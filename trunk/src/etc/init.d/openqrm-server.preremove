@@ -1,0 +1,5 @@
+#!/bin/bash
+# this is the pre-remove script for the packaging stage
+
+/etc/init.d/openqrm-server stop
+/etc/init.d/openqrm-server uninstall

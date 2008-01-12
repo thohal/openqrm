@@ -1,0 +1,45 @@
+#!/bin/bash
+# openQRM mysql-specfic functions
+
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	echo "ERROR: Please export OPENQRM_SERVER_BASE_DIR before sourcing $0"
+	exit 1
+fi
+
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+OPENQRM_DATABASE_INIT="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/mysql/openqrm-mysql-init.sql"
+
+function initialize_database() {
+
+	if ! which mysql 1>/dev/null 2>&1; then
+		echo "ERROR: Mysql client 'mysql' not installed/found on this system"
+		return 1
+	else
+		MYSQL_CLIENT=`which mysql`
+	fi
+
+	# set the dbname in the sql init-script
+	OPENQRM_DATABASE_INIT_TMP=/tmp/openqrm-mysql-init.sql
+	cat $OPENQRM_DATABASE_INIT | sed -e "s/OPENQRM_DB/$OPENQRM_DATABASE_NAME/" > $OPENQRM_DATABASE_INIT_TMP
+
+	echo "Initializing the openQRM-database"
+	if [ -z "$OPENQRM_DATABASE_PASSWORD" ]; then
+		$MYSQL_CLIENT -u $OPENQRM_DATABASE_USER --host $OPENQRM_DATABASE_SERVER -e "drop database $OPENQRM_DATABASE_NAME" 1>/dev/null 2>&1
+		$MYSQL_CLIENT -u $OPENQRM_DATABASE_USER --host $OPENQRM_DATABASE_SERVER < $OPENQRM_DATABASE_INIT_TMP
+		RET=$?
+	else
+		$MYSQL_CLIENT -u $OPENQRM_DATABASE_USER -p$OPENQRM_DATABASE_PASSWORD --host $OPENQRM_DATABASE_SERVER -e "drop database $OPENQRM_DATABASE_NAME" 1>/dev/null 2>&1
+		$MYSQL_CLIENT -u $OPENQRM_DATABASE_USER -p$OPENQRM_DATABASE_PASSWORD --host $OPENQRM_DATABASE_SERVER < $OPENQRM_DATABASE_INIT_TMP
+		RET=$?
+	fi
+	rm -f $OPENQRM_DATABASE_INIT_TMP
+	return $RET
+}
+
+
+
+case "$1" in
+	init)
+		initialize_database
+		;;
+esac

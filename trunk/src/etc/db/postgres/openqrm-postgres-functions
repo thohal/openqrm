@@ -1,0 +1,39 @@
+#!/bin/bash
+# openQRM postgres-specfic functions
+
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	echo "ERROR: Please export OPENQRM_SERVER_BASE_DIR before sourcing $0"
+	exit 1
+fi
+
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+OPENQRM_DATABASE_INIT="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/postgres/openqrm-postgres-init.sql"
+
+
+
+function initialize_database() {
+
+	if ! which psql 1>/dev/null 2>&1; then
+		echo "ERROR: Postgres client 'psql' not installed/found on this system"
+		return 1
+	else
+		POSTGRES_CLIENT=`which psql`
+	fi
+
+	echo "Initializing the openQRM-database"
+	cp -f $OPENQRM_DATABASE_INIT /tmp/
+	chmod 777 /tmp/openqrm-postgres-init.sql
+	su - postgres -c "$POSTGRES_CLIENT -d $OPENQRM_DATABASE_NAME --set openqrmdbuser=$OPENQRM_DATABASE_USER -f /tmp/openqrm-postgres-init.sql"
+	RET=$?
+	rm -f /tmp/openqrm-postgres-init.sql
+	return $RET
+}
+
+
+
+
+case "$1" in
+	init)
+		initialize_database
+		;;
+esac

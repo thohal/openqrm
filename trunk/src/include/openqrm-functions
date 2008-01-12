@@ -1,0 +1,189 @@
+#!/bin/bash
+# this is the main function file for openQRM
+# only general + generic functions should go in here
+
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	echo "ERROR: Please export OPENQRM_SERVER_BASE_DIR before sourcing $0"
+	exit 1
+fi
+
+
+# A more portable "chkconfig". 
+# Uses chkconfig or rc.d-update as found, if not then "manual".
+function openqrm_chkconfig() {
+	action="$1"
+	service="$2"
+
+	if [ $action != "add" ] && [ $action != "del" ] ; then
+		echo "qrm_chkconfig: action must be either \"add\" or \"del\""
+		return 1
+	fi
+	if [ -z "${service}" ] ; then
+		echo "qrm_chkconfig: service must be valid service name"
+		return 1
+	fi
+
+	
+	# For Redhat/SuSe
+	if [ -x /sbin/chkconfig ] ; then
+		case $action in
+			add)	
+				local do_chkconfig=1
+				# check if the init is not configured
+				chkconfig --list ${service} > /dev/null 2>&1 && do_chkconfig=
+
+				# maybe it is configured, but for our runlevel not (tam)
+				if [ -z "$do_chkconfig" ]; then
+					do_chkconfig=1
+					local runlevel=$(grep initdefault /etc/inittab | grep id |cut -d ':' -f2)
+					for f in /etc/rc${runlevel}.d/S??${service} /etc/init.d/rc${runlevel}.d/S??${service}; do	
+						[ -e $f ] && do_chkconfig=
+					done
+				fi
+				if [ $do_chkconfig ]; then
+                	        	chkconfig --add ${service}
+					if [ ! -f /etc/UnitedLinux-release ]; then
+                        	        	chkconfig ${service} on
+					else
+	                        	        chkconfig --add ${service}
+					fi
+				fi
+				;;
+			del)
+				#check if service exists
+				if chkconfig --list ${service} > /dev/null 2>&1 ; then
+					chkconfig --del ${service}
+				fi
+				;;
+			
+		esac
+	# For Debian
+	elif [ -x /usr/sbin/update-rc.d ] ; then
+		# according to manuals, update-rc.d does nothing if links already exist
+		if [ $action == "add" ] ; then
+			local -a chkconfig_spec=($(grep 'chkconfig:' /etc/init.d/${service} | cut -d ':' -f2- ))
+			
+			if [[ -n "${chkconfig_spec[0]}" &&  "${chkconfig_spec[0]}" != '-' ]]; then
+				local runlevels="$(echo ${chkconfig_spec[0]} | sed 's/\(.\)/\1 /g')"
+				args="start ${chkconfig_spec[1]} $runlevels . stop ${chkconfig_spec[2]} 0 1 6 ."
+			fi
+			unset IFS
+			update-rc.d ${service}  $args
+		elif [ $action == "del" ] ; then
+			update-rc.d -f ${service} remove 1>/dev/null 2>&1
+		fi
+	# "Manual".  Uses S91 by default
+	else
+		# Get default runlevel
+		runlevel=$( grep default /etc/inittab | grep ^id: | cut -f 2 -d: )
+
+		# Find directory for script links
+		if [ -d /etc/rc.d/ ] ; then
+		        rcdir=/etc/rc.d/rc${runlevel}.d
+		else
+		        rcdir=/etc/rc${runlevel}.d
+		fi
+
+		if [ $action == "add" ] ; then 
+			if [ ! -f $rcdir/S??${service} ] && [ -f /etc/init.d/${service} ] ; then
+			       ln -s /etc/init.d/${service} $rcdir/S91${service}
+			fi
+		elif [ $action == "del" ] ; then
+			if [ -f $rcdir/S??${service} ] ; then
+			       rm $rcdir/S??${service}
+			fi
+		fi
+	fi
+	return 0
+}
+
+
+
+# create short name for distro for the package stage
+function openqrm_get_distro()
+{
+	# find out which distribution it is
+	# find out which version it is
+	# give the ROOT_DIR as the first cmdline param
+	local ROOT_DIR=${1:-/}
+	if [ -f $ROOT_DIR/etc/redhat-release ]; then
+		RELEASE=$(cat $ROOT_DIR/etc/redhat-release | head -1)
+		case $RELEASE in
+			*Zod*)
+				echo "fc6"
+				;;
+			*Bordeaux*)
+				echo "fc5"
+				;;
+			*Stentz*)
+				echo "fc4"
+				;;
+			*Nahant*)
+				echo "el4"
+				;;
+			*Shrike*)
+				echo "rh9"
+				;;
+			*Psyche*)
+				echo "rh8"
+				;;
+			*Valhalla*)
+				echo "rh73"
+				;;
+			*Taroon*)
+				echo "el3"
+				;;
+			*)
+				echo "rh"
+				;;
+		esac
+	elif [ -f $ROOT_DIR/etc/UnitedLinux-release ]; then
+		RELEASE=$(cat $ROOT_DIR/etc/UnitedLinux-release | head -1)
+		case $RELEASE in
+			*UnitedLinux*)
+				echo "suse8"
+				;;
+			*)
+				echo "suse"
+				;;
+		esac
+	elif [ -f $ROOT_DIR/etc/SuSE-release ]; then
+		RELEASE=$(cat $ROOT_DIR/etc/SuSE-release | head -1)
+		case $RELEASE in
+			*9*)
+				echo "suse9"
+				;;
+			*10*)
+				echo "suse10"
+				;;
+			*)
+				echo "suse"
+				;;
+		esac
+		
+	elif [ -f $ROOT_DIR/etc/debian_version ]; then
+		RELEASE=$(cat $ROOT_DIR/etc/debian_version | head -1)
+		case $RELEASE in
+			*3.1*)
+				echo "debian31"
+				;;
+			*)
+				echo "ubuntu"
+				;;
+		esac
+	else
+		echo "generic"
+	fi
+
+}
+
+
+
+
+
+
+
+
+
+
+

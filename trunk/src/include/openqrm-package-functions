@@ -1,0 +1,214 @@
+#!/bin/bash
+# this is the package function file for openQRM
+# only functions needed for packaging should go in here
+
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	echo "ERROR: Please export OPENQRM_SERVER_BASE_DIR before sourcing $0"
+	exit 1
+fi
+
+# get the openqrm-server configuration + functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+for VAR in `cat $OPENQRM_SERVER_CONF | grep -v ^# | grep OPENQRM | cut -d'=' -f1`; do
+	eval `export $VAR`
+done
+OPENQRM_PACKAGE_TMP_DIR=/tmp
+
+function openqrm_check_requirements() {
+	# check which dependencies to use
+	if [ -f /etc/debian_version ]; then
+		echo "Checking the requirements for Debian/Ubuntu based systems"
+		OPENQRM_SERVER_DEPENDENCIES=$OPENQRM_SERVER_DEPENDENCIES_DEBIAN
+		OPENQRM_PACKAGE_TYPE=deb
+		OPENQRM_DEPENDENCY_CHECK_COMMAND="dpkg -s"
+		OPENQRM_PACKAGE_SYSTEM="debian"
+	elif [ -f /etc/redhat-version ]; then
+		echo "Checking the requirements for Redhat based systems"
+		OPENQRM_SERVER_DEPENDENCIES=$OPENQRM_SERVER_DEPENDENCIES_REDHAT
+		OPENQRM_PACKAGE_TYPE=rpm
+		OPENQRM_DEPENDENCY_CHECK_COMMAND="rpm -qs"
+		OPENQRM_PACKAGE_SYSTEM="redhat"
+	elif [ -f /etc/SuSE-release ]; then
+		echo "Checking the requirements for Suse based systems"
+		OPENQRM_SERVER_DEPENDENCIES=$OPENQRM_SERVER_DEPENDENCIES_SUSE
+		OPENQRM_PACKAGE_TYPE=rpm
+		OPENQRM_DEPENDENCY_CHECK_COMMAND="rpm -qs"
+		OPENQRM_PACKAGE_SYSTEM="suse"
+	else
+		echo "NOTICE: Could not find out which dependencies to use"
+		echo "        Please make sure to have all needed components installed!"
+		sleep 4
+		echo "... Continuing anyway"
+		return 0
+	fi
+
+	echo "openqrm-server requires : $OPENQRM_SERVER_DEPENDENCIES"
+	for DEP in `echo $OPENQRM_SERVER_DEPENDENCIES | sed -e "s/,//g"`; do
+		if $OPENQRM_DEPENDENCY_CHECK_COMMAND $DEP 1>/dev/null 2>&1; then
+			echo "-> found $DEP installed"
+		else
+			echo "ERROR: $DEP not installed. Please install to continue"
+			return 1
+		fi
+	done
+
+	# get a list of plugins for checking their dependencies
+	OPENQRM_PACKAGE_COMPONENT_LIST=`ls $OPENQRM_SERVER_BASE_DIR/openqrm/plugins`
+	for OPENQRM_PLUGIN in $OPENQRM_PACKAGE_COMPONENT_LIST; do
+		. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/openqrm-plugin-$OPENQRM_PLUGIN"".conf
+		if [ "$OPENQRM_PACKAGE_SYSTEM" == "debian" ]; then
+			OPENQRM_PLUGIN_DEPENDENCIES=$OPENQRM_PLUGIN_DEPENDENCIES_DEBIAN
+		elif [ "$OPENQRM_PACKAGE_SYSTEM" == "redhat" ]; then
+			OPENQRM_PLUGIN_DEPENDENCIES=$OPENQRM_PLUGIN_DEPENDENCIES_REDHAT
+		elif [ "$OPENQRM_PACKAGE_SYSTEM" == "suse" ]; then
+			OPENQRM_PLUGIN_DEPENDENCIES=$OPENQRM_PLUGIN_DEPENDENCIES_SUSE
+		fi		
+		echo "openqrm-plugin-$OPENQRM_PLUGIN requires : `echo $OPENQRM_PLUGIN_DEPENDENCIES | sed -e "s/openqrm-server//g"`"
+		for DEP in `echo $OPENQRM_PLUGIN_DEPENDENCIES | sed -e "s/,//g" | sed -e "s/openqrm-server//g"`; do
+			if $OPENQRM_DEPENDENCY_CHECK_COMMAND $DEP 1>/dev/null 2>&1; then
+				echo "-> found $DEP installed"
+			else
+				echo "ERROR: $DEP not installed. Please install to continue"
+				return 1
+			fi
+		done
+	done
+	echo "Checking for required components finished successfully"
+
+}
+
+
+
+function openqrm_package() {
+
+	# get distribution
+	OPENQRM_PACKAGE_DISTRIBUTION=`openqrm_get_distro`
+	if [ -f /etc/debian_version ]; then
+		OPENQRM_PACKAGE_TYPE=deb
+	else
+		OPENQRM_PACKAGE_TYPE=rpm
+	fi
+	echo "Creating $OPENQRM_PACKAGE_TYPE packages for openQRM-server ver. $OPENQRM_SERVER_VERSION for $OPENQRM_PACKAGE_DISTRIBUTION"
+
+	# which components to build
+	OPENQRM_PACKAGE_COMPONENT_LIST=`ls $OPENQRM_SERVER_BASE_DIR/openqrm/plugins`
+	OPENQRM_PACKAGE_COMPONENT_LIST="openqrm-server "`echo $OPENQRM_PACKAGE_COMPONENT_LIST | sed -e "s/\n//g"`
+	echo "Packing the following components : $OPENQRM_PACKAGE_COMPONENT_LIST"
+	
+	# decide on rpm or deb package
+	if [ "$OPENQRM_PACKAGE_TYPE" == "rpm" ]; then
+		echo "Starting rpm packaging"
+		
+		# create spec file from template
+		
+		
+	elif [ "$OPENQRM_PACKAGE_TYPE" == "deb" ]; then
+
+		OPENQRM_PACKAGE_ARCHITECTURE=`dpkg --print-architecture`	
+		for OPENQRM_PACKAGE_COMPONENT in $OPENQRM_PACKAGE_COMPONENT_LIST; do
+
+			echo "Starting deb packaging for $OPENQRM_PACKAGE_COMPONENT"
+
+			# check if to package the openqrm-server or plugins
+			if [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server" ]; then
+				# we package the server (without any plugins)
+				echo "Packaging the openQRM-server"
+				OPENQRM_PACKAGE_NAME=$OPENQRM_PACKAGE_COMPONENT
+				
+				# set the server dependencies
+				OPENQRM_PACKAGE_DEPENDENCIES=$OPENQRM_SERVER_DEPENDENCIES_DEBIAN
+
+				# (re-)create the package tmp dir
+				rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE
+				mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/DEBIAN
+
+				# create control file from template
+				cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-deb.control |	\
+					sed -e "s/OPENQRM_PACKAGE_NAME/$OPENQRM_PACKAGE_NAME/g" |	\
+					sed -e "s/OPENQRM_PACKAGE_VERSION/$OPENQRM_SERVER_VERSION/g" |	\
+					sed -e "s/OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_PACKAGE_ARCHITECTURE/g" |	\
+					sed -e "s/OPENQRM_PACKAGE_DEPENDENCIES/$OPENQRM_PACKAGE_DEPENDENCIES/g"	\
+					> $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/DEBIAN/control
+
+				# create debian-binary file
+				echo "2.0" > $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/DEBIAN/debian-binary
+
+				# create postinst + prerm
+				cp $OPENQRM_SERVER_BASE_DIR/openqrm/etc/init.d/openqrm-server.postinstall $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/DEBIAN/postinst
+				chmod 0775 $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/DEBIAN/postinst
+				cp $OPENQRM_SERVER_BASE_DIR/openqrm/etc/init.d/openqrm-server.preremove $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/DEBIAN/prerm
+				chmod 0775 $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/DEBIAN/prerm
+
+				# copy package content
+				mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_SERVER_BASE_DIR
+				cp -aR $OPENQRM_SERVER_BASE_DIR/openqrm $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_SERVER_BASE_DIR/
+				rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/*
+
+				# build the deb package
+				dpkg-deb --build $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE
+
+			else
+
+				# we package a plugin
+				echo "Packaging the openQRM plugin-$OPENQRM_PACKAGE_COMPONENT"
+				OPENQRM_PACKAGE_NAME=openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT
+
+				# get the plugin configuration
+				. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/etc/$OPENQRM_PACKAGE_NAME"".conf
+
+				# set the plugins dependencies
+				OPENQRM_PACKAGE_DEPENDENCIES=$OPENQRM_PLUGIN_DEPENDENCIES_DEBIAN
+
+				# (re-)create the package tmp dir
+				rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE
+				mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/DEBIAN
+
+				# create control file from template
+				cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-deb.control |	\
+					sed -e "s/OPENQRM_PACKAGE_NAME/$OPENQRM_PACKAGE_NAME/g" |	\
+					sed -e "s/OPENQRM_PACKAGE_VERSION/$OPENQRM_PLUGIN_VERSION/g" |	\
+					sed -e "s/OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_PACKAGE_ARCHITECTURE/g" |	\
+					sed -e "s/OPENQRM_PACKAGE_DEPENDENCIES/$OPENQRM_PACKAGE_DEPENDENCIES/g"	\
+					> $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/DEBIAN/control
+
+				# create debian-binary file
+				echo "2.0" > $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/DEBIAN/debian-binary
+
+				# create postinst + prerm
+				cp $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/etc/init.d/$OPENQRM_PACKAGE_NAME"".postinstall $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/DEBIAN/postinst
+				chmod 0775 $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/DEBIAN/postinst
+				cp $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/etc/init.d/$OPENQRM_PACKAGE_NAME"".preremove $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/DEBIAN/prerm
+				chmod 0775 $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/DEBIAN/prerm
+
+				# copy package content
+				mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_SERVER_BASE_DIR/openqrm/plugins
+				cp -aR $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/
+
+				# build the deb package
+				dpkg-deb --build $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE
+
+			fi
+
+		done
+	
+	else
+		echo "ERROR: package type $OPENQRM_PACKAGE_TYPE not supported yet"
+		exit 1
+	fi
+
+
+
+}
+
+
+
+
+case "$1" in
+	package)
+		openqrm_package
+		;;
+	check)
+		openqrm_check_requirements
+		;;
+esac

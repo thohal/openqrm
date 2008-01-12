@@ -1,0 +1,21 @@
+This is an openQRM development project.
+
+Its goal is it to archive the following improvements compared
+to current stable openQRM branch :
+
+- KISS (keep it simple)
+- run everywhere (support for every linux distribution)
+- clean up (remove all not needed code)
+- reduce code base (less code = less bugs)
+- using existing components (instead of providing own binaries/libs)
+- better packaging and dependencies
+- enabling/disabling plugins via the GUI
+- support for multiple databases (db2, mysql, oracle, postgres)
+- porting from java to php
+- ... and some more
+
+Please feel free to contribute to this project with your own
+ideas and code. 
+
+Matt Rechenburg
+

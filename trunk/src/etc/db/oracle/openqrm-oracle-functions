@@ -1,0 +1,34 @@
+#!/bin/bash
+# openQRM oracle-specfic functions
+
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	echo "ERROR: Please export OPENQRM_SERVER_BASE_DIR before sourcing $0"
+	exit 1
+fi
+
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+OPENQRM_DATABASE_INIT="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/oracle/openqrm-oracle-init.sql"
+
+
+function initialize_database() {
+
+	if ! which sqlplus 1>/dev/null 2>&1; then
+		echo "ERROR: Oracle client 'sqlplus' not installed/found on this system"
+		return 1
+	else
+		ORACLE_CLIENT=`which sqlplus`
+	fi
+
+	echo "Initializing the openQRM-database"
+	$ORACLE_CLIENT $OPENQRM_DATABASE_USER/$OPENQRM_DATABASE_PASSWORD@$OPENQRM_DATABASE_NAME @$OPENQRM_DATABASE_INIT
+	return $?
+}
+
+
+
+
+case "$1" in
+	init)
+		initialize_database
+		;;
+esac

@@ -1,0 +1,12 @@
+Package: OPENQRM_PACKAGE_NAME
+Version: OPENQRM_PACKAGE_VERSION
+Section: admin
+Priority: optional
+Architecture: OPENQRM_PACKAGE_ARCHITECTURE
+Depends: OPENQRM_PACKAGE_DEPENDENCIES
+Suggests:
+Conflicts:
+Replaces: OPENQRM_PACKAGE_NAME
+Maintainer: Matt Rechenburg <m.rechenburg@t-online.de>
+Description: openQRM is the next generation data-center management platform.
+

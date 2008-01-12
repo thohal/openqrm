@@ -1,0 +1,16 @@
+To install please run :
+
+	make && make install
+	
+To start run :
+
+	make start
+
+To check the install requirements run :
+
+	make check
+
+To package (rpm/deb) run :
+
+	make package
+

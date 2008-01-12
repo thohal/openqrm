@@ -1,0 +1,38 @@
+#!/bin/bash
+# openQRM db2-specfic functions
+
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	echo "ERROR: Please export OPENQRM_SERVER_BASE_DIR before sourcing $0"
+	exit 1
+fi
+
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+OPENQRM_DATABASE_INIT="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/db2/openqrm-db2-init.sql"
+
+
+function initialize_database() {
+
+	if ! which db2 1>/dev/null 2>&1; then
+		echo "ERROR: DB2 client 'db2' not installed/found on this system"
+		return 1
+	else
+		DB2_CLIENT=`which db2`
+	fi
+
+	echo "Initializing the openQRM-database"
+	cat $OPENQRM_DATABASE_INIT | sed -e "s/connect to OPENQRM_DB/connect to $OPENQRM_DATABASE_NAME/" > /tmp/openqrm-db2-init.sql
+	chmod 777 /tmp/openqrm-db2-init.sql
+	su - $OPENQRM_DATABASE_USER -c "$DB2_CLIENT -vf /tmp/openqrm-db2-init.sql"
+	rm -f /tmp/openqrm-db2-init.sql
+	# db2 client does not return good
+	return 0
+
+}
+
+
+
+case "$1" in
+	init)
+		initialize_database
+		;;
+esac

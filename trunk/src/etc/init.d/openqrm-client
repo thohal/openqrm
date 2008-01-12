@@ -1,0 +1,79 @@
+#!/bin/bash
+# openqrm-client	openQRM init script for the managed resources
+#
+# chkconfig: 345 98 19
+# description: openQRM is the next generation Linux Data Center management
+
+# support for LSB init scripts
+### BEGIN INIT INFO
+# Provides:
+# Required-Start: $all
+# Required-Stop: $all
+# Default-Start:   3 4 5
+# Default-Stop: 0 1 2 6
+# Short-Description: openQRM init script for the managed resources
+# Description: openQRM init script for the managed resources
+### END INIT INFO
+
+PATH=/usr/bin:/sbin:/bin:/usr/sbin
+export PATH
+LOCKFILE=/var/lock/subsys/openqrm
+mkdir -p $(dirname $LOCKFILE)
+
+export `eval cat /proc/cmdline`	
+if [ -f /var/openqrm/conf/openqrm.conf.$id ];then
+	. /var/openqrm/conf/openqrm.conf.$id
+fi
+
+. $OPENQRM_RESOURCE_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_RESOURCE_BASE_DIR/openqrm/include/openqrm-nodes-functions
+
+
+function openqrm_client_start() {
+	echo "Starting openQRM-client"
+
+	# checks
+	grep -q "/initrd" /proc/mounts && umount /initrd
+
+	touch ${LOCKFILE}
+}
+
+
+function openqrm_client_stop() {
+	echo "Stopping openQRM-client"
+
+	/bin/rm -f ${LOCKFILE}
+}
+
+function openqrm_client_status() {
+	if [ -f ${LOCKFILE} ]; then
+		echo "openQRM-client service is running"
+	else
+		echo "openQRM-client service is not running"
+	fi
+}
+
+
+
+case "$1" in
+	start)
+		openqrm_client_start
+		;;
+		openqrm_client_start
+		;;
+	stop)
+		openqrm_client_stop
+		;;
+	status)
+		openqrm_client_status
+		;;
+	restart)
+		openqrm_client_stop
+		openqrm_client_start
+		;;
+	*)
+		echo $"Usage: $0 {start|stop|status|restart}"
+		exit 1
+		;;
+esac
+

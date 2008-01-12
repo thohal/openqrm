@@ -1,0 +1,41 @@
+# openQRM dhcpd-plugin default dhcpd.conf
+
+allow booting;
+allow bootp;
+
+# Standard configuration directives...
+option subnet-mask ${OPENQRM_DHCPD_SUBNETMASK};
+option broadcast-address ${OPENQRM_DHCPD_BROADCAST};
+option routers ${OPENQRM_DHCPD_GATEWAY};
+option domain-name "${OPENQRM_DHCPD_DOMAIN}";
+option domain-name-servers ${OPENQRM_DHCPD_DNS};
+ddns-update-style ad-hoc;
+next-server ${OPENQRM_DHCPD_TFTP_SERVER};
+
+# Group the PXE bootable hosts together
+group {
+	# PXE-specific configuration directives...
+	option vendor-encapsulated-options 09:0f:80:00:0c:4e:65:74:77:6f:72:6b:20:62:6f:6f:74:0a:07:00:50:72:6f:6d:70:74:06:01:02:08:03:80:00:00:47:04:80:00:00:00:ff;
+
+	subnet ${OPENQRM_DHCPD_NETWORK} netmask ${OPENQRM_DHCPD_SUBNETMASK} {
+		default-lease-time 21600;
+		max-lease-time 43200;
+		
+		class "NOTPXE" {
+			match if substring (option vendor-class-identifier, 0, 9) != "PXEClient";
+			ignore unknown-clients;
+		}
+		pool {
+			range ${OPENQRM_DHCPD_BROADCAST} ${OPENQRM_DHCPD_BROADCAST};
+			allow members of "NOTPXE";
+		}
+
+		# the range to serve
+		range ${OPENQRM_DHCPD_FIRST_IP_ADDRESS} ${OPENQRM_DHCPD_LAST_IP_ADDRESS};
+		filename "/pxelinux.0";
+
+	}
+}
+
+
+

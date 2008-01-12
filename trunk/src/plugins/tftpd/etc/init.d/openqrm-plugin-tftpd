@@ -1,0 +1,44 @@
+#!/bin/bash
+# init script for the openQRM tftpd-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/tftpd/include/openqrm-plugin-tftpd-functions
+
+function openqrm_plugin_tftpd_start() {
+	echo "Starting the openQRM tftpd-plugin"
+
+	# check pmtu
+	openqrm_plugin_tftpd_update_pmtu
+
+	# start tftp service
+	/usr/sbin/in.tftpd -l -s $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/
+}
+
+
+function openqrm_plugin_tftpd_stop() {
+	echo "Stopping the openQRM tftpd-plugin"
+	killall in.tftpd 1>/dev/null 2>&1
+}
+
+case "$1" in
+	start)
+		openqrm_plugin_tftpd_start
+		;;
+	stop)
+		openqrm_plugin_tftpd_stop
+		;;
+	restart)
+		openqrm_plugin_tftpd_stop
+		sleep 1
+		openqrm_plugin_tftpd_start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+
+esac
+exit $?
+
+
+
+

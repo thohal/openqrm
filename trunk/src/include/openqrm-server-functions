@@ -1,0 +1,25 @@
+#!/bin/bash
+# this is the server function file for openQRM
+# only server functions should go in here
+
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	echo "ERROR: Please export OPENQRM_SERVER_BASE_DIR before sourcing $0"
+	exit 1
+fi
+
+# source the server configuration
+OPENQRM_SERVER_CONF=$OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_CONF
+
+# function to export all given configuration from the
+# main openQRM-server config file
+function openqrm_server_get_config() {
+	. $OPENQRM_SERVER_CONF
+	for VAR in `cat $OPENQRM_SERVER_CONF | grep -v ^# | grep OPENQRM | cut -d'=' -f1`; do
+		eval `export $VAR`
+	done
+	# get ip configuration
+	export OPENQRM_SERVER_IP_ADDRESS=`ifconfig $OPENQRM_SERVER_INTERFACE | grep inet | grep -v inet6 | cut -d':' -f2 | awk {' print $1 '} | head -n 1`
+	export OPENQRM_SERVER_BROADCAST_ADDRESS=`ifconfig $OPENQRM_SERVER_INTERFACE | grep inet | grep -v inet6 | cut -d':' -f3 | awk {' print $1 '} | head -n 1`
+	export OPENQRM_SERVER_SUBNET_MASK=`ifconfig $OPENQRM_SERVER_INTERFACE | grep inet | grep -v inet6 | cut -d':' -f4 | awk {' print $1 '} | head -n 1`
+}

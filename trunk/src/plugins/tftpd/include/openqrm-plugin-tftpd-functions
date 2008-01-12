@@ -1,0 +1,12 @@
+#!/bin/bash
+# this is the functions file for the tftpd-plugin
+
+
+function openqrm_plugin_tftpd_update_pmtu() {
+	#if pmtu is disabled we want to reenable it so tftp trasfer don't get stuck
+	#if the are mtu problems on the network.
+	pmtu_disable_status=$(cat /proc/sys/net/ipv4/ip_no_pmtu_disc)
+	if [ "$pmtu_disable_status" != "0" ] ; then
+		cat 0 > /proc/sys/net/ipv4/ip_no_pmtu_disc
+	fi
+}

@@ -1,0 +1,187 @@
+#!/bin/bash
+# openqrm-server	openQRM-server init script
+#
+# chkconfig: 2345 98 24
+# description: openQRM is the next generation Linux Data Center management
+
+# support for LSB init script
+### BEGIN INIT INFO
+# Provides: qrm-server
+# Required-Start: $local_fs $network $remote_fs
+# Required-Stop: $local_fs $network $remote_fs
+# Default-Start:  2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: openQRM-server init script
+# Description: openQRM-server init script
+### END INIT INFO
+
+PATH=/usr/bin:/sbin:/bin:/usr/sbin
+export PATH
+LOCKFILE=/var/lock/subsys/openqrm-server
+mkdir -p $(dirname $LOCKFILE)
+
+# find the openqrm-server-base-dir
+readlink() {
+    local path=$1 ll
+    if [ -L "$path" ]; then
+        ll="$(LC_ALL=C ls -l "$path" 2> /dev/null)" &&
+        echo "${ll/* -> }"
+    else
+        return 1
+    fi
+}
+
+SCRIPT=$0
+while [ -L "$SCRIPT" ]; do
+	SRC=$(readlink $SCRIPT)
+	if [ "${SRC:0:1}" != "/" ]; then
+		SRC=$(dirname $SCRIPT)/$SRC
+	fi
+	SCRIPT=$SRC
+done
+export OPENQRM_SERVER_BASE_DIR=`pushd \`dirname $SCRIPT\`/../../../ 1>/dev/null && pwd && popd 1>/dev/null`
+
+# get the openqrm-server configuration + functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions
+openqrm_server_get_config
+
+# -> this will later come from the db
+OPENQRM_SERVER_PLUGINS_ENABLED="dhcpd tftpd"
+
+
+
+
+# functions
+
+
+function openqrm_server_init() {
+
+	echo "First startup detected. Running initialization."
+
+	# initialyze the database
+	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions
+	$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions init
+
+	# link the web application directory to the documentroot
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
+
+	# create $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-pxelinux |	\
+		sed -e "s/OPENQRM_BOOTIMAGE_KERNEL/vmlinuz-openqrm/g" |	\
+		sed -e "s/OPENQRM_BOOTIMAGE_INITRD/initrd-openqrm.img/g" |	\
+		sed -e "s/OPENQRM_RESOURCE_ID/0/g" |	\
+		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/g" \
+		> $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default
+
+	# add automatic startup to init
+	openqrm_chkconfig add openqrm-server
+	
+	# for all plugins run init functions
+
+}
+
+
+function openqrm_server_uninstall() {
+
+	echo "Uninstalling openQRM-server ver. $OPENQRM_SERVER_VERSION"
+	# drop db
+
+
+	# remove automatic startup
+	openqrm_chkconfig del openqrm-server
+	rm -f /etc/init.d/openqrm-server
+
+	echo "Uninstallation of openQRM-server finished"
+
+}
+
+
+function openqrm_server_start() {
+	echo "Starting the openQRM-server ver. $OPENQRM_SERVER_VERSION"
+	# check if we are at first-startup, if yes do initialization
+	if [ ! -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default ]; then
+		openqrm_server_init
+	fi
+		
+	# check openqrm-interface
+	ifconfig "$OPENQRM_SERVER_INTERFACE" | grep inet 1>/dev/null 2>&1 || \
+		{ echo "Interface $OPENQRM_SERVER_INTERFACE is down. Please configure and activate it and try again"; return 1; }
+	CONFIGURED_IP=$(cat $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default | grep "openqrm=" | sed -e "s/.*openqrm=//" | awk {' print $1 '})
+	if [ "$OPENQRM_SERVER_IP_ADDRESS" != "$CONFIGURED_IP" ]; then
+		echo -e "Interface $OPENQRM_SERVER_INTERFACE has the wrong ip-configuration.\n" \
+			  "       The openQRM-server is configured to have the ip-address $CONFIGURED_IP\n" \
+  			  "       but the interface $OPENQRM_SERVER_INTERFACE is running with the ip-address $OPENQRM_SERVER_IP_ADDRESS"
+		return 1
+	fi
+
+
+
+	# start all enabled plugins
+	echo "Starting enabled openQRM-server plugins"
+	for OPENQRM_PLUGIN in $OPENQRM_SERVER_PLUGINS_ENABLED; do
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN start
+	done
+
+	touch ${LOCKFILE}
+	
+}
+
+
+function openqrm_server_stop() {
+
+	# stop all enabled plugins
+	echo "Stopping enabled openQRM-server plugins"
+	for OPENQRM_PLUGIN in $OPENQRM_SERVER_PLUGINS_ENABLED; do
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN stop
+	done
+
+	echo "Stopping the openQRM-server ver. $OPENQRM_SERVER_VERSION"
+
+
+	/bin/rm -f ${LOCKFILE}
+}
+
+
+function openqrm_server_status() {
+	if [ -f ${LOCKFILE} ]; then
+		echo "openQRM-server ver. $OPENQRM_SERVER_VERSION is running"
+	else
+		echo "openQRM-server ver. $OPENQRM_SERVER_VERSION is not running"
+	fi
+}
+
+
+# main
+case "$1" in
+	start)
+		openqrm_server_start
+		;;
+	stop)
+		openqrm_server_stop
+		;;
+	status)
+		openqrm_server_status
+		;;
+	restart)
+		openqrm_server_stop
+		sleep 1
+		openqrm_server_start
+		;;
+	init)
+		openqrm_server_init
+		;;
+	uninstall)
+		openqrm_server_uninstall
+		;;
+	*)
+		echo "Usage: $0 {start|stop|status|restart|init|uninstall}"
+		exit 1
+
+esac
+
+
+

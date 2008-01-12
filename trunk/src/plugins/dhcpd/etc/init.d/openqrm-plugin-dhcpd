@@ -1,0 +1,42 @@
+#!/bin/bash
+# init script for the openQRM dhcpd plugin
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/include/openqrm-plugin-dhcpd-functions
+
+# for the init function
+mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/var/state/dhcp
+
+
+
+function openqrm_plugin_dhcpd_start() {
+	echo "Starting the openQRM dhcpd-plugin"
+	#/usr/sbin/dhcpd -cf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf -lf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/var/state/dhcp/dhcpd.leases 2>&1 | logger
+}
+
+
+function openqrm_plugin_dhcpd_stop() {
+	echo "stopping the openQRM dhcpd plugin"
+	killall dhcpd 1>/dev/null 2>&1
+	return 0
+}
+
+case "$1" in
+	start)
+		openqrm_plugin_dhcpd_start
+		;;
+	stop)
+		openqrm_plugin_dhcpd_stop
+		;;
+	restart)
+		openqrm_plugin_dhcpd_stop
+		sleep 1
+		openqrm_plugin_dhcpd_start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+
+esac
+exit $?
+
+
