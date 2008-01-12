@@ -12,6 +12,7 @@ to current stable openQRM branch :
 - enabling/disabling plugins via the GUI
 - support for multiple databases (db2, mysql, oracle, postgres)
 - porting from java to php
+- removing the installer-stage, do the inititialization during firststart
 - ... and some more
 
 Please feel free to contribute to this project with your own
