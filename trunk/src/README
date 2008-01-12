@@ -4,7 +4,7 @@ Its goal is it to archive the following improvements compared
 to current stable openQRM branch :
 
 - KISS (keep it simple)
-- run everywhere (support for every linux distribution)
+- run everywhere (support for every linux distribution, especially Debian+Ubuntu)
 - clean up (remove all not needed code)
 - reduce code base (less code = less bugs)
 - using existing components (instead of providing own binaries/libs)
