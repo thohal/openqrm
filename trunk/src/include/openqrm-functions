@@ -109,6 +109,12 @@ function openqrm_get_distro()
 	if [ -f $ROOT_DIR/etc/redhat-release ]; then
 		RELEASE=$(cat $ROOT_DIR/etc/redhat-release | head -1)
 		case $RELEASE in
+			*Werewolf*)
+				echo "fc8"
+				;;
+			*Moonshine*)
+				echo "fc7"
+				;;
 			*Zod*)
 				echo "fc6"
 				;;
