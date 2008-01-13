@@ -95,6 +95,8 @@ function openqrm_package() {
 	OPENQRM_PACKAGE_COMPONENT_LIST=`ls $OPENQRM_SERVER_BASE_DIR/openqrm/plugins`
 	OPENQRM_PACKAGE_COMPONENT_LIST="openqrm-server "`echo $OPENQRM_PACKAGE_COMPONENT_LIST | sed -e "s/\n//g"`
 	echo "Packing the following components : $OPENQRM_PACKAGE_COMPONENT_LIST"
+
+	########################## RPM PACKAGING ##########################
 	
 	# decide on rpm or deb package
 	if [ "$OPENQRM_PACKAGE_TYPE" == "rpm" ]; then
@@ -206,27 +208,8 @@ function openqrm_package() {
 
 		done
 
+	########################## DEB PACKAGING ##########################
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		
-		
 	elif [ "$OPENQRM_PACKAGE_TYPE" == "deb" ]; then
 
 		OPENQRM_PACKAGE_ARCHITECTURE=`dpkg --print-architecture`	
