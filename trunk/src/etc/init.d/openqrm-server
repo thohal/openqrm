@@ -123,7 +123,9 @@ function openqrm_server_start() {
 	# start all enabled plugins
 	echo "Starting enabled openQRM-server plugins"
 	for OPENQRM_PLUGIN in $OPENQRM_SERVER_PLUGINS_ENABLED; do
-		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN start
+		if [ -x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN ]; then
+			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN start
+		fi
 	done
 
 	touch ${LOCKFILE}
@@ -136,7 +138,9 @@ function openqrm_server_stop() {
 	# stop all enabled plugins
 	echo "Stopping enabled openQRM-server plugins"
 	for OPENQRM_PLUGIN in $OPENQRM_SERVER_PLUGINS_ENABLED; do
-		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN stop
+		if [ -x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN ]; then
+			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN stop
+		fi
 	done
 
 	echo "Stopping the openQRM-server ver. $OPENQRM_SERVER_VERSION"

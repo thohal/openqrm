@@ -121,8 +121,8 @@ function openqrm_package() {
 				mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE
 
 				# set postinst + prerm
-				OPENQRM_PACKAGE_POSTINSTALL="chmod -x /opt/openqrm/etc/init.d/openqrm-server.postinstall \&\& /opt/openqrm/etc/init.d/openqrm-server.postinstall"
-				OPENQRM_PACKAGE_PREREMOVE="chmod -x /opt/openqrm/etc/init.d/openqrm-server.preremove \&\& /opt/openqrm/etc/init.d/openqrm-server.preremove"
+				OPENQRM_PACKAGE_POSTINSTALL="sh /opt/openqrm/etc/init.d/openqrm-server.postinstall"
+				OPENQRM_PACKAGE_PREREMOVE="sh /opt/openqrm/etc/init.d/openqrm-server.preremove"
 
 				# set if files should include openqrm-server or just a plugin
 				OPENQRM_BUILD_POSTINSTALL="rm -rf \$RPM_BUILD_ROOT/opt/openqrm/plugins/*"
@@ -171,6 +171,10 @@ function openqrm_package() {
 				rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE
 				mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE
 
+				# set postinst + prerm
+				OPENQRM_PACKAGE_POSTINSTALL="sh /opt/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/etc/init.d/openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT.postinstall"
+				OPENQRM_PACKAGE_PREREMOVE="sh /opt/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/etc/init.d/openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT.preremove"
+
 				# set if files should include openqrm-server or just a plugin
 				OPENQRM_BUILD_POSTINSTALL="mkdir -p \$RPM_BUILD_ROOT/opt_plugin/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT \&\& cp -aR \$RPM_BUILD_ROOT/opt/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/* \$RPM_BUILD_ROOT/opt_plugin/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/ \&\& rm -rf \$RPM_BUILD_ROOT/opt \&\& mv \$RPM_BUILD_ROOT/opt_plugin \$RPM_BUILD_ROOT/opt"
 
@@ -182,8 +186,8 @@ function openqrm_package() {
 					sed -e "s/OPENQRM_PACKAGE_DISTRIBUTION/$OPENQRM_PACKAGE_DISTRIBUTION/g" |	\
 					sed -e "s/OPENQRM_PACKAGE_DEPENDENCIES/$OPENQRM_PACKAGE_DEPENDENCIES/g" |	\
 					sed -e "s#OPENQRM_BUILD_POSTINSTALL#$OPENQRM_BUILD_POSTINSTALL#g" |	\
-					sed -e "s#OPENQRM_PACKAGE_POSTINSTALL##g" |	\
-					sed -e "s#OPENQRM_PACKAGE_PREREMOVE##g"	\
+					sed -e "s#OPENQRM_PACKAGE_POSTINSTALL#$OPENQRM_PACKAGE_POSTINSTALL#g" |	\
+					sed -e "s#OPENQRM_PACKAGE_PREREMOVE#$OPENQRM_PACKAGE_PREREMOVE#g"	\
 					> $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_PACKAGE_NAME.spec
 
 				# create the source package
