@@ -1,6 +1,13 @@
 <?php
 
-include('/usr/share/php/adodb/adodb.inc.php');
+// different locations of adodb for suse/redhat/debian
+if (file_exists("/usr/share/cacti/lib/adodb/adodb.inc.php")) {
+        include('/usr/share/cacti/lib/adodb/adodb.inc.php');
+} else if  (file_exists("/usr/share/php/adodb/adodb.inc.php")) {
+        include('/usr/share/php/adodb/adodb.inc.php');
+} else {
+        echo "ERROR: Could not find adodb on this system!";
+}
 
 echo "hallo<br>";
 
