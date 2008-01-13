@@ -26,15 +26,13 @@ make install
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/opt
 cp -aR /opt/openqrm $RPM_BUILD_ROOT/opt/
-rm -rf $RPM_BUILD_ROOT/opt/openqrm/plugins/*
+OPENQRM_BUILD_POSTINSTALL
 
 %post
-chmod -x /opt/openqrm/etc/init.d/openqrm-server.postinstall
-/opt/openqrm/etc/init.d/openqrm-server.postinstall
+OPENQRM_PACKAGE_POSTINSTALL
 
 %preun
-chmod -x /opt/openqrm/etc/init.d/openqrm-server.preremove
-/opt/openqrm/etc/init.d/openqrm-server.preremove
+OPENQRM_PACKAGE_PREREMOVE
 
 %clean
 rm -rf $RPM_BUILD_ROOT
