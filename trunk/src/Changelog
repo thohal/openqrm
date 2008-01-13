@@ -1,0 +1,7 @@
+# this is the changelog for the openQRM-server project
+
+12.1.2008	-	Matt	-	created initial framework
+							designed dependencies setup
+							implemented deb-packaging
+13.1.2008	-	Matt	-	added support for rpm-packaging
+
