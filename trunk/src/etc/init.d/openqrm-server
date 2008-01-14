@@ -66,7 +66,16 @@ function openqrm_server_init() {
 	$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions init
 
 	# link the web application directory to the documentroot
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
+	if [ -f /etc/SuSE-release ]; then
+		# for suse's default web-server configuration symlinks do not work
+		# since we do not want to touch the webservers config we copy and link back
+		mkdir -p $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
+		mv $OPENQRM_SERVER_BASE_DIR/openqrm/web/* $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
+		rmdir $OPENQRM_SERVER_BASE_DIR/openqrm/web
+		ln -sf $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm $OPENQRM_SERVER_BASE_DIR/openqrm/web
+	else
+		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
+	fi
 
 	# create $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default
 	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/

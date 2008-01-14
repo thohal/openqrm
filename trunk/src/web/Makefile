@@ -13,9 +13,9 @@ install:
 	
 uninstall:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make uninstall' as root" && exit 1)
-	. $(OPENQRM_SERVER_CONF) && rm -f $$OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
+	. $(OPENQRM_SERVER_CONF) && rm -rf $$OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
 	. $(OPENQRM_SERVER_CONF) && rm -rf $$OPENQRM_SERVER_BASE_DIR/openqrm/web/*
-	. $(OPENQRM_SERVER_CONF) && rmdir $$OPENQRM_SERVER_BASE_DIR/openqrm/web
+	. $(OPENQRM_SERVER_CONF) && rm -rf $$OPENQRM_SERVER_BASE_DIR/openqrm/web
 
 clean:
 
