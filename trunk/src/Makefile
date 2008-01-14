@@ -23,9 +23,14 @@ start: check
 	@. $(OPENQRM_SERVER_CONF) && ln -sf $$OPENQRM_SERVER_BASE_DIR/openqrm/etc/init.d/openqrm-server /etc/init.d/openqrm-server
 	@/etc/init.d/openqrm-server start
 
-uninstall:
+stop:
+	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make start' as root" && exit 1)
+	@if [ -x /etc/init.d/openqrm-server ]; then /etc/init.d/openqrm-server stop; fi
+
+uninstall: stop
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make uninstall' as root" && exit 1)
 	@. $(OPENQRM_SERVER_CONF) && if [ ! -d $$OPENQRM_SERVER_BASE_DIR/openqrm ]; then echo "openQRM not installed"; exit 1; fi
+	@if [ -x /etc/init.d/openqrm-server ]; then /etc/init.d/openqrm-server uninstall; fi
 	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name "CVS"`; do cd $$SRC_DIR && make uninstall && cd ..; done
 	@. $(OPENQRM_SERVER_CONF) && rmdir $$OPENQRM_SERVER_BASE_DIR/openqrm
 
