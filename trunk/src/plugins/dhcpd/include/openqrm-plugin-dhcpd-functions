@@ -1,3 +1,22 @@
 #!/bin/bash
 # this is the functions file for the dhcpd-plugin
 
+OPENQRM_SERVER_DEFAULT_DOMAIN="openqrm"
+OPENQRM_PLUGIN_DHCPD_CONF_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/templates/openqrm-plugin-dhcpd-configuration.template"
+OPENQRM_PLUGIN_DHCPD_CONF="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf"
+OPENQRM_PLUGIN_DHCPD_LEASE_DIR="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/var/state/dhcp"
+
+
+function openqrm_plugin_dhcpd_ipcalc() {
+	# 1 param = ipadress
+	# 2 param = subnetmask
+	# displays network
+	if [ -f /etc/debian_version ]; then
+		OPENQRM_PLUGIN_DHCPD_NETWORK=`ipcalc $1 $2 | grep -i network | awk {' print $2 '} | cut -d'/' -f1`
+	elif [ -f /etc/redhat-release ]; then
+		OPENQRM_PLUGIN_DHCPD_NETWORK=`ipcalc -s -n $1 $2 2>/dev/null | cut -d'=' -f 2`
+	elif [ -f /etc/SuSE-release ]; then
+		OPENQRM_PLUGIN_DHCPD_NETWORK=`ipcalc -s -n $1 $2 2>/dev/null | cut -d'=' -f 2`
+	fi
+	echo $OPENQRM_PLUGIN_DHCPD_NETWORK
+}

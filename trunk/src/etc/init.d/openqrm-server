@@ -71,8 +71,8 @@ function openqrm_server_init() {
 	# create $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default
 	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-pxelinux |	\
-		sed -e "s/OPENQRM_BOOTIMAGE_KERNEL/vmlinuz-openqrm/g" |	\
-		sed -e "s/OPENQRM_BOOTIMAGE_INITRD/initrd-openqrm.img/g" |	\
+		sed -e "s/OPENQRM_BOOTIMAGE_KERNEL/vmlinuz-default/g" |	\
+		sed -e "s/OPENQRM_BOOTIMAGE_INITRD/initrd-default.img/g" |	\
 		sed -e "s/OPENQRM_RESOURCE_ID/0/g" |	\
 		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/g" \
 		> $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default
@@ -81,6 +81,11 @@ function openqrm_server_init() {
 	openqrm_chkconfig add openqrm-server
 	
 	# for all plugins run init functions
+	for OPENQRM_PLUGIN in $OPENQRM_SERVER_PLUGINS_ENABLED; do
+		if [ -x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN ]; then
+			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN init
+		fi
+	done
 
 }
 

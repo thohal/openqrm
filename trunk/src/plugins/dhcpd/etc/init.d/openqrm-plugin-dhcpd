@@ -1,24 +1,77 @@
 #!/bin/bash
 # init script for the openQRM dhcpd plugin
 OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/include/openqrm-plugin-dhcpd-functions
-
-# for the init function
-mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/var/state/dhcp
 
 
 
 function openqrm_plugin_dhcpd_start() {
 	echo "Starting the openQRM dhcpd-plugin"
-	#/usr/sbin/dhcpd -cf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf -lf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/var/state/dhcp/dhcpd.leases 2>&1 | logger
+	# on debian/ubuntu dhcpd ver.3 is named dhcpd3
+	if [ -x /usr/sbin/dhcpd3 ]; then
+		/usr/sbin/dhcpd3 -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/dhcpd.leases 2>&1 | logger
+	elif [ -x /usr/sbin/dhcpd ]; then
+		/usr/sbin/dhcpd -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/dhcpd.leases 2>&1 | logger
+	else
+		echo "ERROR: Could not find the dhcpd (ver.3) binary"
+		exit 1
+	fi
 }
 
 
 function openqrm_plugin_dhcpd_stop() {
-	echo "stopping the openQRM dhcpd plugin"
+	echo "Stopping the openQRM dhcpd plugin"
 	killall dhcpd 1>/dev/null 2>&1
+	killall dhcpd3 1>/dev/null 2>&1
 	return 0
 }
+
+
+function openqrm_plugin_dhcpd_init() {
+	echo "Initializing the openQRM dhcpd plugin"
+	openqrm_server_get_config
+	# create leases dir
+	mkdir -p $OPENQRM_PLUGIN_DHCPD_LEASE_DIR
+	touch $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/dhcpd.leases
+	chmod -R 777 $OPENQRM_PLUGIN_DHCPD_LEASE_DIR
+
+	# calculate the defaults
+	OPENQRM_SERVER_NETWORK=`openqrm_plugin_dhcpd_ipcalc $OPENQRM_SERVER_IP_ADDRESS $OPENQRM_SERVER_SUBNET_MASK`
+	IP1=`echo $OPENQRM_SERVER_NETWORK | cut -d'.' -f 1-3`
+	IP2=`echo $OPENQRM_SERVER_NETWORK | cut -d'.' -f 4`
+	IP2=$(( IP2 + 1 ))
+	OPENQRM_PLUGIN_DHCPD_IP_RANGE_FIRST="$IP1.$IP2"
+	IP1=`echo $OPENQRM_SERVER_BROADCAST_ADDRESS | cut -d'.' -f 1-3`
+	IP2=`echo $OPENQRM_SERVER_BROADCAST_ADDRESS | cut -d'.' -f 4`
+	IP2=$(( IP2 - 1 ))
+	OPENQRM_PLUGIN_DHCPD_IP_RANGE_LAST="$IP1.$IP2"
+	OPENQRM_SERVER_DNS=`cat /etc/resolv.conf | grep -m 1 "nameserver" | awk {' print $2 '} | head -n1 2>/dev/null`
+	OPENQRM_SERVER_DEFAULT_GATEWAY=`route -n | grep -m 1 '^0.0.0.0' | awk {' print $2 '} | head -n1 2>/dev/null`
+	OPENQRM_SERVER_DOMAIN=`cat /etc/resolv.conf | grep -m 1 "search" | awk '{print $2'} | head -n1 2>/dev/null`
+	if [ "$OPENQRM_SERVER_DOMAIN" == "" ]; then
+		OPENQRM_SERVER_DOMAIN=$OPENQRM_SERVER_DEFAULT_DOMAIN
+	fi
+	# create default dhcpd configuration
+	cat $OPENQRM_PLUGIN_DHCPD_CONF_TEMPLATE |	\
+		sed -e "s/OPENQRM_SERVER_SUBNET_MASK/$OPENQRM_SERVER_SUBNET_MASK/g" |	\
+
+		sed -e "s/OPENQRM_SERVER_SUBNET_MASK/$OPENQRM_SERVER_SUBNET_MASK/g" |	\
+		sed -e "s/OPENQRM_SERVER_BROADCAST_ADDRESS/$OPENQRM_SERVER_BROADCAST_ADDRESS/g" |	\
+		sed -e "s/OPENQRM_SERVER_DEFAULT_GATEWAY/$OPENQRM_SERVER_DEFAULT_GATEWAY/g" |	\
+		sed -e "s/OPENQRM_SERVER_DOMAIN/$OPENQRM_SERVER_DOMAIN/g" |	\
+		sed -e "s/OPENQRM_SERVER_DNS/$OPENQRM_SERVER_DNS/g" |	\
+		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/g" |	\
+		sed -e "s/OPENQRM_SERVER_NETWORK/$OPENQRM_SERVER_NETWORK/g" |	\
+		sed -e "s/OPENQRM_PLUGIN_DHCPD_IP_RANGE_FIRST/$OPENQRM_PLUGIN_DHCPD_IP_RANGE_FIRST/g" |	\
+		sed -e "s/OPENQRM_PLUGIN_DHCPD_IP_RANGE_LAST/$OPENQRM_PLUGIN_DHCPD_IP_RANGE_LAST/g"	\
+		> $OPENQRM_PLUGIN_DHCPD_CONF
+
+	return 0
+}
+
 
 case "$1" in
 	start)
@@ -32,8 +85,11 @@ case "$1" in
 		sleep 1
 		openqrm_plugin_dhcpd_start
 		;;
+	init)
+		openqrm_plugin_dhcpd_init
+		;;
 	*)
-		echo "Usage: $0 {start|stop|restart}"
+		echo "Usage: $0 {start|stop|restart|init}"
 		exit 1
 
 esac

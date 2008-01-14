@@ -20,6 +20,11 @@ function openqrm_plugin_tftpd_stop() {
 	killall in.tftpd 1>/dev/null 2>&1
 }
 
+function openqrm_plugin_tftpd_init() {
+	echo "Initializing the openQRM tftpd-plugin"
+}
+
+
 case "$1" in
 	start)
 		openqrm_plugin_tftpd_start
@@ -32,8 +37,11 @@ case "$1" in
 		sleep 1
 		openqrm_plugin_tftpd_start
 		;;
+	init)
+		openqrm_plugin_tftpd_init
+		;;
 	*)
-		echo "Usage: $0 {start|stop|restart}"
+		echo "Usage: $0 {start|stop|restart|init}"
 		exit 1
 
 esac
