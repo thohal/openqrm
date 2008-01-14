@@ -80,6 +80,17 @@ function openqrm_server_init() {
 	# add automatic startup to init
 	openqrm_chkconfig add openqrm-server
 	
+	# need to copy pxelinux.0 to the tftpboot dir
+	# sym-linking it does not work because the tftpd-server does not support symlinks
+	cp -a /usr/lib/syslinux/pxelinux.0 $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0
+	
+	# we need to create the default openqrm-boot-image here
+	# for now we just copy the systems kernel + initrd
+	mkdir $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot
+	OPENQRM_SERVER_KERNEL_VERSION=`uname -r`
+	cp -a /boot/vmlinuz-$OPENQRM_SERVER_KERNEL_VERSION $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/vmlinuz-default
+	cp -a /boot/initrd.img-$OPENQRM_SERVER_KERNEL_VERSION $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-default.img
+	
 	# for all plugins run init functions
 	for OPENQRM_PLUGIN in $OPENQRM_SERVER_PLUGINS_ENABLED; do
 		if [ -x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN ]; then
