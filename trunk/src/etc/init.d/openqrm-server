@@ -82,7 +82,16 @@ function openqrm_server_init() {
 	
 	# need to copy pxelinux.0 to the tftpboot dir
 	# sym-linking it does not work because the tftpd-server does not support symlinks
-	cp -a /usr/lib/syslinux/pxelinux.0 $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0
+	if [ -f /usr/lib/syslinux/pxelinux.0 ]; then
+		cp -a /usr/lib/syslinux/pxelinux.0 $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0
+	elif [ -f /usr/share/syslinux/pxelinux.0 ]; then
+		cp -a /usr/share/syslinux/pxelinux.0 $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0
+	else
+		echo "ERROR: Could not find syslinux pxelinux.0 file!"
+		echo "       Please copy it manually to $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/"
+		echo "       and try again ..."
+		exit 1		
+	fi
 	
 	# we need to create the default openqrm-boot-image here
 	# for now we just copy the systems kernel + initrd

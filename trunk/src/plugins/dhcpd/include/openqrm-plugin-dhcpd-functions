@@ -16,7 +16,7 @@ function openqrm_plugin_dhcpd_ipcalc() {
 	elif [ -f /etc/redhat-release ]; then
 		OPENQRM_PLUGIN_DHCPD_NETWORK=`ipcalc -s -n $1 $2 2>/dev/null | cut -d'=' -f 2`
 	elif [ -f /etc/SuSE-release ]; then
-		OPENQRM_PLUGIN_DHCPD_NETWORK=`ipcalc -s -n $1 $2 2>/dev/null | cut -d'=' -f 2`
+		OPENQRM_PLUGIN_DHCPD_NETWORK=`ipcalc $1 $2 | grep -i network | awk {' print $2 '} | cut -d'/' -f1`
 	fi
 	echo $OPENQRM_PLUGIN_DHCPD_NETWORK
 }
