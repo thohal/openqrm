@@ -4,4 +4,5 @@
 							designed dependencies setup
 							implemented deb-packaging
 13.1.2008	-	Matt	-	added support for rpm-packaging
-
+14.1.2008	-	Matt	-	made tftpd plugin working
+							made dhcpd plugin working
