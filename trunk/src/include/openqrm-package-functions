@@ -13,7 +13,9 @@ fi
 for VAR in `cat $OPENQRM_SERVER_CONF | grep -v ^# | grep OPENQRM | cut -d'=' -f1`; do
 	eval `export $VAR`
 done
-OPENQRM_PACKAGE_TMP_DIR=/tmp
+
+# get distribution
+export OPENQRM_PACKAGE_DISTRIBUTION=`openqrm_get_distro`
 
 function openqrm_check_requirements() {
 	# check which dependencies to use
@@ -72,8 +74,6 @@ function openqrm_check_requirements() {
 
 function openqrm_package() {
 
-	# get distribution
-	OPENQRM_PACKAGE_DISTRIBUTION=`openqrm_get_distro`
 	if [ -f /etc/debian_version ]; then
 		OPENQRM_PACKAGE_TYPE=deb
 	else
@@ -296,13 +296,12 @@ function openqrm_package() {
 		exit 1
 	fi
 
-
-
 }
 
 
 
 
+# case for running functions called from Makefiles
 case "$1" in
 	package)
 		openqrm_package

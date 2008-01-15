@@ -1,0 +1,165 @@
+#!/bin/bash
+########################## build functions ##########################
+
+# in the stage these function are used the files are not installed yet
+# so we source the relative path
+OPENQRM_SOURCE_DIR=`dirname $0`/..
+OPENQRM_SOURCE_DIR=$(pushd $OPENQRM_SOURCE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SOURCE_DIR/etc/openqrm-server.conf
+
+OPENQRM_INITR_COMPONENTS="/bin/bash /sbin/portmap /usr/bin/rsync"
+
+# function displaying the library files (not links) a binary depends on
+function openqrm_build_find_libs() {
+	BINARY=$1
+	for LIBRARY in `ldd $BINARY | awk {' print $3 '}`; do
+		REAL_LIBRARYFILE=`readlink $LIBRARY`
+		FULL_PATH_TO_LIBRARY=`dirname $LIBRARY`
+		if [ "$FULL_PATH_TO_LIBRARY" != "." ]; then
+			echo $FULL_PATH_TO_LIBRARY/$REAL_LIBRARYFILE
+		fi
+	done
+
+
+
+}
+
+
+
+# function to download+cache source packages in the package-dir
+function openqrm_cache_or_download() {
+	# 1 param: 		component name
+	# 2 param:		download-location
+	OPENQRM_SOURCE_COMPONENT_NAME=$1
+	. $OPENQRM_SOURCE_DIR/etc/build.conf/$OPENQRM_SOURCE_COMPONENT_NAME.conf
+	OPENQRM_SOURCE_COMPONENT_FILE=`basename $OPENQRM_SOURCE_DOWNLOAD`
+	CURRENT_DIR=`pwd`
+	if [ -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/$OPENQRM_SOURCE_COMPONENT_NAME/source/$OPENQRM_SOURCE_COMPONENT_FILE ]; then
+		echo "-> found component $OPENQRM_SOURCE_COMPONENT_NAME ($OPENQRM_SOURCE_COMPONENT_FILE) already downloaded"
+	else
+		mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/$OPENQRM_SOURCE_COMPONENT_NAME/source/
+		cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/$OPENQRM_SOURCE_COMPONENT_NAME/source/
+		if ! wget $OPENQRM_SOURCE_DOWNLOAD; then
+			echo "ERROR: Could not download $OPENQRM_SOURCE_COMPONENT_NAME from $OPENQRM_SOURCE_DOWNLOAD"
+			echo "       Please put $OPENQRM_SOURCE_COMPONENT_FILE in $OPENQRM_BUILD_TMP_DIR/openqrm-build/$OPENQRM_SOURCE_COMPONENT_NAME/source/ and try again."
+			exit 1
+		fi
+	fi
+	cp -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/$OPENQRM_SOURCE_COMPONENT_NAME/source/$OPENQRM_SOURCE_COMPONENT_FILE $OPENQRM_BUILD_TMP_DIR/openqrm-build/$OPENQRM_SOURCE_COMPONENT_NAME/
+	cd $CURRENT_DIR
+}
+
+
+
+#function to compile a component from the source
+function openqrm_compile_from_source() {
+	# 1 param: 		component name
+	# 2 param:		download-location
+	# optional variables :
+	# OPENQRM_CONFIGURE		command to use for configure (default "./configure" if exists)
+	# OPENQRM_PRE_MAKE		commands to run before make
+	# OPENQRM_POST_MAKE		commands to run after make
+
+	OPENQRM_SOURCE_COMPONENT_NAME=$1
+	. $OPENQRM_SOURCE_DIR/etc/build.conf/$OPENQRM_SOURCE_COMPONENT_NAME.conf
+	OPENQRM_SOURCE_COMPONENT_FILE=`basename $OPENQRM_SOURCE_DOWNLOAD`
+	CURRENT_DIR=`pwd`
+	# check if it is already compiled
+	if [ ! -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/$OPENQRM_SOURCE_COMPONENT_NAME/$OPENQRM_SOURCE_BINARY_RESULT ]; then
+		# nope, then we have to build it
+		# unpack
+		cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/$OPENQRM_SOURCE_COMPONENT_NAME/
+		OPENQRM_SOURCE_COMPONENT_FILE_TYPE=`echo $OPENQRM_SOURCE_COMPONENT_FILE | sed -e "s/.*\.//g"`
+		if [ "$OPENQRM_SOURCE_COMPONENT_FILE_TYPE" == "bz2" ]; then
+			tar -xjf $OPENQRM_SOURCE_COMPONENT_FILE
+		else
+			tar -xzf $OPENQRM_SOURCE_COMPONENT_FILE
+		fi
+		rm -f $OPENQRM_SOURCE_COMPONENT_FILE
+		cd $OPENQRM_SOURCE_COMPONENT_NAME-$OPENQRM_SOURCE_VERSION
+
+		# configure
+		if [ "$OPENQRM_CONFIGURE" != "" ]; then
+			$OPENQRM_CONFIGURE
+		elif [ -f ./configure ]; then
+			chmod +x ./configure && ./configure
+		fi
+
+		# pre-make
+		eval $OPENQRM_PRE_MAKE
+
+		# make + make install
+		make
+		make install
+
+		# post-make
+		eval $OPENQRM_POST_MAKE
+
+		unset OPENQRM_CONFIGURE OPENQRM_PRE_MAKE OPENQRM_POST_MAKE
+		cd $CURRENT_DIR
+	else
+		echo "-> Found $OPENQRM_SOURCE_BINARY_RESULT already in the build-cache"
+		echo "-> Skipping compilation, taking the ready build component from the cache"
+	fi
+}
+
+
+
+# function to create the default initrd-template during the compile stage
+function openqrm_create_default_initrd_template() {
+
+	echo "Creating the default initrd-template"
+	# getting + compiling busybox
+	. $OPENQRM_SOURCE_DIR/etc/build.conf/busybox.conf
+	openqrm_cache_or_download busybox
+	OPENQRM_SOURCE_COMPONENT_BUILD_DIR=$OPENQRM_BUILD_TMP_DIR/openqrm-build/busybox/busybox-$OPENQRM_SOURCE_VERSION/
+	export OPENQRM_PRE_MAKE="cp $OPENQRM_SOURCE_DIR/etc/build.conf/busybox.configuration $OPENQRM_SOURCE_COMPONENT_BUILD_DIR/.config && make oldconfig"
+	openqrm_compile_from_source busybox
+	# create the initroot
+	mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot
+	cp -aR $OPENQRM_SOURCE_COMPONENT_BUILD_DIR/_install/* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
+
+	# create lib dir + copy ld-linux
+	mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib
+	cp -a /lib/ld-* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
+
+	# add the libs busybox depends on
+	for LIB in `openqrm_build_find_libs $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/busybox`; do
+		LIB=`echo $LIB | cut -d'-' -f1 | cut -d'.' -f1`
+		cp -a $LIB""* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
+	done
+
+	# add some more utils + their libs
+	for UTIL in $OPENQRM_INITR_COMPONENTS; do
+		cp -a $UTIL $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin
+		echo "Adding $UTIL to default initrd-template"
+		for LIB in `openqrm_build_find_libs $UTIL`; do
+			LIB=`echo $LIB | cut -d'-' -f1 | cut -d'.' -f1`
+			cp -a $LIB""* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
+		done
+	done
+
+}
+
+
+
+function openqrm_pack_default_initrd_template() {
+
+	# pack
+	CURRENT_DIR=`pwd`
+	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
+	tar -czf $OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-default.tgz *
+	cd $CURRENT_DIR
+
+}
+
+
+# case for running functions called from Makefiles
+case "$1" in
+	initrd)
+		openqrm_create_default_initrd_template
+		;;
+	pack_initrd)
+		openqrm_pack_default_initrd_template
+		;;
+esac
