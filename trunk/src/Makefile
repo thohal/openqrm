@@ -3,7 +3,7 @@
 
 export OPENQRM_SERVER_CONF=$(shell pwd)/etc/openqrm-server.conf
 
-all:	configure compile
+all: configure compile initrd
 	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name "CVS"`; do cd $$SRC_DIR && make all && cd ..; done
 
 configure:
@@ -12,10 +12,16 @@ configure:
 compile:
 	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name "CVS"`; do cd $$SRC_DIR && make && cd ..; done
 
+initrd:
+	@chmod +x include/openqrm-build-functions
+	@include/openqrm-build-functions initrd
+
 install:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make install' as root" && exit 1)
 	@. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm
 	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name "CVS"`; do cd $$SRC_DIR && make install && cd ..; done
+	@chmod +x include/openqrm-build-functions
+	@include/openqrm-build-functions pack_initrd
 
 start: check
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make start' as root" && exit 1)
@@ -52,5 +58,5 @@ check:
 
 
 
-.PHONY: all configure compile install start uninstall clean realclean reinstall package check
+.PHONY: all configure compile install start uninstall clean realclean reinstall package check initrd
 
