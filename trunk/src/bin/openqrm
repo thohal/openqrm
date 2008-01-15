@@ -1,2 +1,10 @@
 #!/bin/bash
 # this is the openQRM commandline client
+
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../..
+	OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+fi
+
+
+echo "OPENQRM_SERVER_BASE_DIR $OPENQRM_SERVER_BASE_DIR"
