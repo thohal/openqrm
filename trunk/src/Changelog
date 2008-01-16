@@ -6,3 +6,5 @@
 13.1.2008	-	Matt	-	added support for rpm-packaging
 14.1.2008	-	Matt	-	made tftpd plugin working
 							made dhcpd plugin working
+16.1.2008	-	Matt	-	added creating default initrd template
+							added creating default boot-image
