@@ -7,7 +7,7 @@ OPENQRM_SOURCE_DIR=`dirname $0`/..
 OPENQRM_SOURCE_DIR=$(pushd $OPENQRM_SOURCE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SOURCE_DIR/etc/openqrm-server.conf
 
-OPENQRM_INITRD_COMPONENTS="/bin/bash /sbin/portmap /usr/bin/rsync"
+OPENQRM_INITRD_COMPONENTS="/bin/bash /sbin/portmap /usr/bin/rsync /sbin/modprobe /sbin/depmod /sbin/insmod /sbin/lsmod /sbin/mke2fs"
 OPENQRM_INITRD_DIRECTORIES="bin etc etc/rc.d/init.d etc/sysconfig etc/X11 lib lib/modules lib/i686 loopfs mnt old_root proc sys sysroot usr usr/lib usr/bin usr/sbin var var/lock var/lock/subsys var/log var/run /var/lib /var/lib/nfs /var/lib/nfs/statd"
 
 
@@ -122,6 +122,11 @@ function openqrm_create_default_initrd_template() {
 	OPENQRM_SOURCE_COMPONENT_BUILD_DIR=$OPENQRM_BUILD_TMP_DIR/openqrm-build/busybox/busybox-$OPENQRM_SOURCE_VERSION/
 	export OPENQRM_PRE_MAKE="cp $OPENQRM_SOURCE_DIR/etc/build.conf/busybox.configuration $OPENQRM_SOURCE_COMPONENT_BUILD_DIR/.config && make oldconfig"
 	openqrm_compile_from_source busybox
+	# getting hwdata
+	openqrm_cache_or_download hwdata-knoppix
+	export DESTDIR=$OPENQRM_BUILD_TMP_DIR/openqrm-build/hwdata-knoppix/hwdata-install
+	openqrm_compile_from_source hwdata-knoppix
+
 	# create the initroot
 	mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot
 	cp -aR $OPENQRM_SOURCE_COMPONENT_BUILD_DIR/_install/* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
@@ -133,16 +138,19 @@ function openqrm_create_default_initrd_template() {
 	# add the libs busybox depends on
 	for LIB in `openqrm_build_find_libs $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/busybox`; do
 		LIB=`echo $LIB | cut -d'-' -f1 | cut -d'.' -f1`
-		cp -a $LIB""* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
+		if [ "$LIB" != "/lib/" ]; then
+			cp -a $LIB""* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
+		fi
 	done
-
 	# add some more utils + their libs
 	for UTIL in $OPENQRM_INITRD_COMPONENTS; do
 		cp -a $UTIL $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin
 		echo "Adding $UTIL to default initrd-template"
 		for LIB in `openqrm_build_find_libs $UTIL`; do
 			LIB=`echo $LIB | cut -d'-' -f1 | cut -d'.' -f1`
-			cp -a $LIB""* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
+			if [ "$LIB" != "/lib/" ]; then
+				cp -a $LIB""* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
+			fi
 		done
 	done
 	# creating initrd directories
@@ -162,6 +170,8 @@ function openqrm_create_default_initrd_template() {
 	echo "passwd:     files" > nsswitch.conf
 	echo "shadow:     files" >> nsswitch.conf
 	echo "group:      files" >> nsswitch.conf
+	# installing hwdata	
+	cp -aR $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwdata-knoppix/hwdata-install/* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
 
 	# creating the initrd devices
 	rm -rf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/dev
