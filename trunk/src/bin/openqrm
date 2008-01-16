@@ -5,6 +5,24 @@ if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
 	OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../..
 	OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 fi
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 
 
-echo "OPENQRM_SERVER_BASE_DIR $OPENQRM_SERVER_BASE_DIR"
+function openqrm_usage() {
+	echo "Usage:"
+	echo "`basename $0` help			- This help screen"
+	echo "`basename $0` bootimage		- Managing boot-images"
+}
+
+
+
+case "$1" in
+
+	bootimage)
+		openqrm_server_create_boot_image
+		;;
+	*)
+		openqrm_usage
+		;;
+esac

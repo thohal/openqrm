@@ -15,6 +15,11 @@ compile:
 initrd:
 	@chmod +x include/openqrm-build-functions
 	@include/openqrm-build-functions initrd
+	@include/openqrm-build-functions get_kernel_default_boot_image
+
+bootimage: initrd
+	@chmod +x include/openqrm-build-functions
+	@include/openqrm-build-functions default_boot_image
 
 install:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make install' as root" && exit 1)
@@ -22,6 +27,7 @@ install:
 	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name "CVS"`; do cd $$SRC_DIR && make install && cd ..; done
 	@chmod +x include/openqrm-build-functions
 	@include/openqrm-build-functions pack_initrd
+	@include/openqrm-build-functions default_boot_image
 
 start: check
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make start' as root" && exit 1)
@@ -58,5 +64,5 @@ check:
 
 
 
-.PHONY: all configure compile install start uninstall clean realclean reinstall package check initrd
+.PHONY: all configure compile install start uninstall clean realclean reinstall package check initrd bootimage
 

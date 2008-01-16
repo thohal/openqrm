@@ -1,15 +1,19 @@
 #!/bin/bash
 ########################## build functions ##########################
 
-# in the stage these function are used the files are not installed yet
+# in the stage these function are used the files may be not installed yet
 # so we source the relative path
 OPENQRM_SOURCE_DIR=`dirname $0`/..
 OPENQRM_SOURCE_DIR=$(pushd $OPENQRM_SOURCE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SOURCE_DIR/etc/openqrm-server.conf
 
-OPENQRM_INITR_COMPONENTS="/bin/bash /sbin/portmap /usr/bin/rsync"
+OPENQRM_INITRD_COMPONENTS="/bin/bash /sbin/portmap /usr/bin/rsync"
+OPENQRM_INITRD_DIRECTORIES="bin etc etc/rc.d/init.d etc/sysconfig etc/X11 lib lib/modules lib/i686 loopfs mnt old_root proc sys sysroot usr usr/lib usr/bin usr/sbin var var/lock var/lock/subsys var/log var/run /var/lib /var/lib/nfs /var/lib/nfs/statd"
+
+
 
 # function displaying the library files (not links) a binary depends on
+# -> this is generic
 function openqrm_build_find_libs() {
 	BINARY=$1
 	for LIBRARY in `ldd $BINARY | awk {' print $3 '}`; do
@@ -25,8 +29,8 @@ function openqrm_build_find_libs() {
 }
 
 
-
 # function to download+cache source packages in the package-dir
+# -> this is for "make all" / comilation phase
 function openqrm_cache_or_download() {
 	# 1 param: 		component name
 	# 2 param:		download-location
@@ -52,6 +56,7 @@ function openqrm_cache_or_download() {
 
 
 #function to compile a component from the source
+# -> this is for "make all" / compilation phase
 function openqrm_compile_from_source() {
 	# 1 param: 		component name
 	# 2 param:		download-location
@@ -106,9 +111,11 @@ function openqrm_compile_from_source() {
 
 
 # function to create the default initrd-template during the compile stage
+# -> this is for "make install" / installation phase
 function openqrm_create_default_initrd_template() {
 
 	echo "Creating the default initrd-template"
+	CURRENT_DIR=`pwd`
 	# getting + compiling busybox
 	. $OPENQRM_SOURCE_DIR/etc/build.conf/busybox.conf
 	openqrm_cache_or_download busybox
@@ -130,7 +137,7 @@ function openqrm_create_default_initrd_template() {
 	done
 
 	# add some more utils + their libs
-	for UTIL in $OPENQRM_INITR_COMPONENTS; do
+	for UTIL in $OPENQRM_INITRD_COMPONENTS; do
 		cp -a $UTIL $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin
 		echo "Adding $UTIL to default initrd-template"
 		for LIB in `openqrm_build_find_libs $UTIL`; do
@@ -138,20 +145,129 @@ function openqrm_create_default_initrd_template() {
 			cp -a $LIB""* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
 		done
 	done
+	# creating initrd directories
+	for DIR in $OPENQRM_INITRD_DIRECTORIES; do
+		mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/$DIR
+	done
+	touch $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/var/lib/nfs/rmtab 
+	touch $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/var/lib/nfs/xtab  
+	touch $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/var/lib/nfs/etab
+	touch $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/var/lib/nfs/state
+	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc
+	ln -sf /proc/mounts mtab
+	ln -sf rc.d/init.d init.d
+	touch fstab
+	echo "root:x:0:0:root:/root:/bin/bash" > passwd
+	echo "root:x:0:root" > group
+	echo "passwd:     files" > nsswitch.conf
+	echo "shadow:     files" >> nsswitch.conf
+	echo "group:      files" >> nsswitch.conf
 
+	# creating the initrd devices
+	rm -rf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/dev
+	$OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/busybox makedevs -d $OPENQRM_SOURCE_DIR/etc/build.conf/initrd-devices.conf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
+	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/dev/
+	ln -sf tty0 systty
+	ln -sf ram1 ram
+
+	# create rcS
+	cat >> $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/rc.d/init.d/rcS << EOF
+#!/bin/bash
+export SHELL=/bin/bash
+echo "openQRM resource is starting rcS" > /dev/console
+
+export \$(eval cat /proc/cmdline)
+
+if [ -f /reboot ]; then
+	echo "openQRM resource is rebooting now"
+	/sbin/reboot
+fi
+
+if [ -f /halt ]; then
+	echo "openQRM resource is shutting down now"
+	/sbin/halt
+fi
+
+EOF
+	chmod +x $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/rc.d/init.d/rcS
+
+	# create inittab
+	cat >> $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/inittab << EOF
+
+# inittab
+::askfirst:-/bin/bash
+tty2::askfirst:-/bin/bash
+tty3::askfirst:-/bin/bash
+tty4::askfirst:-/bin/bash
+::sysinit:/etc/init.d/rcS
+::restart:/sbin/init
+
+# Stuff to do before rebooting
+::ctrlaltdel:/sbin/reboot
+::shutdown:/sbin/halt
+
+EOF
+	cd $CURRENT_DIR
 }
 
 
-
+# function to create a tgz file out of the initroot/initrd-content
+# -> this is for "make install" / installation phase
 function openqrm_pack_default_initrd_template() {
-
 	# pack
 	CURRENT_DIR=`pwd`
 	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
 	tar -czf $OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-default.tgz *
 	cd $CURRENT_DIR
-
 }
+
+
+
+# function download and unpack the kerne for default boot-image
+# -> this is for "make all" / compilation phase
+function openqrm_get_kernel_default_boot_image() {
+	# download
+	openqrm_cache_or_download defaultkernel
+}
+
+
+# function to create the default boot-image
+# -> this is for "make install" / installation phase
+function openqrm_create_default_boot_image() {
+	echo "Creating the 'default' openQRM boot-image"
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	CURRENT_DIR=`pwd`
+	# get the defaultkernel config
+	# -> the build.conf dir is not going to be installed so
+	#    we source the file in the source dir
+	. $OPENQRM_SOURCE_DIR/etc/build.conf/defaultkernel.conf
+
+	# unpack the downloaded kernel to a tmp dir
+	rm -rf $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
+	mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
+	KERNEL_FILE=`basename $OPENQRM_SOURCE_DOWNLOAD`
+	cp $OPENQRM_BUILD_TMP_DIR/openqrm-build/defaultkernel/source/$KERNEL_FILE $OPENQRM_BUILD_TMP_DIR/openqrm-build/default/
+
+	# in case we have a deb kernel file
+	if [ -f /etc/debian_version ]; then
+		cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
+		ar -x $KERNEL_FILE
+		rm -f control.tar.gz debian-binary $KERNEL_FILE
+		tar -xzf data.tar.gz
+		rm -f data.tar.gz
+	else
+	# we have a rpm as kernel file
+		echo "Not yet supported"
+	fi
+
+	
+	openqrm_server_create_boot_image default $OPENQRM_SOURCE_VERSION $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
+
+
+	cd $CURRENT_DIR
+}
+
 
 
 # case for running functions called from Makefiles
@@ -161,5 +277,11 @@ case "$1" in
 		;;
 	pack_initrd)
 		openqrm_pack_default_initrd_template
+		;;
+	get_kernel_default_boot_image)
+		openqrm_get_kernel_default_boot_image
+		;;
+	default_boot_image)
+		openqrm_create_default_boot_image
 		;;
 esac

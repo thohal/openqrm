@@ -11,6 +11,16 @@ fi
 OPENQRM_SERVER_CONF=$OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 . $OPENQRM_SERVER_CONF
 
+# some definitions
+OPENQRM_QRM_UNWANTED_MODULES="cops.o ipddp.o ltpc.o hdlcdrv.o airo_cs.o aironet4500_cs.o airo.o axnet_cs.o fmvj18x_cs.o ibmtr_cs.o netwave_cs.o nmclan_cs.o pcnet_cs.o ray_cs.o smc91c92_cs.o wavelan_cs.o wvlan_cs.o xirc2ps_cs.o xircom_cb.o xircom_tulip_cb.o ppp_async.o ppp_deflate.o ppp_generic.o ppp_synctty.o wavelan.o wd.o winbond-840.o airo_cs.o airo.o hermes.o orinoco_cs.o orinoco.o orinoco_plx.o orinoco_old_cs.o cops.ko ipddp.ko ltpc.ko hdlcdrv.ko airo_cs.ko aironet4500_cs.ko airo.ko axnet_cs.ko fmvj18x_cs.ko ibmtr_cs.ko netwave_cs.ko nmclan_cs.ko pcnet_cs.ko ray_cs.ko smc91c92_cs.ko wavelan_cs.ko wvlan_cs.ko xirc2ps_cs.ko xircom_cb.ko xircom_tulip_cb.ko ppp_async.ko ppp_deflate.ko ppp_generic.ko ppp_synctty.ko wavelan.ko wd.ko winbond-840.ko airo_cs.ko airo.ko hermes.ko orinoco_cs.ko orinoco.ko orinoco_plx.ko orinoco_old_cs.ko de600.ko de620.ko defxx.ko depca.ko hp100.ko hp.ko hp-plus.ko ne3210.ko ne.ko netwave_cs.ko ipw2100.ko proteon.ko skisa.ko"
+OPENQRM_DEFAULT_INITRD_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-default.tgz"
+OPENQRM_SERVER_LINUXRC="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-linuxrc"
+OPENQRM_MAX_INITRD_SIZE=128000
+OPENQRM_DEFAULT_RAM_DISK_BLOCK_SIZE=1024
+
+
+
+
 # function to export all given configuration from the
 # main openQRM-server config file
 function openqrm_server_get_config() {
@@ -23,3 +33,67 @@ function openqrm_server_get_config() {
 	export OPENQRM_SERVER_BROADCAST_ADDRESS=`ifconfig $OPENQRM_SERVER_INTERFACE | grep inet | grep -v inet6 | cut -d':' -f3 | awk {' print $1 '} | head -n 1`
 	export OPENQRM_SERVER_SUBNET_MASK=`ifconfig $OPENQRM_SERVER_INTERFACE | grep inet | grep -v inet6 | cut -d':' -f4 | awk {' print $1 '} | head -n 1`
 }
+
+
+
+# function to create boot-images
+function openqrm_server_create_boot_image() {
+	OPENQRM_SERVER_BOOT_IMAGE_NAME=$1
+	OPENQRM_SERVER_BOOT_IMAGE_VERSION=$2
+	OPENQRM_SERVER_BOOT_IMAGE_LOCATION=$3
+	
+	echo "Creating boot-image $OPENQRM_SERVER_BOOT_IMAGE_NAME version $OPENQRM_SERVER_BOOT_IMAGE_VERSION"
+	# copy kernel + System-map
+	cp -a $OPENQRM_SERVER_BOOT_IMAGE_LOCATION/boot/vmlinuz-$OPENQRM_SERVER_BOOT_IMAGE_VERSION $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/vmlinuz-$OPENQRM_SERVER_BOOT_IMAGE_NAME
+	cp -a $OPENQRM_SERVER_BOOT_IMAGE_LOCATION/boot/System.map-$OPENQRM_SERVER_BOOT_IMAGE_VERSION $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/System.map-$OPENQRM_SERVER_BOOT_IMAGE_NAME
+	# modules
+	tar -C $OPENQRM_SERVER_BOOT_IMAGE_LOCATION/ -czf $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/modules-$OPENQRM_SERVER_BOOT_IMAGE_NAME.tgz lib
+	# initrd
+	mkdir -p $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_BOOT_IMAGE_NAME
+	mkdir -p $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_BOOT_IMAGE_NAME/lib/modules/$OPENQRM_SERVER_BOOT_IMAGE_VERSION
+	for MODULE in `find $OPENQRM_SERVER_BOOT_IMAGE_LOCATION/lib/modules/$OPENQRM_SERVER_BOOT_IMAGE_VERSION/kernel/drivers/net -type f | grep -v wireless`; do
+		MODULE_NAME=`echo $MODULE | sed -e "s/.*\///"`
+		if ! echo $OPENQRM_QRM_UNWANTED_MODULES | grep $MODULE_NAME 1>/dev/null; then
+			/bin/cp -f $MODULE $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_BOOT_IMAGE_NAME/lib/modules/$OPENQRM_SERVER_BOOT_IMAGE_VERSION
+		fi
+	done
+	# unpack the initrd-template
+	tar -C $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_BOOT_IMAGE_NAME -xzf $OPENQRM_DEFAULT_INITRD_TEMPLATE
+
+	# check size
+	OPENQRM_INITRD_SIZE=`du -s $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_BOOT_IMAGE_NAME/ | awk {' print $1 '}`
+	OPENQRM_INITRD_SIZE=$(( QRM_INITRD_SIZE + 16000 ))
+	if (( $OPENQRM_INITRD_SIZE > $OPENQRM_MAX_INITRD_SIZE )); then
+		echo "ERROR: Initrd got too big"
+		return 1
+	fi
+
+	# creating the initrd file
+	dd if=/dev/zero of=$OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_BOOT_IMAGE_NAME.img bs=1k count=$OPENQRM_INITRD_SIZE
+	#get ram block size there is a problem in newer kernels with size 4096
+	if [ -f "$OPENQRM_SERVER_BOOT_IMAGE_LOCATION/boot/config-$OPENQRM_SERVER_BOOT_IMAGE_VERSION" ]; then
+		ram_block_size=`cat $OPENQRM_SERVER_BOOT_IMAGE_LOCATION/boot/config-$OPENQRM_SERVER_BOOT_IMAGE_VERSION | grep  CONFIG_BLK_DEV_RAM_BLOCKSIZE | awk -F= '{print $2}'`
+		if [ -z $ram_block_size ]; then
+			ram_block_size=$OPENQRM_DEFAULT_RAM_DISK_BLOCK_SIZE
+		fi
+	else
+		ram_block_size=$OPENQRM_DEFAULT_RAM_DISK_BLOCK_SIZE
+	fi
+	mkfs.ext2 -q -b $ram_block_size -F $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_BOOT_IMAGE_NAME.img
+	tune2fs -c 0 -i 0 $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_BOOT_IMAGE_NAME.img
+	mkdir -p $OPENQRM_TEMP_DIR/bootimage/mnt
+	mount -o loop $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_BOOT_IMAGE_NAME.img $OPENQRM_TEMP_DIR/bootimage/mnt
+	mv $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_BOOT_IMAGE_NAME/* $OPENQRM_TEMP_DIR/bootimage/mnt/
+	# add the openQRM-linuxrc
+	rm -f $OPENQRM_TEMP_DIR/bootimage/mnt/linuxrc
+	cp $OPENQRM_SERVER_LINUXRC $OPENQRM_TEMP_DIR/bootimage/mnt/linuxrc
+	chmod +x $OPENQRM_TEMP_DIR/bootimage/mnt/linuxrc
+	umount $OPENQRM_TEMP_DIR/bootimage/mnt
+	gzip $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_BOOT_IMAGE_NAME.img
+	mv $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_BOOT_IMAGE_NAME.img.gz $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$OPENQRM_SERVER_BOOT_IMAGE_NAME.img
+	rm -rf $OPENQRM_TEMP_DIR/bootimage
+}
+
+
+
+

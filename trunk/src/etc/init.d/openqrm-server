@@ -102,13 +102,6 @@ function openqrm_server_init() {
 		exit 1		
 	fi
 	
-	# we need to create the default openqrm-boot-image here
-	# for now we just copy the systems kernel + initrd
-	mkdir $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot
-	OPENQRM_SERVER_KERNEL_VERSION=`uname -r`
-	cp -a /boot/vmlinuz-$OPENQRM_SERVER_KERNEL_VERSION $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/vmlinuz-default
-	cp -a /boot/initrd.img-$OPENQRM_SERVER_KERNEL_VERSION $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-default.img
-	
 	# for all plugins run init functions
 	for OPENQRM_PLUGIN in $OPENQRM_SERVER_PLUGINS_ENABLED; do
 		if [ -x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN ]; then
