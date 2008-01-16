@@ -126,7 +126,10 @@ function openqrm_create_default_initrd_template() {
 	# getting hwdata
 	openqrm_cache_or_download hwdata-knoppix
 	export DESTDIR=$OPENQRM_BUILD_TMP_DIR/openqrm-build/hwdata-knoppix/hwdata-install
+	export OPENQRM_POST_MAKE="make install"
 	openqrm_compile_from_source hwdata-knoppix
+	. $OPENQRM_SOURCE_DIR/etc/build.conf/hwdata-knoppix.conf
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwdata-knoppix/hwdata-knoppix-$OPENQRM_SOURCE_VERSION/debian/pcitable-knoppix $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwdata-knoppix/hwdata-install/usr/share/hwdata/pcitable
 	# kudzu
 	openqrm_cache_or_download kudzu-knoppix
 	export OPENQRM_MAKE_TARGET=libkudzu.a
@@ -138,7 +141,10 @@ function openqrm_create_default_initrd_template() {
 	. $OPENQRM_SOURCE_DIR/etc/build.conf/kudzu-knoppix.conf
 	OPENQRM_SOURCE_KUDZU_DIR="$OPENQRM_BUILD_TMP_DIR/openqrm-build/kudzu-knoppix/kudzu-knoppix-$OPENQRM_SOURCE_VERSION/"
 	. $OPENQRM_SOURCE_DIR/etc/build.conf/hwsetup.conf
+	
+	OPENQRM_SOURCE_HWSETUP_FILE=`basename $OPENQRM_SOURCE_DOWNLOAD`
 	OPENQRM_SOURCE_HWSETUP_DIR="$OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/hwsetup-$OPENQRM_SOURCE_VERSION/"
+	tar -C $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/ -xzf $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/$OPENQRM_SOURCE_HWSETUP_FILE
 	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/hwsetup-$OPENQRM_SOURCE_VERSION
 	cc -I$OPENQRM_SOURCE_KUDZU_DIR -DBLACKLIST -Wall -fPIC -O2 -s -o hwsetup hwsetup.c -L$OPENQRM_SOURCE_KUDZU_DIR -lkudzu -lpci -lz
 	cd $CURRENT_DIR
@@ -190,6 +196,13 @@ function openqrm_create_default_initrd_template() {
 	cp -aR $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwdata-knoppix/hwdata-install/* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
 	cp -a $OPENQRM_SOURCE_KUDZU_DIR/libkudzu.a $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
 	cp -a $OPENQRM_SOURCE_HWSETUP_DIR/hwsetup $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/
+	# add the libs hwsetup depends on
+	for LIB in `openqrm_build_find_libs $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/hwsetup`; do
+		LIB=`echo $LIB | cut -d'-' -f1 | cut -d'.' -f1`
+		if [ "$LIB" != "/lib/" ]; then
+			cp -a $LIB""* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
+		fi
+	done
 
 	# creating the initrd devices
 	rm -rf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/dev
