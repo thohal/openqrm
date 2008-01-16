@@ -93,9 +93,9 @@ function openqrm_compile_from_source() {
 		# pre-make
 		eval $OPENQRM_PRE_MAKE
 
-		# make + make install
-		make
-		make install
+		# make
+		make $OPENQRM_MAKE_TARGET
+		# we do not run make install, if needed pls run it in post-make
 
 		# post-make
 		eval $OPENQRM_POST_MAKE
@@ -121,11 +121,27 @@ function openqrm_create_default_initrd_template() {
 	openqrm_cache_or_download busybox
 	OPENQRM_SOURCE_COMPONENT_BUILD_DIR=$OPENQRM_BUILD_TMP_DIR/openqrm-build/busybox/busybox-$OPENQRM_SOURCE_VERSION/
 	export OPENQRM_PRE_MAKE="cp $OPENQRM_SOURCE_DIR/etc/build.conf/busybox.configuration $OPENQRM_SOURCE_COMPONENT_BUILD_DIR/.config && make oldconfig"
+	export OPENQRM_POST_MAKE="make install"
 	openqrm_compile_from_source busybox
 	# getting hwdata
 	openqrm_cache_or_download hwdata-knoppix
 	export DESTDIR=$OPENQRM_BUILD_TMP_DIR/openqrm-build/hwdata-knoppix/hwdata-install
 	openqrm_compile_from_source hwdata-knoppix
+	# kudzu
+	openqrm_cache_or_download kudzu-knoppix
+	export OPENQRM_MAKE_TARGET=libkudzu.a
+	openqrm_compile_from_source kudzu-knoppix
+	# hwsetup
+	openqrm_cache_or_download hwsetup
+	# we need some more includes/libs as provided in the hwsetup Makefile
+	# so we compile it manually
+	. $OPENQRM_SOURCE_DIR/etc/build.conf/kudzu-knoppix.conf
+	OPENQRM_SOURCE_KUDZU_DIR="$OPENQRM_BUILD_TMP_DIR/openqrm-build/kudzu-knoppix/kudzu-knoppix-$OPENQRM_SOURCE_VERSION/"
+	. $OPENQRM_SOURCE_DIR/etc/build.conf/hwsetup.conf
+	OPENQRM_SOURCE_HWSETUP_DIR="$OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/hwsetup-$OPENQRM_SOURCE_VERSION/"
+	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/hwsetup-$OPENQRM_SOURCE_VERSION
+	cc -I$OPENQRM_SOURCE_KUDZU_DIR -DBLACKLIST -Wall -fPIC -O2 -s -o hwsetup hwsetup.c -L$OPENQRM_SOURCE_KUDZU_DIR -lkudzu -lpci -lz
+	cd $CURRENT_DIR
 
 	# create the initroot
 	mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot
@@ -170,8 +186,10 @@ function openqrm_create_default_initrd_template() {
 	echo "passwd:     files" > nsswitch.conf
 	echo "shadow:     files" >> nsswitch.conf
 	echo "group:      files" >> nsswitch.conf
-	# installing hwdata	
+	# installing hwdata, libkudzu and hwsetup
 	cp -aR $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwdata-knoppix/hwdata-install/* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
+	cp -a $OPENQRM_SOURCE_KUDZU_DIR/libkudzu.a $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
+	cp -a $OPENQRM_SOURCE_HWSETUP_DIR/hwsetup $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/
 
 	# creating the initrd devices
 	rm -rf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/dev
