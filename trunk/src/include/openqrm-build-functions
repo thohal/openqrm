@@ -27,6 +27,9 @@ function openqrm_build_find_libs() {
 	BINARY=$1
 	for LIBRARY in `ldd $BINARY | awk {' print $3 '}`; do
 		REAL_LIBRARYFILE=`readlink $LIBRARY`
+		if [ "$REAL_LIBRARYFILE" == "" ]; then
+			REAL_LIBRARYFILE=`basename $LIBRARY`
+		fi
 		FULL_PATH_TO_LIBRARY=`dirname $LIBRARY`
 		if [ "$FULL_PATH_TO_LIBRARY" != "." ]; then
 			echo $FULL_PATH_TO_LIBRARY/$REAL_LIBRARYFILE
