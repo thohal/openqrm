@@ -11,6 +11,8 @@ ln -sf /proc/self/fd /dev/fd
 echo 0x0100 > /proc/sys/kernel/real-root-dev
 echo 6 > /proc/sys/kernel/printk
 syslogd &&  klogd
+# need to run depmod 2 times as experienced
+depmod -a
 depmod -a
 hwsetup -p
 eval `cat /proc/cmdline`

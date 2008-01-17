@@ -5,9 +5,18 @@
 # so we source the relative path
 OPENQRM_SOURCE_DIR=`dirname $0`/..
 OPENQRM_SOURCE_DIR=$(pushd $OPENQRM_SOURCE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+# source the openqrm-functions file for more features
+export OPENQRM_SERVER_BASE_DIR=$OPENQRM_SOURCE_DIR
+. $OPENQRM_SOURCE_DIR/include/openqrm-functions
+# source the openqrm-server.conf which resets the basedir again
 . $OPENQRM_SOURCE_DIR/etc/openqrm-server.conf
-
-OPENQRM_INITRD_COMPONENTS="/bin/bash /sbin/portmap /usr/bin/rsync /sbin/modprobe /sbin/depmod /sbin/insmod /sbin/lsmod /sbin/mke2fs"
+OPENQRM_BUILD_DISTRIBUTION=`openqrm_get_distro`
+if [ "$OPENQRM_BUILD_DISTRIBUTION" == "fc7" ] || [ "$OPENQRM_BUILD_DISTRIBUTION" == "fc8" ] ; then
+	# portmap was replaced with rpcbind on fc > 7
+	OPENQRM_INITRD_COMPONENTS="/bin/bash /sbin/rpcbind /usr/bin/rsync /sbin/modprobe /sbin/depmod /sbin/insmod /sbin/lsmod /sbin/mke2fs"
+else
+	OPENQRM_INITRD_COMPONENTS="/bin/bash /sbin/portmap /usr/bin/rsync /sbin/modprobe /sbin/depmod /sbin/insmod /sbin/lsmod /sbin/mke2fs"
+fi
 OPENQRM_INITRD_DIRECTORIES="bin etc etc/rc.d/init.d etc/sysconfig etc/X11 lib lib/modules lib/i686 loopfs mnt old_root proc sys sysroot usr usr/lib usr/bin usr/sbin var var/lock var/lock/subsys var/log var/run /var/lib /var/lib/nfs /var/lib/nfs/statd"
 
 
@@ -351,7 +360,8 @@ function openqrm_create_default_boot_image() {
 		rm -f data.tar.gz
 	else
 	# we have a rpm as kernel file
-		echo "Not yet supported"
+		cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
+		rpm2cpio $KERNEL_FILE  | cpio --extract --make-directories --no-absolute-filenames --preserve-modification-time
 	fi
 
 	
