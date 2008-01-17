@@ -8,8 +8,60 @@ export PATH
 mount -t proc proc /proc
 mkdir -p /dev/fd
 ln -sf /proc/self/fd /dev/fd
-
-#below is needed for pivot_root to work
 echo 0x0100 > /proc/sys/kernel/real-root-dev
+echo 6 > /proc/sys/kernel/printk
+syslogd &&  klogd
+depmod -a
+hwsetup -p
+eval `cat /proc/cmdline`
+if grep -q sysfs /proc/filesystems ; then
+	mount -t sysfs none /sys
+fi
+# collecting some infos from /proc/cmdline
+OPENQRM_RESOURCE_MAC_ADDRESS=`echo $BOOTIF | sed -e "s/-/:/g"  | sed -e "s/^01://g" | tr '[:lower:]' '[:upper:]'`
+OPENQRM_RESOURCE_MANAGED_INTERFACE=`ifconfig -a | grep $OPENQRM_RESOURCE_MAC_ADDRESS | awk {' print $1 '}`
+
+OPENQRM_RESOURCE_IP_ADDRESS=`echo $ip | cut -d':' -f1`
+OPENQRM_SERVER_IP_ADDRESS=`echo $ip | cut -d':' -f2`
+OPENQRM_RESOURCE_DEFAULT_GATEWAY=`echo $ip | cut -d':' -f3`
+OPENQRM_RESOURCE_SUBNETMASK=`echo $ip | cut -d':' -f4`
+OPENQRM_RESOURCE_BROADCAST=`ipcalc -b $OPENQRM_RESOURCE_IP_ADDRESS $OPENQRM_RESOURCE_SUBNETMASK | cut -d'=' -f2`
+
+# adjust arp settings
+if [ -f /proc/sys/net/ipv4/conf/$OPENQRM_RESOURCE_MANAGED_INTERFACE/arp_filter ]; then
+	echo 1 > /proc/sys/net/ipv4/conf/$OPENQRM_RESOURCE_MANAGED_INTERFACE/arp_filter
+fi
+if [ -f /proc/sys/net/ipv4/conf/$OPENQRM_RESOURCE_MANAGED_INTERFACE/rp_filter ]; then
+	echo 1 > /proc/sys/net/ipv4/conf/$OPENQRM_RESOURCE_MANAGED_INTERFACE/rp_filter
+fi
+
+# get the net working
+echo "Bringing up $OPENQRM_RESOURCE_MANAGED_INTERFACE:oq"
+echo "-> ip-address		: $OPENQRM_RESOURCE_IP_ADDRESS"
+echo "-> subnetmask		: $OPENQRM_RESOURCE_SUBNETMASK"
+echo "-> broadcast		: $OPENQRM_RESOURCE_BROADCAST"
+echo "-> default gw		: $OPENQRM_RESOURCE_DEFAULT_GATEWAY"
+echo "-> openQRM-server	: $OPENQRM_SERVER_IP_ADDRESS"
+ifconfig lo 127.0.0.1 up
+ifconfig $OPENQRM_RESOURCE_MANAGED_INTERFACE down
+ifconfig $OPENQRM_RESOURCE_MANAGED_INTERFACE up
+ifconfig $OPENQRM_RESOURCE_MANAGED_INTERFACE:oq $OPENQRM_RESOURCE_IP_ADDRESS netmask $OPENQRM_RESOURCE_SUBNETMASK broadcast $OPENQRM_RESOURCE_BROADCAST up
+if [ "$OPENQRM_RESOURCE_DEFAULT_GATEWAY" != "0.0.0.0" ]; then
+	route add default gw $OPENQRM_RESOURCE_DEFAULT_GATEWAY
+fi
+
+# send resource-id
+# get resource parameter
+# -> if not in openQRM already, add to db
+# if any deployment plugin is enabled, handle over the control
+# -> deployment plugins will take care to mount the root fs
+#    and do the pivot_root if needed
+# -> if the system is "idle" (meaning no deployment plugin enabled)
+#    we return to finish the linuxrc and give a admin shell
+#    -> no need to start any monitoring daemons because the system
+#       will do "nothing" anyway
 
 /bin/bash
+
+
+
