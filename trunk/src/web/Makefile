@@ -10,6 +10,12 @@ install:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make install' as root" && exit 1)
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web
 	. $(OPENQRM_SERVER_CONF) && cp *.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/action
+	. $(OPENQRM_SERVER_CONF) && cp action/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/action/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base
+	. $(OPENQRM_SERVER_CONF) && cp base/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include
+	. $(OPENQRM_SERVER_CONF) && cp base/include/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/
 	
 uninstall:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make uninstall' as root" && exit 1)
