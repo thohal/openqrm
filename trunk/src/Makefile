@@ -3,7 +3,7 @@
 
 export OPENQRM_SERVER_CONF=$(shell pwd)/etc/openqrm-server.conf
 
-all: configure compile initrd
+all: buildrequirements configure compile initrd
 	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name "CVS"`; do cd $$SRC_DIR && make all && cd ..; done
 
 configure:
@@ -62,7 +62,11 @@ check:
 	. $(OPENQRM_SERVER_CONF) && chmod +x include/openqrm-package-functions
 	. $(OPENQRM_SERVER_CONF) && export OPENQRM_SERVER_BASE_DIR && include/openqrm-package-functions check
 
+buildrequirements:
+	@chmod +x include/openqrm-build-functions
+	@include/openqrm-build-functions check_build_requirements
+	
 
 
-.PHONY: all configure compile install start uninstall clean realclean reinstall package check initrd bootimage
+.PHONY: all configure compile install start uninstall clean realclean reinstall package check initrd bootimage buildrequirements
 

@@ -29,6 +29,58 @@ function openqrm_build_find_libs() {
 }
 
 
+
+# function to check the requirements for the compile phase
+# -> this is for "make all" / comilation phase
+function openqrm_check_build_requirements() {
+	echo "Checking requirements for the compilation phase"
+	# check which command to use for checking the requirements
+	if [ -f /etc/debian_version ]; then
+		OPENQRM_PACKAGE_TYPE=deb
+		OPENQRM_REQUIREMENTS_CHECK_COMMAND="dpkg -s"
+	elif [ -f /etc/redhat-release ]; then
+		OPENQRM_PACKAGE_TYPE=rpm
+		OPENQRM_REQUIREMENTS_CHECK_COMMAND="rpm -qs"
+	elif [ -f /etc/SuSE-release ]; then
+		OPENQRM_PACKAGE_TYPE=rpm
+		OPENQRM_REQUIREMENTS_CHECK_COMMAND="rpm -qs"
+	else
+		echo "NOTICE: Could not find out which compile-requirements to use"
+		echo "        Please make sure to have all needed components installed!"
+		sleep 4
+		echo "... Continuing anyway"
+		return 0
+	fi
+
+	echo "openqrm-server requires : $OPENQRM_SERVER_BUILD_REQUIREMENTS"
+	for DEP in `echo $OPENQRM_SERVER_BUILD_REQUIREMENTS | sed -e "s/,//g"`; do
+		if $OPENQRM_REQUIREMENTS_CHECK_COMMAND $DEP 1>/dev/null 2>&1; then
+			echo "-> found $DEP installed"
+		else
+			echo "ERROR: $DEP not installed. Please install to continue"
+			return 1
+		fi
+	done
+
+	# get a list of plugins for checking their requirements
+	OPENQRM_PACKAGE_COMPONENT_LIST=`ls $OPENQRM_SOURCE_DIR/plugins | grep -v Makefile | grep -v CVS`
+	for OPENQRM_PLUGIN in $OPENQRM_PACKAGE_COMPONENT_LIST; do
+		. $OPENQRM_SOURCE_DIR/plugins/$OPENQRM_PLUGIN/etc/openqrm-plugin-$OPENQRM_PLUGIN"".conf
+		echo "openqrm-plugin-$OPENQRM_PLUGIN requires : `echo $OPENQRM_PLUGIN_BUILD_REQUIREMENTS`"
+		for DEP in `echo $OPENQRM_PLUGIN_BUILD_REQUIREMENTS | sed -e "s/,//g"`; do
+			if $OPENQRM_REQUIREMENTS_CHECK_COMMAND $DEP 1>/dev/null 2>&1; then
+				echo "-> found $DEP installed"
+			else
+				echo "ERROR: $DEP not installed. Please install to continue"
+				return 1
+			fi
+		done
+	done
+	echo "Checking for required components to compile openQRM finished successfully"
+
+}
+
+
 # function to download+cache source packages in the package-dir
 # -> this is for "make all" / comilation phase
 function openqrm_cache_or_download() {
@@ -313,6 +365,9 @@ function openqrm_create_default_boot_image() {
 
 # case for running functions called from Makefiles
 case "$1" in
+	check_build_requirements)
+		openqrm_check_build_requirements
+		;;
 	initrd)
 		openqrm_create_default_initrd_template
 		;;
