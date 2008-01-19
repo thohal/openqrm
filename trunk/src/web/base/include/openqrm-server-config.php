@@ -1,7 +1,5 @@
 <?php
 
-
-// $OPENQRM_SERVER_CONFIG_FILE="{$_SERVER['DOCUMENT_ROOT']}/openqrm/base/include/openqrm-server.conf";
 $OPENQRM_SERVER_CONFIG_FILE="/opt/openqrm/etc/openqrm-server.conf";
 
 
