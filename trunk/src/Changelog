@@ -10,3 +10,5 @@
 							added creating default boot-image
 17.1.2008	-	Matt	-	added to init network on the intird
 							added build-requirements check
+19.1.2008	-	Matt	-	added root-execution environemnt for the server
+							added to add new detected resources automatically

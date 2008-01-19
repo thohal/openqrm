@@ -8,8 +8,7 @@ fi
 
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 OPENQRM_DATABASE_INIT="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/postgres/openqrm-postgres-init.sql"
-
-
+	OPENQRM_DATABASE_INIT_TMP=/tmp/openqrm-postgres-init.sql
 
 function initialize_database() {
 
@@ -21,11 +20,13 @@ function initialize_database() {
 	fi
 
 	echo "Initializing the openQRM-database"
-	cp -f $OPENQRM_DATABASE_INIT /tmp/
-	chmod 777 /tmp/openqrm-postgres-init.sql
-	su - postgres -c "$POSTGRES_CLIENT -d $OPENQRM_DATABASE_NAME --set openqrmdbuser=$OPENQRM_DATABASE_USER -f /tmp/openqrm-postgres-init.sql"
+	cat $OPENQRM_DATABASE_INIT |	\
+		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/"	\
+		> $OPENQRM_DATABASE_INIT_TMP
+	chmod 777 $OPENQRM_DATABASE_INIT_TMP
+	su - postgres -c "$POSTGRES_CLIENT -d $OPENQRM_DATABASE_NAME --set openqrmdbuser=$OPENQRM_DATABASE_USER -f $OPENQRM_DATABASE_INIT_TMP"
 	RET=$?
-	rm -f /tmp/openqrm-postgres-init.sql
+	rm -f $OPENQRM_DATABASE_INIT_TMP
 	return $RET
 }
 

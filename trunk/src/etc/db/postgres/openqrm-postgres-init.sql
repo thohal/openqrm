@@ -9,6 +9,7 @@ create table resource_info(
 	resource_imageid int8,
 	resource_openqrmserver char(20),
 	resource_basedir char(100),
+	resource_serverid int8,
 	resource_ip char(20),
 	resource_subnet char(20),
 	resource_broadcast char(20),
@@ -24,7 +25,7 @@ create table resource_info(
 	resource_swapused int8,
 	resource_hostname char(40),
 	resource_load decimal(4,2),
-	resource_rexecdport int8,
+	resource_execdport int8,
 	resource_senddelay int8,
 	resource_capabilities char(255),
 	resource_state char(20),
@@ -104,7 +105,7 @@ create table image_service(
 );
 
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared) values ('1', 'idle', 'openQRM', 'ram', 'ram', 'ext2', '1');
-insert into resource_info (resource_id, resource_localboot) values ('0', '1');
+insert into resource_info (resource_id, resource_localboot, resource_openqrmserver) values ('0', '1', 'OPENQRM_SERVER_IP_ADDRESS');
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared ) values ( '2', 'hda1', 'Linux', 'local', '/dev/hda1', 'ext3', '0');
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared ) values ( '3', 'hda2', 'Linux', 'local', '/dev/hda2', 'ext3', '0');
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared ) values ( '4', 'sda1', 'Linux', 'local', '/dev/sda1', 'ext3', '0');

@@ -7,7 +7,11 @@ if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
 fi
 
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+# get full server config
+openqrm_server_get_config
 OPENQRM_DATABASE_INIT="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/mysql/openqrm-mysql-init.sql"
+
 
 function initialize_database() {
 
@@ -20,7 +24,10 @@ function initialize_database() {
 
 	# set the dbname in the sql init-script
 	OPENQRM_DATABASE_INIT_TMP=/tmp/openqrm-mysql-init.sql
-	cat $OPENQRM_DATABASE_INIT | sed -e "s/OPENQRM_DB/$OPENQRM_DATABASE_NAME/" > $OPENQRM_DATABASE_INIT_TMP
+	cat $OPENQRM_DATABASE_INIT |	\
+		sed -e "s/OPENQRM_DB/$OPENQRM_DATABASE_NAME/" |	\
+		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/"	\
+		> $OPENQRM_DATABASE_INIT_TMP
 
 	echo "Initializing the openQRM-database"
 	if [ -z "$OPENQRM_DATABASE_PASSWORD" ]; then

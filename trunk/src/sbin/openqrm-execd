@@ -1,0 +1,45 @@
+#!/bin/bash
+#  openQRM-rexecd, a openQRM-daemon for remote exection of openQRM-commands
+
+OPENQRM_SBIN_DIR=`dirname $0`
+OPENQRM_BASE_DIR=`pushd $OPENQRM_SBIN_DIR/.. 1>/dev/null && pwd && popd 1>/dev/null`
+
+# check if running on the server or on a managed resource
+if [ -f "$OPENQRM_BASE_DIR/include/openqrm-server-functions" ]; then
+	# we are running on the server
+	. $OPENQRM_BASE_DIR/include/openqrm-functions
+	. $OPENQRM_BASE_DIR/include/openqrm-server-functions
+else
+	# we are running on a managed resource
+	OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP_ADDRESS=$resource_openqrmserver
+fi
+
+function openqrm_validate_execution() {
+	if [ "$SENDER_IP_ADDRESS" == "$OPENQRM_SERVER_IP_ADDRESS" ]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+# main loop
+while (true); do
+	# wait for the openqrm-command
+	read OPENQRM_LISTEN
+	if [ ! -z "$OPENQRM_LISTEN" ]; then
+		export SENDER_IP_ADDRESS=`echo $OPENQRM_LISTEN | cut -d':' -f1 2>/dev/null`
+		export OPENQRM_COMMAND=`echo $OPENQRM_LISTEN | cut -d':' -f2- 2>/dev/null`
+		echo "$0: Received openQRM-command from $SENDER_IP_ADDRESS" | logger
+		echo "    Running $OPENQRM_COMMAND" | logger
+		if [ "$SENDER_IP_ADDRESS" != "" ] && [ "$OPENQRM_COMMAND" != "" ]; then
+			if `openqrm_validate_execution`; then 
+				$OPENQRM_COMMAND  2>&1 | logger
+			fi
+		fi
+	fi
+done
+exit 1
+
+

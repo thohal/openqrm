@@ -8,6 +8,7 @@ fi
 
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 OPENQRM_DATABASE_INIT="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/oracle/openqrm-oracle-init.sql"
+OPENQRM_DATABASE_INIT_TMP="/tmp/openqrm-oracle-init.sql"
 
 
 function initialize_database() {
@@ -20,7 +21,10 @@ function initialize_database() {
 	fi
 
 	echo "Initializing the openQRM-database"
-	$ORACLE_CLIENT $OPENQRM_DATABASE_USER/$OPENQRM_DATABASE_PASSWORD@$OPENQRM_DATABASE_NAME @$OPENQRM_DATABASE_INIT
+	cat $OPENQRM_DATABASE_INIT |	\
+		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/"	\
+		> $OPENQRM_DATABASE_INIT_TMP
+	$ORACLE_CLIENT $OPENQRM_DATABASE_USER/$OPENQRM_DATABASE_PASSWORD@$OPENQRM_DATABASE_NAME @$OPENQRM_DATABASE_INIT_TMP
 	return $?
 }
 

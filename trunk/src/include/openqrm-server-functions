@@ -18,9 +18,6 @@ OPENQRM_SERVER_LINUXRC="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-l
 OPENQRM_MAX_INITRD_SIZE=128000
 OPENQRM_DEFAULT_RAM_DISK_BLOCK_SIZE=1024
 
-
-
-
 # function to export all given configuration from the
 # main openQRM-server config file
 function openqrm_server_get_config() {
@@ -33,10 +30,14 @@ function openqrm_server_get_config() {
 	export OPENQRM_SERVER_BROADCAST_ADDRESS=`ifconfig $OPENQRM_SERVER_INTERFACE | grep inet | grep -v inet6 | cut -d':' -f3 | awk {' print $1 '} | head -n 1`
 	export OPENQRM_SERVER_SUBNET_MASK=`ifconfig $OPENQRM_SERVER_INTERFACE | grep inet | grep -v inet6 | cut -d':' -f4 | awk {' print $1 '} | head -n 1`
 }
-
+# run immediatly
+openqrm_server_get_config
 
 
 # function to create boot-images
+# param 1	: boot-image name
+# param 2	: kernel-version
+# param 3	: path-to-kernel-files
 function openqrm_server_create_boot_image() {
 	OPENQRM_SERVER_BOOT_IMAGE_NAME=$1
 	OPENQRM_SERVER_BOOT_IMAGE_VERSION=$2
@@ -94,6 +95,43 @@ function openqrm_server_create_boot_image() {
 	rm -rf $OPENQRM_TEMP_DIR/bootimage
 }
 
+
+
+
+
+# function adding a new resource to the openQRM-server
+# param 1	: resource_id
+# param 2	: boot-image name
+# param 3	: pxelinux.cfg filename
+function openqrm_server_create_pxe_config() {
+	local RESOURCE_ID=$1
+	local BOOT_IMAGE_NAME=$2
+	local RESOURCE_PXELINUXCFG_FILE=$3
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-pxelinux |	\
+		sed -e "s/OPENQRM_BOOTIMAGE_KERNEL/vmlinuz-$BOOT_IMAGE_NAME/g" |	\
+		sed -e "s/OPENQRM_BOOTIMAGE_INITRD/initrd-$BOOT_IMAGE_NAME.img/g" |	\
+		sed -e "s/OPENQRM_RESOURCE_ID/$RESOURCE_ID/g" |	\
+		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/g" \
+		> $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE
+		chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE
+}
+
+
+
+# function adding a new resource to the openQRM-server
+# param 1	: resource_id
+# param 2	: resource_mac
+# param 3	: resouce_ip
+function openqrm_server_add_resource() {
+	local RESOURCE_ID=$1
+	local RESOURCE_MAC=$2
+	local RESOURCE_IP_ADDRESS=$3
+	local RESOURCE_PXELINUXCFG_FILE=`echo 01-$RESOURCE_MAC | sed -e "s/:/-/g" | tr '[:upper:]' '[:lower:]'`
+	echo "openQRM-server: Adding resource $RESOURCE_ID $RESOURCE_MAC/$RESOURCE_IP_ADDRESS" | logger
+	openqrm_server_create_pxe_config $RESOURCE_ID default $RESOURCE_PXELINUXCFG_FILE
+
+
+}
 
 
 

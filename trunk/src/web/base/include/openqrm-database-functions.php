@@ -13,18 +13,18 @@ if (file_exists("/usr/share/cacti/lib/adodb/adodb.inc.php")) {
 global $OPENQRM_DATABASE_TYPE, $OPENQRM_DATABASE_USER;
 $IMAGE_INFO_TABLE="image_info";
 $KERNEL_INFO_TABLE="kernel_info";
-$NODES_INFO_TABLE="node_info";
+$RESOURCE_INFO_TABLE="resource_info";
 $EVENT_INFO_TABLE="event_info";
 $USER_INFO_TABLE="user_info";
 if ("$OPENQRM_DATABASE_TYPE" == "db2") {
-	$IMAGE_INFO_TABLE="$OPENQRM_DATABASE_USER.$EVENT_INFO_TABLE";
-	$KERNEL_INFO_TABLE="$OPENQRM_DATABASE_USER.$EVENT_INFO_TABLE";
-	$NODES_INFO_TABLE="$OPENQRM_DATABASE_USER.$EVENT_INFO_TABLE";
+	$IMAGE_INFO_TABLE="$OPENQRM_DATABASE_USER.$IMAGE_INFO_TABLE";
+	$KERNEL_INFO_TABLE="$OPENQRM_DATABASE_USER.$KERNEL_INFO_TABLE";
+	$RESOURCE_INFO_TABLE="$OPENQRM_DATABASE_USER.$RESOURCE_INFO_TABLE";
 	$EVENT_INFO_TABLE="$OPENQRM_DATABASE_USER.$EVENT_INFO_TABLE";
 	$USER_INFO_TABLE="$OPENQRM_DATABASE_USER.$USER_INFO_TABLE";
 }
 
-global $KERNEL_INFO_TABLE, $IMAGE_INFO_TABLE, $NODES_INFO_TABLE, $EVENT_INFO_TABLE, $USER_INFO_TABLE;
+global $KERNEL_INFO_TABLE, $IMAGE_INFO_TABLE, $RESOURCE_INFO_TABLE, $EVENT_INFO_TABLE, $USER_INFO_TABLE;
 
 
 // returns a db-connection
@@ -45,7 +45,7 @@ function openqrm_get_db_connection() {
 	
 	if ("$OPENQRM_DATABASE_TYPE" == "db2") {
 		$db = &ADONewConnection('db2');
-		$dsn = "qcore";
+		$dsn = "$OPENQRM_DATABASE_NAME";
 		$db->Connect($dsn);
 	} else {
 		if (strlen($OPENQRM_DATABASE_PASSWORD)) {
@@ -60,6 +60,9 @@ function openqrm_get_db_connection() {
 	$db->SetFetchMode(ADODB_FETCH_ASSOC);
 	return $db;
 }
+
+
+
 
 			 
 // function to print arrays

@@ -6,7 +6,8 @@ if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
 	echo "ERROR: Please export OPENQRM_SERVER_BASE_DIR before sourcing $0"
 	exit 1
 fi
-
+# some static defines
+OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
 
 # A more portable "chkconfig". 
 # Uses chkconfig or rc.d-update as found, if not then "manual".

@@ -22,12 +22,14 @@ fi
 # collecting some infos from /proc/cmdline
 OPENQRM_RESOURCE_MAC_ADDRESS=`echo $BOOTIF | sed -e "s/-/:/g"  | sed -e "s/^01://g" | tr '[:lower:]' '[:upper:]'`
 OPENQRM_RESOURCE_MANAGED_INTERFACE=`ifconfig -a | grep $OPENQRM_RESOURCE_MAC_ADDRESS | awk {' print $1 '}`
-
 OPENQRM_RESOURCE_IP_ADDRESS=`echo $ip | cut -d':' -f1`
 OPENQRM_SERVER_IP_ADDRESS=`echo $ip | cut -d':' -f2`
 OPENQRM_RESOURCE_DEFAULT_GATEWAY=`echo $ip | cut -d':' -f3`
 OPENQRM_RESOURCE_SUBNETMASK=`echo $ip | cut -d':' -f4`
 OPENQRM_RESOURCE_BROADCAST=`ipcalc -b $OPENQRM_RESOURCE_IP_ADDRESS $OPENQRM_RESOURCE_SUBNETMASK | cut -d'=' -f2`
+
+OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
+mkdir -p `dirname $OPENQRM_RESOURCE_PARAMETER_FILE`
 
 # adjust arp settings
 if [ -f /proc/sys/net/ipv4/conf/$OPENQRM_RESOURCE_MANAGED_INTERFACE/arp_filter ]; then
@@ -39,6 +41,7 @@ fi
 
 # get the net working
 echo "Bringing up $OPENQRM_RESOURCE_MANAGED_INTERFACE:oq"
+echo "-> mac-address	: $OPENQRM_RESOURCE_MAC_ADDRESS"
 echo "-> ip-address		: $OPENQRM_RESOURCE_IP_ADDRESS"
 echo "-> subnetmask		: $OPENQRM_RESOURCE_SUBNETMASK"
 echo "-> broadcast		: $OPENQRM_RESOURCE_BROADCAST"
@@ -52,9 +55,18 @@ if [ "$OPENQRM_RESOURCE_DEFAULT_GATEWAY" != "0.0.0.0" ]; then
 	route add default gw $OPENQRM_RESOURCE_DEFAULT_GATEWAY
 fi
 
-# send resource-id
+# send resource-id (-1 = new resource)
+if [ "$id" == "-1" ]; then
+	# this will add the resource to the openQRM-server
+	echo "New resource detected ! Adding to the openQRM-server at $OPENQRM_SERVER_IP_ADDRESS"
+	wget -O /dev/null "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-action.php?resource_command=new_resource&resource_mac=$OPENQRM_RESOURCE_MAC_ADDRESS&resource_ip=$OPENQRM_RESOURCE_IP_ADDRESS&resource_id=$id"
+fi
+
 # get resource parameter
-# -> if not in openQRM already, add to db
+echo "Getting resource-parameters ..."
+wget -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-action.php?resource_command=get_parameter&resource_mac=$OPENQRM_RESOURCE_MAC_ADDRESS"
+. $OPENQRM_RESOURCE_PARAMETER_FILE
+
 # if any deployment plugin is enabled, handle over the control
 # -> deployment plugins will take care to mount the root fs
 #    and do the pivot_root if needed
