@@ -1,6 +1,8 @@
 <?php
 
 require_once "openqrm-database-functions.php";
+require_once "openqrm-server-functions.php";
+
 global $RESOURCE_INFO_TABLE;
 
 // ######################## resource functions #############################
@@ -62,8 +64,10 @@ function openqrm_is_resource_id_free($resource_id) {
 function openqrm_add_resource($resource_id, $resource_mac, $resource_ip) {
 	global $OPENQRM_EXEC_PORT;
 	global $RESOURCE_INFO_TABLE;
+	global $OPENQRM_RESOURCE_BASE_DIR;
+	$OPENQRM_SERVER_IP_ADDRESS=openqrm_server_get_ip_address();
 	$db=openqrm_get_db_connection();
-	$rs = $db->Execute("insert into $RESOURCE_INFO_TABLE (resource_id, resource_localboot, resource_kernel, resource_kernelid, resource_image, resource_imageid, resource_openqrmserver, resource_basedir, resource_serverid, resource_ip, resource_subnet, resource_broadcast, resource_network, resource_mac, resource_uptime, resource_cpunumber, resource_cpuspeed, resource_cpumodel, resource_memtotal, resource_memused, resource_swaptotal, resource_swapused, resource_hostname, resource_load, resource_execdport, resource_senddelay, resource_state, resource_event) values ($resource_id, 0, 'default', 1, 'idle', 1, '', '', 1, '$resource_ip', '', '', '', '$resource_mac', 0, 0, 0, '0', 0, 0, 0, 0, 'idle', 0, $OPENQRM_EXEC_PORT, 30, 'booting', 'detected')");
+	$rs = $db->Execute("insert into $RESOURCE_INFO_TABLE (resource_id, resource_localboot, resource_kernel, resource_kernelid, resource_image, resource_imageid, resource_openqrmserver, resource_basedir, resource_serverid, resource_ip, resource_subnet, resource_broadcast, resource_network, resource_mac, resource_uptime, resource_cpunumber, resource_cpuspeed, resource_cpumodel, resource_memtotal, resource_memused, resource_swaptotal, resource_swapused, resource_hostname, resource_load, resource_execdport, resource_senddelay, resource_state, resource_event) values ($resource_id, 0, 'default', 1, 'idle', 1, '$OPENQRM_SERVER_IP_ADDRESS', '$OPENQRM_RESOURCE_BASE_DIR', 1, '$resource_ip', '', '', '', '$resource_mac', 0, 0, 0, '0', 0, 0, 0, 0, 'idle', 0, $OPENQRM_EXEC_PORT, 30, 'booting', 'detected')");
 }
 
 // removes resource from the database

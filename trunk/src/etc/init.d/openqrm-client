@@ -21,13 +21,9 @@ LOCKFILE=/var/lock/subsys/openqrm
 mkdir -p $(dirname $LOCKFILE)
 
 export `eval cat /proc/cmdline`	
-if [ -f /var/openqrm/conf/openqrm.conf.$id ];then
-	. /var/openqrm/conf/openqrm.conf.$id
-fi
-
-. $OPENQRM_RESOURCE_BASE_DIR/openqrm/include/openqrm-functions
-. $OPENQRM_RESOURCE_BASE_DIR/openqrm/include/openqrm-nodes-functions
-
+. /var/openqrm/openqrm-resource.conf
+export OPENQRM_SERVER_BASE_DIR=$resource_basedir
+. $resource_basedir/openqrm/include/openqrm-functions
 
 function openqrm_client_start() {
 	echo "Starting openQRM-client"
@@ -35,13 +31,18 @@ function openqrm_client_start() {
 	# checks
 	grep -q "/initrd" /proc/mounts && umount /initrd
 
+	# start openqrm-execd
+	$resource_basedir/openqrm/sbin/openqrm-exec-port-monitor $resource_ip $resource_execdport | $resource_basedir/openqrm/sbin/openqrm-execd &
+
 	touch ${LOCKFILE}
 }
 
 
 function openqrm_client_stop() {
 	echo "Stopping openQRM-client"
-
+	# stop openqrm-execd
+	killall openqrm-exec-port-monitor 1>/dev/null 2>&1
+	killall openqrm-execd 1>/dev/null 2>&1
 	/bin/rm -f ${LOCKFILE}
 }
 
@@ -57,8 +58,6 @@ function openqrm_client_status() {
 
 case "$1" in
 	start)
-		openqrm_client_start
-		;;
 		openqrm_client_start
 		;;
 	stop)

@@ -75,6 +75,13 @@ wget -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP_ADDRESS/open
 #    -> no need to start any monitoring daemons because the system
 #       will do "nothing" anyway
 
+# run default openqrm-client boot-service
+cd /
+wget "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.tgz"
+tar -xzf openqrm-client.tgz
+rm -f openqrm-client.tgz
+$resource_basedir/openqrm/etc/init.d/openqrm-client start
+
 /bin/bash
 
 
