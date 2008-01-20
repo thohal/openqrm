@@ -13,3 +13,5 @@
 19.1.2008	-	Matt	-	added root-execution environemnt for the server
 							added to add new detected resources automatically
 							added starting the openrm-client on the booted resources
+20.1.2008	-	Matt	-	cleaned-up init process on the initrd
+							made reboot/halt working

@@ -76,11 +76,16 @@ wget -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP_ADDRESS/open
 #       will do "nothing" anyway
 
 # run default openqrm-client boot-service
+echo "Getting openqrm-client package"
 cd /
 wget "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.tgz"
 tar -xzf openqrm-client.tgz
 rm -f openqrm-client.tgz
 $resource_basedir/openqrm/etc/init.d/openqrm-client start
+
+# send idle/available
+echo "Sending idle/available to openQRM-server at $OPENQRM_SERVER_IP_ADDRESS"
+wget -O /dev/null "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-action.php?resource_command=update_status&resource_id=$resource_id&resource_state=idle&resource_event=available"
 
 # rcs0 will be started here from init
 

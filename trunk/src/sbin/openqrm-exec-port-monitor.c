@@ -80,7 +80,10 @@ int main(int argc, char** argv) {
 			fflush(stdout);
 			fflush(stderr);
 		}
-		buf[msgsize -2 ] = '\0';
+		if (buf[msgsize - 1] == '\n') {
+			msgsize--;
+		}
+		buf[msgsize] = '\0';
 		printf("%s:%s\n",inet_ntoa(peer.sin_addr.s_addr), buf);
 		close(fd);
 		fflush(stdout);

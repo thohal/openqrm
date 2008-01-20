@@ -201,8 +201,6 @@ function openqrm_update_resource_info($resource_id, $resource_fields) {
 
 function openqrm_update_resource_status($resource_id, $resource_state, $resource_event) {
 	global $RESOURCE_INFO_TABLE;
-	set_default($resource_state,0);
-	set_default($resource_event,0);
 	$db=openqrm_get_db_connection();
 	$query = "update $RESOURCE_INFO_TABLE set
 			resource_state='$resource_state',

@@ -7,15 +7,18 @@ $resource_command = $_REQUEST["resource_command"];
 $resource_id = $_REQUEST["resource_id"];
 $resource_mac = $_REQUEST["resource_mac"];
 $resource_ip = $_REQUEST["resource_ip"];
+$resource_state = $_REQUEST["resource_state"];
+$resource_event = $_REQUEST["resource_event"];
+
 
 $OPENQRM_SERVER_IP_ADDRESS=openqrm_server_get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
 
 	switch ($resource_command) {
 	
-		# new_resource needs :
-		# resource_mac
-		# resource_ip
+		// new_resource needs :
+		// resource_mac
+		// resource_ip
 		case 'new_resource':
 			if (openqrm_resource_exists($resource_mac)) {
 				echo "Resource $resource_mac already exist in the openQRM-database!";
@@ -48,9 +51,9 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 
 			break;
 
-		# remove requires :
-		# resource_id
-		# resouce_mac
+		// remove requires :
+		// resource_id
+		// resouce_mac
 		case 'remove':
 			$fp = fsockopen($OPENQRM_SERVER_IP_ADDRESS, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
 			if(!$fp) {
@@ -66,9 +69,9 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			echo "Removed resource $resource_id/$resource_mac from the openQRM-database";
 			break;
 
-		# localboot requires :
-		# resource_id
-		# resource_mac
+		// localboot requires :
+		// resource_id
+		// resource_mac
 		case 'localboot':
 			$fp = fsockopen($OPENQRM_SERVER_IP_ADDRESS, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
 			if(!$fp) {
@@ -82,9 +85,9 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			echo "Configured resource $resource_id for local-boot";
 			break;
 			
-		# netboot requires :
-		# resource_id
-		# resource_mac
+		// netboot requires :
+		// resource_id
+		// resource_mac
 		case 'netboot':
 			$fp = fsockopen($OPENQRM_SERVER_IP_ADDRESS, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
 			if(!$fp) {
@@ -98,14 +101,14 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			echo "Configured resource $resource_id to net-boot";
 			break;
 
-		# assign requires :
-		# resource_id
-		# resource_mac
-		# resource_ip
-		# kernel_id
-		# kernel_name
-		# image_id
-		# image_name
+		// assign requires :
+		// resource_id
+		// resource_mac
+		// resource_ip
+		// kernel_id
+		// kernel_name
+		// image_id
+		// image_name
 		
 		case 'assign':
 			$kernel_name=openqrm_get_kernel_name($_REQUEST["resource_kernelid"]);
@@ -135,8 +138,8 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 
 			break;
 
-		# get_parameter requires :
-		# resource_mac
+		// get_parameter requires :
+		// resource_mac
 		case 'get_parameter':
 			if (strlen($resource_mac)) {
 				$resource_id=openqrm_get_resource_id_by_resource_mac($resource_mac);
@@ -145,9 +148,9 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			exit();
 			break;
 
-		# update_info requires :
-		# resource_id
-		# array of resource_fields
+		// update_info requires :
+		// resource_id
+		// array of resource_fields
 		case 'update_info':
 			if (strlen($resource_id)) {
 				openqrm_update_resource_info($resource_id, $resource_fields);
@@ -155,10 +158,10 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			exit();
 			break;
 
-		# update_status requires :
-		# resource_id
-		# resource_state
-		# resource_event
+		// update_status requires :
+		// resource_id
+		// resource_state
+		// resource_event
 		case 'update_status':
 			if (strlen($resource_id)) {
 				openqrm_update_resource_status($resource_id, $resource_state, $resource_event);
@@ -167,8 +170,8 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			break;
 
 
-		# reboot requires :
-		# resource_ip
+		// reboot requires :
+		// resource_ip
 		case 'reboot':
 			$fp = fsockopen($resource_ip, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
 			if(!$fp) {
@@ -180,20 +183,20 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			break;
 
 
-		# shutdown requires :
-		# resource_ip
-		case 'shutdown':
+		// halt requires :
+		// resource_ip
+		case 'halt':
 			$fp = fsockopen($resource_ip, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
 			if(!$fp) {
 				echo "Could not shutdown Resource with ip-address $resource_ip";
 				exit();
 			}
-			fputs($fp,"shutdown");
+			fputs($fp,"halt");
 			fclose($fp);
 			break;
 
-		# list requires :
-		# nothing
+		// list requires :
+		// nothing
 	    case 'list':
 			$resource_list = openqrm_get_resource_list();
 			foreach ($resource_list as $resource) {

@@ -48,6 +48,14 @@ echo "<br>";
 $OPENQRM_RESOURCE_LIST=openqrm_get_resource_list();
 print_r($OPENQRM_RESOURCE_LIST);
 
+$resource_ip=$OPENQRM_RESOURCE_LIST[1][resource_ip] ;
+
+echo "ip = $resource_ip";
+echo "<br>";
+echo "<a href=\"../action/resource-action.php?resource_command=reboot&resource_ip=$resource_ip\">reboot</a>";
+echo "<br>";
+echo "<a href=\"../action/resource-action.php?resource_command=halt&resource_ip=$resource_ip\">halt</a>";
+echo "<br>";
 
 
 
