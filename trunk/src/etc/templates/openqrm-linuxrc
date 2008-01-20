@@ -82,7 +82,6 @@ tar -xzf openqrm-client.tgz
 rm -f openqrm-client.tgz
 $resource_basedir/openqrm/etc/init.d/openqrm-client start
 
-/bin/bash
-
+# rcs0 will be started here from init
 
 

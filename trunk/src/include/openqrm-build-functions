@@ -239,6 +239,13 @@ function openqrm_create_default_initrd_template() {
 			fi
 		done
 	done
+	# fix reboot for the initrd -> reboot -f (it's simply faster)
+	rm -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/reboot
+	cat >> $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/reboot << EOF
+#!/bin/bash
+/bin/busybox reboot -f
+EOF
+	chmod +x $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/reboot
 	# creating initrd directories
 	for DIR in $OPENQRM_INITRD_DIRECTORIES; do
 		mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/$DIR
@@ -276,27 +283,18 @@ function openqrm_create_default_initrd_template() {
 	ln -sf ram1 ram
 
 	# create rcS
+	rm -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/rc.d/init.d/rcS
 	cat >> $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/rc.d/init.d/rcS << EOF
 #!/bin/bash
 export SHELL=/bin/bash
-echo "openQRM resource is starting rcS" > /dev/console
-
 export \$(eval cat /proc/cmdline)
-
-if [ -f /reboot ]; then
-	echo "openQRM resource is rebooting now"
-	/sbin/reboot
-fi
-
-if [ -f /halt ]; then
-	echo "openQRM resource is shutting down now"
-	/sbin/halt
-fi
+echo "openQRM resource \$id is starting rcS" > /dev/console
 
 EOF
 	chmod +x $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/rc.d/init.d/rcS
 
 	# create inittab
+	rm -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/inittab
 	cat >> $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/inittab << EOF
 
 # inittab
@@ -305,7 +303,7 @@ tty2::askfirst:-/bin/bash
 tty3::askfirst:-/bin/bash
 tty4::askfirst:-/bin/bash
 ::sysinit:/etc/init.d/rcS
-::restart:/sbin/init
+::restart:/sbin/reboot
 
 # Stuff to do before rebooting
 ::ctrlaltdel:/sbin/reboot
