@@ -151,8 +151,8 @@ function openqrm_server_start() {
 
 	# start the openqrm-execd daemon
 	$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec-port-monitor $OPENQRM_SERVER_IP_ADDRESS $OPENQRM_EXEC_PORT | $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-execd &
-	
-
+	# and the monitoring infra-structure	
+	$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-monitord &
 
 	touch ${LOCKFILE}
 	
@@ -173,6 +173,7 @@ function openqrm_server_stop() {
 
 	killall openqrm-exec-port-monitor 1>/dev/null 2>&1
 	killall openqrm-execd 1>/dev/null 2>&1
+	killall openqrm-monitord 1>/dev/null 2>&1
 	/bin/rm -f ${LOCKFILE}
 }
 

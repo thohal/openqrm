@@ -15,3 +15,4 @@
 							added starting the openrm-client on the booted resources
 20.1.2008	-	Matt	-	cleaned-up init process on the initrd
 							made reboot/halt working
+21.1.2008	-	Matt	-	added basic monitoring framework

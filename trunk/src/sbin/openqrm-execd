@@ -11,7 +11,8 @@ if [ -f "$OPENQRM_BASE_DIR/include/openqrm-server-functions" ]; then
 	. $OPENQRM_BASE_DIR/include/openqrm-server-functions
 else
 	# we are running on a managed resource
-	OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
+	export OPENQRM_SERVER_BASE_DIR=$OPENQRM_BASE_DIR
+	. $OPENQRM_BASE_DIR/include/openqrm-functions
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
 	OPENQRM_SERVER_IP_ADDRESS=$resource_openqrmserver
 fi

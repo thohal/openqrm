@@ -1,0 +1,225 @@
+#!/bin/bash
+# openqrm-monitord, a openQRM daemon for gathering system statistics
+
+OPENQRM_SBIN_DIR=`dirname $0`
+OPENQRM_BASE_DIR=`pushd $OPENQRM_SBIN_DIR/.. 1>/dev/null && pwd && popd 1>/dev/null`
+OPENQRM_EVENT="statistics"
+OPENQRM_STATE="active"
+
+# check if running on the server or on a managed resource
+if [ -f "$OPENQRM_BASE_DIR/include/openqrm-server-functions" ]; then
+	# we are running on the server
+	. $OPENQRM_BASE_DIR/include/openqrm-functions
+	. $OPENQRM_BASE_DIR/include/openqrm-server-functions
+	export resource_id=0
+	export resource_senddelay=30
+	export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+else
+	# we are running on a managed resource
+	export OPENQRM_SERVER_BASE_DIR=$OPENQRM_BASE_DIR
+	. $OPENQRM_BASE_DIR/include/openqrm-functions
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+fi
+
+# local used functions
+
+function urlencodechar() {
+	# notice : "%", "*" and "\" are not supported
+	UCHAR=$1
+	UCHAR=${UCHAR/\~/%7E}
+	UCHAR=${UCHAR/\!/%21}
+	UCHAR=${UCHAR/\@/%40}
+	UCHAR=${UCHAR/\\#/%23}
+	UCHAR=${UCHAR/\\$/%24}
+	#UCHAR=${UCHAR/\%/%25}
+	UCHAR=${UCHAR/\^/%5E}
+	UCHAR=${UCHAR/\&/%26}
+	#UCHAR=${UCHAR/\\*/%2A}
+	UCHAR=${UCHAR/\(/%28}
+	UCHAR=${UCHAR/\)/%29}
+	UCHAR=${UCHAR/\+/%2B}
+	UCHAR=${UCHAR/\|/%7C}
+	UCHAR=${UCHAR/\{/%7B}
+	UCHAR=${UCHAR/\}/%7D}
+	UCHAR=${UCHAR/\:/%3A}
+	UCHAR=${UCHAR/\"/%22}
+	UCHAR=${UCHAR/\</%3C}
+	UCHAR=${UCHAR/\>/%3E}
+	UCHAR=${UCHAR/\\?/%3F}
+	UCHAR=${UCHAR/\`/%60}
+	UCHAR=${UCHAR/\=/%3D}
+	#UCHAR=${UCHAR/\\/%5C}
+	UCHAR=${UCHAR/\[/%5B}
+	UCHAR=${UCHAR/\]/%5D}
+	UCHAR=${UCHAR/\;/%3B}
+	UCHAR=${UCHAR/\'/%27}
+	UCHAR=${UCHAR/\,/%2C}
+	UCHAR=${UCHAR/\//%2F}
+	# whitespace
+	if [ -z $UCHAR ]; then
+	        UCHAR=%20
+	fi
+	echo "$UCHAR"
+}
+
+
+function urlencodestring() {
+	USERINPUT=$@
+	LENGTH=${#USERINPUT}
+	for (( LOOP=0; LOOP<$LENGTH; LOOP++ )); do
+		TESTCHAR=`echo ${USERINPUT:$LOOP:1}`
+		TESTCHAR=`urlencodechar $TESTCHAR`
+		echo -n $TESTCHAR
+	done
+}
+
+
+function send_info() {
+	current_state=`urlencodestring $OPENQRM_STATE`
+	current_event=`urlencodestring $OPENQRM_EVENT`
+	MESSAGEDATA="resource_id=$resource_id&resource_uptime=$current_uptime&resource_cpunumber=$current_cpu_number&resource_cpuspeed=$current_cpu_speed&resource_cpumodel=$current_cpu_model&resource_memtotal=$current_mem_total&resource_memused=$current_mem_used&resource_swaptotal=$current_swap_total&resource_swapused=$current_swap_used&resource_hostname=$current_hostname&resource_load=$current_cpu_load&resource_state=$current_state&resource_event=$current_event&resource_capabilities=$dyn_current_resource_capabilities";
+	OPENQRM_RESOURCE_INFO_URL="http://$resource_openqrmserver/openqrm/action/resource-action.php?resource_command=update_info&$MESSAGEDATA"
+	wget -q -O /dev/null "$OPENQRM_RESOURCE_INFO_URL"
+}
+
+
+# converts bytes to mega-bytes
+function bytes_to_mega() {
+        echo $1 | awk '{printf("%.0f",  $1 /  1024/ 1024)}'
+}
+
+
+# statistic gathering functions
+
+# uptime
+function find_uptime() {
+	current_uptime=`cat /proc/uptime | cut -d'.' -f 1`
+	if [ -z "$current_uptime" ]; then
+		current_uptime=0
+	fi
+}
+
+
+
+# cpu_number
+function find_cpu_number() {
+	current_cpu_number=`grep '^cpu[0-9]' /proc/stat | wc -l`
+	current_cpu_number=${current_cpu_number// /}
+	if [ -z "$current_cpu_number" ]; then
+		current_cpu_number=0
+	fi
+}
+
+# cpu_speed
+function find_cpu_speed() {
+	current_cpu_speed=(`cat /proc/cpuinfo | grep "cpu.*MHz"`)
+	current_cpu_speed=${current_cpu_speed[3]/\.*/}
+	if [ -z "$current_cpu_speed" ]; then
+		current_cpu_speed=0
+	fi
+}
+
+
+# cpu_model
+function find_cpu_model() {
+	current_cpu_model=`cat /proc/cpuinfo | grep "model.*name" | head -n 1 | tr -s ' ' | cut -d' ' -f 3-`
+	current_cpu_model=`urlencodestring $current_cpu_model`
+	if [ -z "current_cpu_model" ]; then 
+		current_cpu_model=0
+	fi
+}
+
+# mem_total
+function find_mem_total() {
+	current_mem_total=`cat /proc/meminfo | awk '/MemTotal:/ { print int($2/1024) };'`
+}
+
+# mem_used
+function find_mem_used() {
+	if [ -z "$current_mem_total" ]; then
+		current_mem_total=`cat /proc/meminfo | awk '/MemTotal:/ { print int($2/1024) };'`
+	fi
+	current_mem_free=`cat /proc/meminfo | awk '/MemFree:/ { print int($2/1024) };'`
+	current_mem_used=$((current_mem_total - current_mem_free))
+	if [ -z "$current_mem_used" ]; then
+		current_mem_used=0
+	fi
+}
+
+
+# swap_total
+function find_swap_total() {
+	current_swap_total=`cat /proc/meminfo | awk '/SwapTotal:/ { print int($2/1024) };'`
+}
+
+# swap_used
+function find_swap_used() {
+	if [ -z "$current_swap_total" ]; then
+		current_swap_total=`cat /proc/meminfo | awk '/SwapTotal:/ { print int($2/1024) };'`
+	fi
+	current_swap_free=`cat /proc/meminfo | awk '/SwapFree:/ { print int($2/1024) };'`
+	current_swap_used=$((current_swap_total - current_swap_free))
+	if [ -z "$current_swap_used" ]; then
+		current_swap_used=0
+	fi
+}
+
+# hostname
+function find_hostname() {
+	current_hostname=`hostname`
+	current_hostname=`urlencodestring $current_hostname`
+	if [ -z "$current_hostname" ]; then
+		current_hostname=0
+	fi
+}
+
+
+
+# cpu_load
+function find_cpu_load() {
+	current_cpu_load=`cat /proc/loadavg | cut -d' ' -f 1`
+	if [ -z "$current_cpu_load" ]; then
+		current_cpu_load=0
+	fi
+}
+
+
+# start after /proc is mounted
+while [ ! -f /proc/cpuinfo ]; do
+	sleep 5
+done
+
+# gathering the static values
+echo "$0: Gathering resources-information" | logger
+# cpu_number
+find_cpu_number
+# cpu_speed
+find_cpu_speed
+# cpu_model
+find_cpu_model
+# mem_total
+find_mem_total
+
+# main loop
+while (true); do
+	# uptime
+	find_uptime
+	# mem_used
+	find_mem_used
+	# swap_total
+	find_swap_total
+	# swap_used
+	find_swap_used
+	# hostname
+	find_hostname
+	# cpu_load
+	find_cpu_load
+	# sending statistics
+	send_info
+	# delay
+	sleep $resource_senddelay
+done
+# never reached
+exit 0
+
+

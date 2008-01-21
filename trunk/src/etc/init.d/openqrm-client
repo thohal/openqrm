@@ -33,7 +33,8 @@ function openqrm_client_start() {
 
 	# start openqrm-execd
 	$resource_basedir/openqrm/sbin/openqrm-exec-port-monitor $resource_ip $resource_execdport | $resource_basedir/openqrm/sbin/openqrm-execd &
-
+	# start openqrm-monitord
+	$resource_basedir/openqrm/sbin/openqrm-monitord &
 	touch ${LOCKFILE}
 }
 
@@ -43,6 +44,7 @@ function openqrm_client_stop() {
 	# stop openqrm-execd
 	killall openqrm-exec-port-monitor 1>/dev/null 2>&1
 	killall openqrm-execd 1>/dev/null 2>&1
+	killall openqrm-monitord 1>/dev/null 2>&1
 	/bin/rm -f ${LOCKFILE}
 }
 

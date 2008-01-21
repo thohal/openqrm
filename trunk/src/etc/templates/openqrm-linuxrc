@@ -59,12 +59,12 @@ fi
 if [ "$id" == "-1" ]; then
 	# this will add the resource to the openQRM-server
 	echo "New resource detected ! Adding to the openQRM-server at $OPENQRM_SERVER_IP_ADDRESS"
-	wget -O /dev/null "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-action.php?resource_command=new_resource&resource_mac=$OPENQRM_RESOURCE_MAC_ADDRESS&resource_ip=$OPENQRM_RESOURCE_IP_ADDRESS&resource_id=$id"
+	wget -q -O /dev/null "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-action.php?resource_command=new_resource&resource_mac=$OPENQRM_RESOURCE_MAC_ADDRESS&resource_ip=$OPENQRM_RESOURCE_IP_ADDRESS&resource_id=$id"
 fi
 
 # get resource parameter
 echo "Getting resource-parameters ..."
-wget -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-action.php?resource_command=get_parameter&resource_mac=$OPENQRM_RESOURCE_MAC_ADDRESS"
+wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-action.php?resource_command=get_parameter&resource_mac=$OPENQRM_RESOURCE_MAC_ADDRESS"
 . $OPENQRM_RESOURCE_PARAMETER_FILE
 
 # if any deployment plugin is enabled, handle over the control
@@ -78,14 +78,14 @@ wget -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP_ADDRESS/open
 # run default openqrm-client boot-service
 echo "Getting openqrm-client package"
 cd /
-wget "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.tgz"
+wget -q "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.tgz"
 tar -xzf openqrm-client.tgz
 rm -f openqrm-client.tgz
 $resource_basedir/openqrm/etc/init.d/openqrm-client start
 
 # send idle/available
 echo "Sending idle/available to openQRM-server at $OPENQRM_SERVER_IP_ADDRESS"
-wget -O /dev/null "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-action.php?resource_command=update_status&resource_id=$resource_id&resource_state=idle&resource_event=available"
+wget -q -O /dev/null "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-action.php?resource_command=update_status&resource_id=$resource_id&resource_state=idle&resource_event=available"
 
 # rcs0 will be started here from init
 

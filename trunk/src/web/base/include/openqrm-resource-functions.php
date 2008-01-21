@@ -184,8 +184,8 @@ function openqrm_get_resource_list() {
 
 function openqrm_update_resource_info($resource_id, $resource_fields) {
 	global $RESOURCE_INFO_TABLE;
-	if ($resource_id < 0 || ! is_array($resource_fields)) {
-		print("Unable to update resource $resource_id");
+	if (! is_array($resource_fields)) {
+		print("ERROR: Unable to update resource $resource_id");
 		return 1;
 	}
 	$db=openqrm_get_db_connection();

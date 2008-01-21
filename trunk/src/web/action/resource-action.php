@@ -9,6 +9,11 @@ $resource_mac = $_REQUEST["resource_mac"];
 $resource_ip = $_REQUEST["resource_ip"];
 $resource_state = $_REQUEST["resource_state"];
 $resource_event = $_REQUEST["resource_event"];
+foreach ($_REQUEST as $key => $value) {
+	if (strncmp($key, "resource_", 9) == 0) {
+		$resource_fields[$key] = $value;
+	}
+}
 
 
 $OPENQRM_SERVER_IP_ADDRESS=openqrm_server_get_ip_address();

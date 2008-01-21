@@ -12,6 +12,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-execd $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-exec-port-monitor $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
+	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-monitord $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
 	. $(OPENQRM_SERVER_CONF) && chmod +x $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm*
 
 uninstall:
