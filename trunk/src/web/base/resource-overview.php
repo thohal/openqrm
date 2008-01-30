@@ -1,5 +1,10 @@
 <?php
 require_once "include/openqrm-resource-functions.php";
+// using the htmlobject class
+require_once "include/html/htmlobject.class.php";
+require_once "include/html/htmlobject_box.class.php";
+require_once "include/html/htmlobject_select.class.php";
+require_once "include/html/htmlobject_textarea.class.php";
 
 echo "Resource overview";
 echo "<br>";
@@ -58,6 +63,52 @@ echo "<a href=\"../action/resource-action.php?resource_command=halt&resource_ip=
 echo "<br>";
 
 
+
+echo "<br>";
+echo "html-class tests";
+echo "<br>";
+
+
+$select = new htmlobject_select();
+$select->id = 'id';
+$select->name = 'name';
+$select->css = 'select';
+$select->tabindex = 1;
+$select->title = 'title';
+$select->size = 3;
+$select->style = 'white-space:nowrap;';
+$select->multiple = true;
+$select->disabled = true;
+$select->text = array('1','2','3','4');
+$select->selected = array('3');
+echo $select->get_string();
+
+echo "<br>";
+
+$textarea = new htmlobject_textarea();
+$textarea->id = 'id';
+$textarea->name = 'name';
+$textarea->css = 'textarea';
+$textarea->tabindex = 1;
+$textarea->title = 'title';
+$textarea->size = 3;
+$textarea->style = 'white-space:nowrap;';
+$textarea->cols = 10;
+$textarea->rows = 10;
+$textarea->disabled = true;
+$textarea->readonly = true;
+$textarea->text = 'text';
+echo $textarea->get_string();
+
+echo "<br>";
+
+$box = new htmlobject_box();
+$box->label = 'mySelect';
+$box->content = $select->get_string();
+echo  $box->get_string();
+
+echo "<br>";
+echo "<br>";
 
 ?>
 
