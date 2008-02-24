@@ -36,7 +36,7 @@ create table resource_info(
 
 drop table kernel_info;
 create table kernel_info(
-	kernel_id INTEGER NOT NULL PRIMARY KEY,,
+	kernel_id INTEGER NOT NULL PRIMARY KEY,
 	kernel_name VARCHAR2(50),
 	kernel_version VARCHAR2(50),
 	kernel_capabilities VARCHAR2(255)
@@ -46,7 +46,7 @@ create table kernel_info(
 
 drop table image_info;
 create table image_info(
-	image_id INTEGER NOT NULL PRIMARY KEY,,
+	image_id INTEGER NOT NULL PRIMARY KEY,
 	image_name VARCHAR2(50),
 	image_version VARCHAR2(30),
 	image_type VARCHAR2(20),
@@ -60,7 +60,7 @@ create table image_info(
 
 drop table event_info;
 create table event_info(
-	event_id INTEGER NOT NULL PRIMARY KEY,,
+	event_id INTEGER NOT NULL PRIMARY KEY,
 	event_name VARCHAR2(50),
 	event_time VARCHAR2(50),
 	event_priority INTEGER,
@@ -77,7 +77,7 @@ create table event_info(
 
 drop table user_info;
 create table user_info(
-	user_id INTEGER NOT NULL PRIMARY KEY,,
+	user_id INTEGER NOT NULL PRIMARY KEY,
 	user_name VARCHAR2(20),
 	user_password VARCHAR2(20),
 	user_gender VARCHAR2(1),
@@ -92,6 +92,12 @@ create table user_info(
 	user_state VARCHAR2(20)
 );
 
+
+drop table role_info;
+create table role_info(
+	role_id INTEGER NOT NULL PRIMARY KEY,
+	role_name VARCHAR2(20)
+);
 
 
 drop table resource_service;

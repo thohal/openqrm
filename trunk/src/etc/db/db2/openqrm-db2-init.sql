@@ -96,7 +96,11 @@ create table user_info(						\
 	primary key(user_id)					\
 )
 
-
+drop table role_info
+create table role_info(						\
+	role_id bigint,							\
+	role_name varchar(20)					\
+)
 
 drop table resource_service
 create table resource_service (					\

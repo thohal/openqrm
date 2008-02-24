@@ -91,6 +91,12 @@ create table user_info(
 );
 
 
+drop table role_info;
+create table role_info(
+	role_id int8 NOT NULL PRIMARY KEY,,
+	role_name char(20)
+);
+
 
 drop table resource_service;
 create table resource_service(

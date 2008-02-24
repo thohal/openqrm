@@ -96,6 +96,11 @@ create table user_info(
 	user_state VARCHAR(20)
 );
 
+create table role_info(
+	role_id INT(5) NOT NULL PRIMARY KEY,
+	role_name VARCHAR(20)
+);
+
 
 create table resource_service (
 	resource_id INT(5) NOT NULL PRIMARY KEY,
