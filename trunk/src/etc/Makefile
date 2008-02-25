@@ -12,6 +12,8 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp openqrm* $$OPENQRM_SERVER_BASE_DIR/openqrm/etc/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/etc/init.d
 	. $(OPENQRM_SERVER_CONF) && cp init.d/openqrm* $$OPENQRM_SERVER_BASE_DIR/openqrm/etc/init.d/ && chmod 700 $$OPENQRM_SERVER_BASE_DIR/openqrm/etc/init.d/*   
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd
+	. $(OPENQRM_SERVER_CONF) && cp httpd/openqrm* $$OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates
 	. $(OPENQRM_SERVER_CONF) && cp templates/openqrm* $$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/ && chmod 700 $$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/*   
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/db2 $$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/mysql $$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/oracle $$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/postgres

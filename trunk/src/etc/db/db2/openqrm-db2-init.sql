@@ -124,6 +124,7 @@ insert into image_info (image_id, image_name, image_version, image_type, image_r
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared ) values ( 4, 'sda1', 'Linux', 'local', '/dev/sda1', 'ext3', 0)
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared ) values ( 5, 'sda2', 'Linux', 'local', '/dev/sda2', 'ext3', 0)
 insert into user_info (user_id, user_name, user_password, user_gender, user_first_name, user_last_name, user_department, user_office, user_role, user_last_update_time, user_description, user_capabilities, user_state) values (0, 'openqrm', 'openqrm', '-', '-', '-', '-', '-', 0, '-', 'openQRM-Server default user', '', 'activated')
+insert into role_info (role_id, user_name) values (0, 'administrator')
 
 
 
