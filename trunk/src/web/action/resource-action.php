@@ -77,13 +77,14 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		// localboot requires :
 		// resource_id
 		// resource_mac
+		// resource_ip
 		case 'localboot':
 			$fp = fsockopen($OPENQRM_SERVER_IP_ADDRESS, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
 			if(!$fp) {
 				echo "Could not connect to the openQRM-Server!";
 				exit();
 			}
-			fputs($fp,"openqrm_setboot local $resource_id $resource_mac $OPENQRM_SERVER_BASE_DIR");
+			fputs($fp,"openqrm_server_set_boot local $resource_id $resource_mac $resource_ip $OPENQRM_SERVER_BASE_DIR");
 			fclose($fp);
 			// update db
 			openqrm_set_resource_localboot($resource_id, 1);
@@ -93,13 +94,14 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		// netboot requires :
 		// resource_id
 		// resource_mac
+		// resource_ip
 		case 'netboot':
 			$fp = fsockopen($OPENQRM_SERVER_IP_ADDRESS, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
 			if(!$fp) {
 				echo "Could not connect to the openQRM-Server!";
 				exit();
 			}
-			fputs($fp,"openqrm_setboot net $resource_id $resource_mac $OPENQRM_SERVER_BASE_DIR");
+			fputs($fp,"openqrm_server_set_boot net $resource_id $resource_mac $resource_ip $OPENQRM_SERVER_BASE_DIR");
 			fclose($fp);
 			// update db
 			openqrm_set_resource_localboot($resource_id, 0);

@@ -312,6 +312,28 @@ function openqrm_get_resource_count($which) {
 }
 
 
+// displays the resource-overview
+function openqrm_display_resource_overview($DEFAULT_RESOURCE_START, $DEFAULT_RESOURCE_COUNT) {
+	global $RESOURCE_INFO_TABLE;
+	$db=openqrm_get_db_connection();
+	$recordSet = &$db->SelectLimit("select * from $RESOURCE_INFO_TABLE where resource_id>=$DEFAULT_RESOURCE_START order by resource_id ASC", $DEFAULT_RESOURCE_COUNT);
+	$resource_array = array();
+	if (!$recordSet) {
+		print $db->ErrorMsg();
+	} else {
+		while (!$recordSet->EOF) {
+			array_push($resource_array, $recordSet->fields);
+			$recordSet->MoveNext();
+		}
+		$recordSet->Close();
+	}		
+	return $resource_array;
+}
+
+
+
+
+
 
 
 ?>

@@ -129,9 +129,29 @@ function openqrm_server_add_resource() {
 	local RESOURCE_PXELINUXCFG_FILE=`echo 01-$RESOURCE_MAC | sed -e "s/:/-/g" | tr '[:upper:]' '[:lower:]'`
 	echo "openQRM-server: Adding resource $RESOURCE_ID $RESOURCE_MAC/$RESOURCE_IP_ADDRESS" | logger
 	openqrm_server_create_pxe_config $RESOURCE_ID default $RESOURCE_PXELINUXCFG_FILE
-
-
 }
 
+
+
+# function to set a resource net or local boot
+# param 1	: resource_id
+# param 2	: resource_mac
+# param 3	: resouce_ip
+function openqrm_server_set_boot() {
+	local RESOURCE_BOOT=$1
+	local RESOURCE_ID=$2
+	local RESOURCE_MAC=$3
+	local RESOURCE_IP_ADDRESS=$4
+	local RESOURCE_PXELINUXCFG_FILE=`echo 01-$RESOURCE_MAC | sed -e "s/:/-/g" | tr '[:upper:]' '[:lower:]'`
+	if [ "$RESOURCE_BOOT" == "net" ]; then
+		echo "openQRM-server: Setting resource $RESOURCE_ID $RESOURCE_MAC/$RESOURCE_IP_ADDRESS to netboot" | logger
+		openqrm_server_create_pxe_config $RESOURCE_ID default $RESOURCE_PXELINUXCFG_FILE
+	else
+		echo "openQRM-server: Setting resource $RESOURCE_ID $RESOURCE_MAC/$RESOURCE_IP_ADDRESS to localboot" | logger
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE | sed -e "s/default.*/default local/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE.update
+		mv $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE.update $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE
+		chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE
+	fi
+}
 
 

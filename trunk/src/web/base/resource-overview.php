@@ -6,26 +6,22 @@ require_once "include/html/htmlobject_box.class.php";
 require_once "include/html/htmlobject_select.class.php";
 require_once "include/html/htmlobject_textarea.class.php";
 
-echo "Resource overview";
+echo "<b>Resource overview</b>";
 echo "<br>";
-
 
 echo "<br>";
 $OPENQRM_RESOURCE_COUNT_ALL=openqrm_get_resource_count("all");
-echo "OPENQRM_RESOURCE_COUNT_ALL $OPENQRM_RESOURCE_COUNT_ALL";
+echo "All resources: $OPENQRM_RESOURCE_COUNT_ALL";
 echo "<br>";
 
 $OPENQRM_RESOURCE_COUNT_ONLINE=openqrm_get_resource_count("online");
-echo "OPENQRM_RESOURCE_COUNT_ONLINE $OPENQRM_RESOURCE_COUNT_ONLINE";
+echo "Online resources: $OPENQRM_RESOURCE_COUNT_ONLINE";
 echo "<br>";
 
 $OPENQRM_RESOURCE_COUNT_OFFLINE=openqrm_get_resource_count("offline");
-echo "OPENQRM_RESOURCE_COUNT_OFFLINE $OPENQRM_RESOURCE_COUNT_OFFLINE";
+echo "Offline resources: $OPENQRM_RESOURCE_COUNT_OFFLINE";
 echo "<br>";
 
-
-echo "<br>";
-echo "<br>";
 
 /*
 echo "adding resource ...";
@@ -47,68 +43,78 @@ echo "removing resource ..";
 openqrm_remove_resource(1, "00:13:8F:0D:BB:B1");
 */
 
-echo "<br>";
-echo "<br>";
 
-$OPENQRM_RESOURCE_LIST=openqrm_get_resource_list();
-print_r($OPENQRM_RESOURCE_LIST);
+	$resource_array = openqrm_display_resource_overview(0, 10);
 
-$resource_ip=$OPENQRM_RESOURCE_LIST[1][resource_ip] ;
+		foreach ($resource_array as $index => $resource) {
 
-echo "ip = $resource_ip";
-echo "<br>";
-echo "<a href=\"../action/resource-action.php?resource_command=reboot&resource_ip=$resource_ip\">reboot</a>";
-echo "<br>";
-echo "<a href=\"../action/resource-action.php?resource_command=halt&resource_ip=$resource_ip\">halt</a>";
-echo "<br>";
+			$resource_id = $resource["resource_id"];
+			$resource_localboot = $resource["resource_localboot"];
+			$resource_kernel = $resource["resource_kernel"];
+			$resource_kernelid = $resource["resource_kernelid"];
+			$resource_image = $resource["resource_image"];
+			$resource_imageid = $resource["resource_imageid"];
+			$resource_openqrmserver = $resource["resource_openqrmserver"];
+			$resource_ip = $resource["resource_ip"];
+			$resource_mac = $resource["resource_mac"];
+			$resource_hostname = $resource["resource_hostname"];
+			$resource_state = $resource["resource_state"];
+			$resource_event = $resource["resource_event"];
+
+			if ("$resource_id" != "0") {
+				echo "<form action='../action/resource-action.php' method=post>";
+				echo "resource&nbsp;&nbsp; $resource_id &nbsp;";
+				// local or netboot
+				if ("$resource_localboot" == "0") {
+					echo "<a href=\"../action/resource-action.php?resource_command=localboot&resource_id=$resource_id&resource_ip=$resource_ip&resource_mac=$resource_mac\">net</a>";
+				} else {
+					echo "<a href=\"../action/resource-action.php?resource_command=netboot&resource_id=$resource_id&resource_ip=$resource_ip&resource_mac=$resource_mac\">local</a>";
+				}
+				echo "&nbsp; $resource_kernel &nbsp; $resource_kernelid &nbsp; $resource_image &nbsp; $resource_imageid &nbsp; $resource_ip &nbsp; $resource_mac &nbsp; $resource_hostname &nbsp; $resource_state &nbsp; $resource_event &nbsp; ";
+
+				$select = new htmlobject_select();
+				$select->id = 'id';
+				$select->name = 'resource_command';
+				$select->css = 'select';
+				$select->tabindex = 1;
+				$select->title = 'Resource-Actions';
+				$select->size = 2;
+				$select->style = 'white-space:nowrap;';
+				$select->multiple = false;
+				$select->disabled = false;
+				$select->text = array('','reboot','halt','remove');
+				$select->selected = array('');
+				echo $select->get_string();
+
+				echo "<input type=hidden name=resource_ip value=$resource_ip>";
+				echo "<input type=hidden name=resource_id value=$resource_id>";
+				echo "<input type=hidden name=resource_mac value=$resource_mac>";
+
+				echo "<input type=hidden name=resource_localboot value=$resource_localboot>";
+				echo "<input type=hidden name=resource_kernel value=$resource_kernel>";
+				echo "<input type=hidden name=resource_kernelid value=$resource_kernelid>";
+				echo "<input type=hidden name=resource_image value=$resource_image>";
+				echo "<input type=hidden name=resource_imageid value=$resource_imageid>";
+
+				echo "<input type=submit value='apply'>";
+				echo "</form>";
+
+/*
+				echo "<a href=\"../action/resource-action.php?resource_command=reboot&resource_ip=$resource_ip\">reboot</a>";
+				echo "/";
+				echo "<a href=\"../action/resource-action.php?resource_command=halt&resource_ip=$resource_ip\">halt</a>";
+*/
+			} else {
+				echo "<br>";
+				echo "openQRM $resource_id &nbsp; $resource_localboot";
+				echo "<br>";
+			}
 
 
 
-echo "<br>";
-echo "html-class tests";
-echo "<br>";
+		}
 
 
-$select = new htmlobject_select();
-$select->id = 'id';
-$select->name = 'name';
-$select->css = 'select';
-$select->tabindex = 1;
-$select->title = 'title';
-$select->size = 3;
-$select->style = 'white-space:nowrap;';
-$select->multiple = true;
-$select->disabled = true;
-$select->text = array('1','2','3','4');
-$select->selected = array('3');
-echo $select->get_string();
-
-echo "<br>";
-
-$textarea = new htmlobject_textarea();
-$textarea->id = 'id';
-$textarea->name = 'name';
-$textarea->css = 'textarea';
-$textarea->tabindex = 1;
-$textarea->title = 'title';
-$textarea->size = 3;
-$textarea->style = 'white-space:nowrap;';
-$textarea->cols = 10;
-$textarea->rows = 10;
-$textarea->disabled = true;
-$textarea->readonly = true;
-$textarea->text = 'text';
-echo $textarea->get_string();
-
-echo "<br>";
-
-$box = new htmlobject_box();
-$box->label = 'mySelect';
-$box->content = $select->get_string();
-echo  $box->get_string();
-
-echo "<br>";
-echo "<br>";
 
 ?>
 
