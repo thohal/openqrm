@@ -18,3 +18,6 @@ hwdata-knoppix
 
 defaultkernel
 -> this is the kernel for creating the default boot-image from
+
+phplayersmenu
+-> required for the plugg-able menu user interface
