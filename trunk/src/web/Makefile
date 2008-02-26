@@ -17,8 +17,20 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp base/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include
 	. $(OPENQRM_SERVER_CONF) && cp base/include/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/
-	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/html
-	. $(OPENQRM_SERVER_CONF) && cp base/include/html/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/html/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/class
+	. $(OPENQRM_SERVER_CONF) && cp base/class/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/class/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/css
+	. $(OPENQRM_SERVER_CONF) && cp base/css/*.css $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/css/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu
+	. $(OPENQRM_SERVER_CONF) && cp base/img/menu/*.png $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server
+	#. $(OPENQRM_SERVER_CONF) && cp base/server/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/user
+	. $(OPENQRM_SERVER_CONF) && cp base/server/user/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/user/
+	. $(OPENQRM_SERVER_CONF) && tar -C $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/ -xzvf $$OPENQRM_BUILD_TMP_DIR/openqrm-build/phplayersmenu/source/phplayersmenu-3.2.0-rc.tar.gz
+	. $(OPENQRM_SERVER_CONF) && mv $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/phplayersmenu-3.2.0 $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/phplayersmenu
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins
+
 	
 	echo "Creating the openqrm-client boot-service package"
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service

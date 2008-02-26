@@ -1,6 +1,6 @@
 <?php
-$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openQRM/base/';
-$WebDir = '/openQRM/base/';
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+$WebDir = '/openqrm/base/';
 $IncludeDir = $RootDir.'include/';
 $ExternalDir = $RootDir.'include/';
 $PluginsDir = $RootDir.'plugins/';
