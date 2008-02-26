@@ -1,52 +1,52 @@
 <?php
-require_once "include/openqrm-resource-functions.php";
+require_once "include/openqrm-resource.class.php";
 // using the htmlobject class
 require_once "include/html/htmlobject.class.php";
 require_once "include/html/htmlobject_box.class.php";
 require_once "include/html/htmlobject_select.class.php";
 require_once "include/html/htmlobject_textarea.class.php";
 
-require_once "include/openqrm-resource.class.php";
 
 echo "<b>Resource overview</b>";
 echo "<br>";
 
 echo "<br>";
-$OPENQRM_RESOURCE_COUNT_ALL=openqrm_get_resource_count("all");
+$resource_tmp = new resource();
+$OPENQRM_RESOURCE_COUNT_ALL = $resource_tmp->get_count("all");
 echo "All resources: $OPENQRM_RESOURCE_COUNT_ALL";
 echo "<br>";
 
-$OPENQRM_RESOURCE_COUNT_ONLINE=openqrm_get_resource_count("online");
+$OPENQRM_RESOURCE_COUNT_ONLINE = $resource_tmp->get_count("online");
 echo "Online resources: $OPENQRM_RESOURCE_COUNT_ONLINE";
 echo "<br>";
 
-$OPENQRM_RESOURCE_COUNT_OFFLINE=openqrm_get_resource_count("offline");
+$OPENQRM_RESOURCE_COUNT_OFFLINE = $resource_tmp->get_count("offline");
 echo "Offline resources: $OPENQRM_RESOURCE_COUNT_OFFLINE";
 echo "<br>";
 
-
 /*
+
 echo "adding resource ...";
-openqrm_add_resource("1", "00:13:8F:0D:BB:B1", "10.20.30.40");
+$resource_tmp->add("1", "00:13:8F:0D:BB:B1", "10.20.30.40");
 echo "<br>";
 echo "<br>";
-$OPENQRM_RESOURCE_COUNT_ALL=openqrm_get_resource_count("all");
+$OPENQRM_RESOURCE_COUNT_ALL=$resource_tmp->get_count("all");
 echo "OPENQRM_RESOURCE_COUNT_ALL $OPENQRM_RESOURCE_COUNT_ALL";
 echo "<br>";
 echo "Resource parameter for resource 1";
 echo "<br>";
-openqrm_get_resource_parameter(1);
+$resource_tmp->get_parameter(1);
 echo "<br>";
 echo "<br>";
-$OPENQRM_RESOURCE_LIST=openqrm_get_resource_list();
+$OPENQRM_RESOURCE_LIST=$resource_tmp->get_list();
 print_r($OPENQRM_RESOURCE_LIST);
 echo "<br>";
 echo "removing resource ..";
-openqrm_remove_resource(1, "00:13:8F:0D:BB:B1");
+$resource_tmp->remove(1, "00:13:8F:0D:BB:B1");
 */
 
 
-	$resource_array = openqrm_display_resource_overview(0, 10);
+	$resource_array = $resource_tmp->display_overview(0, 10);
 
 		foreach ($resource_array as $index => $resource_db) {
 

@@ -1,7 +1,7 @@
 <?php
 
-require_once "../base/include/openqrm-resource-functions.php";
-require_once "../base/include/openqrm-server-functions.php";
+require_once "../base/include/openqrm-resource.class.php";
+require_once "../base/include/openqrm-server.class.php";
 
 $resource_command = $_REQUEST["resource_command"];
 $resource_id = $_REQUEST["resource_id"];
@@ -15,8 +15,9 @@ foreach ($_REQUEST as $key => $value) {
 	}
 }
 
+$openqrm_server = new server();
+$OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 
-$OPENQRM_SERVER_IP_ADDRESS=openqrm_server_get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
 
 	switch ($resource_command) {
@@ -25,34 +26,29 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		// resource_mac
 		// resource_ip
 		case 'new_resource':
-			if (openqrm_resource_exists($resource_mac)) {
+			$resource = new resource();
+			if ($resource->exists($resource_mac)) {
 				echo "Resource $resource_mac already exist in the openQRM-database!";
 				exit();
 			}
-				echo "here<br>";
 			if ("$resource_id" == "-1") {
-				$new_resource_id=openqrm_get_next_resource_id();
+				$new_resource_id=$resource->get_next_resource_id();
+				$resource->id = $new_resource_id;
 			} else {			
 			// 	check if resource_id is free
-				if (openqrm_is_resource_id_free($resource_id)) {			
+				if ($resource->is_id_free($resource_id)) {			
 					$new_resource_id=$resource_id;
 				} else {
-					echo "Given resource id $new_resource_id is already in use!";
+					echo "Given resource id $resource_id is already in use!";
 					exit();
 				}
 			}
-			$fp = fsockopen($OPENQRM_SERVER_IP_ADDRESS, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
-			if(!$fp) {
-				echo "Could not connect to the openQRM-Server!";
-				exit();
-			}
 			// send command to the openQRM-server
-			fputs($fp,"openqrm_server_add_resource $new_resource_id $resource_mac $resource_ip");
-			fclose($fp);
+			$openqrm_server->send_command("openqrm_server_add_resource $new_resource_id $resource_mac $resource_ip");
 			// add to openQRM database
-			openqrm_add_resource($new_resource_id, $resource_mac, $resource_ip);
+			$resource->add($new_resource_id, $resource_mac, $resource_ip);
 			echo "Added new resource $new_resource_id/$resource_mac to the openQRM-database";
-//			openqrm_get_resource_parameter($new_resource_id);
+//			$resource->get_parameter($new_resource_id);
 
 			break;
 
@@ -60,17 +56,10 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		// resource_id
 		// resouce_mac
 		case 'remove':
-			$fp = fsockopen($OPENQRM_SERVER_IP_ADDRESS, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
-			if(!$fp) {
-				echo "Could not connect to the openQRM-Server!";
-				exit();
-			}
-			// send command to the openQRM-server
-			fputs($fp,"openqrm_remove_resource $resource_id $resource_mac $OPENQRM_SERVER_BASE_DIR");
-			fclose($fp);
-
+			$openqrm_server->send_command("openqrm_remove_resource $resource_id $resource_mac");
 			// remove from openQRM database
-			openqrm_remove_resource($resource_id, $resource_mac);
+			$resource = new resource();
+			$resource->remove($resource_id, $resource_mac);
 			echo "Removed resource $resource_id/$resource_mac from the openQRM-database";
 			break;
 
@@ -79,15 +68,10 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		// resource_mac
 		// resource_ip
 		case 'localboot':
-			$fp = fsockopen($OPENQRM_SERVER_IP_ADDRESS, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
-			if(!$fp) {
-				echo "Could not connect to the openQRM-Server!";
-				exit();
-			}
-			fputs($fp,"openqrm_server_set_boot local $resource_id $resource_mac $resource_ip $OPENQRM_SERVER_BASE_DIR");
-			fclose($fp);
+			$openqrm_server->send_command("openqrm_server_set_boot local $resource_id $resource_mac $resource_ip");
 			// update db
-			openqrm_set_resource_localboot($resource_id, 1);
+			$resource = new resource();
+			$resource->set_localboot($resource_id, 1);
 			echo "Configured resource $resource_id for local-boot";
 			break;
 			
@@ -96,15 +80,10 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		// resource_mac
 		// resource_ip
 		case 'netboot':
-			$fp = fsockopen($OPENQRM_SERVER_IP_ADDRESS, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
-			if(!$fp) {
-				echo "Could not connect to the openQRM-Server!";
-				exit();
-			}
-			fputs($fp,"openqrm_server_set_boot net $resource_id $resource_mac $resource_ip $OPENQRM_SERVER_BASE_DIR");
-			fclose($fp);
+			$openqrm_server->send_command("openqrm_server_set_boot net $resource_id $resource_mac $resource_ip");
 			// update db
-			openqrm_set_resource_localboot($resource_id, 0);
+			$resource = new resource();
+			$resource->set_localboot($resource_id, 0);
 			echo "Configured resource $resource_id to net-boot";
 			break;
 
@@ -118,39 +97,30 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		// image_name
 		
 		case 'assign':
-			$kernel_name=openqrm_get_kernel_name($_REQUEST["resource_kernelid"]);
-			$image_name=openqrm_get_image_name($_REQUEST["resource_imageid"]);
-			$fp = fsockopen($OPENQRM_SERVER_IP_ADDRESS, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
-			if(!$fp) {
-				echo "Could not connect to the openQRM-Server!";
-				exit();
-			}
+
+			// TODO !! create classes for kernel and images
+		// 	$kernel_name=openqrm_get_kernel_name($_REQUEST["resource_kernelid"]);
+		//	$image_name=openqrm_get_image_name($_REQUEST["resource_imageid"]);
+
 			// send command to the openQRM-server
-			fputs($fp,"openqrm_assign_kernel $resource_id $resource_mac $kernel_name $OPENQRM_SERVER_BASE_DIR");
-			fclose($fp);
+			$openqrm_server->send_command("openqrm_assign_kernel $resource_id $resource_mac $kernel_name");
 			openqrm_set_default($_REQUEST["resource_serverid"], 0);
 			// update openQRM database
-			assign_resource($resource_id, $kernel_name, $_REQUEST["resource_kernelid"], $image_name, $_REQUEST["resource_imageid"], $_REQUEST["resource_serverid"]);
+			$resource = new resource();
+			$resource->assign($resource_id, $kernel_name, $_REQUEST["resource_kernelid"], $image_name, $_REQUEST["resource_imageid"], $_REQUEST["resource_serverid"]);
 			echo "Assigned resource $resource_id to boot $kernel_name and use $image_name";
 			// echo "assigning finished, rebooting $resource_ip";
 			// reboot resource
-			$fp = fsockopen($resource_ip, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
-			if(!$fp) {
-				echo "$errstr ($errno)<br>";
-				echo "Could not connect to Resource with ip-address $resource_ip!";
-				exit();
-			}
-			fputs($fp,"reboot");
-			fclose($fp);
-
+			$resource->send_command("$resource_ip", "reboot");
 			break;
 
 		// get_parameter requires :
 		// resource_mac
 		case 'get_parameter':
 			if (strlen($resource_mac)) {
-				$resource_id=openqrm_get_resource_id_by_resource_mac($resource_mac);
-				openqrm_get_resource_parameter($resource_id);
+				$resource = new resource();
+				$resource->get_instance_by_mac($resource_mac);
+				$resource->get_parameter($resource->id);
 			}
 			exit();
 			break;
@@ -160,7 +130,8 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		// array of resource_fields
 		case 'update_info':
 			if (strlen($resource_id)) {
-				openqrm_update_resource_info($resource_id, $resource_fields);
+				$resource = new resource();
+				$resource->update_info($resource_id, $resource_fields);
 			}
 			exit();
 			break;
@@ -171,7 +142,8 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		// resource_event
 		case 'update_status':
 			if (strlen($resource_id)) {
-				openqrm_update_resource_status($resource_id, $resource_state, $resource_event);
+				$resource = new resource();
+				$resource->update_status($resource_id, $resource_state, $resource_event);
 			}
 			exit();
 			break;
@@ -180,34 +152,25 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		// reboot requires :
 		// resource_ip
 		case 'reboot':
-			$fp = fsockopen($resource_ip, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
-			if(!$fp) {
-				echo "Could not reboot Resource with ip-address $resource_ip";
-				exit();
-			}
-			fputs($fp,"reboot");
-			fclose($fp);
+			$resource = new resource();
+			$resource->send_command("$resource_ip", "reboot");
 			break;
 
 
 		// halt requires :
 		// resource_ip
 		case 'halt':
-			$fp = fsockopen($resource_ip, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
-			if(!$fp) {
-				echo "Could not shutdown Resource with ip-address $resource_ip";
-				exit();
-			}
-			fputs($fp,"halt");
-			fclose($fp);
+			$resource = new resource();
+			$resource->send_command("$resource_ip", "halt");
 			break;
 
 		// list requires :
 		// nothing
 	    case 'list':
-			$resource_list = openqrm_get_resource_list();
-			foreach ($resource_list as $resource) {
-				foreach ($resource as $key => $val) {
+			$resource = new resource();
+			$resource_list = $resource->get_resource_list();
+			foreach ($resource_list as $resource_l) {
+				foreach ($resource_l as $key => $val) {
 					print "$key=$val ";
 				}
 				print "\n";
