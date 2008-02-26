@@ -5,6 +5,7 @@ export OPENQRM_SERVER_CONF=$(shell pwd)/../etc/openqrm-server.conf
 configure:
 
 compile:
+	../include/openqrm-build-functions get_phplayersmenu
 
 install:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make install' as root" && exit 1)
@@ -18,6 +19,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp base/include/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/html
 	. $(OPENQRM_SERVER_CONF) && cp base/include/html/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/html/
+	
 	echo "Creating the openqrm-client boot-service package"
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client/$$OPENQRM_RESOURCE_BASE_DIR/openqrm

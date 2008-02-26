@@ -373,6 +373,13 @@ function openqrm_create_default_boot_image() {
 }
 
 
+# function downloads + prepares phplayersmenu
+# -> this is for "make compile" / compilation phase
+openqrm_get_phplayersmenu() {
+	. $OPENQRM_SOURCE_DIR/etc/build.conf/phplayersmenu.conf
+	openqrm_cache_or_download phplayersmenu
+}
+
 
 # case for running functions called from Makefiles
 case "$1" in
@@ -390,5 +397,8 @@ case "$1" in
 		;;
 	default_boot_image)
 		openqrm_create_default_boot_image
+		;;
+	get_phplayersmenu)
+		openqrm_get_phplayersmenu
 		;;
 esac
