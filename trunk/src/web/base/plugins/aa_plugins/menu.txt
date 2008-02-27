@@ -4,3 +4,4 @@
 #	IMG
 #	Target
 .|Plugins
+..|Plugin manager|plugins/aa_plugins/plugin-manager.php
