@@ -31,10 +31,11 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/user
 	. $(OPENQRM_SERVER_CONF) && cp base/server/user/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/user/
 	#. $(OPENQRM_SERVER_CONF) && cp base/server/user/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/user/
-	. $(OPENQRM_SERVER_CONF) && tar -C $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/ -xzvf $$OPENQRM_BUILD_TMP_DIR/openqrm-build/phplayersmenu/source/phplayersmenu-3.2.0-rc.tar.gz
-	. $(OPENQRM_SERVER_CONF) && mv $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/phplayersmenu-3.2.0 $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/phplayersmenu
+	# install phplayersmenu
+	. $(OPENQRM_SERVER_CONF) && . ../etc/build.conf/phplayersmenu.conf && tar -C $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/ -xzf $$OPENQRM_BUILD_TMP_DIR/openqrm-build/phplayersmenu/source/phplayersmenu-$$OPENQRM_SOURCE_VERSION-$$OPENQRM_SOURCE_SUB_VERSION.tar.gz
+	. $(OPENQRM_SERVER_CONF) && rm -rf $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/phplayersmenu
+	. $(OPENQRM_SERVER_CONF) && . ../etc/build.conf/phplayersmenu.conf && mv $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/phplayersmenu-$$OPENQRM_SOURCE_VERSION $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/phplayersmenu
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins
-
 	
 	echo "Creating the openqrm-client boot-service package"
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service
