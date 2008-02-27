@@ -8,7 +8,7 @@
 <frame src="menu.php" name="NaviFrame" frameborder="0">
   <frameset rows="100,*">
   <frame src="top.php" name="TopFrame" frameborder="0" noresize scrolling="no">
-  <frame src="http://www.mozilla.org/" name="MainFrame" frameborder="0">
+  <frame src="server/resource/resource-overview.php" name="MainFrame" frameborder="0">
   </frameset>
 
   <noframes>

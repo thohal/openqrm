@@ -1,10 +1,11 @@
 <?php
-require_once "../../class/openqrm-resource.class.php";
+
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+require_once "$RootDir/class/openqrm-resource.class.php";
 // using the htmlobject class
-require_once "../../class/htmlobject.class.php";
-require_once "../../class/htmlobject_box.class.php";
-require_once "../../class/htmlobject_select.class.php";
-require_once "../../class/htmlobject_textarea.class.php";
+require_once "$RootDir/class/htmlobject_box.class.php";
+require_once "$RootDir/class/htmlobject_select.class.php";
+require_once "$RootDir/class/htmlobject_textarea.class.php";
 
 echo "<b>Resource overview</b>";
 echo "<br>";

@@ -1,7 +1,8 @@
 <?php
 
-require_once "../../include/openqrm-database-functions.php";
-require_once "../../class/openqrm-server.class.php";
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+require_once "$RootDir/include/openqrm-database-functions.php";
+require_once "$RootDir/class/openqrm-server.class.php";
 
 global $RESOURCE_INFO_TABLE;
 
