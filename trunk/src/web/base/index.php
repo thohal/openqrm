@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/frameset.dtd">
 <html>
 <head>
-<title>Beschreibung des Frameset-Inhalts</title>
+<title>openQRM-Server</title>
 </head>
 <frameset cols="200,*">
 <frame src="menu.php" name="NaviFrame" frameborder="0">
@@ -13,9 +13,8 @@
 
   <noframes>
     <body>
-      <h1>Alternativ-Inhalt</h1>
-      <p>Wird angezeigt, wenn der Browser keine Frames darstellen kann.</p>
-      <p>Mindest-Inhalt sollten eine Kurzbeschreibung und eine Sitemap sein.</p>
+      <h1>openQRM-Server</h1>
+      <p>Please use a browser which supports HTML-frames</p>
     </body>
   </noframes>
 </frameset>
