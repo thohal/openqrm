@@ -1,7 +1,7 @@
 <?php
 
-// This class represents a server managed by openQRM
-// The server abstrations consists of the combination of 
+// This class represents a applicance managed by openQRM
+// The applicance abstrations consists of the combination of 
 // - 1 boot-image (kernel.class)
 // - 1 (or more) server-filesystem/rootfs (image.class)
 // - requirements (cpu-number, cpu-speed, memory needs, etc)
@@ -13,12 +13,12 @@ $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 global $RESOURCE_INFO_TABLE;
 
-class server {
+class applicance {
 
 var $id = '';
 
 // ---------------------------------------------------------------------------------
-// general server methods
+// general applicance methods
 // ---------------------------------------------------------------------------------
 
 
