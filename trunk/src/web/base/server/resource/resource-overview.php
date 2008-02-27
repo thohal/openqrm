@@ -53,7 +53,7 @@ $resource_tmp->remove(1, "00:13:8F:0D:BB:B1");
 			$resource = new resource();
 			$resource->get_instance_by_id($resource_db["resource_id"]);
 			if ("$resource->id" != "0") {
-				echo "<form action='../action/resource-action.php' method=post>";
+				echo "<form action='../../../action/resource-action.php' method=post>";
 				echo "resource&nbsp;&nbsp; $resource->id &nbsp;";
 				// local or netboot
 				if ("$resource->localboot" == "0") {
