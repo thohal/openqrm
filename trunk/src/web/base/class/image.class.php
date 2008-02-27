@@ -2,11 +2,11 @@
 
 // This class represents a filesystem-image (rootfs) 
 // In combination with a kernel it can be deployed to a resource
-// via the server.class
+// via the appliance.class
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
-global $RESOURCE_INFO_TABLE;
+global $IMAGE_INFO_TABLE;
 
 class image {
 

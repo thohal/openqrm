@@ -11,30 +11,43 @@ install:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make install' as root" && exit 1)
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web
 	. $(OPENQRM_SERVER_CONF) && cp *.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/
+	# action
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/action
 	. $(OPENQRM_SERVER_CONF) && cp action/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/action/
+	# base
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base
 	. $(OPENQRM_SERVER_CONF) && cp base/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/
+	# base/include
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include
 	. $(OPENQRM_SERVER_CONF) && cp base/include/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/
+	# base/class
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/class
 	. $(OPENQRM_SERVER_CONF) && cp base/class/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/class/
+	# base/css
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/css
 	. $(OPENQRM_SERVER_CONF) && cp base/css/*.css $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/css/
+	# base/img/menu
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu
 	. $(OPENQRM_SERVER_CONF) && cp base/img/menu/*.png $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/
 	. $(OPENQRM_SERVER_CONF) && cp base/img/*.gif $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/
+	# base/server
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server
+	# base/server/resource
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/resource
 	. $(OPENQRM_SERVER_CONF) && cp base/server/resource/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/resource/
 	. $(OPENQRM_SERVER_CONF) && cp base/server/resource/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/resource/
+	# base/server/user
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/user
 	. $(OPENQRM_SERVER_CONF) && cp base/server/user/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/user/
 	#. $(OPENQRM_SERVER_CONF) && cp base/server/user/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/user/
+	# base/server/image
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/image
 	. $(OPENQRM_SERVER_CONF) && cp base/server/image/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/image/
 	. $(OPENQRM_SERVER_CONF) && cp base/server/image/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/image/
-
+	# base/server/kernel
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/kernel
+	. $(OPENQRM_SERVER_CONF) && cp base/server/kernel/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/kernel/
+	. $(OPENQRM_SERVER_CONF) && cp base/server/kernel/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/kernel/
 
 	# install phplayersmenu
 	. $(OPENQRM_SERVER_CONF) && . ../etc/build.conf/phplayersmenu.conf && tar -C $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/ -xzf $$OPENQRM_BUILD_TMP_DIR/openqrm-build/phplayersmenu/source/phplayersmenu-$$OPENQRM_SOURCE_VERSION-$$OPENQRM_SOURCE_SUB_VERSION.tar.gz
