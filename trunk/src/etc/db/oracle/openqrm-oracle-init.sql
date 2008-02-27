@@ -57,6 +57,31 @@ create table image_info(
 	image_capabilities VARCHAR2(255)
 );
 
+drop table appliance_info;
+create table appliance_info(
+	appliance_id INTEGER NOT NULL PRIMARY KEY,
+	appliance_name VARCHAR2(50),
+	appliance_kernelid INTEGER,
+	appliance_imageid INTEGER,
+	appliance_starttime INTEGER,
+	appliance_stoptime INTEGER,
+	appliance_cpunumber INTEGER,
+	appliance_cpuspeed INTEGER,
+	appliance_cpumodel VARCHAR2(40),
+	appliance_memtotal INTEGER,
+	appliance_swaptotal INTEGER,
+	appliance_capabilities VARCHAR2(255),
+	appliance_cluster INTEGER,
+	appliance_ssi INTEGER,
+	appliance_resources INTEGER,
+	appliance_highavailable INTEGER,
+	appliance_virtual INTEGER,
+	appliance_virtualization_method VARCHAR2(20),
+	appliance_virtualization_host INTEGER,
+	appliance_state VARCHAR2(20),
+	appliance_comment VARCHAR2(100),
+	appliance_event VARCHAR2(20)
+);
 
 drop table event_info;
 create table event_info(

@@ -56,6 +56,32 @@ create table image_info(
 );
 
 
+drop table appliance_info;
+create table appliance_info(
+	appliance_id int8 NOT NULL PRIMARY KEY,
+	appliance_name char(50),
+	appliance_kernelid int8,
+	appliance_imageid int8,
+	appliance_starttime int8,
+	appliance_stoptime int8,
+	appliance_cpunumber int8,
+	appliance_cpuspeed int8,
+	appliance_cpumodel char(40),
+	appliance_memtotal int8,
+	appliance_swaptotal int8,
+	appliance_capabilities char(255),
+	appliance_cluster int8,
+	appliance_ssi int8,
+	appliance_resources int8,
+	appliance_highavailable int8,
+	appliance_virtual int8,
+	appliance_virtualization_method char(20),
+	appliance_virtualization_host int8,
+	appliance_state char(20),
+	appliance_comment char(100),
+	appliance_event char(20)
+);
+
 drop table event_info;
 create table event_info(
 	event_id int8 NOT NULL PRIMARY KEY,,

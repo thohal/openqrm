@@ -60,6 +60,35 @@ create table image_info(			\
 	primary key(image_id)				\
 )
 
+
+drop table appliance_info
+create table appliance_info(				\
+	appliance_id bigint,					\
+	appliance_name varchar(50),		\
+	appliance_kernelid bigint,			\
+	appliance_imageid bigint,			\
+	appliance_starttime bigint,			\
+	appliance_stoptime bigint,			\
+	appliance_cpunumber bigint,			\
+	appliance_cpuspeed bigint,			\
+	appliance_cpumodel varchar(40),		\
+	appliance_memtotal bigint,			\
+	appliance_swaptotal bigint,			\
+	appliance_capabilities varchar(255),	\
+	appliance_cluster bigint,			\
+	appliance_ssi bigint,			\
+	appliance_resources bigint,			\
+	appliance_highavailable bigint,			\
+	appliance_virtual bigint,			\
+	appliance_virtualization_method varchar(20),	\
+	appliance_virtualization_host bigint,			\
+	appliance_state varchar(20),			\
+	appliance_comment varchar(100),			\
+	appliance_event varchar(20),			\
+	primary key(appliance_id)			\
+)
+
+
 drop table event_info
 create table event_info(			\
 	event_id bigint,			\
