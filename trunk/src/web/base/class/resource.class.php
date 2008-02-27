@@ -2,7 +2,7 @@
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
-require_once "$RootDir/class/openqrm-server.class.php";
+require_once "$RootDir/class/openqrm_server.class.php";
 
 global $RESOURCE_INFO_TABLE;
 
@@ -400,3 +400,6 @@ function display_overview($start, $count) {
 // ---------------------------------------------------------------------------------
 
 }
+
+?>
+

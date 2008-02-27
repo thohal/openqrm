@@ -4,7 +4,7 @@ $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 global $RESOURCE_INFO_TABLE;
 
-class server {
+class openqrm_server {
 
 var $id = '';
 

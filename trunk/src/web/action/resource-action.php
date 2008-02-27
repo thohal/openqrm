@@ -1,8 +1,8 @@
 <?php
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
-require_once "$RootDir/class/openqrm-resource.class.php";
-require_once "$RootDir/class/openqrm-server.class.php";
+require_once "$RootDir/class/resource.class.php";
+require_once "$RootDir/class/openqrm_server.class.php";
 
 $resource_command = $_REQUEST["resource_command"];
 $resource_id = $_REQUEST["resource_id"];
@@ -16,7 +16,7 @@ foreach ($_REQUEST as $key => $value) {
 	}
 }
 
-$openqrm_server = new server();
+$openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 
 global $OPENQRM_SERVER_IP_ADDRESS;
