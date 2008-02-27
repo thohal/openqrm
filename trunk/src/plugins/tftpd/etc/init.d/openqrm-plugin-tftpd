@@ -2,7 +2,11 @@
 # init script for the openQRM tftpd-plugin
 
 OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/tftpd/include/openqrm-plugin-tftpd-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/tftpd/etc/openqrm-plugin-tftpd.conf
 
 function openqrm_plugin_tftpd_start() {
 	echo "Starting the openQRM tftpd-plugin"
@@ -20,8 +24,16 @@ function openqrm_plugin_tftpd_stop() {
 	killall in.tftpd 1>/dev/null 2>&1
 }
 
+function openqrm_plugin_tftpd_uninstall() {
+	echo "Uninstalling the openQRM tftpd-plugin"
+	openqrm_plugin_tftpd_stop
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+}
+
 function openqrm_plugin_tftpd_init() {
 	echo "Initializing the openQRM tftpd-plugin"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/tftpd/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
 }
 
 
@@ -40,8 +52,11 @@ case "$1" in
 	init)
 		openqrm_plugin_tftpd_init
 		;;
+	uninstall)
+		openqrm_plugin_tftpd_uninstall
+		;;
 	*)
-		echo "Usage: $0 {start|stop|restart|init}"
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
 		exit 1
 
 esac

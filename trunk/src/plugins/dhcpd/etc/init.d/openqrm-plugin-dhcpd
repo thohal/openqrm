@@ -5,8 +5,7 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/include/openqrm-plugin-dhcpd-functions
-
-
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/openqrm-plugin-dhcpd.conf
 
 function openqrm_plugin_dhcpd_start() {
 	echo "Starting the openQRM dhcpd-plugin"
@@ -69,8 +68,20 @@ function openqrm_plugin_dhcpd_init() {
 		sed -e "s/OPENQRM_PLUGIN_DHCPD_IP_RANGE_LAST/$OPENQRM_PLUGIN_DHCPD_IP_RANGE_LAST/g"	\
 		> $OPENQRM_PLUGIN_DHCPD_CONF
 
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+
 	return 0
 }
+
+
+function openqrm_plugin_dhcpd_uninstall() {
+	echo "Uninstalling the openQRM dhcpd plugin"
+	openqrm_plugin_dhcpd_stop
+	# unlinking the web dir
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+}
+
 
 
 case "$1" in
@@ -88,8 +99,11 @@ case "$1" in
 	init)
 		openqrm_plugin_dhcpd_init
 		;;
+	uninstall)
+		openqrm_plugin_dhcpd_uninstall
+		;;
 	*)
-		echo "Usage: $0 {start|stop|restart|init}"
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
 		exit 1
 
 esac

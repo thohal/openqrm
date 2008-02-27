@@ -55,37 +55,16 @@ $mid->icondir = $RootDir.'img/menu/';
 $mid->iconwww = $WebDir.'img/menu/';
 
 $strMenuStructure = '';
-$plugins = new Folder();
-$plugins->getFolders($RootDir.'server/');
+$server = new Folder();
+$server->getFolders($RootDir.'server/');
 
-foreach ($plugins->folders as $plug) {
-	$filename = $RootDir.'server/'.$plug.'/menu.txt';
+foreach ($server->folders as $server_dir) {
+	$filename = $RootDir.'server/'.$server_dir.'/menu.txt';
 	if(file_exists($filename)) {
 		$strMenuStructure .= implode('', file($filename));
 	}
 }
-if($strMenuStructure != '') {
-	$mid->setMenuStructureString($strMenuStructure);
-}	
-$mid->setIconsize(16, 16);
-$mid->parseStructureForMenu('treemenu1');
-$mid->newTreeMenu('treemenu1');
-$mid->printTreeMenu('treemenu1');
 
-unset($plugins);
-
-echo '<hr>';
-
-$mid = new TreeMenu();
-$mid->dirroot = $RootDir;
-$mid->libjsdir = $layersmenue_dir.'libjs/';
-$mid->tpldir = $RootDir.'tpl/';
-$mid->imgdir = $RootDir.'img/menu/';
-$mid->imgwww = $WebDir.'img/menu/';
-$mid->icondir = $RootDir.'img/menu/';
-$mid->iconwww = $WebDir.'img/menu/';
-
-$strMenuStructure = '';
 $plugins = new Folder();
 $plugins->getFolders($PluginsDir);
 
@@ -95,13 +74,15 @@ foreach ($plugins->folders as $plug) {
 		$strMenuStructure .= implode('', file($filename));
 	}
 }
+
 if($strMenuStructure != '') {
 	$mid->setMenuStructureString($strMenuStructure);
 }	
 $mid->setIconsize(16, 16);
-$mid->parseStructureForMenu('treemenu2');
-$mid->newTreeMenu('treemenu2');
-$mid->printTreeMenu('treemenu2');
+$mid->parseStructureForMenu('treemenu1');
+$mid->newTreeMenu('treemenu1');
+$mid->printTreeMenu('treemenu1');
+
 ?>
 
 </body>
