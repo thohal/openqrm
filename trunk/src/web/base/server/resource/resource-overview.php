@@ -57,9 +57,9 @@ $resource_tmp->remove(1, "00:13:8F:0D:BB:B1");
 				echo "resource&nbsp;&nbsp; $resource->id &nbsp;";
 				// local or netboot
 				if ("$resource->localboot" == "0") {
-					echo "<a href=\"../action/resource-action.php?resource_command=localboot&resource_id=$resource->id&resource_ip=$resource->ip&resource_mac=$resource->mac\">net</a>";
+					echo "<a href=\"../../../action/resource-action.php?resource_command=localboot&resource_id=$resource->id&resource_ip=$resource->ip&resource_mac=$resource->mac\">net</a>";
 				} else {
-					echo "<a href=\"../action/resource-action.php?resource_command=netboot&resource_id=$resource->id&resource_ip=$resource->ip&resource_mac=$resource->mac\">local</a>";
+					echo "<a href=\"../../../action/resource-action.php?resource_command=netboot&resource_id=$resource->id&resource_ip=$resource->ip&resource_mac=$resource->mac\">local</a>";
 				}
 				echo "&nbsp; $resource->kernel &nbsp; $resource->kernelid &nbsp; $resource->image &nbsp; $resource->imageid &nbsp; $resource->ip &nbsp; $resource->mac &nbsp; $resource->hostname &nbsp; $resource->state &nbsp; $resource->event &nbsp; ";
 

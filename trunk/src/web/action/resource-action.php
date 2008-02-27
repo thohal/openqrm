@@ -1,7 +1,8 @@
 <?php
 
-require_once "../base/include/openqrm-resource.class.php";
-require_once "../base/include/openqrm-server.class.php";
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+require_once "$RootDir/class/openqrm-resource.class.php";
+require_once "$RootDir/class/openqrm-server.class.php";
 
 $resource_command = $_REQUEST["resource_command"];
 $resource_id = $_REQUEST["resource_id"];
