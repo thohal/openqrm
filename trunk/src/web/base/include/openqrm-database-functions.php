@@ -1,12 +1,16 @@
 <?php
-require_once "openqrm-server-config.php";
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
+require_once ($RootDir.'include/openqrm-server-config.php');
+
 // different locations of adodb for suse/redhat/debian
-if (file_exists("/usr/share/cacti/lib/adodb/adodb.inc.php")) {
-        include('/usr/share/cacti/lib/adodb/adodb.inc.php');
-} else if  (file_exists("/usr/share/php/adodb/adodb.inc.php")) {
-        include('/usr/share/php/adodb/adodb.inc.php');
+if (file_exists('/usr/share/cacti/lib/adodb/adodb.inc.php')) {
+    require_once ('/usr/share/cacti/lib/adodb/adodb.inc.php');
+} else if (file_exists('/usr/share/php/adodb/adodb.inc.php')) {
+    require_once ('/usr/share/php/adodb/adodb.inc.php');
+} else if (file_exists($RootDir.'include/adodb/adodb.inc.php')) {
+    require_once ($RootDir.'include/adodb/adodb.inc.php');
 } else {
-        echo "ERROR: Could not find adodb on this system!";
+	echo 'ERROR: Could not find adodb on this system!';
 }
 
 
