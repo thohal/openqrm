@@ -1,5 +1,8 @@
 <?php
 
+// This class represents a resource in openQRM (physical hardware or virtual machine)
+
+
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/class/openqrm_server.class.php";

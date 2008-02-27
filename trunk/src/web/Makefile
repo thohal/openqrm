@@ -31,6 +31,11 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/user
 	. $(OPENQRM_SERVER_CONF) && cp base/server/user/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/user/
 	#. $(OPENQRM_SERVER_CONF) && cp base/server/user/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/user/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/image
+	. $(OPENQRM_SERVER_CONF) && cp base/server/image/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/image/
+	. $(OPENQRM_SERVER_CONF) && cp base/server/image/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/image/
+
+
 	# install phplayersmenu
 	. $(OPENQRM_SERVER_CONF) && . ../etc/build.conf/phplayersmenu.conf && tar -C $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/ -xzf $$OPENQRM_BUILD_TMP_DIR/openqrm-build/phplayersmenu/source/phplayersmenu-$$OPENQRM_SOURCE_VERSION-$$OPENQRM_SOURCE_SUB_VERSION.tar.gz
 	. $(OPENQRM_SERVER_CONF) && rm -rf $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/phplayersmenu

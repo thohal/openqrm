@@ -3,5 +3,5 @@
 #	Alt
 #	IMG
 #	Target
-.|Resource
+.|Resources
 ..|Overview|server/resource/resource-overview.php

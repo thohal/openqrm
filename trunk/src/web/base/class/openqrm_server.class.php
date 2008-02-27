@@ -1,5 +1,7 @@
 <?php
 
+// This class represents the openQRM-server
+
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 global $RESOURCE_INFO_TABLE;
