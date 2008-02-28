@@ -1,6 +1,7 @@
 <?php
 
-$OPENQRM_SERVER_CONFIG_FILE="/opt/openqrm/etc/openqrm-server.conf";
+$OPENQRM_BASE_DIR=dirname(dirname(dirname(dirname(readlink("/etc/init.d/openqrm-server")))));
+$OPENQRM_SERVER_CONFIG_FILE="$OPENQRM_BASE_DIR/openqrm/etc/openqrm-server.conf";
 
 
 // function to get infos from the openqrm-server.conf
