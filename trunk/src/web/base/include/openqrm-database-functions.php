@@ -28,6 +28,12 @@ if ("$OPENQRM_DATABASE_TYPE" == "db2") {
 	$USER_INFO_TABLE="$OPENQRM_DATABASE_USER.$USER_INFO_TABLE";
 }
 
+define('IMAGE_INFO_TABLE', $IMAGE_INFO_TABLE);
+define('KERNEL_INFO_TABLE', $KERNEL_INFO_TABLE);
+define('RESOURCE_INFO_TABLE', $RESOURCE_INFO_TABLE);
+define('EVENT_INFO_TABLE', $EVENT_INFO_TABLE);
+define('USER_INFO_TABLE', $USER_INFO_TABLE);
+
 global $KERNEL_INFO_TABLE, $IMAGE_INFO_TABLE, $RESOURCE_INFO_TABLE, $EVENT_INFO_TABLE, $USER_INFO_TABLE;
 
 
@@ -67,6 +73,28 @@ function openqrm_get_db_connection() {
 
 
 
+//-----------------------------------------------------------------------------------
+function openqrm_db_get_result($query) {
+	$ar = array();
+	$db = openqrm_get_db_connection();
+	$db->SetFetchMode(ADODB_FETCH_ASSOC);
+	$result = $db->Execute($query);
+	while ($arr = $result->FetchRow()) {
+		$tmp = array();
+		foreach ($arr as $key=>$val) {
+			if(is_string($key)) {
+				$tmp[] = array("value" => $val, "label" => $key);
+			}
+		}
+	$ar[] = $tmp;
+	}
+return $ar;
+}
+//-----------------------------------------------------------------------------------
+function openqrm_db_get_result_single ($query) {
+	$result = openqrm_db_get_result($query);
+	return array("value" => $result[0][0]["value"], "label" => $result[0][0]["label"]);
+}
 
 			 
 // function to print arrays
