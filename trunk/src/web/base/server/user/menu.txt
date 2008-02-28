@@ -1,6 +1,2 @@
-#	Title
-#	Href
-#	Alt
-#	IMG
-#	Target
-.|User
+.|Administration
+..|User|server/user/user.php
