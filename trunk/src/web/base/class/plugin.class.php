@@ -20,26 +20,30 @@ var $name = '';
 function available() {
 	global $RootDir;
 	global $OPENQRM_SERVER_BASE_DIR;
+	$plugin_array = array();
 	$plugins = new Folder();
 	$plugins->getFolders("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/");
 	foreach ($plugins->folders as $plugin) {
-		echo "$plugin <br>";
+			array_push($plugin_array, $plugin);
 	}
+	return $plugin_array;
 }
 
 
 // return a list of enabledplugins
 function enabled() {
 	global $RootDir;
+	$plugin_array = array();
 	$plugins = new Folder();
 	$plugins->getFolders($RootDir.'plugins/');
 	foreach ($plugins->folders as $plugin) {
 		if ("$plugin" != "aa_plugins") {
 			$plugin=basename(dirname(realpath($RootDir.'plugins/'.$plugin)));
-			echo "$plugin <br>";
+			array_push($plugin_array, $plugin);
 		}
 
 	}
+	return $plugin_array;
 }
 
 // ---------------------------------------------------------------------------------

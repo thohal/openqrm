@@ -10,7 +10,7 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 
 function openqrm_plugin_tftpd_start() {
 	echo "Starting the openQRM tftpd-plugin"
-
+	openqrm_plugin_tftpd_stop 1>/dev/null 2>&1
 	# check pmtu
 	openqrm_plugin_tftpd_update_pmtu
 
