@@ -1,3 +1,13 @@
+<html>
+<head>
+<title>openQRM Plugin Manager</title>
+</head>
+<body>
+
+<script>
+parent.NaviFrame.location.href="../../menu.php';
+</script>
+
 <?php
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
@@ -46,3 +56,4 @@ foreach ($plugins_enabled as $index => $plugin_name) {
 
 ?>
 
+</body>
