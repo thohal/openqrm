@@ -95,7 +95,15 @@ function openqrm_db_get_result_single ($query) {
 	$result = openqrm_db_get_result($query);
 	return array("value" => $result[0][0]["value"], "label" => $result[0][0]["label"]);
 }
-
+//-----------------------------------------------------------------------------------
+function openqrm_db_get_result_double ($query) {
+	$ar_Return = array();
+	$result = openqrm_db_get_result($query);
+	foreach ( $result as $res) {
+		$ar_Return[] = array("value" => $res[0]["value"], "label" => $res[1]["value"]);
+	}
+	return $ar_Return;
+}
 			 
 // function to print arrays
 function print_array($item, $key) {

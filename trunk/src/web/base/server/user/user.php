@@ -1,10 +1,10 @@
 <?php
 require_once('../../include/htmlobject.inc.php');
-require_once('user.class.php');
+require_once('../../include/user.inc.php');
 
 
-$user = new User();
-$user->get_user_data('admin');
+$user = new user();
+$user->get_user_data(OPENQRM_USER_NAME);
 
 $html_id = htmlobject_input('id', $user->id, 'text', 5);
 $html_name = htmlobject_input('name', $user->name, 'text', 20);
