@@ -1,4 +1,5 @@
 <?php
+header("Cache-Control: private");
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 $WebDir = '/openqrm/base/';
 $IncludeDir = $RootDir.'include/';
@@ -17,6 +18,7 @@ $layersmenue_dir = $ExternalDir.'phplayersmenu/';
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
+<meta http-equiv="cache-control" content="no-cache"></meta>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"></meta>
 
 <link rel="stylesheet" href="css/menu.css" type="text/css"></link>
