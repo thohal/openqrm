@@ -1,3 +1,10 @@
+<html>
+<head>
+<title>openQRM Resource actions</title>
+<meta http-equiv="refresh" content="3; URL=../base/server/resource/resource-overview.php">
+</head>
+<body>
+
 <?php
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
@@ -33,7 +40,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 				exit();
 			}
 			if ("$resource_id" == "-1") {
-				$new_resource_id=$resource->get_next_resource_id();
+				$new_resource_id=$resource->get_next_id();
 				$resource->id = $new_resource_id;
 			} else {			
 			// 	check if resource_id is free
@@ -187,3 +194,4 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 
 ?>
 
+</body>

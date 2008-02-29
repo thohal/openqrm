@@ -20,14 +20,17 @@ function resource_htmlobject_select($name, $value, $title = '', $selected = '') 
 
 
 
-function resource_display() {
-
+function resource_display($admin) {
 	$resource_tmp = new resource();
 	$OPENQRM_RESOURCE_COUNT_ALL = $resource_tmp->get_count("all");
 	$OPENQRM_RESOURCE_COUNT_ONLINE = $resource_tmp->get_count("online");
 	$OPENQRM_RESOURCE_COUNT_OFFLINE = $resource_tmp->get_count("offline");
 
-	$disp = "<b>Resource overview</b>";
+	if ("$admin" == "admin") {
+		$disp = "<b>Resource Admin</b>";
+	} else {
+		$disp = "<b>Resource overview</b>";
+	}
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."All resources: $OPENQRM_RESOURCE_COUNT_ALL";
@@ -36,7 +39,6 @@ function resource_display() {
 	$disp = $disp."<br>";
 	$disp = $disp."Offline resources: $OPENQRM_RESOURCE_COUNT_OFFLINE";
 	$disp = $disp."<br>";
-	$resource_tmp->add("1", "00:13:8F:0D:BB:B1", "10.20.30.40");
 	$resource_array = $resource_tmp->display_overview(0, 10);
 	foreach ($resource_array as $index => $resource_db) {
 		$resource = new resource();
@@ -44,35 +46,45 @@ function resource_display() {
 		if ("$resource->id" != "0") {
 			$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
 			$disp = $disp."<form action='../../../action/resource-action.php' method=post>";
-			$disp = $disp."$resource->id ";
+			$disp = $disp."$resource->id $resource->hostname ";
+
 			// local or netboot
-			if ("$resource->localboot" == "0") {
-				$disp = $disp."<a href=\"../../../action/resource-action.php?resource_command=localboot&resource_id=$resource->id&resource_ip=$resource->ip&resource_mac=$resource->mac\"> net</a>";
+			if ("$admin" == "admin") {
+				if ("$resource->localboot" == "0") {
+					$disp = $disp."<a href=\"../../../action/resource-action.php?resource_command=localboot&resource_id=$resource->id&resource_ip=$resource->ip&resource_mac=$resource->mac\"> net</a>";
+				} else {
+					$disp = $disp."<a href=\"../../../action/resource-action.php?resource_command=netboot&resource_id=$resource->id&resource_ip=$resource->ip&resource_mac=$resource->mac\"> local</a>";
+				}
 			} else {
-				$disp = $disp."<a href=\"../../../action/resource-action.php?resource_command=netboot&resource_id=$resource->id&resource_ip=$resource->ip&resource_mac=$resource->mac\"> local</a>";
+				if ("$resource->localboot" == "0") {
+					$disp = $disp." net";
+				} else {
+					$disp = $disp." local";
+				}
 			}
-			$disp = $disp." $resource->kernel $resource->kernelid $resource->image $resource->imageid $resource->ip $resource->mac $resource->hostname $resource->state ";
-			$resource_action_ar = array();
-			$resource_action_ar[] = array("value"=>'', "label"=>'',);
-			$resource_action_ar[] = array("value"=>'reboot', "label"=>'reboot',);
-			$resource_action_ar[] = array("value"=>'halt', "label"=>'halt',);
-			$resource_action_ar[] = array("value"=>'remove', "label"=>'remove',);
-			$resource_action_selected_ar[] = array("value"=>'', "label"=>'',);
+			$disp = $disp." $resource->kernel $resource->image $resource->ip $resource->mac $resource->state ";
 
-			$select = resource_htmlobject_select('resource_command', $resource_action_ar, '', $resource_action_selected_ar);
-			$disp = $disp.$select;
+			if ("$admin" == "admin") {
 
-			$disp = $disp."<input type=hidden name=resource_ip value=$resource->ip>";
-			$disp = $disp."<input type=hidden name=resource_id value=$resource->id>";
-			$disp = $disp."<input type=hidden name=resource_mac value=$resource->mac>";
+				$resource_action_ar = array();
+				$resource_action_ar[] = array("value"=>'', "label"=>'',);
+				$resource_action_ar[] = array("value"=>'reboot', "label"=>'reboot',);
+				$resource_action_ar[] = array("value"=>'halt', "label"=>'halt',);
+				$resource_action_ar[] = array("value"=>'remove', "label"=>'remove',);
+				$resource_action_selected_ar[] = array("value"=>'', "label"=>'',);
+				$select = resource_htmlobject_select('resource_command', $resource_action_ar, '', $resource_action_selected_ar);
+				$disp = $disp.$select;
 
-			$disp = $disp."<input type=hidden name=resource_localboot value=$resource->localboot>";
-			$disp = $disp."<input type=hidden name=resource_kernel value=$resource->kernel>";
-			$disp = $disp."<input type=hidden name=resource_kernelid value=$resource->kernelid>";
-			$disp = $disp."<input type=hidden name=resource_image value=$resource->image>";
-			$disp = $disp."<input type=hidden name=resource_imageid value=$resource->imageid>";
-
-			$disp = $disp."<input type=submit value='apply'>";
+				$disp = $disp."<input type=hidden name=resource_ip value=$resource->ip>";
+				$disp = $disp."<input type=hidden name=resource_id value=$resource->id>";
+				$disp = $disp."<input type=hidden name=resource_mac value=$resource->mac>";
+				$disp = $disp."<input type=hidden name=resource_localboot value=$resource->localboot>";
+				$disp = $disp."<input type=hidden name=resource_kernel value=$resource->kernel>";
+				$disp = $disp."<input type=hidden name=resource_kernelid value=$resource->kernelid>";
+				$disp = $disp."<input type=hidden name=resource_image value=$resource->image>";
+				$disp = $disp."<input type=hidden name=resource_imageid value=$resource->imageid>";
+				$disp = $disp."<input type=submit value='apply'>";
+			}
 			$disp = $disp."</form>";
 			$disp = $disp."</div>";
 
@@ -88,9 +100,39 @@ function resource_display() {
 }
 
 
+
+function resource_form() {
+
+	$disp = "<b>New Resource</b>";
+	$disp = $disp."<form action='../../../action/resource-action.php' method=post>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp.htmlobject_input('resource_mac', array("value" => 'XX:XX:XX:XX:XX:XX', "label" => 'Insert Mac-address'), 'text', 17);
+	$disp = $disp."<input type=hidden name=resource_id value='-1'>";
+	$disp = $disp."<input type=hidden name=resource_ip value='0.0.0.0'>";
+	$disp = $disp."<input type=hidden name=resource_command value='new_resource'>";
+	$disp = $disp."<input type=submit value='add'>";
+	$disp = $disp."";
+	$disp = $disp."";
+	$disp = $disp."";
+	$disp = $disp."";
+	$disp = $disp."";
+	$disp = $disp."</form>";
+	return $disp;
+}
+
+
+
+
+
 $output = array();
-$output[] = array('label' => 'Resource-List', 'value' => resource_display());
-$output[] = array('label' => 'Resource-Admin', 'value' => resource_display());
+// all user
+$output[] = array('label' => 'Resource-List', 'value' => resource_display(""));
+// if admin
+$output[] = array('label' => 'New', 'value' => resource_form());
+$output[] = array('label' => 'Resource-Admin', 'value' => resource_display("admin"));
+
+
 echo htmlobject_tabmenu($output);
 
 ?>
