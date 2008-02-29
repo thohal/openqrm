@@ -51,10 +51,6 @@ export OPENQRM_SERVER_BASE_DIR=`pushd \`dirname $SCRIPT\`/../../../ 1>/dev/null 
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions
 
-# -> this will later come from the db
-OPENQRM_SERVER_PLUGINS_ENABLED="dhcpd tftpd"
-
-
 
 
 # functions
@@ -122,12 +118,6 @@ function openqrm_server_init() {
 		exit 1		
 	fi
 	
-	# for all plugins run init functions
-	for OPENQRM_PLUGIN in $OPENQRM_SERVER_PLUGINS_ENABLED; do
-		if [ -x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN ]; then
-			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN init
-		fi
-	done
 
 }
 
@@ -169,9 +159,12 @@ function openqrm_server_start() {
 
 	# start all enabled plugins
 	echo "Starting enabled openQRM-server plugins"
-	for OPENQRM_PLUGIN in $OPENQRM_SERVER_PLUGINS_ENABLED; do
-		if [ -x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN ]; then
-			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN start
+	for OPENQRM_PLUGIN in `ls $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/`; do
+		. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/openqrm-plugin-$OPENQRM_PLUGIN.conf
+		if [ -d $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER ]; then
+			if [ -x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN ]; then
+				$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN start
+			fi
 		fi
 	done
 
@@ -189,9 +182,12 @@ function openqrm_server_stop() {
 
 	# stop all enabled plugins
 	echo "Stopping enabled openQRM-server plugins"
-	for OPENQRM_PLUGIN in $OPENQRM_SERVER_PLUGINS_ENABLED; do
-		if [ -x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN ]; then
-			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN stop
+	for OPENQRM_PLUGIN in `ls $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/`; do
+		. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/openqrm-plugin-$OPENQRM_PLUGIN.conf
+		if [ -d $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER ]; then
+			if [ -x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN ]; then
+				$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN stop
+			fi
 		fi
 	done
 
