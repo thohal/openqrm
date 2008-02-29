@@ -244,7 +244,7 @@ function get_parameter($resource_id) {
 	}
 	$recordSet->Close();
 	// kernel-parameter
-/*	$recordSet = &$db->Execute("select * from $KERNEL_INFO_TABLE where kernel_id=$kernel_id");
+	$recordSet = &$db->Execute("select * from $KERNEL_INFO_TABLE where kernel_id=$kernel_id");
 	if (!$recordSet)
 		print $db->ErrorMsg();
 	else
@@ -264,7 +264,7 @@ function get_parameter($resource_id) {
 	}
 	$recordSet->Close();
 	$db->Close();
-*/
+
 
 	// enabled plugins
 	// TODO
