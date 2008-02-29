@@ -21,7 +21,7 @@ $kernel_array = $kernel_tmp->display_overview(0, 10);
 foreach ($kernel_array as $index => $kernel_db) {
 	$kernel = new kernel();
 	$kernel->get_instance_by_id($kernel_db["kernel_id"]);
-	echo "<form action='../../../action/kernel-action.php' method=post>";
+	echo "<form action='kernel-action.php' method=post>";
 	echo "kernel&nbsp;$kernel->id &nbsp; $kernel->name";
 	echo "</form>";
 }
