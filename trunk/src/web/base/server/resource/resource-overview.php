@@ -5,6 +5,7 @@
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/class/resource.class.php";
+require_once "$RootDir/class/image.class.php";
 // using the htmlobject class
 require_once "$RootDir/include/htmlobject.inc.php";
 
@@ -62,7 +63,17 @@ function resource_display($admin) {
 					$disp = $disp." local";
 				}
 			}
-			$disp = $disp." $resource->kernel $resource->image $resource->ip $resource->mac $resource->state ";
+			$disp = $disp." $resource->kernel ";
+			
+//			$image = new image();
+//			$image_list = $image->get_list();
+			
+			$image_list = array();
+			$image_list[] = array("value"=>'idle', "label"=>'idle',);
+			$image_select = resource_htmlobject_select('Images', $image_list, '', $image_list);
+			$disp = $disp.$image_select;
+
+			$disp = $disp." $resource->ip $resource->mac $resource->state ";
 
 			if ("$admin" == "admin") {
 

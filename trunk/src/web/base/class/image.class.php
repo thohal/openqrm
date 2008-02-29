@@ -205,6 +205,25 @@ function get_count($image_type) {
 
 
 
+// returns a list of all image names
+function get_list() {
+	global $IMAGE_INFO_TABLE;
+	$db=openqrm_get_db_connection();
+	$image_set = &$db->Execute("select image_name from $IMAGE_INFO_TABLE");
+	$image_name_array = array();
+	if (!$image_set) {
+		print $db->ErrorMsg();
+	} else {
+		while  (!$image_set->EOF) {
+			$image_name_array[] = $image_set->fields["image_name"];
+			$image_set->MoveNext();
+		}
+	}
+	return $image_name_array;
+}
+
+
+
 // displays the image-overview
 function display_overview($start, $count) {
 	global $IMAGE_INFO_TABLE;
