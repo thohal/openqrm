@@ -6,6 +6,7 @@
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/image.class.php";
+require_once "$RootDir/class/kernel.class.php";
 // using the htmlobject class
 require_once "$RootDir/include/htmlobject.inc.php";
 
@@ -29,6 +30,15 @@ function resource_display($admin) {
 
 	if ("$admin" == "admin") {
 		$disp = "<b>Resource Admin</b>";
+		$image = new image();
+		$image_list = array();
+		$image_list = $image->get_list();
+
+		$kernel = new kernel();
+		$kernel_list = array();
+		$kernel_list = $kernel->get_list();
+
+
 	} else {
 		$disp = "<b>Resource overview</b>";
 	}
@@ -63,15 +73,22 @@ function resource_display($admin) {
 					$disp = $disp." local";
 				}
 			}
-			$disp = $disp." $resource->kernel ";
-			
-//			$image = new image();
-//			$image_list = $image->get_list();
-			
-			$image_list = array();
-			$image_list[] = array("value"=>'idle', "label"=>'idle',);
-			$image_select = resource_htmlobject_select('Images', $image_list, '', $image_list);
-			$disp = $disp.$image_select;
+
+			// kernel selection
+			if ("$admin" == "admin") {
+				$kernel_select = resource_htmlobject_select('resource_kernelid', $kernel_list, '', $kernel_list);
+				$disp = $disp.$kernel_select;
+			} else {
+				$disp = $disp." $resource->kernel ";
+			}
+
+			// image selection
+			if ("$admin" == "admin") {
+				$image_select = resource_htmlobject_select('resource_imageid', $image_list, '', $image_list);
+				$disp = $disp.$image_select;
+			} else {
+				$disp = $disp." $resource->image ";
+			}
 
 			$disp = $disp." $resource->ip $resource->mac $resource->state ";
 
@@ -79,6 +96,7 @@ function resource_display($admin) {
 
 				$resource_action_ar = array();
 				$resource_action_ar[] = array("value"=>'', "label"=>'',);
+				$resource_action_ar[] = array("value"=>'assign', "label"=>'assign',);
 				$resource_action_ar[] = array("value"=>'reboot', "label"=>'reboot',);
 				$resource_action_ar[] = array("value"=>'halt', "label"=>'halt',);
 				$resource_action_ar[] = array("value"=>'remove', "label"=>'remove',);
@@ -90,10 +108,6 @@ function resource_display($admin) {
 				$disp = $disp."<input type=hidden name=resource_id value=$resource->id>";
 				$disp = $disp."<input type=hidden name=resource_mac value=$resource->mac>";
 				$disp = $disp."<input type=hidden name=resource_localboot value=$resource->localboot>";
-				$disp = $disp."<input type=hidden name=resource_kernel value=$resource->kernel>";
-				$disp = $disp."<input type=hidden name=resource_kernelid value=$resource->kernelid>";
-				$disp = $disp."<input type=hidden name=resource_image value=$resource->image>";
-				$disp = $disp."<input type=hidden name=resource_imageid value=$resource->imageid>";
 				$disp = $disp."<input type=submit value='apply'>";
 			}
 			$disp = $disp."</form>";

@@ -155,6 +155,19 @@ function get_count() {
 }
 
 
+
+
+// returns a list of all kernel names
+function get_list() {
+	global $KERNEL_INFO_TABLE;
+	$query = "select kernel_id, kernel_name from $KERNEL_INFO_TABLE";
+	$kernel_name_array = array();
+	$kernel_name_array = openqrm_db_get_result_double ($query);
+	return $kernel_name_array;
+}
+
+
+
 // displays the kernel-overview
 function display_overview($start, $count) {
 	global $KERNEL_INFO_TABLE;

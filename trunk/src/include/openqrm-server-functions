@@ -167,6 +167,29 @@ function openqrm_server_set_boot() {
 }
 
 
+
+
+# function to assign a kernel to a resource
+# param 1	: resource_id
+# param 2	: resource_mac
+# param 3	: resouce_ip
+function openqrm_assign_kernel() {
+	local RESOURCE_ID=$1
+	local RESOURCE_MAC=$2
+	local RESOURCE_KERNEL=$3
+	local RESOURCE_PXELINUXCFG_FILE=`echo 01-$RESOURCE_MAC | sed -e "s/:/-/g" | tr '[:upper:]' '[:lower:]'`
+	echo "openQRM-server: Assigning resource $RESOURCE_ID $RESOURCE_MAC to kernel $RESOURCE_KERNEL" | logger
+	openqrm_server_create_pxe_config $RESOURCE_ID $RESOURCE_KERNEL $RESOURCE_PXELINUXCFG_FILE
+}
+
+
+
+
+
+
+
+
+
 # --------------------------------------------------------------------
 # ------------------------- plugin functions -------------------------
 # --------------------------------------------------------------------

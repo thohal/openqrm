@@ -204,25 +204,14 @@ function remove($resource_id, $resource_mac) {
 
 
 // assigns a kernel and fs-image to a resource
-function assign($resource_id, $resource_kernel, $resource_kernelid, $resource_image, $resource_imageid, $resource_serverid) {
+function assign($resource_id, $resource_kernelid, $resource_kernel, $resource_imageid, $resource_image) {
 	global $RESOURCE_INFO_TABLE;
 	$db=openqrm_get_db_connection();
-	if ("$resource_imageid" == "1") {
-		// idle
-		$rs = $db->Execute("update $RESOURCE_INFO_TABLE set
-			 resource_kernel='$resource_kernel',
-			 resource_kernelid=$resource_kernelid,
-			 resource_image='$resource_image',
-			 resource_imageid=$resource_imageid,
-			 resource_serverid=1 where resource_id=$resource_id");
-	} else {
-		$rs = $db->Execute("update $RESOURCE_INFO_TABLE set
-			resource_kernel='$resource_kernel',
-			resource_kernelid=$resource_kernelid,
-			resource_image='$resource_image',
-			resource_imageid=$resource_imageid,
-			resource_serverid=$resource_serverid where resource_id=$resource_id");
-	}
+	$rs = $db->Execute("update $RESOURCE_INFO_TABLE set
+		 resource_kernelid=$resource_kernelid,
+		 resource_kernel='$resource_kernel',
+		 resource_imageid=$resource_imageid,
+		 resource_image='$resource_image' where resource_id=$resource_id");
 }
 
 

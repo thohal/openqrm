@@ -9,6 +9,8 @@
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/class/resource.class.php";
+require_once "$RootDir/class/image.class.php";
+require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 
 $resource_command = $_REQUEST["resource_command"];
@@ -103,23 +105,29 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		// kernel_name
 		// image_id
 		// image_name
+		// appliance_id
 		
 		case 'assign':
 
-			// TODO !! create classes for kernel and images
-		// 	$kernel_name=openqrm_get_kernel_name($_REQUEST["resource_kernelid"]);
-		//	$image_name=openqrm_get_image_name($_REQUEST["resource_imageid"]);
+		 	$kernel_id=($_REQUEST["resource_kernelid"]);
+			$kernel = new kernel();
+			$kernel->get_instance_by_id($kernel_id);
+			$kernel_name = $kernel->name;
+
+			$image_id=($_REQUEST["resource_imageid"]);
+			$image = new image();
+			$image->get_instance_by_id($image_id);
+			$image_name = $image->name;
 
 			// send command to the openQRM-server
 			$openqrm_server->send_command("openqrm_assign_kernel $resource_id $resource_mac $kernel_name");
-			openqrm_set_default($_REQUEST["resource_serverid"], 0);
 			// update openQRM database
 			$resource = new resource();
-			$resource->assign($resource_id, $kernel_name, $_REQUEST["resource_kernelid"], $image_name, $_REQUEST["resource_imageid"], $_REQUEST["resource_serverid"]);
+			$resource->assign($resource_id, $kernel_id, $kernel_name, $image_id, $image_name);
 			echo "Assigned resource $resource_id to boot $kernel_name and use $image_name";
 			// echo "assigning finished, rebooting $resource_ip";
 			// reboot resource
-			$resource->send_command("$resource_ip", "reboot");
+			$resource->send_command($resource->ip, "reboot");
 			break;
 
 		// get_parameter requires :
