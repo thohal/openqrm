@@ -1,38 +1,84 @@
+
+<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+
 <?php
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/class/image.class.php";
 // using the htmlobject class
-require_once "$RootDir/class/htmlobject_box.class.php";
-require_once "$RootDir/class/htmlobject_select.class.php";
-require_once "$RootDir/class/htmlobject_textarea.class.php";
+require_once "$RootDir/include/htmlobject.inc.php";
 
-echo "<b>Filesystem-Image overview</b>";
-echo "<br>";
 
-echo "<br>";
-$image_tmp = new image();
-$OPENQRM_RESOURCE_COUNT_ALL = $image_tmp->get_count("local");
-echo "All local images: $OPENQRM_RESOURCE_COUNT_ALL";
-echo "<br>";
-$OPENQRM_RESOURCE_COUNT_ALL = $image_tmp->get_count("ram");
-echo "All ramdisk images: $OPENQRM_RESOURCE_COUNT_ALL";
-echo "<br>";
-echo "<br>";
+function image_display($admin) {
+	$image_tmp = new image();
+	$OPENQRM_KERNEL_COUNT_RAMDISK = $image_tmp->get_count("ram");
+	$OPENQRM_KERNEL_COUNT_LOCAL = $image_tmp->get_count("local");
 
-$image_array = $image_tmp->display_overview(0, 10);
+	if ("$admin" == "admin") {
+		$disp = "<b>Image Admin</b>";
+	} else {
+		$disp = "<b>Image overview</b>";
+	}
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."All ramdisk images: $OPENQRM_KERNEL_COUNT_RAMDISK";
+	$disp = $disp."<br>";
+	$disp = $disp."All local images: $OPENQRM_KERNEL_COUNT_LOCAL";
+	$disp = $disp."<br>";
+	$image_array = $image_tmp->display_overview(0, 10);
+	foreach ($image_array as $index => $image_db) {
+		$image = new image();
+		$image->get_instance_by_id($image_db["image_id"]);
 
-foreach ($image_array as $index => $image_db) {
-	$image = new image();
-	$image->get_instance_by_id($image_db["image_id"]);
-	echo "<form action='../../../action/image-action.php' method=post>";
-	echo "image&nbsp;$image->id &nbsp; $image->name &nbsp; $image->version &nbsp; $image->type &nbsp; $image->rootdevice &nbsp; $image->rootfstype &nbsp; $image->isshared &nbsp; $image->comment &nbsp; $image->capabilities";
-	echo "</form>";
+		$disp = $disp."<div id=\"image\" nowrap=\"true\">";
+		$disp = $disp."<form action='image-action.php' method=post>";
+		$disp = $disp."$image->id $image->name ";
+		$disp = $disp."<input type=hidden name=image_id value=$image->id>";
+		$disp = $disp."<input type=hidden name=image_name value=$image->name>";
+		$disp = $disp."<input type=hidden name=image_command value='remove'";
+		if ("$admin" == "admin") {
+			$disp = $disp."<input type=submit value='remove'>";
+		}
+		$disp = $disp."</form>";
+		$disp = $disp."</div>";
+	}
+	return $disp;
+}
+
+
+
+function image_form() {
+
+	$disp = "<b>New Image</b>";
+	$disp = $disp."<form action='image-action.php' method=post>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp.htmlobject_input('image_name', array("value" => '', "label" => 'Insert Image name'), 'text', 20);
+	$disp = $disp."<input type=hidden name=image_command value='new_image'>";
+	$disp = $disp."<input type=submit value='add'>";
+	$disp = $disp."";
+	$disp = $disp."";
+	$disp = $disp."";
+	$disp = $disp."";
+	$disp = $disp."";
+	$disp = $disp."</form>";
+	return $disp;
 }
 
 
 
 
 
+$output = array();
+// all user
+$output[] = array('label' => 'Image-List', 'value' => image_display(""));
+// if admin
+$output[] = array('label' => 'New', 'value' => image_form());
+$output[] = array('label' => 'Image-Admin', 'value' => image_display("admin"));
+
+
+echo htmlobject_tabmenu($output);
+
 ?>
+
 

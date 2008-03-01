@@ -119,6 +119,53 @@ function openqrm_server_add_kernel() {
 	return 0
 }
 
+
+
+
+
+# --------------------------------------------------------------------
+# ------------------------- deployments functions -------------------------
+# --------------------------------------------------------------------
+
+# function to ad a deployment method to the openQRM-server db
+# this function is used by the init+uninstall functions of the deployment plugins
+# param 1	: username
+# param 2	: password
+# param 3	: deployment type
+# param 4	: deployment name
+function openqrm_server_add_deployment_type() {
+	OPENQRM_USER=$1
+	OPENQRM_USER_PASSWORD=$2
+	OPENQRM_SERVER_DEPLOYMENT_TYPE=$3
+	OPENQRM_SERVER_DEPLOYMENT_NAME=$4
+	echo "openQRM-server: Adding deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE  to the openQRM-server" | logger
+	if ! wget -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/image/image-action.php?image_command=add_deployment_type&deployment_type=$OPENQRM_SERVER_DEPLOYMENT_TYPE&deployment_name=$OPENQRM_SERVER_DEPLOYMENT_NAME"; then
+		echo "ERROR: Could not add deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE to the openQRM-server!" | logger
+		return 1
+	fi
+	return 0
+}
+
+# function to remove a deployment method to the openQRM-server db
+# this function is used by the init+uninstall functions of the deployment plugins
+# param 1	: username
+# param 2	: password
+# param 3	: deployment type
+function openqrm_server_remove_deployment_type() {
+	OPENQRM_USER=$1
+	OPENQRM_USER_PASSWORD=$2
+	OPENQRM_SERVER_DEPLOYMENT_TYPE=$3
+	echo "openQRM-server: Removing deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE  from the openQRM-server" | logger
+	if ! wget -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/image/image-action.php?image_command=remove_deployment_type&deployment_type=$OPENQRM_SERVER_DEPLOYMENT_TYPE"; then
+		echo "ERROR: Could not remove deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE from the openQRM-server!" | logger
+		return 1
+	fi
+	return 0
+}
+
+
+
+
 # --------------------------------------------------------------------
 # ------------------------- resource functions -----------------------
 # --------------------------------------------------------------------
