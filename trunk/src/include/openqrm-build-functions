@@ -326,48 +326,58 @@ function openqrm_pack_default_initrd_template() {
 
 
 
-# function download and unpack the kerne for default boot-image
+# function download and unpack the kerne for default kernel
 # -> this is for "make all" / compilation phase
-function openqrm_get_kernel_default_boot_image() {
+function openqrm_get_kernel_default_kernel() {
 	# download
 	openqrm_cache_or_download defaultkernel
 }
 
 
-# function to create the default boot-image
+# function to create the default kernel
 # -> this is for "make install" / installation phase
-function openqrm_create_default_boot_image() {
-	echo "Creating the 'default' openQRM boot-image"
+function openqrm_create_default_kernel() {
+	echo "Creating the 'default' openQRM kernel"
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 	CURRENT_DIR=`pwd`
-	# get the defaultkernel config
-	# -> the build.conf dir is not going to be installed so
-	#    we source the file in the source dir
-	. $OPENQRM_SOURCE_DIR/etc/build.conf/defaultkernel.conf
-
-	# unpack the downloaded kernel to a tmp dir
-	rm -rf $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
-	mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
-	KERNEL_FILE=`basename $OPENQRM_SOURCE_DOWNLOAD`
-	cp $OPENQRM_BUILD_TMP_DIR/openqrm-build/defaultkernel/source/$KERNEL_FILE $OPENQRM_BUILD_TMP_DIR/openqrm-build/default/
-
-	# in case we have a deb kernel file
-	if [ -f /etc/debian_version ]; then
-		cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
-		ar -x $KERNEL_FILE
-		rm -f control.tar.gz debian-binary $KERNEL_FILE
-		tar -xzf data.tar.gz
-		rm -f data.tar.gz
+	# in case we have it in the cache
+	if [ -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/default_ready/vmlinuz-default ]; then
+		echo "Using cached version from $OPENQRM_BUILD_TMP_DIR/openqrm-build/default_ready/"
+		cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/default_ready/*default* $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/
 	else
-	# we have a rpm as kernel file
-		cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
-		rpm2cpio $KERNEL_FILE  | cpio --extract --make-directories --no-absolute-filenames --preserve-modification-time
-	fi
+	# we do not have it in the cache so we need to build it
 
+		# get the defaultkernel config
+		# -> the build.conf dir is not going to be installed so
+		#    we source the file in the source dir
+		. $OPENQRM_SOURCE_DIR/etc/build.conf/defaultkernel.conf
+
+		# unpack the downloaded kernel to a tmp dir
+		rm -rf $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
+		mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
+		KERNEL_FILE=`basename $OPENQRM_SOURCE_DOWNLOAD`
+		cp $OPENQRM_BUILD_TMP_DIR/openqrm-build/defaultkernel/source/$KERNEL_FILE $OPENQRM_BUILD_TMP_DIR/openqrm-build/default/
+
+		# in case we have a deb kernel file
+		if [ -f /etc/debian_version ]; then
+			cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
+			ar -x $KERNEL_FILE
+			rm -f control.tar.gz debian-binary $KERNEL_FILE
+			tar -xzf data.tar.gz
+			rm -f data.tar.gz
+		else
+		# we have a rpm as kernel file
+			cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
+			rpm2cpio $KERNEL_FILE  | cpio --extract --make-directories --no-absolute-filenames --preserve-modification-time
+		fi
 	
-	openqrm_server_create_boot_image default $OPENQRM_SOURCE_VERSION $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
-
+		openqrm_server_create_kernel default $OPENQRM_SOURCE_VERSION $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
+		# put it in the cache 
+		mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/default_ready
+		cp -a $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/*default* $OPENQRM_BUILD_TMP_DIR/openqrm-build/default_ready/
+		
+	fi
 
 	cd $CURRENT_DIR
 }
@@ -392,11 +402,11 @@ case "$1" in
 	pack_initrd)
 		openqrm_pack_default_initrd_template
 		;;
-	get_kernel_default_boot_image)
-		openqrm_get_kernel_default_boot_image
+	get_kernel_default_kernel)
+		openqrm_get_kernel_default_kernel
 		;;
-	default_boot_image)
-		openqrm_create_default_boot_image
+	default_kernel)
+		openqrm_create_default_kernel
 		;;
 	get_phplayersmenu)
 		openqrm_get_phplayersmenu

@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>openQRM Kernel actions</title>
-<meta http-equiv="refresh" content="3; URL=../base/server/kernel/kernel-overview.php">
+<meta http-equiv="refresh" content="3; URL=kernel-overview.php">
 </head>
 <body>
 
@@ -27,19 +27,23 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$kernel = new kernel();
 			$new_kernel_id=$kernel->get_next_id();
 			$kernel->add($new_kernel_id, $kernel_name, $kernel_version);
-			echo "Added kernel $kernel_name/$kernel_version to the openQRM-database");
+			echo "Added kernel $kernel_name/$kernel_version to the openQRM-database";
 			break;
 
 		case 'remove':
 			$kernel = new kernel();
-			remove($kernel_id);
-			echo "Removed kernel $kernel_id from the openQRM-database");
+			$kernel->remove($kernel_id);
+			echo "Removed kernel $kernel_id from the openQRM-database";
 			break;
 
 		case 'remove_by_name':
 			$kernel = new kernel();
-			remove_by_name($kernel_name);
-			echo "Removed kernel $kernel_name from the openQRM-database");
+			$kernel->remove_by_name($kernel_name);
+			echo "Removed kernel $kernel_name from the openQRM-database";
+			break;
+
+		default:
+			echo "No Such openQRM-command!";
 			break;
 
 

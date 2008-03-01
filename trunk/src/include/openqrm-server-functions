@@ -34,35 +34,41 @@ function openqrm_server_get_config() {
 openqrm_server_get_config
 
 
-# function to create boot-images
-# param 1	: boot-image name
+
+# --------------------------------------------------------------------
+# ------------------------- kernel functions -------------------------
+# --------------------------------------------------------------------
+
+
+# function to create kernels
+# param 1	: kernel name
 # param 2	: kernel-version
 # param 3	: path-to-kernel-files
-function openqrm_server_create_boot_image() {
-	OPENQRM_SERVER_BOOT_IMAGE_NAME=$1
-	OPENQRM_SERVER_BOOT_IMAGE_VERSION=$2
-	OPENQRM_SERVER_BOOT_IMAGE_LOCATION=$3
+function openqrm_server_create_kernel() {
+	OPENQRM_SERVER_KERNEL_NAME=$1
+	OPENQRM_SERVER_KERNEL_VERSION=$2
+	OPENQRM_SERVER_KERNEL_LOCATION=$3
 	
-	echo "Creating boot-image $OPENQRM_SERVER_BOOT_IMAGE_NAME version $OPENQRM_SERVER_BOOT_IMAGE_VERSION"
+	echo "Creating kernel $OPENQRM_SERVER_KERNEL_NAME version $OPENQRM_SERVER_KERNEL_VERSION"
 	# copy kernel + System-map
-	cp -a $OPENQRM_SERVER_BOOT_IMAGE_LOCATION/boot/vmlinuz-$OPENQRM_SERVER_BOOT_IMAGE_VERSION $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/vmlinuz-$OPENQRM_SERVER_BOOT_IMAGE_NAME
-	cp -a $OPENQRM_SERVER_BOOT_IMAGE_LOCATION/boot/System.map-$OPENQRM_SERVER_BOOT_IMAGE_VERSION $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/System.map-$OPENQRM_SERVER_BOOT_IMAGE_NAME
+	cp -a $OPENQRM_SERVER_KERNEL_LOCATION/boot/vmlinuz-$OPENQRM_SERVER_KERNEL_VERSION $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/vmlinuz-$OPENQRM_SERVER_KERNEL_NAME
+	cp -a $OPENQRM_SERVER_KERNEL_LOCATION/boot/System.map-$OPENQRM_SERVER_KERNEL_VERSION $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/System.map-$OPENQRM_SERVER_KERNEL_NAME
 	# modules
-	tar -C $OPENQRM_SERVER_BOOT_IMAGE_LOCATION/ -czf $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/modules-$OPENQRM_SERVER_BOOT_IMAGE_NAME.tgz lib
+	tar -C $OPENQRM_SERVER_KERNEL_LOCATION/ -czf $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/modules-$OPENQRM_SERVER_KERNEL_NAME.tgz lib
 	# initrd
-	mkdir -p $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_BOOT_IMAGE_NAME
-	mkdir -p $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_BOOT_IMAGE_NAME/lib/modules/$OPENQRM_SERVER_BOOT_IMAGE_VERSION
-	for MODULE in `find $OPENQRM_SERVER_BOOT_IMAGE_LOCATION/lib/modules/$OPENQRM_SERVER_BOOT_IMAGE_VERSION/kernel/drivers/net -type f | grep -v wireless`; do
+	mkdir -p $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME
+	mkdir -p $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/lib/modules/$OPENQRM_SERVER_KERNEL_VERSION
+	for MODULE in `find $OPENQRM_SERVER_KERNEL_LOCATION/lib/modules/$OPENQRM_SERVER_KERNEL_VERSION/kernel/drivers/net -type f | grep -v wireless`; do
 		MODULE_NAME=`echo $MODULE | sed -e "s/.*\///"`
 		if ! echo $OPENQRM_QRM_UNWANTED_MODULES | grep $MODULE_NAME 1>/dev/null; then
-			/bin/cp -f $MODULE $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_BOOT_IMAGE_NAME/lib/modules/$OPENQRM_SERVER_BOOT_IMAGE_VERSION
+			/bin/cp -f $MODULE $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/lib/modules/$OPENQRM_SERVER_KERNEL_VERSION
 		fi
 	done
 	# unpack the initrd-template
-	tar -C $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_BOOT_IMAGE_NAME -xzf $OPENQRM_DEFAULT_INITRD_TEMPLATE
+	tar -C $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME -xzf $OPENQRM_DEFAULT_INITRD_TEMPLATE
 
 	# check size
-	OPENQRM_INITRD_SIZE=`du -s $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_BOOT_IMAGE_NAME/ | awk {' print $1 '}`
+	OPENQRM_INITRD_SIZE=`du -s $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/ | awk {' print $1 '}`
 	OPENQRM_INITRD_SIZE=$(( QRM_INITRD_SIZE + 16000 ))
 	if (( $OPENQRM_INITRD_SIZE > $OPENQRM_MAX_INITRD_SIZE )); then
 		echo "ERROR: Initrd got too big"
@@ -70,46 +76,66 @@ function openqrm_server_create_boot_image() {
 	fi
 
 	# creating the initrd file
-	dd if=/dev/zero of=$OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_BOOT_IMAGE_NAME.img bs=1k count=$OPENQRM_INITRD_SIZE
+	dd if=/dev/zero of=$OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img bs=1k count=$OPENQRM_INITRD_SIZE
 	#get ram block size there is a problem in newer kernels with size 4096
-	if [ -f "$OPENQRM_SERVER_BOOT_IMAGE_LOCATION/boot/config-$OPENQRM_SERVER_BOOT_IMAGE_VERSION" ]; then
-		ram_block_size=`cat $OPENQRM_SERVER_BOOT_IMAGE_LOCATION/boot/config-$OPENQRM_SERVER_BOOT_IMAGE_VERSION | grep  CONFIG_BLK_DEV_RAM_BLOCKSIZE | awk -F= '{print $2}'`
+	if [ -f "$OPENQRM_SERVER_KERNEL_LOCATION/boot/config-$OPENQRM_SERVER_KERNEL_VERSION" ]; then
+		ram_block_size=`cat $OPENQRM_SERVER_KERNEL_LOCATION/boot/config-$OPENQRM_SERVER_KERNEL_VERSION | grep  CONFIG_BLK_DEV_RAM_BLOCKSIZE | awk -F= '{print $2}'`
 		if [ -z $ram_block_size ]; then
 			ram_block_size=$OPENQRM_DEFAULT_RAM_DISK_BLOCK_SIZE
 		fi
 	else
 		ram_block_size=$OPENQRM_DEFAULT_RAM_DISK_BLOCK_SIZE
 	fi
-	mkfs.ext2 -q -b $ram_block_size -F $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_BOOT_IMAGE_NAME.img
-	tune2fs -c 0 -i 0 $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_BOOT_IMAGE_NAME.img
+	mkfs.ext2 -q -b $ram_block_size -F $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img
+	tune2fs -c 0 -i 0 $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img
 	mkdir -p $OPENQRM_TEMP_DIR/bootimage/mnt
-	mount -o loop $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_BOOT_IMAGE_NAME.img $OPENQRM_TEMP_DIR/bootimage/mnt
-	mv $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_BOOT_IMAGE_NAME/* $OPENQRM_TEMP_DIR/bootimage/mnt/
+	mount -o loop $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img $OPENQRM_TEMP_DIR/bootimage/mnt
+	mv $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/* $OPENQRM_TEMP_DIR/bootimage/mnt/
 	# add the openQRM-linuxrc
 	rm -f $OPENQRM_TEMP_DIR/bootimage/mnt/linuxrc
 	cp $OPENQRM_SERVER_LINUXRC $OPENQRM_TEMP_DIR/bootimage/mnt/linuxrc
 	chmod +x $OPENQRM_TEMP_DIR/bootimage/mnt/linuxrc
 	umount $OPENQRM_TEMP_DIR/bootimage/mnt
-	gzip $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_BOOT_IMAGE_NAME.img
-	mv $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_BOOT_IMAGE_NAME.img.gz $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$OPENQRM_SERVER_BOOT_IMAGE_NAME.img
+	gzip $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img
+	mv $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img.gz $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$OPENQRM_SERVER_KERNEL_NAME.img
 	rm -rf $OPENQRM_TEMP_DIR/bootimage
 }
 
 
 
+# function to add a kernel to the openQRM-server db
+# param 1	: kernel name
+# param 2	: kernel-version
+function openqrm_server_add_kernel() {
+	OPENQRM_USER=$1
+	OPENQRM_USER_PASSWORD=$2
+	OPENQRM_SERVER_KERNEL_NAME=$3
+	OPENQRM_SERVER_KERNEL_VERSION=$4
+	echo "openQRM-server: Adding kernel $OPENQRM_SERVER_KERNEL_NAME version $OPENQRM_SERVER_KERNEL_VERSION" | logger
+	if ! wget -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/kernel/kernel-action.php?kernel_command=new_kernel&kernel_name=$OPENQRM_SERVER_KERNEL_NAME&kernel_version=$OPENQRM_SERVER_KERNEL_VERSION"; then
+		echo "ERROR: Could not add kernel $OPENQRM_SERVER_KERNEL_NAME to the openQRM-server!" | logger
+		return 1
+	fi
+	return 0
+}
+
+# --------------------------------------------------------------------
+# ------------------------- resource functions -----------------------
+# --------------------------------------------------------------------
+
 
 
 # function adding a new resource to the openQRM-server
 # param 1	: resource_id
-# param 2	: boot-image name
+# param 2	: kernel name
 # param 3	: pxelinux.cfg filename
 function openqrm_server_create_pxe_config() {
 	local RESOURCE_ID=$1
-	local BOOT_IMAGE_NAME=$2
+	local KERNEL_NAME=$2
 	local RESOURCE_PXELINUXCFG_FILE=$3
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-pxelinux |	\
-		sed -e "s/OPENQRM_BOOTIMAGE_KERNEL/vmlinuz-$BOOT_IMAGE_NAME/g" |	\
-		sed -e "s/OPENQRM_BOOTIMAGE_INITRD/initrd-$BOOT_IMAGE_NAME.img/g" |	\
+		sed -e "s/OPENQRM_BOOTIMAGE_KERNEL/vmlinuz-$KERNEL_NAME/g" |	\
+		sed -e "s/OPENQRM_BOOTIMAGE_INITRD/initrd-$KERNEL_NAME.img/g" |	\
 		sed -e "s/OPENQRM_RESOURCE_ID/$RESOURCE_ID/g" |	\
 		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/g" \
 		> $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE

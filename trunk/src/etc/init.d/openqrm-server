@@ -98,6 +98,17 @@ function openqrm_server_init() {
 	# create the default user
 	htpasswd -bc $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd openqrm openqrm
 
+	# here we add the default kernel+kernel-version to the openQRM-server
+	# via the kernel-action.form. If this returns bad something is wrong
+	DEFAULT_KERNEL_VERSION=`tar -tf $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/modules-default.tgz | head -n3 | tail -n1`
+	DEFAULT_KERNEL_VERSION=`basename $DEFAULT_KERNEL_VERSION`
+	echo "Adding the default kernel version $DEFAULT_KERNEL_VERSION"
+	if ! openqrm_server_add_kernel openqrm openqrm default $DEFAULT_KERNEL_VERSION; then
+		echo "WARNING: Could not add the default kernel!"
+		echo "         Please check your Apache-configuration according openQRM"
+		exit -1
+	fi
+
 	# create $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default
 	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/
 	openqrm_server_create_pxe_config -1 default default
