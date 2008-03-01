@@ -54,6 +54,8 @@ create table image_info(			\
 	image_type varchar(20),			\
 	image_rootdevice varchar(20),	\
 	image_rootfstype varchar(10),	\
+	# freetext parameter for the deployment plugin
+	image_deployment_parameter varchar(10),	\
 	image_isshared bigint,			\
 	image_comment varchar(255),		\
 	image_capabilities varchar(255),		\
@@ -144,6 +146,14 @@ create table image_service (				\
 	service varchar(50),					\
 	primary key(image_id)					\
 )
+
+# plugg-able deployment types
+drop table deployment_info
+create table deployment_info(
+	deployment_id bigint,						\
+	deployment_name varchar(50),				\
+	deployment_type varchar(20)					\
+);
 
 
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared) values (1, 'idle', 'openqrm', 'ram', 'ram', 'ext2', 1)

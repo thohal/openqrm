@@ -58,6 +58,8 @@ create table image_info(
 	image_rootdevice VARCHAR(20),
 	# can be : ext2/3, nfs
 	image_rootfstype VARCHAR(10),
+	# freetext parameter for the deployment plugin
+	image_deployment_parameter VARCHAR(255),
 	image_isshared INT(1),
 	image_comment VARCHAR(255),
 	image_capabilities VARCHAR(255)
@@ -142,6 +144,16 @@ create table image_service (
 	service VARCHAR(50) NOT NULL,
 	INDEX(service)
 );
+
+
+# plugg-able deployment types
+create table deployment_info(
+	deployment_id INT(5) NOT NULL PRIMARY KEY,
+	deployment_name VARCHAR(50),
+	deployment_type VARCHAR(20)
+);
+
+
 
 # initial data
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared) values ('1', 'idle', 'openqrm', 'ram', 'ram', 'ext2', '1');

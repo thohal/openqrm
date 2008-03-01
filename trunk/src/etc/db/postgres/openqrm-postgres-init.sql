@@ -50,6 +50,8 @@ create table image_info(
 	image_type char(20),
 	image_rootdevice char(20),
 	image_rootfstype char(10),
+	# freetext parameter for the deployment plugin
+	image_deployment_parameter char(255),
 	image_isshared int8,
 	image_comment char(255),
 	image_capabilities char(255)
@@ -135,6 +137,16 @@ create table image_service(
 	image_id int8 NOT NULL PRIMARY KEY,
 	service char(50)
 );
+
+# plugg-able deployment types
+drop table deployment_info;
+create table deployment_info(
+	deployment_id int8 NOT NULL PRIMARY KEY,
+	deployment_name char(50),
+	deployment_type char(20)
+);
+
+
 
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared) values ('1', 'idle', 'openQRM', 'ram', 'ram', 'ext2', '1');
 insert into resource_info (resource_id, resource_localboot, resource_openqrmserver) values ('0', '1', 'OPENQRM_SERVER_IP_ADDRESS');
