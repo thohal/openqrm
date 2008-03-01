@@ -56,15 +56,15 @@ function resource_display($admin) {
 		$resource->get_instance_by_id($resource_db["resource_id"]);
 		if ("$resource->id" != "0") {
 			$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
-			$disp = $disp."<form action='../../../action/resource-action.php' method=post>";
+			$disp = $disp."<form action='resource-action.php' method=post>";
 			$disp = $disp."$resource->id $resource->hostname ";
 
 			// local or netboot
 			if ("$admin" == "admin") {
 				if ("$resource->localboot" == "0") {
-					$disp = $disp."<a href=\"../../../action/resource-action.php?resource_command=localboot&resource_id=$resource->id&resource_ip=$resource->ip&resource_mac=$resource->mac\"> net</a>";
+					$disp = $disp."<a href=\"resource-action.php?resource_command=localboot&resource_id=$resource->id&resource_ip=$resource->ip&resource_mac=$resource->mac\"> net</a>";
 				} else {
-					$disp = $disp."<a href=\"../../../action/resource-action.php?resource_command=netboot&resource_id=$resource->id&resource_ip=$resource->ip&resource_mac=$resource->mac\"> local</a>";
+					$disp = $disp."<a href=\"resource-action.php?resource_command=netboot&resource_id=$resource->id&resource_ip=$resource->ip&resource_mac=$resource->mac\"> local</a>";
 				}
 			} else {
 				if ("$resource->localboot" == "0") {
@@ -129,7 +129,7 @@ function resource_display($admin) {
 function resource_form() {
 
 	$disp = "<b>New Resource</b>";
-	$disp = $disp."<form action='../../../action/resource-action.php' method=post>";
+	$disp = $disp."<form action='resource-action.php' method=post>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp.htmlobject_input('resource_mac', array("value" => 'XX:XX:XX:XX:XX:XX', "label" => 'Insert Mac-address'), 'text', 17);

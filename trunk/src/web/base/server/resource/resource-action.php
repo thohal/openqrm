@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>openQRM Resource actions</title>
-<meta http-equiv="refresh" content="3; URL=../base/server/resource/resource-overview.php">
+<meta http-equiv="refresh" content="3; URL=resource-overview.php">
 </head>
 <body>
 
@@ -129,41 +129,6 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			// reboot resource
 			$resource->send_command($resource->ip, "reboot");
 			break;
-
-		// get_parameter requires :
-		// resource_mac
-		case 'get_parameter':
-			if (strlen($resource_mac)) {
-				$resource = new resource();
-				$resource->get_instance_by_mac($resource_mac);
-				$resource->get_parameter($resource->id);
-			}
-			exit();
-			break;
-
-		// update_info requires :
-		// resource_id
-		// array of resource_fields
-		case 'update_info':
-			if (strlen($resource_id)) {
-				$resource = new resource();
-				$resource->update_info($resource_id, $resource_fields);
-			}
-			exit();
-			break;
-
-		// update_status requires :
-		// resource_id
-		// resource_state
-		// resource_event
-		case 'update_status':
-			if (strlen($resource_id)) {
-				$resource = new resource();
-				$resource->update_status($resource_id, $resource_state, $resource_event);
-			}
-			exit();
-			break;
-
 
 		// reboot requires :
 		// resource_ip
