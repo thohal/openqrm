@@ -4,8 +4,6 @@ $thisfile = basename($_SERVER['PHP_SELF']);
 require_once('../../include/htmlobject.inc.php');
 require_once('../../include/user.inc.php');
 
-echo $OPENQRM_USER->role;
-
 if(htmlobject_request('action') != '') {
 	require_once('action.inc.php');
 }
