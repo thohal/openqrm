@@ -1,0 +1,52 @@
+#!/bin/bash
+# this is the root-mount initrd-service
+# which takes care to mount the remote
+# nfs-rootfs according to the image_deployment_parameters
+# at /mnt
+
+# nfs-deployment
+# Required defines in the image_deploy_paramters
+# IMAGE_STORAGE_SERVER_IP	- set to the ip-address of the NFS-server
+# IMAGE_ROOT_DIR			- set to the path to the rootfs on the NFS-server
+# Optional parameters 
+# IMAGE_NFS_MOUNT_OPTIONS	- can be e.g. set to tcp
+
+modprobe sunrpc
+modprobe lockd
+modprobe nfs
+rm -rf /dev/null
+mknod -m 666 /dev/null c 1 3
+portmap
+
+if ! mount -t nfs -o rw,$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR /mnt; then
+	echo "ERROR: Could not mount $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR by nfs"
+	# give a shell for the admin
+	/bin/bash
+else
+	echo "nfs-deployment: Mounted $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR"
+fi
+
+# prepare fs-image for nfs-root mount
+# fill /boot and /lib/modules on the fs-image
+# transfer resource basedir
+# prepare init according plugin services
+# manageds shared image
+
+
+
+
+
+# remont /mnt ro
+for ((i=0;i<=20;i+=1)); do
+	ret=0
+	mount -t nfs -o ro,$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR /mnt
+	echo -n "."
+	sleep 1
+	ret=1
+done
+if [ $ret != 0 ] ; then
+	echo "ERROR: nfs-deployment could not remount /mnt "
+	/bin/bash
+fi
+
+
