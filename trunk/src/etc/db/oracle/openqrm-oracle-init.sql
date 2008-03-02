@@ -151,10 +151,7 @@ create table deployment_info(
 
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared) values ('1', 'idle', 'openqrm', 'ram', 'ram', 'ext2', '1');
 insert into resource_info (resource_id, resource_localboot, resource_openqrmserver) values ('0', '1', 'OPENQRM_SERVER_IP_ADDRESS');
-insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared ) values ( '2', 'hda1', 'Linux', 'local', '/dev/hda1', 'ext3', '0');
-insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared ) values ( '3', 'hda2', 'Linux', 'local', '/dev/hda2', 'ext3', '0');
-insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared ) values ( '4', 'sda1', 'Linux', 'local', '/dev/sda1', 'ext3', '0');
-insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared ) values ( '5', 'sda2', 'Linux', 'local', '/dev/sda2', 'ext3', '0');
+insert into deployment_info (deployment_id, deployment_name, deployment_type) values ('1', 'Ramdisk Deployment', 'ram');
 insert into user_info (user_id, user_name, user_password, user_gender, user_first_name, user_last_name, user_department, user_office, user_role, user_last_update_time, user_description, user_capabilities, user_state) values (0, 'openqrm', 'openqrm', '-', '-', '-', '-', '-', 0, '-', 'openQRM-Server default user', '-', 'activated');
 insert into role_info (role_id, role_name) values (0, 'administrator');
 
