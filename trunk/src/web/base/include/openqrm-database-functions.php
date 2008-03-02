@@ -74,7 +74,12 @@ function openqrm_get_db_connection() {
 	return $db;
 }
 
-
+// function to print arrays
+function print_array($item, $key) {
+	if (!is_int($key)) {
+		echo "$key=\"$item\"\n";
+	}
+}
 
 //-----------------------------------------------------------------------------------
 function openqrm_db_get_result($query) {
@@ -89,14 +94,16 @@ function openqrm_db_get_result($query) {
 				$tmp[] = array("value" => $val, "label" => $key);
 			}
 		}
-	$ar[] = $tmp;
+		$ar[] = $tmp;
 	}
-return $ar;
+	return $ar;
 }
 //-----------------------------------------------------------------------------------
 function openqrm_db_get_result_single ($query) {
 	$result = openqrm_db_get_result($query);
-	return array("value" => $result[0][0]["value"], "label" => $result[0][0]["label"]);
+	if(isset($result[0][0]["value"])) {
+		return array("value" => $result[0][0]["value"], "label" => $result[0][0]["label"]);
+	}
 }
 //-----------------------------------------------------------------------------------
 function openqrm_db_get_result_double ($query) {
@@ -107,13 +114,4 @@ function openqrm_db_get_result_double ($query) {
 	}
 	return $ar_Return;
 }
-			 
-// function to print arrays
-function print_array($item, $key) {
-	if (!is_int($key)) {
-		echo "$key=\"$item\"\n";
-	}
-}
-
-
 ?>

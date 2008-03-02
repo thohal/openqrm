@@ -47,7 +47,7 @@ function htmlobject_input($name, $value, $type = 'text', $maxlength = '') {
 * @param  $selected array()
 * @return string
 */
-function htmlobject_select($name, $value, $title = '', $selected = '') {
+function htmlobject_select($name, $value, $title = '', $selected = array()) {
 
 		$html = new htmlobject_select();
 		$html->name = $name;
@@ -90,7 +90,7 @@ function htmlobject_tabmenu($value) {
 	$i = 0;
 	foreach ($value as $val) {
 		$html = new htmlobject_div();
-		$html->id = 'id'.$i;
+		$html->id = 'tab'.$i;
 		$html->css = 'htmlobject_tab_box';
 		$html->title = $val['label'];
 		$html->text = $val['value'];
