@@ -15,7 +15,7 @@ function openqrm_parse_conf ( $filepath ) {
     foreach( $ini as $line ){
         $line = trim( $line );
         // Comments
-        if ( $line == '' || $line{0} == '#' ) { continue; }
+        if ( $line == '' || $line{0} != 'O' ) { continue; }
         // Key-value pair
         list( $key, $value ) = explode( '=', $line, 2 );
         $key = trim( $key );
