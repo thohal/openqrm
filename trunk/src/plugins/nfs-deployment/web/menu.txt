@@ -3,4 +3,4 @@
 #	Alt
 #	IMG
 #	Target
-..|Nfs-deployment
+.|Nfs-deployment
