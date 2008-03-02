@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>openQRM Image actions</title>
-<meta http-equiv="refresh" content="300; URL=image-overview.php">
+<meta http-equiv="refresh" content="3; URL=image-overview.php">
 </head>
 <body>
 

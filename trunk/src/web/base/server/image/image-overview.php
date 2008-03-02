@@ -5,8 +5,10 @@
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/class/image.class.php";
+require_once "$RootDir/class/deployment.class.php";
 // using the htmlobject class
 require_once "$RootDir/include/htmlobject.inc.php";
+
 
 
 function image_display($admin) {
@@ -49,11 +51,29 @@ function image_display($admin) {
 
 function image_form() {
 
+	$deployment = new deployment();
+	$deployment_list = array();
+	$deployment_list = $deployment->get_list();
+
 	$disp = "<b>New Image</b>";
 	$disp = $disp."<form action='image-action.php' method=post>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp.htmlobject_input('image_name', array("value" => '', "label" => 'Insert Image name'), 'text', 20);
+	$disp = $disp.htmlobject_input('image_version', array("value" => '', "label" => 'Image version'), 'text', 20);
+
+	$deployment_select = htmlobject_select('image_type', $deployment_list, 'Deployment type', $deployment_list);
+	$disp = $disp.$deployment_select;
+
+	$disp = $disp.htmlobject_input('image_rootdevice', array("value" => '', "label" => 'Image root-device'), 'text', 20);
+	$disp = $disp.htmlobject_input('image_rootfstype', array("value" => '', "label" => 'Image root-fs type'), 'text', 20);
+
+    $disp = $disp."<input type='checkbox' name='image_isshared' value='0'> Shared Image<br>";
+    
+	$disp = $disp.htmlobject_textarea('image_deployment_parameter', array("value" => '', "label" => 'Deployment parameter'));
+	$disp = $disp.htmlobject_textarea('image_comment', array("value" => '', "label" => 'Comment'));
+	$disp = $disp.htmlobject_textarea('image_capabilities', array("value" => '', "label" => 'Image Capabilities'));
+
 	$disp = $disp."<input type=hidden name=image_command value='new_image'>";
 	$disp = $disp."<input type=submit value='add'>";
 	$disp = $disp."";
