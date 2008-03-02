@@ -34,6 +34,28 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		// get_parameter requires :
 		// resource_mac
 		case 'get_parameter':
+			// if resource-id = -1 we add a new resource first
+			if ($resource_id = "-1") {
+				// check if resource already exists
+				$resource = new resource();
+				if ($resource->exists($resource_mac)) {
+					echo "Resource $resource_mac already exist in the openQRM-database!";
+				} else {
+					// add resource
+					$new_resource_id=$resource->get_next_id();
+					$resource->id = $new_resource_id;
+					// 	check if resource_id is free
+					if ($resource->is_id_free($resource->id)) {			
+						$new_resource_id=$resource_id;
+					} else {
+						echo "Given resource id $resource->id is already in use!";
+						exit();
+					}
+					$resource->add($new_resource_id, $resource_mac, $resource_ip);
+				}
+			}		
+		
+		
 			if (strlen($resource_mac)) {
 				$resource = new resource();
 				$resource->get_instance_by_mac($resource_mac);
