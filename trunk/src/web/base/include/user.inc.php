@@ -8,9 +8,8 @@ function set_env() {
 	$OPENQRM_USER->set_user();
 	$GLOBALS['OPENQRM_USER'] = $OPENQRM_USER;
 	
-	define('OPENQRM_USER_NAME', $user->name['value']);
-	define('OPENQRM_USER_ROLE_ID', $user->role['value']);
-	define('OPENQRM_USER_ROLE_NAME', $user->role['label']);
+	define('OPENQRM_USER_NAME', $OPENQRM_USER->name);
+	define('OPENQRM_USER_ROLE_NAME', $OPENQRM_USER->role);
 }
 
 set_env();
