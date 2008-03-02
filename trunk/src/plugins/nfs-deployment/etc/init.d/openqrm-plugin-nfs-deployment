@@ -1,0 +1,69 @@
+#!/bin/bash
+# init script for the openQRM nfs-deployment-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-deployment/include/openqrm-plugin-nfs-deployment-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-deployment/etc/openqrm-plugin-nfs-deployment.conf
+
+
+# TODO
+# we must find a proper solution to start/stop 
+# the plugin with correct user-authentication
+# -> for now using openqrm user static
+
+function openqrm_plugin_nfs-deployment_start() {
+	echo "Starting the openQRM nfs-deployment-plugin"
+	openqrm_server_add_deployment_type openqrm openqrm nfs "Nfs-root deployment"
+}
+
+
+function openqrm_plugin_nfs-deployment_stop() {
+	echo "Stopping the openQRM nfs-deployment-plugin"
+	openqrm_server_remove_deployment_type openqrm openqrm nfs
+
+}
+
+function openqrm_plugin_nfs-deployment_uninstall() {
+	echo "Uninstalling the openQRM nfs-deployment-plugin"
+	openqrm_plugin_nfs-deployment_stop
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+}
+
+function openqrm_plugin_nfs-deployment_init() {
+	echo "Initializing the openQRM nfs-deployment-plugin"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-deployment/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+}
+
+
+case "$1" in
+	start)
+		openqrm_plugin_nfs-deployment_start
+		;;
+	stop)
+		openqrm_plugin_nfs-deployment_stop
+		;;
+	restart)
+		openqrm_plugin_nfs-deployment_stop
+		sleep 1
+		openqrm_plugin_nfs-deployment_start
+		;;
+	init)
+		openqrm_plugin_nfs-deployment_init
+		;;
+	uninstall)
+		openqrm_plugin_nfs-deployment_uninstall
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+

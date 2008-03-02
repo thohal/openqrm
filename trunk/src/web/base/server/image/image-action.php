@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>openQRM Image actions</title>
-<meta http-equiv="refresh" content="3; URL=image-overview.php">
+<meta http-equiv="refresh" content="300; URL=image-overview.php">
 </head>
 <body>
 
@@ -55,16 +55,16 @@ foreach ($_REQUEST as $key => $value) {
 			break;
 
 		case 'add_deployment_type':
-			$deployment_type = new deployment();
+			$deployment = new deployment();
 			$deployment_fields["deployment_id"]=$deployment->get_next_id();
 			$deployment->add($deployment_fields);
 			echo "Added deployment type $deployment_name to the openQRM-database";
 			break;
 
 		case 'remove_deployment_type':
-			$deployment_type = new deployment();
+			$deployment = new deployment();
 			$deployment->remove_by_type($deployment_type);
-			echo "Removed deployment type $deployment from the openQRM-database";
+			echo "Removed deployment type $deployment_type from the openQRM-database";
 			break;
 
 		default:

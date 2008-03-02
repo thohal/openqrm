@@ -5,6 +5,8 @@
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 
+global $DEPLOYMENT_INFO_TABLE;
+
 class deployment {
 
 var $id = '';
@@ -19,13 +21,14 @@ var $type = '';
 
 // returns an deployment from the db selected by id, type or name
 function get_instance($id, $name, $type) {
+	global $DEPLOYMENT_INFO_TABLE;
 	$db=openqrm_get_db_connection();
 	if ("$id" != "") {
-		$deployment_array = &$db->Execute("select * from DEPLOYMENT_INFO_TABLE where deployment_id=$id");
+		$deployment_array = &$db->Execute("select * from $DEPLOYMENT_INFO_TABLE where deployment_id=$id");
 	} else if ("$name" != "") {
-		$deployment_array = &$db->Execute("select * from DEPLOYMENT_INFO_TABLE where deployment_name=$name");
+		$deployment_array = &$db->Execute("select * from $DEPLOYMENT_INFO_TABLE where deployment_name=$name");
 	} else if ("$type" != "") {
-		$deployment_array = &$db->Execute("select * from DEPLOYMENT_INFO_TABLE where deployment_type=$type");
+		$deployment_array = &$db->Execute("select * from $DEPLOYMENT_INFO_TABLE where deployment_type=$type");
 	} else {
 		echo "ERROR: Could not create instance of deployment without data";
 		exit(-1);
@@ -65,9 +68,10 @@ function get_instance_by_type($type) {
 
 // get next free deployment-id
 function get_next_id() {
+	global $DEPLOYMENT_INFO_TABLE;
 	$next_free_deployment_id=1;
 	$db=openqrm_get_db_connection();
-	$recordSet = &$db->Execute("select deployment_id from DEPLOYMENT_INFO_TABLE");
+	$recordSet = &$db->Execute("select deployment_id from $DEPLOYMENT_INFO_TABLE");
 	if (!$recordSet)
         print $db->ErrorMsg();
     else
@@ -88,8 +92,9 @@ function get_next_id() {
 
 // checks if given deployment id is free in the db
 function is_id_free($deployment_id) {
+	global $DEPLOYMENT_INFO_TABLE;
 	$db=openqrm_get_db_connection();
-	$rs = &$db->Execute("select deployment_id from DEPLOYMENT_INFO_TABLE where deployment_id=$deployment_id");
+	$rs = &$db->Execute("select deployment_id from $DEPLOYMENT_INFO_TABLE where deployment_id=$deployment_id");
 	if (!$rs)
 		print $db->ErrorMsg();
 	else
@@ -103,12 +108,13 @@ function is_id_free($deployment_id) {
 
 // adds deployment to the database
 function add($deployment_fields) {
+	global $DEPLOYMENT_INFO_TABLE;
 	if (!is_array($deployment_fields)) {
 		print("deployment_field not well defined");
 		return 1;
 	}
 	$db=openqrm_get_db_connection();
-	$result = $db->AutoExecute(DEPLOYMENT_INFO_TABLE, $deployment_fields, 'INSERT');
+	$result = $db->AutoExecute($DEPLOYMENT_INFO_TABLE, $deployment_fields, 'INSERT');
 	if (! $result) {
 		print("Failed adding new deployment to database");
 	}
@@ -117,21 +123,24 @@ function add($deployment_fields) {
 
 // removes deployment from the database
 function remove($deployment_id) {
+	global $DEPLOYMENT_INFO_TABLE;
 	$db=openqrm_get_db_connection();
-	$rs = $db->Execute("delete from DEPLOYMENT_INFO_TABLE where deployment_id=$deployment_id");
+	$rs = $db->Execute("delete from $DEPLOYMENT_INFO_TABLE where deployment_id=$deployment_id");
 }
 
 // removes deployment from the database by deployment_type
-function remove_by_type($deployment_type) {
+function remove_by_type($type) {
+	global $DEPLOYMENT_INFO_TABLE;
 	$db=openqrm_get_db_connection();
-	$rs = $db->Execute("delete from DEPLOYMENT_INFO_TABLE where deployment_type='$deployment_type'");
+	$rs = $db->Execute("delete from $DEPLOYMENT_INFO_TABLE where deployment_type='$type'");
 }
 
 
 
 // returns a list of all deployment names
 function get_list() {
-	$query = "select deployment_id, deployment_name from DEPLOYMENT_INFO_TABLE";
+	global $DEPLOYMENT_INFO_TABLE;
+	$query = "select deployment_id, deployment_name from $DEPLOYMENT_INFO_TABLE";
 	$deployment_name_array = array();
 	$deployment_name_array = openqrm_db_get_result_double ($query);
 	return $deployment_name_array;
