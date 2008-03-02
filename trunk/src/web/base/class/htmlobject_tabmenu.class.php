@@ -96,6 +96,19 @@ if(count($this->_content) > 0) {
 	$_strReturn .= "</div>\n";
 	$_strReturn .= "<div style=\"line-height:0px;clear:both;\">&#160;</div>\n";
 
+    if(isset($_REQUEST['strMsg']) && $_REQUEST['strMsg'] != "") {
+    $_strReturn .= '
+    <div class="msgBox" id="msgBox">'.$_REQUEST['strMsg'].'</div>
+    <script>
+    var aktiv = window.setInterval("msgBox()", 5000);
+
+    function msgBox() {
+        document.getElementById(\'msgBox\').style.display = \'none\';
+        window.clearInterval(aktiv);
+    }
+    </script>';
+    }
+	
 	foreach($this->_content as $content) {
 		$content->title = '';
 		$_strReturn .= $content->get_string();
