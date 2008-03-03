@@ -69,6 +69,9 @@ padding:0;
 /* Tabbox */
 
 .htmlobject_tab_box {
+	font-family: Tahoma, Verdana, sans-serif;
+	font-size: 11px;
+	background-color:#ffffff;
 	margin:20px 0 20px 20px;
 	text-align: left;
 	width:400px;
@@ -85,8 +88,6 @@ padding:0;
 /* Box */
 
 .htmlobject_box {
-	font-family: Tahoma, Verdana, sans-serif;
-	font-size: 11px;
 	color: #646464;
 	margin: 0 0 5px 0 !important;
 }
@@ -120,4 +121,20 @@ padding:0;
 }
 .htmlobject_box.textarea .right {
 	float:none;
+}
+.msgBox {
+font-family: Tahoma, Verdana, sans-serif;
+font-size: 11px;
+display:block;
+width:420px;
+border: solid 1px #aaaaaa;
+background-color:#FFFFE0;
+color:black;
+padding:5px 15px;
+margin:20px 0 0px 20px;
+z-index:100;
+}
+.msgBox strong {
+font-weight:bold;
+color:red;
 }
