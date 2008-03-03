@@ -82,6 +82,33 @@ function print_array($item, $key) {
 }
 
 //-----------------------------------------------------------------------------------
+function openqrm_db_get_free_id($fieldname, $tablename) {
+
+	$db=openqrm_get_db_connection();
+	$recordSet = &$db->Execute("select $fieldname from $tablename");
+	if (!$recordSet)
+        print $db->ErrorMsg();
+    else {
+		$ar_ids = array();
+		
+		while ($arr = $recordSet->FetchRow()) {
+		foreach($arr as $val) {
+			$ar_ids[] = $val;
+		}
+		}
+
+		$i=1;
+		while($i > 0) {
+			if(in_array($i, $ar_ids) == false) {
+				return $i;
+				break;
+			}
+		 $i++;
+		}
+	}
+    $db->Close();
+}
+//-----------------------------------------------------------------------------------
 function openqrm_db_get_result($query) {
 	$ar = array();
 	$db = openqrm_get_db_connection();
