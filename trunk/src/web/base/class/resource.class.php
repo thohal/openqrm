@@ -53,9 +53,9 @@ function get_instance($id, $mac, $ip) {
 	if ("$id" != "") {
 		$resource_array = $db->GetAll("select * from $RESOURCE_INFO_TABLE where resource_id=$id");
 	} else if ("$mac" != "") {
-		$resource_array = $db->GetAll("select * from $RESOURCE_INFO_TABLE where resource_mac=$mac");
+		$resource_array = $db->GetAll("select * from $RESOURCE_INFO_TABLE where resource_mac='$mac'");
 	} else if ("$ip" != "") {
-		$resource_array = $db->GetAll("select * from $RESOURCE_INFO_TABLE where resource_ip=$ip");
+		$resource_array = $db->GetAll("select * from $RESOURCE_INFO_TABLE where resource_ip='$ip'");
 	} else {
 		echo "ERROR: Could not create instance of resource without data";
 		exit(-1);
@@ -137,6 +137,9 @@ function exists($mac_address) {
 	global $RESOURCE_INFO_TABLE;
 	$db=openqrm_get_db_connection();
 	$rs = &$db->Execute("select resource_id from $RESOURCE_INFO_TABLE where resource_mac='$mac_address'");
+	if (!$rs)
+		print $db->ErrorMsg();
+	else
 	if ($rs->EOF) {
 		return false;
 	} else {
@@ -156,7 +159,7 @@ function get_next_id() {
     else
 	while (!$recordSet->EOF) {
 		if ($recordSet->fields["resource_id"] != $next_free_resource_id) {
-			if (openqrm_is_resource_id_free($next_free_resource_id)) {
+			if ($this->is_id_free($next_free_resource_id)) {
 				return $next_free_resource_id;
 			}
 		}
@@ -191,6 +194,8 @@ function add($resource_id, $resource_mac, $resource_ip) {
 	global $OPENQRM_EXEC_PORT;
 	global $RESOURCE_INFO_TABLE;
 	global $OPENQRM_RESOURCE_BASE_DIR;
+	$openqrm_server = new openqrm_server();
+	$OPENQRM_SERVER_IP_ADDRESS = $openqrm_server->get_ip_address();
 	$db=openqrm_get_db_connection();
 	$rs = $db->Execute("insert into $RESOURCE_INFO_TABLE (resource_id, resource_localboot, resource_kernel, resource_kernelid, resource_image, resource_imageid, resource_openqrmserver, resource_basedir, resource_serverid, resource_ip, resource_subnet, resource_broadcast, resource_network, resource_mac, resource_uptime, resource_cpunumber, resource_cpuspeed, resource_cpumodel, resource_memtotal, resource_memused, resource_swaptotal, resource_swapused, resource_hostname, resource_load, resource_execdport, resource_senddelay, resource_state, resource_event) values ($resource_id, 0, 'default', 1, 'idle', 1, '$OPENQRM_SERVER_IP_ADDRESS', '$OPENQRM_RESOURCE_BASE_DIR', 1, '$resource_ip', '', '', '', '$resource_mac', 0, 0, 0, '0', 0, 0, 0, 0, 'idle', 0, $OPENQRM_EXEC_PORT, 30, 'booting', 'detected')");
 }

@@ -1,8 +1,3 @@
-<html>
-<head>
-<title>openQRM Resource actions</title>
-</head>
-<body>
 
 <?php
 
@@ -38,27 +33,25 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			if ($resource_id = "-1") {
 				// check if resource already exists
 				$resource = new resource();
-				if ($resource->exists($resource_mac)) {
-					echo "Resource $resource_mac already exist in the openQRM-database!";
-				} else {
+				if (!$resource->exists($resource_mac)) {
+					// echo "Resource $resource_mac already exist in the openQRM-database!";
+					// } else {
 					// add resource
 					$new_resource_id=$resource->get_next_id();
 					$resource->id = $new_resource_id;
+					// echo "Adding resource $resource_mac $resource_id $new_resource_id $resource->id<br>";
 					// 	check if resource_id is free
-					if ($resource->is_id_free($resource->id)) {			
-						$new_resource_id=$resource_id;
-					} else {
+					if (!$resource->is_id_free($resource->id)) {			
 						echo "Given resource id $resource->id is already in use!";
 						exit();
 					}
 					$resource->add($new_resource_id, $resource_mac, $resource_ip);
 				}
 			}		
-		
-		
+
 			if (strlen($resource_mac)) {
 				$resource = new resource();
-				$resource->get_instance_by_mac($resource_mac);
+				$resource->get_instance_by_mac("$resource_mac");
 				$resource->get_parameter($resource->id);
 			}
 			exit();
@@ -95,4 +88,4 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 
 ?>
 
-</body>
+
