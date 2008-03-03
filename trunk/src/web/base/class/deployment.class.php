@@ -140,7 +140,7 @@ function remove_by_type($type) {
 // returns a list of all deployment names
 function get_list() {
 	global $DEPLOYMENT_INFO_TABLE;
-	$query = "select deployment_id, deployment_name from $DEPLOYMENT_INFO_TABLE";
+	$query = "select deployment_type, deployment_name from $DEPLOYMENT_INFO_TABLE";
 	$deployment_name_array = array();
 	$deployment_name_array = openqrm_db_get_result_double ($query);
 	return $deployment_name_array;

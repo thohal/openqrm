@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>openQRM Resource actions</title>
-<meta http-equiv="refresh" content="3; URL=resource-overview.php">
+<meta http-equiv="refresh" content="300; URL=resource-overview.php">
 </head>
 <body>
 
@@ -127,7 +127,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			echo "Assigned resource $resource_id to boot $kernel_name and use $image_name";
 			// echo "assigning finished, rebooting $resource_ip";
 			// reboot resource
-			$resource->send_command($resource->ip, "reboot");
+			$resource->send_command($resource_ip, "reboot");
 			break;
 
 		// reboot requires :
