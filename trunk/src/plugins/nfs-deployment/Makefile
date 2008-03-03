@@ -16,6 +16,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp include/openqrm* $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-deployment/include/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-deployment/web
 	. $(OPENQRM_SERVER_CONF) && cp web/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-deployment/web/
+	. $(OPENQRM_SERVER_CONF) && cp web/*.nfs-deployment $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-deployment/web/
 
 uninstall:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make uninstall' as root" && exit 1)

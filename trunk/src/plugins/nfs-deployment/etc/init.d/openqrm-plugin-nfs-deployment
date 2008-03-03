@@ -30,12 +30,16 @@ function openqrm_plugin_nfs-deployment_uninstall() {
 	echo "Uninstalling the openQRM nfs-deployment-plugin"
 	openqrm_plugin_nfs-deployment_stop
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.nfs-deployment
 }
 
 function openqrm_plugin_nfs-deployment_init() {
 	echo "Initializing the openQRM nfs-deployment-plugin"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-deployment/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	# linking the boot-service
+	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-deployment/web/root-mount.nfs-deployment
+	ln -s $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-deployment/web/root-mount.nfs-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.nfs-deployment
 }
 
 
