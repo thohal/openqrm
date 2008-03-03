@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>openQRM Resource actions</title>
-<meta http-equiv="refresh" content="300; URL=resource-overview.php">
+<meta http-equiv="refresh" content="3; URL=resource-overview.php">
 </head>
 <body>
 

@@ -96,7 +96,10 @@ if [ "$image_type" != "ram" ]; then
 		umount /sys
 	fi
 	umount /proc
-	do_pivot_root /mnt /mnt/initrd
+	
+	cd /mnt
+	
+	pivot_root . /mnt/initrd
 	export CONSOLE=/dev/console
 	if [ -e /usr/sbin/chroot ]; then
 		exec /usr/sbin/chroot . /sbin/init 3

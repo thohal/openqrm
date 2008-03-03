@@ -11,14 +11,21 @@
 # Optional parameters 
 # IMAGE_NFS_MOUNT_OPTIONS	- can be e.g. set to tcp
 
-modprobe sunrpc
-modprobe lockd
-modprobe nfs
+# get the deployment parameters from openqrm.conf
+OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
+. $OPENQRM_RESOURCE_PARAMETER_FILE
+echo "image_deployment_parameter $image_deployment_parameter"
+eval $image_deployment_parameter
+
+modprobe sunrpc 1>/dev/null 2>&1
+modprobe lockd 1>/dev/null 2>&1
+modprobe nfs 1>/dev/null 2>&1
 rm -rf /dev/null
 mknod -m 666 /dev/null c 1 3
 portmap
 
-if ! mount -t nfs -o rw,$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR /mnt; then
+set -x
+if ! mount -t nfs -o rw$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR /mnt; then
 	echo "ERROR: Could not mount $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR by nfs"
 	# give a shell for the admin
 	/bin/bash
@@ -37,16 +44,19 @@ fi
 
 
 # remont /mnt ro
-for ((i=0;i<=20;i+=1)); do
-	ret=0
-	mount -t nfs -o ro,$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR /mnt
+ret=0
+while ! mount -t nfs -o ro,remount$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR /mnt; do
 	echo -n "."
 	sleep 1
-	ret=1
+	REMOUNT_LOOP=$( REMOUNT_LOOP + 1 )
+	if [ "$REMOUNT_LOOP" == "10" ]; then
+		echo "ERROR: nfs-deployment could not remount /mnt "
+		/bin/bash
+	fi
 done
-if [ $ret != 0 ] ; then
-	echo "ERROR: nfs-deployment could not remount /mnt "
-	/bin/bash
-fi
+
+
+
+
 
 
