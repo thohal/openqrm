@@ -4,7 +4,79 @@
 export SHELL=/bin/bash
 PATH=/sbin:/bin:/usr/bin:/usr/sbin
 export PATH
+# some defines 
+export IMAGE_FSTAB=/mnt/etc/fstab
+export IMAGE_FSTAB_STATIC=/mnt/etc/fstab-static
 
+# functions
+
+function import_kernel() {
+	mount -t tmpfs none /lib/modules
+	cd /lib/modules
+	tftp $OPENQRM_SERVER_IP_ADDRESS -g -r boot/modules-$kernel_name.tgz -l modules-$kernel_name.tgz
+	tar -C / -xzf /lib/modules/modules-$kernel_name.tgz
+	rm -f modules-$kernel_name.tgz
+	mkdir -p /boot
+	mount -t tmpfs none /boot
+	cd /boot
+	tftp $OPENQRM_SERVER_IP_ADDRESS -g -r boot/vmlinuz-$kernel_name -l vmlinuz-$kernel_name
+	mv vmlinuz-$kernel_name vmlinuz-$kernel_version
+	tftp $OPENQRM_SERVER_IP_ADDRESS -g -r boot/System.map-$kernel_name -l System.map-$kernel_name
+	mv System.map-$kernel_name System.map-$kernel_version
+	cd /
+	depmod -a
+	hwsetup -p
+}
+
+
+# this functions adds the common entries to the images fstab
+function create_fstab_commons() {
+	echo "none	 /dev/pts     devpts   gid=5,mode=620     0 0" >> $IMAGE_FSTAB
+	echo "none	 /proc	proc     defaults	   0 0" >> $IMAGE_FSTAB
+	echo "none	 /dev/shm     tmpfs    defaults	   0 0" >> $IMAGE_FSTAB
+	echo "/dev/fd0     /mnt/floppy  auto     noauto,owner,kudzu 0 0" >> $IMAGE_FSTAB
+	IFS=$'\n'
+	for IDEDEVICES in $(ls /proc/ide); do
+		if grep cdrom /proc/ide/$IDEDEVICES/media 1>/dev/null 2>&1; then
+			echo "Found cdrom at $IDEDEVICES"
+			mkdir -p /mnt/cdrom$LOOP 1>/dev/null 
+			echo "/dev/$IDEDEVICES     /mnt/cdrom$LOOP   udf,iso9660 noauto,owner,kudzu,ro 0 0" >> $IMAGE_FSTAB
+			LOOP=$(( LOOP +1 ))
+		fi
+	done
+	FOUND_SWAP=0
+	for SWPSPACE in $(cat /proc/partitions |grep '[0-9]' | awk '{print $4}'); do
+		if echo $SWPSPACE | grep '[0-9]' 1>/dev/null; then
+			if swapon /dev/${SWPSPACE} 1>/dev/null 2>&1; then
+				swapoff /dev/${SWPSPACE} 1>/dev/null 
+				echo "Adding /dev/${SWPSPACE} as swap space"
+				echo "/dev/${SWPSPACE} swap	swap	defaults	0 0" >> $IMAGE_FSTAB
+				FOUND_SWAP=1
+			fi
+		fi
+	done
+	if [ "$FOUND_SWAP" == "0" ]; then
+		# we need to create a small swap file
+		dd if=/dev/zero of=/mnt/tmp/mini-swap.swap bs=1M count=1
+		mkswap /mnt/tmp/mini-swap.swap
+		echo "Adding mini-swap file as swap space"
+		echo "/tmp/mini-swap.swap swap	swap	noauto	0 0" >> $IMAGE_FSTAB
+	fi
+	IFS=$OLD_IFS
+	if [ -f $IMAGE_FSTAB_STATIC ]; then
+		echo "Found $IMAGE_FSTAB_STATIC, adding to $IMAGE_FSTAB"
+		cat $IMAGE_FSTAB_STATIC >> $FSTAB_QRM
+	fi
+
+
+
+}
+
+
+
+
+
+# main
 mount -t proc proc /proc
 mkdir -p /dev/fd
 ln -sf /proc/self/fd /dev/fd
@@ -64,6 +136,10 @@ fi
 wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$id&resource_mac=$OPENQRM_RESOURCE_MAC_ADDRESS&resource_ip=$OPENQRM_RESOURCE_IP_ADDRESS"
 . $OPENQRM_RESOURCE_PARAMETER_FILE
 
+# get kernel + modules by tftp
+echo "Importing kernel files"
+import_kernel
+
 # run default openqrm-client boot-service
 echo "Getting openqrm-client package"
 cd /
@@ -80,14 +156,42 @@ $resource_basedir/openqrm/etc/init.d/openqrm-client start
 #    -> no need to start any monitoring daemons because the system
 #       will do "nothing" anyway
 if [ "$image_type" != "ram" ]; then
-
+	eval $image_deployment_parameter
 	cd /
 	wget -q "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/root-mount.$image_type-deployment"
 	chmod +x root-mount.$image_type-deployment
-	# run the deployment plugin command, it will take care
-	# to mount the rootfs at /mnt according to the deployment-type
-	# and the image_deployment_parameters
-	./root-mount.$image_type-deployment
+	# source the deployment plugin command, it will provide 
+	# the functions to mount/remount the rootfs at /mnt according 
+	# to the deployment-type and the image_deployment_parameters
+	. ./root-mount.$image_type-deployment
+
+	# mount ro (provided by the deployment plugin)
+	mount_rootfs
+
+	# fill /boot and /lib/modules on the fs-image
+	echo "Filling /boot and /lib/modules"
+	rm -rf /mnt/boot/vmlinuz-$kernel_version /mnt/boot/System.map-$kernel_version /mnt/lib/modules/$kernel_version
+	cp -af /boot/vmlinuz-$kernel_version /mnt/boot/vmlinuz-$kernel_version
+	cp -af /boot/System.map-$kernel_version /mnt/boot/System.map-$kernel_version
+	cp -af /lib/modules/$kernel_version /mnt/lib/modules/
+
+	# create custom fstab / needed for the remount rw during the system init
+	# (custom entry provided by the deployment plugin)
+	create_fstab
+	# (common entries provided by a local function)
+	create_fstab_commons
+
+	# transfer resource basedir
+	echo "Preparing resource openQRM client"
+
+	# prepare init according plugin services
+	echo "Preparing system init"
+
+	# managed shared image
+	echo "Prepare image as shared"
+
+	# remount rw (provided by the deployment plugin)
+	remount_rootfs
 
 	# chroot + init
 	killall syslogd klogd 1>/dev/null 2>&1

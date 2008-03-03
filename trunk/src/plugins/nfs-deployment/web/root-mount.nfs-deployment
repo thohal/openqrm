@@ -1,8 +1,7 @@
 #!/bin/bash
 # this is the root-mount initrd-service
-# which takes care to mount the remote
-# nfs-rootfs according to the image_deployment_parameters
-# at /mnt
+# which proivdes function to mount/remount the remote
+# nfs-rootfs according to the image_deployment_parameters at /mnt
 
 # nfs-deployment
 # Required defines in the image_deploy_paramters
@@ -14,45 +13,54 @@
 # get the deployment parameters from openqrm.conf
 OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
 . $OPENQRM_RESOURCE_PARAMETER_FILE
-echo "image_deployment_parameter $image_deployment_parameter"
 eval $image_deployment_parameter
 
-modprobe sunrpc 1>/dev/null 2>&1
-modprobe lockd 1>/dev/null 2>&1
-modprobe nfs 1>/dev/null 2>&1
-rm -rf /dev/null
-mknod -m 666 /dev/null c 1 3
-portmap
 
-if ! mount -t nfs -o rw$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR /mnt; then
-	echo "ERROR: Could not mount $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR by nfs"
-	# give a shell for the admin
-	/bin/bash
-else
-	echo "nfs-deployment: Mounted $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR"
-fi
+function mount_rootfs() {
+	modprobe sunrpc 1>/dev/null 2>&1
+	modprobe lockd 1>/dev/null 2>&1
+	modprobe nfs 1>/dev/null 2>&1
+	rm -rf /dev/null
+	mknod -m 666 /dev/null c 1 3
+	portmap
 
-# prepare fs-image for nfs-root mount
-# fill /boot and /lib/modules on the fs-image
-# transfer resource basedir
-# prepare init according plugin services
-# manageds shared image
-
-
-
-# remont /mnt ro
-while ! mount -t nfs -o ro,remount$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR /mnt; do
-	echo -n "."
-	sleep 1
-	REMOUNT_LOOP=$( REMOUNT_LOOP + 1 )
-	if [ "$REMOUNT_LOOP" == "10" ]; then
-		echo "ERROR: nfs-deployment could not remount /mnt "
+	if ! mount -t nfs -o rw$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR /mnt; then
+		echo "ERROR: Could not mount $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR by nfs"
+		# give a shell for the admin
 		/bin/bash
+	else
+		echo "nfs-deployment: Mounted $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR rw"
 	fi
-done
+
+	# prepare fs-image for nfs-root mount
+	
+	# prepare fstab
+}
 
 
+function remount_rootfs() {
 
+	# remont /mnt ro
+	while ! mount -t nfs -o ro,remount$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR /mnt; do
+		echo -n "."
+		sleep 1
+		REMOUNT_LOOP=$( REMOUNT_LOOP + 1 )
+		if [ "$REMOUNT_LOOP" == "10" ]; then
+			echo "ERROR: nfs-deployment could not remount /mnt "
+			/bin/bash
+		fi
+	done
+	echo "nfs-deployment: Re-mounted $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR ro"
+	killall portmap
+	
+}
+
+
+function create_fstab() {
+	local OLD_IFS=$IFS
+	rm -f $IMAGE_FSTAB
+	echo "0.0.0.0:$IMAGE_ROOT_DIR   /   nfs  defaults   0 0" >> $IMAGE_FSTAB
+}
 
 
 
