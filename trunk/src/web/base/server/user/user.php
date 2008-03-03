@@ -33,12 +33,24 @@ $GLOBALS['html_state'] = htmlobject_input('state', $user->state, 'text', 20);
 
 html_elements();
 
+$switch = '
+<table>
+<tr>
+<td><label for="action_up">update</label></td>
+<td><input type="radio" name="action" id="action_up" value="user_update" checked></td>
+<td><label for="action_del">delete</label></td>
+<td><input type="radio" name="action" id="action_del" value="user_delete"></td>
+<td><input type="submit"></td>
+</tr>
+</table>
+';
+
 $account_output = "
 <form action=\"$thisfile\" method=\"post\">
 <input type=\"hidden\" name=\"currenttab\" value=\"tab0\">
-<input type=\"hidden\" name=\"action\" value=\"user_update\">
 $html_id
 $html_name
+$html_password
 $html_role
 $html_first_name
 $html_last_name
@@ -49,7 +61,8 @@ $html_state
 $html_last_update_time
 $html_description
 $html_capabilities
-<input type=\"submit\">
+$switch
+
 </form>
 ";
 
@@ -110,7 +123,7 @@ $tmp = '';
 	$html = new htmlobject_div();
 	$html->css = 'div_tr';
 	$html->handler = '
-		onmouseover="this.style.backgroundColor = \'aqua\';"
+		onmouseover="this.style.backgroundColor = \'#eeeeee\';"
 		onmouseout="this.style.backgroundColor = \'transparent\'";
 		onclick="location.href=\''.$thisfile.'?currenttab=tab0&name='.$ar[0]['value'].'\'";
 	';
@@ -146,16 +159,6 @@ $output[] = array('label' => 'Add User', 'value' => $add_user_output);
 .user_last_name { width:90px; }
 .user_role { width:50px; }
 .user_last_update_time { width:80px; }
-
-.div_tr {
-cursor:pointer; 
-border-left: 1px solid;
-}
-.div_td {
-padding:5px !important;
-border-bottom: 1px solid;
-border-right: 1px solid;
-}
 </style>
 
 <?php

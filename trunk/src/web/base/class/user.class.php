@@ -183,7 +183,7 @@ var $_role_table = '';
 	}
 	//-----------------------------------------------------------------------------------
 	function query_insert(){
-		$this->id = 4444;
+		$this->id = openqrm_db_get_free_id('user_id', $this->_user_table);
 		$query = '
 			INSERT INTO 
 				`user_info` (
@@ -221,21 +221,25 @@ var $_role_table = '';
 	}
 	//-----------------------------------------------------------------------------------
 	function query_update(){
+	
+		$strSet = '';
+		if($this->password != '') {
+			$strSet .= '`user_password` = "'.$this->password.'",';
+		}
+			$strSet .= '`user_gender` = "'.$this->gender.'",';
+			$strSet .= '`user_first_name` = "'.$this->first_name.'",';
+			$strSet .= '`user_last_name` = 	"'.$this->last_name.'",';
+			$strSet .= '`user_department` = "'.$this->department.'",';
+			$strSet .= '`user_office` = "'.$this->office.'",';
+			$strSet .= '`user_role` = '.$this->role.',';
+			$strSet .= '`user_last_update_time` = "'.$this->last_update_time.'",';
+			$strSet .= '`user_description` = "'.$this->description.'",';
+			$strSet .= '`user_capabilities` = "'.$this->capabilities.'",';
+			$strSet .= '`user_state` = "'.$this->state.'"';
+	
 		$query = '
 			UPDATE	`user_info`
-			SET		`user_id`  = "'.$this->id.'",
-					`user_name` = "'.$this->name.'",
-					`user_password` = "'.$this->name.'",
-					`user_gender` = "'.$this->gender.'",
-					`user_first_name` = "'.$this->first_name.'",
-					`user_last_name` = 	"'.$this->last_name.'",
-					`user_department` = "'.$this->department.'",
-					`user_office` = "'.$this->office.'",
-					`user_role` = '.$this->role.',
-					`user_last_update_time` = "'.$this->last_update_time.'",
-					`user_description` = "'.$this->description.'",
-					`user_capabilities` = "'.$this->capabilities.'",
-					`user_state` = "'.$this->state.'"
+			SET		'. $strSet .'				
 			WHERE user_name = "'.$this->name.'"
 				AND user_id = "'.$this->id.'"
 			LIMIT 1
@@ -259,6 +263,7 @@ var $_role_table = '';
 	//-----------------------------------------------------------------------------------
     function get_gender_list() {
 		$ar_Return = array();
+		$ar_Return[] = array("value"=>'', "label"=>'',);
 		$ar_Return[] = array("value"=>'f', "label"=>'female',);
 		$ar_Return[] = array("value"=>'m', "label"=>'male',);
 		return $ar_Return;
@@ -294,7 +299,8 @@ var $_role_table = '';
 				user_first_name,
 				user_last_name,
 				user_role
-			FROM '.$this->_user_table.'	
+			FROM '.$this->_user_table.'
+			ORDER BY user_name
 		';
 		$result = openqrm_db_get_result($query);
 		return $result;
