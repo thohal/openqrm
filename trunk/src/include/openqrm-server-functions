@@ -112,7 +112,7 @@ function openqrm_server_add_kernel() {
 	OPENQRM_SERVER_KERNEL_NAME=$3
 	OPENQRM_SERVER_KERNEL_VERSION=$4
 	echo "openQRM-server: Adding kernel $OPENQRM_SERVER_KERNEL_NAME version $OPENQRM_SERVER_KERNEL_VERSION" | logger
-	if ! wget -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/kernel/kernel-action.php?kernel_command=new_kernel&kernel_name=$OPENQRM_SERVER_KERNEL_NAME&kernel_version=$OPENQRM_SERVER_KERNEL_VERSION"; then
+	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/kernel/kernel-action.php?kernel_command=new_kernel&kernel_name=$OPENQRM_SERVER_KERNEL_NAME&kernel_version=$OPENQRM_SERVER_KERNEL_VERSION"; then
 		echo "ERROR: Could not add kernel $OPENQRM_SERVER_KERNEL_NAME to the openQRM-server!" | logger
 		return 1
 	fi
@@ -139,7 +139,7 @@ function openqrm_server_add_deployment_type() {
 	OPENQRM_SERVER_DEPLOYMENT_TYPE=$3
 	OPENQRM_SERVER_DEPLOYMENT_NAME=$4
 	echo "openQRM-server: Adding deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE  to the openQRM-server" | logger
-	if ! wget -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/image/image-action.php?image_command=add_deployment_type&deployment_type=$OPENQRM_SERVER_DEPLOYMENT_TYPE&deployment_name=$OPENQRM_SERVER_DEPLOYMENT_NAME"; then
+	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/image/image-action.php?image_command=add_deployment_type&deployment_type=$OPENQRM_SERVER_DEPLOYMENT_TYPE&deployment_name=$OPENQRM_SERVER_DEPLOYMENT_NAME"; then
 		echo "ERROR: Could not add deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE to the openQRM-server!" | logger
 		return 1
 	fi
@@ -156,7 +156,7 @@ function openqrm_server_remove_deployment_type() {
 	OPENQRM_USER_PASSWORD=$2
 	OPENQRM_SERVER_DEPLOYMENT_TYPE=$3
 	echo "openQRM-server: Removing deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE  from the openQRM-server" | logger
-	if ! wget -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/image/image-action.php?image_command=remove_deployment_type&deployment_type=$OPENQRM_SERVER_DEPLOYMENT_TYPE"; then
+	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/image/image-action.php?image_command=remove_deployment_type&deployment_type=$OPENQRM_SERVER_DEPLOYMENT_TYPE"; then
 		echo "ERROR: Could not remove deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE from the openQRM-server!" | logger
 		return 1
 	fi
