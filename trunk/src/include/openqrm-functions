@@ -16,11 +16,11 @@ function openqrm_chkconfig() {
 	service="$2"
 
 	if [ $action != "add" ] && [ $action != "del" ] ; then
-		echo "qrm_chkconfig: action must be either \"add\" or \"del\""
+		echo "openqrm_chkconfig: action must be either \"add\" or \"del\""
 		return 1
 	fi
 	if [ -z "${service}" ] ; then
-		echo "qrm_chkconfig: service must be valid service name"
+		echo "openqrm_chkconfig: service must be valid service name"
 		return 1
 	fi
 

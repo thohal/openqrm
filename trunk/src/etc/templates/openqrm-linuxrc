@@ -10,6 +10,52 @@ export IMAGE_FSTAB_STATIC=/mnt/etc/fstab-static
 
 # functions
 
+function prepare_udev() {
+	mkdir -p /mnt/initrd
+	if [ ! -e /mnt/dev/console ] || [ ! -e /mnt/dev/null ]; then
+		if [ ! -d /mnt/dev ]; then
+			mkdir -p /mnt/dev
+		fi
+		mount -t tmpfs none /mnt/dev/
+		cp -a /dev/* /mnt/dev/
+		mkdir -p /mnt/dev/.udevdb/
+	fi
+}
+
+
+function prepare_var() {
+	VAR_LOOP=0
+	local OLD_IFS=$IFS
+	IFS=$'\n'
+	for var_run_dir in $(ls -al /mnt/var/run | grep ^d); do
+		unset IFS
+		VAR_ARRAY=($var_run_dir)
+		VAR_DIR=${VAR_ARRAY[8]}
+		if [ "$VAR_DIR" != "." ] && [ "$VAR_DIR" != ".." ]; then
+			VAR_USER=${VAR_ARRAY[2]}
+			VAR_GROUP=${VAR_ARRAY[3]}
+			VAR_RUN_DIR[$VAR_LOOP]="$VAR_DIR $VAR_USER $VAR_GROUP"
+			VAR_LOOP=$(( VAR_LOOP + 1 ))
+		fi
+	done
+	mount -n -t tmpfs none /mnt/var/run
+	rm -f /mnt/var/log/wtmp
+	ln -s -f ../run/wtmp /mnt/var/log/wtmp
+	touch /mnt/var/run/wtmp
+	chmod 0664 /mnt/var/run/wtmp
+	for (( d=0;d<$VAR_LOOP;d++)); do
+		VAR_ARRAY=(${VAR_RUN_DIR[$d]})
+		VAR_DIR=${VAR_ARRAY[0]}
+		VAR_USER=${VAR_ARRAY[1]}
+		VAR_GROUP=${VAR_ARRAY[2]}
+		mkdir -p /mnt/var/run/$VAR_DIR
+		chown $VAR_USER:$VAR_GROUP /mnt/var/run/$VAR_DIR 1>/dev/null 
+	done
+	unset IFS
+	return 0
+}
+
+
 function import_kernel() {
 	mount -t tmpfs none /lib/modules
 	cd /lib/modules
@@ -25,7 +71,12 @@ function import_kernel() {
 	mv System.map-$kernel_name System.map-$kernel_version
 	cd /
 	depmod -a
+	# load ide disk + cdroms
+	modprobe ide-core
+	modprobe ide-generic
+	modprobe ide-disk
 	hwsetup -p
+
 }
 
 
@@ -68,11 +119,19 @@ function create_fstab_commons() {
 		cat $IMAGE_FSTAB_STATIC >> $FSTAB_QRM
 	fi
 
-
-
 }
 
 
+function prepare_services() {
+	chroot /mnt ln -sf /$resource_basedir/openqrm/etc/init.d/openqrm-client /etc/init.d/openqrm-client
+	echo "" > /mnt/tmp/openqrm-client.enable
+	echo "OPENQRM_SERVER_BASE_DIR=$resource_basedir" >> /mnt/tmp/openqrm-client.enable
+	echo ". /$resource_basedir/openqrm/include/openqrm-functions" >> /mnt/tmp/openqrm-client.enable
+	echo "openqrm_chkconfig add openqrm-client" >> /mnt/tmp/openqrm-client.enable
+	chmod +x /mnt/tmp/openqrm-client.enable
+	chroot /mnt /tmp/openqrm-client.enable
+	rm -f /mnt/tmp/openqrm-client.enable
+}
 
 
 
@@ -166,6 +225,9 @@ if [ "$image_type" != "ram" ]; then
 	. ./root-mount.$image_type-deployment
 
 	# mount ro (provided by the deployment plugin)
+	###############################################################
+	# DEPLOYMENT PLUGIN HOOK ######################################
+	###############################################################
 	mount_rootfs
 
 	# fill /boot and /lib/modules on the fs-image
@@ -177,20 +239,38 @@ if [ "$image_type" != "ram" ]; then
 
 	# create custom fstab / needed for the remount rw during the system init
 	# (custom entry provided by the deployment plugin)
+	###############################################################
+	# DEPLOYMENT PLUGIN HOOK ######################################
+	###############################################################
 	create_fstab
+
 	# (common entries provided by a local function)
 	create_fstab_commons
 
 	# transfer resource basedir
 	echo "Preparing resource openQRM client"
+	rm -rf /mnt/$resource_basedir/openqrm
+	mkdir /mnt/$resource_basedir/openqrm/
+	cp -a /$resource_basedir/openqrm/* /mnt/$resource_basedir/openqrm/
+	# copy resource parameter
+	mkdir -p /mnt/`dirname $OPENQRM_RESOURCE_PARAMETER_FILE`
+	cp -af $OPENQRM_RESOURCE_PARAMETER_FILE /mnt/OPENQRM_RESOURCE_PARAMETER_FILE
 
 	# prepare init according plugin services
 	echo "Preparing system init"
+	prepare_udev
+	prepare_var
+	prepare_services
 
 	# managed shared image
-	echo "Prepare image as shared"
+	if [ "$image_isshared" != "" ]; then
+		echo "Prepare image as shared"
+	fi
 
 	# remount rw (provided by the deployment plugin)
+	###############################################################
+	# DEPLOYMENT PLUGIN HOOK ######################################
+	###############################################################
 	remount_rootfs
 
 	# chroot + init
@@ -202,7 +282,7 @@ if [ "$image_type" != "ram" ]; then
 	umount /proc
 	
 	cd /mnt
-	
+
 	pivot_root . /mnt/initrd
 	export CONSOLE=/dev/console
 	if [ -e /usr/sbin/chroot ]; then

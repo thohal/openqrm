@@ -28,7 +28,11 @@ export OPENQRM_SERVER_BASE_DIR=$resource_basedir
 function openqrm_client_start() {
 	echo "Starting openQRM-client"
 
+	openqrm_client_stop 1>/dev/null 2>&1
 	# checks
+	umount /initrd/lib/modules 1>/dev/null 2>&1
+	umount /initrd/boot 1>/dev/null 2>&1
+	umount /initrd/ 1>/dev/null 2>&1
 	grep -q "/initrd" /proc/mounts && umount /initrd
 
 	# start openqrm-execd
