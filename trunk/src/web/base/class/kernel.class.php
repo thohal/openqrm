@@ -60,31 +60,6 @@ function get_instance_by_name($name) {
 // ---------------------------------------------------------------------------------
 
 
-
-// get next free kernel-id
-function get_next_id() {
-	global $KERNEL_INFO_TABLE;
-	$next_free_kernel_id=1;
-	$db=openqrm_get_db_connection();
-	$recordSet = &$db->Execute("select kernel_id from $KERNEL_INFO_TABLE");
-	if (!$recordSet)
-        print $db->ErrorMsg();
-    else
-        while (!$recordSet->EOF) {
-            if ($recordSet->fields["kernel_id"] != $next_free_kernel_id) {
-            	if (is_kernel_id_free($next_free_kernel_id)) {
-	            	return $next_free_kernel_id;
-	            }
-            }
-            $next_free_kernel_id++;
-            $recordSet->MoveNext();
-        }
-    $recordSet->Close();
-    $db->Close();
-    return $next_free_kernel_id;
-}
-
-
 // checks if given kernel id is free in the db
 function is_id_free($kernel_id) {
 	global $KERNEL_INFO_TABLE;

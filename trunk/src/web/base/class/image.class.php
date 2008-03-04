@@ -72,30 +72,6 @@ function get_instance_by_name($name) {
 // ---------------------------------------------------------------------------------
 
 
-// get next free image-id
-function get_next_id() {
-	global $IMAGE_INFO_TABLE;
-	$next_free_image_id=1;
-	$db=openqrm_get_db_connection();
-	$recordSet = &$db->Execute("select image_id from $IMAGE_INFO_TABLE");
-	if (!$recordSet)
-        print $db->ErrorMsg();
-    else
-        while (!$recordSet->EOF) {
-            if ($recordSet->fields["image_id"] != $next_free_image_id) {
-            	if (is_image_id_free($next_free_image_id)) {
-	            	return $next_free_image_id;
-	            }
-            }
-            $next_free_image_id++;
-            $recordSet->MoveNext();
-        }
-    $recordSet->Close();
-    $db->Close();
-    return $next_free_image_id;
-}
-
-
 // checks if given image id is free in the db
 function is_id_free($image_id) {
 	global $IMAGE_INFO_TABLE;

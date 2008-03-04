@@ -8,9 +8,11 @@
 <?php
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
+global $KERNEL_INFO_TABLE;
 
 // user/role authentication
 $user = new user($_SERVER['PHP_AUTH_USER']);
@@ -33,7 +35,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 	switch ($kernel_command) {
 		case 'new_kernel':
 			$kernel = new kernel();
-			$new_kernel_id=$kernel->get_next_id();
+			$new_kernel_id=openqrm_db_get_free_id('kernel_id', $KERNEL_INFO_TABLE);
 			$kernel->add($new_kernel_id, $kernel_name, $kernel_version);
 			echo "Added kernel $kernel_name/$kernel_version to the openQRM-database";
 			break;

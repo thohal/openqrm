@@ -8,10 +8,13 @@
 <?php
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
+global $IMAGE_INFO_TABLE;
+global $DEPLOYMENT_INFO_TABLE;
 
 // user/role authentication
 $user = new user($_SERVER['PHP_AUTH_USER']);
@@ -45,7 +48,7 @@ foreach ($_REQUEST as $key => $value) {
 	switch ($image_command) {
 		case 'new_image':
 			$image = new image();
-			$image_fields["image_id"]=$image->get_next_id();
+			$image_fields["image_id"]=openqrm_db_get_free_id('image_id', $IMAGE_INFO_TABLE);
 			$image->add($image_fields);
 			echo "Added image $image_name/$image_version to the openQRM-database";
 			break;
@@ -64,7 +67,7 @@ foreach ($_REQUEST as $key => $value) {
 
 		case 'add_deployment_type':
 			$deployment = new deployment();
-			$deployment_fields["deployment_id"]=$deployment->get_next_id();
+			$deployment_fields["deployment_id"]=openqrm_db_get_free_id('deployment_id', $DEPLOYMENT_INFO_TABLE);
 			$deployment->add($deployment_fields);
 			echo "Added deployment type $deployment_name to the openQRM-database";
 			break;

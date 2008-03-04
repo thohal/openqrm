@@ -66,30 +66,6 @@ function get_instance_by_type($type) {
 // ---------------------------------------------------------------------------------
 
 
-// get next free deployment-id
-function get_next_id() {
-	global $DEPLOYMENT_INFO_TABLE;
-	$next_free_deployment_id=1;
-	$db=openqrm_get_db_connection();
-	$recordSet = &$db->Execute("select deployment_id from $DEPLOYMENT_INFO_TABLE");
-	if (!$recordSet)
-        print $db->ErrorMsg();
-    else
-        while (!$recordSet->EOF) {
-            if ($recordSet->fields["deployment_id"] != $next_free_deployment_id) {
-            	if (is_deployment_id_free($next_free_deployment_id)) {
-	            	return $next_free_deployment_id;
-	            }
-            }
-            $next_free_deployment_id++;
-            $recordSet->MoveNext();
-        }
-    $recordSet->Close();
-    $db->Close();
-    return $next_free_deployment_id;
-}
-
-
 // checks if given deployment id is free in the db
 function is_id_free($deployment_id) {
 	global $DEPLOYMENT_INFO_TABLE;
