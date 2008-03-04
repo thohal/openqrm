@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>openQRM Plugins actions</title>
-<meta http-equiv="refresh" content="3; URL=plugin-manager.php">
+<meta http-equiv="refresh" content="1; URL=plugin-manager.php">
 </head>
 <body>
 
@@ -56,6 +56,10 @@ echo "... processing command $plugin_command for plugin $plugin_name <br>";
 			echo "No Such openQRM-plugin command!";
 			break;
 	}
+	sleep(4);
+	echo "<script>";
+	echo "parent.NaviFrame.location.href='../../menu.php';";
+	echo "</script>";
 
 
 ?>

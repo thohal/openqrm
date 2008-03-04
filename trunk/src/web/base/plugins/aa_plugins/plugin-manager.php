@@ -1,59 +1,73 @@
-<html>
-<head>
-<title>openQRM Plugin Manager</title>
-</head>
-<body>
 
-<script>
-parent.NaviFrame.location.href="../../menu.php';
-</script>
+<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
 
 <?php
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/class/plugin.class.php";
-// using the htmlobject class
-require_once "$RootDir/class/htmlobject_box.class.php";
-require_once "$RootDir/class/htmlobject_select.class.php";
-require_once "$RootDir/class/htmlobject_textarea.class.php";
+require_once "$RootDir/include/htmlobject.inc.php";
+require_once('../../include/user.inc.php');
 
-echo "<b>Plugin manager</b>";
-echo "<br>";
+$user = new user($_SERVER['PHP_AUTH_USER']);
+$user->set_user();
 
-$plugin = new plugin();
-$plugins_available = $plugin->available();
-$plugins_enabled = $plugin->enabled();
+function plugin_display($admin) {
 
-echo "<br>";
-echo "Available plugins";
-echo "<hr>";
-foreach ($plugins_available as $index => $plugin_name) {
-	if (!in_array($plugin_name, $plugins_enabled)) {
-		echo "$plugin_name ";
-		echo "<a href=\"plugin-action.php?plugin_name=$plugin_name&plugin_command=init_plugin\">enable</a>";
+	if ("$admin" == "admin") {
+		$disp = "<b>Plugin Manager</b>";
+	
+	} else {
+		$disp = "<b>Plugin List</b>";
 	}
-	echo "<br>";	
+
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+
+	$plugin = new plugin();
+	$plugins_available = $plugin->available();
+	$plugins_enabled = $plugin->enabled();
+
+	$disp = $disp."<br>";
+	$disp = $disp."Available plugins";
+	$disp = $disp."<hr>";
+	foreach ($plugins_available as $index => $plugin_name) {
+		if (!in_array($plugin_name, $plugins_enabled)) {
+			$disp = $disp."$plugin_name ";
+			if ("$admin" == "admin") {
+				$disp = $disp."<a href=\"plugin-action.php?plugin_name=$plugin_name&plugin_command=init_plugin\">enable</a>";
+			}
+		}
+		$disp = $disp."<br>";	
+	}
+
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."Enabled plugins";
+	$disp = $disp."<hr>";
+
+	foreach ($plugins_enabled as $index => $plugin_name) {
+		$disp = $disp."$plugin_name ";
+		if ("$admin" == "admin") {
+			$disp = $disp."<a href=\"plugin-action.php?plugin_name=$plugin_name&plugin_command=uninstall_plugin\">disable</a>";
+			$disp = $disp."/ <a href=\"plugin-action.php?plugin_name=$plugin_name&plugin_command=start_plugin\">start</a>";
+			$disp = $disp."/ <a href=\"plugin-action.php?plugin_name=$plugin_name&plugin_command=stop_plugin\">stop</a>";
+		}
+		$disp = $disp."<br>";	
+	}
+	return $disp;
 }
 
-echo "<br>";
-echo "<br>";
-echo "<br>";
-echo "Enabled plugins";
-echo "<hr>";
 
-foreach ($plugins_enabled as $index => $plugin_name) {
-	echo "$plugin_name ";
-	echo "<a href=\"plugin-action.php?plugin_name=$plugin_name&plugin_command=uninstall_plugin\">disable</a>";
-	echo "/ <a href=\"plugin-action.php?plugin_name=$plugin_name&plugin_command=start_plugin\">start</a>";
-	echo "/ <a href=\"plugin-action.php?plugin_name=$plugin_name&plugin_command=stop_plugin\">stop</a>";
-
-	echo "<br>";	
+$output = array();
+// all users
+$output[] = array('label' => 'Plugin-List', 'value' => plugin_display(""));
+// if admin
+if ($user->role == "administrator") {
+	$output[] = array('label' => 'Plugin-Manager', 'value' => plugin_display("admin"));
 }
 
-
-
-
+echo htmlobject_tabmenu($output);
 
 ?>
 
-</body>
