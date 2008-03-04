@@ -85,7 +85,9 @@ function resource_display($admin) {
 
 			// image selection
 			if ("$admin" == "admin") {
-				$image_select = resource_htmlobject_select('resource_imageid', $image_list, '', $image_list);
+				$image_selected = array();
+				$image_selected[] = array("value"=>'$resource->imageid', "label"=>'$resource->image');
+				$image_select = resource_htmlobject_select('resource_imageid', $image_list, 'Select image', $image_selected);
 				$disp = $disp.$image_select;
 			} else {
 				$disp = $disp." $resource->image ";

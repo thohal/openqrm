@@ -2,10 +2,12 @@
 <?php
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
+global $RESOURCE_INFO_TABLE;
 
 $resource_command = $_REQUEST["resource_command"];
 $resource_id = $_REQUEST["resource_id"];
@@ -37,7 +39,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 					// echo "Resource $resource_mac already exist in the openQRM-database!";
 					// } else {
 					// add resource
-					$new_resource_id=$resource->get_next_id();
+					$new_resource_id=openqrm_db_get_free_id('resource_id', $RESOURCE_INFO_TABLE);
 					$resource->id = $new_resource_id;
 					// echo "Adding resource $resource_mac $resource_id $new_resource_id $resource->id<br>";
 					// 	check if resource_id is free

@@ -148,30 +148,6 @@ function exists($mac_address) {
 }
 
 
-// returns the next free resource-id
-function get_next_id() {
-	global $RESOURCE_INFO_TABLE;
-	$next_free_resource_id=0;
-	$db=openqrm_get_db_connection();
-	$recordSet = &$db->Execute("select resource_id from $RESOURCE_INFO_TABLE");
-	if (!$recordSet)
-        print $db->ErrorMsg();
-    else
-	while (!$recordSet->EOF) {
-		if ($recordSet->fields["resource_id"] != $next_free_resource_id) {
-			if ($this->is_id_free($next_free_resource_id)) {
-				return $next_free_resource_id;
-			}
-		}
-		$next_free_resource_id++;
-		$recordSet->MoveNext();
-	}
-    $recordSet->Close();
-    $db->Close();
-    return $next_free_resource_id;
-}
-
-
 // checks if given resource id is free in the db
 function is_id_free($resource_id) {
 	global $RESOURCE_INFO_TABLE;
