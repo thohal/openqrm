@@ -6,6 +6,8 @@
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
+require_once "$RootDir/class/storage.class.php";
+require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
@@ -62,6 +64,40 @@ function image_form() {
 
 	$deployment_select = htmlobject_select('image_type', $deployment_list, 'Deployment type', $deployment_list);
 	$disp = $disp.$deployment_select;
+	$disp = $disp."<br>";
+	$disp = $disp."Select Storage server";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."<hr>";
+
+	// storage-server list select with radio buttons
+	$storage_tmp = new storage();
+	$storage_array = $storage_tmp->display_overview(0, 10);
+	foreach ($storage_array as $index => $storage_db) {
+	
+		$resource = new resource();
+		$resource->get_instance_by_id($storage_db["storage_resource_id"]);
+		if ("$resource->id" != "0") {
+			$disp = $disp."<div id=\"storage\" nowrap=\"true\">";
+		    $disp = $disp."<input type='radio' name='image_storageid' value='$resource->id'>";
+			$disp = $disp." Storage $resource->id $resource->hostname ";
+			$disp = $disp." $resource->ip $resource->mac $resource->state ";
+			$disp = $disp."</div>";
+
+		} else {
+			$disp = $disp."<br>";
+			$disp = $disp."<div id=\"storage\" nowrap=\"true\">";
+		    $disp = $disp."<input type='radio' name='image_storageid' value='$resource->id'>";
+			$disp = $disp." $resource->id &nbsp; openQRM-server";
+			$disp = $disp." $resource->ip  ";
+			$disp = $disp."</div>";
+			$disp = $disp."<br>";
+		}
+	}
+
+	$disp = $disp."<hr>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
 
 	$disp = $disp.htmlobject_input('image_rootdevice', array("value" => '', "label" => 'Image root-device'), 'text', 20);
 	$disp = $disp.htmlobject_input('image_rootfstype', array("value" => '', "label" => 'Image root-fs type'), 'text', 20);
