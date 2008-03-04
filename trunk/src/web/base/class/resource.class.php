@@ -180,6 +180,12 @@ function add($resource_fields) {
 	$resource_fields["resource_basedir"]=$OPENQRM_RESOURCE_BASE_DIR;
 	$resource_fields["resource_openqrmserver"]=$OPENQRM_SERVER_IP_ADDRESS;
 	$resource_fields["resource_execdport"]=$OPENQRM_EXEC_PORT;
+	$resource_fields["resource_kernel"]='default';
+	$resource_fields["resource_kernelid"]='1';
+	$resource_fields["resource_image"]='idle';
+	$resource_fields["resource_imageid"]='1';
+	$resource_fields["resource_senddelay"]=30;
+
 	$db=openqrm_get_db_connection();
 	$result = $db->AutoExecute($RESOURCE_INFO_TABLE, $resource_fields, 'INSERT');
 	if (! $result) {
@@ -252,11 +258,25 @@ function get_parameter($resource_id) {
 	else
 	while (!$recordSet->EOF) {
 		array_walk($recordSet->fields, 'print_array');
+		$image_storageid=$recordSet->fields["image_storageid"];
 		$recordSet->MoveNext();
 	}
 	$recordSet->Close();
+	// storage parameter
+	if (strlen($image_storageid)) {
+		$recordSet = &$db->Execute("select resource_ip from $RESOURCE_INFO_TABLE where resource_id=$image_storageid");
+		if (!$recordSet)
+			print $db->ErrorMsg();
+		else
+		while (!$recordSet->EOF) {
+			//array_walk($recordSet->fields, 'print_array');
+			$image_storage_server_ip=$recordSet->fields['resource_ip'];
+			$recordSet->MoveNext();
+		}
+		$recordSet->Close();
+		echo "image_storage_server_ip=$image_storage_server_ip";
+	}
 	$db->Close();
-
 
 	// enabled plugins
 	// TODO
