@@ -26,6 +26,7 @@ if ($user->role != "administrator") {
 $image_command = $_REQUEST["image_command"];
 $image_id = $_REQUEST["image_id"];
 $image_name = $_REQUEST["image_name"];
+$image_type = $_REQUEST["image_type"];
 $image_fields = array();
 foreach ($_REQUEST as $key => $value) {
 	if (strncmp($key, "image_", 5) == 0) {
@@ -44,6 +45,10 @@ foreach ($_REQUEST as $key => $value) {
 	}
 }
 
+# switch deployment_id to deyployment_type
+$deployment_switch = new deployment();
+$deployment_switch->get_instance_by_id($image_type);
+$image_fields["image_type"] = $deployment_switch->type;
 
 	switch ($image_command) {
 		case 'new_image':
