@@ -21,8 +21,8 @@ function initialize_database() {
 
 	echo "Initializing the openQRM-database"
 	cat $OPENQRM_DATABASE_INIT |	\
-		sed -e "s/connect to OPENQRM_DB/connect to $OPENQRM_DATABASE_NAME/" |	\
-		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/"	\
+		sed -e "s/connect to OPENQRM_DB/connect to $OPENQRM_DATABASE_NAME/g" |	\
+		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/g"	\
 		> /tmp/openqrm-db2-init.sql
 	chmod 777 /tmp/openqrm-db2-init.sql
 	su - $OPENQRM_DATABASE_USER -c "$DB2_CLIENT -vf /tmp/openqrm-db2-init.sql"

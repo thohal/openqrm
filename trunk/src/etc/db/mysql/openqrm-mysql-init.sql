@@ -168,7 +168,7 @@ create table deployment_info(
 
 # initial data
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared) values ('1', 'idle', 'openqrm', 'ram', 'ram', 'ext2', '1');
-insert into resource_info (resource_id, resource_localboot, resource_openqrmserver) values ('0', '1', 'OPENQRM_SERVER_IP_ADDRESS');
+insert into resource_info (resource_id, resource_localboot, resource_openqrmserver, resource_ip) values ('0', '1', 'OPENQRM_SERVER_IP_ADDRESS', 'OPENQRM_SERVER_IP_ADDRESS');
 # base deployment type ram
 insert into deployment_info (deployment_id, deployment_name, deployment_type ) values (1, 'Ramdisk Deployment', 'ram');
 # user openqrm

@@ -25,8 +25,8 @@ function initialize_database() {
 	# set the dbname in the sql init-script
 	OPENQRM_DATABASE_INIT_TMP=/tmp/openqrm-mysql-init.sql
 	cat $OPENQRM_DATABASE_INIT |	\
-		sed -e "s/OPENQRM_DB/$OPENQRM_DATABASE_NAME/" |	\
-		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/"	\
+		sed -e "s/OPENQRM_DB/$OPENQRM_DATABASE_NAME/g" |	\
+		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/g"	\
 		> $OPENQRM_DATABASE_INIT_TMP
 
 	echo "Initializing the openQRM-database"

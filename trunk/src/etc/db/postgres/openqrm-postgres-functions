@@ -21,7 +21,7 @@ function initialize_database() {
 
 	echo "Initializing the openQRM-database"
 	cat $OPENQRM_DATABASE_INIT |	\
-		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/"	\
+		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/g"	\
 		> $OPENQRM_DATABASE_INIT_TMP
 	chmod 777 $OPENQRM_DATABASE_INIT_TMP
 	su - postgres -c "$POSTGRES_CLIENT -d $OPENQRM_DATABASE_NAME --set openqrmdbuser=$OPENQRM_DATABASE_USER -f $OPENQRM_DATABASE_INIT_TMP"
