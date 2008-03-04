@@ -254,7 +254,7 @@ if [ "$image_type" != "ram" ]; then
 	cp -a /$resource_basedir/openqrm/* /mnt/$resource_basedir/openqrm/
 	# copy resource parameter
 	mkdir -p /mnt/`dirname $OPENQRM_RESOURCE_PARAMETER_FILE`
-	cp -af $OPENQRM_RESOURCE_PARAMETER_FILE /mnt/OPENQRM_RESOURCE_PARAMETER_FILE
+	cp -af $OPENQRM_RESOURCE_PARAMETER_FILE /mnt/$OPENQRM_RESOURCE_PARAMETER_FILE
 
 	# prepare init according plugin services
 	echo "Preparing system init"
