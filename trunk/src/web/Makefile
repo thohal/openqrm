@@ -48,6 +48,10 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/appliance
 	. $(OPENQRM_SERVER_CONF) && cp base/server/appliance/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/appliance/
 	. $(OPENQRM_SERVER_CONF) && cp base/server/appliance/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/appliance/
+	# base/server/storage
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/storage
+	. $(OPENQRM_SERVER_CONF) && cp base/server/storage/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/storage/
+	. $(OPENQRM_SERVER_CONF) && cp base/server/storage/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/storage/
 	# base/server/kernel
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/kernel
 	. $(OPENQRM_SERVER_CONF) && cp base/server/kernel/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/kernel/
