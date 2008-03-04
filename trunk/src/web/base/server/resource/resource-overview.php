@@ -4,11 +4,12 @@
 <?php
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/kernel.class.php";
-// using the htmlobject class
 require_once "$RootDir/include/htmlobject.inc.php";
+
 
 function resource_htmlobject_select($name, $value, $title = '', $selected = '') {
 		$html = new htmlobject_select();
@@ -148,15 +149,18 @@ function resource_form() {
 
 
 
-
+// user/role authentication
+$user = new user($_SERVER['PHP_AUTH_USER']);
+$user->set_user();
 
 $output = array();
 // all user
 $output[] = array('label' => 'Resource-List', 'value' => resource_display(""));
 // if admin
-$output[] = array('label' => 'New', 'value' => resource_form());
-$output[] = array('label' => 'Resource-Admin', 'value' => resource_display("admin"));
-
+if ($user->role == "administrator") {
+	$output[] = array('label' => 'New', 'value' => resource_form());
+	$output[] = array('label' => 'Resource-Admin', 'value' => resource_display("admin"));
+}
 
 echo htmlobject_tabmenu($output);
 

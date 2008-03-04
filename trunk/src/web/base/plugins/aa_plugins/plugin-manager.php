@@ -6,10 +6,8 @@
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/class/plugin.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
-require_once('../../include/user.inc.php');
+require_once "$RootDir/include/user.inc.php";
 
-$user = new user($_SERVER['PHP_AUTH_USER']);
-$user->set_user();
 
 function plugin_display($admin) {
 
@@ -58,6 +56,10 @@ function plugin_display($admin) {
 	return $disp;
 }
 
+
+// user/role authentication
+$user = new user($_SERVER['PHP_AUTH_USER']);
+$user->set_user();
 
 $output = array();
 // all users

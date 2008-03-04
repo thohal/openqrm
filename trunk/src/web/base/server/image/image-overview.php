@@ -4,12 +4,10 @@
 <?php
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/deployment.class.php";
-// using the htmlobject class
 require_once "$RootDir/include/htmlobject.inc.php";
-
-
 
 function image_display($admin) {
 	$image_tmp = new image();
@@ -86,16 +84,18 @@ function image_form() {
 }
 
 
-
-
+// user/role authentication
+$user = new user($_SERVER['PHP_AUTH_USER']);
+$user->set_user();
 
 $output = array();
 // all user
 $output[] = array('label' => 'Image-List', 'value' => image_display(""));
 // if admin
-$output[] = array('label' => 'New', 'value' => image_form());
-$output[] = array('label' => 'Image-Admin', 'value' => image_display("admin"));
-
+if ($user->role == "administrator") {
+	$output[] = array('label' => 'New', 'value' => image_form());
+	$output[] = array('label' => 'Image-Admin', 'value' => image_display("admin"));
+}
 
 echo htmlobject_tabmenu($output);
 

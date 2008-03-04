@@ -7,11 +7,12 @@
 
 <?php
 
-require_once('../../include/user.inc.php');
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/plugin.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 
+// user/role authentication
 $user = new user($_SERVER['PHP_AUTH_USER']);
 $user->set_user();
 if ($user->role != "administrator") {

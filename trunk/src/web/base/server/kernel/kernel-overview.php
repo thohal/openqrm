@@ -4,8 +4,8 @@
 <?php
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/kernel.class.php";
-// using the htmlobject class
 require_once "$RootDir/include/htmlobject.inc.php";
 
 
@@ -67,14 +67,18 @@ function kernel_form() {
 
 
 
+// user/role authentication
+$user = new user($_SERVER['PHP_AUTH_USER']);
+$user->set_user();
 
 $output = array();
 // all user
 $output[] = array('label' => 'Kernel-List', 'value' => kernel_display(""));
 // if admin
-$output[] = array('label' => 'New', 'value' => kernel_form());
-$output[] = array('label' => 'Kernel-Admin', 'value' => kernel_display("admin"));
-
+if ($user->role == "administrator") {
+	$output[] = array('label' => 'New', 'value' => kernel_form());
+	$output[] = array('label' => 'Kernel-Admin', 'value' => kernel_display("admin"));
+}
 
 echo htmlobject_tabmenu($output);
 

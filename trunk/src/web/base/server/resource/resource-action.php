@@ -8,10 +8,18 @@
 <?php
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
+
+// user/role authentication
+$user = new user($_SERVER['PHP_AUTH_USER']);
+$user->set_user();
+if ($user->role != "administrator") {
+	exit();
+}
 
 $resource_command = $_REQUEST["resource_command"];
 $resource_id = $_REQUEST["resource_id"];
