@@ -16,6 +16,8 @@ var $version = '';
 var $type = '';
 var $rootdevice = '';
 var $rootfstype = '';
+var $storage_ip = '';
+var $deployment_parameter = '';
 var $isshared = '';
 var $comment = '';
 var $capabilities = '';
@@ -47,6 +49,8 @@ function get_instance($id, $name) {
 		$this->type = $image["image_type"];
 		$this->rootdevice = $image["image_rootdevice"];
 		$this->rootfstype = $image["image_rootfstype"];
+		$this->storage_ip = $image["image_storage_ip"];
+		$this->deployment_parameter = $image["image_deployment_parameter"];
 		$this->isshared = $image["image_isshared"];
 		$this->comment = $image["image_comment"];
 		$this->capabilities = $image["image_capabilities"];

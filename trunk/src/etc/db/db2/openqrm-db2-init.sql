@@ -10,7 +10,7 @@ create table resource_info(				\
 	resource_imageid bigint,			\
 	resource_openqrmserver varchar(20),	\
 	resource_basedir varchar(100),		\
-	resource_serverid bigint,			\
+	resource_applianceid bigint,			\
 	resource_ip varchar(20),			\
 	resource_subnet varchar(20),		\
 	resource_broadcast varchar(20),		\
@@ -54,6 +54,7 @@ create table image_info(			\
 	image_type varchar(20),			\
 	image_rootdevice varchar(20),	\
 	image_rootfstype varchar(10),	\
+	image_storage_ip varchar(20),			\
 	# freetext parameter for the deployment plugin
 	image_deployment_parameter varchar(10),	\
 	image_isshared bigint,			\

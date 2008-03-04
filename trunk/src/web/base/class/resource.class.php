@@ -20,7 +20,7 @@ var $image = '';
 var $imageid = '';
 var $openqrmserver = '';
 var $basedir = '';
-var $serverid = '';
+var $applianceid = '';
 var $ip = '';
 var $subnet = '';
 var $broadcast = '';
@@ -69,7 +69,7 @@ function get_instance($id, $mac, $ip) {
 		$this->imageid = $resource["resource_imageid"];
 		$this->openqrmserver = $resource["resource_openqrmserver"];
 		$this->basedir = $resource["resource_basedir"];
-		$this->serverid = $resource["resource_serverid"];
+		$this->applianceid = $resource["resource_applianceid"];
 		$this->ip = $resource["resource_ip"];
 		$this->subnet = $resource["resource_subnet"];
 		$this->broadcast = $resource["resource_broadcast"];

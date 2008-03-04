@@ -9,7 +9,7 @@ create table resource_info(
 	resource_imageid int8,
 	resource_openqrmserver char(20),
 	resource_basedir char(100),
-	resource_serverid int8,
+	resource_applianceid int8,
 	resource_ip char(20),
 	resource_subnet char(20),
 	resource_broadcast char(20),
@@ -50,6 +50,7 @@ create table image_info(
 	image_type char(20),
 	image_rootdevice char(20),
 	image_rootfstype char(10),
+	image_storage_ip char(20),
 	# freetext parameter for the deployment plugin
 	image_deployment_parameter char(255),
 	image_isshared int8,
