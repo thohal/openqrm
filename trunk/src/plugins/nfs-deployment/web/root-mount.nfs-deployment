@@ -9,12 +9,19 @@
 # IMAGE_ROOT_DIR			- set to the path to the rootfs on the NFS-server
 # Optional parameters 
 # IMAGE_NFS_MOUNT_OPTIONS	- can be e.g. set to tcp
-
+# IMAGE_INSTALL_FROM		- can be set to an (nfs) location from
+#							  which the image will be installed at
+#							  deployment time
+#							  syntax is : ip_of_nfs-server:path_to_target_image
+#
 # get the deployment parameters from openqrm.conf
 OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
 . $OPENQRM_RESOURCE_PARAMETER_FILE
 eval $image_deployment_parameter
 
+#######################################################################
+# required functions ##################################################
+#######################################################################
 
 function mount_rootfs() {
 	modprobe sunrpc 1>/dev/null 2>&1
@@ -31,10 +38,9 @@ function mount_rootfs() {
 	else
 		echo "nfs-deployment: Mounted $IMAGE_STORAGE_SERVER_IP:$IMAGE_ROOT_DIR rw"
 	fi
-
-	# prepare fs-image for nfs-root mount
 	
-	# prepare fstab
+	install_rootfs
+
 }
 
 
@@ -61,6 +67,35 @@ function create_fstab() {
 	rm -f $IMAGE_FSTAB
 	echo "0.0.0.0:$IMAGE_ROOT_DIR   /   nfs  defaults   0 0" >> $IMAGE_FSTAB
 }
+
+
+#######################################################################
+# optional functions ##################################################
+#######################################################################
+
+function install_rootfs() {
+	if  [ "$IMAGE_INSTALL_FROM" != "" ]; then
+		echo "nfs-deployment: Installing $resource_image from $IMAGE_INSTALL_FROM"
+		mkdir -p /mnt2
+		if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_INSTALL_FROM /mnt2; then
+			echo "ERROR: Could not mount $IMAGE_INSTALL_FROM by nfs"
+			# give a shell for the admin
+			/bin/bash
+		fi
+
+		echo "nfs-deployment: Starting copying. This can take a while ...."
+		cp -af /mnt2/.* /mnt/
+		cp -af /mnt2/* /mnt/
+		
+		echo "nfs-deployment: Copying finished. Continuing boot-up"
+
+		umount /mnt2
+		rmdir /mnt2
+	else
+		echo "nfs-deployment: Skipping install phase"
+	fi
+}
+
 
 
 
