@@ -47,7 +47,8 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 						echo "Given resource id $resource->id is already in use!";
 						exit();
 					}
-					$resource->add($new_resource_id, $resource_mac, $resource_ip);
+					$resource_fields["resource_id"]=$new_resource_id;
+					$resource->add($resource_fields);
 				}
 			}		
 
