@@ -95,8 +95,10 @@ function openqrm_server_init() {
 
 	# create the .htaccess file
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-htaccess.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htaccess
-	# create the default user
+	# create the default admin user
 	htpasswd -bc $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd openqrm openqrm
+	# create the default anonymous user
+	htpasswd -b $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd anonymous openqrm
 
 	# here we add the default kernel+kernel-version to the openQRM-server
 	# via the kernel-action.form. If this returns bad something is wrong
