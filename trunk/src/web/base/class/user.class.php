@@ -291,6 +291,22 @@ var $_role_table = '';
 	}
 	
 	//-----------------------------------------------------------------------------------
+    function check_string_name($name) {
+		if (ereg("^[A-Za-z0-9]*$", $name) === false) {
+			return '[A-Za-z0-9]';
+		} else {
+			return '';
+		}
+	}
+	//-----------------------------------------------------------------------------------
+    function check_string_password($pass) {
+		if (ereg("^[A-Za-z0-9_-]*$", $pass) === false) {
+			return '[A-Za-z0-9_-]';
+		} else {
+			return '';
+		}
+	}	
+	//-----------------------------------------------------------------------------------
     function get_users() {
 		$query = '
 			SELECT 

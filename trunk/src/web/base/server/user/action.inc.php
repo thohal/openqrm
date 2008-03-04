@@ -1,28 +1,52 @@
 <?php
 $strMsg = '';
 $error = false;
+$url = '';
 
-	switch ($_REQUEST['action']) {
+switch ($_REQUEST['action']) {
+	//--------------------------------------------------
+	//--------------------------------------------------
 	case 'user_update':
-	$user = new user(htmlobject_request('name'));
+		$user = new user(htmlobject_request('name'));
 		//--------------------------------------------------
 		if(htmlobject_request('name') == '') {
 			$strMsg .= 'Login must not be empty<br>';
 			$error = true;			
+		} else {
+			if(strtolower($OPENQRM_USER->role) == 'admin' ) {
+				$strCheck = $user->check_string_name(htmlobject_request('name'));
+				if ($strCheck != '') {
+					$user->name = '';
+					$strMsg .= 'Login must be '.$strCheck.'<br>';
+					$error = true;
+				}
+			} else {
+				$strMsg .= 'You are not allowed to change Login<br>';
+				$error = true;			
+			}
+		}		
+		//--------------------------------------------------		
+		if(htmlobject_request('password') != '') {
+			$strCheck = $user->check_string_password(htmlobject_request('password'));
+			if ($strCheck != '') {
+				$strMsg .= 'Password must be '.$strCheck.'<br>';
+				$error = true;			
+			}
 		}
-		if ($user->check_user_exists() === false) {
+		//--------------------------------------------------			
+		if ($user->name != '' && $user->check_user_exists() === false) {
 			$strMsg .= 'User not found<br>';
 			$error = true;
 		} 
-		
+		//--------------------------------------------------			
 		if($error === false) {
 			$user->set_user_from_request();
 			$msg = $user->query_update();
-			$strMsg .= 'success ';			
+			$strMsg .= 'success ';
+			$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$_REQUEST['currenttab'].'&name='.htmlobject_request('name');
 		}	
-	
-		$strMsg .= 'user_update';
 		break;
+	//--------------------------------------------------
 	//--------------------------------------------------
 	case 'user_insert':
 	$user = new user(htmlobject_request('name'));
@@ -32,9 +56,10 @@ $error = false;
 			$strMsg .= 'Login must not be empty<br>';
 			$error = true;			
 		} else {
-			if (ereg("^[A-Za-z0-9]*$", htmlobject_request('name')) === false) {
+			$strCheck = $user->check_string_name(htmlobject_request('name'));
+			if ($strCheck != '') {
 				$user->name = '';
-				$strMsg .= 'Login must be A[a]-Z[z] or 0-9<br>';
+				$strMsg .= 'Login must be '.$strCheck.'<br>';
 				$error = true;			
 			}
 		}
@@ -47,8 +72,9 @@ $error = false;
 			$strMsg .= 'Password must not be empty<br>';
 			$error = true;			
 		} else {
-			if (ereg("^[A-Za-z0-9_-]*$", htmlobject_request('password')) === false) {
-				$strMsg .= 'Password must be A[a]-Z[z] 0-9 or -_<br>';
+			$strCheck = $user->check_string_password(htmlobject_request('password'));
+			if ($strCheck != '') {
+				$strMsg .= 'Password must be '.$strCheck.'<br>';
 				$error = true;			
 			}
 		}
@@ -56,25 +82,24 @@ $error = false;
 		if($error === false) {
 			$user->set_user_from_request();
 			$msg = $user->query_insert();
-			$strMsg .= 'success ';			
+			$strMsg .= 'success ';
 		}
 		break;
+	//--------------------------------------------------
 	//--------------------------------------------------	
 	case 'user_delete':
 	
 		$strMsg .= 'user_delete';
 		break;
-	//--------------------------------------------------		
-	case 'delete':
-	
-		$strMsg .= 'delete';
-		break;
 }
 
 if($error === true) {
-$strMsg = "<strong>Error:</strong><br>".$strMsg;
+	$strMsg = "<strong>Error:</strong><br>".$strMsg;
 }
-$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$_REQUEST['currenttab'];
+if($url == '') {
+	$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$_REQUEST['currenttab'];
+}
 header("Location: $url");
+header("Method: Post");
 exit;
 ?>

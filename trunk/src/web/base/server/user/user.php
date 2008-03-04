@@ -8,7 +8,13 @@ if(htmlobject_request('action') != '') {
 	require_once('action.inc.php');
 }
 
-$user = new user($_SERVER['PHP_AUTH_USER']);
+if(strtolower($OPENQRM_USER->role) == 'admin' && htmlobject_request('name') != '') {
+	$user = new user(htmlobject_request('name'));
+} else {
+	$user = new user($_SERVER['PHP_AUTH_USER']);
+}
+
+
 $user->set_user_form();
 
 function html_elements() {
@@ -66,42 +72,12 @@ $switch
 </form>
 ";
 
-$user->id['value'] = '';
-$user->name['value'] = '';
-$user->password['value'] = '';
-$user->gender['value'] = '';
-$user->role['value'] = '';
-$user->first_name['value'] = '';
-$user->last_name['value'] = '';
-$user->department['value'] = '';
-$user->office['value'] = '';
-$user->last_update_time['value'] = '';
-$user->description['value'] = '';
-$user->capabilities['value'] = '';
-$user->state['value'] = '';
+$output = array();
+$output[] = array('label' => 'Account', 'value' => $account_output);
 
-html_elements();
+if(strtolower($OPENQRM_USER->role) == 'admin') {
 
-$add_user_output = "
-<form action=\"$thisfile\" method=\"post\">
-<input type=\"hidden\" name=\"currenttab\" value=\"tab2\">
-<input type=\"hidden\" name=\"action\" value=\"user_insert\">
-$html_id
-$html_name
-$html_password
-$html_role
-$html_first_name
-$html_last_name
-$html_gender
-$html_department
-$html_office
-$html_state
-$html_description
-$html_capabilities
-<input type=\"submit\">
-</form>
-";
-
+//---------------------------------------------------------
 $ar_edit = array();
 $ar_users = $user->get_users();
 foreach ($ar_users as $ar) {
@@ -143,11 +119,54 @@ $edit_user_output .= $res;
 $edit_user_output .= "
 </form>
 ";
-
-$output = array();
-$output[] = array('label' => 'Account', 'value' => $account_output);
 $output[] = array('label' => 'Edit User', 'value' => $edit_user_output);
+
+//---------------------------------------------------------
+$user->id['value'] = '';
+$user->name['value'] = '';
+$user->password['value'] = '';
+$user->gender['value'] = '';
+$user->role['value'] = '';
+$user->first_name['value'] = '';
+$user->last_name['value'] = '';
+$user->department['value'] = '';
+$user->office['value'] = '';
+$user->last_update_time['value'] = '';
+$user->description['value'] = '';
+$user->capabilities['value'] = '';
+$user->state['value'] = '';
+
+html_elements();
+
+$add_user_output = "
+<form action=\"$thisfile\" method=\"post\">
+<input type=\"hidden\" name=\"currenttab\" value=\"tab2\">
+<input type=\"hidden\" name=\"action\" value=\"user_insert\">
+$html_id
+$html_name
+$html_password
+$html_role
+$html_first_name
+$html_last_name
+$html_gender
+$html_department
+$html_office
+$html_state
+$html_description
+$html_capabilities
+<input type=\"submit\">
+</form>
+";
 $output[] = array('label' => 'Add User', 'value' => $add_user_output);
+
+
+
+
+}
+
+
+
+
 
 ?>
 
