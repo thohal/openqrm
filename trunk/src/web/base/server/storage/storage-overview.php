@@ -26,13 +26,14 @@ function storage_display($admin) {
 	foreach ($storage_array as $index => $storage_db) {
 		$storage = new storage();
 		$storage->get_instance_by_id($storage_db["storage_id"]);
-
-//		$storage_resource = new resource();
-		
+		$storage_resource = new resource();
+		$storage_resource->get_instance_by_id($storage->resource_id);
+		$storage_deployment = new deployment();
+		$storage_deployment->get_instance_by_id($storage->deployment_type);
 
 		$disp = $disp."<div id=\"storage\" nowrap=\"true\">";
 		$disp = $disp."<form action='storage-action.php' method=post>";
-		$disp = $disp."$storage->id $storage->name $storage->resource_id $storage->deployment_type ";
+		$disp = $disp."$storage->id $storage->name $storage->resource_id/$storage_resource->ip $storage->deployment_type/$storage_deployment->type ";
 		$disp = $disp."<input type=hidden name=storage_id value=$storage->id>";
 		$disp = $disp."<input type=hidden name=storage_name value=$storage->name>";
 		$disp = $disp."<input type=hidden name=storage_command value='remove'";
