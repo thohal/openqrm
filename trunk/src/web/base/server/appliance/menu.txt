@@ -1,0 +1,7 @@
+#	Title
+#	Href
+#	Alt
+#	IMG
+#	Target
+.|Appliances
+..|Overview|server/appliance/appliance-overview.php
