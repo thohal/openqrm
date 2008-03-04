@@ -50,7 +50,7 @@ create table image_info(
 	image_type char(20),
 	image_rootdevice char(20),
 	image_rootfstype char(10),
-	image_storage_ip char(20),
+	image_storageid int8,
 	# freetext parameter for the deployment plugin
 	image_deployment_parameter char(255),
 	image_isshared int8,

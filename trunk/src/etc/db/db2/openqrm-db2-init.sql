@@ -54,7 +54,7 @@ create table image_info(			\
 	image_type varchar(20),			\
 	image_rootdevice varchar(20),	\
 	image_rootfstype varchar(10),	\
-	image_storage_ip varchar(20),			\
+	image_storageid bigint,			\
 	# freetext parameter for the deployment plugin
 	image_deployment_parameter varchar(10),	\
 	image_isshared bigint,			\

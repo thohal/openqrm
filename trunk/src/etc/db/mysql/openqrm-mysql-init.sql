@@ -58,7 +58,7 @@ create table image_info(
 	image_rootdevice VARCHAR(20),
 	# can be : ext2/3, nfs
 	image_rootfstype VARCHAR(10),
-	image_storage_ip VARCHAR(20),
+	image_storageid INT(5),
 	# freetext parameter for the deployment plugin
 	image_deployment_parameter VARCHAR(255),
 	image_isshared INT(1),
