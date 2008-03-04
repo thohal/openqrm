@@ -45,15 +45,15 @@ foreach ($_REQUEST as $key => $value) {
 	}
 }
 
-# switch deployment_id to deyployment_type
-$deployment_switch = new deployment();
-$deployment_switch->get_instance_by_id($image_type);
-$image_fields["image_type"] = $deployment_switch->type;
 
 	switch ($image_command) {
 		case 'new_image':
 			$image = new image();
 			$image_fields["image_id"]=openqrm_db_get_free_id('image_id', $IMAGE_INFO_TABLE);
+			# switch deployment_id to deyployment_type
+			$deployment_switch = new deployment();
+			$deployment_switch->get_instance_by_id($image_type);
+			$image_fields["image_type"] = $deployment_switch->type;
 			$image->add($image_fields);
 			echo "Added image $image_name/$image_version to the openQRM-database";
 			break;
