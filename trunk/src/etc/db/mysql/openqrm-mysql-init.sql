@@ -133,6 +133,17 @@ create table role_info(
 );
 
 
+create table storage_info(
+	storage_id INT(5) NOT NULL PRIMARY KEY,
+	storage_name VARCHAR(20),
+	storage_resource_id INT(5),
+	storage_deployment_type INT(5),
+	storage_comment VARCHAR(100),
+	storage_capabilities VARCHAR(255),
+	storage_state VARCHAR(20)
+);
+
+
 create table resource_service (
 	resource_id INT(5) NOT NULL PRIMARY KEY,
 	service VARCHAR(50) NOT NULL,

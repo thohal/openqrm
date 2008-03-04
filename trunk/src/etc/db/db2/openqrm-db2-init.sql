@@ -133,6 +133,19 @@ create table role_info(						\
 	role_name varchar(20)					\
 )
 
+drop table storage_info
+create table storage_info(						\
+	storage_id bigint,							\
+	storage_name varchar(20),					\
+	storage_resource_id bigint,					\
+	storage_deployment_type bigint,				\
+	storage_comment varchar(100),			\
+	storage_capabilities varchar(255),			\
+	storage_state varchar(20),					\
+	primary key(storage_id)					\
+)
+
+
 drop table resource_service
 create table resource_service (					\
 	resource_id bigint,							\

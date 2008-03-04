@@ -126,6 +126,17 @@ create table role_info(
 );
 
 
+drop table storage_info;
+create table storage_info(
+	storage_id int8 NOT NULL PRIMARY KEY,,
+	storage_name char(20),
+	storage_resource_id int8,
+	storage_deployment_type int8,
+	storage_comment char(255),
+	storage_capabilities char(255),
+	storage_state char(20)
+);
+
 drop table resource_service;
 create table resource_service(
 	resource_id int8 NOT NULL PRIMARY KEY,
