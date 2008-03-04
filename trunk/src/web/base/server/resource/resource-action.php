@@ -66,7 +66,8 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			// send command to the openQRM-server
 			$openqrm_server->send_command("openqrm_server_add_resource $new_resource_id $resource_mac $resource_ip");
 			// add to openQRM database
-			$resource->add($new_resource_id, $resource_mac, $resource_ip);
+			$resource_fields["resource_id"]=$new_resource_id;
+			$resource->add($resource_fields);
 			echo "Added new resource $new_resource_id/$resource_mac to the openQRM-database";
 //			$resource->get_parameter($new_resource_id);
 
