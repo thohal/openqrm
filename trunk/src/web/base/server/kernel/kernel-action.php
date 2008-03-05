@@ -27,7 +27,7 @@ $kernel_name = $_REQUEST["kernel_name"];
 $kernel_version = $_REQUEST["kernel_version"];
 $kernel_fields = array();
 foreach ($_REQUEST as $key => $value) {
-	if (strncmp($key, "kernel_", 10) == 0) {
+	if (strncmp($key, "kernel_", 7) == 0) {
 		$kernel_fields[$key] = $value;
 	}
 }
