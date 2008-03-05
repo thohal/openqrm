@@ -47,6 +47,9 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 						echo "Given resource id $resource->id is already in use!";
 						exit();
 					}
+					# send add resource to openQRM-server
+					$openqrm_server->send_command("openqrm_server_add_resource $new_resource_id $resource_mac $resource_ip");
+					# add resource to db					
 					$resource_fields["resource_id"]=$new_resource_id;
 					$resource->add($resource_fields);
 				}
