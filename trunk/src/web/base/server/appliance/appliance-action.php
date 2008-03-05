@@ -27,7 +27,7 @@ $appliance_id = $_REQUEST["appliance_id"];
 $appliance_name = $_REQUEST["appliance_name"];
 $appliance_fields = array();
 foreach ($_REQUEST as $key => $value) {
-	if (strncmp($key, "appliance_", 5) == 0) {
+	if (strncmp($key, "appliance_", 10) == 0) {
 		$appliance_fields[$key] = $value;
 	}
 }
@@ -38,7 +38,7 @@ $deployment_name = $_REQUEST["deployment_name"];
 $deployment_type = $_REQUEST["deployment_type"];
 $deployment_fields = array();
 foreach ($_REQUEST as $key => $value) {
-	if (strncmp($key, "deployment_", 10) == 0) {
+	if (strncmp($key, "deployment_", 11) == 0) {
 		$deployment_fields[$key] = $value;
 	}
 }

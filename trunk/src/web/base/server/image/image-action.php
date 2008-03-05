@@ -29,7 +29,7 @@ $image_name = $_REQUEST["image_name"];
 $image_type = $_REQUEST["image_type"];
 $image_fields = array();
 foreach ($_REQUEST as $key => $value) {
-	if (strncmp($key, "image_", 5) == 0) {
+	if (strncmp($key, "image_", 6) == 0) {
 		$image_fields[$key] = $value;
 	}
 }
@@ -40,7 +40,7 @@ $deployment_name = $_REQUEST["deployment_name"];
 $deployment_type = $_REQUEST["deployment_type"];
 $deployment_fields = array();
 foreach ($_REQUEST as $key => $value) {
-	if (strncmp($key, "deployment_", 10) == 0) {
+	if (strncmp($key, "deployment_", 11) == 0) {
 		$deployment_fields[$key] = $value;
 	}
 }

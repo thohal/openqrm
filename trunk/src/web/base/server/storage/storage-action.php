@@ -28,7 +28,7 @@ $storage_id = $_REQUEST["storage_id"];
 $storage_name = $_REQUEST["storage_name"];
 $storage_fields = array();
 foreach ($_REQUEST as $key => $value) {
-	if (strncmp($key, "storage_", 5) == 0) {
+	if (strncmp($key, "storage_", 8) == 0) {
 		$storage_fields[$key] = $value;
 	}
 }
