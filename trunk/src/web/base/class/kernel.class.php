@@ -77,10 +77,17 @@ function is_id_free($kernel_id) {
 
 
 // adds kernel to the database
-function add($kernel_id, $kernel_name, $kernel_version) {
+function add($kernel_fields) {
 	global $KERNEL_INFO_TABLE;
+	if (!is_array($kernel_fields)) {
+		print("kernel_field not well defined");
+		return 1;
+	}
 	$db=openqrm_get_db_connection();
-	$rs = $db->Execute("insert into $KERNEL_INFO_TABLE (kernel_id, kernel_name, kernel_version) values ($kernel_id, '$kernel_name', '$kernel_version')");
+	$result = $db->AutoExecute($KERNEL_INFO_TABLE, $kernel_fields, 'INSERT');
+	if (! $result) {
+		print("Failed adding new kernel to database");
+	}
 }
 
 
