@@ -6,6 +6,7 @@
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
+require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
@@ -41,11 +42,25 @@ function appliance_display($admin) {
 		$disp = $disp."<div id=\"appliance\" nowrap=\"true\">";
 		$disp = $disp."<form action='appliance-action.php' method=post>";
 		$disp = $disp."$appliance->id $appliance->name ";
+
+		$appliance_resource = new resource();
+		$appliance_resource->get_instance_by_id($appliance->resources);
+		$disp = $disp."$appliance_resource->ip ";
+		$disp = $disp."$appliance_resource->mac ";
+
 		$disp = $disp."<input type=hidden name=appliance_id value=$appliance->id>";
 		$disp = $disp."<input type=hidden name=appliance_name value=$appliance->name>";
-		$disp = $disp."<input type=hidden name=appliance_command value='remove'";
 		if ("$admin" == "admin") {
-			$disp = $disp."<input type=submit value='remove'>";
+
+			$appliance_action_ar = array();
+			$appliance_action_ar[] = array("value"=>'', "label"=>'',);
+			$appliance_action_ar[] = array("value"=>'start', "label"=>'Start',);
+			$appliance_action_ar[] = array("value"=>'stop', "label"=>'Stop',);
+			$appliance_action_ar[] = array("value"=>'remove', "label"=>'remove',);
+			$appliance_action_selected_ar[] = array("value"=>'', "label"=>'',);
+			$select = appliance_htmlobject_select('appliance_command', $appliance_action_ar, '', $appliance_action_selected_ar);
+			$disp = $disp.$select;
+			$disp = $disp." <input type=submit value='apply'>";
 		}
 		$disp = $disp."</form>";
 		$disp = $disp."</div>";
@@ -74,14 +89,34 @@ function appliance_form() {
 	$disp = $disp.htmlobject_input('appliance_name', array("value" => '', "label" => 'Appliance name'), 'text', 20);
 	$disp = $disp."<br>";
 	$disp = $disp."Kernel ";
-	$kernel_select = appliance_htmlobject_select('resource_kernelid', $kernel_list, '', $kernel_list);
+	$kernel_select = appliance_htmlobject_select('appliance_kernelid', $kernel_list, '', $kernel_list);
 	$disp = $disp.$kernel_select;
 	$disp = $disp."<br>";
 	$disp = $disp."Server-Image ";
-	$image_select = appliance_htmlobject_select('resource_imageid', $image_list, 'Select image', $image_list);
+	$image_select = appliance_htmlobject_select('appliance_imageid', $image_list, 'Select image', $image_list);
 	$disp = $disp.$image_select;
 	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."Select Resource";
+	$disp = $disp."<hr>";
+
+	$resource_tmp = new resource();
+	$resource_array = $resource_tmp->display_overview(0, 10);
+	foreach ($resource_array as $index => $resource_db) {
+		$resource = new resource();
+		$resource->get_instance_by_id($resource_db["resource_id"]);
+		if ("$resource->id" != "0") {
+			$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
+		    $disp = $disp."<input type='radio' name='appliance_resources' value='$resource->id'>";
+			$disp = $disp." $resource->id $resource->hostname ";
+			$disp = $disp." $resource->ip $resource->mac $resource->state ";
+			$disp = $disp."</div>";
+		}
+	}
+
+	$disp = $disp."<hr>";
 	$disp = $disp."Requirements";
+	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp.htmlobject_input('appliance_cpuspeed', array("value" => '', "label" => 'CPU-Speed'), 'text', 20);
 	$disp = $disp.htmlobject_input('appliance_cpumodel', array("value" => '', "label" => 'CPU-Model'), 'text', 20);

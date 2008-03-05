@@ -11,6 +11,10 @@
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
+require_once "$RootDir/class/resource.class.php";
+require_once "$RootDir/class/image.class.php";
+require_once "$RootDir/class/kernel.class.php";
+
 global $APPLIANCE_INFO_TABLE;
 
 class appliance {
@@ -163,6 +167,32 @@ function remove_by_name($appliance_name) {
 	$db=openqrm_get_db_connection();
 	$rs = $db->Execute("delete from $APPLIANCE_INFO_TABLE where appliance_name='$appliance_name'");
 }
+
+
+
+// starts an appliance -> assigns it to a resource
+function start() {
+
+	$resource = new resource();
+	$resource->get_instance_by_id($this->resources);
+	$kernel = new kernel();
+	$kernel->get_instance_by_id($this->kernelid);
+	$image = new image();
+	$image->get_instance_by_id($this->imageid);
+	$resource->assign($resource->id, $kernel->id, $kernel->name, $image->id, $image->name);
+	$resource->send_command("$resource->ip", "reboot");
+}
+
+
+// stops an appliance -> de-assigns it to idle
+function stop() {
+	$resource = new resource();
+	$resource->get_instance_by_id($this->resources);
+	$resource->assign($resource->id, "1", "default", "1", "idle");
+	$resource->send_command("$resource->ip", "reboot");
+}
+
+
 
 // returns appliance name by appliance_id
 function get_name($appliance_id) {

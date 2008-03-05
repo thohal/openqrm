@@ -64,6 +64,21 @@ foreach ($_REQUEST as $key => $value) {
 			echo "Removed appliance $appliance_name from the openQRM-database";
 			break;
 
+		case 'start':
+			$appliance = new appliance();
+			$appliance->get_instance_by_id($appliance_id);
+			$appliance->start();
+			echo "Started appliance $appliance_id";
+			break;
+
+		case 'stop':
+			$appliance = new appliance();
+			$appliance->get_instance_by_id($appliance_id);
+			$appliance->stop();
+			echo "Stopped appliance $appliance_id";
+			break;
+
+
 
 		default:
 			echo "No Such openQRM-command!";
