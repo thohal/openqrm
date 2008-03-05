@@ -135,9 +135,9 @@ function resource_form() {
 	$disp = $disp."<form action='resource-action.php' method=post>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp.htmlobject_input('resource_mac', array("value" => 'XX:XX:XX:XX:XX:XX', "label" => 'Insert Mac-address'), 'text', 17);
+	$disp = $disp.htmlobject_input('resource_mac', array("value" => 'XX:XX:XX:XX:XX:XX', "label" => 'Mac-address'), 'text', 17);
+	$disp = $disp.htmlobject_input('resource_ip', array("value" => '0.0.0.0', "label" => 'Ip-address'), 'text', 20);
 	$disp = $disp."<input type=hidden name=resource_id value='-1'>";
-	$disp = $disp."<input type=hidden name=resource_ip value='0.0.0.0'>";
 	$disp = $disp."<input type=hidden name=resource_command value='new_resource'>";
 	$disp = $disp."<input type=submit value='add'>";
 	$disp = $disp."";
