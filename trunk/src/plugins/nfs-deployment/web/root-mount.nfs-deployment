@@ -62,7 +62,6 @@ function remount_rootfs() {
 
 
 function create_fstab() {
-	local OLD_IFS=$IFS
 	rm -f $IMAGE_FSTAB
 	echo "0.0.0.0:$IMAGE_ROOT_DIR   /   nfs  defaults   0 0" >> $IMAGE_FSTAB
 }

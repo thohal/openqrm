@@ -82,6 +82,7 @@ function import_kernel() {
 
 # this functions adds the common entries to the images fstab
 function create_fstab_commons() {
+	local OLD_IFS=$IFS
 	echo "none	 /dev/pts     devpts   gid=5,mode=620     0 0" >> $IMAGE_FSTAB
 	echo "none	 /proc	proc     defaults	   0 0" >> $IMAGE_FSTAB
 	echo "none	 /dev/shm     tmpfs    defaults	   0 0" >> $IMAGE_FSTAB
