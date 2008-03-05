@@ -1,0 +1,135 @@
+#!/bin/bash
+# this is the root-mount initrd-service
+# which proivdes function to mount/remount the remote
+# local-rootfs according to the image_deployment_parameters at /mnt
+#
+# local-deployment INSTALL
+# Required defines in the image_deploy_paramters
+# IMAGE_INSTALL_FROM		- set to the server-location (path) of the local-deployment image
+#							  which should be installed (restored) on the local device.
+#							  syntax is : /path_to_target_image
+#
+# Optional parameters 
+# IMAGE_NFS_MOUNT_OPTIONS	- can be e.g. set to tcp
+#
+#
+# local-deployment GRAB
+# Required defines in the image_deploy_paramters
+# IMAGE_GRAB_TO			- set to the server-location (path) the local-deployment image should
+#						  be transfered to. syntax is : /path_to_target_image
+#
+# Optional parameters 
+# IMAGE_NFS_MOUNT_OPTIONS	- can be e.g. set to tcp
+#
+
+# get the deployment parameters from openqrm.conf
+OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
+. $OPENQRM_RESOURCE_PARAMETER_FILE
+eval $image_deployment_parameter
+
+#######################################################################
+# required functions ##################################################
+#######################################################################
+
+function mount_rootfs() {
+	modprobe ext3 1>/dev/null 2>&1
+	grab_rootfs
+
+	if ! mount -t $image_rootfstype -o rw$IMAGE_NFS_MOUNT_OPTIONS $image_rootdevice /mnt; then
+		echo "ERROR: Could not mount $image_rootdevice / $image_rootfstype"
+		# give a shell for the admin
+		/bin/bash
+	else
+		echo "local-deployment: Mounted $image_rootdevice rw"
+	fi
+	
+	install_rootfs
+}
+
+
+function remount_rootfs() {
+
+	# remont /mnt ro
+	while ! mount -t $image_rootfstype -o ro,remount$IMAGE_NFS_MOUNT_OPTIONS $image_rootdevice /mnt; do
+		echo -n "."
+		sleep 1
+		REMOUNT_LOOP=$( REMOUNT_LOOP + 1 )
+		if [ "$REMOUNT_LOOP" == "10" ]; then
+			echo "ERROR: local-deployment could not remount /mnt "
+			/bin/bash
+		fi
+	done
+	echo "local-deployment: Re-mounted $image_rootdevice ro"
+}
+
+
+function create_fstab() {
+	rm -f $IMAGE_FSTAB
+	echo "$image_rootdevice   /   local  defaults   0 0" >> $IMAGE_FSTAB
+}
+
+
+#######################################################################
+# optional functions ##################################################
+#######################################################################
+
+function install_rootfs() {
+	if  [ "$IMAGE_INSTALL_FROM" != "" ]; then
+		echo "local-deployment: Installing $resource_image from $image_storage_server_ip:$IMAGE_INSTALL_FROM to $image_rootdevice"
+		modprobe sunrpc 1>/dev/null 2>&1
+		modprobe lockd 1>/dev/null 2>&1
+		modprobe nfs 1>/dev/null 2>&1
+		rm -rf /dev/null
+		mknod -m 666 /dev/null c 1 3
+		portmap
+		mkdir -p /mnt2
+		if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_INSTALL_FROM /mnt2; then
+			echo "ERROR: Could not mount $image_storage_server_ip:$IMAGE_INSTALL_FROM by nfs"
+			# give a shell for the admin
+			/bin/bash
+		fi
+
+		echo "local-deployment: Started install-phase. This can take a while ...."
+		
+		echo "local-deployment: Install-phase finished. Continuing boot-up"
+
+		umount /mnt2
+		rmdir /mnt2
+		killall portmap
+		
+	else
+		echo "local-deployment: Skipping install phase"
+	fi
+}
+
+
+function grab_rootfs() {
+	if  [ "$IMAGE_GRAB_TO" != "" ]; then
+		echo "local-deployment: Grabbing $resource_image from $image_rootdevice to image_storage_server_ip:$IMAGE_GRAB_TO"
+		modprobe sunrpc 1>/dev/null 2>&1
+		modprobe lockd 1>/dev/null 2>&1
+		modprobe nfs 1>/dev/null 2>&1
+		rm -rf /dev/null
+		mknod -m 666 /dev/null c 1 3
+		portmap
+		mkdir -p /mnt2
+		if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_GRAB_TO /mnt2; then
+			echo "ERROR: Could not mount $image_storage_server_ip:$IMAGE_GRAB_TO by nfs"
+			# give a shell for the admin
+			/bin/bash
+		fi
+
+		echo "local-deployment: Started grab-pase. This can take a while ...."
+		
+		echo "local-deployment: Grab-phase finished. Continuing boot-up"
+
+		umount /mnt2
+		rmdir /mnt2
+		killall portmap
+	else
+		echo "local-deployment: Skipping grab phase"
+	fi
+}
+
+
+
