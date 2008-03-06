@@ -1,15 +1,21 @@
-#!/bin/bash
+#!/bin/bash -x
 ########################## build functions ##########################
 
 # in the stage these function are used the files may be not installed yet
-# so we source the relative path
-OPENQRM_SOURCE_DIR=`dirname $0`/..
-OPENQRM_SOURCE_DIR=$(pushd $OPENQRM_SOURCE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	echo "ERROR: Please export OPENQRM_SERVER_BASE_DIR before sourcing $0"
+	exit 1
+fi
+if [ "$OPENQRM_SOURCE_DIR" == "" ]; then
+	echo "ERROR: Please export OPENQRM_SOURCE_DIR before sourcing $0"
+	exit 1
+fi
 # source the openqrm-functions file for more features
-export OPENQRM_SERVER_BASE_DIR=$OPENQRM_SOURCE_DIR
 . $OPENQRM_SOURCE_DIR/include/openqrm-functions
 # source the openqrm-server.conf which resets the basedir again
 . $OPENQRM_SOURCE_DIR/etc/openqrm-server.conf
+
 OPENQRM_BUILD_DISTRIBUTION=`openqrm_get_distro`
 if [ "$OPENQRM_BUILD_DISTRIBUTION" == "fc7" ] || [ "$OPENQRM_BUILD_DISTRIBUTION" == "fc8" ] ; then
 	# portmap was replaced with rpcbind on fc > 7
@@ -97,9 +103,14 @@ function openqrm_check_build_requirements() {
 # -> this is for "make all" / comilation phase
 function openqrm_cache_or_download() {
 	# 1 param: 		component name
-	# 2 param:		download-location
+	# 2 param:		component build config file
 	OPENQRM_SOURCE_COMPONENT_NAME=$1
-	. $OPENQRM_SOURCE_DIR/etc/build.conf/$OPENQRM_SOURCE_COMPONENT_NAME.conf
+	OPENQRM_SOURCE_COMPONENT_BUILD_CONFIG=$2
+	if [ "$OPENQRM_SOURCE_COMPONENT_BUILD_CONFIG" == "" ]; then
+		. $OPENQRM_SOURCE_DIR/etc/build.conf/$OPENQRM_SOURCE_COMPONENT_NAME.conf
+	else
+		. $OPENQRM_SOURCE_COMPONENT_BUILD_CONFIG
+	fi
 	OPENQRM_SOURCE_COMPONENT_FILE=`basename $OPENQRM_SOURCE_DOWNLOAD`
 	CURRENT_DIR=`pwd`
 	if [ -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/$OPENQRM_SOURCE_COMPONENT_NAME/source/$OPENQRM_SOURCE_COMPONENT_FILE ]; then
@@ -123,14 +134,18 @@ function openqrm_cache_or_download() {
 # -> this is for "make all" / compilation phase
 function openqrm_compile_from_source() {
 	# 1 param: 		component name
-	# 2 param:		download-location
+	# 2 param:		component build config file
 	# optional variables :
 	# OPENQRM_CONFIGURE		command to use for configure (default "./configure" if exists)
 	# OPENQRM_PRE_MAKE		commands to run before make
 	# OPENQRM_POST_MAKE		commands to run after make
-
 	OPENQRM_SOURCE_COMPONENT_NAME=$1
-	. $OPENQRM_SOURCE_DIR/etc/build.conf/$OPENQRM_SOURCE_COMPONENT_NAME.conf
+	OPENQRM_SOURCE_COMPONENT_BUILD_CONFIG=$2
+	if [ "$OPENQRM_SOURCE_COMPONENT_BUILD_CONFIG" == "" ]; then
+		. $OPENQRM_SOURCE_DIR/etc/build.conf/$OPENQRM_SOURCE_COMPONENT_NAME.conf
+	else
+		. $OPENQRM_SOURCE_COMPONENT_BUILD_CONFIG
+	fi
 	OPENQRM_SOURCE_COMPONENT_FILE=`basename $OPENQRM_SOURCE_DOWNLOAD`
 	CURRENT_DIR=`pwd`
 	# check if it is already compiled
@@ -178,13 +193,14 @@ function openqrm_compile_from_source() {
 # -> this is for "make install" / installation phase
 function openqrm_create_default_initrd_template() {
 
-	echo "Creating the default initrd-template"
 	CURRENT_DIR=`pwd`
+	OPENQRM_SOURCE_DIR_FULL_PATH=`cd $OPENQRM_SOURCE_DIR && pwd && cd $CURRENT_DIR`
+	echo "Creating the default initrd-template"
 	# getting + compiling busybox
 	. $OPENQRM_SOURCE_DIR/etc/build.conf/busybox.conf
 	openqrm_cache_or_download busybox
 	OPENQRM_SOURCE_COMPONENT_BUILD_DIR=$OPENQRM_BUILD_TMP_DIR/openqrm-build/busybox/busybox-$OPENQRM_SOURCE_VERSION/
-	export OPENQRM_PRE_MAKE="cp $OPENQRM_SOURCE_DIR/etc/build.conf/busybox.configuration $OPENQRM_SOURCE_COMPONENT_BUILD_DIR/.config && make oldconfig"
+	export OPENQRM_PRE_MAKE="cp $OPENQRM_SOURCE_DIR_FULL_PATH/etc/build.conf/busybox.configuration $OPENQRM_SOURCE_COMPONENT_BUILD_DIR/.config && make oldconfig"
 	export OPENQRM_POST_MAKE="make install"
 	openqrm_compile_from_source busybox
 	# getting hwdata
@@ -277,7 +293,7 @@ EOF
 
 	# creating the initrd devices
 	rm -rf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/dev
-	$OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/busybox makedevs -d $OPENQRM_SOURCE_DIR/etc/build.conf/initrd-devices.conf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
+	$OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/busybox makedevs -d $OPENQRM_SOURCE_DIR_FULL_PATH/etc/build.conf/initrd-devices.conf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
 	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/dev/
 	ln -sf tty0 systty
 	ln -sf ram1 ram
@@ -390,25 +406,3 @@ openqrm_get_phplayersmenu() {
 	openqrm_cache_or_download phplayersmenu
 }
 
-
-# case for running functions called from Makefiles
-case "$1" in
-	check_build_requirements)
-		openqrm_check_build_requirements
-		;;
-	initrd)
-		openqrm_create_default_initrd_template
-		;;
-	pack_initrd)
-		openqrm_pack_default_initrd_template
-		;;
-	get_kernel_default_kernel)
-		openqrm_get_kernel_default_kernel
-		;;
-	default_kernel)
-		openqrm_create_default_kernel
-		;;
-	get_phplayersmenu)
-		openqrm_get_phplayersmenu
-		;;
-esac

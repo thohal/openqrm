@@ -1,0 +1,18 @@
+#!/bin/bash
+# this script helps the "make" to call functions 
+# from within the Makefile
+
+OPENQRM_SERVER_BASE_DIR=`dirname $0`
+OPENQRM_SOURCE_DIR=$OPENQRM_SERVER_BASE_DIR
+. $OPENQRM_SOURCE_DIR/etc/openqrm-server.conf
+. $OPENQRM_SOURCE_DIR/include/openqrm-functions
+. $OPENQRM_SOURCE_DIR/include/openqrm-build-functions
+. $OPENQRM_SOURCE_DIR/include/openqrm-package-functions
+MAKE_COMMAND=$1
+
+if [ "$MAKE_COMMAND" == "" ]; then
+	echo "This script helps the "make" to call functions from within the Makefiles"
+	exit 0
+fi
+
+$@

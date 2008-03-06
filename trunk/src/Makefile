@@ -2,6 +2,7 @@
 #.SILENT:
 
 export OPENQRM_SERVER_CONF=$(shell pwd)/etc/openqrm-server.conf
+export OPENQRM_SOURCE_DIR=$(shell pwd)
 
 all: buildrequirements configure compile initrd
 	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name "CVS"`; do cd $$SRC_DIR && make all && cd ..; done
@@ -13,21 +14,21 @@ compile:
 	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name "CVS"`; do cd $$SRC_DIR && make && cd ..; done
 
 initrd:
-	@chmod +x include/openqrm-build-functions
-	@include/openqrm-build-functions initrd
-	@include/openqrm-build-functions get_kernel_default_kernel
+	@chmod +x make-assistant
+	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_create_default_initrd_template
+	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_get_kernel_default_kernel
 
 bootimage: initrd
-	@chmod +x include/openqrm-build-functions
-	@include/openqrm-build-functions default_kernel
+	@chmod +x make-assistant
+	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_create_default_kernel
 
 install:
+	@chmod +x make-assistant
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make install' as root" && exit 1)
 	@. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm
 	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name "CVS"`; do cd $$SRC_DIR && make install && cd ..; done
-	@chmod +x include/openqrm-build-functions
-	@include/openqrm-build-functions pack_initrd
-	@include/openqrm-build-functions default_kernel
+	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_pack_default_initrd_template
+	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_create_default_kernel
 
 start: check
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make start' as root" && exit 1)
@@ -53,18 +54,18 @@ realclean:	clean
 	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name "CVS"`; do cd $$SRC_DIR && make realclean && cd ..; done
 
 package: uninstall clean all install
-	. $(OPENQRM_SERVER_CONF) && chmod +x include/openqrm-package-functions
-	. $(OPENQRM_SERVER_CONF) && export OPENQRM_SERVER_BASE_DIR && include/openqrm-package-functions package
+	@chmod +x make-assistant
+	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_package
 
 reinstall: uninstall clean all install start
 
 check:
-	. $(OPENQRM_SERVER_CONF) && chmod +x include/openqrm-package-functions
-	. $(OPENQRM_SERVER_CONF) && export OPENQRM_SERVER_BASE_DIR && include/openqrm-package-functions check
+	@chmod +x make-assistant
+	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_check_requirements
 
 buildrequirements:
-	@chmod +x include/openqrm-build-functions
-	@include/openqrm-build-functions check_build_requirements
+	@chmod +x make-assistant
+	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_check_build_requirements
 	
 
 

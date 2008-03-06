@@ -40,6 +40,7 @@ function openqrm_plugin_local-deployment_init() {
 	# linking the boot-service
 	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-deployment/web/root-mount.local-deployment
 	ln -s $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-deployment/web/root-mount.local-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.local-deployment
+	ln -s $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-deployment/web/partimage $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/partimage
 }
 
 

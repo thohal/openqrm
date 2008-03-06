@@ -6,11 +6,15 @@ if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
 	echo "ERROR: Please export OPENQRM_SERVER_BASE_DIR before sourcing $0"
 	exit 1
 fi
+if [ "$OPENQRM_SOURCE_DIR" == "" ]; then
+	echo "ERROR: Please export OPENQRM_SOURCE_DIR before sourcing $0"
+	exit 1
+fi
 
 # get the openqrm-server configuration + functions
-. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
-. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
-for VAR in `cat $OPENQRM_SERVER_CONF | grep -v ^# | grep OPENQRM | cut -d'=' -f1`; do
+. $OPENQRM_SOURCE_DIR/etc/openqrm-server.conf
+. $OPENQRM_SOURCE_DIR/include/openqrm-functions
+for VAR in `cat $OPENQRM_SOURCE_DIR/etc/openqrm-server.conf | grep -v ^# | grep OPENQRM | cut -d'=' -f1`; do
 	eval `export $VAR`
 done
 
@@ -55,7 +59,7 @@ function openqrm_check_requirements() {
 	# get a list of plugins for checking their dependencies
 	OPENQRM_PACKAGE_COMPONENT_LIST=`ls $OPENQRM_SERVER_BASE_DIR/openqrm/plugins`
 	for OPENQRM_PLUGIN in $OPENQRM_PACKAGE_COMPONENT_LIST; do
-		. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/openqrm-plugin-$OPENQRM_PLUGIN"".conf
+		. $OPENQRM_SOURCE_DIR/plugins/$OPENQRM_PLUGIN/etc/openqrm-plugin-$OPENQRM_PLUGIN"".conf
 		echo "openqrm-plugin-$OPENQRM_PLUGIN requires : `echo $OPENQRM_PLUGIN_DEPENDENCIES | sed -e "s/openqrm-server//g"`"
 		for DEP in `echo $OPENQRM_PLUGIN_DEPENDENCIES | sed -e "s/,//g" | sed -e "s/openqrm-server//g"`; do
 			if $OPENQRM_DEPENDENCY_CHECK_COMMAND $DEP 1>/dev/null 2>&1; then
@@ -82,7 +86,7 @@ function openqrm_package() {
 	echo "Creating $OPENQRM_PACKAGE_TYPE packages for openQRM-server ver. $OPENQRM_SERVER_VERSION for $OPENQRM_PACKAGE_DISTRIBUTION"
 
 	# which components to build
-	OPENQRM_PACKAGE_COMPONENT_LIST=`ls $OPENQRM_SERVER_BASE_DIR/openqrm/plugins`
+	OPENQRM_PACKAGE_COMPONENT_LIST=`ls $OPENQRM_SOURCE_DIR/plugins`
 	OPENQRM_PACKAGE_COMPONENT_LIST="openqrm-server "`echo $OPENQRM_PACKAGE_COMPONENT_LIST | sed -e "s/\n//g"`
 	echo "Packing the following components : $OPENQRM_PACKAGE_COMPONENT_LIST"
 
@@ -300,13 +304,3 @@ function openqrm_package() {
 
 
 
-
-# case for running functions called from Makefiles
-case "$1" in
-	package)
-		openqrm_package
-		;;
-	check)
-		openqrm_check_requirements
-		;;
-esac

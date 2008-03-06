@@ -6,8 +6,9 @@ export OPENQRM_PLUGIN_LOCAL_DEPLOYMENT_DIR=$(shell pwd)
 configure:
 
 compile:
-	#. $(OPENQRM_SERVER_CONF) && ../../include/openqrm-build-functions openqrm_cache_or_download partimage $(OPENQRM_PLUGIN_LOCAL_DEPLOYMENT_DIR)/etc/build.conf/partimage.conf
-	#. $(OPENQRM_SERVER_CONF) && . etc/build.conf/partimage.conf && cd $$OPENQRM_BUILD_TMP_DIR/openqrm-build/partimage/ && tar -xjf partimage-$$OPENQRM_SOURCE_VERSION.tar.bz2
+	
+	. $(OPENQRM_SERVER_CONF) && ../../make-assistant openqrm_cache_or_download partimage $(OPENQRM_PLUGIN_LOCAL_DEPLOYMENT_DIR)/etc/build.conf/partimage.conf
+	. $(OPENQRM_SERVER_CONF) && . etc/build.conf/partimage.conf && cd $$OPENQRM_BUILD_TMP_DIR/openqrm-build/partimage/ && tar -xjf partimage-$$OPENQRM_SOURCE_VERSION.tar.bz2
 
 install:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make install' as root" && exit 1)
@@ -20,7 +21,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-deployment/web
 	. $(OPENQRM_SERVER_CONF) && cp web/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-deployment/web/
 	. $(OPENQRM_SERVER_CONF) && cp web/*.local-deployment $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-deployment/web/
-	#. $(OPENQRM_SERVER_CONF) && cp $$OPENQRM_BUILD_TMP_DIR/openqrm-build/partimage/partimage $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-deployment/web/
+	. $(OPENQRM_SERVER_CONF) && cp $$OPENQRM_BUILD_TMP_DIR/openqrm-build/partimage/partimage $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-deployment/web/
 
 
 uninstall:

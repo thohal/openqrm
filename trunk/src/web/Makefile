@@ -5,7 +5,7 @@ export OPENQRM_SERVER_CONF=$(shell pwd)/../etc/openqrm-server.conf
 configure:
 
 compile:
-	../include/openqrm-build-functions get_phplayersmenu
+	../make-assistant openqrm_get_phplayersmenu
 
 install:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make install' as root" && exit 1)
