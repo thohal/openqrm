@@ -76,6 +76,16 @@ function create_fstab() {
 function install_rootfs() {
 	if  [ "$IMAGE_INSTALL_FROM" != "" ]; then
 		echo "local-deployment: Installing $resource_image from $image_storage_server_ip:$IMAGE_INSTALL_FROM to $image_rootdevice"
+		# getting partimage
+		cd /sbin
+		echo "local-deployment: Getting partimage util"
+		if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/partimage; then
+			/bin/bash
+		fi
+		chmod +x partimage
+
+		cd /
+		# mounting source location
 		modprobe sunrpc 1>/dev/null 2>&1
 		modprobe lockd 1>/dev/null 2>&1
 		modprobe nfs 1>/dev/null 2>&1
@@ -83,13 +93,16 @@ function install_rootfs() {
 		mknod -m 666 /dev/null c 1 3
 		portmap
 		mkdir -p /mnt2
-		if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_INSTALL_FROM /mnt2; then
+		if ! mount -t nfs -o ro,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_INSTALL_FROM /mnt2; then
 			echo "ERROR: Could not mount $image_storage_server_ip:$IMAGE_INSTALL_FROM by nfs"
 			# give a shell for the admin
 			/bin/bash
 		fi
 
 		echo "local-deployment: Started install-phase. This can take a while ...."
+		
+		# debug
+		/bin/bash
 		
 		echo "local-deployment: Install-phase finished. Continuing boot-up"
 
@@ -106,6 +119,16 @@ function install_rootfs() {
 function grab_rootfs() {
 	if  [ "$IMAGE_GRAB_TO" != "" ]; then
 		echo "local-deployment: Grabbing $resource_image from $image_rootdevice to image_storage_server_ip:$IMAGE_GRAB_TO"
+		# getting partimage
+		cd /sbin
+		echo "local-deployment: Getting partimage util"
+		if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/partimage; then
+			/bin/bash
+		fi
+		chmod +x partimage
+
+		cd /
+		# mounting target location
 		modprobe sunrpc 1>/dev/null 2>&1
 		modprobe lockd 1>/dev/null 2>&1
 		modprobe nfs 1>/dev/null 2>&1
@@ -113,7 +136,7 @@ function grab_rootfs() {
 		mknod -m 666 /dev/null c 1 3
 		portmap
 		mkdir -p /mnt2
-		if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_GRAB_TO /mnt2; then
+		if ! mount -t nfs -o rw,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_GRAB_TO /mnt2; then
 			echo "ERROR: Could not mount $image_storage_server_ip:$IMAGE_GRAB_TO by nfs"
 			# give a shell for the admin
 			/bin/bash
@@ -121,6 +144,9 @@ function grab_rootfs() {
 
 		echo "local-deployment: Started grab-pase. This can take a while ...."
 		
+		# debug
+		/bin/bash
+
 		echo "local-deployment: Grab-phase finished. Continuing boot-up"
 
 		umount /mnt2
