@@ -82,43 +82,6 @@ function create_fstab() {
 # optional functions ##################################################
 #######################################################################
 
-function install_rootfs() {
-	echo "local-deployment: Installing $resource_image from $image_storage_server_ip:$IMAGE_INSTALL_FROM to $image_rootdevice"
-	# getting partimage
-	if [ ! -x /sbin/partimage ]; then
-		cd /sbin
-		echo "local-deployment: Getting partimage util"
-		if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/partimage; then
-			/bin/bash
-		fi
-		chmod +x partimage
-		cd /
-	fi
-	# mounting source location
-	modprobe sunrpc 1>/dev/null 2>&1
-	modprobe lockd 1>/dev/null 2>&1
-	modprobe nfs 1>/dev/null 2>&1
-	rm -rf /dev/null
-	mknod -m 666 /dev/null c 1 3
-	portmap
-	mkdir -p /mnt2
-	if ! mount -t nfs -o ro,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_INSTALL_FROM /mnt2; then
-		echo "ERROR: Could not mount $image_storage_server_ip:$IMAGE_INSTALL_FROM by nfs"
-		# give a shell for the admin
-		/bin/bash
-	fi
-
-	echo "local-deployment: Started install-phase. This can take a while ...."
-	partimage -b restore $image_rootdevice /mnt2/$image_name.000
-	
-	/bin/bash
-	echo "local-deployment: Install-phase finished. Continuing boot-up"
-
-	umount /mnt2
-	rmdir /mnt2
-	killall portmap
-		
-}
 
 
 function grab_rootfs() {
@@ -148,7 +111,13 @@ function grab_rootfs() {
 	fi
 
 	echo "local-deployment: Started grab-pase. This can take a while ...."
+	# grabbing the root partition
 	partimage -z1 --nocheck --overwrite --nodesc -f3 -b save $image_rootdevice /mnt2/$image_name
+	# saving the mbr
+	ROOT_DISK=`echo $image_rootdevice | sed -e "s/[0-9]//g"`
+	dd if=$ROOT_DISK of=/mnt2/$image_name.mbr count=1 bs=512
+	# saving the extend partitions
+	sfdisk -d $ROOT_DISK > /mnt2/$image_name.sf
 	echo "local-deployment: Grab-phase finished. Continuing boot-up"
 
 	umount /mnt2
@@ -156,5 +125,48 @@ function grab_rootfs() {
 	killall portmap
 }
 
+
+
+
+function install_rootfs() {
+	echo "local-deployment: Installing $resource_image from $image_storage_server_ip:$IMAGE_INSTALL_FROM to $image_rootdevice"
+	# getting partimage
+	if [ ! -x /sbin/partimage ]; then
+		cd /sbin
+		echo "local-deployment: Getting partimage util"
+		if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/partimage; then
+			/bin/bash
+		fi
+		chmod +x partimage
+		cd /
+	fi
+	# mounting source location
+	modprobe sunrpc 1>/dev/null 2>&1
+	modprobe lockd 1>/dev/null 2>&1
+	modprobe nfs 1>/dev/null 2>&1
+	rm -rf /dev/null
+	mknod -m 666 /dev/null c 1 3
+	portmap
+	mkdir -p /mnt2
+	if ! mount -t nfs -o ro,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_INSTALL_FROM /mnt2; then
+		echo "ERROR: Could not mount $image_storage_server_ip:$IMAGE_INSTALL_FROM by nfs"
+		# give a shell for the admin
+		/bin/bash
+	fi
+
+	echo "local-deployment: Started install-phase. This can take a while ...."
+	# restoring the mbr
+	ROOT_DISK=`echo $image_rootdevice | sed -e "s/[0-9]//g"`
+	dd if=/mnt2/$image_name.mbr of=$ROOT_DISK
+	# restoring the extented partition layout
+	sfdisk $ROOT_DISK < /mnt2/$image_name.sf
+	partimage -b restore $image_rootdevice /mnt2/$image_name.000
+	echo "local-deployment: Install-phase finished. Continuing boot-up"
+
+	umount /mnt2
+	rmdir /mnt2
+	killall portmap
+		
+}
 
 
