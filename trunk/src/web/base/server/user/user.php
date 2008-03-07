@@ -8,7 +8,7 @@ if(htmlobject_request('action') != '') {
 	require_once('action.inc.php');
 }
 
-if(strtolower($OPENQRM_USER->role) == 'admin' && htmlobject_request('name') != '') {
+if(strtolower($OPENQRM_USER->role) == 'administrator' && htmlobject_request('name') != '') {
 	$user = new user(htmlobject_request('name'));
 } else {
 	$user = new user($_SERVER['PHP_AUTH_USER']);
@@ -75,48 +75,43 @@ $switch
 $output = array();
 $output[] = array('label' => 'Account', 'value' => $account_output);
 
-if(strtolower($OPENQRM_USER->role) == 'admin') {
+if(strtolower($OPENQRM_USER->role) == 'administrator') {
 
 //---------------------------------------------------------
 $ar_edit = array();
+
 $ar_users = $user->get_users();
 foreach ($ar_users as $ar) {
 $tmp = '';
 
+
 	foreach ($ar as $val) {
-	
-		$html = new htmlobject_div();
-		$html->style = 'float:left;';
-		$html->css = $val['label'] .' div_td';
-		
 		$text = $val['value'];
 		if($text == '') { $text = '&#160;'; }
-		
-		$html->text = $text;
-		$tmp .= $html->get_string();
-		
+		$tmp .= '<td class="'. $val['label'] .' div_td">'.$text.'</td>';
 	}
-	$html = new htmlobject_div();
-	$html->css = 'div_tr';
-	$html->handler = '
-		onmouseover="this.style.backgroundColor = \'#eeeeee\';"
-		onmouseout="this.style.backgroundColor = \'transparent\'";
-		onclick="location.href=\''.$thisfile.'?currenttab=tab0&name='.$ar[0]['value'].'\'";
+	$ar_edit[] = '
+		<tr class="div_tr"
+			onmouseover="this.style.backgroundColor = \'#eeeeee\';"
+			onmouseout="this.style.backgroundColor = \'transparent\'";
+			onclick="location.href=\''.$thisfile.'?currenttab=tab0&name='.$ar[0]['value'].'\';">
 	';
-	$html->text = $tmp .'<div class="floatbreaker">&#160;</div>';
-	$ar_edit[] = $html->get_string();	
+	$ar_edit[] = $tmp;
+	$ar_edit[] = '</tr>';
 }
 
 $edit_user_output = "
 <form action=\"$thisfile\" method=\"post\">
 <input type=\"hidden\" name=\"currenttab\" value=\"tab1\">
 <input type=\"hidden\" name=\"action\" value=\"user_edit\">
+<table cellpadding=\"0\" cellspacing=\"0\">
 ";
 foreach ( $ar_edit as $res ) {
-$edit_user_output .= $res;
+$edit_user_output .= ''.$res.'';
 }
 
 $edit_user_output .= "
+</table>
 </form>
 ";
 $output[] = array('label' => 'Edit User', 'value' => $edit_user_output);

@@ -5,48 +5,56 @@ $url = '';
 
 switch ($_REQUEST['action']) {
 	//--------------------------------------------------
+	//  Update User
 	//--------------------------------------------------
 	case 'user_update':
 		$user = new user(htmlobject_request('name'));
-		//--------------------------------------------------
-		if(htmlobject_request('name') == '') {
-			$strMsg .= 'Login must not be empty<br>';
-			$error = true;			
-		} else {
-			if(strtolower($OPENQRM_USER->role) == 'admin' ) {
-				$strCheck = $user->check_string_name(htmlobject_request('name'));
-				if ($strCheck != '') {
-					$user->name = '';
-					$strMsg .= 'Login must be '.$strCheck.'<br>';
-					$error = true;
-				}
+		
+		if($user->check_user_exists() === true) {
+			//--------------------------------------------------
+			if(htmlobject_request('name') == '') {
+				$strMsg .= 'Login must not be empty<br>';
+				$error = true;			
 			} else {
-				$strMsg .= 'You are not allowed to change Login<br>';
-				$error = true;			
+				if(strtolower($OPENQRM_USER->role) == 'administrator' || htmlobject_request('name') == $OPENQRM_USER->name) {
+					$strCheck = $user->check_string_name(htmlobject_request('name'));
+					if ($strCheck != '') {
+						$strMsg .= 'Login must be '.$strCheck.'<br>';
+						$error = true;
+					}
+				} else {
+					$strMsg .= 'You are not allowed to change Login<br>';
+					$error = true;			
+				}
 			}
-		}		
-		//--------------------------------------------------		
-		if(htmlobject_request('password') != '') {
-			$strCheck = $user->check_string_password(htmlobject_request('password'));
-			if ($strCheck != '') {
-				$strMsg .= 'Password must be '.$strCheck.'<br>';
-				$error = true;			
+			//--------------------------------------------------
+			$user->get_role_name();
+			if(strtolower($OPENQRM_USER->role) != 'administrator' && htmlobject_request('role') != $user->role['value'] && $error === false) {
+				$strMsg .= 'You are not allowed to change Role<br>';
+				$error = true;
 			}
-		}
-		//--------------------------------------------------			
-		if ($user->name != '' && $user->check_user_exists() === false) {
+			//--------------------------------------------------		
+			if(htmlobject_request('password') != '') {
+				$strCheck = $user->check_string_password(htmlobject_request('password'));
+				if ($strCheck != '') {
+					$strMsg .= 'Password must be '.$strCheck.'<br>';
+					$error = true;			
+				}
+			}
+		} else {
 			$strMsg .= 'User not found<br>';
 			$error = true;
-		} 
+		}
 		//--------------------------------------------------			
 		if($error === false) {
 			$user->set_user_from_request();
 			$msg = $user->query_update();
 			$strMsg .= 'success ';
 			$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$_REQUEST['currenttab'].'&name='.htmlobject_request('name');
-		}	
+		}
 		break;
 	//--------------------------------------------------
+	//  Insert User
 	//--------------------------------------------------
 	case 'user_insert':
 	$user = new user(htmlobject_request('name'));
@@ -86,10 +94,15 @@ switch ($_REQUEST['action']) {
 		}
 		break;
 	//--------------------------------------------------
+	//  Delete User
 	//--------------------------------------------------	
 	case 'user_delete':
-	
-		$strMsg .= 'user_delete';
+		if(strtolower($OPENQRM_USER->role) == 'administrator' || htmlobject_request('name') == $OPENQRM_USER->name) {	
+			$strMsg .= 'user_delete';
+		} else {
+			$strMsg .= 'You are not allowed to delete Users<br>';
+			$error = true;			
+		}
 		break;
 }
 
