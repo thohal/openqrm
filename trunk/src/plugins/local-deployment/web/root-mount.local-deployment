@@ -49,7 +49,7 @@ function mount_rootfs() {
 		echo "local-deployment: Skipping install phase"
 	fi
 
-	if ! mount -t $image_rootfstype -o rw$IMAGE_NFS_MOUNT_OPTIONS $image_rootdevice /mnt; then
+	if ! mount -t $image_rootfstype -o rw $image_rootdevice /mnt; then
 		echo "ERROR: Could not mount $image_rootdevice / $image_rootfstype"
 		# give a shell for the admin
 		/bin/bash
@@ -74,7 +74,7 @@ function mount_rootfs() {
 function remount_rootfs() {
 
 	# remont /mnt ro
-	while ! mount -t $image_rootfstype -o ro,remount$IMAGE_NFS_MOUNT_OPTIONS $image_rootdevice /mnt; do
+	while ! mount -t $image_rootfstype -o ro,remount $image_rootdevice /mnt; do
 		echo -n "."
 		sleep 1
 		REMOUNT_LOOP=$( REMOUNT_LOOP + 1 )
