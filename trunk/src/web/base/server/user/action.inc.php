@@ -94,11 +94,24 @@ switch ($_REQUEST['action']) {
 		}
 		break;
 	//--------------------------------------------------
-	//  Delete User
+	//  Delete User 1
 	//--------------------------------------------------	
 	case 'user_delete':
 		if(strtolower($OPENQRM_USER->role) == 'administrator' || htmlobject_request('name') == $OPENQRM_USER->name) {	
-			$strMsg .= 'user_delete';
+			$url = $thisfile.'?delete=1&currenttab='.$_REQUEST['currenttab'].'&name='.htmlobject_request('name');
+		} else {
+			$strMsg .= 'You are not allowed to delete Users<br>';
+			$error = true;			
+		}
+		break;
+	//--------------------------------------------------
+	//  Delete User 2
+	//--------------------------------------------------	
+	case 'user_delete_2':
+		if(strtolower($OPENQRM_USER->role) == 'administrator' || htmlobject_request('name') == $OPENQRM_USER->name) {	
+			$user = new user(htmlobject_request('name'));
+			$user->query_delete();
+			$strMsg .= 'User <b>'.htmlobject_request('name').'</b> deleted<br>';		
 		} else {
 			$strMsg .= 'You are not allowed to delete Users<br>';
 			$error = true;			

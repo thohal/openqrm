@@ -36,6 +36,25 @@ $GLOBALS['html_state'] = htmlobject_input('state', $user->state, 'text', 20);
 
 }
 
+if(htmlobject_request('delete') == 1) {
+
+$account_output = '
+<form action="'.$thisfile.'" method="post">
+<input type="hidden" name="currenttab" value="tab0">
+<input type="hidden" name="action" value="user_delete_2">
+<input type="hidden" name="name" value="'.htmlobject_request('name').'">
+<center>
+<br><br>
+Really delete user <strong>'.htmlobject_request('name').'</strong> ?
+<br><br>
+<br><br>
+<input type="submit" value="ok" class="button">
+<br><br>
+</center>
+</form>
+';
+
+} else {
 
 html_elements();
 
@@ -46,7 +65,7 @@ $switch = '
 <td><input type="radio" name="action" id="action_up" value="user_update" checked></td>
 <td><label for="action_del">delete</label></td>
 <td><input type="radio" name="action" id="action_del" value="user_delete"></td>
-<td><input type="submit"></td>
+<td><input type="submit" class="button"></td>
 </tr>
 </table>
 ';
@@ -71,6 +90,8 @@ $switch
 
 </form>
 ";
+
+}
 
 $output = array();
 $output[] = array('label' => 'Account', 'value' => $account_output);
@@ -149,7 +170,7 @@ $html_office
 $html_state
 $html_description
 $html_capabilities
-<input type=\"submit\">
+<input type=\"submit\" class=\"button\">
 </form>
 ";
 $output[] = array('label' => 'Add User', 'value' => $add_user_output);

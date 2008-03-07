@@ -247,6 +247,15 @@ var $_role_table = '';
 		return openqrm_db_get_result($query);
 	}
 	//-----------------------------------------------------------------------------------
+	function query_delete(){
+		$query = "
+			DELETE FROM $this->_user_table
+			WHERE user_name = '".$this->name."'
+			LIMIT 1
+		";
+		return openqrm_db_get_result($query);
+	}
+	//-----------------------------------------------------------------------------------
     function check_user_exists() {
 		$query = "
 			SELECT user_name as `Name`
