@@ -16,7 +16,7 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 
 function openqrm_plugin_local-deployment_start() {
 	echo "Starting the openQRM local-deployment-plugin"
-	openqrm_server_add_deployment_type openqrm openqrm local "Local-root deployment"
+	openqrm_server_add_deployment_type openqrm openqrm local "Local-deployment"
 }
 
 
