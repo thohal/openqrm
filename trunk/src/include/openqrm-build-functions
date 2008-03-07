@@ -19,9 +19,9 @@ fi
 OPENQRM_BUILD_DISTRIBUTION=`openqrm_get_distro`
 if [ "$OPENQRM_BUILD_DISTRIBUTION" == "fc7" ] || [ "$OPENQRM_BUILD_DISTRIBUTION" == "fc8" ] ; then
 	# portmap was replaced with rpcbind on fc > 7
-	OPENQRM_INITRD_COMPONENTS="/bin/bash /sbin/rpcbind /usr/bin/rsync /sbin/modprobe /sbin/depmod /sbin/insmod /sbin/lsmod /sbin/mke2fs"
+	OPENQRM_INITRD_COMPONENTS="/bin/bash /sbin/rpcbind /usr/bin/rsync /sbin/modprobe /sbin/depmod /sbin/insmod /sbin/lsmod /sbin/mke2fs /sbin/sfdisk"
 else
-	OPENQRM_INITRD_COMPONENTS="/bin/bash /sbin/portmap /usr/bin/rsync /sbin/modprobe /sbin/depmod /sbin/insmod /sbin/lsmod /sbin/mke2fs"
+	OPENQRM_INITRD_COMPONENTS="/bin/bash /sbin/portmap /usr/bin/rsync /sbin/modprobe /sbin/depmod /sbin/insmod /sbin/lsmod /sbin/mke2fs /sbin/sfdisk"
 fi
 OPENQRM_INITRD_DIRECTORIES="bin etc etc/rc.d/init.d etc/sysconfig etc/X11 lib lib/modules lib/i686 loopfs mnt old_root proc sys sysroot usr usr/lib usr/bin usr/sbin var var/lock var/lock/subsys var/log var/run /var/lib /var/lib/nfs /var/lib/nfs/statd"
 
