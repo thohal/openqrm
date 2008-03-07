@@ -7,6 +7,8 @@ export PATH
 # some defines 
 export IMAGE_FSTAB=/mnt/etc/fstab
 export IMAGE_FSTAB_STATIC=/mnt/etc/fstab-static
+export NETWORK_SERVICES_TO_ADJUST="/etc/init.d/portmap /etc/init.d/netfs /etc/rc.d/init.d/portmap /etc/rc.d/init.d/netfs /etc/init.d/network /etc/rc.d/init.d/network /etc/init.d/networking /etc/rc.d/init.d/networking"
+export NOT_START_SERVICE="dbus avahi-daemon"
 
 # functions
 
@@ -125,13 +127,33 @@ function create_fstab_commons() {
 
 function prepare_services() {
 	chroot /mnt ln -sf /$resource_basedir/openqrm/etc/init.d/openqrm-client /etc/init.d/openqrm-client
-	echo "" > /mnt/tmp/openqrm-client.enable
+	echo "#!/bin/bash -x" > /mnt/tmp/openqrm-client.enable
 	echo "OPENQRM_SERVER_BASE_DIR=$resource_basedir" >> /mnt/tmp/openqrm-client.enable
 	echo ". /$resource_basedir/openqrm/include/openqrm-functions" >> /mnt/tmp/openqrm-client.enable
 	echo "openqrm_chkconfig add openqrm-client" >> /mnt/tmp/openqrm-client.enable
+	for SERVICE in $NOT_START_SERVICE; do
+		echo "openqrm_chkconfig del $SERVICE" >> /mnt/tmp/openqrm-client.enable
+	done
 	chmod +x /mnt/tmp/openqrm-client.enable
-	chroot /mnt /tmp/openqrm-client.enable
+	chroot /mnt /tmp/openqrm-client.enable 1>/dev/null 2>&1
 	rm -f /mnt/tmp/openqrm-client.enable
+}
+
+
+function prepare_net_init() {
+	INIT_SCRIPTS_TO_PREPARE="$@"
+	for INIT_SCRIPT in $INIT_SCRIPTS_TO_PREPARE; do
+		if [ -f /mnt/$INIT_SCRIPT ]; then
+			if ! grep -A2 "stop)" /mnt/$INIT_SCRIPT | grep -q "openqrm" ; then
+				echo "Preparing init script $INIT_SCRIPT"
+				sed -e "s/^[ \t]*stop)\(.*\)/stop) exit # added by openqrm \n\1/" /mnt/$INIT_SCRIPT > /mnt/${INIT_SCRIPT}.openqrm
+				mv -f /mnt/${INIT_SCRIPT}.openqrm /mnt/$INIT_SCRIPT
+				chmod +x /mnt/$INIT_SCRIPT
+			else
+				echo "Init script $INIT_SCRIPT already prepared"
+			fi
+		fi
+	done
 }
 
 
@@ -173,7 +195,7 @@ fi
 
 # get the net working
 echo "Bringing up $OPENQRM_RESOURCE_MANAGED_INTERFACE:oq"
-echo "-> mac-address	: $OPENQRM_RESOURCE_MAC_ADDRESS"
+echo "-> mac-address		: $OPENQRM_RESOURCE_MAC_ADDRESS"
 echo "-> ip-address		: $OPENQRM_RESOURCE_IP_ADDRESS"
 echo "-> subnetmask		: $OPENQRM_RESOURCE_SUBNETMASK"
 echo "-> broadcast		: $OPENQRM_RESOURCE_BROADCAST"
@@ -211,10 +233,6 @@ $resource_basedir/openqrm/etc/init.d/openqrm-client start
 # if any deployment plugin is enabled, handle over the control
 # -> deployment plugins will take care to mount the root fs
 #    and do the pivot_root if needed
-# -> if the system is "idle" (meaning no deployment plugin enabled)
-#    we return to finish the linuxrc and give a admin shell
-#    -> no need to start any monitoring daemons because the system
-#       will do "nothing" anyway
 if [ "$image_type" != "ram" ]; then
 	eval $image_deployment_parameter
 	cd /
@@ -262,6 +280,7 @@ if [ "$image_type" != "ram" ]; then
 	prepare_udev
 	prepare_var
 	prepare_services
+	prepare_net_init $NETWORK_SERVICES_TO_ADJUST
 
 	# managed shared image
 	if [ "$image_isshared" != "" ]; then

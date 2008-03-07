@@ -204,3 +204,10 @@ function transform_rootfs_to_nfs() {
 }
 
 
+
+function install_rootfs_from_nfs() {
+	:
+}
+
+
+
