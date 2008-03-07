@@ -53,6 +53,11 @@ function mount_rootfs() {
 		echo "local-deployment: Mounted $image_rootdevice rw"
 	fi
 
+	if  [ "$IMAGE_TRANSFORM_TO_NFS" != "" ]; then
+		transform_rootfs_to_nfs
+	else
+		echo "local-deployment: Skipping transformation phase to nfs"
+	fi
 }
 
 
@@ -162,6 +167,35 @@ function install_rootfs() {
 	sfdisk $ROOT_DISK < /mnt2/$image_name.sf
 	partimage -b restore $image_rootdevice /mnt2/$image_name.000
 	echo "local-deployment: Install-phase finished. Continuing boot-up"
+
+	umount /mnt2
+	rmdir /mnt2
+	killall portmap
+		
+}
+
+
+
+function transform_rootfs_to_nfs() {
+	echo "local-deployment: Transforming $resource_image from $image_rootdevice to $image_storage_server_ip:$IMAGE_TRANSFORM_TO_NFS"
+	# mounting target location
+	modprobe sunrpc 1>/dev/null 2>&1
+	modprobe lockd 1>/dev/null 2>&1
+	modprobe nfs 1>/dev/null 2>&1
+	rm -rf /dev/null
+	mknod -m 666 /dev/null c 1 3
+	portmap
+	mkdir -p /mnt2
+
+	if ! mount -t nfs -o rw,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_TRANSFORM_TO_NFS /mnt2; then
+		echo "ERROR: Could not mount $image_storage_server_ip:$IMAGE_TRANSFORM_TO_NFS by nfs"
+		# give a shell for the admin
+		/bin/bash
+	fi
+	echo "local-deployment: Started tranformation phase to nfs. This can take a while ...."
+	cp -af /mnt/.* /mnt2/
+	cp -af /mnt/* /mnt2/
+	echo "local-deployment: Transform phase to nfs finished. Continuing boot-up"
 
 	umount /mnt2
 	rmdir /mnt2
