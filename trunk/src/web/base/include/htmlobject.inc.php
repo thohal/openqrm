@@ -109,13 +109,17 @@ function htmlobject_tabmenu($value) {
 * @param $html object
 * @return string
 */
-function htmlobject_box_from_object($html, $css='') {
+function htmlobject_box_from_object($html, $css='', $usetitle = true) {
 
 	$box = new htmlobject_box();
 	$box->id = 'htmlobject_box_'. $html->name;
 	$box->css = 'htmlobject_box'.$css;
 	$box->label = $html->title;
 	$box->content = $html;
+	
+	if($usetitle === false) {
+		$html->title = '';
+	}
 	
 	return $box->get_string();
 }
@@ -175,7 +179,7 @@ function htmlobject_radio_list($name, $value, $title = '', $checked = '') {
 	$html->title = $title;
 	$html->text = $_strReturn;
 
-	$_strReturn = htmlobject_box_from_object($html, ' outerbox');	
+	$_strReturn = htmlobject_box_from_object($html, ' outerbox', false);	
 	
 	return $_strReturn;
 }
