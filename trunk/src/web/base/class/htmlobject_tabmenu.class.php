@@ -89,7 +89,7 @@ if(count($this->_content) > 0) {
 		$_strReturn .= $content->title;
 		$_strReturn .= "</a>";
 		$_strReturn .= "</span>";
-		$_strReturn .= "</li>";
+		$_strReturn .= "</li>\n";
 	}
 	
 	$_strReturn .= "</ul>\n";
@@ -106,11 +106,13 @@ if(count($this->_content) > 0) {
         document.getElementById(\'msgBox\').style.display = \'none\';
         window.clearInterval(aktiv);
     }
-    </script>';
+    </script>
+	';
     }
 	
 	foreach($this->_content as $content) {
 		$content->title = '';
+		$_strReturn .= "\n\n<!-- $content->id -->\n";
 		$_strReturn .= $content->get_string();
 	}
 }	

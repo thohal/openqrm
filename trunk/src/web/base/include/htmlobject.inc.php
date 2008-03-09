@@ -6,6 +6,7 @@ require_once($ClassDir.'htmlobject_select.class.php');
 require_once($ClassDir.'htmlobject_box.class.php');
 require_once($ClassDir.'htmlobject_tabmenu.class.php');
 require_once($ClassDir.'htmlobject_div.class.php');
+require_once($ClassDir.'htmlobject_head.class.php');
 
 //---------------------------------------------------------------
 /**
@@ -117,6 +118,26 @@ function htmlobject_box_from_object($html, $css='') {
 	$box->content = $html;
 	
 	return $box->get_string();
+}
+//---------------------------------------------------------------
+/**
+* builds head of Page
+* @access public
+* @param $title string
+* @return string
+*/
+function htmlobject_head($title = '', $timer = '') {
+
+	$html = new htmlobject_head();
+	$html->add_meta('content-language','en');
+	$html->add_meta('content-type','text/html; charset=utf-8');
+	$html->add_meta('expires','Sat, 01 Dec 2001 00:00:00 GMT');
+	$html->add_meta('cache-control','no-cache');
+	$html->add_meta('pragma','no-cache');
+	$html->add_style('../../css/htmlobject.css');
+	$html->title = $title;
+	
+	return $html->get_string();
 }
 //---------------------------------------------------------------
 function htmlobject_request($arg) 

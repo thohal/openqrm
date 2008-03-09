@@ -98,95 +98,87 @@ $output[] = array('label' => 'Account', 'value' => $account_output);
 
 if(strtolower($OPENQRM_USER->role) == 'administrator') {
 
-//---------------------------------------------------------
-$ar_edit = array();
+	//---------------------------------------------------------
+	$ar_edit = array();
+	$ar_users = $user->get_users();
 
-$ar_users = $user->get_users();
-foreach ($ar_users as $ar) {
-$tmp = '';
-
-
-	foreach ($ar as $val) {
-		$text = $val['value'];
-		if($text == '') { $text = '&#160;'; }
-		$tmp .= '<td class="'. $val['label'] .' div_td">'.$text.'</td>';
+	foreach ($ar_users as $ar) {
+	$tmp = '';
+		foreach ($ar as $val) {
+			$text = $val['value'];
+			if($text == '') { $text = '&#160;'; }
+			$tmp .= '<td class="'. $val['label'] .' div_td">'.$text.'</td>';
+		}
+		$ar_edit[] = '
+			<tr class="div_tr"
+				onmouseover="this.style.backgroundColor = \'#eeeeee\';"
+				onmouseout="this.style.backgroundColor = \'transparent\'";
+				onclick="location.href=\''.$thisfile.'?currenttab=tab0&name='.$ar[0]['value'].'\';">
+		';
+		$ar_edit[] = $tmp;
+		$ar_edit[] = '</tr>';
 	}
-	$ar_edit[] = '
-		<tr class="div_tr"
-			onmouseover="this.style.backgroundColor = \'#eeeeee\';"
-			onmouseout="this.style.backgroundColor = \'transparent\'";
-			onclick="location.href=\''.$thisfile.'?currenttab=tab0&name='.$ar[0]['value'].'\';">
-	';
-	$ar_edit[] = $tmp;
-	$ar_edit[] = '</tr>';
+
+	$edit_user_output = "
+	<form action=\"$thisfile\" method=\"post\">
+	<input type=\"hidden\" name=\"currenttab\" value=\"tab1\">
+	<input type=\"hidden\" name=\"action\" value=\"user_edit\">
+	<table cellpadding=\"0\" cellspacing=\"0\">
+	";
+	
+	foreach ( $ar_edit as $res ) {
+		$edit_user_output .= ''.$res.'';
+	}
+	
+	$edit_user_output .= "
+	</table>
+	</form>
+	";
+	$output[] = array('label' => 'Edit User', 'value' => $edit_user_output);
+
+	//---------------------------------------------------------
+	$user->id['value'] = '';
+	$user->name['value'] = '';
+	$user->password['value'] = '';
+	$user->gender['value'] = '';
+	$user->role['value'] = '';
+	$user->first_name['value'] = '';
+	$user->last_name['value'] = '';
+	$user->department['value'] = '';
+	$user->office['value'] = '';
+	$user->last_update_time['value'] = '';
+	$user->description['value'] = '';
+	$user->capabilities['value'] = '';
+	$user->state['value'] = '';
+
+	html_elements();
+
+	$add_user_output = "
+	<form action=\"$thisfile\" method=\"post\">
+	<input type=\"hidden\" name=\"currenttab\" value=\"tab2\">
+	<input type=\"hidden\" name=\"action\" value=\"user_insert\">
+	$html_id
+	$html_name
+	$html_password
+	$html_role
+	$html_first_name
+	$html_last_name
+	$html_gender
+	$html_department
+	$html_office
+	$html_state
+	$html_description
+	$html_capabilities
+	<input type=\"submit\" class=\"button\">
+	</form>
+	";
+	$output[] = array('label' => 'Add User', 'value' => $add_user_output);
 }
 
-$edit_user_output = "
-<form action=\"$thisfile\" method=\"post\">
-<input type=\"hidden\" name=\"currenttab\" value=\"tab1\">
-<input type=\"hidden\" name=\"action\" value=\"user_edit\">
-<table cellpadding=\"0\" cellspacing=\"0\">
-";
-foreach ( $ar_edit as $res ) {
-$edit_user_output .= ''.$res.'';
-}
-
-$edit_user_output .= "
-</table>
-</form>
-";
-$output[] = array('label' => 'Edit User', 'value' => $edit_user_output);
-
-//---------------------------------------------------------
-$user->id['value'] = '';
-$user->name['value'] = '';
-$user->password['value'] = '';
-$user->gender['value'] = '';
-$user->role['value'] = '';
-$user->first_name['value'] = '';
-$user->last_name['value'] = '';
-$user->department['value'] = '';
-$user->office['value'] = '';
-$user->last_update_time['value'] = '';
-$user->description['value'] = '';
-$user->capabilities['value'] = '';
-$user->state['value'] = '';
-
-html_elements();
-
-$add_user_output = "
-<form action=\"$thisfile\" method=\"post\">
-<input type=\"hidden\" name=\"currenttab\" value=\"tab2\">
-<input type=\"hidden\" name=\"action\" value=\"user_insert\">
-$html_id
-$html_name
-$html_password
-$html_role
-$html_first_name
-$html_last_name
-$html_gender
-$html_department
-$html_office
-$html_state
-$html_description
-$html_capabilities
-<input type=\"submit\" class=\"button\">
-</form>
-";
-$output[] = array('label' => 'Add User', 'value' => $add_user_output);
-
-
-
-
-}
-
-
-
-
+echo htmlobject_head('User Administration');
 
 ?>
-
-<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+<body>
 <style>
 .user_name { width:74px; }
 .user_id { width:40px; }
@@ -197,10 +189,11 @@ $output[] = array('label' => 'Add User', 'value' => $add_user_output);
 </style>
 
 <?php
-
 echo htmlobject_tabmenu($output);
-
 ?>
+
+</body>
+</html>
 
 
 
