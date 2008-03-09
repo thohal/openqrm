@@ -86,7 +86,7 @@ $this->init_htmlobject_box();
 
 $_strReturn = '
 <div'.$this->_init_htmlobject.'>
-<div'.$this->css_left.'><label for="'.$this->content->name.'">'.$this->label.'</label></div>
+<div'.$this->css_left.'><label for="'.$this->content->id.'">'.$this->label.'</label></div>
 <div'.$this->css_right.'>'.$this->content->get_string().'</div>
 <div style="line-height:0px;height:0px;clear:both;" class="floatbreaker">&#160;</div>
 </div>

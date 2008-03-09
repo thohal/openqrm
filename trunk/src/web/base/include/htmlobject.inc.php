@@ -143,6 +143,43 @@ function htmlobject_head($title = '', $timer = '', $url = '') {
 	return $html->get_string();
 }
 //---------------------------------------------------------------
+/**
+* builds html radio box
+* @access public
+* @param  $name string
+* @param  $value array(label=>, value=>)
+* @param  $checked string
+* @return string
+*/
+function htmlobject_radio_list($name, $value, $title = '', $checked = '') {
+	$_strReturn = '';
+
+	$i = 0;
+	foreach ($value as $val) {
+		$html = new htmlobject_input();
+		$html->type = 'radio';
+		$html->id = uniqid();
+		$html->name = $name;
+		$html->title =  $val['label'];
+		if($checked == $val['value']) {
+			$html->checked = true;
+		}
+		$html->value = $val['value'];
+		$_strReturn .= htmlobject_box_from_object($html, ' radio');
+		
+		$i++;
+	}
+	
+	$html = new htmlobject_div();
+	$html->name = '';
+	$html->title = $title;
+	$html->text = $_strReturn;
+
+	$_strReturn = htmlobject_box_from_object($html, ' outerbox');	
+	
+	return $_strReturn;
+}
+//---------------------------------------------------------------
 function htmlobject_request($arg) 
 {
 	if (isset($_REQUEST[$arg])) 
