@@ -126,7 +126,7 @@ function htmlobject_box_from_object($html, $css='') {
 * @param $title string
 * @return string
 */
-function htmlobject_head($title = '', $timer = '') {
+function htmlobject_head($title = '', $timer = '', $url = '') {
 
 	$html = new htmlobject_head();
 	$html->add_meta('content-language','en');
@@ -134,6 +134,9 @@ function htmlobject_head($title = '', $timer = '') {
 	$html->add_meta('expires','Sat, 01 Dec 2001 00:00:00 GMT');
 	$html->add_meta('cache-control','no-cache');
 	$html->add_meta('pragma','no-cache');
+	if($timer != '' && $url != '') {
+		$html->add_meta('refresh', $timer.'; URL='.$url);	
+	}
 	$html->add_style('../../css/htmlobject.css');
 	$html->title = $title;
 	
