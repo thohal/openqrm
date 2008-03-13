@@ -1,0 +1,19 @@
+#!/bin/bash
+
+export OPENQRM_SERVER_BASE_DIR=`dirname $0`
+export OPENQRM_SOURCE_DIR=$OPENQRM_SERVER_BASE_DIR
+. include/openqrm-functions
+. include/openqrm-build-functions
+
+for COMPONENT_CONFIG in `find etc/build.conf/ -name *.conf | grep -v initrd` ; do
+	COMPONENT=`basename $COMPONENT_CONFIG`
+	COMPONENT=`echo $COMPONENT | cut -d'.' -f1`
+	echo "Checking $COMPONENT"
+	openqrm_cache_or_download $COMPONENT $COMPONENT_CONFIG
+done
+#for COMPONENT_CONFIG in `find plugins/ -name *.conf` ; do
+#	COMPONENT=`basename $COMPONENT_CONFIG`
+#	COMPONENT=`echo $COMPONENT | cut -d'.' -f1`
+#	echo "Checking $COMPONENT"
+#	openqrm_cache_or_download $COMPONENT $COMPONENT_CONFIG
+#done
