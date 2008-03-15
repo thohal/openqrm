@@ -12,7 +12,7 @@ OPENQRM_SERVER_CONF=$OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 . $OPENQRM_SERVER_CONF
 
 # some definitions
-OPENQRM_QRM_UNWANTED_MODULES="cops.o ipddp.o ltpc.o hdlcdrv.o airo_cs.o aironet4500_cs.o airo.o axnet_cs.o fmvj18x_cs.o ibmtr_cs.o netwave_cs.o nmclan_cs.o pcnet_cs.o ray_cs.o smc91c92_cs.o wavelan_cs.o wvlan_cs.o xirc2ps_cs.o xircom_cb.o xircom_tulip_cb.o ppp_async.o ppp_deflate.o ppp_generic.o ppp_synctty.o wavelan.o wd.o winbond-840.o airo_cs.o airo.o hermes.o orinoco_cs.o orinoco.o orinoco_plx.o orinoco_old_cs.o cops.ko ipddp.ko ltpc.ko hdlcdrv.ko airo_cs.ko aironet4500_cs.ko airo.ko axnet_cs.ko fmvj18x_cs.ko ibmtr_cs.ko netwave_cs.ko nmclan_cs.ko pcnet_cs.ko ray_cs.ko smc91c92_cs.ko wavelan_cs.ko wvlan_cs.ko xirc2ps_cs.ko xircom_cb.ko xircom_tulip_cb.ko ppp_async.ko ppp_deflate.ko ppp_generic.ko ppp_synctty.ko wavelan.ko wd.ko winbond-840.ko airo_cs.ko airo.ko hermes.ko orinoco_cs.ko orinoco.ko orinoco_plx.ko orinoco_old_cs.ko de600.ko de620.ko defxx.ko depca.ko hp100.ko hp.ko hp-plus.ko ne3210.ko ne.ko netwave_cs.ko ipw2100.ko proteon.ko skisa.ko"
+OPENQRM_UNWANTED_MODULES="cops.o ipddp.o ltpc.o hdlcdrv.o airo_cs.o aironet4500_cs.o airo.o axnet_cs.o fmvj18x_cs.o ibmtr_cs.o netwave_cs.o nmclan_cs.o pcnet_cs.o ray_cs.o smc91c92_cs.o wavelan_cs.o wvlan_cs.o xirc2ps_cs.o xircom_cb.o xircom_tulip_cb.o ppp_async.o ppp_deflate.o ppp_generic.o ppp_synctty.o wavelan.o wd.o winbond-840.o airo_cs.o airo.o hermes.o orinoco_cs.o orinoco.o orinoco_plx.o orinoco_old_cs.o cops.ko ipddp.ko ltpc.ko hdlcdrv.ko airo_cs.ko aironet4500_cs.ko airo.ko axnet_cs.ko fmvj18x_cs.ko ibmtr_cs.ko netwave_cs.ko nmclan_cs.ko pcnet_cs.ko ray_cs.ko smc91c92_cs.ko wavelan_cs.ko wvlan_cs.ko xirc2ps_cs.ko xircom_cb.ko xircom_tulip_cb.ko ppp_async.ko ppp_deflate.ko ppp_generic.ko ppp_synctty.ko wavelan.ko wd.ko winbond-840.ko airo_cs.ko airo.ko hermes.ko orinoco_cs.ko orinoco.ko orinoco_plx.ko orinoco_old_cs.ko de600.ko de620.ko defxx.ko depca.ko hp100.ko hp.ko hp-plus.ko ne3210.ko ne.ko netwave_cs.ko ipw2100.ko proteon.ko skisa.ko"
 OPENQRM_DEFAULT_INITRD_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-default.tgz"
 OPENQRM_SERVER_LINUXRC="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-linuxrc"
 OPENQRM_MAX_INITRD_SIZE=128000
@@ -60,7 +60,7 @@ function openqrm_server_create_kernel() {
 	mkdir -p $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/lib/modules/$OPENQRM_SERVER_KERNEL_VERSION
 	for MODULE in `find $OPENQRM_SERVER_KERNEL_LOCATION/lib/modules/$OPENQRM_SERVER_KERNEL_VERSION/kernel/drivers/net -type f | grep -v wireless`; do
 		MODULE_NAME=`echo $MODULE | sed -e "s/.*\///"`
-		if ! echo $OPENQRM_QRM_UNWANTED_MODULES | grep $MODULE_NAME 1>/dev/null; then
+		if ! echo $OPENQRM_UNWANTED_MODULES | grep $MODULE_NAME 1>/dev/null; then
 			/bin/cp -f $MODULE $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/lib/modules/$OPENQRM_SERVER_KERNEL_VERSION
 		fi
 	done
