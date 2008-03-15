@@ -6,6 +6,9 @@
 # iscsi-deployment
 # Required defines in the image_deploy_paramters
 #
+# IMAGE_TARGET						- target name of the Iscsi-target server
+#									  where the image is located
+#
 #
 # Optional parameters 
 # IMAGE_NFS_MOUNT_OPTIONS			- can be e.g. set to proto=tcp for the install/transform phase
@@ -48,25 +51,24 @@ function mount_rootfs() {
 	# get the iscsiadm via wget from the openQRM-servers boot-service dir
 
 	# load iscsi related modules
-	#modprobe iscsi-....... 1>/dev/null 2>&1
+	modprobe iscsi_tcp libiscsi scsi_transport_iscsi scsi_mod sg sd_mod ib_iser
 
 	# create config /etc/iscsi/iscsid.conf
+	mkdir -p /etc/iscsi/
+	cat >> /etc/iscsi/iscsid.conf << EOF
+node.startup = manual
+node.session.timeo.replacement_timeout = 120
+node.conn[0].timeo.login_timeout = 15
+node.conn[0].timeo.logout_timeout = 15
+node.conn[0].timeo.noop_out_interval = 10
+node.conn[0].timeo.noop_out_timeout = 15
+node.session.iscsi.InitialR2T = No
+node.session.iscsi.ImmediateData = Yes
+node.session.iscsi.FirstBurstLength = 262144
+node.session.iscsi.MaxBurstLength = 16776192
+node.conn[0].iscsi.MaxRecvDataSegmentLength = 65536
 
-	#node.startup = automatic
-	#node.session.auth.username = MY-ISCSI-USER
-	#node.session.auth.password = MY-ISCSI-PASSWORD
-	#discovery.sendtargets.auth.username = MY-ISCSI-USER
-	#discovery.sendtargets.auth.password = MY-ISCSI-PASSWORD
-	#node.session.timeo.replacement_timeout = 120
-	#node.conn[0].timeo.login_timeout = 15
-	#node.conn[0].timeo.logout_timeout = 15
-	#node.conn[0].timeo.noop_out_interval = 10
-	#node.conn[0].timeo.noop_out_timeout = 15
-	#node.session.iscsi.InitialR2T = No
-	#node.session.iscsi.ImmediateData = Yes
-	#node.session.iscsi.FirstBurstLength = 262144
-	#node.session.iscsi.MaxBurstLength = 16776192
-	#node.conn[0].iscsi.MaxRecvDataSegmentLength = 65536
+EOF
 
 	# start syslog + klogd
 	syslogd &
@@ -74,9 +76,14 @@ function mount_rootfs() {
 
 	# start iscsid
 	/sbin/iscsid &
+	sleep 2
 
 	# discover
-	#iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip
+	echo "iscsi-deployment: Discoverying Iscsi-target $image_storage_server_ip:3260"
+	iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260
+
+	# login
+	iscsiadm -m node -T $IMAGE_TARGET -p $image_storage_server_ip:3260 --login
 
 	# finallly mount
 	if ! mount -t $image_rootfstype $image_rootdevice /mnt; then
