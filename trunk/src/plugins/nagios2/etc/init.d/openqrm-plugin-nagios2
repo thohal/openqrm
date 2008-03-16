@@ -1,0 +1,78 @@
+#!/bin/bash
+# init script for the openQRM nagios2 plugin
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/include/openqrm-plugin-nagios2-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/etc/openqrm-plugin-nagios2.conf
+
+function openqrm_plugin_nagios2_start() {
+	echo "Starting the openQRM nagios2-plugin"
+	openqrm_plugin_nagios2_stop 1>/dev/null 2>&1
+	# on debian/ubuntu nagios2 ver.3 is named nagios23
+	if [ -x /usr/sbin/nagios23 ]; then
+		/usr/sbin/nagios23 -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/nagios2.leases 2>&1 | logger
+	elif [ -x /usr/sbin/nagios2 ]; then
+		/usr/sbin/nagios2 -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/nagios2.leases 2>&1 | logger
+	else
+		echo "ERROR: Could not find the nagios2 (ver.3) binary"
+		exit 1
+	fi
+}
+
+
+function openqrm_plugin_nagios2_stop() {
+	echo "Stopping the openQRM nagios2 plugin"
+	killall nagios2 1>/dev/null 2>&1
+	killall nagios23 1>/dev/null 2>&1
+	return 0
+}
+
+
+function openqrm_plugin_nagios2_init() {
+	echo "Initializing the openQRM nagios2 plugin"
+	
+
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+
+	return 0
+}
+
+
+function openqrm_plugin_nagios2_uninstall() {
+	echo "Uninstalling the openQRM nagios2 plugin"
+	openqrm_plugin_nagios2_stop
+	# unlinking the web dir
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+}
+
+
+
+case "$1" in
+	start)
+		openqrm_plugin_nagios2_start
+		;;
+	stop)
+		openqrm_plugin_nagios2_stop
+		;;
+	restart)
+		openqrm_plugin_nagios2_stop
+		sleep 1
+		openqrm_plugin_nagios2_start
+		;;
+	init)
+		openqrm_plugin_nagios2_init
+		;;
+	uninstall)
+		openqrm_plugin_nagios2_uninstall
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+

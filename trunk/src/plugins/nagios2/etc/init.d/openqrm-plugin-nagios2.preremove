@@ -1,0 +1,3 @@
+#!/bin/bash
+# this is the openqrm-plugin-nagios2 preremove script
+`dirname $0`/openqrm-plugin-nagios2 stop
