@@ -79,7 +79,7 @@ function remount_rootfs() {
 	while ! mount -t nfs -o ro,remount,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_ROOT_DIR /mnt; do
 		echo -n "."
 		sleep 1
-		REMOUNT_LOOP=$( REMOUNT_LOOP + 1 )
+		REMOUNT_LOOP=$[ REMOUNT_LOOP + 1 ]
 		if [ "$REMOUNT_LOOP" == "10" ]; then
 			echo "ERROR: nfs-deployment could not remount /mnt "
 			/bin/bash

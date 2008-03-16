@@ -77,7 +77,7 @@ function remount_rootfs() {
 	while ! mount -t $image_rootfstype -o ro,remount $image_rootdevice /mnt; do
 		echo -n "."
 		sleep 1
-		REMOUNT_LOOP=$( REMOUNT_LOOP + 1 )
+		REMOUNT_LOOP=$[ REMOUNT_LOOP + 1 ]
 		if [ "$REMOUNT_LOOP" == "10" ]; then
 			echo "ERROR: local-deployment could not remount /mnt "
 			/bin/bash
