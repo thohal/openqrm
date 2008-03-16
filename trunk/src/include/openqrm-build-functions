@@ -279,6 +279,8 @@ EOF
 	echo "passwd:     files" > nsswitch.conf
 	echo "shadow:     files" >> nsswitch.conf
 	echo "group:      files" >> nsswitch.conf
+	# cp libnss
+	cp -aR /lib/libnss_* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/	
 	# installing hwdata, libkudzu and hwsetup
 	cp -aR $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwdata-knoppix/hwdata-install/* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
 	cp -a $OPENQRM_SOURCE_KUDZU_DIR/libkudzu.a $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
@@ -380,8 +382,15 @@ function openqrm_create_default_kernel() {
 			cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
 			ar -x $KERNEL_FILE
 			rm -f control.tar.gz debian-binary $KERNEL_FILE
-			tar -xzf data.tar.gz
-			rm -f data.tar.gz
+			if [ -f ./data.tar.bz2 ]; then
+				tar -xjf data.tar.bz2
+				rm -f data.tar.bz2
+			elif [ -f ./data.tar.tgz ]; then
+				tar -xzf ./data.tar.tgz
+			else
+				echo "ERROR: could not unpack data file"
+				exit 1
+			fi
 		else
 		# we have a rpm as kernel file
 			cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
