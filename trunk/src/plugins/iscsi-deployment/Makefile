@@ -17,6 +17,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-deployment/web
 	. $(OPENQRM_SERVER_CONF) && cp web/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-deployment/web/
 	. $(OPENQRM_SERVER_CONF) && cp web/*.iscsi-deployment $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-deployment/web/
+	. $(OPENQRM_SERVER_CONF) && cp web/*.html $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-deployment/web/
 
 uninstall:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make uninstall' as root" && exit 1)

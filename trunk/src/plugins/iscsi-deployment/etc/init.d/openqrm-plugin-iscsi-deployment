@@ -31,6 +31,7 @@ function openqrm_plugin_iscsi-deployment_uninstall() {
 	openqrm_plugin_iscsi-deployment_stop
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.iscsi-deployment
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.iscsi-menu.html
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsid
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsiadm
 }
@@ -41,7 +42,9 @@ function openqrm_plugin_iscsi-deployment_init() {
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-deployment/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
 	# linking the boot-service
 	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-deployment/web/root-mount.iscsi-deployment
-	ln -s $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-deployment/web/root-mount.iscsi-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.iscsi-deployment
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-deployment/web/root-mount.iscsi-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.iscsi-deployment
+	# linking the image-menu
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-deployment/web/image-deployment-parameter.iscsi-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.iscsi-menu.html
 	# copying iscsid to boot-service dir
 	cp -f `which iscsid` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
 	# copying iscsiadm to boot-service dir
