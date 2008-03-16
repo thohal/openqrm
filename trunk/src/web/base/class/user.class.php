@@ -217,6 +217,8 @@ var $_role_table = '';
 					"'.$this->state.'"
 				)
 		';
+		
+		$this->change_htpasswd('insert');
 		return openqrm_db_get_result($query);
 	}
 	//-----------------------------------------------------------------------------------
@@ -225,6 +227,7 @@ var $_role_table = '';
 		$strSet = '';
 		if($this->password != '') {
 			$strSet .= '`user_password` = "'.$this->password.'",';
+			$this->change_htpasswd('update');
 		}
 			$strSet .= '`user_gender` = "'.$this->gender.'",';
 			$strSet .= '`user_first_name` = "'.$this->first_name.'",';
@@ -253,6 +256,7 @@ var $_role_table = '';
 			WHERE user_name = '".$this->name."'
 			LIMIT 1
 		";
+		$this->change_htpasswd('delete');
 		return openqrm_db_get_result($query);
 	}
 	//-----------------------------------------------------------------------------------
@@ -298,7 +302,6 @@ var $_role_table = '';
 		$result = openqrm_db_get_result_double($query);
 		return $result;
 	}
-	
 	//-----------------------------------------------------------------------------------
     function check_string_name($name) {
 		if (ereg("^[A-Za-z0-9]*$", $name) === false) {
@@ -314,6 +317,52 @@ var $_role_table = '';
 		} else {
 			return '';
 		}
+	}
+	//-----------------------------------------------------------------------------------
+	/**
+	* Change htpassswd
+	* @access private
+	* @param $mode [update, delete, insert] 
+	*/
+    function change_htpasswd($mode = 'update') {
+	global $RootDir;
+
+		$ar_values = array();
+		
+		$handle = fopen ($RootDir.'/.htpasswd', "r");
+		while (!feof($handle)) {
+			$tmp = explode(':', fgets($handle, 4096));
+			if($tmp[0] != '') {
+				$ar_values[$tmp[0]] = $tmp[1];
+			}
+		}
+		fclose ($handle);
+
+		$handle = fopen ($RootDir.'/.htpasswd', "w+");
+		
+		if($mode == 'insert') {
+			foreach($ar_values as $key => $value) {
+				fputs($handle, "$key:$value");
+			}
+			fputs($handle, $this->name.':'.crypt($this->password)."\n");
+		}
+		if($mode == 'update') {
+			foreach($ar_values as $key => $value) {
+				if($key == $this->name) { 
+					fputs($handle, $this->name.':'.crypt($this->password)."\n"); 
+				} else {
+					fputs($handle, "$key:$value");
+				}
+			}
+		}
+		if($mode == 'delete') {
+			foreach($ar_values as $key => $value) {
+				if($key != $this->name) { 
+					fputs($handle, "$key:$value");
+				}
+			}
+		}
+		fclose ($handle);
 	}	
 	//-----------------------------------------------------------------------------------
     function get_users() {
@@ -323,11 +372,16 @@ var $_role_table = '';
 				user_id,
 				user_first_name,
 				user_last_name,
-				user_role
-			FROM '.$this->_user_table.'
+				role_name
+			FROM '.$this->_user_table.', '.$this->_role_table.'
+			WHERE user_role = role_id
 			ORDER BY user_name
 		';
-		$result = openqrm_db_get_result($query);
+		$ar_db = openqrm_db_get_result($query);
+		$ar_headline = array();
+		$ar_headline[] = array('Login', 'ID', 'First Name', 'Last Name', 'Role');		
+		$result = array_merge($ar_headline, $ar_db);
+		
 		return $result;
 	}	
 	//-----------------------------------------------------------------------------------	
@@ -339,6 +393,6 @@ var $_role_table = '';
 		else
 			return '';
 	}
-	
+
 }
 ?>

@@ -36,6 +36,8 @@ $GLOBALS['html_state'] = htmlobject_input('state', $user->state, 'text', 20);
 
 }
 
+// Delete User step 2
+//---------------------------------------------------------
 if(htmlobject_request('delete') == 1) {
 
 $account_output = '
@@ -54,7 +56,10 @@ Really delete user <strong>'.htmlobject_request('name').'</strong> ?
 </form>
 ';
 
-} else {
+} 
+// Standard Output
+//---------------------------------------------------------
+else {
 
 html_elements();
 
@@ -102,15 +107,24 @@ if(strtolower($OPENQRM_USER->role) == 'administrator') {
 	$ar_edit = array();
 	$ar_users = $user->get_users();
 
+	$i = 0;
 	foreach ($ar_users as $ar) {
 	$tmp = '';
+	if($i == 0) {
+		foreach ($ar as $val) {
+			$tmp .= '<th class="th">'.$val.'</th>';
+		}
+		$ar_edit[] = '<tr>';
+		$ar_edit[] = $tmp;
+		$ar_edit[] = '</tr>';
+	} else {
 		foreach ($ar as $val) {
 			$text = $val['value'];
 			if($text == '') { $text = '&#160;'; }
-			$tmp .= '<td class="'. $val['label'] .' div_td">'.$text.'</td>';
+			$tmp .= '<td class="'. $val['label'] .' td">'.$text.'</td>';
 		}
 		$ar_edit[] = '
-			<tr class="div_tr"
+			<tr class="tr"
 				onmouseover="this.style.backgroundColor = \'#eeeeee\';"
 				onmouseout="this.style.backgroundColor = \'transparent\'";
 				onclick="location.href=\''.$thisfile.'?currenttab=tab0&name='.$ar[0]['value'].'\';">
@@ -118,12 +132,14 @@ if(strtolower($OPENQRM_USER->role) == 'administrator') {
 		$ar_edit[] = $tmp;
 		$ar_edit[] = '</tr>';
 	}
+	$i++;	
+	}
 
 	$edit_user_output = "
 	<form action=\"$thisfile\" method=\"post\">
 	<input type=\"hidden\" name=\"currenttab\" value=\"tab1\">
 	<input type=\"hidden\" name=\"action\" value=\"user_edit\">
-	<table cellpadding=\"0\" cellspacing=\"0\">
+	<table class=\"table\" cellspacing=\"0\">
 	";
 	
 	foreach ( $ar_edit as $res ) {
@@ -136,6 +152,7 @@ if(strtolower($OPENQRM_USER->role) == 'administrator') {
 	";
 	$output[] = array('label' => 'Edit User', 'value' => $edit_user_output);
 
+	// Restet user to recive empty form
 	//---------------------------------------------------------
 	$user->id['value'] = '';
 	$user->name['value'] = '';

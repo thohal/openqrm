@@ -143,11 +143,23 @@ z-index:100;
 font-weight:bold;
 color:red;
 }
-.div_tr {
+.table {
+border-spacing:0px;
+border-top: 1px solid #91a7b4; 
+border-left: 1px solid #91a7b4;
+}
+.tr {
 cursor:pointer; 
 border-left: 1px solid #91a7b4;
 }
-.div_td {
+.td {
+margin:0;
+padding:5px !important;
+border-bottom: 1px solid #91a7b4;
+border-right: 1px solid #91a7b4;
+}
+.th {
+margin:0;
 padding:5px !important;
 border-bottom: 1px solid #91a7b4;
 border-right: 1px solid #91a7b4;
