@@ -45,13 +45,20 @@ fi
 
 function mount_rootfs() {
 
-	# NOTICE !! not yet fully implemented !
-
 	# get iscsid via wget from the openQRM-servers boot-service dir
+	wget -q -O /sbin/iscsid http://$resource_openqrmserver/openqrm/boot-service/iscsid
 	# get the iscsiadm via wget from the openQRM-servers boot-service dir
+	wget -q -O /sbin/iscsiadm http://$resource_openqrmserver/openqrm/boot-service/iscsiadm
+	chmod +x /sbin/iscsi*
 
 	# load iscsi related modules
-	modprobe iscsi_tcp libiscsi scsi_transport_iscsi scsi_mod sg sd_mod ib_iser
+	modprobe iscsi_tcp
+	modprobe libiscsi
+	modprobe scsi_transport_iscsi
+	modprobe scsi_mod
+	modprobe sg
+	modprobe sd_mod
+	modprobe ib_iser
 
 	# create config /etc/iscsi/iscsid.conf
 	mkdir -p /etc/iscsi/
@@ -68,6 +75,11 @@ node.session.iscsi.FirstBurstLength = 262144
 node.session.iscsi.MaxBurstLength = 16776192
 node.conn[0].iscsi.MaxRecvDataSegmentLength = 65536
 
+EOF
+
+	# create /etc/iscsi/initiatorname.iscsi
+	cat >> /etc/iscsi/initiatorname.iscsi << EOF
+InitiatorName=iqn.1993-08.org.debian:01:31721e7e6b8f
 EOF
 
 	# start syslog + klogd
@@ -114,11 +126,12 @@ EOF
 
 function remount_rootfs() {
 
+	REMOUNT_LOOP=0
 	# remont /mnt ro
-	while ! mount -t $image_rootfstype $image_rootdevice /mnt; do
+	while ! mount -t $image_rootfstype -o ro,remount $image_rootdevice /mnt; do
 		echo -n "."
 		sleep 1
-		REMOUNT_LOOP=$( REMOUNT_LOOP + 1 )
+		REMOUNT_LOOP=$[ REMOUNT_LOOP + 1 ]
 		if [ "$REMOUNT_LOOP" == "10" ]; then
 			echo "ERROR: iscsi-deployment could not remount /mnt "
 			/bin/bash
