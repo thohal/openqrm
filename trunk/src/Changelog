@@ -16,3 +16,8 @@
 20.1.2008	-	Matt	-	cleaned-up init process on the initrd
 							made reboot/halt working
 21.1.2008	-	Matt	-	added basic monitoring framework
+16.3.2008	-	Matt&Sascha	major updates on the basic framework
+							introduced user management and plugg-ability
+							added local, nfs and iscsi deployment types (also plugg-able)
+							added appliance based deployment mechanism
+							
