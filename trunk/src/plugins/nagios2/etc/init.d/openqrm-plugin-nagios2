@@ -11,10 +11,10 @@ function openqrm_plugin_nagios2_start() {
 	echo "Starting the openQRM nagios2-plugin"
 	openqrm_plugin_nagios2_stop 1>/dev/null 2>&1
 	# on debian/ubuntu nagios2 ver.3 is named nagios23
-	if [ -x /usr/sbin/nagios23 ]; then
-		/usr/sbin/nagios23 -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/nagios2.leases 2>&1 | logger
-	elif [ -x /usr/sbin/nagios2 ]; then
+	if [ -x /usr/sbin/nagios2 ]; then
 		/usr/sbin/nagios2 -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/nagios2.leases 2>&1 | logger
+	elif [ -x /usr/sbin/nagios2 ]; then
+		/usr/sbin/nagios -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/nagios2.leases 2>&1 | logger
 	else
 		echo "ERROR: Could not find the nagios2 (ver.3) binary"
 		exit 1
