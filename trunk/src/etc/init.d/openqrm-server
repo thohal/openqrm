@@ -99,6 +99,7 @@ function openqrm_server_init() {
 	htpasswd -bc $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd openqrm openqrm
 	# create the default anonymous user
 	htpasswd -b $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd anonymous openqrm
+	chmod 666 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd
 
 	# here we add the default kernel+kernel-version to the openQRM-server
 	# via the kernel-action.form. If this returns bad something is wrong
