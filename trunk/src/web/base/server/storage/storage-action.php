@@ -23,6 +23,7 @@ global $DEPLOYMENT_INFO_TABLE;
 
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {
+	syslog(LOG_ERR, "openQRM-engine: Un-Authorized access to storage-actions from $OPENQRM_USER->name!");
 	exit();
 }
 
@@ -46,24 +47,23 @@ foreach ($_REQUEST as $key => $value) {
 }
 
 
+	syslog(LOG_NOTICE, "openQRM-engine: Processing command $storage_command on storage $storage_name");
+
 	switch ($storage_command) {
 		case 'new_storage':
 			$storage = new storage();
 			$storage_fields["storage_id"]=openqrm_db_get_free_id('storage_id', $STORAGE_INFO_TABLE);
 			$storage->add($storage_fields);
-			// echo "Added storage $storage_name/$storage_version to the openQRM-database";
 			break;
 
 		case 'remove':
 			$storage = new storage();
 			$storage->remove($storage_id);
-			// echo "Removed storage $storage_id from the openQRM-database";
 			break;
 
 		case 'remove_by_name':
 			$storage = new storage();
 			$storage->remove_by_name($storage_name);
-			// echo "Removed storage $storage_name from the openQRM-database";
 			break;
 
 

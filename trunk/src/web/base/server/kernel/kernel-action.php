@@ -21,10 +21,12 @@ global $KERNEL_INFO_TABLE;
 
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {
+	syslog(LOG_ERR, "openQRM-engine: Un-Authorized access to kernel-actions from $OPENQRM_USER->name!");
 	exit();
 }
 
 $kernel_id = $_REQUEST["kernel_id"];
+$kernel_name = $_REQUEST["kernel_name"];
 $kernel_version = $_REQUEST["kernel_version"];
 $kernel_fields = array();
 foreach ($_REQUEST as $key => $value) {
@@ -40,24 +42,22 @@ $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 
 global $OPENQRM_SERVER_IP_ADDRESS;
 
+	syslog(LOG_NOTICE, "openQRM-engine: Processing command $kernel_command for kernel $kernel_name");
 	switch ($kernel_command) {
 		case 'new_kernel':
 			$kernel = new kernel();
 			$kernel_fields["kernel_id"]=openqrm_db_get_free_id('kernel_id', $KERNEL_INFO_TABLE);
 			$kernel->add($kernel_fields);
-			// echo "Added kernel $kernel_name/$kernel_version to the openQRM-database";
 			break;
 
 		case 'remove':
 			$kernel = new kernel();
 			$kernel->remove($kernel_id);
-			// echo "Removed kernel $kernel_id from the openQRM-database";
 			break;
 
 		case 'remove_by_name':
 			$kernel = new kernel();
 			$kernel->remove_by_name($kernel_name);
-			// echo "Removed kernel $kernel_name from the openQRM-database";
 			break;
 
 		default:

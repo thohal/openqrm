@@ -21,6 +21,7 @@ require_once "$RootDir/class/openqrm_server.class.php";
 $user = new user($_SERVER['PHP_AUTH_USER']);
 $user->set_user();
 if ($OPENQRM_USER->role != "administrator") {
+	syslog(LOG_ERR, "openQRM-engine: Un-Authorized access to plugin-actions from $OPENQRM_USER->name!");
 	exit();
 }
 
@@ -28,7 +29,8 @@ $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 
 global $OPENQRM_SERVER_IP_ADDRESS;
-// echo "... processing command $plugin_command for plugin $plugin_name <br>";
+
+	syslog(LOG_NOTICE, "openQRM-engine: Processing command $plugin_command for plugin $plugin_name");
 	switch ($plugin_command) {
 	
 		// init_plugin needs :
