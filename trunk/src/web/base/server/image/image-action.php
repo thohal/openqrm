@@ -70,6 +70,15 @@ foreach ($_REQUEST as $key => $value) {
 			echo "Added image $image_name/$image_version to the openQRM-database";
 			break;
 
+		case 'update_image':
+			$image = new image();
+			if(!strlen($image_fields["image_isshared"])) {
+				$image_fields["image_isshared"]="0";
+			}
+			$image->update($image_id, $image_fields);
+			echo "updated image $image_id $image_name/$image_version in the openQRM-database";
+			break;
+
 		case 'remove':
 			$image = new image();
 			$image->remove($image_id);
