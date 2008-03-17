@@ -115,15 +115,11 @@ function storage_form() {
 }
 
 
-// user/role authentication
-$user = new user($_SERVER['PHP_AUTH_USER']);
-$user->set_user();
-
 $output = array();
 // all user
 $output[] = array('label' => 'Storage-List', 'value' => storage_display(""));
 // if admin
-if ($user->role == "administrator") {
+if ($OPENQRM_USER->role == "administrator") {
 	$output[] = array('label' => 'New', 'value' => storage_form());
 	$output[] = array('label' => 'Storage-Admin', 'value' => storage_display("admin"));
 }

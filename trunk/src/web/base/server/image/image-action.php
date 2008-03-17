@@ -4,10 +4,8 @@
 <?php
 	$dep_is_selected = $_REQUEST["dep_is_selected"];
 	$image_type = $_REQUEST["image_type"];
-
-	
 	if (!strlen($dep_is_selected)) {
-		echo "<meta http-equiv=\"refresh\" content=\"3; URL=image-overview.php\">";
+		echo "<meta http-equiv=\"refresh\" content=\"0; URL=image-overview.php?currenttab=tab2&strMsg=Processing image command\">";
 	} else {
 		echo "<meta http-equiv=\"refresh\" content=\"0; URL=image-overview.php?currenttab=tab1&dep_is_selected=$dep_is_selected&image_type=$image_type&strMsg=Image-type-loaded\">";
 		exit();
@@ -29,9 +27,7 @@ global $IMAGE_INFO_TABLE;
 global $DEPLOYMENT_INFO_TABLE;
 
 // user/role authentication
-$user = new user($_SERVER['PHP_AUTH_USER']);
-$user->set_user();
-if ($user->role != "administrator") {
+if ($OPENQRM_USER->role != "administrator") {
 	exit();
 }
 
@@ -67,7 +63,7 @@ foreach ($_REQUEST as $key => $value) {
 			$deployment_switch->get_instance_by_id($image_type);
 			$image_fields["image_type"] = $deployment_switch->type;
 			$image->add($image_fields);
-			echo "Added image $image_name/$image_version to the openQRM-database";
+			// echo "Added image $image_name/$image_version to the openQRM-database";
 			break;
 
 		case 'update_image':
@@ -76,32 +72,32 @@ foreach ($_REQUEST as $key => $value) {
 				$image_fields["image_isshared"]="0";
 			}
 			$image->update($image_id, $image_fields);
-			echo "updated image $image_id $image_name/$image_version in the openQRM-database";
+			// echo "updated image $image_id $image_name/$image_version in the openQRM-database";
 			break;
 
 		case 'remove':
 			$image = new image();
 			$image->remove($image_id);
-			echo "Removed image $image_id from the openQRM-database";
+			// echo "Removed image $image_id from the openQRM-database";
 			break;
 
 		case 'remove_by_name':
 			$image = new image();
 			$image->remove_by_name($image_name);
-			echo "Removed image $image_name from the openQRM-database";
+			// echo "Removed image $image_name from the openQRM-database";
 			break;
 
 		case 'add_deployment_type':
 			$deployment = new deployment();
 			$deployment_fields["deployment_id"]=openqrm_db_get_free_id('deployment_id', $DEPLOYMENT_INFO_TABLE);
 			$deployment->add($deployment_fields);
-			echo "Added deployment type $deployment_name to the openQRM-database";
+			// echo "Added deployment type $deployment_name to the openQRM-database";
 			break;
 
 		case 'remove_deployment_type':
 			$deployment = new deployment();
 			$deployment->remove_by_type($deployment_type);
-			echo "Removed deployment type $deployment_type from the openQRM-database";
+			// echo "Removed deployment type $deployment_type from the openQRM-database";
 			break;
 
 		default:

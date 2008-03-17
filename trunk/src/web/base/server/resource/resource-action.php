@@ -1,7 +1,12 @@
+<?php
+$resource_command = $_REQUEST["resource_command"];
+$resource_id = $_REQUEST["resource_id"];
+?>
+
 <html>
 <head>
 <title>openQRM Resource actions</title>
-<meta http-equiv="refresh" content="3; URL=resource-overview.php">
+<meta http-equiv="refresh" content="0; URL=resource-overview.php?currenttab=tab1&strMsg=Processing <?php echo $resource_command; ?> on <?php echo $resource_id; ?>">
 </head>
 <body>
 
@@ -17,14 +22,10 @@ require_once "$RootDir/class/openqrm_server.class.php";
 global $RESOURCE_INFO_TABLE;
 
 // user/role authentication
-$user = new user($_SERVER['PHP_AUTH_USER']);
-$user->set_user();
-if ($user->role != "administrator") {
+if ($OPENQRM_USER->role != "administrator") {
 	exit();
 }
 
-$resource_command = $_REQUEST["resource_command"];
-$resource_id = $_REQUEST["resource_id"];
 $resource_mac = $_REQUEST["resource_mac"];
 $resource_ip = $_REQUEST["resource_ip"];
 $resource_state = $_REQUEST["resource_state"];
@@ -48,7 +49,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		case 'new_resource':
 			$resource = new resource();
 			if ($resource->exists($resource_mac)) {
-				echo "Resource $resource_mac already exist in the openQRM-database!";
+				// echo "Resource $resource_mac already exist in the openQRM-database!";
 				exit();
 			}
 			if ("$resource_id" == "-1") {
@@ -59,7 +60,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 				if ($resource->is_id_free($resource_id)) {			
 					$new_resource_id=$resource_id;
 				} else {
-					echo "Given resource id $resource_id is already in use!";
+					// echo "Given resource id $resource_id is already in use!";
 					exit();
 				}
 			}
@@ -69,7 +70,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$resource_fields["resource_id"]=$new_resource_id;
 			$resource_fields["resource_localboot"]=0;
 			$resource->add($resource_fields);
-			echo "Added new resource $new_resource_id/$resource_mac to the openQRM-database";
+			// echo "Added new resource $new_resource_id/$resource_mac to the openQRM-database";
 //			$resource->get_parameter($new_resource_id);
 
 			break;
@@ -82,7 +83,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			// remove from openQRM database
 			$resource = new resource();
 			$resource->remove($resource_id, $resource_mac);
-			echo "Removed resource $resource_id/$resource_mac from the openQRM-database";
+			// echo "Removed resource $resource_id/$resource_mac from the openQRM-database";
 			break;
 
 		// localboot requires :
@@ -94,7 +95,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			// update db
 			$resource = new resource();
 			$resource->set_localboot($resource_id, 1);
-			echo "Configured resource $resource_id for local-boot";
+			// echo "Configured resource $resource_id for local-boot";
 			break;
 			
 		// netboot requires :
@@ -106,7 +107,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			// update db
 			$resource = new resource();
 			$resource->set_localboot($resource_id, 0);
-			echo "Configured resource $resource_id to net-boot";
+			// echo "Configured resource $resource_id to net-boot";
 			break;
 
 		// assign requires :
@@ -136,7 +137,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			// update openQRM database
 			$resource = new resource();
 			$resource->assign($resource_id, $kernel_id, $kernel_name, $image_id, $image_name);
-			echo "Assigned resource $resource_id to boot $kernel_name and use $image_name";
+			// echo "Assigned resource $resource_id to boot $kernel_name and use $image_name";
 			// echo "assigning finished, rebooting $resource_ip";
 			// reboot resource
 			$resource->send_command($resource_ip, "reboot");

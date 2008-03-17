@@ -56,15 +56,12 @@ function plugin_display($admin) {
 }
 
 
-// user/role authentication
-$user = new user($_SERVER['PHP_AUTH_USER']);
-$user->set_user();
 
 $output = array();
 // all users
 $output[] = array('label' => 'Plugin-List', 'value' => plugin_display(""));
 // if admin
-if ($user->role == "administrator") {
+if ($OPENQRM_USER->role == "administrator") {
 	$output[] = array('label' => 'Plugin-Manager', 'value' => plugin_display("admin"));
 }
 

@@ -151,15 +151,11 @@ function resource_form() {
 
 
 
-// user/role authentication
-$user = new user($_SERVER['PHP_AUTH_USER']);
-$user->set_user();
-
 $output = array();
 // all user
 $output[] = array('label' => 'Resource-List', 'value' => resource_display(""));
 // if admin
-if ($user->role == "administrator") {
+if ($OPENQRM_USER->role == "administrator") {
 	$output[] = array('label' => 'New', 'value' => resource_form());
 	$output[] = array('label' => 'Resource-Admin', 'value' => resource_display("admin"));
 }

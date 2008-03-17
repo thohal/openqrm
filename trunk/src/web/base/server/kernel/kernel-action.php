@@ -1,7 +1,12 @@
+<?php
+$kernel_command = $_REQUEST["kernel_command"];
+$kernel_name = $_REQUEST["kernel_name"];
+?>
+
 <html>
 <head>
 <title>openQRM Kernel actions</title>
-<meta http-equiv="refresh" content="3; URL=kernel-overview.php">
+<meta http-equiv="refresh" content="0; URL=kernel-overview.php?currenttab=tab2&strMsg=Processing <?php echo $kernel_command; ?> on <?php echo $kernel_name; ?>">
 </head>
 <body>
 
@@ -15,15 +20,11 @@ require_once "$RootDir/class/openqrm_server.class.php";
 global $KERNEL_INFO_TABLE;
 
 // user/role authentication
-$user = new user($_SERVER['PHP_AUTH_USER']);
-$user->set_user();
-if ($user->role != "administrator") {
+if ($OPENQRM_USER->role != "administrator") {
 	exit();
 }
 
-$kernel_command = $_REQUEST["kernel_command"];
 $kernel_id = $_REQUEST["kernel_id"];
-$kernel_name = $_REQUEST["kernel_name"];
 $kernel_version = $_REQUEST["kernel_version"];
 $kernel_fields = array();
 foreach ($_REQUEST as $key => $value) {
@@ -44,19 +45,19 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$kernel = new kernel();
 			$kernel_fields["kernel_id"]=openqrm_db_get_free_id('kernel_id', $KERNEL_INFO_TABLE);
 			$kernel->add($kernel_fields);
-			echo "Added kernel $kernel_name/$kernel_version to the openQRM-database";
+			// echo "Added kernel $kernel_name/$kernel_version to the openQRM-database";
 			break;
 
 		case 'remove':
 			$kernel = new kernel();
 			$kernel->remove($kernel_id);
-			echo "Removed kernel $kernel_id from the openQRM-database";
+			// echo "Removed kernel $kernel_id from the openQRM-database";
 			break;
 
 		case 'remove_by_name':
 			$kernel = new kernel();
 			$kernel->remove_by_name($kernel_name);
-			echo "Removed kernel $kernel_name from the openQRM-database";
+			// echo "Removed kernel $kernel_name from the openQRM-database";
 			break;
 
 		default:

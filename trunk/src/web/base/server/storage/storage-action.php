@@ -1,7 +1,12 @@
+<?php
+$storage_command = $_REQUEST["storage_command"];
+$storage_name = $_REQUEST["storage_name"];
+?>
+
 <html>
 <head>
 <title>openQRM Storage actions</title>
-<meta http-equiv="refresh" content="3; URL=storage-overview.php">
+<meta http-equiv="refresh" content="0; URL=storage-overview.php?currenttab=tab1&strMsg=Processing <?php echo $storage_command; ?> on <?php echo $storage_name; ?>">
 </head>
 <body>
 
@@ -17,15 +22,11 @@ global $IMAGE_INFO_TABLE;
 global $DEPLOYMENT_INFO_TABLE;
 
 // user/role authentication
-$user = new user($_SERVER['PHP_AUTH_USER']);
-$user->set_user();
-if ($user->role != "administrator") {
+if ($OPENQRM_USER->role != "administrator") {
 	exit();
 }
 
-$storage_command = $_REQUEST["storage_command"];
 $storage_id = $_REQUEST["storage_id"];
-$storage_name = $_REQUEST["storage_name"];
 $storage_fields = array();
 foreach ($_REQUEST as $key => $value) {
 	if (strncmp($key, "storage_", 8) == 0) {
@@ -50,19 +51,19 @@ foreach ($_REQUEST as $key => $value) {
 			$storage = new storage();
 			$storage_fields["storage_id"]=openqrm_db_get_free_id('storage_id', $STORAGE_INFO_TABLE);
 			$storage->add($storage_fields);
-			echo "Added storage $storage_name/$storage_version to the openQRM-database";
+			// echo "Added storage $storage_name/$storage_version to the openQRM-database";
 			break;
 
 		case 'remove':
 			$storage = new storage();
 			$storage->remove($storage_id);
-			echo "Removed storage $storage_id from the openQRM-database";
+			// echo "Removed storage $storage_id from the openQRM-database";
 			break;
 
 		case 'remove_by_name':
 			$storage = new storage();
 			$storage->remove_by_name($storage_name);
-			echo "Removed storage $storage_name from the openQRM-database";
+			// echo "Removed storage $storage_name from the openQRM-database";
 			break;
 
 

@@ -1,7 +1,12 @@
+<?php
+$appliance_command = $_REQUEST["appliance_command"];
+$appliance_name = $_REQUEST["appliance_name"];
+?>
+
 <html>
 <head>
 <title>openQRM Appliance actions</title>
-<meta http-equiv="refresh" content="3; URL=appliance-overview.php">
+<meta http-equiv="refresh" content="0; URL=appliance-overview.php?currenttab=tab2&strMsg=Processing <?php echo $appliance_command; ?> on <?php echo $appliance_name; ?>">
 </head>
 <body>
 
@@ -16,15 +21,11 @@ require_once "$RootDir/class/openqrm_server.class.php";
 global $APPLIANCE_INFO_TABLE;
 
 // user/role authentication
-$user = new user($_SERVER['PHP_AUTH_USER']);
-$user->set_user();
-if ($user->role != "administrator") {
+if ($OPENQRM_USER->role != "administrator") {
 	exit();
 }
 
-$appliance_command = $_REQUEST["appliance_command"];
 $appliance_id = $_REQUEST["appliance_id"];
-$appliance_name = $_REQUEST["appliance_name"];
 $appliance_fields = array();
 foreach ($_REQUEST as $key => $value) {
 	if (strncmp($key, "appliance_", 10) == 0) {
@@ -49,33 +50,33 @@ foreach ($_REQUEST as $key => $value) {
 			$appliance = new appliance();
 			$appliance_fields["appliance_id"]=openqrm_db_get_free_id('appliance_id', $APPLIANCE_INFO_TABLE);
 			$appliance->add($appliance_fields);
-			echo "Added appliance $appliance_name to the openQRM-database";
+			// echo "Added appliance $appliance_name to the openQRM-database";
 			break;
 
 		case 'remove':
 			$appliance = new appliance();
 			$appliance->remove($appliance_id);
-			echo "Removed appliance $appliance_id from the openQRM-database";
+			// echo "Removed appliance $appliance_id from the openQRM-database";
 			break;
 
 		case 'remove_by_name':
 			$appliance = new appliance();
 			$appliance->remove_by_name($appliance_name);
-			echo "Removed appliance $appliance_name from the openQRM-database";
+			// echo "Removed appliance $appliance_name from the openQRM-database";
 			break;
 
 		case 'start':
 			$appliance = new appliance();
 			$appliance->get_instance_by_id($appliance_id);
 			$appliance->start();
-			echo "Started appliance $appliance_id";
+			// echo "Started appliance $appliance_id";
 			break;
 
 		case 'stop':
 			$appliance = new appliance();
 			$appliance->get_instance_by_id($appliance_id);
 			$appliance->stop();
-			echo "Stopped appliance $appliance_id";
+			// echo "Stopped appliance $appliance_id";
 			break;
 
 
