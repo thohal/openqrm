@@ -138,6 +138,7 @@ var $_role_table = '';
 		$this->state 			= $result[0][8]['value'];
 		$this->role 			= $result[0][9]['value'];
 		$this->last_update_time	= $result[0][10]['value'];
+		$this->password			= $result[0][11]['value'];
 		
 		$this->get_role_name();
 		$this->role = $this->role['label'];
