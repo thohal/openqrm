@@ -34,11 +34,10 @@ function plugin_display($admin) {
 			if ("$admin" == "admin") {
 				$disp = $disp."<a href=\"plugin-action.php?plugin_name=$plugin_name&plugin_command=init_plugin\">enable</a>";
 			}
+			$disp = $disp."<br>";	
 		}
-		$disp = $disp."<br>";	
 	}
 
-	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."Enabled plugins";
