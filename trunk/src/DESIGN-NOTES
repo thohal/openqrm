@@ -29,6 +29,8 @@ planned plugins :
 - lvs
 - nagios
 - help
+- lvm2-storage
+- netapp
 
 
 
