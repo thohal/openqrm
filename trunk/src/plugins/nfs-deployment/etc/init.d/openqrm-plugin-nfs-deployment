@@ -11,40 +11,28 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 
 
 function openqrm_plugin_nfs-deployment_start() {
-	local USERNAME=$1
-	local PASSWORD=$2
-	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
-		echo -n "nfs-deployment: Please give a username to start the plugin : "
-		read USERNAME
-		echo	
-		echo -n "nfs-deployment: Please give the password for user $USERNAME : "
-		read PASSWORD
-		echo
-	fi
 	echo "Starting the openQRM nfs-deployment-plugin"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD nfs "Nfs-root deployment"
 }
 
 
 function openqrm_plugin_nfs-deployment_stop() {
+	echo "Stopping the openQRM nfs-deployment-plugin"
+}
+
+function openqrm_plugin_nfs-deployment_uninstall() {
 	local USERNAME=$1
 	local PASSWORD=$2
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
-		echo -n "nfs-deployment: Please give a username to stop the plugin : "
+		echo -n "nfs-deployment: Please give a username to uninstall the plugin : "
 		read USERNAME
 		echo	
 		echo -n "nfs-deployment: Please give the password for user $USERNAME : "
 		read PASSWORD
 		echo
 	fi
-	echo "Stopping the openQRM nfs-deployment-plugin"
-	openqrm_server_remove_deployment_type $USERNAME $PASSWORD nfs
-
-}
-
-function openqrm_plugin_nfs-deployment_uninstall() {
 	echo "Uninstalling the openQRM nfs-deployment-plugin"
 	openqrm_plugin_nfs-deployment_stop
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD nfs
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.nfs-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.nfs-menu.html
@@ -52,7 +40,18 @@ function openqrm_plugin_nfs-deployment_uninstall() {
 }
 
 function openqrm_plugin_nfs-deployment_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "nfs-deployment: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "nfs-deployment: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
 	echo "Initializing the openQRM nfs-deployment-plugin"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD nfs "Nfs-root deployment"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-deployment/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
 	# linking the boot-service
@@ -67,10 +66,10 @@ PASS=$3
 
 case "$1" in
 	start)
-		openqrm_plugin_nfs-deployment_start $USER $PASS
+		openqrm_plugin_nfs-deployment_start
 		;;
 	stop)
-		openqrm_plugin_nfs-deployment_stop $USER $PASS
+		openqrm_plugin_nfs-deployment_stop
 		;;
 	restart)
 		openqrm_plugin_nfs-deployment_stop
@@ -78,10 +77,10 @@ case "$1" in
 		openqrm_plugin_nfs-deployment_start
 		;;
 	init)
-		openqrm_plugin_nfs-deployment_init
+		openqrm_plugin_nfs-deployment_init $USER $PASS
 		;;
 	uninstall)
-		openqrm_plugin_nfs-deployment_uninstall
+		openqrm_plugin_nfs-deployment_uninstall $USER $PASS
 		;;
 	*)
 		echo "Usage: $0 {start|stop|restart|init|uninstall}"

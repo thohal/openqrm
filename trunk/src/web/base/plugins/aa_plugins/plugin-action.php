@@ -35,28 +35,28 @@ echo "... processing command $plugin_command for plugin $plugin_name <br>";
 		// plugin_name
 		case 'init_plugin':
 			// send command to the openQRM-server
-			$openqrm_server->send_command("openqrm_server_plugin_command $plugin_name init");
+			$openqrm_server->send_command("openqrm_server_plugin_command $plugin_name init $OPENQRM_USER->name $OPENQRM_USER->password");
 			break;
 
 		// uninstall_plugin needs :
 		// plugin_name
 		case 'uninstall_plugin':
 			// send command to the openQRM-server
-			$openqrm_server->send_command("openqrm_server_plugin_command $plugin_name uninstall");
+			$openqrm_server->send_command("openqrm_server_plugin_command $plugin_name uninstall $OPENQRM_USER->name $OPENQRM_USER->password");
 			break;
 
 		// start_plugin needs :
 		// plugin_name
 		case 'start_plugin':
 			// send command to the openQRM-server
-			$openqrm_server->send_command("openqrm_server_plugin_command $plugin_name start $OPENQRM_USER->name $OPENQRM_USER->password");
+			$openqrm_server->send_command("openqrm_server_plugin_command $plugin_name start");
 			break;
 
 		// stop_plugin needs :
 		// plugin_name
 		case 'stop_plugin':
 			// send command to the openQRM-server
-			$openqrm_server->send_command("openqrm_server_plugin_command $plugin_name stop $OPENQRM_USER->name $OPENQRM_USER->password");
+			$openqrm_server->send_command("openqrm_server_plugin_command $plugin_name stop");
 			break;
 
 		default:
