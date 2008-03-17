@@ -9,20 +9,36 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-deployment/etc/openqrm-plugin-iscsi-deployment.conf
 
 
-# TODO
-# we must find a proper solution to start/stop 
-# the plugin with correct user-authentication
-# -> for now using openqrm user static
 
 function openqrm_plugin_iscsi-deployment_start() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "iscsi-deployment: Please give a username to start the plugin : "
+		read USERNAME
+		echo	
+		echo -n "iscsi-deployment: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
 	echo "Starting the openQRM iscsi-deployment-plugin"
-	openqrm_server_add_deployment_type openqrm openqrm iscsi "Iscsi-root deployment"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD iscsi "Iscsi-root deployment"
 }
 
 
 function openqrm_plugin_iscsi-deployment_stop() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "iscsi-deployment: Please give a username to stop the plugin : "
+		read USERNAME
+		echo	
+		echo -n "iscsi-deployment: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
 	echo "Stopping the openQRM iscsi-deployment-plugin"
-	openqrm_server_remove_deployment_type openqrm openqrm iscsi
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD iscsi
 
 }
 
@@ -52,13 +68,15 @@ function openqrm_plugin_iscsi-deployment_init() {
 	
 }
 
+USER=$2
+PASS=$3
 
 case "$1" in
 	start)
-		openqrm_plugin_iscsi-deployment_start
+		openqrm_plugin_iscsi-deployment_start $USER $PASS
 		;;
 	stop)
-		openqrm_plugin_iscsi-deployment_stop
+		openqrm_plugin_iscsi-deployment_stop $USER $PASS
 		;;
 	restart)
 		openqrm_plugin_iscsi-deployment_stop

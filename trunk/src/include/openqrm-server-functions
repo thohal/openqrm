@@ -272,10 +272,12 @@ function openqrm_assign_kernel() {
 function openqrm_server_plugin_command() {
 	local PLUGIN_NAME=$1
 	local PLUGIN_COMMAND=$2
+	local PLUGIN_USER=$3
+	local PLUGIN_PASS=$4
 	local PLUGIN_INIT_SCRIPT="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$PLUGIN_NAME/etc/init.d/openqrm-plugin-$PLUGIN_NAME"
 	if [ -x $PLUGIN_INIT_SCRIPT ]; then
-		echo "openQRM-server: $PLUGIN_COMMAND openQRM plugin $PLUGIN_NAME" | logger
-		$PLUGIN_INIT_SCRIPT $PLUGIN_COMMAND &
+		echo "openQRM-server: $PLUGIN_COMMAND openQRM plugin $PLUGIN_NAME user $PLUGIN_USER" | logger
+		$PLUGIN_INIT_SCRIPT $PLUGIN_COMMAND $PLUGIN_USER $PLUGIN_PASS &
 	else
 		echo "openQRM-server: $PLUGIN_NAME init script not found or not executable !" | logger
 	fi

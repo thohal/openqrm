@@ -49,14 +49,14 @@ echo "... processing command $plugin_command for plugin $plugin_name <br>";
 		// plugin_name
 		case 'start_plugin':
 			// send command to the openQRM-server
-			$openqrm_server->send_command("openqrm_server_plugin_command $plugin_name start");
+			$openqrm_server->send_command("openqrm_server_plugin_command $plugin_name start $OPENQRM_USER->name $OPENQRM_USER->password");
 			break;
 
 		// stop_plugin needs :
 		// plugin_name
 		case 'stop_plugin':
 			// send command to the openQRM-server
-			$openqrm_server->send_command("openqrm_server_plugin_command $plugin_name stop");
+			$openqrm_server->send_command("openqrm_server_plugin_command $plugin_name stop $OPENQRM_USER->name $OPENQRM_USER->password");
 			break;
 
 		default:
