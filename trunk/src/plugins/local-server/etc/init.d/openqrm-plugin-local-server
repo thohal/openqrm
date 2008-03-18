@@ -1,0 +1,61 @@
+#!/bin/bash
+# init script for the openQRM local-server-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-server/include/openqrm-plugin-local-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-server/etc/openqrm-plugin-local-server.conf
+
+function openqrm_plugin_local-server_start() {
+	echo "Starting the openQRM local-server-plugin"
+	openqrm_plugin_local-server_stop 1>/dev/null 2>&1
+}
+
+
+function openqrm_plugin_local-server_stop() {
+	echo "Stopping the openQRM local-server-plugin"
+}
+
+function openqrm_plugin_local-server_uninstall() {
+	echo "Uninstalling the openQRM local-server-plugin"
+	openqrm_plugin_local-server_stop
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+}
+
+function openqrm_plugin_local-server_init() {
+	echo "Initializing the openQRM local-server-plugin"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-server/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+}
+
+
+case "$1" in
+	start)
+		openqrm_plugin_local-server_start
+		;;
+	stop)
+		openqrm_plugin_local-server_stop
+		;;
+	restart)
+		openqrm_plugin_local-server_stop
+		sleep 1
+		openqrm_plugin_local-server_start
+		;;
+	init)
+		openqrm_plugin_local-server_init
+		;;
+	uninstall)
+		openqrm_plugin_local-server_uninstall
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+
