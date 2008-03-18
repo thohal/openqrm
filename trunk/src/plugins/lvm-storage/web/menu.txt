@@ -1,0 +1,6 @@
+#	Title
+#	Href
+#	Alt
+#	IMG
+#	Target
+.|Lvm-storage
