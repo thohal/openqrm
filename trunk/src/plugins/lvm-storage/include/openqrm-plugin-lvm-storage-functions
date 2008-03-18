@@ -1,3 +1,156 @@
 #!/bin/bash
 # this is the functions file for the lvm-storage-plugin
 
+
+# iscsi-target config file
+IETDCONF=/etc/ietd.conf
+
+# some definitions
+DEFAULT_IMAGE_SIZE=5000
+LVM_MGMT_LOCK_FILE=/var/run/lvm-storage/lvm-storage-plugin.lock
+LVM_MGMT_LOCK_DELAY=5
+LVM_MGMT_LOCK_RETRY=100
+LVM_MGMT_LOCK_TIMEOUT=500
+MAX_UMOUNT_LOOP=5
+LV_SIZE_DEFAULT=5000
+ISCSI_TARGET_URL=http://iscsitarget.sourceforge.net/
+
+
+################ common lvm-storage functions
+
+# logs for lvm_storage
+function lvm_storage_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "lvm-storage plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function lvm_storage_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $LVM_MGMT_LOCK_FILE` ]; then
+		mkdir -p `dirname $LVM_MGMT_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $LVM_MGMT_LOCK_DELAY -r $LVM_MGMT_LOCK_RETRY -l $LVM_MGMT_LOCK_TIMEOUT $LVM_MGMT_LOCK_FILE
+				RET=$?
+				lvm_storage_log lvm_storage_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $LVM_MGMT_LOCK_FILE
+				RET=$?
+				lvm_storage_log lvm_storage_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			lvm_storage_log lvm_storage_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ lvm-storage functions
+
+
+function check_iscsi_target() {
+	# iscsi-target installed ?
+	if ! ls $IETDCONF 1>/dev/null; then
+		echo "ERROR: Iscsi Enterprise Target not installed !"
+		echo "ERROR: For managing Iscsi filesystem-images please download and install from"
+		echo "       $ISCSI_TARGET_URL"
+		lvm_storage_log lvm-storage-functions "ERROR: Iscsi Enterprise Target not installed !"
+		lvm_storage_lock release
+		return 1
+	fi			
+}
+
+
+
+function manage_fstab() {
+	case "$1" in
+		add)
+			echo "/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME    /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME      ext3    defaults        1 1" >> /etc/fstab
+			;;
+		remove)
+			cat /etc/fstab | sed -e "s#^/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME.*##g" > /tmp/fstab.tmp-update
+			/bin/mv -f /tmp/fstab.tmp-update /etc/fstab
+			;;
+	esac
+}
+
+
+function manage_nfs() {
+	case "$1" in
+		add)
+			if [ "$2" != "snap" ]; then
+				lvm_storage_log qrm-lvm-nfs-manage "NOTICE: creating ext3 filesytem on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
+				if ! mkfs.ext3 /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME; then
+					lvm_storage_log lvm-storage-functions "ERROR: Could not create ext3 filesytem on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
+					manage_fstab remove
+					lvm_storage_lock release
+					return 1
+				fi
+			fi
+			mkdir -p /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
+			if ! `mount /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME`; then
+				lvm_storage_log lvm-storage-functions "ERROR: Could not mount /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME at /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
+				manage_fstab remove
+				lvm_storage_lock release
+				return 1
+			fi
+			echo "/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME	*(rw,insecure,no_root_squash,async)" >> /etc/exports
+			/etc/init.d/nfs reload
+			;;
+		remove)
+			cat /etc/exports | sed -e "s#^/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME.*##g" > /tmp/exports.tmp-update
+			/bin/mv -f /tmp/exports.tmp-update /etc/exports
+			/etc/init.d/nfs reload
+			while ! `umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME`; do
+				echo "ERROR: Could not umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME, trying again ..."
+				lvm_storage_log lvm-storage-functions "ERROR: Could not umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME, trying again ..."
+				if [ "$UMOUNT_LOOP" = "$MAX_UMOUNT_LOOP" ]; then
+					echo "ERROR: Could not umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME. Giving up !!!" 2>1
+					lvm_storage_log lvm-storage-functions "ERROR: Could not umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME. Giving up !!!"
+					manage_fstab remove
+					lvm_storage_lock release
+					return 20
+				fi
+				UMOUNT_LOOP=$(( UMOUNT_LOOP + 1 ))
+				sleep 2
+			done
+			rmdir /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
+			;;
+	esac
+}
+
+
+
+function manage_iscsi() {
+
+	if ! check_iscsi_target; then
+		return
+	fi
+	case "$1" in
+		add)
+			IMAGE_LUN=`cat $IETDCONF | grep Lun | awk {' print $2 '} | sort -n -r | head -n 1`
+			IMAGE_LUN=$(( IMAGE_LUN + 1 ))
+			echo "	Lun $IMAGE_LUN Path=/dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME,Type=fileio" >> $IETDCONF
+			nohup /etc/init.d/iscsi-target restart
+			;;
+		remove)
+			cat $IETDCONF | sed -e "s#.*$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME.*##g" > /tmp/ietd.conf.tmp-update
+			/bin/mv -f /tmp/ietd.conf.tmp-update $IETDCONF
+			nohup /etc/init.d/iscsi-target restart
+			;;
+	esac
+}
+
+

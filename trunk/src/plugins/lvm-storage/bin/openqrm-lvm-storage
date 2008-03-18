@@ -1,5 +1,198 @@
 #!/bin/bash
 
 # this script automatically manages nfs and iscsi on lvm
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+	OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+fi
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/include/openqrm-plugin-lvm-storage-functions
 
+
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+
+function lvm_storage_usage() {
+	echo "Usage : $0 add/remove/snap/list <-n image-name> <-v volume-group> <-t nfs/iscsi>"
+	echo "             [-m size in MB]"
+	echo "             [-s image-snapshot-name]"
+	exit 1
+}
+
+
+LVM_COMMAND=$1
+shift
+
+while [ $# -ne 0 ]; do
+	case "$1" in
+		-n)
+			LVM_IMAGE_NAME=$2
+			shift
+			;;
+		-m)
+			LVM_IMAGE_SIZE=$2
+			shift
+			;;
+		-s)
+			LVM_IMAGE_SNAPSHOT_NAME=$2
+			shift
+			;;
+		-t)
+			LVM_IMAGE_TYPE=$2
+			shift
+			;;
+		-v)
+			LVM_STORAGE_SERVER_VOLUME_GROUP=$2
+			shift
+			;;
+		*)
+			echo "ERROR: Free commandline arguments are not allowed"
+			lvm_storage_usage
+			exit 6
+			;;
+	esac
+	shift
+done
+
+
+
+
+# main
+if [ "$LVM_COMMAND" == "" ]; then
+	lvm_storage_usage
+fi
+if [ "$LVM_COMMAND" != "list" ]; then
+	if [ "$LVM_IMAGE_NAME" == "" ]; then
+		lvm_storage_usage
+	fi
+	if [ "$LVM_STORAGE_SERVER_VOLUME_GROUP" == "" ]; then
+		lvm_storage_usage
+	fi
+	if [ "$LVM_IMAGE_TYPE" == "" ]; then
+		lvm_storage_usage
+	fi
+fi
+
+# load required lvm modules
+modprobe dm-mod 1>/dev/null
+modprobe dm-snapshot 1>/dev/null
+# give time to settle
+sleep 2
+
+if [ "$LVM_COMMAND" != "list" ]; then
+	# check if volume group exists
+	if ! `vgdisplay | grep $LVM_STORAGE_SERVER_VOLUME_GROUP 1>/dev/null`; then
+		echo "ERROR: Could not find volume-group $LVM_STORAGE_SERVER_VOLUME_GROUP on the storage-server"
+		exit 1
+	fi
+fi
+
+case "$LVM_COMMAND" in 
+
+	add)
+	
+		if [ "$LVM_IMAGE_SIZE" == "" ]; then
+			LVM_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
+			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
+			echo "... press return to continue"
+			read
+		fi
+		export LVM_IMAGE_SIZE
+		echo -n "Creating logical volume $LVM_IMAGE_NAME size $LVM_IMAGE_SIZE MB using volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
+
+		lvcreate -L$LVM_IMAGE_SIZE -n$LVM_IMAGE_NAME $LVM_STORAGE_SERVER_VOLUME_GROUP
+
+		if [ "$LVM_IMAGE_TYPE" == "iscsi" ]; then
+			echo "Detected Iscsi-image. Adding to $IETDCONF"
+			check_iscsi_target
+			lvm_storage_lock aquire
+			manage_iscsi add
+			lvm_storage_lock release
+		elif [ "$LVM_IMAGE_TYPE" == "nfs" ]; then
+			# we mount them and add to exports
+			echo "Detected NFS-image. Mounting and adding $LVM_IMAGE_NAME to /etc/fstab + /etc/exports"
+			lvm_storage_lock aquire
+			manage_fstab add
+			manage_nfs add
+			lvm_storage_lock release
+		fi
+
+		;;
+
+	remove)
+
+		echo -n "Removing logical volume $LVM_IMAGE_NAME on volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
+
+		if [ "$LVM_IMAGE_TYPE" == "iscsi" ]; then
+			echo "Detected Iscsi-image. Removing from $IETDCONF"
+			check_iscsi_target
+			lvm_storage_lock aquire
+			manage_iscsi remove
+			lvm_storage_lock release
+		elif [ "$LVM_IMAGE_TYPE" == "nfs" ]; then
+			echo "Detected NFS-image. Removing from /etc/exports"
+			lvm_storage_lock aquire
+			manage_nfs remove
+			manage_fstab remove
+			lvm_storage_lock release
+		fi
+
+		# give time to settle
+		sync
+		sleep 2
+		lvchange -a n /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
+		lvremove -f /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
+		;;
+
+	snap)
+		if [ "$LVM_IMAGE_SNAPSHOT_NAME" == "" ]; then
+			echo "ERROR: Please give a name for the snapshot using the -s cmdline parmeter"
+			echo
+			lvm_storage_usage
+		fi
+		if [ "$LVM_IMAGE_SIZE" == "" ]; then
+			LVM_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
+			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
+			echo "... press return to continue"
+			read
+		fi
+		export LVM_IMAGE_SIZE
+		
+		# check that source fs-images exist
+		if ! `lvdisplay /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 1>/dev/null`; then
+			echo "ERROR: Could not find /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME on the storage-server"
+			exit 1
+		fi
+		echo -n "Creating snapshot size $LVM_IMAGE_SIZE from logical volume $LVM_IMAGE_NAME -> $LVM_IMAGE_SNAPSHOT_NAME"
+		lvcreate --size $LVM_IMAGE_SIZE""m --snapshot --name $LVM_IMAGE_SNAPSHOT_NAME /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
+		export LVM_IMAGE_NAME=$LVM_IMAGE_SNAPSHOT_NAME
+
+		if [ "$LVM_IMAGE_TYPE" == "iscsi" ]; then
+			echo "Detected Iscsi-image. Adding to $IETDCONF"
+			check_iscsi_target
+			lvm_storage_lock aquire
+			manage_iscsi add
+			lvm_storage_lock release
+		elif [ "$LVM_IMAGE_TYPE" == "nfs" ]; then
+			echo "Detected NFS-image. Mounting and adding $IMAGE_NAME to /etc/fstab + /etc/exports"
+			lvm_storage_lock aquire
+			manage_fstab add
+			manage_nfs add snap
+			lvm_storage_lock release
+		fi
+		;;
+
+	list)
+		lvm lvs
+		;;
+
+	*)
+		lvm_storage_usage
+		;;
+
+
+esac
 
