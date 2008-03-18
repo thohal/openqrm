@@ -252,8 +252,8 @@ $output[] = array('label' => 'Images', 'value' => image_display(""));
 // if admin
 if ($OPENQRM_USER->role == "administrator") {
 	$output[] = array('label' => 'Add Image', 'value' => image_form());
-	$edit_image_id = $_REQUEST["edit_image_id"];
 	$output[] = array('label' => 'Image Admin', 'value' => image_display("admin"));
+	$edit_image_id = $_REQUEST["edit_image_id"];
 	if (strlen($edit_image_id)) {
 		$output[] = array('label' => 'Edit Image', 'value' => image_edit($edit_image_id));
 	}
