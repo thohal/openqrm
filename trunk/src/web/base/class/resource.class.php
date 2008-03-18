@@ -4,8 +4,10 @@
 
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+$BootServiceDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/boot-service/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/class/openqrm_server.class.php";
+require_once "$RootDir/class/plugin.class.php";
 
 global $RESOURCE_INFO_TABLE;
 
@@ -228,6 +230,7 @@ function get_parameter($resource_id) {
 	global $RESOURCE_INFO_TABLE;
 	global $KERNEL_INFO_TABLE;
 	global $IMAGE_INFO_TABLE;
+	global $BootServiceDir;
 	$db=openqrm_get_db_connection();
 	// resource parameter
 	$recordSet = &$db->Execute("select * from $RESOURCE_INFO_TABLE where resource_id=$resource_id");
@@ -278,9 +281,19 @@ function get_parameter($resource_id) {
 	}
 	$db->Close();
 
-	// enabled plugins
-	// TODO
+	$plugin = new plugin();
+	$enabled_plugins = $plugin->enabled();
 
+	foreach ($enabled_plugins as $index => $plugin_name) {
+		$plugin_list = "$plugin_list$plugin_name ";
+		// add to list of boot-services only if boot-services for the resource exists
+		$plugin_boot_service = "$BootServiceDir/boot-service-$plugin_name.tgz";
+		if (file_exists($plugin_boot_service)) {
+			$boot_service_list = "$boot_service_list$plugin_name ";
+		}
+	}
+	echo "openqrm_plugins=\"$plugin_list\"\n";
+	echo "openqrm_boot_services=\"$boot_service_list\"\n";
 
 }
 
