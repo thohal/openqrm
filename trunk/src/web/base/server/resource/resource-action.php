@@ -78,7 +78,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 
 		// remove requires :
 		// resource_id
-		// resouce_mac
+		// resource_mac
 		case 'remove':
 			$openqrm_server->send_command("openqrm_remove_resource $resource_id $resource_mac");
 			// remove from openQRM database
