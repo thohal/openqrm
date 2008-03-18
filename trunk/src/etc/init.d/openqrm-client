@@ -25,6 +25,38 @@ export `eval cat /proc/cmdline`
 export OPENQRM_SERVER_BASE_DIR=$resource_basedir
 . $resource_basedir/openqrm/include/openqrm-functions
 
+
+# gets/starts/stops enabled boot-services for the resources
+function openqrm_boot_service() {
+	local BOOT_SERVICE=$1
+	local BOOT_SERVICE_CMD=$2
+	local CURRENT=`pwd`
+	
+	# get + install the package during start
+	if [ "$BOOT_SERVICE_CMD" == "start" ]; then
+		echo "Getting boot-service package $BOOT_SERVICE"
+		mkdir -p  $resource_basedir/openqrm/plugins/$BOOT_SERVICE
+		cd $resource_basedir/openqrm/plugins/$BOOT_SERVICE
+		if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/boot-service-$BOOT_SERVICE.tgz; then
+			echo "ERROR: Could not get boot-service package for boot-service $BOOT_SERVICE !"
+			return 1
+		fi
+		tar -xzf boot-service-$BOOT_SERVICE.tgz
+		rm -f boot-service-$BOOT_SERVICE.tgz	
+	fi
+	# run the boot-service cmd
+	BOOT_SERVICE_INIT="$resource_basedir/openqrm/plugins/$BOOT_SERVICE/etc/init.d/openqrm-plugin-$BOOT_SERVICE"
+	if [ -x $BOOT_SERVICE_INIT ]; then
+		echo "Running $BOOT_SERVICE_CMD on boot-service $BOOT_SERVICE"
+		$BOOT_SERVICE_INIT $BOOT_SERVICE_CMD
+	fi
+	cd $CURRENT
+}
+
+
+
+
+
 function openqrm_client_start() {
 	echo "Starting openQRM-client"
 
@@ -39,12 +71,26 @@ function openqrm_client_start() {
 	$resource_basedir/openqrm/sbin/openqrm-exec-port-monitor $resource_ip $resource_execdport | $resource_basedir/openqrm/sbin/openqrm-execd &
 	# start openqrm-monitord
 	$resource_basedir/openqrm/sbin/openqrm-monitord &
+
+	if [ ! -f /linuxrc ]; then
+		# start boot-services from enabled plugins
+		for boot_service in $openqrm_boot_services; do
+			openqrm_boot_service $boot_service start
+		done
+	fi
 	touch ${LOCKFILE}
 }
 
 
 function openqrm_client_stop() {
 	echo "Stopping openQRM-client"
+
+	if [ ! -f /linuxrc ]; then
+		# stop boot-services from enabled plugins
+		for boot_service in $openqrm_boot_services; do
+			openqrm_boot_service $boot_service stop
+		done
+	fi
 	# stop openqrm-execd
 	killall openqrm-exec-port-monitor 1>/dev/null 2>&1
 	killall openqrm-execd 1>/dev/null 2>&1
