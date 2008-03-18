@@ -109,7 +109,7 @@ function storage_form() {
 	$disp = $disp.htmlobject_textarea('storage_capabilities', array("value" => '', "label" => 'Storage Capabilities'));
 
 	$disp = $disp."<input type=hidden name=storage_command value='new_storage'>";
-	$disp = $disp."<input type=submit value='add'>";
+	$disp = $disp."<input type=submit value='Add'>";
 	$disp = $disp."";
 	$disp = $disp."";
 	$disp = $disp."";
@@ -122,7 +122,7 @@ function storage_form() {
 function storage_edit($storage_id) {
 
 	if (!strlen($storage_id))  {
-		echo "No Appliance selected!";
+		echo "No Storage selected!";
 		exit(0);
 	}
 
@@ -202,7 +202,7 @@ if ($OPENQRM_USER->role == "administrator") {
 	$output[] = array('label' => 'Storage-Admin', 'value' => storage_display("admin"));
 	$edit_storage_id = $_REQUEST["edit_storage_id"];
 	if (strlen($edit_storage_id)) {
-		$output[] = array('label' => 'Edit Appliance', 'value' => storage_edit($edit_storage_id));
+		$output[] = array('label' => 'Edit Storage', 'value' => storage_edit($edit_storage_id));
 	}
 }
 

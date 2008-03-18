@@ -35,9 +35,19 @@ function kernel_display($admin) {
 		$disp = $disp."<input type=hidden name=kernel_name value=$kernel->name>";
 		$disp = $disp."<input type=hidden name=kernel_command value='remove'";
 		if ("$admin" == "admin") {
-			$disp = $disp."<input type=submit value='remove'>";
+			$disp = $disp."<input type=submit value='Remove'>";
 		}
 		$disp = $disp."</form>";
+
+		$disp = $disp."<form action='kernel-overview.php?currenttab=tab3' method=post>";
+		$disp = $disp."<input type=hidden name=kernel_id value=$kernel->id>";
+		$disp = $disp."<input type=hidden name=kernel_name value=$kernel->name>";
+		$disp = $disp."<input type=hidden name=edit_kernel_id value=$kernel->id>";
+		if ("$admin" == "admin") {
+			$disp = $disp."<input type=submit value='Edit'>";
+		}
+		$disp = $disp."</form>";
+
 		$disp = $disp."</div>";
 	}
 	return $disp;
@@ -54,7 +64,36 @@ function kernel_form() {
 	$disp = $disp.htmlobject_input('kernel_name', array("value" => '', "label" => 'Insert Kernel name'), 'text', 20);
 	$disp = $disp.htmlobject_input('kernel_version', array("value" => '', "label" => 'Insert Kernel version'), 'text', 20);
 	$disp = $disp."<input type=hidden name=kernel_command value='new_kernel'>";
-	$disp = $disp."<input type=submit value='add'>";
+	$disp = $disp."<input type=submit value='Add'>";
+	$disp = $disp."";
+	$disp = $disp."";
+	$disp = $disp."";
+	$disp = $disp."";
+	$disp = $disp."";
+	$disp = $disp."</form>";
+	return $disp;
+}
+
+
+function kernel_edit($kernel_id) {
+
+	if (!strlen($kernel_id))  {
+		echo "No Kernel selected!";
+		exit(0);
+	}
+
+	$kernel = new kernel();
+	$kernel->get_instance_by_id($kernel_id);
+
+	$disp = "<b>Edit Kernel</b>";
+	$disp = $disp."<form action='kernel-action.php' method=post>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp.htmlobject_input('kernel_name', array("value" => $kernel->name, "label" => 'Insert Kernel name'), 'text', 20);
+	$disp = $disp.htmlobject_input('kernel_version', array("value" => $kernel->version, "label" => 'Insert Kernel version'), 'text', 20);
+	$disp = $disp."<input type=hidden name=kernel_id value=$kernel_id>";
+	$disp = $disp."<input type=hidden name=kernel_command value='update'>";
+	$disp = $disp."<input type=submit value='Update'>";
 	$disp = $disp."";
 	$disp = $disp."";
 	$disp = $disp."";
@@ -67,6 +106,7 @@ function kernel_form() {
 
 
 
+
 $output = array();
 // all user
 $output[] = array('label' => 'Kernel-List', 'value' => kernel_display(""));
@@ -74,6 +114,10 @@ $output[] = array('label' => 'Kernel-List', 'value' => kernel_display(""));
 if ($OPENQRM_USER->role == "administrator") {
 	$output[] = array('label' => 'New', 'value' => kernel_form());
 	$output[] = array('label' => 'Kernel-Admin', 'value' => kernel_display("admin"));
+	$edit_kernel_id = $_REQUEST["edit_kernel_id"];
+	if (strlen($edit_kernel_id)) {
+		$output[] = array('label' => 'Edit Kernel', 'value' => kernel_edit($edit_kernel_id));
+	}
 }
 
 echo htmlobject_tabmenu($output);

@@ -90,6 +90,20 @@ function add($kernel_fields) {
 	}
 }
 
+// updates kernel in the database
+function update($kernel_id, $kernel_fields) {
+	global $KERNEL_INFO_TABLE;
+	if ($kernel_id < 0 || ! is_array($kernel_fields)) {
+		print("Unable to update kernel $kernel_id");
+		return 1;
+	}
+	$db=openqrm_get_db_connection();
+	unset($kernel_fields["kernel_id"]);
+	$result = $db->AutoExecute($KERNEL_INFO_TABLE, $kernel_fields, 'UPDATE', "kernel_id = $kernel_id");
+	if (! $result) {
+		print("Failed updating kernel $kernel_id");
+	}
+}
 
 // removes kernel from the database
 function remove($kernel_id) {

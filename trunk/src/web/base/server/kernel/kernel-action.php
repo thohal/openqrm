@@ -50,6 +50,11 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$kernel->add($kernel_fields);
 			break;
 
+		case 'update':
+			$kernel = new kernel();
+			$kernel->update($kernel_id, $kernel_fields);
+			break;
+
 		case 'remove':
 			$kernel = new kernel();
 			$kernel->remove($kernel_id);
