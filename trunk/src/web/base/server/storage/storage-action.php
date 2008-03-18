@@ -6,7 +6,7 @@ $storage_name = $_REQUEST["storage_name"];
 <html>
 <head>
 <title>openQRM Storage actions</title>
-<meta http-equiv="refresh" content="0; URL=storage-overview.php?currenttab=tab1&strMsg=Processing <?php echo $storage_command; ?> on <?php echo $storage_name; ?>">
+<meta http-equiv="refresh" content="0; URL=storage-overview.php?currenttab=tab2&strMsg=Processing <?php echo $storage_command; ?> on <?php echo $storage_name; ?>">
 </head>
 <body>
 
@@ -54,6 +54,11 @@ foreach ($_REQUEST as $key => $value) {
 			$storage = new storage();
 			$storage_fields["storage_id"]=openqrm_db_get_free_id('storage_id', $STORAGE_INFO_TABLE);
 			$storage->add($storage_fields);
+			break;
+
+		case 'update':
+			$storage = new storage();
+			$storage->update($storage_id, $storage_fields);
 			break;
 
 		case 'remove':
