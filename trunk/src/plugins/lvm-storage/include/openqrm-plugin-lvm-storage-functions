@@ -107,12 +107,24 @@ function manage_nfs() {
 				return 1
 			fi
 			echo "/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME	*(rw,insecure,no_root_squash,async)" >> /etc/exports
-			/etc/init.d/nfs reload
+			if [ -x /etc/init.d/nfs ]; then
+				/etc/init.d/nfs reload
+			elif [ -x /etc/init.d/nfs-kernel-server ]; then
+				/etc/init.d/nfs-kernel-server reload
+			else
+				echo "WARNING: Could not find nfs-server init script !"
+			fi
 			;;
 		remove)
 			cat /etc/exports | sed -e "s#^/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME.*##g" > /tmp/exports.tmp-update
 			/bin/mv -f /tmp/exports.tmp-update /etc/exports
-			/etc/init.d/nfs reload
+			if [ -x /etc/init.d/nfs ]; then
+				/etc/init.d/nfs reload
+			elif [ -x /etc/init.d/nfs-kernel-server ]; then
+				/etc/init.d/nfs-kernel-server reload
+			else
+				echo "WARNING: Could not find nfs-server init script !"
+			fi
 			while ! `umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME`; do
 				echo "ERROR: Could not umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME, trying again ..."
 				lvm_storage_log lvm-storage-functions "ERROR: Could not umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME, trying again ..."
