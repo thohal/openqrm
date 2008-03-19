@@ -1,12 +1,10 @@
 #!/bin/bash
 
 # this script automatically manages nfs and iscsi on lvm
-if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
-	OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
-	OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
-fi
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/include/openqrm-plugin-lvm-storage-functions
-
+. /var/openqrm/openqrm-resource.conf
 
 # let only root run this script
 WHOAMI=`whoami`
@@ -19,6 +17,8 @@ function lvm_storage_usage() {
 	echo "Usage : $0 add/remove/snap/list <-n image-name> <-v volume-group> <-t nfs/iscsi>"
 	echo "             [-m size in MB]"
 	echo "             [-s image-snapshot-name]"
+	echo "        $0 post_vg <-u username> <-p password>"
+	echo "        $0 post_lv <-u username> <-p password> <-v volume-group>"
 	exit 1
 }
 
@@ -44,6 +44,14 @@ while [ $# -ne 0 ]; do
 			LVM_IMAGE_TYPE=$2
 			shift
 			;;
+		-u)
+			LVM_OPENQRM_USERNAME=$2
+			shift
+			;;
+		-p)
+			LVM_OPENQRM_PASSWORD=$2
+			shift
+			;;
 		-v)
 			LVM_STORAGE_SERVER_VOLUME_GROUP=$2
 			shift
@@ -64,25 +72,42 @@ done
 if [ "$LVM_COMMAND" == "" ]; then
 	lvm_storage_usage
 fi
-if [ "$LVM_COMMAND" != "list" ]; then
-	if [ "$LVM_IMAGE_NAME" == "" ]; then
-		lvm_storage_usage
-	fi
-	if [ "$LVM_STORAGE_SERVER_VOLUME_GROUP" == "" ]; then
-		lvm_storage_usage
-	fi
-	if [ "$LVM_IMAGE_TYPE" == "" ]; then
-		lvm_storage_usage
+
+if [ "$LVM_COMMAND" == "post_lv" ] || [ "$LVM_COMMAND" == "post_vg" ]; then
+		if [ "$LVM_OPENQRM_USERNAME" == "" ]; then
+			lvm_storage_usage
+		fi
+		if [ "$LVM_OPENQRM_PASSWORD" == "" ]; then
+			lvm_storage_usage
+		fi
+		if [ "$LVM_COMMAND" == "post_lv" ]; then
+			if [ "$LVM_STORAGE_SERVER_VOLUME_GROUP" == "" ]; then
+				lvm_storage_usage
+			fi
+		fi
+else
+
+	if [ "$LVM_COMMAND" != "list" ]; then
+		if [ "$LVM_IMAGE_NAME" == "" ]; then
+			lvm_storage_usage
+		fi
+		if [ "$LVM_STORAGE_SERVER_VOLUME_GROUP" == "" ]; then
+			lvm_storage_usage
+		fi
+		if [ "$LVM_IMAGE_TYPE" == "" ]; then
+			lvm_storage_usage
+		fi
 	fi
 fi
+# load required lvm modules if needed
+if ! grep dm_mod /proc/modules 1>/dev/null; then
+	modprobe dm-mod 1>/dev/null
+	modprobe dm-snapshot 1>/dev/null
+	# give time to settle
+	sleep 2
+fi
 
-# load required lvm modules
-modprobe dm-mod 1>/dev/null
-modprobe dm-snapshot 1>/dev/null
-# give time to settle
-sleep 2
-
-if [ "$LVM_COMMAND" != "list" ]; then
+if [ "$LVM_COMMAND" != "list" ] && [ "$LVM_COMMAND" != "post_vg" ]; then
 	# check if volume group exists
 	if ! `vgdisplay | grep $LVM_STORAGE_SERVER_VOLUME_GROUP 1>/dev/null`; then
 		echo "ERROR: Could not find volume-group $LVM_STORAGE_SERVER_VOLUME_GROUP on the storage-server"
@@ -188,7 +213,28 @@ case "$LVM_COMMAND" in
 	list)
 		lvm lvs
 		;;
-
+	post_vg)
+		echo "Posting current volume group status to the openQRM-server"
+		STORAGE_STATUS_TMP=$resource_id.vg.stat
+		vgdisplay > $STORAGE_STATUS_TMP
+		if ! wget -q -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$resource_basedir/openqrm/plugins/lvm-storage/bin/openqrm_postencode.py $STORAGE_STATUS_TMP` http://$resource_openqrmserver/openqrm/base/plugins/9/lvm-storage-action.php?lvm_storage_command=get_storage; then
+			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!"
+			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!" | logger
+		fi
+		rm -f $STORAGE_STATUS_TMP
+		rm -f $STORAGE_STATUS_TMP.post
+		;;
+	post_lv)
+		echo "Posting current logic volume status to the openQRM-server"
+		STORAGE_STATUS_TMP=$resource_id.$LVM_STORAGE_SERVER_VOLUME_GROUP.lv.stat
+		lvdisplay > $STORAGE_STATUS_TMP
+		if ! wget -q -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$resource_basedir/openqrm/plugins/lvm-storage/bin/openqrm_postencode.py $STORAGE_STATUS_TMP` http://$resource_openqrmserver/openqrm/base/plugins/9/lvm-storage-action.php?lvm_storage_command=get_storage; then
+			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!"
+			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!" | logger
+		fi
+		rm -f $STORAGE_STATUS_TMP
+		rm -f $STORAGE_STATUS_TMP.post
+		;;
 	*)
 		lvm_storage_usage
 		;;
