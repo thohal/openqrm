@@ -14,7 +14,7 @@ if [ "$WHOAMI" != "root" ]; then
 fi
 
 function lvm_storage_usage() {
-	echo "Usage : $0 add/remove/snap/list <-n image-name> <-v volume-group> <-t nfs/iscsi>"
+	echo "Usage : $0 add/remove/snap/list <-n image-name> <-v volume-group> <-t nfs/iscsi/aoe>"
 	echo "             [-m size in MB]"
 	echo "             [-s image-snapshot-name]"
 	echo "        $0 post_vg <-u username> <-p password>"
@@ -143,6 +143,12 @@ case "$LVM_COMMAND" in
 			manage_fstab add
 			manage_nfs add
 			lvm_storage_lock release
+		elif [ "$LVM_IMAGE_TYPE" == "aoe" ]; then
+			echo "Detected Aoe-image. Adding to $VBLADECONF"
+			check_vblade
+			lvm_storage_lock aquire
+			manage_vblade add
+			lvm_storage_lock release
 		fi
 
 		;;
@@ -162,6 +168,12 @@ case "$LVM_COMMAND" in
 			lvm_storage_lock aquire
 			manage_nfs remove
 			manage_fstab remove
+			lvm_storage_lock release
+		elif [ "$LVM_IMAGE_TYPE" == "aoe" ]; then
+			echo "Detected Aoe-image. Removing from $VBLADECONF"
+			check_vblade
+			lvm_storage_lock aquire
+			manage_vblade remove
 			lvm_storage_lock release
 		fi
 
@@ -206,6 +218,12 @@ case "$LVM_COMMAND" in
 			lvm_storage_lock aquire
 			manage_fstab add
 			manage_nfs add snap
+			lvm_storage_lock release
+		elif [ "$LVM_IMAGE_TYPE" == "aoe" ]; then
+			echo "Detected Aoe-image. Adding to $VBLADECONF"
+			check_vblade
+			lvm_storage_lock aquire
+			manage_vblade add
 			lvm_storage_lock release
 		fi
 		;;

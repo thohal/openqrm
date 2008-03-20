@@ -4,7 +4,7 @@
 
 # iscsi-target config file
 IETDCONF=/etc/ietd.conf
-
+VBLADECONF=/etc/vblade/vblade.conf
 # some definitions
 DEFAULT_IMAGE_SIZE=5000
 LVM_MGMT_LOCK_FILE=/var/run/lvm-storage/lvm-storage-plugin.lock
@@ -164,5 +164,65 @@ function manage_iscsi() {
 			;;
 	esac
 }
+
+
+
+
+function check_vblade() {
+	# vblade installed ?
+	if ! which vbladed 1>/dev/null; then
+		echo "ERROR: Vblade is not installed !"
+		echo "ERROR: For managing Aoe filesystem-images please install 'vblade'"
+		lvm_storage_log lvm-storage-functions "ERROR: Vblade is not installed !"
+		lvm_storage_lock release
+		return 1
+	fi			
+}
+
+
+function manage_vblade() {
+
+	if ! check_vblade; then
+		return
+	fi
+	if [ ! -f $VBLADECONF ]; then
+		mkdir -p `dirname $VBLADECONF`
+		echo "# this is the vblade configuration file created by openQRM" > $VBLADECONF
+		echo "" >> $VBLADECONF
+	fi
+	
+	case "$1" in
+		add)
+			# currently just one static shelf !
+			AOE_SHELF=1
+			# slots are dynamic
+			AOE_SLOT=`cat $VBLADECONF | grep disk | awk {' print $3 '} | sort -n -r | head -n 1`
+			AOE_SLOT=$(( AOE_SLOT + 1 ))
+			AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '}`
+			echo "disk $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME" >> $VBLADECONF
+			# start vbladed
+			vbladed $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
+			# this is a trick !
+			# vbladed used waitpid which blocks qrm-execd, using nohup, screen or & does not help so we restart the openqrm-client
+			/etc/init.d/openqrm-client restart &
+			;;
+		remove)
+			for VBLADE_PID in `ps ax | grep vblade | grep -w $LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME | awk {' print $1 '}`; do
+				kill $VBLADE_PID
+			done
+			sync			
+			cat $VBLADECONF | sed -e "s#.*$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME.*##g" > /tmp/vblade.conf.tmp-update
+			/bin/mv -f /tmp/vblade.conf.tmp-update $VBLADECONF
+			;;
+	esac
+}
+
+
+
+
+
+
+
+
 
 
