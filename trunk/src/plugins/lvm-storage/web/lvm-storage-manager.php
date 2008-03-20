@@ -104,7 +104,7 @@ function lvm_storage_lv_display($admin, $lvm_storage_id, $lvm_volume_group) {
 	$disp = $disp."Add logical volume to volume group $lvm_volume_group";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<form action='lvm-storage-action.php?currenttab=tab2' method=post>";
+	$disp = $disp."<form action='lvm-storage-action.php' method=post>";
 	$disp = $disp.htmlobject_input('lvm_storage_logcial_volume_name', array("value" => '', "label" => 'Name'), 'text', 20);
 	$disp = $disp.htmlobject_input('lvm_storage_logcial_volume_size', array("value" => '', "label" => 'MB'), 'text', 20);
 
@@ -113,7 +113,9 @@ function lvm_storage_lv_display($admin, $lvm_storage_id, $lvm_volume_group) {
 	$disp = $disp."<input type=hidden name=lvm_storage_command value='add_lv'>";
 	$disp = $disp." <input type=submit value='Add'>";
 	$disp = $disp."</form>";
+	$disp = $disp."<br>";
 
+	$disp = $disp."<hr>";
 
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
@@ -137,7 +139,31 @@ function lvm_storage_lv_display($admin, $lvm_storage_id, $lvm_volume_group) {
 					$disp = $disp.$lvm;
 					$disp = $disp."<br>";
 				}
+
+				// find the last line of each lv and display cloning options
+				if (strstr($lvm, "Block device")) {
+					$disp = $disp."<form action='lvm-storage-action.php' method=post>";
+					$disp = $disp."<br>";
+					$disp = $disp."<b>Create Clone :</b>";
+					$disp = $disp."<br>";
+					$disp = $disp."<br>";
+					$disp = $disp.htmlobject_input('lvm_storage_logcial_volume_snapshot_name', array("value" => '', "label" => 'Name'), 'text', 20);
+					$disp = $disp."<br>";
+					$disp = $disp.htmlobject_input('lvm_storage_logcial_volume_size', array("value" => '', "label" => 'MB'), 'text', 20);
+					$disp = $disp."<br>";
+					$disp = $disp."<input type=hidden name=lvm_storage_id value=$storage->id>";
+					$disp = $disp."<input type=hidden name=lvm_volume_group value=$lvm_volume_group>";
+					$disp = $disp."<input type=hidden name=lvm_storage_logcial_volume_name value=$real_logical_volume_name>";
+					$disp = $disp."<input type=hidden name=lvm_storage_command value='snap_lv'>";
+					$disp = $disp." <input type=submit value='Create'>";
+					$disp = $disp."<hr>";
+					$disp = $disp."<br>";
+					$disp = $disp."</form>";
+				}
+
+
 		}
+
 	} else {
 		$disp = $disp."<br> no view available<br> $storage_lv_list";
 	}
