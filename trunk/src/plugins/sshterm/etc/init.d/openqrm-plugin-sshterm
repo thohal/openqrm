@@ -10,12 +10,13 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 function openqrm_plugin_sshterm_start() {
 	echo "Starting the openQRM sshterm-plugin"
 	openqrm_plugin_sshterm_stop 1>/dev/null 2>&1
-	# on debian/ubuntu sshterm ver.3 is named sshterm3
-	/etc/init.d/ajaxterm start 1>/dev/null 2>&1
+	ajaxterm 1>/dev/null 2>&1
+	return 0
+}
 
 function openqrm_plugin_sshterm_stop() {
 	echo "Stopping the openQRM sshterm plugin"
-	/etc/init.d/ajaxterm stop 1>/dev/null 2>&1
+	killall  python /usr/share/ajaxterm/ajaxterm.py 1>/dev/null 2>&1
 	return 0
 }
 
