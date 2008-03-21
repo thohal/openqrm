@@ -1,0 +1,68 @@
+#!/bin/bash
+# init script for the openQRM sshterm plugin
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/include/openqrm-plugin-sshterm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/etc/openqrm-plugin-sshterm.conf
+
+function openqrm_plugin_sshterm_start() {
+	echo "Starting the openQRM sshterm-plugin"
+	openqrm_plugin_sshterm_stop 1>/dev/null 2>&1
+	# on debian/ubuntu sshterm ver.3 is named sshterm3
+	/etc/init.d/ajaxterm start 1>/dev/null 2>&1
+
+function openqrm_plugin_sshterm_stop() {
+	echo "Stopping the openQRM sshterm plugin"
+	/etc/init.d/ajaxterm stop 1>/dev/null 2>&1
+	return 0
+}
+
+
+function openqrm_plugin_sshterm_init() {
+	echo "Initializing the openQRM sshterm plugin"
+	
+
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+
+	return 0
+}
+
+
+function openqrm_plugin_sshterm_uninstall() {
+	echo "Uninstalling the openQRM sshterm plugin"
+	openqrm_plugin_sshterm_stop
+	# unlinking the web dir
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+}
+
+
+
+case "$1" in
+	start)
+		openqrm_plugin_sshterm_start
+		;;
+	stop)
+		openqrm_plugin_sshterm_stop
+		;;
+	restart)
+		openqrm_plugin_sshterm_stop
+		sleep 1
+		openqrm_plugin_sshterm_start
+		;;
+	init)
+		openqrm_plugin_sshterm_init
+		;;
+	uninstall)
+		openqrm_plugin_sshterm_uninstall
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
