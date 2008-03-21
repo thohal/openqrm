@@ -3,9 +3,9 @@
 
 define host{
         use                     generic-host            ; Name of host template to use
-        host_name               SimonsIT
-        alias                   Simons IT
-        address                 www.simons-it-service.de
+        host_name               NODE
+        alias                   NODE
+        address                 IPADDRESS
         }
 
 # Define a service to check the disk space of the root partition
@@ -14,7 +14,7 @@ define host{
 
 define service{
         use                             generic-service         ; Name of service template to use
-        host_name                       SimonsIT
+        host_name                       NODE
         service_description             FTP-Server
         check_command                   check_ftp
         }
