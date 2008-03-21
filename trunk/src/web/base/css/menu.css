@@ -1,3 +1,8 @@
+body {
+margin: 10px 0 0 20px;
+}
+
+
 .treemenudiv	{
 	display: block;
 	white-space: nowrap;
@@ -11,10 +16,11 @@
 }
 
 a.phplmnormal:hover	{
+cursor:pointer;
+	padding:0 0 0 0;
 	font-family: bitstream vera sans, luxi sans, verdana, geneva, arial, helvetica, sans-serif;
 	font-size: 13px;
 	color: #000000;
-	background-color: #fff0c0;
 	text-decoration: none;
 }
 
@@ -76,4 +82,7 @@ a.phplmselected:active	{
 	font-size: 13px;
 	color: #ff0000;
 	text-decoration: none;
+}
+.imgs	{
+	border: 0px;
 }
