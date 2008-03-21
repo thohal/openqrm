@@ -86,7 +86,7 @@ function openqrm_package() {
 	echo "Creating $OPENQRM_PACKAGE_TYPE packages for openQRM-server ver. $OPENQRM_SERVER_VERSION for $OPENQRM_PACKAGE_DISTRIBUTION"
 
 	# which components to build
-	OPENQRM_PACKAGE_COMPONENT_LIST=`ls $OPENQRM_SOURCE_DIR/plugins`
+	OPENQRM_PACKAGE_COMPONENT_LIST=`ls $OPENQRM_SOURCE_DIR/plugins | grep -v Makefile | grep -v CVS`
 	OPENQRM_PACKAGE_COMPONENT_LIST="openqrm-server "`echo $OPENQRM_PACKAGE_COMPONENT_LIST | sed -e "s/\n//g"`
 	echo "Packing the following components : $OPENQRM_PACKAGE_COMPONENT_LIST"
 
