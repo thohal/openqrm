@@ -5,7 +5,6 @@ export OPENQRM_SERVER_CONF=$(shell pwd)/../etc/openqrm-server.conf
 configure:
 
 compile:
-	../make-assistant openqrm_get_phplayersmenu
 
 install:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make install' as root" && exit 1)
@@ -61,12 +60,6 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp base/plugins/aa_plugins/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/aa_plugins/
 	. $(OPENQRM_SERVER_CONF) && cp base/plugins/aa_plugins/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/aa_plugins/
 
-	# install phplayersmenu
-	. $(OPENQRM_SERVER_CONF) && . ../etc/build.conf/phplayersmenu.conf && tar -C $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/ -xzf $$OPENQRM_BUILD_TMP_DIR/openqrm-build/phplayersmenu/source/phplayersmenu-$$OPENQRM_SOURCE_VERSION-$$OPENQRM_SOURCE_SUB_VERSION.tar.gz
-	. $(OPENQRM_SERVER_CONF) && rm -rf $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/phplayersmenu
-	. $(OPENQRM_SERVER_CONF) && . ../etc/build.conf/phplayersmenu.conf && mv $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/phplayersmenu-$$OPENQRM_SOURCE_VERSION $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/phplayersmenu
-	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins
-	
 	echo "Creating the openqrm-client boot-service package"
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client/$$OPENQRM_RESOURCE_BASE_DIR/openqrm

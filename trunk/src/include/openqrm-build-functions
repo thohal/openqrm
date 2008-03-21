@@ -408,10 +408,3 @@ function openqrm_create_default_kernel() {
 }
 
 
-# function downloads + prepares phplayersmenu
-# -> this is for "make compile" / compilation phase
-openqrm_get_phplayersmenu() {
-	. $OPENQRM_SOURCE_DIR/etc/build.conf/phplayersmenu.conf
-	openqrm_cache_or_download phplayersmenu
-}
-
