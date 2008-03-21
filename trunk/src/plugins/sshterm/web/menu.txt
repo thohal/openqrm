@@ -3,4 +3,4 @@
 #	Alt
 #	IMG
 #	Target
-.|SSH-Terminal
+.|SSH-Terminal|http://localhost:8022
