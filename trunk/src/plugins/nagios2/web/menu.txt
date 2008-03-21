@@ -3,4 +3,4 @@
 #	Alt
 #	IMG
 #	Target
-.|Nagios2
+.|Nagios2|http://localhost/nagios2
