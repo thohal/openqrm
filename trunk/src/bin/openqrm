@@ -16,11 +16,15 @@ function openqrm_usage() {
 }
 
 
+BOOT_IMAGE_NAME=$2
+BOOT_IMAGE_VERSION=$3
+BOOT_IMAGE_LOCATION=$4
+
 
 case "$1" in
 
 	bootimage)
-		openqrm_server_create_boot_image
+		openqrm_server_create_kernel $BOOT_IMAGE_NAME $BOOT_IMAGE_VERSION $BOOT_IMAGE_LOCATION
 		;;
 	*)
 		openqrm_usage
