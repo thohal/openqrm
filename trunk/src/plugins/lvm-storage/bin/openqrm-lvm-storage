@@ -5,6 +5,7 @@ OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/include/openqrm-plugin-lvm-storage-functions
 . /var/openqrm/openqrm-resource.conf
+OPENQRM_POSTENCODE="$resource_basedir/openqrm/sbin/openqrm-postencode.py"
 
 # let only root run this script
 WHOAMI=`whoami`
@@ -235,7 +236,7 @@ case "$LVM_COMMAND" in
 		echo "Posting current volume group status to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.vg.stat
 		vgdisplay > $STORAGE_STATUS_TMP
-		if ! wget -q -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$resource_basedir/openqrm/plugins/lvm-storage/bin/openqrm_postencode.py $STORAGE_STATUS_TMP` http://$resource_openqrmserver/openqrm/base/plugins/9/lvm-storage-action.php?lvm_storage_command=get_storage; then
+		if ! wget -q -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$resource_openqrmserver/openqrm/base/plugins/9/lvm-storage-action.php?lvm_storage_command=get_storage; then
 			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!" | logger
 		fi
@@ -246,7 +247,7 @@ case "$LVM_COMMAND" in
 		echo "Posting current logic volume status to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.$LVM_STORAGE_SERVER_VOLUME_GROUP.lv.stat
 		lvdisplay > $STORAGE_STATUS_TMP
-		if ! wget -q -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$resource_basedir/openqrm/plugins/lvm-storage/bin/openqrm_postencode.py $STORAGE_STATUS_TMP` http://$resource_openqrmserver/openqrm/base/plugins/9/lvm-storage-action.php?lvm_storage_command=get_storage; then
+		if ! wget -q -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$resource_openqrmserver/openqrm/base/plugins/9/lvm-storage-action.php?lvm_storage_command=get_storage; then
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!" | logger
 		fi
