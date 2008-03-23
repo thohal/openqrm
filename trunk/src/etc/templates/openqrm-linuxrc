@@ -319,5 +319,12 @@ else
 	wget -q -O /dev/null "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-monitor.php?resource_command=update_status&resource_id=$resource_id&resource_state=idle&resource_event=available"
 
 	# rcs0 will be started here from init
+	
+	# for initramfs initrds we start a shell here
+	if [ -x /init ]; then
+		echo "Detected initrd as initramfs, starting a shell"
+		/bin/bash
+	fi	
+	
 fi
 

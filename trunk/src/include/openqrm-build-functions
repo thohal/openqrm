@@ -396,8 +396,14 @@ function openqrm_create_default_kernel() {
 			cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
 			rpm2cpio $KERNEL_FILE  | cpio --extract --make-directories --no-absolute-filenames --preserve-modification-time
 		fi
-	
-		openqrm_server_create_kernel default $OPENQRM_SOURCE_VERSION $OPENQRM_BUILD_TMP_DIR/openqrm-build/default
+
+		# ext2 or initramfs initrd  ?
+		if [ -f /etc/debian_version ]; then
+			openqrm_server_create_kernel default $OPENQRM_SOURCE_VERSION $OPENQRM_BUILD_TMP_DIR/openqrm-build/default initramfs
+		else
+			openqrm_server_create_kernel default $OPENQRM_SOURCE_VERSION $OPENQRM_BUILD_TMP_DIR/openqrm-build/default ext2
+		fi
+
 		# put it in the cache 
 		mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/default_ready
 		cp -a $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/*default* $OPENQRM_BUILD_TMP_DIR/openqrm-build/default_ready/

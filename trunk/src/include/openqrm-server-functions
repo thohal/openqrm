@@ -48,8 +48,14 @@ function openqrm_server_create_kernel() {
 	OPENQRM_SERVER_KERNEL_NAME=$1
 	OPENQRM_SERVER_KERNEL_VERSION=$2
 	OPENQRM_SERVER_KERNEL_LOCATION=$3
+	# OPENQRM_SERVER_KERNEL_TYPE can be "ext2" or "initramfs"
+	OPENQRM_SERVER_KERNEL_TYPE=$4
 	
-	echo "Creating kernel $OPENQRM_SERVER_KERNEL_NAME version $OPENQRM_SERVER_KERNEL_VERSION"
+	if [ "$OPENQRM_SERVER_KERNEL_TYPE" == "" ]; then
+		OPENQRM_SERVER_KERNEL_TYPE="ext2"
+	fi
+	
+	echo "Creating kernel $OPENQRM_SERVER_KERNEL_NAME version $OPENQRM_SERVER_KERNEL_VERSION ($OPENQRM_SERVER_KERNEL_TYPE initrd)"
 	# copy kernel + System-map
 	cp -a $OPENQRM_SERVER_KERNEL_LOCATION/boot/vmlinuz-$OPENQRM_SERVER_KERNEL_VERSION $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/vmlinuz-$OPENQRM_SERVER_KERNEL_NAME
 	cp -a $OPENQRM_SERVER_KERNEL_LOCATION/boot/System.map-$OPENQRM_SERVER_KERNEL_VERSION $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/System.map-$OPENQRM_SERVER_KERNEL_NAME
@@ -76,29 +82,48 @@ function openqrm_server_create_kernel() {
 	fi
 
 	# creating the initrd file
-	dd if=/dev/zero of=$OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img bs=1k count=$OPENQRM_INITRD_SIZE
-	#get ram block size there is a problem in newer kernels with size 4096
-	if [ -f "$OPENQRM_SERVER_KERNEL_LOCATION/boot/config-$OPENQRM_SERVER_KERNEL_VERSION" ]; then
-		ram_block_size=`cat $OPENQRM_SERVER_KERNEL_LOCATION/boot/config-$OPENQRM_SERVER_KERNEL_VERSION | grep  CONFIG_BLK_DEV_RAM_BLOCKSIZE | awk -F= '{print $2}'`
-		if [ -z $ram_block_size ]; then
+	if [ "$OPENQRM_SERVER_KERNEL_TYPE" == "ext2" ]; then
+		echo "Creating the initrd as $OPENQRM_SERVER_KERNEL_TYPE"
+		dd if=/dev/zero of=$OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img bs=1k count=$OPENQRM_INITRD_SIZE
+		#get ram block size there is a problem in newer kernels with size 4096
+		if [ -f "$OPENQRM_SERVER_KERNEL_LOCATION/boot/config-$OPENQRM_SERVER_KERNEL_VERSION" ]; then
+			ram_block_size=`cat $OPENQRM_SERVER_KERNEL_LOCATION/boot/config-$OPENQRM_SERVER_KERNEL_VERSION | grep  CONFIG_BLK_DEV_RAM_BLOCKSIZE | awk -F= '{print $2}'`
+			if [ -z $ram_block_size ]; then
+				ram_block_size=$OPENQRM_DEFAULT_RAM_DISK_BLOCK_SIZE
+			fi
+		else
 			ram_block_size=$OPENQRM_DEFAULT_RAM_DISK_BLOCK_SIZE
 		fi
+		mkfs.ext2 -q -b $ram_block_size -F $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img
+		tune2fs -c 0 -i 0 $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img
+		mkdir -p $OPENQRM_TEMP_DIR/bootimage/mnt
+		mount -o loop $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img $OPENQRM_TEMP_DIR/bootimage/mnt
+		mv $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/* $OPENQRM_TEMP_DIR/bootimage/mnt/
+		# add the openQRM-linuxrc
+		rm -f $OPENQRM_TEMP_DIR/bootimage/mnt/linuxrc
+		cp $OPENQRM_SERVER_LINUXRC $OPENQRM_TEMP_DIR/bootimage/mnt/linuxrc
+		chmod +x $OPENQRM_TEMP_DIR/bootimage/mnt/linuxrc
+		umount $OPENQRM_TEMP_DIR/bootimage/mnt
+		gzip $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img
+		mv $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img.gz $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$OPENQRM_SERVER_KERNEL_NAME.img
+		rm -rf $OPENQRM_TEMP_DIR/bootimage
+	elif [ "$OPENQRM_SERVER_KERNEL_TYPE" == "initramfs" ]; then
+		echo "Creating the initrd as $OPENQRM_SERVER_KERNEL_TYPE"
+		DIR_CURRENT=`pwd`
+		# add the openQRM-linuxrc as init
+		rm -f $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/linuxrc
+		rm -f $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/init
+		cp $OPENQRM_SERVER_LINUXRC $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/init
+		chmod +x $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/init
+		# pack with cpio
+		cd $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/
+		find . | cpio -o -H newc | gzip -9 > $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$OPENQRM_SERVER_KERNEL_NAME.img
+		cd $DIR_CURRENT
+		rm -rf $OPENQRM_TEMP_DIR/bootimage
 	else
-		ram_block_size=$OPENQRM_DEFAULT_RAM_DISK_BLOCK_SIZE
+		echo "ERROR: Supported initrd types are ext2 and initramfs"
+		return 1
 	fi
-	mkfs.ext2 -q -b $ram_block_size -F $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img
-	tune2fs -c 0 -i 0 $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img
-	mkdir -p $OPENQRM_TEMP_DIR/bootimage/mnt
-	mount -o loop $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img $OPENQRM_TEMP_DIR/bootimage/mnt
-	mv $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/* $OPENQRM_TEMP_DIR/bootimage/mnt/
-	# add the openQRM-linuxrc
-	rm -f $OPENQRM_TEMP_DIR/bootimage/mnt/linuxrc
-	cp $OPENQRM_SERVER_LINUXRC $OPENQRM_TEMP_DIR/bootimage/mnt/linuxrc
-	chmod +x $OPENQRM_TEMP_DIR/bootimage/mnt/linuxrc
-	umount $OPENQRM_TEMP_DIR/bootimage/mnt
-	gzip $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img
-	mv $OPENQRM_TEMP_DIR/bootimage/initrd-$OPENQRM_SERVER_KERNEL_NAME.img.gz $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$OPENQRM_SERVER_KERNEL_NAME.img
-	rm -rf $OPENQRM_TEMP_DIR/bootimage
 }
 
 
