@@ -1,0 +1,56 @@
+#!/bin/bash
+# this is the functions file for the xen-plugin
+
+
+################ common xen functions
+
+# logs for xen
+function xen_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "xen plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function xen_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $LVM_MGMT_LOCK_FILE` ]; then
+		mkdir -p `dirname $LVM_MGMT_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $LVM_MGMT_LOCK_DELAY -r $LVM_MGMT_LOCK_RETRY -l $LVM_MGMT_LOCK_TIMEOUT $LVM_MGMT_LOCK_FILE
+				RET=$?
+				xen_log xen_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $LVM_MGMT_LOCK_FILE
+				RET=$?
+				xen_log xen_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			xen_log xen_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ xen functions
+
+
+
+
+
+
+
+
+
+

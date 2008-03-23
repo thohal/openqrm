@@ -1,0 +1,65 @@
+#!/bin/bash
+# init script for the openQRM xen-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/include/openqrm-plugin-xen-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/openqrm-plugin-xen.conf
+
+function openqrm_plugin_xen_start() {
+	echo "Starting the openQRM xen-plugin"
+	openqrm_plugin_xen_stop 1>/dev/null 2>&1
+}
+
+
+function openqrm_plugin_xen_stop() {
+	echo "Stopping the openQRM xen-plugin"
+}
+
+function openqrm_plugin_xen_uninstall() {
+	echo "Uninstalling the openQRM xen-plugin"
+	openqrm_plugin_xen_stop
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-xen.tgz
+}
+
+function openqrm_plugin_xen_init() {
+	echo "Initializing the openQRM xen-plugin"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web/boot-service-xen.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-xen.tgz
+	
+}
+
+
+case "$1" in
+	start)
+		openqrm_plugin_xen_start
+		;;
+	stop)
+		openqrm_plugin_xen_stop
+		;;
+	restart)
+		openqrm_plugin_xen_stop
+		sleep 1
+		openqrm_plugin_xen_start
+		;;
+	init)
+		openqrm_plugin_xen_init
+		;;
+	uninstall)
+		openqrm_plugin_xen_uninstall
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+
