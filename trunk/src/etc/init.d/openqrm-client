@@ -45,7 +45,7 @@ function openqrm_boot_service() {
 		rm -f boot-service-$BOOT_SERVICE.tgz	
 	fi
 	# run the boot-service cmd
-	BOOT_SERVICE_INIT="$resource_basedir/openqrm/plugins/$BOOT_SERVICE/etc/init.d/openqrm-plugin-$BOOT_SERVICE"
+	BOOT_SERVICE_INIT="$resource_basedir/openqrm/plugins/$BOOT_SERVICE/etc/init.d/$BOOT_SERVICE"
 	if [ -x $BOOT_SERVICE_INIT ]; then
 		echo "Running $BOOT_SERVICE_CMD on boot-service $BOOT_SERVICE"
 		$BOOT_SERVICE_INIT $BOOT_SERVICE_CMD
