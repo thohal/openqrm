@@ -12,6 +12,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp etc/openqrm* $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/init.d
 	. $(OPENQRM_SERVER_CONF) && cp etc/init.d/openqrm* $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/init.d/ && chmod 700 $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/init.d/*
+	. $(OPENQRM_SERVER_CONF) && cp etc/init.d/xen* $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/init.d/ && chmod 700 $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/init.d/*
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/templates
 	. $(OPENQRM_SERVER_CONF) && cp etc/templates/openqrm* $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/templates/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/include
@@ -23,7 +24,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin
 	. $(OPENQRM_SERVER_CONF) && cp bin/openqrm* $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/
 	. $(OPENQRM_SERVER_CONF) && chmod +x $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm*
-	. $(OPENQRM_SERVER_CONF) && tar -C $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen -czvf $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web/boot-service-xen.tgz include/ bin/
+	. $(OPENQRM_SERVER_CONF) && tar -C $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen -czvf $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web/boot-service-xen.tgz include/ bin/ etc/init.d/xen
 
 uninstall:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make uninstall' as root" && exit 1)

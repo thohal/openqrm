@@ -20,4 +20,11 @@ function xen_kernel_hook() {
 		echo "xen-plugin: Copying Xen-hypervisor to $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/"
 		cp -f $KERNEL_LOCATION/boot/xen-$XEN_VERSION.gz $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/
 	fi
+	
+	# linking the initrd to the boot-service dir
+	if [ ! -f $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/initrd-$KERNEL_NAME.img ]; then
+		echo "xen-plugin: Linking $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$KERNEL_NAME.img to $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/initrd-$KERNEL_NAME.img"
+		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$KERNEL_NAME.img $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/initrd-$KERNEL_NAME.img
+	fi
+	
 }

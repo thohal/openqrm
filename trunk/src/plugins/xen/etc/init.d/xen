@@ -1,0 +1,69 @@
+#!/bin/bash
+# this is the boot-service init script for the Xen-hosts
+
+export `eval cat /proc/cmdline`	
+. /var/openqrm/openqrm-resource.conf
+export OPENQRM_SERVER_BASE_DIR=$resource_basedir
+. $resource_basedir/openqrm/include/openqrm-functions
+
+
+
+
+function xen_start() {
+	echo "Starting the openQRM xen-plugin"
+	xen_stop 1>/dev/null 2>&1
+
+	# xen interface -> the one not bounded to the rootfs
+	OPENQRM_INTERFACE=`ifconfig | grep $resource_mac | grep :oq | cut -d':' -f1`
+	XEN_INTERFACE=`ifconfig | grep ^eth | grep -v $OPENQRM_INTERFACE | head -n1 | awk {' print $1 '}`
+	/etc/xen/scripts/network-bridge start vifnum=0 bridge=xenbr0 netdev=$XEN_INTERFACE 
+
+	# download the initrd
+	if ! wget -q -O /boot/initrd-$resource_kernel.img http://$resource_openqrmserver/openqrm/boot-service/initrd-$resource_kernel.img; then
+		echo "ERROR: Could not download http://$resource_openqrmserver/openqrm/boot-service/initrd-$resource_kernel.img"
+		return 1
+	fi
+
+
+}
+
+
+function xen_stop() {
+	echo "Stopping the openQRM xen-plugin"
+}
+
+
+
+
+
+case "$1" in
+	start)
+		xen_start
+		;;
+	stop)
+		xen_stop
+		;;
+	restart)
+		xen_stop
+		sleep 1
+		xen_start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+
+esac
+exit $?
+
+
+
+
+
+
+
+
+
+
+
+
+
