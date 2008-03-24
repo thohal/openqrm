@@ -29,6 +29,7 @@ function openqrm_server_get_config() {
 	export OPENQRM_SERVER_IP_ADDRESS=`ifconfig $OPENQRM_SERVER_INTERFACE | grep inet | grep -v inet6 | cut -d':' -f2 | awk {' print $1 '} | head -n 1`
 	export OPENQRM_SERVER_BROADCAST_ADDRESS=`ifconfig $OPENQRM_SERVER_INTERFACE | grep inet | grep -v inet6 | cut -d':' -f3 | awk {' print $1 '} | head -n 1`
 	export OPENQRM_SERVER_SUBNET_MASK=`ifconfig $OPENQRM_SERVER_INTERFACE | grep inet | grep -v inet6 | cut -d':' -f4 | awk {' print $1 '} | head -n 1`
+	export OPENQRM_SERVER_DEFAULT_GATEWAY=`route -n | grep ^0.0.0.0 | head -n1 | awk {' print $2 '}`
 }
 # run immediatly
 openqrm_server_get_config
@@ -52,7 +53,7 @@ function openqrm_server_create_kernel() {
 	OPENQRM_SERVER_KERNEL_TYPE=$4
 	
 	if [ "$OPENQRM_SERVER_KERNEL_TYPE" == "" ]; then
-		OPENQRM_SERVER_KERNEL_TYPE="ext2"
+		export OPENQRM_SERVER_KERNEL_TYPE="ext2"
 	fi
 	
 	echo "Creating kernel $OPENQRM_SERVER_KERNEL_NAME version $OPENQRM_SERVER_KERNEL_VERSION ($OPENQRM_SERVER_KERNEL_TYPE initrd)"
@@ -124,6 +125,17 @@ function openqrm_server_create_kernel() {
 		echo "ERROR: Supported initrd types are ext2 and initramfs"
 		return 1
 	fi
+
+	# hook for plugins
+	for OPENQRM_PLUGIN in `ls $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/`; do
+		. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/openqrm-plugin-$OPENQRM_PLUGIN.conf
+		if [ -d $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER ]; then
+			if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/include/openqrm-plugin-$OPENQRM_PLUGIN-kernel-hook ]; then
+				. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/include/openqrm-plugin-$OPENQRM_PLUGIN-kernel-hook
+				$OPENQRM_PLUGIN""_kernel_hook $OPENQRM_SERVER_KERNEL_NAME $OPENQRM_SERVER_KERNEL_VERSION $OPENQRM_SERVER_KERNEL_LOCATION $OPENQRM_SERVER_KERNEL_TYPE
+			fi
+		fi
+	done
 }
 
 
@@ -212,6 +224,17 @@ function openqrm_server_create_pxe_config() {
 		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/g" \
 		> $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE
 		chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE
+
+		# allow plugin to re-write the pxe-config
+		for OPENQRM_PLUGIN in `ls $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/`; do
+			. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/openqrm-plugin-$OPENQRM_PLUGIN.conf
+			if [ -d $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER ]; then
+				if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/include/openqrm-plugin-$OPENQRM_PLUGIN-assign-hook ]; then
+					. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/include/openqrm-plugin-$OPENQRM_PLUGIN-assign-hook
+					$OPENQRM_PLUGIN""_assign_hook $RESOURCE_ID $KERNEL_NAME $RESOURCE_PXELINUXCFG_FILE
+				fi
+			fi
+		done
 }
 
 
@@ -283,7 +306,19 @@ function openqrm_assign_kernel() {
 
 
 
-
+# function to get infos about a resource
+# param 1	: resource_mac
+function openqrm_get_resource_parameter() {
+	local mac=$1
+	wget -q -O /tmp/$mac "http://localhost/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_mac=$mac"
+	. /tmp/$mac
+	for param in `cat /tmp/$mac`; do
+		KEY=`echo $param | cut -d'=' -f1`
+		if [ "$KEY" != '"' ]; then
+			export $KEY
+		fi
+	done
+}
 
 
 
