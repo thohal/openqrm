@@ -277,7 +277,7 @@ function get_parameter($resource_id) {
 			$recordSet->MoveNext();
 		}
 		$recordSet->Close();
-		echo "image_storage_server_ip=$image_storage_server_ip";
+		echo "image_storage_server_ip=$image_storage_server_ip\n";
 	}
 	$db->Close();
 
