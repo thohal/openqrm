@@ -1,0 +1,71 @@
+body {
+	background-color: #74B3DC;
+	margin: 0px; 
+	padding: 0px;
+
+
+}
+div {
+	margin: 0px; 
+	padding: 0px;
+}
+.logo {
+	background-image: url(../img/top-logo-bg.gif);
+	background-repeat:no-repeat;
+	background-color: white;
+	position:absolute;
+	top:10px;
+	width:170px;
+	padding: 15px 0 0 30px;
+	height:80px;
+}
+.main {
+background-color: #74B3DC;
+	margin: 1px 0 0 200px;
+	height: 72px;
+	border: 1px solid #3399CC;
+	border-top: 1px solid #33CCFF;
+	border-left: 1px solid #33CCFF;
+}
+.div_box {
+	margin: 5px 0 0 5px;
+	height: 60px;
+	border: 1px solid #3399CC;
+border-bottom: 1px solid #33CCFF;
+border-right: 1px solid #33CCFF;
+	width:150px;
+	float:left;
+}
+.top {
+	font-family: Tahoma, Verdana, sans-serif;
+	font-size: 11px;
+	color: #646464;
+	background-image: url(../img/top-top-bg.gif);
+	background-repeat:no-repeat;
+	background-color: white;
+	margin: 0 0 0 400px;
+line-height:25px;
+text-align:right;
+padding:0 20px 0 0;
+}
+.bottom-line {
+position:absolute;
+bottom:0;
+clear:both;
+line-height:0px;
+width:100%;
+
+}
+
+
+
+/* Standard */
+
+.floatbreaker {
+clear:both;
+line-height:0px;
+font-size:0px;
+border:0px none;
+margin:0;
+padding:0;
+}

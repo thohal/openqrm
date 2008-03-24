@@ -1,5 +1,6 @@
 body {
-	background-color: #eeeeee;
+	
+	/*background-color: #eeeeee; */
 	margin: 0px; 
 	padding: 0px;
 }
@@ -22,14 +23,14 @@ padding:0;
 	float: left;
 	width: 100%;
 	line-height: normal;
-    padding: 6px 0 0 0px;
+    padding: 20px 0 0 0px;
 	border-bottom:1px solid #91a7b4;
 	margin:0 0 0 0;
     background-color:white;
 }
 .htmlobject_tabs ul {
 	position:relative;
-	margin: 0 0 0 5px;
+	margin: 0 0 0 20px;
 	padding: 0 0 0;
 	list-style: none;
 }
@@ -40,15 +41,16 @@ padding:0;
     border-width:1px;
     border-style:solid;
     border-color:#91a7b4;
+    background-color:#eeeeee; 
 	margin: 0;
 	margin-left: 0;
-	margin-right: 2px;
+	margin-right: 4px;
 	padding: 0 0 0 0px;
 }
 .htmlobject_tabs li.current {
-    border-bottom: 1px solid #eeeeee !important;
-    background-color:#eeeeee;
-	margin-right: 2px;
+    background-color:transparent;
+    border-bottom: 1px solid white !important;
+	margin-right: 4px;
 }
 .htmlobject_tabs span {
 	float: left;

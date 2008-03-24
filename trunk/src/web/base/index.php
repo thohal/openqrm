@@ -4,11 +4,17 @@
 <head>
 <title>openQRM-Server</title>
 </head>
-  <frameset rows="100,*">
-  <frame src="top.php" name="TopFrame" frameborder="0" noresize scrolling="no">
-	<frameset cols="200,*">
-	<frame src="menu.php" name="NaviFrame" frameborder="0">
-  <frame src="server/resource/resource-overview.php" name="MainFrame" frameborder="0">
+<style>
+.left-border {
+border:1px solid;
+}
+</style>
+
+  <frameset rows="100,*" frameborder="0" framespacing="0" border="0">
+  <frame src="top.php" name="TopFrame" noresize scrolling="no" marginwidth="0" marginheight="0">
+	<frameset cols="200,*" frameborder="0" framespacing="0" border="0">
+	<frame src="menu.php" name="NaviFrame" marginwidth="0" marginheight="0">
+  <frame src="server/resource/resource-overview.php" name="MainFrame" marginwidth="0" marginheight="0">
   </frameset>
 
   <noframes>
