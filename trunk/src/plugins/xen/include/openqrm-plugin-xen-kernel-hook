@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# this is a hook function for the kernel-creation phase
+
+XEN_VERSION=3.1
+
+function xen_kernel_hook() {
+
+	local KERNEL_NAME=$1
+	local KERNEL_VERSION=$2
+	local KERNEL_LOCATION=$3
+	local KERNEL_TYPE=$4
+
+	echo "xen-plugin: Running xen_kernel_hook $KERNEL_NAME $KERNEL_VERSION $KERNEL_LOCATION $KERNEL_TYPE"
+	echo "xen-plugin: Running xen_kernel_hook $KERNEL_NAME $KERNEL_VERSION $KERNEL_LOCATION $KERNEL_TYPE" | logger
+	echo "xen-plugin: basedir = $OPENQRM_SERVER_BASE_DIR" | logger
+
+	if [ -f $KERNEL_LOCATION/boot/xen-$XEN_VERSION.gz ]; then
+		echo "xen-plugin: Found Xen-hypervisor at $KERNEL_LOCATION/boot/xen-$XEN_VERSION.gz"
+		echo "xen-plugin: Copying Xen-hypervisor to $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/"
+		cp -f $KERNEL_LOCATION/boot/xen-$XEN_VERSION.gz $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/
+	fi
+}

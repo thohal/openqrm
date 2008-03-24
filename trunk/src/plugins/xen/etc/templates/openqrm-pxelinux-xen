@@ -1,0 +1,7 @@
+default xen
+
+label xen
+ kernel pxelinux/com32/modules/mboot.c32
+ append boot/xen-@@XEN_VERSION@@.gz --- boot/vmlinuz-@@KERNEL_NAME@@ ramdisk_size=131072 id=@@OPENQRM_RESOURCE_ID@@ openqrm=@@OPENQRM_SERVER_IP_ADDRESS@@ ip=@@OPENQRM_RESOURCE_IP@@:@@OPENQRM_SERVER_IP_ADDRESS@@:@@OPENQRM_SERVER_DEFAULT_GATEWAY@@:@@OPENQRM_SERVER_SUBNET_MASK@@ BOOTIF=@@OPENQRM_RESOURCE_MAC@@ --- boot/initrd-@@KERNEL_NAME@@.img
+
+
