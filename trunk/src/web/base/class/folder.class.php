@@ -51,6 +51,7 @@ var $arExcludedFiles = array('.', '..');
 	    	if (in_array($file, $arExcludedFiles) == FALSE){
 	    		if (is_dir("$path/$file")== TRUE) {
 					$this->folders[] = $file;
+					sort($this->folders);
 	    		}		
 	    	}	
 	    }
