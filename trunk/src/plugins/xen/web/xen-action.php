@@ -31,6 +31,11 @@ if ($OPENQRM_USER->role != "administrator") {
 }
 
 $xen_name = $_REQUEST["xen_name"];
+$xen_mac = $_REQUEST["xen_mac"];
+$xen_ip = $_REQUEST["xen_ip"];
+$xen_ram = $_REQUEST["xen_ram"];
+$xen_disk = $_REQUEST["xen_disk"];
+$xen_swap = $_REQUEST["xen_swap"];
 $xen_fields = array();
 foreach ($_REQUEST as $key => $value) {
 	if (strncmp($key, "xen_", 4) == 0) {
@@ -41,6 +46,13 @@ unset($xen_fields["xen_command"]);
 
 	syslog(LOG_NOTICE, "openQRM-engine: Processing command $xen_command");
 	switch ($xen_command) {
+
+		case 'new':
+			$xen = new resource();
+			$xen->get_instance_by_id($xen_id);
+			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen create -n $xen_name -m $xen_mac -i $xen_ip -r $xen_ram -d $xen_disk -s $xen_swap -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+			$xen->send_command($xen->ip, $resource_command);
+			break;
 
 		case 'start':
 			$xen = new resource();
@@ -74,13 +86,6 @@ unset($xen_fields["xen_command"]);
 			$xen = new resource();
 			$xen->get_instance_by_id($xen_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen remove -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$xen->send_command($xen->ip, $resource_command);
-			break;
-
-		case 'new':
-			$xen = new resource();
-			$xen->get_instance_by_id($xen_id);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen create -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
 			break;
 

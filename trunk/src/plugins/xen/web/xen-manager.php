@@ -29,7 +29,7 @@ function xen_display($admin) {
 
 		$xen_resource = new resource();
 		$xen_resource->get_instance_by_id($xen_db["resource_id"]);
-
+		// refresh
 		$disp = $disp."<div id=\"xen\" nowrap=\"true\">";
 		$disp = $disp."<form action='xen-action.php' method=post>";
 		$disp = $disp."$xen_resource->id $xen_resource->ip ";
@@ -39,6 +39,15 @@ function xen_display($admin) {
 			$disp = $disp."<input type=submit value='Refresh'>";
 		}
 		$disp = $disp."</form>";
+		// create
+		$disp = $disp."<form action='xen-create.php' method=post>";
+		$disp = $disp."<input type=hidden name=xen_id value=$xen_resource->id>";
+		if ("$admin" == "admin") {
+			$disp = $disp."<input type=submit value='Create'>";
+		}
+		$disp = $disp."</form>";
+
+
 		$loop=0;
 		$xen_vm_list_file="xen-stat/$xen_resource->id.vm_list";
 		if (file_exists($xen_vm_list_file)) {
@@ -67,15 +76,17 @@ function xen_display($admin) {
 						$disp = $disp.$xen_name;
 						$disp = $disp." ";
 						$disp = $disp.$xen_data;
-						$disp = $disp."  <a href=\"xen-action.php?xen_name=$xen_name&xen_command=start&xen_id=$xen_resource->id\">Start</a>";
-						$disp = $disp." / ";
-						$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=stop&xen_id=$xen_resource->id\">Stop</a>";
-						$disp = $disp." / ";
-						$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=reboot&xen_id=$xen_resource->id\">Reboot</a>";
-						$disp = $disp." / ";
-						$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=kill&xen_id=$xen_resource->id\">Force-stop</a>";
-						$disp = $disp." / ";
-						$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=remove&xen_id=$xen_resource->id\">Remove</a>";
+						if ("$admin" == "admin") {
+							$disp = $disp."  <a href=\"xen-action.php?xen_name=$xen_name&xen_command=start&xen_id=$xen_resource->id\">Start</a>";
+							$disp = $disp." / ";
+							$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=stop&xen_id=$xen_resource->id\">Stop</a>";
+							$disp = $disp." / ";
+							$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=reboot&xen_id=$xen_resource->id\">Reboot</a>";
+							$disp = $disp." / ";
+							$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=kill&xen_id=$xen_resource->id\">Force-stop</a>";
+							$disp = $disp." / ";
+							$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=remove&xen_id=$xen_resource->id\">Remove</a>";
+						}
 						$disp = $disp."<br>";
 
 					} elseif ($loop > 1) {
