@@ -6,7 +6,6 @@
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 
 export XEN_PXE_CONFIG_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/templates/openqrm-pxelinux-xen"
-export XEN_VERSION=3.1
 
 function xen_assign_hook() {
 
@@ -26,7 +25,7 @@ function xen_assign_hook() {
 
 		cat $XEN_PXE_CONFIG_TEMPLATE |	\
 			sed -e "s/@@KERNEL_NAME@@/$OPENQRM_KERNEL_NAME/g" |	\
-			sed -e "s/@@XEN_VERSION@@/$XEN_VERSION/g" |	\
+			sed -e "s/@@XEN_VERSION@@/$OPENQRM_KERNEL_NAME/g" |	\
 			sed -e "s/@@OPENQRM_RESOURCE_ID@@/$OPENQRM_RESOURCE_ID/g" |	\
 			sed -e "s/@@OPENQRM_RESOURCE_IP@@/$resource_ip/g" |	\
 			sed -e "s/@@OPENQRM_RESOURCE_MAC@@/$OPENQRM_RESOURCE_MAC/g" |	\
