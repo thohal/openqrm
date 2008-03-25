@@ -101,11 +101,16 @@ function openqrm_server_init() {
 	htpasswd -b $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd anonymous openqrm
 	chmod 666 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd
 
-	# here we add the default kernel+kernel-version to the openQRM-server
+	# here we create + add the default kernel+kernel-version to the openQRM-server
 	# via the kernel-action.form. If this returns bad something is wrong
-	DEFAULT_KERNEL_VERSION=`tar -tf $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/modules-default.tgz | head -n3 | tail -n1`
-	DEFAULT_KERNEL_VERSION=`basename $DEFAULT_KERNEL_VERSION`
-	echo "Adding the default kernel version $DEFAULT_KERNEL_VERSION"
+	DEFAULT_KERNEL_VERSION=`uname -r`
+	echo "Creating the default kernel version $DEFAULT_KERNEL_VERSION"
+	if [ -f /etc/debian_version ]; then
+		INITRD_TYPE="initramfs"
+	else
+		INITRD_TYPE="ext2"
+	fi
+	openqrm_server_create_kernel default $DEFAULT_KERNEL_VERSION / $INITRD_TYPE
 	if ! openqrm_server_add_kernel openqrm openqrm default $DEFAULT_KERNEL_VERSION; then
 		echo "WARNING: Could not add the default kernel!"
 		echo "         Please check your Apache-configuration according openQRM"

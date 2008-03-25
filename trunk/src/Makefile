@@ -16,11 +16,6 @@ compile:
 initrd:
 	@chmod +x make-assistant
 	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_create_default_initrd_template
-	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_get_kernel_default_kernel
-
-bootimage: initrd
-	@chmod +x make-assistant
-	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_create_default_kernel
 
 install:
 	@chmod +x make-assistant
@@ -28,7 +23,6 @@ install:
 	@. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm
 	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name "CVS"`; do cd $$SRC_DIR && make install && cd ..; done
 	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_pack_default_initrd_template
-	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_create_default_kernel
 
 start: check
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make start' as root" && exit 1)
@@ -69,5 +63,5 @@ buildrequirements:
 	
 
 
-.PHONY: all configure compile install start uninstall clean realclean reinstall package check initrd bootimage buildrequirements
+.PHONY: all configure compile install start uninstall clean realclean reinstall package check initrd buildrequirements
 
