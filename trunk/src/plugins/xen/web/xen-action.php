@@ -84,6 +84,13 @@ unset($xen_fields["xen_command"]);
 			$xen->send_command($xen->ip, $resource_command);
 			break;
 
+		case 'add':
+			$xen = new resource();
+			$xen->get_instance_by_id($xen_id);
+			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen add -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+			$xen->send_command($xen->ip, $resource_command);
+			break;
+
 
 		case 'get_xen':
 			if (!file_exists($XenDir)) {

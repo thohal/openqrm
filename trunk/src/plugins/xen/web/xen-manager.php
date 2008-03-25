@@ -50,7 +50,7 @@ function xen_display($admin) {
 					$xen_name = str_replace(".cfg", "", $xen_name);
 
 					if ("$admin" == "admin") {
-						$disp = $disp." $xen_name <a href=\"xen-action.php?xen_name=$xen_name&xen_command=new&xen_id=$xen_resource->id\">Add</a>";
+						$disp = $disp." $xen_name <a href=\"xen-action.php?xen_name=$xen_name&xen_command=add&xen_id=$xen_resource->id\">Add</a>";
 					} else {
 						$disp = $disp." $xen_name";
 					}

@@ -1,0 +1,10 @@
+kernel      = '/boot/vmlinuz-@@KERNEL_VERSION@@'
+ramdisk     = '/boot/initrd-@@KERNEL_NAME@@.img'
+memory      = '@@OPENQRM_RESOURCE_RAM@@'
+extra='xencons=tty id=@@OPENQRM_RESOURCE_ID@@ ramdisk_size=131072 openqrm=@@OPENQRM_SERVER_IP_ADDRESS@@ ip=@@OPENQRM_RESOURCE_IP@@:@@OPENQRM_SERVER_IP_ADDRESS@@:@@OPENQRM_XEN_DEFAULT_GATEWAY@@:@@OPENQRM_XEN_SUBNET_MASK@@ BOOTIF=@@OPENQRM_RESOURCE_MAC@@'
+name        = '@@XEN_VM_NAME@@'
+vif         = [ 'mac=@@OPENQRM_RESOURCE_MAC@@, ip=@@OPENQRM_RESOURCE_IP@@' ]
+on_poweroff = 'destroy'
+on_reboot   = 'restart'
+on_crash    = 'destroy'
+

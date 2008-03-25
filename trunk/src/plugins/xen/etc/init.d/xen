@@ -16,7 +16,9 @@ function xen_start() {
 	# xen interface -> the one not bounded to the rootfs
 	OPENQRM_INTERFACE=`ifconfig | grep $resource_mac | grep :oq | cut -d':' -f1`
 	XEN_INTERFACE=`ifconfig | grep ^eth | grep -v $OPENQRM_INTERFACE | head -n1 | awk {' print $1 '}`
-	/etc/xen/scripts/network-bridge start vifnum=0 bridge=xenbr0 netdev=$XEN_INTERFACE 
+	if [ -x /etc/xen/scripts/network-bridge ]; then
+		/etc/xen/scripts/network-bridge start vifnum=0 bridge=xenbr0 netdev=$XEN_INTERFACE 
+	fi
 
 	# download the initrd
 	if ! wget -q -O /boot/initrd-$resource_kernel.img http://$resource_openqrmserver/openqrm/boot-service/initrd-$resource_kernel.img; then
