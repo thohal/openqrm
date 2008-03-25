@@ -1,7 +1,2 @@
-#	Title
-#	Href
-#	Alt
-#	IMG
-#	Target
-.|Resources
-..|Overview|server/resource/resource-overview.php
+..|Resources
+...|Overview|server/resource/resource-overview.php

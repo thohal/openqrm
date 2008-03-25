@@ -1,0 +1,8 @@
+# this is the root of the menu
+# syntax is :
+#	Title
+#	Href
+#	Alt
+#	IMG
+#	Target
+.|Data-Center

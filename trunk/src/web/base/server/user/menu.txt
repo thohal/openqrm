@@ -1,2 +1,2 @@
-.|User
-..|Admin|server/user/user.php
+..|User
+...|Admin|server/user/user.php
