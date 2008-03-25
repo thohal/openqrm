@@ -31,6 +31,9 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp base/img/*.gif $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/
 	# base/server
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server
+	# base/server/aa_server
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/aa_server
+	. $(OPENQRM_SERVER_CONF) && cp base/server/aa_server/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/aa_server/
 	# base/server/resource
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/resource
 	. $(OPENQRM_SERVER_CONF) && cp base/server/resource/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/resource/
