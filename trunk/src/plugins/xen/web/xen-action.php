@@ -17,12 +17,16 @@ require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/include/openqrm-server-config.php";
 require_once "$RootDir/class/resource.class.php";
+require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
-global $IMAGE_INFO_TABLE;
 global $OPENQRM_SERVER_BASE_DIR;
+global $RESOURCE_INFO_TABLE;
 
 // place for the xen stat files
 $XenDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/11/xen-stat';
+
+// currently static name for the Xen-kernel
+$XEN_KERNEL_NAME="xen";
 
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {
@@ -48,10 +52,23 @@ unset($xen_fields["xen_command"]);
 	switch ($xen_command) {
 
 		case 'new':
+			// send command to xen-host to create the new vm
 			$xen = new resource();
 			$xen->get_instance_by_id($xen_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen create -n $xen_name -m $xen_mac -i $xen_ip -r $xen_ram -d $xen_disk -s $xen_swap -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
+			// add vm to openQRM
+			$resource_new = new resource();
+			$resource_id = openqrm_db_get_free_id('resource_id', $RESOURCE_INFO_TABLE);
+			$resource_fields = array();
+			$resource_fields["resource_id"]=$resource_id;
+			$resource_fields["resource_mac"]=$xen_mac;
+			$resource_fields["resource_ip"]=$xen_ip;
+			$resource->add($resource_fields);
+			// assign to xen kernel
+			$kernel_xen = new kernel();
+			$kernel->get_instance_by_name($XEN_KERNEL_NAME);
+			$resource->assign($resource_id, $kernel->id, $kernel->name, 1, "idle");
 			break;
 
 		case 'start':
