@@ -392,6 +392,16 @@ function get_count($which) {
 }
 
 
+// generates a mac address
+function generate_mac() {
+	$CMD="(date; cat /proc/interrupts) | md5sum | sed -r 's/^(.{10}).*\$/\\1/; s/([0-9a-f]{2})/\\1:/g; s/:\$//;' | tr '[:lower:]:' '[:upper:]-' | sed -e 's/-/:/g'";
+	$GEN_MAC=exec($CMD);
+	$GEN_MAC="00:".$GEN_MAC;
+	$this->mac = $GEN_MAC;
+}
+
+
+
 // displays the resource-overview
 function display_overview($start, $count) {
 	global $RESOURCE_INFO_TABLE;

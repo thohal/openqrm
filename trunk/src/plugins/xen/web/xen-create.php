@@ -24,16 +24,19 @@ function xen_create() {
 	$disp = $disp."<br>";
 	$xen = new resource();
 	$xen->get_instance_by_id($xen_id);
+	$resource_mac_gen = new resource();
+	$resource_mac_gen->generate_mac();
+	$suggested_mac = $resource_mac_gen->mac;
 
 	$disp = $disp."<form action='xen-action.php' method=post>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp.htmlobject_input('xen_name', array("value" => '', "label" => 'VM name'), 'text', 20);
-	$disp = $disp.htmlobject_input('xen_mac', array("value" => '', "label" => 'Mac address'), 'text', 20);
-	$disp = $disp.htmlobject_input('xen_ip', array("value" => '', "label" => 'Ip address'), 'text', 20);
-	$disp = $disp.htmlobject_input('xen_ram', array("value" => '', "label" => 'Memory (MB)'), 'text', 10);
-	$disp = $disp.htmlobject_input('xen_disk', array("value" => '', "label" => 'Disk (MB)'), 'text', 10);
-	$disp = $disp.htmlobject_input('xen_swap', array("value" => '', "label" => 'Swap (MB)'), 'text', 10);
+	$disp = $disp.htmlobject_input('xen_mac', array("value" => $suggested_mac, "label" => 'Mac address'), 'text', 20);
+	$disp = $disp.htmlobject_input('xen_ip', array("value" => 'dhcp', "label" => 'Ip address'), 'text', 20);
+	$disp = $disp.htmlobject_input('xen_ram', array("value" => '256', "label" => 'Memory (MB)'), 'text', 10);
+	$disp = $disp.htmlobject_input('xen_disk', array("value" => '2000', "label" => 'Disk (MB)'), 'text', 10);
+	$disp = $disp.htmlobject_input('xen_swap', array("value" => '500', "label" => 'Swap (MB)'), 'text', 10);
 	$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
 	$disp = $disp."<input type=hidden name=xen_command value='new'>";
 	$disp = $disp."<br>";

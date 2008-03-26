@@ -55,7 +55,7 @@ function get_instance($id, $name) {
 	if ("$id" != "") {
 		$appliance_array = &$db->Execute("select * from $APPLIANCE_INFO_TABLE where appliance_id=$id");
 	} else if ("$name" != "") {
-		$appliance_array = &$db->Execute("select * from $APPLIANCE_INFO_TABLE where appliance_name=$name");
+		$appliance_array = &$db->Execute("select * from $APPLIANCE_INFO_TABLE where appliance_name='$name'");
 	} else {
 		echo "ERROR: Could not create instance of appliance without data";
 		exit(-1);

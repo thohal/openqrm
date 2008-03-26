@@ -20,6 +20,7 @@ foreach ($_REQUEST as $key => $value) {
 		$resource_fields[$key] = $value;
 	}
 }
+unset($resource_fields["resource_command"]);
 
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
@@ -32,12 +33,10 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		// resource_mac
 		case 'get_parameter':
 			// if resource-id = -1 we add a new resource first
-			if ($resource_id = "-1") {
+			if ($resource_id == "-1") {
 				// check if resource already exists
 				$resource = new resource();
 				if (!$resource->exists($resource_mac)) {
-					// echo "Resource $resource_mac already exist in the openQRM-database!";
-					// } else {
 					// add resource
 					$new_resource_id=openqrm_db_get_free_id('resource_id', $RESOURCE_INFO_TABLE);
 					$resource->id = $new_resource_id;
@@ -55,10 +54,11 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 					$resource->add($resource_fields);
 				}
 			}		
-
 			if (strlen($resource_mac)) {
 				$resource = new resource();
 				$resource->get_instance_by_mac("$resource_mac");
+				// update the resource parameter in any way
+				$resource->update_info($resource->id, $resource_fields);
 				$resource->get_parameter($resource->id);
 			}
 			exit();

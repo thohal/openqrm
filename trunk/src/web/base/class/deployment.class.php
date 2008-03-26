@@ -26,9 +26,9 @@ function get_instance($id, $name, $type) {
 	if ("$id" != "") {
 		$deployment_array = &$db->Execute("select * from $DEPLOYMENT_INFO_TABLE where deployment_id=$id");
 	} else if ("$name" != "") {
-		$deployment_array = &$db->Execute("select * from $DEPLOYMENT_INFO_TABLE where deployment_name=$name");
+		$deployment_array = &$db->Execute("select * from $DEPLOYMENT_INFO_TABLE where deployment_name='$name'");
 	} else if ("$type" != "") {
-		$deployment_array = &$db->Execute("select * from $DEPLOYMENT_INFO_TABLE where deployment_type=$type");
+		$deployment_array = &$db->Execute("select * from $DEPLOYMENT_INFO_TABLE where deployment_type='$type'");
 	} else {
 		echo "ERROR: Could not create instance of deployment without data";
 		exit(-1);

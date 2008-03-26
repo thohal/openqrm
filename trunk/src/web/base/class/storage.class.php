@@ -29,7 +29,7 @@ function get_instance($id, $name) {
 	if ("$id" != "") {
 		$storage_array = &$db->Execute("select * from $STORAGE_INFO_TABLE where storage_id=$id");
 	} else if ("$name" != "") {
-		$storage_array = &$db->Execute("select * from $STORAGE_INFO_TABLE where storage_name=$name");
+		$storage_array = &$db->Execute("select * from $STORAGE_INFO_TABLE where storage_name='$name'");
 	} else {
 		echo "ERROR: Could not create instance of storage without data";
 		exit(-1);

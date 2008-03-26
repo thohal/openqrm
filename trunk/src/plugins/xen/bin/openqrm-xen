@@ -111,10 +111,20 @@ case "$XEN_COMMAND" in
 		fi
 		echo "Creating Xen vm $XEN_VM_NAME -> /etc/xen/$XEN_VM_NAME.cfg"
 		# gathering some infos
+		if [ "$XEN_VM_IP" == "dhcp" ]; then
+			echo "-> gathering an ip-address for $XEN_VM_MAC ..."
+			if ! xen_get_next_ip $XEN_VM_MAC; then
+				return 1			
+			fi
+			export XEN_VM_IP=$PARTITION_IP
+			export OPENQRM_XEN_SUBNET_MASK=$PARTITION_SUBNET
+		else
+			export OPENQRM_XEN_SUBNET_MASK=`ifconfig | grep $resource_ip | cut -d':' -f3 | awk {' print $1 '}`
+		fi
 		export OPENQRM_XEN_DEFAULT_GATEWAY=`route -n | grep ^0.0.0.0 | head -n1 | awk {' print $2 '}`
-		export OPENQRM_XEN_SUBNET_MASK=`ifconfig | grep $resource_ip | cut -d':' -f3 | awk {' print $1 '}`
 		export OPENQRM_RESOURCE_ID=-1
 		export OPENQRM_KERNEL_VERSION=`uname -r`
+		# creating the cfg
 		cat $OPENQRM_XEN_VM_TEMPLATE |	\
 			sed -e "s/@@XEN_VM_NAME@@/$XEN_VM_NAME/g" |	\
 			sed -e "s/@@KERNEL_NAME@@/$resource_kernel/g" |	\

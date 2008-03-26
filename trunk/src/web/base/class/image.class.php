@@ -35,7 +35,7 @@ function get_instance($id, $name) {
 	if ("$id" != "") {
 		$image_array = &$db->Execute("select * from $IMAGE_INFO_TABLE where image_id=$id");
 	} else if ("$name" != "") {
-		$image_array = &$db->Execute("select * from $IMAGE_INFO_TABLE where image_name=$name");
+		$image_array = &$db->Execute("select * from $IMAGE_INFO_TABLE where image_name='$name'");
 	} else {
 		echo "ERROR: Could not create instance of image without data";
 		exit(-1);

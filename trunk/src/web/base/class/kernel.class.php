@@ -26,7 +26,7 @@ function get_instance($id, $name) {
 	if ("$id" != "") {
 		$kernel_array = &$db->Execute("select * from $KERNEL_INFO_TABLE where kernel_id=$id");
 	} else if ("$name" != "") {
-		$kernel_array = &$db->Execute("select * from $KERNEL_INFO_TABLE where kernel_name=$name");
+		$kernel_array = &$db->Execute("select * from $KERNEL_INFO_TABLE where kernel_name='$name'");
 	} else {
 		echo "ERROR: Could not create instance of kernel without data";
 		exit(-1);

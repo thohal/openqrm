@@ -6,7 +6,7 @@ $xen_id = $_REQUEST["xen_id"];
 <html>
 <head>
 <title>openQRM Xen actions</title>
-<meta http-equiv="refresh" content="0; URL=xen-manager.php?currenttab=tab1&strMsg=Processing <?php echo $xen_command; ?>">
+<meta http-equiv="refresh" content="10; URL=xen-manager.php?currenttab=tab1&strMsg=Processing <?php echo $xen_command; ?>">
 </head>
 <body>
 
@@ -64,11 +64,11 @@ unset($xen_fields["xen_command"]);
 			$resource_fields["resource_id"]=$resource_id;
 			$resource_fields["resource_mac"]=$xen_mac;
 			$resource_fields["resource_ip"]=$xen_ip;
-			$resource->add($resource_fields);
+			$resource_new->add($resource_fields);
 			// assign to xen kernel
 			$kernel_xen = new kernel();
-			$kernel->get_instance_by_name($XEN_KERNEL_NAME);
-			$resource->assign($resource_id, $kernel->id, $kernel->name, 1, "idle");
+			$kernel_xen->get_instance_by_name($XEN_KERNEL_NAME);
+			$resource_new->assign($resource_id, $kernel_xen->id, $kernel_xen->name, 1, "idle");
 			break;
 
 		case 'start':

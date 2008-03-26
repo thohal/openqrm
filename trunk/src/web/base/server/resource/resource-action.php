@@ -36,6 +36,7 @@ foreach ($_REQUEST as $key => $value) {
 		$resource_fields[$key] = $value;
 	}
 }
+unset($resource_fields["resource_command"]);
 
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();

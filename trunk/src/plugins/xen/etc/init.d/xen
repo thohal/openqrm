@@ -6,7 +6,10 @@ export `eval cat /proc/cmdline`
 export OPENQRM_SERVER_BASE_DIR=$resource_basedir
 . $resource_basedir/openqrm/include/openqrm-functions
 
-
+# only run on xen hosts
+if [ ! -f /proc/xen/capabilities ]; then
+	exit 0
+fi
 
 
 function xen_start() {
