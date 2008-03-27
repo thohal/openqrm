@@ -45,6 +45,11 @@ foreach ($_REQUEST as $key => $value) {
 	}
 }
 
+$openqrm_server = new openqrm_server();
+$OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
+global $OPENQRM_SERVER_IP_ADDRESS;
+
+
 	syslog(LOG_NOTICE, "openQRM-engine: Processing command $appliance_command on appliance $appliance_name");
 	switch ($appliance_command) {
 		case 'new_appliance':
@@ -83,6 +88,14 @@ foreach ($_REQUEST as $key => $value) {
 		case 'start':
 			$appliance = new appliance();
 			$appliance->get_instance_by_id($appliance_id);
+			$resource = new resource();
+			$resource->get_instance_by_id($appliance->resources);
+			$kernel = new kernel();
+			$kernel->get_instance_by_id($appliance->kernelid);
+
+			// send command to the openQRM-server
+			$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac $kernel->name");
+			// start appliance
 			$appliance->start();
 			break;
 

@@ -172,13 +172,13 @@ function remove_by_name($appliance_name) {
 
 // starts an appliance -> assigns it to a resource
 function start() {
-
 	$resource = new resource();
 	$resource->get_instance_by_id($this->resources);
 	$kernel = new kernel();
 	$kernel->get_instance_by_id($this->kernelid);
 	$image = new image();
 	$image->get_instance_by_id($this->imageid);
+	// assign + reboot resource
 	$resource->assign($resource->id, $kernel->id, $kernel->name, $image->id, $image->name);
 	$resource->send_command("$resource->ip", "reboot");
 }
