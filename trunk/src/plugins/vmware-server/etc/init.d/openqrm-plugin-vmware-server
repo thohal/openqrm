@@ -1,0 +1,65 @@
+#!/bin/bash
+# init script for the openQRM vmware-server-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/include/openqrm-plugin-vmware-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/etc/openqrm-plugin-vmware-server.conf
+
+function openqrm_plugin_vmware_server_start() {
+	echo "Starting the openQRM vmware-server-plugin"
+	openqrm_plugin_vmware_server_stop 1>/dev/null 2>&1
+}
+
+
+function openqrm_plugin_vmware_server_stop() {
+	echo "Stopping the openQRM vmware-server-plugin"
+}
+
+function openqrm_plugin_vmware_server_uninstall() {
+	echo "Uninstalling the openQRM vmware-server-plugin"
+	openqrm_plugin_vmware_server_stop
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-vmware-server.tgz
+}
+
+function openqrm_plugin_vmware_server_init() {
+	echo "Initializing the openQRM vmware-server-plugin"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/web/boot-service-vmware-server.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-vmware-server.tgz
+	
+}
+
+
+case "$1" in
+	start)
+		openqrm_plugin_vmware_server_start
+		;;
+	stop)
+		openqrm_plugin_vmware_server_stop
+		;;
+	restart)
+		openqrm_plugin_vmware_server_stop
+		sleep 1
+		openqrm_plugin_vmware_server_start
+		;;
+	init)
+		openqrm_plugin_vmware_server_init
+		;;
+	uninstall)
+		openqrm_plugin_vmware_server_uninstall
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+

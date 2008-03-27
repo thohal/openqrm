@@ -1,0 +1,58 @@
+#!/bin/bash
+# this is the boot-service init script for the VMware-server hosts
+
+export `eval cat /proc/cmdline`	
+. /var/openqrm/openqrm-resource.conf
+export OPENQRM_SERVER_BASE_DIR=$resource_basedir
+. $resource_basedir/openqrm/include/openqrm-functions
+
+# only run on vmware-server hosts
+which vmware-cmd 1>/dev/null 2>&1 || exit 0
+
+
+function vmware-server_start() {
+	echo "Starting the openQRM vmware-server-plugin"
+	vmware-server_stop 1>/dev/null 2>&1
+}
+
+
+function vmware-server_stop() {
+	echo "Stopping the openQRM vmware-server-plugin"
+	/etc/init.d/vmware-serverd stop
+}
+
+
+
+
+
+case "$1" in
+	start)
+		vmware-server_start
+		;;
+	stop)
+		vmware-server_stop
+		;;
+	restart)
+		vmware-server_stop
+		sleep 1
+		vmware-server_start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+
+esac
+exit $?
+
+
+
+
+
+
+
+
+
+
+
+
+
