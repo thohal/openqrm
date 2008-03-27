@@ -7,10 +7,7 @@ export OPENQRM_SERVER_BASE_DIR=$resource_basedir
 . $resource_basedir/openqrm/include/openqrm-functions
 
 # only run on xen hosts
-if [ ! -f /proc/xen/capabilities ]; then
-	exit 0
-fi
-
+grep -q "control_d" /proc/xen/capabilities || exit 0
 
 function xen_start() {
 	echo "Starting the openQRM xen-plugin"
@@ -28,13 +25,27 @@ function xen_start() {
 		echo "ERROR: Could not download http://$resource_openqrmserver/openqrm/boot-service/initrd-$resource_kernel.img"
 		return 1
 	fi
-
+	# adjust Xen-config	and enable migration
+	if [ -f /etc/xen/xend-config.sxp ]; then
+		cat /etc/xen/xend-config.sxp |	\
+			sed -e "s/^(xend-relocation-hosts-allow/#(xend-relocation-hosts-allow/g" |	\
+			sed -e "s/^#(xend-relocation-hosts-allow '')/(xend-relocation-hosts-allow '')/g" |	\
+			sed -e "s/^#(xend-relocation-port 8002)/(xend-relocation-port 8002)/g" |	\
+			sed -e "s/^#(xend-relocation-address '')/(xend-relocation-address '')/g" > /tmp/xend-config.sxp.openqrm
+		mv -f /tmp/xend-config.sxp.openqrm /etc/xen/xend-config.sxp
+	fi
+	# restart xen
+	if [ -x /etc/init.d/xend ]; then
+		/etc/init.d/xend stop
+		/etc/init.d/xend start
+	fi
 
 }
 
 
 function xen_stop() {
 	echo "Stopping the openQRM xen-plugin"
+	/etc/init.d/xend stop
 }
 
 

@@ -40,6 +40,9 @@ $xen_ip = $_REQUEST["xen_ip"];
 $xen_ram = $_REQUEST["xen_ram"];
 $xen_disk = $_REQUEST["xen_disk"];
 $xen_swap = $_REQUEST["xen_swap"];
+$xen_migrate_to_id = $_REQUEST["xen_migrate_to_id"];
+$xen_migrate_type = $_REQUEST["xen_migrate_type"];
+
 $xen_fields = array();
 foreach ($_REQUEST as $key => $value) {
 	if (strncmp($key, "xen_", 4) == 0) {
@@ -121,6 +124,18 @@ unset($xen_fields["xen_command"]);
 			$xen->send_command($xen->ip, $resource_command);
 			break;
 
+		case 'migrate':
+			$xen = new resource();
+			$xen->get_instance_by_id($xen_id);
+			$destination = new resource();
+			$destination->get_instance_by_id($xen_migrate_to_id);
+			if ("$xen_migrate_type" == "1") {
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen migrate -n $xen_name -i $destination->ip -t live -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+			} else {
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen migrate -n $xen_name -i $destination->ip -t regular -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+			}
+			$xen->send_command($xen->ip, $resource_command);
+			break;
 
 		case 'get_xen':
 			if (!file_exists($XenDir)) {

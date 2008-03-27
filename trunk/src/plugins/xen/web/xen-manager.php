@@ -14,6 +14,16 @@ require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
+function xen_htmlobject_select($name, $value, $title = '', $selected = '') {
+		$html = new htmlobject_select();
+		$html->name = $name;
+		$html->title = $title;
+		$html->selected = $selected;
+		$html->text_index = array("value" => "value", "text" => "label");
+		$html->text = $value;
+		return $html->get_string();
+}
+
 
 function xen_display($admin) {
 
@@ -90,6 +100,39 @@ function xen_display($admin) {
 								$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=kill&xen_id=$xen_resource->id\">Force-stop</a>";
 								$disp = $disp." / ";
 								$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=remove&xen_id=$xen_resource->id\">Remove</a>";
+
+								$disp = $disp."<br>";
+								$disp = $disp."--- Migrate to ";
+
+								// we need a select with the ids/ips from all resources which
+								// are used by appliances with xen capabilities
+								$xen_host_resource_list = array();
+								$appliance_list = new appliance();
+								$appliance_list_array = $appliance_list->get_list();
+								foreach ($appliance_list_array as $index => $app) {
+									$appliance_xen_host_check = new appliance();
+									$appliance_xen_host_check->get_instance_by_id($app["value"]);
+									if (strstr($appliance_xen_host_check->capabilities, "xen")) {
+										$xen_host_resource = new resource();
+										$xen_host_resource->get_instance_by_id($appliance_xen_host_check->resources);
+										$xen_host_resource_list[] = array("value"=>$xen_host_resource->id, "label"=>$xen_host_resource->ip,);
+									}
+								}
+
+								$disp = $disp."<form action='xen-action.php' method=post>";
+								$migrateion_select = xen_htmlobject_select('xen_migrate_to_id', $xen_host_resource_list, '', $xen_host_resource_list);
+								$disp = $disp.$migrateion_select;
+  								$disp = $disp."<input type='checkbox' name='xen_migrate_type' value='1'> live<br>";
+
+
+								$disp = $disp."<input type=hidden name=xen_id value=$xen_resource->id>";
+								$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
+								$disp = $disp."<input type=hidden name=xen_command value='migrate'>";
+								$disp = $disp."<input type=submit value='Start migration'>";
+								$disp = $disp."</form>";
+								
+
+
 							}
 							$disp = $disp."<br>";
 

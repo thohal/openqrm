@@ -20,7 +20,8 @@ fi
 
 function xen_usage() {
 	echo "Usage : $0 start/stop/reboot/kill/add/delete/remove/list <-n vm-name>"
-	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-i ip-address> <-r memory> [-d disk-size] [-s swap-size]"
+	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-i ip-address> <-r memory> [-d disk-size -s swap-size]"
+	echo "Usage : $0 migrate <-n vm-name> <-i ip-address> <-t live/regular>"
 	echo "        $0 post_vm_list <-u username> <-p password>"
 	exit 1
 }
@@ -53,6 +54,10 @@ while [ $# -ne 0 ]; do
 			;;
 		-s)
 			XEN_VM_SWAP=$2
+			shift
+			;;
+		-t)
+			XEN_MIGRATION_TYPE=$2
 			shift
 			;;
 		-u)
@@ -182,6 +187,14 @@ EOF
 		echo "Deleting Xen vm $XEN_VM_NAME"
 		rm -f /etc/xen/$XEN_VM_NAME.*
 		rm -rf $OPENQRM_VM_DIR/$XEN_VM_NAME
+		;;
+	migrate)
+		echo "Migrating Xen vm $XEN_VM_NAME to $XEN_VM_IP ($XEN_MIGRATION_TYPE)"
+		if [ "$XEN_MIGRATION_TYPE" == "live" ]; then
+			xm migrate $XEN_VM_NAME $XEN_VM_IP -l
+		else
+			xm migrate $XEN_VM_NAME $XEN_VM_IP
+		fi
 		;;
 	list)
 		echo "Listing Xen vms"
