@@ -132,10 +132,10 @@ function appliance_form() {
 	$disp = $disp.htmlobject_input('appliance_memtotal', array("value" => '', "label" => 'Memory'), 'text', 20);
 	$disp = $disp.htmlobject_input('appliance_swaptotal', array("value" => '', "label" => 'Swap'), 'text', 20);
 	$disp = $disp.htmlobject_input('appliance_capabilities', array("value" => '', "label" => 'Capabilities'), 'text', 255);
-    $disp = $disp."<input type='checkbox' name='appliance_cluster' value='0'> Cluster<br>";
-    $disp = $disp."<input type='checkbox' name='appliance_ssi' value='0'> SSI<br>";
-    $disp = $disp."<input type='checkbox' name='appliance_highavailable' value='0'> High-Available<br>";
-    $disp = $disp."<input type='checkbox' name='appliance_virtual' value='0'> Virtual<br>";
+    $disp = $disp."<input type='checkbox' name='appliance_cluster' value='1'> Cluster<br>";
+    $disp = $disp."<input type='checkbox' name='appliance_ssi' value='1'> SSI<br>";
+    $disp = $disp."<input type='checkbox' name='appliance_highavailable' value='1'> High-Available<br>";
+    $disp = $disp."<input type='checkbox' name='appliance_virtual' value='1'> Virtual<br>";
 	$disp = $disp."<input type=hidden name=appliance_command value='new_appliance'>";
 	$disp = $disp."<input type=submit value='add'>";
 	$disp = $disp."";

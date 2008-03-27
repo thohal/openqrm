@@ -34,6 +34,18 @@ foreach ($_REQUEST as $key => $value) {
 	}
 }
 unset($appliance_fields["appliance_command"]);
+if(!strlen($appliance_fields["appliance_cluster"])) {
+	$appliance_fields["appliance_cluster"]="0";
+}
+if(!strlen($appliance_fields["appliance_ssi"])) {
+	$appliance_fields["appliance_ssi"]="0";
+}
+if(!strlen($appliance_fields["appliance_highavailable"])) {
+	$appliance_fields["appliance_highavailable"]="0";
+}
+if(!strlen($appliance_fields["appliance_virtual"])) {
+	$appliance_fields["appliance_virtual"]="0";
+}
 
 $deployment_id = $_REQUEST["deployment_id"];
 $deployment_name = $_REQUEST["deployment_name"];
@@ -60,18 +72,6 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 
 		case 'update_appliance':
 			$appliance = new appliance();
-			if(!strlen($appliance_fields["appliance_cluster"])) {
-				$appliance_fields["appliance_cluster"]="0";
-			}
-			if(!strlen($appliance_fields["appliance_ssi"])) {
-				$appliance_fields["appliance_ssi"]="0";
-			}
-			if(!strlen($appliance_fields["appliance_highavailable"])) {
-				$appliance_fields["appliance_highavailable"]="0";
-			}
-			if(!strlen($appliance_fields["appliance_virtual"])) {
-				$appliance_fields["appliance_virtual"]="0";
-			}
 			$appliance->update($appliance_id, $appliance_fields);
 			break;
 
