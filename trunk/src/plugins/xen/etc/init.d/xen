@@ -7,7 +7,7 @@ export OPENQRM_SERVER_BASE_DIR=$resource_basedir
 . $resource_basedir/openqrm/include/openqrm-functions
 
 # only run on xen hosts
-grep -q "control_d" /proc/xen/capabilities || exit 0
+grep -q "control_d" /proc/xen/capabilities 2>/dev/null || exit 0
 
 function xen_start() {
 	echo "Starting the openQRM xen-plugin"
