@@ -6,7 +6,7 @@ $xen_id = $_REQUEST["xen_id"];
 <html>
 <head>
 <title>openQRM Xen actions</title>
-<meta http-equiv="refresh" content="10; URL=xen-manager.php?currenttab=tab1&strMsg=Processing <?php echo $xen_command; ?>">
+<meta http-equiv="refresh" content="0; URL=xen-manager.php?currenttab=tab1&strMsg=Processing <?php echo $xen_command; ?>">
 </head>
 <body>
 
@@ -67,7 +67,7 @@ unset($xen_fields["xen_command"]);
 			$resource_new->add($resource_fields);
 			// assign to xen kernel
 			$kernel_xen = new kernel();
-			$kernel_xen->get_instance_by_name($XEN_KERNEL_NAME);
+			$kernel_xen->get_instance_by_id($xen->kernelid);
 			$resource_new->assign($resource_id, $kernel_xen->id, $kernel_xen->name, 1, "idle");
 			break;
 
@@ -110,6 +110,13 @@ unset($xen_fields["xen_command"]);
 			$xen = new resource();
 			$xen->get_instance_by_id($xen_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen add -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+			$xen->send_command($xen->ip, $resource_command);
+			break;
+
+		case 'delete':
+			$xen = new resource();
+			$xen->get_instance_by_id($xen_id);
+			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen delete -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
 			break;
 

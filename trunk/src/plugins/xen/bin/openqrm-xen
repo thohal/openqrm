@@ -19,7 +19,7 @@ if [ "$WHOAMI" != "root" ]; then
 fi
 
 function xen_usage() {
-	echo "Usage : $0 start/stop/reboot/kill/add/remove/list <-n vm-name>"
+	echo "Usage : $0 start/stop/reboot/kill/add/delete/remove/list <-n vm-name>"
 	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-i ip-address> <-r memory> [-d disk-size] [-s swap-size]"
 	echo "        $0 post_vm_list <-u username> <-p password>"
 	exit 1
@@ -177,6 +177,11 @@ EOF
 	remove)
 		echo "Removing Xen vm $XEN_VM_NAME"
 		xm delete $XEN_VM_NAME
+		;;
+	delete)
+		echo "Deleting Xen vm $XEN_VM_NAME"
+		rm -f /etc/xen/$XEN_VM_NAME.*
+		rm -rf $OPENQRM_VM_DIR/$XEN_VM_NAME
 		;;
 	list)
 		echo "Listing Xen vms"

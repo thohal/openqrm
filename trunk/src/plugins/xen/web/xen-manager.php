@@ -60,6 +60,8 @@ function xen_display($admin) {
 
 					if ("$admin" == "admin") {
 						$disp = $disp." $xen_name <a href=\"xen-action.php?xen_name=$xen_name&xen_command=add&xen_id=$xen_resource->id\">Add</a>";
+						$disp = $disp." / ";
+						$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=delete&xen_id=$xen_resource->id\">Delete</a>";
 					} else {
 						$disp = $disp." $xen_name";
 					}
