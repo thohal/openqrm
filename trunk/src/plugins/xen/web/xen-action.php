@@ -64,6 +64,7 @@ unset($xen_fields["xen_command"]);
 			$resource_fields["resource_id"]=$resource_id;
 			$resource_fields["resource_mac"]=$xen_mac;
 			$resource_fields["resource_ip"]=$xen_ip;
+			$resource_fields["resource_capabilities"]="xen-vm";
 			$resource_new->add($resource_fields);
 			// assign to xen kernel
 			$kernel_xen = new kernel();
