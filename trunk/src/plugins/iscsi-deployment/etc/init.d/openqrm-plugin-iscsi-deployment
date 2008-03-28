@@ -33,7 +33,7 @@ function openqrm_plugin_iscsi-deployment_uninstall() {
 	echo "Uninstalling the openQRM iscsi-deployment-plugin"
 	openqrm_plugin_iscsi-deployment_stop
 	openqrm_server_remove_deployment_type $USERNAME $PASSWORD iscsi
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.iscsi-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.iscsi-menu.html
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsid
@@ -54,7 +54,7 @@ function openqrm_plugin_iscsi-deployment_init() {
 	echo "Initializing the openQRM iscsi-deployment-plugin"
 	openqrm_server_add_deployment_type $USERNAME $PASSWORD iscsi "Iscsi-root deployment"
 	# linking the web dir
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-deployment/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-deployment/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-deployment
 	# linking the boot-service
 	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-deployment/web/root-mount.iscsi-deployment
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-deployment/web/root-mount.iscsi-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.iscsi-deployment

@@ -27,13 +27,13 @@ function openqrm_plugin_tftpd_stop() {
 function openqrm_plugin_tftpd_uninstall() {
 	echo "Uninstalling the openQRM tftpd-plugin"
 	openqrm_plugin_tftpd_stop
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/tftpd
 }
 
 function openqrm_plugin_tftpd_init() {
 	echo "Initializing the openQRM tftpd-plugin"
 	# linking the web dir
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/tftpd/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/tftpd/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/tftpd
 }
 
 

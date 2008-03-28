@@ -70,7 +70,7 @@ function openqrm_plugin_dhcpd_init() {
 		> $OPENQRM_PLUGIN_DHCPD_CONF
 
 	# linking the web dir
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dhcpd
 
 	return 0
 }
@@ -80,7 +80,7 @@ function openqrm_plugin_dhcpd_uninstall() {
 	echo "Uninstalling the openQRM dhcpd plugin"
 	openqrm_plugin_dhcpd_stop
 	# unlinking the web dir
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dhcpd
 }
 
 

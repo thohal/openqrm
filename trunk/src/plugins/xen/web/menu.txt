@@ -4,4 +4,4 @@
 #	IMG
 #	Target
 .|Xen
-..|Xen Manager|plugins/11/xen-manager.php
+..|Xen Manager|plugins/xen/xen-manager.php

@@ -1,7 +1,9 @@
 #!/bin/bash
 # this is the functions file for the xen-plugin
 
-. /var/openqrm/openqrm-resource.conf
+if [ -f /var/openqrm/openqrm-resource.conf ]; then
+	. /var/openqrm/openqrm-resource.conf
+fi
 VETH="$resource_basedir/openqrm/plugins/xen/bin/vethd"
 XEN_VDEVICE_NAME="xendhcp"
 

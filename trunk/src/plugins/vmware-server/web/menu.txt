@@ -4,4 +4,4 @@
 #	IMG
 #	Target
 .|VMware-server
-..|VMware Manager|plugins/12/vmware-server-manager.php
+..|VMware Manager|plugins/vmware-server/vmware-server-manager.php

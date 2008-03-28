@@ -26,7 +26,7 @@ function openqrm_plugin_sshterm_init() {
 	
 
 	# linking the web dir
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sshterm
 
 	return 0
 }
@@ -36,7 +36,7 @@ function openqrm_plugin_sshterm_uninstall() {
 	echo "Uninstalling the openQRM sshterm plugin"
 	openqrm_plugin_sshterm_stop
 	# unlinking the web dir
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sshterm
 }
 
 

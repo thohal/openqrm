@@ -21,13 +21,13 @@ function openqrm_plugin_local-server_stop() {
 function openqrm_plugin_local-server_uninstall() {
 	echo "Uninstalling the openQRM local-server-plugin"
 	openqrm_plugin_local-server_stop
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-server
 }
 
 function openqrm_plugin_local-server_init() {
 	echo "Initializing the openQRM local-server-plugin"
 	# linking the web dir
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-server/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-server/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-server
 }
 
 

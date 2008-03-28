@@ -127,13 +127,10 @@ function openqrm_server_create_kernel() {
 	fi
 
 	# hook for plugins
-	for OPENQRM_PLUGIN in `ls $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/`; do
-		. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/openqrm-plugin-$OPENQRM_PLUGIN.conf
-		if [ -d $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER ]; then
-			if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/include/openqrm-plugin-$OPENQRM_PLUGIN-kernel-hook ]; then
-				. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/include/openqrm-plugin-$OPENQRM_PLUGIN-kernel-hook
-				$OPENQRM_PLUGIN""_kernel_hook $OPENQRM_SERVER_KERNEL_NAME $OPENQRM_SERVER_KERNEL_VERSION $OPENQRM_SERVER_KERNEL_LOCATION $OPENQRM_SERVER_KERNEL_TYPE
-			fi
+	for OPENQRM_PLUGIN in `ls $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/`; do
+		if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/include/openqrm-plugin-$OPENQRM_PLUGIN-kernel-hook ]; then
+			. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/include/openqrm-plugin-$OPENQRM_PLUGIN-kernel-hook
+			$OPENQRM_PLUGIN""_kernel_hook $OPENQRM_SERVER_KERNEL_NAME $OPENQRM_SERVER_KERNEL_VERSION $OPENQRM_SERVER_KERNEL_LOCATION $OPENQRM_SERVER_KERNEL_TYPE
 		fi
 	done
 }
@@ -226,13 +223,10 @@ function openqrm_server_create_pxe_config() {
 		chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE
 
 		# allow plugin to re-write the pxe-config
-		for OPENQRM_PLUGIN in `ls $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/`; do
-			. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/openqrm-plugin-$OPENQRM_PLUGIN.conf
-			if [ -d $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER ]; then
-				if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/include/openqrm-plugin-$OPENQRM_PLUGIN-assign-hook ]; then
-					. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/include/openqrm-plugin-$OPENQRM_PLUGIN-assign-hook
-					$OPENQRM_PLUGIN""_assign_hook $RESOURCE_ID $KERNEL_NAME $RESOURCE_PXELINUXCFG_FILE
-				fi
+		for OPENQRM_PLUGIN in `ls $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/`; do
+			if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/include/openqrm-plugin-$OPENQRM_PLUGIN-assign-hook ]; then
+				. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/include/openqrm-plugin-$OPENQRM_PLUGIN-assign-hook
+				$OPENQRM_PLUGIN""_assign_hook $RESOURCE_ID $KERNEL_NAME $RESOURCE_PXELINUXCFG_FILE
 			fi
 		done
 }

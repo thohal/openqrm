@@ -21,14 +21,14 @@ function openqrm_plugin_vmware_server_stop() {
 function openqrm_plugin_vmware_server_uninstall() {
 	echo "Uninstalling the openQRM vmware-server-plugin"
 	openqrm_plugin_vmware_server_stop
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-server
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-vmware-server.tgz
 }
 
 function openqrm_plugin_vmware_server_init() {
 	echo "Initializing the openQRM vmware-server-plugin"
 	# linking the web dir
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/$OPENQRM_PLUGIN_NUMBER
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-server
 	# link the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/web/boot-service-vmware-server.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-vmware-server.tgz
 	
