@@ -42,6 +42,7 @@ function vmware_server_display($admin) {
 			$vmware_server_resource = new resource();
 			$vmware_server_resource->get_instance_by_id($vmware_server_db["appliance_resources"]);
 
+			$disp = $disp."<hr>";
 			// refresh
 			$disp = $disp."<div id=\"vmware-server\" nowrap=\"true\">";
 			$disp = $disp."<form action='vmware-server-action.php' method=post>";
@@ -60,18 +61,54 @@ function vmware_server_display($admin) {
 			}
 			$disp = $disp."</form>";
 
+			$disp = $disp."<br>";
+			$disp = $disp."<br>";
 
 			$vmware_server_vm_list_file="vmware-server-stat/$vmware_server_resource->id.vm_list";
+			$vmware_vm_registered=array();
 			if (file_exists($vmware_server_vm_list_file)) {
 				$vmware_server_vm_list_content=file($vmware_server_vm_list_file);
-				foreach ($vmware_server_vm_list_content as $index => $vmware_server) {
-						$disp = $disp.$vmware_server;
+				foreach ($vmware_server_vm_list_content as $index => $vmware_server_name) {
+					// find the unregistered vms
+					if (strstr($vmware_server_name, "#")) {
+						$vmware_server_name=str_replace("#", "", $vmware_server_name);
+						$vmware_short_name=basename($vmware_server_name);
+						$vmware_short_name=str_replace(".vmx", "", $vmware_short_name);
+
+						// was displyed already as registered ?
+						if (!in_array($vmware_short_name, $vmware_vm_registered)) {
+							$disp = $disp.$vmware_short_name;
+							if ("$admin" == "admin") {
+								$disp = $disp."  <a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=add&vmware_server_id=$vmware_server_resource->id\">Add</a>";
+								$disp = $disp." / ";
+								$disp = $disp."  <a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=delete&vmware_server_id=$vmware_server_resource->id\">Delete</a>";
+							}
+							$disp = $disp."<br>";
+						}
+					} else {
+						// registered vms
+						$vmware_short_name=basename($vmware_server_name);
+						$vmware_short_name=str_replace(".vmx", "", $vmware_short_name);
+						$disp = $disp.$vmware_short_name;
+						if ("$admin" == "admin") {
+							$disp = $disp."  <a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=start&vmware_server_id=$vmware_server_resource->id\">Start</a>";
+							$disp = $disp." / ";
+							$disp = $disp."<a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=stop&vmware_server_id=$vmware_server_resource->id\">Stop</a>";
+							$disp = $disp." / ";
+							$disp = $disp."<a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=reboot&vmware_server_id=$vmware_server_resource->id\">Reboot</a>";
+							$disp = $disp." / ";
+							$disp = $disp."<a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=remove&vmware_server_id=$vmware_server_resource->id\">Remove</a>";
+						}
 						$disp = $disp."<br>";
+						$vmware_vm_registered[] = $vmware_short_name;
+					}
+					$disp = $disp."<br>";
 				}
 			}
 		$disp = $disp."</div>";
 		
 		}
+		$disp = $disp."<hr>";
 	}
 	return $disp;
 }

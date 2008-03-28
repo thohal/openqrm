@@ -18,7 +18,6 @@ function vmware-server_start() {
 
 function vmware-server_stop() {
 	echo "Stopping the openQRM vmware-server-plugin"
-	/etc/init.d/vmware-serverd stop
 }
 
 

@@ -52,7 +52,11 @@ unset($vmware_server_fields["vmware_server_command"]);
 			// send command to vmware_server-host to create the new vm
 			$vmware_server = new resource();
 			$vmware_server->get_instance_by_id($vmware_server_id);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server create -n $vmware_server_name -m $vmware_server_mac -r $vmware_server_ram -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+			if (strlen($vmware_server_disk)) {
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server create -n $vmware_server_name -m $vmware_server_mac -r $vmware_server_ram -d $vmware_server_disk -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+			} else {
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server create -n $vmware_server_name -m $vmware_server_mac -r $vmware_server_ram -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+			}
 			$vmware_server->send_command($vmware_server->ip, $resource_command);
 			break;
 
@@ -67,13 +71,6 @@ unset($vmware_server_fields["vmware_server_command"]);
 			$vmware_server = new resource();
 			$vmware_server->get_instance_by_id($vmware_server_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server stop -n $vmware_server_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$vmware_server->send_command($vmware_server->ip, $resource_command);
-			break;
-
-		case 'kill':
-			$vmware_server = new resource();
-			$vmware_server->get_instance_by_id($vmware_server_id);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server kill -n $vmware_server_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$vmware_server->send_command($vmware_server->ip, $resource_command);
 			break;
 

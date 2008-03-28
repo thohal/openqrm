@@ -19,7 +19,7 @@ if [ "$WHOAMI" != "root" ]; then
 fi
 
 function vmware-server_usage() {
-	echo "Usage : $0 start/stop/reboot/kill/add/delete/remove/list <-n vm-name>"
+	echo "Usage : $0 start/stop/reboot/add/delete/remove/list <-n vm-name>"
 	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ]"
 	echo "        $0 post_vm_list <-u username> <-p password>"
 	exit 1
@@ -45,10 +45,6 @@ while [ $# -ne 0 ]; do
 			;;
 		-d)
 			VMWARE_SERVER_VM_DISK=$2
-			shift
-			;;
-		-t)
-			VMWARE_SERVER_MIGRATION_TYPE=$2
 			shift
 			;;
 		-u)
@@ -114,7 +110,16 @@ case "$VMWARE_SERVER_COMMAND" in
 		if [ "$VMWARE_SERVER_VM_DISK" != "" ]; then
 			echo "-> Creating disk"
 			mkdir -p $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME
-			 vmware-vdiskmanager -c -s $VMWARE_SERVER_VM_DISK""Mb -a ide -t 0 $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmdk
+			vmware-vdiskmanager -c -s $VMWARE_SERVER_VM_DISK""Mb -a ide -t 0 $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmdk
+			# add the disk to the config file
+			cat $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx |	\
+				sed -e "s/^ide/#ide0/g" > $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx.withdisk
+			mv -f $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx.withdisk $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
+			cat >> $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx << EOF
+ide0:0.present = "TRUE"
+ide0:0.fileName = "$VMWARE_SERVER_VM_NAME.vmdk"
+ide0:0.writeThrough = "TRUE"
+EOF
 		fi
 		
 		# register
@@ -125,31 +130,27 @@ case "$VMWARE_SERVER_COMMAND" in
 		;;
 	add)
 		echo "Adding VMware vm $VMWARE_SERVER_VM_NAME"
-		vmware-cmd -s register $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
+		vmware-cmd -s register $VMWARE_SERVER_VM_NAME
 		;;
 	start)
 		echo "Starting VMware vm $VMWARE_SERVER_VM_NAME"
-		vmware-cmd $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx start
+		vmware-cmd $VMWARE_SERVER_VM_NAME start
 		;;
 	stop)
 		echo "Stopping VMware vm $VMWARE_SERVER_VM_NAME"
-		vmware-cmd $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx stop
-		;;
-	kill)
-		echo "Force-stop VMware vm $VMWARE_SERVER_VM_NAME"
-		vmware-cmd $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx stop hard
+		vmware-cmd $VMWARE_SERVER_VM_NAME stop hard
 		;;
 	reboot)
 		echo "Rebooting VMware vm $VMWARE_SERVER_VM_NAME"
-		vmware-cmd $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx reset
+		vmware-cmd $VMWARE_SERVER_VM_NAME reset hard
 		;;
 	remove)
 		echo "Removing VMware vm $VMWARE_SERVER_VM_NAME"
-v		vmware-cmd -s unregister $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
+		vmware-cmd -s unregister $VMWARE_SERVER_VM_NAME
 		;;
 	delete)
 		echo "Deleting VMware vm $VMWARE_SERVER_VM_NAME"
-		rm -rf $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME
+		rm -rf `dirname $VMWARE_SERVER_VM_NAME`
 		;;
 	list)
 		echo "Listing VMware vms"
@@ -159,6 +160,8 @@ v		vmware-cmd -s unregister $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVE
 		echo "Posting vm list to the openQRM-server"
 		VM_LIST_TMP=$resource_id.vm_list
 		vmware-cmd -l > $VM_LIST_TMP
+		# and the not active vms
+		find $OPENQRM_VM_DIR/../* -name *.vmx | sed -e "s/^/#/g" >> $VM_LIST_TMP
 		if ! wget -q -O /dev/null --http-user=$VMWARE_SERVER_OPENQRM_USERNAME --http-password=$VMWARE_SERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$resource_openqrmserver/openqrm/base/plugins/vmware-server/vmware-server-action.php?vmware_server_command=get_vmware_server; then
 			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!" | logger

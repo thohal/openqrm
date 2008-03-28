@@ -33,7 +33,7 @@ function vmware_server_create() {
 	$disp = $disp."<br>";
 	$disp = $disp.htmlobject_input('vmware_server_name', array("value" => '', "label" => 'VM name'), 'text', 20);
 	$disp = $disp.htmlobject_input('vmware_server_mac', array("value" => $suggested_mac, "label" => 'Mac address'), 'text', 20);
-	$disp = $disp.htmlobject_input('vmware_server_ram', array("value" => '256', "label" => 'Memory (MB)'), 'text', 10);
+	$disp = $disp.htmlobject_input('vmware_server_ram', array("value" => '512', "label" => 'Memory (MB)'), 'text', 10);
 	$disp = $disp.htmlobject_input('vmware_server_disk', array("value" => '2000', "label" => 'Disk (MB)'), 'text', 10);
 	$disp = $disp."<input type=hidden name=vmware_server_id value=$vmware_server_id>";
 	$disp = $disp."<input type=hidden name=vmware_server_command value='new'>";
