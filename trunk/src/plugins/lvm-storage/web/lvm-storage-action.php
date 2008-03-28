@@ -26,7 +26,7 @@ global $DEPLOYMENT_INFO_TABLE;
 global $OPENQRM_SERVER_BASE_DIR;
 
 // place for the storage stat files
-$StorageDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/9/storage';
+$StorageDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/lvm-storage/storage';
 
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {

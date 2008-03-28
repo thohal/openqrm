@@ -23,7 +23,7 @@ global $OPENQRM_SERVER_BASE_DIR;
 global $RESOURCE_INFO_TABLE;
 
 // place for the vmware_server stat files
-$VMwareDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/12/vmware-server-stat';
+$VMwareDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/vmware-server/vmware-server-stat';
 
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {

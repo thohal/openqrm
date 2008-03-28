@@ -159,7 +159,7 @@ v		vmware-cmd -s unregister $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVE
 		echo "Posting vm list to the openQRM-server"
 		VM_LIST_TMP=$resource_id.vm_list
 		vmware-cmd -l > $VM_LIST_TMP
-		if ! wget -q -O /dev/null --http-user=$VMWARE_SERVER_OPENQRM_USERNAME --http-password=$VMWARE_SERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$resource_openqrmserver/openqrm/base/plugins/12/vmware-server-action.php?vmware_server_command=get_vmware_server; then
+		if ! wget -q -O /dev/null --http-user=$VMWARE_SERVER_OPENQRM_USERNAME --http-password=$VMWARE_SERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$resource_openqrmserver/openqrm/base/plugins/vmware-server/vmware-server-action.php?vmware_server_command=get_vmware_server; then
 			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!" | logger
 		fi
