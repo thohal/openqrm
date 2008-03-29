@@ -14,13 +14,15 @@ function kernel_display($admin) {
 	$OPENQRM_KERNEL_COUNT_ALL = $kernel_tmp->get_count();
 
 	if ("$admin" == "admin") {
-		$disp = "<b>Kernel Admin</b>";
+		$disp = "<h1>Kernel Admin</h1>";
 	} else {
-		$disp = "<b>Kernel overview</b>";
+		$disp = "<h1>Kernel overview</h1>";
 	}
 	$disp = $disp."<br>";
-	$disp = $disp."<br>";
+	$disp .= "<br>";
+	$disp = $disp."<div id=\"all_kernel\" nowrap=\"true\">";
 	$disp = $disp."All kernels: $OPENQRM_KERNEL_COUNT_ALL";
+	$disp = $disp."</div>";
 	$disp = $disp."<br>";
 	$kernel_array = $kernel_tmp->display_overview(0, 10);
 	foreach ($kernel_array as $index => $kernel_db) {
@@ -57,7 +59,7 @@ function kernel_display($admin) {
 
 function kernel_form() {
 
-	$disp = "<b>New Kernel</b>";
+	$disp = "<h1>New Kernel</h1>";
 	$disp = $disp."<form action='kernel-action.php' method=post>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
@@ -85,7 +87,7 @@ function kernel_edit($kernel_id) {
 	$kernel = new kernel();
 	$kernel->get_instance_by_id($kernel_id);
 
-	$disp = "<b>Edit Kernel</b>";
+	$disp = "<h1>Edit Kernel</h1>";
 	$disp = $disp."<form action='kernel-action.php' method=post>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";

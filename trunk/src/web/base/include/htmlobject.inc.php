@@ -3,12 +3,6 @@ $ClassDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/class/';
 
 require_once($ClassDir.'PHPLIB.php');
 require_once($ClassDir.'htmlobject.class.php');
-require_once($ClassDir.'htmlobject_input.class.php');
-require_once($ClassDir.'htmlobject_textarea.class.php');
-require_once($ClassDir.'htmlobject_select.class.php');
-require_once($ClassDir.'htmlobject_box.class.php');
-require_once($ClassDir.'htmlobject_tabmenu.class.php');
-require_once($ClassDir.'htmlobject_div.class.php');
 require_once($ClassDir.'htmlobject_head.class.php');
 
 //---------------------------------------------------------------
@@ -68,6 +62,25 @@ function htmlobject_select($name, $value, $title = '', $selected = array()) {
 		$html->text = $value;
 
 		return htmlobject_box_from_object($html, ' select');
+}
+//---------------------------------------------------------------
+/**
+* builds html select
+* @access public
+* @param  $name string
+* @param  $value array(label=>, value=>)
+* @param  $title string
+* @param  $selected array()
+* @return string
+*/
+function htmlobject_select_simple($name, $value, $title = '', $selected = '') {
+		$html = new htmlobject_select();
+		$html->name = $name;
+		$html->title = $title;
+		$html->selected = $selected;
+		$html->text_index = array("value" => "value", "text" => "label");
+		$html->text = $value;
+		return $html->get_string();
 }
 //---------------------------------------------------------------
 /**

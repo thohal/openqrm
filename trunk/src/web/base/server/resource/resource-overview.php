@@ -1,5 +1,10 @@
 
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+<style>
+.htmlobject_tab_box {
+	width:600px;
+}
+</style>
 
 <?php
 
@@ -11,15 +16,7 @@ require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
 
-function resource_htmlobject_select($name, $value, $title = '', $selected = '') {
-		$html = new htmlobject_select();
-		$html->name = $name;
-		$html->title = $title;
-		$html->selected = $selected;
-		$html->text_index = array("value" => "value", "text" => "label");
-		$html->text = $value;
-		return $html->get_string();
-}
+
 
 
 
@@ -30,7 +27,7 @@ function resource_display($admin) {
 	$OPENQRM_RESOURCE_COUNT_OFFLINE = $resource_tmp->get_count("offline");
 
 	if ("$admin" == "admin") {
-		$disp = "<b>Resource Admin</b>";
+		$disp = "<h1>Resource Admin</h1>";
 		$image = new image();
 		$image_list = array();
 		$image_list = $image->get_list();
@@ -41,15 +38,11 @@ function resource_display($admin) {
 
 
 	} else {
-		$disp = "<b>Resource overview</b>";
+		$disp = "<h1>Resource overview</h1>";
 	}
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."All resources: $OPENQRM_RESOURCE_COUNT_ALL";
-	$disp = $disp."<br>";
-	$disp = $disp."Online resources: $OPENQRM_RESOURCE_COUNT_ONLINE";
-	$disp = $disp."<br>";
-	$disp = $disp."Offline resources: $OPENQRM_RESOURCE_COUNT_OFFLINE";
+	$disp = $disp."<div>All resources: $OPENQRM_RESOURCE_COUNT_ALL</div>";
+	$disp = $disp."<div>Online resources: $OPENQRM_RESOURCE_COUNT_ONLINE</div>";
+	$disp = $disp."<div>Offline resources: $OPENQRM_RESOURCE_COUNT_OFFLINE</div>";
 	$disp = $disp."<br>";
 	$resource_array = $resource_tmp->display_overview(0, 10);
 	foreach ($resource_array as $index => $resource_db) {
@@ -77,7 +70,7 @@ function resource_display($admin) {
 
 			// kernel selection
 			if ("$admin" == "admin") {
-				$kernel_select = resource_htmlobject_select('resource_kernelid', $kernel_list, '', $kernel_list);
+				$kernel_select = htmlobject_select_simple('resource_kernelid', $kernel_list, '', $kernel_list);
 				$disp = $disp.$kernel_select;
 			} else {
 				$disp = $disp." $resource->kernel ";
@@ -87,7 +80,7 @@ function resource_display($admin) {
 			if ("$admin" == "admin") {
 				$image_selected = array();
 				$image_selected[] = array("value"=>'$resource->imageid', "label"=>'$resource->image');
-				$image_select = resource_htmlobject_select('resource_imageid', $image_list, 'Select image', $image_selected);
+				$image_select = htmlobject_select_simple('resource_imageid', $image_list, 'Select image', $image_selected);
 				$disp = $disp.$image_select;
 			} else {
 				$disp = $disp." $resource->image ";
@@ -104,7 +97,7 @@ function resource_display($admin) {
 				$resource_action_ar[] = array("value"=>'halt', "label"=>'halt',);
 				$resource_action_ar[] = array("value"=>'remove', "label"=>'remove',);
 				$resource_action_selected_ar[] = array("value"=>'', "label"=>'',);
-				$select = resource_htmlobject_select('resource_command', $resource_action_ar, '', $resource_action_selected_ar);
+				$select = htmlobject_select_simple('resource_command', $resource_action_ar, '', $resource_action_selected_ar);
 				$disp = $disp.$select;
 
 				$disp = $disp."<input type=hidden name=resource_ip value=$resource->ip>";
@@ -131,7 +124,7 @@ function resource_display($admin) {
 
 function resource_form() {
 
-	$disp = "<b>New Resource</b>";
+	$disp = "<h1>New Resource</h1>";
 	$disp = $disp."<form action='resource-action.php' method=post>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
@@ -159,6 +152,9 @@ if ($OPENQRM_USER->role == "administrator") {
 	$output[] = array('label' => 'New', 'value' => resource_form());
 	$output[] = array('label' => 'Resource-Admin', 'value' => resource_display("admin"));
 }
+
+
+
 
 echo htmlobject_tabmenu($output);
 

@@ -71,6 +71,9 @@ padding:0;
 /* Tabbox */
 
 .htmlobject_tab_box {
+	font-family: Tahoma, Verdana, sans-serif;
+	font-size: 11px;
+	color: #646464;
 	background-color:#ffffff;
 	margin:20px 0 20px 20px;
 	text-align: left;
@@ -78,8 +81,11 @@ padding:0;
 	border: solid 1px #aaaaaa;
 	padding:25px;	
 }
+
 .htmlobject_tab_box div,
 .htmlobject_tab_box p,
+.htmlobject_tab_box h1,
+.htmlobject_tab_box h3,
 .htmlobject_tab_box form,
 .htmlobject_tab_box td,
 .htmlobject_box select {
@@ -88,6 +94,14 @@ padding:0;
 	color: #646464;
 	margin:0;
 	padding:0;
+}
+.htmlobject_tab_box h1 {
+	font-weight: bold;
+	font-size: 16px;
+}
+.htmlobject_tab_box h3 {
+	font-weight: bold;
+	font-size: 14px;
 }
 
 /* Box */
