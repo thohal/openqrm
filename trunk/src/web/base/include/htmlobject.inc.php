@@ -1,5 +1,6 @@
 <?php
 $ClassDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/class/';
+require_once($ClassDir.'htmlobject.class.php');
 require_once($ClassDir.'htmlobject_input.class.php');
 require_once($ClassDir.'htmlobject_textarea.class.php');
 require_once($ClassDir.'htmlobject_select.class.php');
