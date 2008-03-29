@@ -30,7 +30,7 @@ $radio = '2';
 
 	$t = new Template_PHPLIB();
 	$t->debug = false;
-	$t->setFile('tplfile', '' . 'demo.tpl');
+	$t->setFile('tplfile', './' . 'tpl.php');
 	$t->setVar(array(
 		'html_head'			=> htmlobject_head("Demo"),
 		'thisfile'			=> $thisfile,
