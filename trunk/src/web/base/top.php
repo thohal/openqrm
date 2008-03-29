@@ -18,7 +18,7 @@ require_once('include/user.inc.php');
 <body>
 
 <div class="logo">
-<img src="img/openqrm.gif">
+<img src="img/logo.png">
 </div>
 <div class="top">
 Login: <a href="server/user/user.php" target="MainFrame"><?php echo OPENQRM_USER_NAME; ?></a>

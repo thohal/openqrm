@@ -13,27 +13,34 @@ require_once($ClassDir.'htmlobject_head.class.php');
 * builds html input box
 * @access public
 * @param  $name string
-* @param  $value array(label=>, value=>)
-* @param  $type enum(text,hidden,password)
+* @param  $value array(array(label=>, value=>))
+* @param  $type enum(text,hidden,password,checkbox)
 * @param  $maxlength int
 * @return string
 */
-function htmlobject_input($name, $value, $type = 'text', $maxlength = '') {
+function htmlobject_input($name, $value, $type = 'text', $arg = '') {
 
 	$html = new htmlobject_input();
 	$html->name = $name;
+	$html->id = 'p'.uniqid();
 	$html->value = $value['value'];
 	$html->title = $value['label'];
 	$html->type = $type;
-	$html->maxlength = $maxlength;
+	
 	switch($type) {
 		case 'text':
-		case 'password': 
-			return htmlobject_box_from_object($html);
+		case 'password':
+			$html->maxlength = $arg;		
+			return htmlobject_box_from_object($html, ' input');
+			break;
+		case 'checkbox':
+			$html->value = '';
+			$html->checked = $arg;		
+			return htmlobject_box_from_object($html, ' checkbox');
 			break;
 		case 'hidden':
 			$html->title = '';
-			$html->maxlength = '';
+			$html->id = '';
 			return $html->get_string();
 			break;
 	}
