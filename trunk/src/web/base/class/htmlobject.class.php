@@ -47,7 +47,6 @@ var $_init_htmlobject;
 	}
 	
 }
-
 //--------------------------------------------------------------------------------------
 
 class htmlobject_select extends htmlobject
@@ -254,7 +253,7 @@ var $tabindex = '';
 * @access public * @var string
 * @values text | password | checkbox | radio | submit | reset | file | hidden | image | button
 */
-var $type = array();
+var $type = '';
 /**
 * value of input
 * @access public * @var string
@@ -361,7 +360,7 @@ var $_init_textarea;
 	$_strReturn = '';
 		$this->init_htmlobject();
 		$this->init_textarea();
-		$_strReturn = "\n<textarea $this->_init_htmlobject$this->_init_textarea>";
+		$_strReturn = "\n<textarea$this->_init_htmlobject$this->_init_textarea>";
 		$_strReturn .= $this->text;
 		$_strReturn .= "</textarea>\n";
 	return $_strReturn;
@@ -387,6 +386,235 @@ var $text = '';
 	}
 }
 
+//------------------------------------------------------------------
+
+class htmlobject_td extends htmlobject
+{
+/**
+* align
+* @access public
+* @var enum (left | center | right | justify | char)
+*/
+var $align = '';
+/**
+* backgroundcolor
+* @access public
+* @var HEX
+*/
+var $bgcolor = '';
+/**
+* vertical align
+* @access public
+* @var enum (top | middle | bottom | baseline)
+*/
+var $valign = '';
+
+/**
+* Content of td
+* @access public
+* @var string
+*/
+var $text = '';
+
+/**
+* internal use only
+*/
+var $_init_td;
+
+	function init_td() {
+	$this->_init_td = '';
+		if ($this->align != '') { $this->_init_td .= ' align="'.$this->align.'"'; }
+		if ($this->bgcolor != '') { $this->_init_td .= ' bgcolor="'.$this->bgcolor.'"'; }
+		if ($this->valign != '') { $this->_init_td .= ' valign="'.$this->valign.'"'; }
+	}
+
+	function get_string() {
+	$_strReturn = '';
+		$this->init_htmlobject();
+		$this->init_td();
+		$_strReturn = "\n<td$this->_init_htmlobject$this->_init_td>";
+		$_strReturn .= $this->text;
+		$_strReturn .= "</td>";
+	return $_strReturn;
+	}
+}
+
+//------------------------------------------------------------------
+
+class htmlobject_tr extends htmlobject
+{
+/**
+* align
+* @access public
+* @var enum (left | center | right | justify | char)
+*/
+var $align = '';
+/**
+* backgroundcolor
+* @access public
+* @var HEX
+*/
+var $bgcolor = '';
+/**
+* vertical align
+* @access public
+* @var enum (top | middle | bottom | baseline)
+*/
+var $valign = '';
+
+/**
+* Content of tr
+* @access public
+* @var string
+*/
+var $arr_tr = array();
+
+/**
+* internal use only
+*/
+var $_init_tr;
+
+	function init_tr() {
+	$this->_init_tr = '';
+		if ($this->align != '') { $this->_init_tr .= ' align="'.$this->align.'"'; }
+		if ($this->bgcolor != '') { $this->_init_tr .= ' bgcolor="'.$this->bgcolor.'"'; }
+		if ($this->valign != '') { $this->_init_tr .= ' valign="'.$this->valign.'"'; }
+	}
+
+	function get_string() {
+	$_strReturn = '';
+		$this->init_htmlobject();
+		$this->init_tr();
+		$_strReturn = "\n<tr$this->_init_htmlobject$this->_init_tr>";
+		foreach($this->arr_tr as $td) {
+			if(is_object($td) == true && get_class($td) == 'htmlobject_td') {
+				$_strReturn .= $td->get_string();
+			}
+			elseif(is_string($td) == true) {
+				$_strReturn .= $td;
+			}
+			else {
+				$_strReturn .= 'td type not defined';
+			}
+		}
+		$_strReturn .= "</tr>\n";
+	return $_strReturn;
+	}
+	
+	function add($td) {
+		$this->arr_tr[] = $td;
+	}	
+	
+}
+//------------------------------------------------------------------
+
+class htmlobject_table extends htmlobject
+{
+/**
+* align
+* @access public
+* @var enum (left | center | right)
+*/
+var $align = '';
+/**
+* table border
+* @access public
+* @var int
+*/
+var $border = '';
+/**
+* table backgroundcolor
+* @access public
+* @var HEX
+*/
+var $bgcolor = '';
+/**
+* cellpadding
+* @access public
+* @var int
+*/
+var $cellpadding;
+/**
+* cellspacing
+* @access public
+* @var int
+*/
+var $cellspacing;
+/**
+* frame
+* @access public
+* @var enum (void | above | below | hsides | lhs | rhs | vsides | box | border)
+*/
+var $frame = '';
+/**
+* rules
+* @access public
+* @var enum (none | groups | rows | cols | all)
+*/
+var $rules = '';
+/**
+* summary
+* @access public
+* @var string
+*/
+var $summary = '';
+/**
+* width
+* @access public
+* @var int
+*/
+var $width = '';
+
+/**
+* Content of table
+* @access public
+* @var array
+*/
+var $arr_table = array();
+
+/**
+* internal use only
+*/
+var $_init_table;
+
+	function init_table() {
+	$this->_init_table = '';
+		if ($this->align != '') { $this->_init_table .= ' align="'.$this->align.'"'; }
+		if (isset($this->border) && $this->border !== '') { $this->_init_table .= ' border="'.$this->border.'"'; }
+		if ($this->bgcolor != '') { $this->_init_table .= ' bgcolor="'.$this->bgcolor.'"'; }
+		if (isset($this->cellpadding) && $this->cellpadding !== '') { $this->_init_table .= ' cellpadding="'.$this->cellpadding.'"'; }
+		if (isset($this->cellspacing) && $this->cellspacing !== '') { $this->_init_table .= ' cellspacing="'.$this->cellspacing.'"'; }
+		if ($this->frame != '') { $this->_init_table .= ' frame="'.$this->frame.'"'; }
+		if ($this->rules != '') { $this->_init_table .= ' rules="'.$this->rules.'"'; }
+		if ($this->summary != '') { $this->_init_table .= ' summary="'.$this->summary.'"'; }
+		if ($this->width != '') { $this->_init_table .= ' width="'.$this->width.'"'; }
+	}
+
+	function get_string() {
+	$_strReturn = '';
+		$this->init_htmlobject();
+		$this->init_table();
+		$_strReturn = "\n<table$this->_init_htmlobject$this->_init_table>";
+		foreach($this->arr_table as $tr) {
+			if(is_object($tr) == true && get_class($tr) == 'htmlobject_tr') {
+				$_strReturn .= $tr->get_string();
+			}
+			elseif(is_string($tr) == true) {
+				$_strReturn .= $tr;
+			}			
+			else {
+				$_strReturn .= 'tr type not defined';
+			}			
+		}
+		$_strReturn .= "</table>\n";
+	return $_strReturn;
+	}
+	
+	function add($tr) {
+		$this->arr_table[] = $tr;
+	}	
+	
+}
 //------------------------------------------------------------------
 
 class htmlobject_tabmenu extends htmlobject
