@@ -63,6 +63,8 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/aa_plugins
 	. $(OPENQRM_SERVER_CONF) && cp base/plugins/aa_plugins/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/aa_plugins/
 	. $(OPENQRM_SERVER_CONF) && cp base/plugins/aa_plugins/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/aa_plugins/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/aa_plugins/img
+	. $(OPENQRM_SERVER_CONF) && cp base/plugins/aa_plugins/img/*.png $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/aa_plugins/img/
 
 	echo "Creating the openqrm-client boot-service package"
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service
