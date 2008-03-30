@@ -18,6 +18,8 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp web/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-deployment/web/
 	. $(OPENQRM_SERVER_CONF) && cp web/*.aoe-deployment $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-deployment/web/
 	. $(OPENQRM_SERVER_CONF) && cp web/*.html $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-deployment/web/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-deployment/web/img
+	. $(OPENQRM_SERVER_CONF) && cp web/img/*.png $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-deployment/web/img/
 
 uninstall:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make uninstall' as root" && exit 1)

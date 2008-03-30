@@ -11,6 +11,7 @@ require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
 function storage_display($admin) {
+	global $RootDir;
 	$storage_tmp = new storage();
 	$OPENQRM_STORAGE_COUNT = $storage_tmp->get_count();
 
@@ -20,8 +21,14 @@ function storage_display($admin) {
 		$disp = "<b>Storage overview</b>";
 	}
 	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."All storages server: $OPENQRM_STORAGE_COUNT";
+	$disp = $disp."<div id=\"all_storage\" nowrap=\"true\">";
+	$disp = $disp."Available storage server: $OPENQRM_STORAGE_COUNT";
+	$disp = $disp."</div>";
+
+	$disp = $disp."<hr>";
+
+	$disp .= "<table>";
+
 	$storage_array = $storage_tmp->display_overview(0, 10);
 	foreach ($storage_array as $index => $storage_db) {
 		$storage = new storage();
@@ -31,29 +38,57 @@ function storage_display($admin) {
 		$storage_deployment = new deployment();
 		$storage_deployment->get_instance_by_id($storage->deployment_type);
 
+		$disp .= "<tr>";
+		$disp .= "<td>";
+		$storage_deployment_icon_path="$RootDir/plugins/$storage_deployment->type-deployment/img/storage.png";
+		$storage_deployment_icon="/openqrm/base/plugins/$storage_deployment->type-deployment/img/storage.png";
+		$storage_deployment_icon_default="/openqrm/base/img/storage.png";
+		if (file_exists($storage_deployment_icon_path)) {
+			$storage_deployment_icon_default=$storage_deployment_icon;
+		}
+		$disp .= "<img src=\"$storage_deployment_icon_default\">";
+		$disp .= "</td><td>";
+		$disp .= "$storage_deployment->type";
+		$disp .= "</td><td>";
 		$disp = $disp."<div id=\"storage\" nowrap=\"true\">";
-
 		$disp = $disp."<form action='storage-action.php' method=post>";
-		$disp = $disp."$storage->id $storage->name $storage->resource_id/$storage_resource->ip $storage->deployment_type/$storage_deployment->type ";
+		$disp = $disp."$storage->id";
+		$disp .= "</td><td>";
+		$disp .= "$storage->name";
+		$disp .= "</td><td>";
+		$disp .= "$storage->resource_id";
+		$disp .= "</td><td>";
+		$disp .= "$storage_resource->ip";
+		$disp .= "</td><td>";
+		$disp .= "$storage->deployment_type";
+		$disp .= "</td><td>";
 		$disp = $disp."<input type=hidden name=storage_id value=$storage->id>";
 		$disp = $disp."<input type=hidden name=storage_name value=$storage->name>";
 		$disp = $disp."<input type=hidden name=storage_command value='remove'>";
+		$disp .= "</td><td>";
 		if ("$admin" == "admin") {
 			$disp = $disp."<input type=submit value='Remove'>";
 		}
 		$disp = $disp."</form>";
-
+		$disp .= "</td><td>";
 		$disp = $disp."<form action='storage-overview.php?currenttab=tab3' method=post>";
 		$disp = $disp."<input type=hidden name=storage_id value=$storage->id>";
 		$disp = $disp."<input type=hidden name=storage_name value=$storage->name>";
 		$disp = $disp."<input type=hidden name=edit_storage_id value=$storage->id>";
+		$disp .= "</td><td>";
 		if ("$admin" == "admin") {
 			$disp = $disp."<input type=submit value='Edit'>";
 		}
 		$disp = $disp."</form>";
 
 		$disp = $disp."</div>";
+
+		$disp .= "</td>";
+		$disp .= "</tr>";
+
 	}
+	$disp .= "</table>";
+	$disp = $disp."<hr>";
 	return $disp;
 }
 

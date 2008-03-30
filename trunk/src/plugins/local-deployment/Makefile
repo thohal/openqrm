@@ -22,6 +22,8 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp web/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-deployment/web/
 	. $(OPENQRM_SERVER_CONF) && cp web/*.local-deployment $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-deployment/web/
 	. $(OPENQRM_SERVER_CONF) && cp $$OPENQRM_BUILD_TMP_DIR/openqrm-build/partimage/partimage $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-deployment/web/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-deployment/web/img
+	. $(OPENQRM_SERVER_CONF) && cp web/img/*.png $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-deployment/web/img/
 
 
 uninstall:
