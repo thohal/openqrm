@@ -55,6 +55,7 @@ function htmlobject_input($name, $value, $type = 'text', $arg = '') {
 function htmlobject_select($name, $value, $title = '', $selected = array()) {
 
 		$html = new htmlobject_select();
+		$html->id = 'p'.uniqid();
 		$html->name = $name;
 		$html->title = $title;
 		$html->selected = $selected;
@@ -93,6 +94,7 @@ function htmlobject_select_simple($name, $value, $title = '', $selected = '') {
 function htmlobject_textarea($name, $value) {
 
 		$html = new htmlobject_textarea();
+		$html->id = 'p'.uniqid();
 		$html->name = $name;
 		$html->title = $value['label'];
 		$html->text = $value['value'];
@@ -148,6 +150,85 @@ function htmlobject_box_from_object($html, $css='', $usetitle = true) {
 }
 //---------------------------------------------------------------
 /**
+* builds html radio box
+* @access public
+* @param  $name string
+* @param  $value array(label=>, value=>)
+* @param  $checked string
+* @return string
+*/
+function htmlobject_radio_list($name, $value, $title = '', $checked = '') {
+	$_strReturn = '';
+
+	$i = 0;
+	foreach ($value as $val) {
+		$html = new htmlobject_input();
+		$html->type = 'radio';
+		$html->id = 'p'.uniqid();
+		$html->name = $name;
+		$html->title =  $val['label'];
+		if($checked == $val['value']) {
+			$html->checked = true;
+		}
+		$html->value = $val['value'];
+		$_strReturn .= htmlobject_box_from_object($html, ' radio');
+		
+		$i++;
+	}
+	
+	$html = new htmlobject_div();
+	$html->name = '';
+	$html->title = $title;
+	$html->text = $_strReturn;
+
+	$_strReturn = htmlobject_box_from_object($html, ' outerbox', false);	
+	
+	return $_strReturn;
+}
+//---------------------------------------------------------------
+/**
+* builds html table
+* @access public
+* @param  $name string
+* @param  $value array(array(label=>, value=>, ...)
+* @param  $mode enum(object,string)
+* @return string
+*/
+function htmlobject_table($id, $value, $mode = 'object') {
+	$_strReturn = '';
+	
+	$table = new htmlobject_table();
+	$table->id = $id;
+	$table->css = 'htmlobject_table';
+	$table->border = 1;
+	$table->cellspacing = 0;
+	$table->cellpadding = 0;
+
+	$i = 0;
+	if($mode == 'object') {
+		foreach ($value as $val) {	
+		$tr = new htmlobject_tr();
+			foreach($val as $key => $v) {
+				$td = new htmlobject_td();
+				$td->css = $key;
+				$td->text = $v;
+				$tr->add($td);
+			}
+		$table->add($tr);
+		}
+	}
+	if($mode == 'string') {
+		$tr = '';
+			foreach ($value as $val) {
+				$tr .= $val;
+			}
+		$table->add($tr);
+	}
+	
+	return $table->get_string();
+}
+//---------------------------------------------------------------
+/**
 * builds head of Page
 * @access public
 * @param $title string
@@ -168,43 +249,6 @@ function htmlobject_head($title = '', $timer = '', $url = '') {
 	$html->title = $title;
 	
 	return $html->get_string();
-}
-//---------------------------------------------------------------
-/**
-* builds html radio box
-* @access public
-* @param  $name string
-* @param  $value array(label=>, value=>)
-* @param  $checked string
-* @return string
-*/
-function htmlobject_radio_list($name, $value, $title = '', $checked = '') {
-	$_strReturn = '';
-
-	$i = 0;
-	foreach ($value as $val) {
-		$html = new htmlobject_input();
-		$html->type = 'radio';
-		$html->id = uniqid();
-		$html->name = $name;
-		$html->title =  $val['label'];
-		if($checked == $val['value']) {
-			$html->checked = true;
-		}
-		$html->value = $val['value'];
-		$_strReturn .= htmlobject_box_from_object($html, ' radio');
-		
-		$i++;
-	}
-	
-	$html = new htmlobject_div();
-	$html->name = '';
-	$html->title = $title;
-	$html->text = $_strReturn;
-
-	$_strReturn = htmlobject_box_from_object($html, ' outerbox', false);	
-	
-	return $_strReturn;
 }
 //---------------------------------------------------------------
 function htmlobject_request($arg) 
