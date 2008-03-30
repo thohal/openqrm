@@ -56,8 +56,7 @@ function storage_display($admin) {
 		$storage_deployment = new deployment();
 		$storage_deployment->get_instance_by_id($storage->deployment_type);
 
-		$disp .= "<tr>";
-		$disp .= "<td>";
+		$disp .= "<tr><td>";
 		$storage_deployment_icon_path="$RootDir/plugins/$storage_deployment->type-deployment/img/storage.png";
 		$storage_deployment_icon="/openqrm/base/plugins/$storage_deployment->type-deployment/img/storage.png";
 		$storage_deployment_icon_default="/openqrm/base/img/storage.png";

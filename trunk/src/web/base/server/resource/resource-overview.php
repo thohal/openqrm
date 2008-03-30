@@ -2,7 +2,7 @@
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
 <style>
 .htmlobject_tab_box {
-	width:600px;
+	width:700px;
 }
 </style>
 
@@ -16,11 +16,10 @@ require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
 
-
-
-
-
 function resource_display($admin) {
+	global $RootDir;
+	$resource_icon_default="/openqrm/base/img/resource.png";
+
 	$resource_tmp = new resource();
 	$OPENQRM_RESOURCE_COUNT_ALL = $resource_tmp->get_count("all");
 	$OPENQRM_RESOURCE_COUNT_ONLINE = $resource_tmp->get_count("online");
@@ -44,6 +43,38 @@ function resource_display($admin) {
 	$disp = $disp."<div>Online resources: $OPENQRM_RESOURCE_COUNT_ONLINE</div>";
 	$disp = $disp."<div>Offline resources: $OPENQRM_RESOURCE_COUNT_OFFLINE</div>";
 	$disp = $disp."<br>";
+	$disp = $disp."<hr>";
+
+	$disp .= "<table>";
+	$disp .= "<tr><td>";
+	$disp .= "";
+	$disp .= "</td><td>";
+	$disp .= "id";
+	$disp .= "</td><td>";
+	$disp .= "hostname";
+	$disp .= "</td><td>";
+	$disp .= "boot";
+	$disp .= "</td><td>";
+	$disp .= "kernel";
+	$disp .= "</td><td>";
+	$disp .= "image";
+	$disp .= "</td><td>";
+	$disp .= "ip";
+	$disp .= "</td><td>";
+	$disp .= "memory";
+	$disp .= "</td><td>";
+	$disp .= "swap";
+	$disp .= "</td><td>";
+	$disp .= "load";
+	$disp .= "</td><td>";
+	$disp .= "state";
+	$disp .= "</td><td>";
+	if ("$admin" == "admin") {
+		$disp .= "action";
+	}
+	$disp .= "</td><td>";
+	$disp .= "</td></tr>";
+
 	$resource_array = $resource_tmp->display_overview(0, 10);
 	foreach ($resource_array as $index => $resource_db) {
 		$resource = new resource();
@@ -51,7 +82,17 @@ function resource_display($admin) {
 		if ("$resource->id" != "0") {
 			$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
 			$disp = $disp."<form action='resource-action.php' method=post>";
-			$disp = $disp."$resource->id $resource->hostname ";
+			$disp .= "<tr><td>";
+			$disp .= "<img src=\"$resource_icon_default\">";
+			$disp .= "</td><td>";
+			$disp = $disp."$resource->id";
+			$disp .= "</td><td>";
+			if (strlen($resource->hostname)) {
+				$disp .= "$resource->hostname";
+			} else {
+				$disp .= "none";
+			}
+			$disp .= "</td><td>";
 
 			// local or netboot
 			if ("$admin" == "admin") {
@@ -67,6 +108,7 @@ function resource_display($admin) {
 					$disp = $disp." local";
 				}
 			}
+			$disp .= "</td><td>";
 
 			// kernel selection
 			if ("$admin" == "admin") {
@@ -75,6 +117,7 @@ function resource_display($admin) {
 			} else {
 				$disp = $disp." $resource->kernel ";
 			}
+			$disp .= "</td><td>";
 
 			// image selection
 			if ("$admin" == "admin") {
@@ -86,7 +129,21 @@ function resource_display($admin) {
 				$disp = $disp." $resource->image ";
 			}
 
-			$disp = $disp." $resource->ip $resource->mac $resource->state ";
+			$disp .= "</td><td>";
+			$disp = $disp."$resource->ip";
+			$disp .= "</td><td>";
+			$disp .= "$resource->memtotal/$resource->memused";
+			$disp .= "</td><td>";
+			$disp .= "$resource->swaptotal/$resource->swapused";
+			$disp .= "</td><td>";
+			$disp .= "$resource->load";
+			$disp .= "</td><td>";
+			if (strlen($resource->state)) {
+				$disp .= "$resource->state";
+			} else {
+				$disp .= "unknown";
+			}
+			$disp .= "</td><td>";
 
 			if ("$admin" == "admin") {
 
@@ -108,15 +165,46 @@ function resource_display($admin) {
 			}
 			$disp = $disp."</form>";
 			$disp = $disp."</div>";
+			$disp .= "</td></tr>";
+
 
 		} else {
-			$disp = $disp."<br>";
+
 			$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
-			$disp = $disp."openQRM $resource->id &nbsp; $resource->localboot";
+			$disp .= "<tr><td>";
+			$disp .= "<img width=32 height=32 src=\"/openqrm/base/img/logo.png\">";
+			$disp .= "</td><td>";
+			$disp .= "$resource->id";
+			$disp .= "</td><td>";
+			$disp .= "localhost";
+			$disp .= "</td><td>";
+			if ("$resource->localboot" == "0") {
+				$disp .= "net";
+			} else {
+				$disp .= "local";
+			}
+			$disp .= "</td><td>";
+			$disp .= "</td><td>";
+			$disp .= "</td><td>";
+			$disp = $disp."$resource->ip";
+			$disp .= "</td><td>";
+			$disp .= "$resource->memtotal / $resource->memused";
+			$disp .= "</td><td>";
+			$disp .= "$resource->swaptotal / $resource->swapused";
+			$disp .= "</td><td>";
+			$disp .= "$resource->load";
+			$disp .= "</td><td>";
+			if (strlen($resource->state)) {
+				$disp .= "$resource->state";
+			} else {
+				$disp .= "unknown";
+			}
+			$disp .= "</td></tr>";
 			$disp = $disp."</div>";
-			$disp = $disp."<br>";
 		}
 	}
+	$disp .= "</table>";
+	$disp = $disp."<hr>";
 	return $disp;
 }
 
