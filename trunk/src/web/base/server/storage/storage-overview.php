@@ -1,5 +1,10 @@
 
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+<style>
+.htmlobject_tab_box {
+	width:300px;
+}
+</style>
 
 <?php
 
@@ -16,9 +21,9 @@ function storage_display($admin) {
 	$OPENQRM_STORAGE_COUNT = $storage_tmp->get_count();
 
 	if ("$admin" == "admin") {
-		$disp = "<b>Storage Admin</b>";
+		$disp = "<h1>Storage Admin</h1>";
 	} else {
-		$disp = "<b>Storage overview</b>";
+		$disp = "<h1>Storage overview</h1>";
 	}
 	$disp = $disp."<br>";
 	$disp = $disp."<div id=\"all_storage\" nowrap=\"true\">";
@@ -28,6 +33,19 @@ function storage_display($admin) {
 	$disp = $disp."<hr>";
 
 	$disp .= "<table>";
+	$disp .= "<tr><td>";
+	$disp .= "";
+	$disp .= "</td><td>";
+	$disp .= "type";
+	$disp .= "</td><td>";
+	$disp .= "id";
+	$disp .= "</td><td>";
+	$disp .= "name";
+	$disp .= "</td><td>";
+	$disp .= "ip";
+	$disp .= "</td><td>";
+	$disp .= "resource";
+	$disp .= "</td></tr>";
 
 	$storage_array = $storage_tmp->display_overview(0, 10);
 	foreach ($storage_array as $index => $storage_db) {
@@ -56,11 +74,9 @@ function storage_display($admin) {
 		$disp .= "</td><td>";
 		$disp .= "$storage->name";
 		$disp .= "</td><td>";
-		$disp .= "$storage->resource_id";
-		$disp .= "</td><td>";
 		$disp .= "$storage_resource->ip";
 		$disp .= "</td><td>";
-		$disp .= "$storage->deployment_type";
+		$disp .= "$storage->resource_id";
 		$disp .= "</td><td>";
 		$disp = $disp."<input type=hidden name=storage_id value=$storage->id>";
 		$disp = $disp."<input type=hidden name=storage_name value=$storage->name>";
@@ -101,10 +117,9 @@ function storage_form() {
 	# remove ramdisk deployment which does not need a storage server
 	array_splice($deployment_list, 0, 1);
 
-	$disp = "<b>New Storage</b>";
+	$disp = "<h1>New Storage</h1>";
+	$disp = $disp."<br>";
 	$disp = $disp."<form action='storage-action.php' method=post>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 	$disp = $disp.htmlobject_input('storage_name', array("value" => '', "label" => 'Insert Storage name'), 'text', 20);
 
 
@@ -170,10 +185,9 @@ function storage_edit($storage_id) {
 	# remove ramdisk deployment which does not need a storage server
 	array_splice($deployment_list, 0, 1);
 
-	$disp = "<b>Edit Storage</b>";
+	$disp = "<h1>Edit Storage</h1>";
+	$disp = $disp."<br>";
 	$disp = $disp."<form action='storage-action.php' method=post>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 	$disp = $disp.htmlobject_input('storage_name', array("value" => $storage->name, "label" => 'Storage name'), 'text', 20);
 
 	$deployment_select = htmlobject_select('storage_deployment_type', $deployment_list, 'Deployment type', $deployment_list);
