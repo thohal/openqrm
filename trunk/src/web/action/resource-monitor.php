@@ -15,12 +15,15 @@ $resource_mac = $_REQUEST["resource_mac"];
 $resource_ip = $_REQUEST["resource_ip"];
 $resource_state = $_REQUEST["resource_state"];
 $resource_event = $_REQUEST["resource_event"];
+$resource_lastgood = $_SERVER['REQUEST_TIME'];
 foreach ($_REQUEST as $key => $value) {
 	if (strncmp($key, "resource_", 9) == 0) {
 		$resource_fields[$key] = $value;
 	}
 }
 unset($resource_fields["resource_command"]);
+// set lastgood
+$resource_fields["resource_lastgood"]=$resource_lastgood;
 
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
@@ -68,6 +71,9 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		// resource_id
 		// array of resource_fields
 		case 'update_info':
+		
+		print_r($resource_fields);
+		
 			if (strlen($resource_id)) {
 				$resource = new resource();
 				$resource->update_info($resource_id, $resource_fields);

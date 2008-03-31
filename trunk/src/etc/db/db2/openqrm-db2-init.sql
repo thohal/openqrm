@@ -29,6 +29,7 @@ create table resource_info(				\
 	resource_execdport bigint,			\
 	resource_senddelay bigint,			\
 	resource_capabilities varchar(255),	\
+	resource_lastgood varchar(10),		\
 	resource_state varchar(20),			\
 	resource_event varchar(20),			\
 	primary key(resource_id)			\

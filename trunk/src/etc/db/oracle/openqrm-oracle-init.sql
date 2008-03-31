@@ -28,6 +28,7 @@ create table resource_info(
 	resource_execdport INTEGER,
 	resource_senddelay INTEGER,
 	resource_capabilities VARCHAR2(255),
+	resource_lastgood VARCHAR2(10),
 	resource_state VARCHAR2(20),
 	resource_event VARCHAR2(20)
 );

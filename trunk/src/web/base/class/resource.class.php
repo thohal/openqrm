@@ -41,6 +41,7 @@ var $load = '';
 var $execdport = '';
 var $senddelay = '';
 var $capabilities = '';
+var $lastgood = '';
 var $state = '';
 var $event = '';
 
@@ -90,6 +91,7 @@ function get_instance($id, $mac, $ip) {
 		$this->execdport = $resource["resource_execdport"];
 		$this->senddelay = $resource["resource_senddelay"];
 		$this->capabilities = $resource["resource_capabilities"];
+		$this->lastgood = $resource["resource_lastgood"];
 		$this->state = $resource["resource_state"];
 		$this->event = $resource["resource_evemnt"];
 	}
@@ -187,6 +189,7 @@ function add($resource_fields) {
 	$resource_fields["resource_image"]='idle';
 	$resource_fields["resource_imageid"]='1';
 	$resource_fields["resource_senddelay"]=30;
+	$resource_fields["resource_lastgood"]=$_SERVER['REQUEST_TIME'];
 
 	$db=openqrm_get_db_connection();
 	$result = $db->AutoExecute($RESOURCE_INFO_TABLE, $resource_fields, 'INSERT');
