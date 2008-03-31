@@ -8,10 +8,13 @@ $BootServiceDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/boot-service/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/class/plugin.class.php";
+require_once "$RootDir/class/event.class.php";
 
 global $RESOURCE_INFO_TABLE;
 $RESOURCE_TIME_OUT=120;
 global $RESOURCE_TIME_OUT;
+$event = new event();
+global $event;
 
 class resource {
 
@@ -53,6 +56,7 @@ var $event = '';
 // returns a resource from the db selected by id, mac or ip
 function get_instance($id, $mac, $ip) {
 	global $RESOURCE_INFO_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	if ("$id" != "") {
 		$resource_array = $db->GetAll("select * from $RESOURCE_INFO_TABLE where resource_id=$id");
@@ -61,7 +65,7 @@ function get_instance($id, $mac, $ip) {
 	} else if ("$ip" != "") {
 		$resource_array = $db->GetAll("select * from $RESOURCE_INFO_TABLE where resource_ip='$ip'");
 	} else {
-		echo "ERROR: Could not create instance of resource without data";
+		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
 		exit(-1);
 	}
 	foreach ($resource_array as $index => $resource) {
@@ -140,10 +144,11 @@ function set_id($id) {
 // checks if a resource exists in the database
 function exists($mac_address) {
 	global $RESOURCE_INFO_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	$rs = &$db->Execute("select resource_id from $RESOURCE_INFO_TABLE where resource_mac='$mac_address'");
 	if (!$rs)
-		print $db->ErrorMsg();
+		$event->log("exists", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
 	if ($rs->EOF) {
 		return false;
@@ -156,10 +161,11 @@ function exists($mac_address) {
 // checks if given resource id is free in the db
 function is_id_free($resource_id) {
 	global $RESOURCE_INFO_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	$rs = &$db->Execute("select resource_id from $RESOURCE_INFO_TABLE where resource_id=$resource_id");
 	if (!$rs)
-		print $db->ErrorMsg();
+		$event->log("exists", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
 	if ($rs->EOF) {
 		return true;
@@ -175,10 +181,11 @@ function add($resource_fields) {
 	global $OPENQRM_EXEC_PORT;
 	global $RESOURCE_INFO_TABLE;
 	global $OPENQRM_RESOURCE_BASE_DIR;
+	global $event;
 	$openqrm_server = new openqrm_server();
 	$OPENQRM_SERVER_IP_ADDRESS = $openqrm_server->get_ip_address();
 	if (!is_array($resource_fields)) {
-		print("resource_field not well defined");
+		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "Resource_field not well defined", "", "", 0, 0, 0);
 		return 1;
 	}
 	# set defaults
@@ -195,7 +202,7 @@ function add($resource_fields) {
 	$db=openqrm_get_db_connection();
 	$result = $db->AutoExecute($RESOURCE_INFO_TABLE, $resource_fields, 'INSERT');
 	if (! $result) {
-		print("Failed adding new resource to database");
+		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "Failed adding new resource to database", "", "", 0, 0, 0);
 	}
 }
 
@@ -235,11 +242,12 @@ function get_parameter($resource_id) {
 	global $KERNEL_INFO_TABLE;
 	global $IMAGE_INFO_TABLE;
 	global $BootServiceDir;
+	global $event;
 	$db=openqrm_get_db_connection();
 	// resource parameter
 	$recordSet = &$db->Execute("select * from $RESOURCE_INFO_TABLE where resource_id=$resource_id");
 	if (!$recordSet)
-		print $db->ErrorMsg();
+		$event->log("get_parameter", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
 	while (!$recordSet->EOF) {
 		array_walk($recordSet->fields, 'print_array');
@@ -251,7 +259,7 @@ function get_parameter($resource_id) {
 	// kernel-parameter
 	$recordSet = &$db->Execute("select * from $KERNEL_INFO_TABLE where kernel_id=$kernel_id");
 	if (!$recordSet)
-		print $db->ErrorMsg();
+		$event->log("get_parameter", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
 	while (!$recordSet->EOF) {
 		array_walk($recordSet->fields, 'print_array');
@@ -261,7 +269,7 @@ function get_parameter($resource_id) {
 	// image-parameter
 	$recordSet = &$db->Execute("select * from $IMAGE_INFO_TABLE where image_id=$image_id");
 	if (!$recordSet)
-		print $db->ErrorMsg();
+		$event->log("get_parameter", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
 	while (!$recordSet->EOF) {
 		array_walk($recordSet->fields, 'print_array');
@@ -273,7 +281,7 @@ function get_parameter($resource_id) {
 	if (strlen($image_storageid)) {
 		$recordSet = &$db->Execute("select resource_ip from $RESOURCE_INFO_TABLE where resource_id=$image_storageid");
 		if (!$recordSet)
-			print $db->ErrorMsg();
+			$event->log("get_parameter", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 		else
 		while (!$recordSet->EOF) {
 			//array_walk($recordSet->fields, 'print_array');
@@ -310,11 +318,12 @@ function get_parameter_array($resource_id) {
 
 function get_list() {
 	global $RESOURCE_INFO_TABLE;
+	global $event;
 	$resource_list = array();
 	$db=openqrm_get_db_connection();
 	$rs = $db->Execute("select resource_id, resource_ip, resource_state from $RESOURCE_INFO_TABLE");
 	if (!$rs)
-		print $db->ErrorMsg();
+		$event->log("get_list", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
 	while (!$rs->EOF) {
 		$resource_list[] = $rs->fields;
@@ -327,19 +336,17 @@ function get_list() {
 
 function update_info($resource_id, $resource_fields) {
 	global $RESOURCE_INFO_TABLE;
+	global $event;
 	if (! is_array($resource_fields)) {
-		print("ERROR: Unable to update resource $resource_id");
+		$event->log("update_info", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "Unable to update resource $resource_id", "", "", 0, 0, 0);
 		return 1;
 	}
 	$db=openqrm_get_db_connection();
 	unset($resource_fields["resource_id"]);
 	$result = $db->AutoExecute($RESOURCE_INFO_TABLE, $resource_fields, 'UPDATE', "resource_id = $resource_id");
 	if (! $result) {
-		print("Failed updating resource $resource_id");
+		$event->log("update_info", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "Failed updating resource $resource_id", "", "", 0, 0, 0);
 	}
-
-	//$resource_uptime, $resource_cpu_number, $resource_cpu_speed, $resource_cpu_model, $resource_mem_total, $resource_mem_used, $resource_swap_total, $resource_swap_used, $resource_hostname, $resource_cpu_load, $resource_state, $resource_event
-
 }
 
 function update_status($resource_id, $resource_state, $resource_event) {
@@ -357,10 +364,11 @@ function update_status($resource_id, $resource_state, $resource_event) {
 // function to send a command to a resource by resource_ip
 function send_command($resource_ip, $resource_command) {
 	global $OPENQRM_EXEC_PORT;
+	global $event;
 	$fp = fsockopen($resource_ip, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
 	if(!$fp) {
-		echo "ERROR: Could not send the command to resource $resource_ip<br>";
-		echo "ERROR: $errstr ($errno)<br>";
+		$event->log("send_command", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "Could not send the command to resource $resource_ip", "", "", 0, 0, 0);
+		$event->log("send_command", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "$errstr ($errno)", "", "", 0, 0, 0);
 		exit();
 	}
 	fputs($fp,"$resource_command");
@@ -372,6 +380,7 @@ function send_command($resource_ip, $resource_command) {
 // returns the number of managed resource
 function get_count($which) {
 	global $RESOURCE_INFO_TABLE;
+	global $event;
 	$count = 0;
 	$db=openqrm_get_db_connection();
 
@@ -388,7 +397,7 @@ function get_count($which) {
 	}
 	$rs = $db->Execute($sql);
 	if (!$rs) {
-		print $db->ErrorMsg();
+		$event->log("get_count", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	} else {
 		$count = $rs->fields["num"];
 	}
@@ -411,11 +420,12 @@ function generate_mac() {
 function check_all_states() {
 	global $RESOURCE_INFO_TABLE;
 	global $RESOURCE_TIME_OUT;
+	global $event;
 	$resource_list = array();
 	$db=openqrm_get_db_connection();
 	$rs = $db->Execute("select resource_id, resource_lastgood, resource_state from $RESOURCE_INFO_TABLE");
 	if (!$rs)
-		print $db->ErrorMsg();
+		$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
 	while (!$rs->EOF) {
 		$resource_id=$rs->fields['resource_id'];
@@ -428,6 +438,8 @@ function check_all_states() {
 				$resource_fields["resource_state"]="error";
 				$resource_error = new resource();
 				$resource_error->update_info($resource_id, $resource_fields);
+				// log error event
+				$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 1, "resource.class.php", "Resource $resource_id is in error state", "", "", 0, 0, 0);
 			}
 		}
 		$rs->MoveNext();
@@ -438,11 +450,12 @@ function check_all_states() {
 // displays the resource-overview
 function display_overview($start, $count) {
 	global $RESOURCE_INFO_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	$recordSet = &$db->SelectLimit("select * from $RESOURCE_INFO_TABLE where resource_id>=$start order by resource_id ASC", $count);
 	$resource_array = array();
 	if (!$recordSet) {
-		print $db->ErrorMsg();
+		$event->log("display_overview", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	} else {
 		while (!$recordSet->EOF) {
 			array_push($resource_array, $recordSet->fields);

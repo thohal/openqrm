@@ -44,7 +44,7 @@ function get_instance($id, $name) {
 	} else if ("$name" != "") {
 		$event_array = &$db->Execute("select * from $EVENT_INFO_TABLE where event_name='$name'");
 	} else {
-		echo "ERROR: Could not create instance of event without data";
+		$this->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "event.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
 		exit(-1);
 	}
 	foreach ($event_array as $index => $event) {
@@ -89,7 +89,7 @@ function is_id_free($event_id) {
 	$db=openqrm_get_db_connection();
 	$rs = &$db->Execute("select event_id from $EVENT_INFO_TABLE where event_id=$event_id");
 	if (!$rs)
-		print $db->ErrorMsg();
+		$this->log("is_id_free", $_SERVER['REQUEST_TIME'], 2, "event.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
 	if ($rs->EOF) {
 		return true;
@@ -103,65 +103,14 @@ function is_id_free($event_id) {
 function add($event_fields) {
 	global $EVENT_INFO_TABLE;
 	if (!is_array($event_fields)) {
-		print("event_field not well defined");
+		$this->log("add", $_SERVER['REQUEST_TIME'], 2, "event.class.php", "Event_field not well defined", "", "", 0, 0, 0);
 		return 1;
 	}
 	$db=openqrm_get_db_connection();
 	$result = $db->AutoExecute($EVENT_INFO_TABLE, $event_fields, 'INSERT');
 	if (! $result) {
-		print("Failed adding new event to database");
+		$this->log("add", $_SERVER['REQUEST_TIME'], 2, "event.class.php", "Failed adding new event to database", "", "", 0, 0, 0);
 	}
-}
-
-// adds event to the database by parameter
-function log($name, $time, $priority, $source, $description, $comment, $capabilities, $status, $image_id, $resource_id) {
-	global $EVENT_INFO_TABLE;
-
-	$new_event_id=openqrm_db_get_free_id('event_id', $EVENT_INFO_TABLE);
-
-	$event_fields=array();
-	$event_fields["event_id"]=$new_event_id;
-	$event_fields["event_name"]="$name";
-	$event_fields["event_time"]="$time";
-	$event_fields["event_priority"]=$priority;
-	$event_fields["event_source"]="$source";
-	$event_fields["event_description"]="$description";
-	$event_fields["event_comment"]="$comment";
-	$event_fields["event_capabilities"]="$capabilities";
-	$event_fields["event_status"]=$status;
-	$event_fields["event_image_id"]=$image_id;
-	$event_fields["event_resource_id"]=$resource_id;
-	$this->add($event_fields);
-	// add to syslog
-    $syslog_str="openQRM $source: ($name) $description";
-    $syslog_prio="LOG_ERR";
-    switch($priority) {
-		case 0:
-		    $syslog_prio=LOG_EMERG;
-			break;
-		case 1:
-		    $syslog_prio=LOG_ALERT;
-			break;
-		case 2:
-		    $syslog_prio=LOG_CRIT;
-			break;
-		case 3:
-		    $syslog_prio=LOG_ERR;
-			break;
-		case 4:
-		    $syslog_prio=LOG_WARNING;
-			break;
-		case 5:
-		    $syslog_prio=LOG_NOTICE;
-			break;
-		case 6:
-		    $syslog_prio=LOG_INFO;
-			break;
-		case 7:
-		    $syslog_prio=LOG_DEBUG;
-			break;
-    }
-	syslog($syslog_prio, $syslog_str);
 }
 
 
@@ -169,16 +118,90 @@ function log($name, $time, $priority, $source, $description, $comment, $capabili
 function update($event_id, $event_fields) {
 	global $EVENT_INFO_TABLE;
 	if ($event_id < 0 || ! is_array($event_fields)) {
-		print("Unable to update event $event_id");
+		$this->log("update", $_SERVER['REQUEST_TIME'], 2, "event.class.php", "Unable to update event $event_id", "", "", 0, 0, 0);
 		return 1;
 	}
 	$db=openqrm_get_db_connection();
 	unset($event_fields["event_id"]);
 	$result = $db->AutoExecute($EVENT_INFO_TABLE, $event_fields, 'UPDATE', "event_id = $event_id");
 	if (! $result) {
-		print("Failed updating event $event_id");
+		$this->log("update", $_SERVER['REQUEST_TIME'], 2, "event.class.php", "Failed updating event $event_id", "", "", 0, 0, 0);
 	}
 }
+
+
+// adds event to the database by parameter
+function log($name, $time, $priority, $source, $description, $comment, $capabilities, $status, $image_id, $resource_id) {
+	global $EVENT_INFO_TABLE;
+
+	// check if log already exists, if yes, just update the date
+	$db=openqrm_get_db_connection();
+	$rs = &$db->Execute("select event_id from $EVENT_INFO_TABLE where event_description='$description' order by event_id DESC limit 1");
+	if (!$rs)
+		$this->log("log", $_SERVER['REQUEST_TIME'], 2, "event.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	else
+	if ($rs->EOF) {
+		// log does not yet exists, add it
+		$new_event_id=openqrm_db_get_free_id('event_id', $EVENT_INFO_TABLE);
+		$event_fields=array();
+		$event_fields["event_id"]=$new_event_id;
+		$event_fields["event_name"]="$name";
+		$event_fields["event_time"]="$time";
+		$event_fields["event_priority"]=$priority;
+		$event_fields["event_source"]="$source";
+		$event_fields["event_description"]="$description";
+		$event_fields["event_comment"]="$comment";
+		$event_fields["event_capabilities"]="$capabilities";
+		$event_fields["event_status"]=$status;
+		$event_fields["event_image_id"]=$image_id;
+		$event_fields["event_resource_id"]=$resource_id;
+		$this->add($event_fields);
+		// add to syslog
+		$syslog_str="openQRM $source: ($name) $description";
+		$syslog_prio="LOG_ERR";
+		switch($priority) {
+			case 0:
+			    $syslog_prio=LOG_WARNING;
+				break;
+			case 1:
+			    $syslog_prio=LOG_WARNING;
+				break;
+			case 2:
+			    $syslog_prio=LOG_WARNING;
+				break;
+			case 3:
+			    $syslog_prio=LOG_WARNING;
+				break;
+			case 4:
+			    $syslog_prio=LOG_WARNING;
+				break;
+			case 5:
+			    $syslog_prio=LOG_NOTICE;
+				break;
+			case 6:
+			    $syslog_prio=LOG_INFO;
+				break;
+			case 7:
+			    $syslog_prio=LOG_DEBUG;
+				break;
+		}
+		syslog($syslog_prio, $syslog_str);
+
+	} else {
+	
+		// log already exists, just update the date
+		$event_fields=array();
+		while (!$rs->EOF) {
+			$event_fields["event_id"]=$rs->fields["event_id"];
+			$rs->MoveNext();
+		}
+		$event_id = $event_fields["event_id"];
+		$event_fields["event_time"]="$time";
+		$this->update($event_id, $event_fields);
+	}
+
+}
+
 
 // removes event from the database
 function remove($event_id) {
@@ -201,7 +224,7 @@ function get_name($event_id) {
 	$db=openqrm_get_db_connection();
 	$event_set = &$db->Execute("select event_name from $EVENT_INFO_TABLE where event_id=$event_id");
 	if (!$event_set) {
-		print $db->ErrorMsg();
+		$this->log("get_name", $_SERVER['REQUEST_TIME'], 2, "event.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	} else {
 		if (!$event_set->EOF) {
 			return $event_set->fields["event_name"];
@@ -218,7 +241,7 @@ function get_count() {
 	$db=openqrm_get_db_connection();
 	$rs = $db->Execute("select count(event_id) as num from $EVENT_INFO_TABLE");
 	if (!$rs) {
-		print $db->ErrorMsg();
+		$this->log("get_count", $_SERVER['REQUEST_TIME'], 2, "event.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	} else {
 		$count = $rs->fields["num"];
 	}
@@ -246,7 +269,7 @@ function display_overview($start, $count) {
 	$recordSet = &$db->SelectLimit("select * from $EVENT_INFO_TABLE where event_id>=$start order by event_id DESC", $count);
 	$event_array = array();
 	if (!$recordSet) {
-		print $db->ErrorMsg();
+		$this->log("display_overview", $_SERVER['REQUEST_TIME'], 2, "event.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	} else {
 		while (!$recordSet->EOF) {
 			array_push($event_array, $recordSet->fields);

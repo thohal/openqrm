@@ -44,7 +44,7 @@ $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 
 global $OPENQRM_SERVER_IP_ADDRESS;
 
-	$event->log("$event_command", $_SERVER['REQUEST_TIME'], 5, "event-action", "Processing command $event_command for event $event_id", "", "", 0, 0, 0);
+	// $event->log("$event_command", $_SERVER['REQUEST_TIME'], 5, "event-action", "Processing command $event_command for event $event_id", "", "", 0, 0, 0);
 	switch ($event_command) {
 		case 'new_event':
 			$event = new event();
@@ -75,7 +75,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			break;
 
 		default:
-			$event->log("$event_command", $_SERVER['REQUEST_TIME'], 3, "event-action", "No such event command ($event_command)", "", "", 0, 0, 0);
+			$event->log("$event_command", $_SERVER['REQUEST_TIME'], 4, "event-action", "No such event command ($event_command)", "", "", 0, 0, 0);
 			break;
 
 
