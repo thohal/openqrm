@@ -18,6 +18,7 @@ require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/include/openqrm-server-config.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/kernel.class.php";
+require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 global $OPENQRM_SERVER_BASE_DIR;
 global $RESOURCE_INFO_TABLE;
@@ -28,9 +29,11 @@ $XenDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/xen/xen-stat';
 // currently static name for the Xen-kernel
 $XEN_KERNEL_NAME="xen";
 
+$event = new event();
+
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {
-	syslog(LOG_ERR, "openQRM-engine: Un-Authorized access to xen-actions from $OPENQRM_USER->name!");
+	$event->log("authorization", $_SERVER['REQUEST_TIME'], 1, "xen-action", "Un-Authorized access to xen-actions from $OPENQRM_USER->name", "", "", 0, 0, 0);
 	exit();
 }
 
@@ -51,7 +54,7 @@ foreach ($_REQUEST as $key => $value) {
 }
 unset($xen_fields["xen_command"]);
 
-	syslog(LOG_NOTICE, "openQRM-engine: Processing command $xen_command");
+	$event->log("$xen_command", $_SERVER['REQUEST_TIME'], 5, "xem-action", "Processing xen command $xen_command", "", "", 0, 0, 0);
 	switch ($xen_command) {
 
 		case 'new':
@@ -157,7 +160,7 @@ unset($xen_fields["xen_command"]);
 			break;
 
 		default:
-			echo "No Such openQRM-command!";
+			$event->log("$xen_command", $_SERVER['REQUEST_TIME'], 3, "xen-action", "No such event command ($xen_command)", "", "", 0, 0, 0);
 			break;
 
 

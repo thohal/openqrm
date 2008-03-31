@@ -18,11 +18,14 @@ require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
+require_once "$RootDir/class/event.class.php";
 global $APPLIANCE_INFO_TABLE;
+
+$event = new event();
 
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {
-	syslog(LOG_ERR, "openQRM-engine: Un-Authorized access to appliance-actions from $OPENQRM_USER->name!");
+	$event->log("authorization", $_SERVER['REQUEST_TIME'], 1, "appliance-action", "Un-Authorized access to appliance-actions from $OPENQRM_USER->name", "", "", 0, 0, 0);
 	exit();
 }
 
@@ -61,8 +64,7 @@ $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
 
-
-	syslog(LOG_NOTICE, "openQRM-engine: Processing command $appliance_command on appliance $appliance_name");
+	$event->log("$appliance_command", $_SERVER['REQUEST_TIME'], 5, "appliance-action", "Processing command $appliance_command on appliance $appliance_name", "", "", 0, 0, 0);
 	switch ($appliance_command) {
 		case 'new_appliance':
 			$appliance = new appliance();
@@ -115,7 +117,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			break;
 
 		default:
-			echo "No Such openQRM-command!";
+			$event->log("$appliance_command", $_SERVER['REQUEST_TIME'], 3, "appliance-action", "No such appliance command ($appliance_command)", "", "", 0, 0, 0);
 			break;
 
 

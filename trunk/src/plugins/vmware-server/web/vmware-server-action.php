@@ -18,6 +18,7 @@ require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/include/openqrm-server-config.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/kernel.class.php";
+require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 global $OPENQRM_SERVER_BASE_DIR;
 global $RESOURCE_INFO_TABLE;
@@ -25,9 +26,11 @@ global $RESOURCE_INFO_TABLE;
 // place for the vmware_server stat files
 $VMwareDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/vmware-server/vmware-server-stat';
 
+$event = new event();
+
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {
-	syslog(LOG_ERR, "openQRM-engine: Un-Authorized access to vmware-server-actions from $OPENQRM_USER->name!");
+	$event->log("authorization", $_SERVER['REQUEST_TIME'], 1, "vmware-server-action", "Un-Authorized access to vmware-server-actions from $OPENQRM_USER->name", "", "", 0, 0, 0);
 	exit();
 }
 
@@ -45,7 +48,7 @@ foreach ($_REQUEST as $key => $value) {
 }
 unset($vmware_server_fields["vmware_server_command"]);
 
-	syslog(LOG_NOTICE, "openQRM-engine: Processing command $vmware_server_command");
+	$event->log("$vmware_server_command", $_SERVER['REQUEST_TIME'], 5, "vmware-server-action", "Processing command $vmware_server_command", "", "", 0, 0, 0);
 	switch ($vmware_server_command) {
 
 		case 'new':
@@ -122,7 +125,7 @@ unset($vmware_server_fields["vmware_server_command"]);
 			break;
 
 		default:
-			echo "No Such openQRM-command!";
+			$event->log("$vmware_server_command", $_SERVER['REQUEST_TIME'], 3, "vmware-server-action", "No such vmware-server command ($vmware_server_command)", "", "", 0, 0, 0);
 			break;
 
 

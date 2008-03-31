@@ -17,13 +17,16 @@ require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/deployment.class.php";
+require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 global $IMAGE_INFO_TABLE;
 global $DEPLOYMENT_INFO_TABLE;
 
+$event = new event();
+
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {
-	syslog(LOG_ERR, "openQRM-engine: Un-Authorized access to storage-actions from $OPENQRM_USER->name!");
+	$event->log("authorization", $_SERVER['REQUEST_TIME'], 1, "storage-action", "Un-Authorized access to storage-actions from $OPENQRM_USER->name", "", "", 0, 0, 0);
 	exit();
 }
 
@@ -46,9 +49,7 @@ foreach ($_REQUEST as $key => $value) {
 	}
 }
 
-
-	syslog(LOG_NOTICE, "openQRM-engine: Processing command $storage_command on storage $storage_name");
-
+	$event->log("$storage_command", $_SERVER['REQUEST_TIME'], 5, "storage-action", "Processing command $storage_command on storage $storage_name", "", "", 0, 0, 0);
 	switch ($storage_command) {
 		case 'new_storage':
 			$storage = new storage();
@@ -71,7 +72,9 @@ foreach ($_REQUEST as $key => $value) {
 			$storage->remove_by_name($storage_name);
 			break;
 
-
+		default:
+			$event->log("$storage_command", $_SERVER['REQUEST_TIME'], 3, "storage-action", "No such event command ($storage_command)", "", "", 0, 0, 0);
+			break;
 
 	}
 ?>

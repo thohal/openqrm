@@ -20,6 +20,7 @@ require_once "$RootDir/include/openqrm-server-config.php";
 require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/deployment.class.php";
+require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 global $IMAGE_INFO_TABLE;
 global $DEPLOYMENT_INFO_TABLE;
@@ -28,9 +29,11 @@ global $OPENQRM_SERVER_BASE_DIR;
 // place for the storage stat files
 $StorageDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/lvm-storage/storage';
 
+$event = new event();
+
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {
-	syslog(LOG_ERR, "openQRM-engine: Un-Authorized access to lvm-storage-actions from $OPENQRM_USER->name!");
+	$event->log("authorization", $_SERVER['REQUEST_TIME'], 1, "lvm-action", "Un-Authorized access to lvm-actions from $OPENQRM_USER->name", "", "", 0, 0, 0);
 	exit();
 }
 
@@ -48,7 +51,7 @@ foreach ($_REQUEST as $key => $value) {
 
 unset($lvm_storage_fields["lvm_storage_command"]);
 
-	syslog(LOG_NOTICE, "openQRM-engine: Processing command $lvm_storage_command on Image $lvm_storage_name");
+	$event->log("$lvm_storage_command", $_SERVER['REQUEST_TIME'], 5, "lvm-storage-action", "Processing lvm-storage command $lvm_storage_command", "", "", 0, 0, 0);
 	switch ($lvm_storage_command) {
 		case 'get_storage':
 			if (!file_exists($StorageDir)) {
@@ -113,7 +116,7 @@ unset($lvm_storage_fields["lvm_storage_command"]);
 			$storage_resource->send_command($storage_resource->ip, $resource_command);
 			break;
 		default:
-			echo "No Such openQRM-command!";
+			$event->log("$lvm_storage_command", $_SERVER['REQUEST_TIME'], 3, "lvm-storage-action", "No such lvm-storage command ($lvm_storage_command)", "", "", 0, 0, 0);
 			break;
 
 

@@ -23,12 +23,15 @@ require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
+require_once "$RootDir/class/event.class.php";
 global $IMAGE_INFO_TABLE;
 global $DEPLOYMENT_INFO_TABLE;
 
+$event = new event();
+
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {
-	syslog(LOG_ERR, "openQRM-engine: Un-Authorized access to image-actions from $OPENQRM_USER->name!");
+	$event->log("authorization", $_SERVER['REQUEST_TIME'], 1, "image-action", "Un-Authorized access to image-actions from $OPENQRM_USER->name", "", "", 0, 0, 0);
 	exit();
 }
 
@@ -54,7 +57,7 @@ foreach ($_REQUEST as $key => $value) {
 	}
 }
 
-	syslog(LOG_NOTICE, "openQRM-engine: Processing command $image_command on Image $image_name");
+	$event->log("$image_command", $_SERVER['REQUEST_TIME'], 5, "image-action", "Processing image $image_command on Image $image_name", "", "", 0, 0, 0);
 	switch ($image_command) {
 		case 'new_image':
 			$image = new image();
@@ -96,7 +99,7 @@ foreach ($_REQUEST as $key => $value) {
 			break;
 
 		default:
-			echo "No Such openQRM-command!";
+			$event->log("$image_command", $_SERVER['REQUEST_TIME'], 3, "image-action", "No such image command ($image_command)", "", "", 0, 0, 0);
 			break;
 
 

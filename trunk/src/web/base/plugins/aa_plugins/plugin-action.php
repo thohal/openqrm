@@ -15,13 +15,14 @@ $plugin_name = $_REQUEST["plugin_name"];
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/plugin.class.php";
+require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 
+$event = new event();
+
 // user/role authentication
-$user = new user($_SERVER['PHP_AUTH_USER']);
-$user->set_user();
 if ($OPENQRM_USER->role != "administrator") {
-	syslog(LOG_ERR, "openQRM-engine: Un-Authorized access to plugin-actions from $OPENQRM_USER->name!");
+	$event->log("authorization", $_SERVER['REQUEST_TIME'], 1, "plugin-action", "Un-Authorized access to plugin-actions from $OPENQRM_USER->name", "", "", 0, 0, 0);
 	exit();
 }
 
@@ -30,7 +31,7 @@ $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 
 global $OPENQRM_SERVER_IP_ADDRESS;
 
-	syslog(LOG_NOTICE, "openQRM-engine: Processing command $plugin_command for plugin $plugin_name");
+	$event->log("$plugin_command", $_SERVER['REQUEST_TIME'], 5, "plugin-action", "Processing command $plugin_command for plugin $plugin_name", "", "", 0, 0, 0);
 	switch ($plugin_command) {
 	
 		// init_plugin needs :
@@ -62,7 +63,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			break;
 
 		default:
-			echo "No Such openQRM-plugin command!";
+			$event->log("plugin_command", $_SERVER['REQUEST_TIME'], 3, "plugin-action", "No such plugin command ($plugin_command)", "", "", 0, 0, 0);
 			break;
 	}
 	sleep(1);

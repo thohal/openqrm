@@ -18,12 +18,15 @@ require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/kernel.class.php";
+require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 global $RESOURCE_INFO_TABLE;
 
+$event = new event();
+
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {
-	syslog(LOG_ERR, "openQRM-engine: Un-Authorized access to resource-actions from $OPENQRM_USER->name!");
+	$event->log("authorization", $_SERVER['REQUEST_TIME'], 1, "resource-action", "Un-Authorized access to resource-actions from $OPENQRM_USER->name", "", "", 0, 0, 0);
 	exit();
 }
 
@@ -43,7 +46,7 @@ $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 
 global $OPENQRM_SERVER_IP_ADDRESS;
 
-	syslog(LOG_NOTICE, "openQRM-engine: Processing command $resource_command on $resource_id");
+	$event->log("$resource_command", $_SERVER['REQUEST_TIME'], 5, "resource-action", "Processing command $resource_command on $resource_id", "", "", 0, 0, 0);
 	switch ($resource_command) {
 	
 		// new_resource needs :
@@ -181,7 +184,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			break;
 
 		default:
-			echo "No Such openQRM-command!";
+			$event->log("$resource_command", $_SERVER['REQUEST_TIME'], 3, "resource-action", "No such resource command ($resource_command)", "", "", 0, 0, 0);
 			break;
 	}
 
