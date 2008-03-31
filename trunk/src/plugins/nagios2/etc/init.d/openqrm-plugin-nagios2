@@ -10,22 +10,14 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 function openqrm_plugin_nagios2_start() {
 	echo "Starting the openQRM nagios2-plugin"
 	openqrm_plugin_nagios2_stop 1>/dev/null 2>&1
-	# on debian/ubuntu nagios2 ver.3 is named nagios23
-	if [ -x /usr/sbin/nagios2 ]; then
-		/usr/sbin/nagios2 -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/nagios2.leases 2>&1 | logger
-	elif [ -x /usr/sbin/nagios2 ]; then
-		/usr/sbin/nagios -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/nagios2.leases 2>&1 | logger
-	else
-		echo "ERROR: Could not find the nagios2 (ver.3) binary"
-		exit 1
-	fi
+	/etc/init.d/nagios2 start 1>/dev/null 2>&1
+	return 0
 }
 
 
 function openqrm_plugin_nagios2_stop() {
 	echo "Stopping the openQRM nagios2 plugin"
-	killall nagios2 1>/dev/null 2>&1
-	killall nagios23 1>/dev/null 2>&1
+	/etc/init.d/nagios2 stop 2>&1
 	return 0
 }
 
