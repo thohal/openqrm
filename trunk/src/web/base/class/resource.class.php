@@ -10,7 +10,8 @@ require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/class/plugin.class.php";
 
 global $RESOURCE_INFO_TABLE;
-
+$RESOURCE_TIME_OUT=120;
+global $RESOURCE_TIME_OUT;
 
 class resource {
 
@@ -403,6 +404,32 @@ function generate_mac() {
 	$this->mac = $GEN_MAC;
 }
 
+
+
+// check when resources last send their statistics
+// update state in case of timeout
+function check_all_states() {
+	global $RESOURCE_INFO_TABLE;
+	global $RESOURCE_TIME_OUT;
+	$resource_list = array();
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute("select resource_id, resource_lastgood from $RESOURCE_INFO_TABLE");
+	if (!$rs)
+		print $db->ErrorMsg();
+	else
+	while (!$rs->EOF) {
+		$resource_id=$rs->fields['resource_id'];
+		$resource_lastgood=$rs->fields['resource_lastgood'];
+		$check_time=$_SERVER['REQUEST_TIME'];
+		if (($check_time - $resource_lastgood) > $RESOURCE_TIME_OUT) {
+			$resource_fields=array();
+			$resource_fields["resource_state"]="error";
+			$resource_error = new resource();
+			$resource_error->update_info($resource_id, $resource_fields);
+		}
+		$rs->MoveNext();
+	}
+}
 
 
 // displays the resource-overview

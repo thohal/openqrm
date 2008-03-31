@@ -71,12 +71,14 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		// resource_id
 		// array of resource_fields
 		case 'update_info':
-		
-		print_r($resource_fields);
-		
+			$resource = new resource();
 			if (strlen($resource_id)) {
-				$resource = new resource();
 				$resource->update_info($resource_id, $resource_fields);
+			}
+			// in case the openQRM-server sends its stats we check
+			// the states of all resources
+			if ("$resource_id" == "0") {
+				$resource->check_all_states();			
 			}
 			exit();
 			break;
