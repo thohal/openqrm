@@ -144,6 +144,12 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		case 'reboot':
 			$resource = new resource();
 			$resource->send_command("$resource_ip", "reboot");
+			// set state to transition
+			$resource_fields=array();
+			$resource_fields["resource_state"]="transition";
+			$resource = new resource();
+			$resource->get_instance_by_ip($resource_ip);
+			$resource->update_info($resource->id, $resource_fields);
 			break;
 
 
@@ -152,6 +158,12 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		case 'halt':
 			$resource = new resource();
 			$resource->send_command("$resource_ip", "halt");
+			// set state to off
+			$resource_fields=array();
+			$resource_fields["resource_state"]="off";
+			$resource = new resource();
+			$resource->get_instance_by_ip($resource_ip);
+			$resource->update_info($resource->id, $resource_fields);
 			break;
 
 		// list requires :

@@ -49,6 +49,8 @@ function resource_display($admin) {
 	$disp .= "<tr><td>";
 	$disp .= "";
 	$disp .= "</td><td>";
+	$disp .= "";
+	$disp .= "</td><td>";
 	$disp .= "id";
 	$disp .= "</td><td>";
 	$disp .= "hostname";
@@ -83,6 +85,16 @@ function resource_display($admin) {
 			$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
 			$disp = $disp."<form action='resource-action.php' method=post>";
 			$disp .= "<tr><td>";
+			$state_icon="/openqrm/base/img/$resource->state.png";
+			// idle ?
+			if (("$resource->imageid" == "1") && ("$resource->state" == "active")) {
+				$state_icon="/openqrm/base/img/idle.png";
+			}
+			if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+				$state_icon="/openqrm/base/img/unknown.png";
+			}
+			$disp .= "<img src=\"$state_icon\">";
+			$disp .= "</td><td>";
 			$disp .= "<img src=\"$resource_icon_default\">";
 			$disp .= "</td><td>";
 			$disp = $disp."$resource->id";
@@ -172,6 +184,12 @@ function resource_display($admin) {
 
 			$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
 			$disp .= "<tr><td>";
+			$state_icon="/openqrm/base/img/$resource->state.png";
+			if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+				$state_icon="/openqrm/base/img/unknown.png";
+			}
+			$disp .= "<img src=\"$state_icon\">";
+			$disp .= "</td><td>";
 			$disp .= "<img width=32 height=32 src=\"/openqrm/base/img/logo.png\">";
 			$disp .= "</td><td>";
 			$disp .= "$resource->id";
