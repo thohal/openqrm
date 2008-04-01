@@ -20,6 +20,7 @@ require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
+require_once "$RootDir/class/virtualization.class.php";
 global $RESOURCE_INFO_TABLE;
 
 $event = new event();
@@ -40,6 +41,16 @@ foreach ($_REQUEST as $key => $value) {
 	}
 }
 unset($resource_fields["resource_command"]);
+
+$virtualization_id = $_REQUEST["virtualization_id"];
+$virtualization_name = $_REQUEST["virtualization_name"];
+$virtualization_type = $_REQUEST["virtualization_type"];
+$virtualization_fields = array();
+foreach ($_REQUEST as $key => $value) {
+	if (strncmp($key, "virtualization_", 15) == 0) {
+		$virtualization_fields[$key] = $value;
+	}
+}
 
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
@@ -182,6 +193,18 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			}
 			exit(0); // nothing more to do
 			break;
+
+		case 'add_virtualization_type':
+			$virtualization = new virtualization();
+			$virtualization_fields["virtualization_id"]=openqrm_db_get_free_id('virtualization_id', $VIRTUALIZATION_INFO_TABLE);
+			$virtualization->add($virtualization_fields);
+			break;
+
+		case 'remove_virtualization_type':
+			$virtualization = new virtualization();
+			$virtualization->remove_by_type($virtualization_type);
+			break;
+
 
 		default:
 			$event->log("$resource_command", $_SERVER['REQUEST_TIME'], 3, "resource-action", "No such resource command ($resource_command)", "", "", 0, 0, 0);

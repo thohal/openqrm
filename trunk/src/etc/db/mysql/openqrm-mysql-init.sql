@@ -166,6 +166,12 @@ create table deployment_info(
 	deployment_type VARCHAR(20)
 );
 
+# plugg-able virtualization types
+create table virtualization_info(
+	virtualization_id INT(5) NOT NULL PRIMARY KEY,
+	virtualization_name VARCHAR(50),
+	virtualization_type VARCHAR(20)
+);
 
 
 # initial data
@@ -173,6 +179,8 @@ insert into image_info (image_id, image_name, image_version, image_type, image_r
 insert into resource_info (resource_id, resource_localboot, resource_openqrmserver, resource_ip) values ('0', '1', 'OPENQRM_SERVER_IP_ADDRESS', 'OPENQRM_SERVER_IP_ADDRESS');
 # base deployment type ram
 insert into deployment_info (deployment_id, deployment_name, deployment_type ) values (1, 'Ramdisk Deployment', 'ram');
+# base virtualization type physical
+insert into virtualization_info (virtualization_id, virtualization_name, virtualization_type ) values (1, 'Physical Systems', 'physical');
 # user openqrm
 insert into user_info (user_id, user_name, user_password, user_gender, user_first_name, user_last_name, user_department, user_office, user_role, user_last_update_time, user_description, user_capabilities, user_state) values (0, 'openqrm', 'openqrm', '-', '-', '-', '-', '-', 0, '-', 'default admin user', '', 'activated');
 insert into user_info (user_id, user_name, user_password, user_gender, user_first_name, user_last_name, user_department, user_office, user_role, user_last_update_time, user_description, user_capabilities, user_state) values (1, 'anonymous', 'openqrm', '-', '-', '-', '-', '-', 1, '-', 'default readonly user', '', 'activated');

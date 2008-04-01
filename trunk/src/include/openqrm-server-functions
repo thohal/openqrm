@@ -161,7 +161,7 @@ function openqrm_server_add_kernel() {
 # ------------------------- deployments functions -------------------------
 # --------------------------------------------------------------------
 
-# function to ad a deployment method to the openQRM-server db
+# function to add a deployment method to the openQRM-server db
 # this function is used by the init+uninstall functions of the deployment plugins
 # param 1	: username
 # param 2	: password
@@ -192,6 +192,48 @@ function openqrm_server_remove_deployment_type() {
 	echo "openQRM-server: Removing deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE  from the openQRM-server" | logger
 	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/image/image-action.php?image_command=remove_deployment_type&deployment_type=$OPENQRM_SERVER_DEPLOYMENT_TYPE"; then
 		echo "ERROR: Could not remove deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE from the openQRM-server!" | logger
+		return 1
+	fi
+	return 0
+}
+
+
+
+# --------------------------------------------------------------------
+# ------------------------- virtualization functions -------------------------
+# --------------------------------------------------------------------
+
+# function to add a virtualization method to the openQRM-server db
+# this function is used by the init+uninstall functions of the virtualization plugins
+# param 1	: username
+# param 2	: password
+# param 3	: virtualization type
+# param 4	: virtualization name
+function openqrm_server_add_virtualization_type() {
+	OPENQRM_USER=$1
+	OPENQRM_USER_PASSWORD=$2
+	OPENQRM_SERVER_VIRTUALIZATION_TYPE=$3
+	OPENQRM_SERVER_VIRTUALIZATION_NAME=$4
+	echo "openQRM-server: Adding virtualization type $OPENQRM_SERVER_VIRTUALIZATION_TYPE  to the openQRM-server" | logger
+	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/resource/resource-action.php?resource_command=add_virtualization_type&virtualization_type=$OPENQRM_SERVER_VIRTUALIZATION_TYPE&virtualization_name=$OPENQRM_SERVER_VIRTUALIZATION_NAME"; then
+		echo "ERROR: Could not add virtualization type $OPENQRM_SERVER_VIRTUALIZATION_TYPE to the openQRM-server!" | logger
+		return 1
+	fi
+	return 0
+}
+
+# function to remove a virtualization method to the openQRM-server db
+# this function is used by the init+uninstall functions of the virtualization plugins
+# param 1	: username
+# param 2	: password
+# param 3	: virtualization type
+function openqrm_server_remove_virtualization_type() {
+	OPENQRM_USER=$1
+	OPENQRM_USER_PASSWORD=$2
+	OPENQRM_SERVER_VIRTUALIZATION_TYPE=$3
+	echo "openQRM-server: Removing virtualization type $OPENQRM_SERVER_VIRTUALIZATION_TYPE  from the openQRM-server" | logger
+	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/resource/resource-action.php?resource_command=remove_virtualization_type&virtualization_type=$OPENQRM_SERVER_VIRTUALIZATION_TYPE"; then
+		echo "ERROR: Could not remove virtualization type $OPENQRM_SERVER_VIRTUALIZATION_TYPE from the openQRM-server!" | logger
 		return 1
 	fi
 	return 0
