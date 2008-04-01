@@ -1131,7 +1131,7 @@ function newTreeMenu(
 			$linkstyle = 'phplm';
 		}
 
-		$this->_treeMenu[$menu_name] .= '<div id="jt' . $cnt . '" class="treemenudiv">' . "\n";
+		$this->_treeMenu[$menu_name] .= '<div id="'.$menu_name . $cnt . '" class="treemenudiv">' . "\n";
 
 		// vertical lines from higher levels
 		for ($i=0; $i<$this->tree[$cnt]['level']-1; $i++) {
@@ -1157,7 +1157,7 @@ function newTreeMenu(
 					$img = $img_collapse_corner;
 					$alt = $alt_collapse_corner;
 				}
-				$this->_treeMenu[$menu_name] .= '<a onmousedown="' . $toggle_function_name . "('" . $cnt . "')" . '"><img align="top" border="0" class="imgs" id="jt' . $cnt . 'node" src="' . $img . '" alt="' . $alt . '" /></a>';
+				$this->_treeMenu[$menu_name] .= '<a onmousedown="' . $toggle_function_name . "('".$menu_name . $cnt . "')" . '"><img align="top" border="0" class="imgs" id="'.$menu_name . $cnt . 'node" src="' . $img . '" alt="' . $alt . '" /></a>';
 			} else {
 				$this->_treeMenu[$menu_name] .= '<img align="top" border="0" class="imgs" src="' . $img_corner . '" alt="' . $alt_corner . '" />';
 			}
@@ -1171,7 +1171,7 @@ function newTreeMenu(
 					$img = $img_collapse;
 					$alt = $alt_collapse;
 				}
-				$this->_treeMenu[$menu_name] .= '<span onmousedown="' . $toggle_function_name . "('" . $cnt . "');" . '"><img align="top" border="0" class="imgs" id="jt' . $cnt . 'node" src="' . $img . '" alt="' . $alt . '" /></span>';
+				$this->_treeMenu[$menu_name] .= '<span onmousedown="' . $toggle_function_name . "('".$menu_name . $cnt . "');" . '"><img align="top" border="0" class="imgs" id="'.$menu_name . $cnt . 'node" src="' . $img . '" alt="' . $alt . '" /></span>';
 			} else {
 				if ($cnt == $this->_firstItem[$menu_name]) {
 					$img = $img_split_first;
@@ -1180,7 +1180,7 @@ function newTreeMenu(
 					$img = $img_split;
 					$alt = $alt_split;
 				}
-				$this->_treeMenu[$menu_name] .= '<img align="top" border="0" class="imgs" id="jt' . $cnt . 'node" src="' . $img . '" alt="' . $alt . '" />';
+				$this->_treeMenu[$menu_name] .= '<img align="top" border="0" class="imgs" id="'.$menu_name . $cnt . 'node" src="' . $img . '" alt="' . $alt . '" />';
 			}
 			$levels[$this->tree[$cnt]['level']-1] = 1;
 		}
@@ -1188,7 +1188,7 @@ function newTreeMenu(
 		if ($this->tree[$cnt]['parsed_href'] == '' || $this->tree[$cnt]['parsed_href'] == '#') {
 			$a_href_open_img = '';
 			$a_href_close_img = '';
-			$a_href_open = '<a class="phplmnormal" onmousedown="' . $toggle_function_name . "('" . $cnt . "');" . '">';
+			$a_href_open = '<a class="phplmnormal" onmousedown="' . $toggle_function_name . "('".$menu_name . $cnt . "');" . '">';
 			$a_href_close = '</a>';
 		} else {
 			$a_href_open_img = '<a href="' . $this->tree[$cnt]['parsed_href'] . '"' . $this->tree[$cnt]['parsed_title'] . $this->tree[$cnt]['parsed_target'] . '>';
@@ -1198,7 +1198,7 @@ function newTreeMenu(
 		}
 
 		if ($not_a_leaf) {
-			$this->_treeMenu[$menu_name] .= $a_href_open_img . '<span onmousedown="' . $toggle_function_name . "('" . $cnt . "')" . '"><img align="top" border="0" class="imgs" id="jt' . $cnt . 'folder" src="' . $img_folder_open . '" alt="' . $alt_folder_open . '" /></span>' . $a_href_close_img;
+			$this->_treeMenu[$menu_name] .= $a_href_open_img . '<span onmousedown="' . $toggle_function_name . "('".$menu_name . $cnt . "')" . '"><img align="top" border="0" class="imgs" id="'.$menu_name . $cnt . 'folder" src="' . $img_folder_open . '" alt="' . $alt_folder_open . '" /></span>' . $a_href_close_img;
 		} else {
 			if ($this->tree[$cnt]['parsed_icon'] != '') {
 				$this->_treeMenu[$menu_name] .= $a_href_open_img . '<img align="top" border="0" src="' . $this->tree[$cnt]['parsed_icon'] . '" width="' . $this->tree[$cnt]['iconwidth'] . '" height="' . $this->tree[$cnt]['iconheight'] . '" alt="' . $alt_leaf . '" />' . $a_href_close_img;
@@ -1210,11 +1210,11 @@ function newTreeMenu(
 		$this->_treeMenu[$menu_name] .= '</div>' . "\n";
 
 		if ($cnt<$this->_lastItem[$menu_name] && $this->tree[$cnt]['level']<$this->tree[$cnt+1]['level']) {
-			$this->_treeMenu[$menu_name] .= '<div id="jt' . $cnt . 'son" class="treemenudiv">' . "\n";
+			$this->_treeMenu[$menu_name] .= '<div id="'.$menu_name . $cnt . 'son" class="treemenudiv">' . "\n";
 			if ($this->tree[$cnt]['expanded'] != 1) {
-				$toggle .= 'if (phplm_expand[' . $cnt . '] != 1) ' . $toggle_function_name . "('" . $cnt . "');\n";
+				$toggle .= 'if (phplm_expand[\'' . $menu_name . $cnt . '\'] != 1) ' . $toggle_function_name . "('".$menu_name . $cnt . "');\n";
 			} else {
-				$toggle .= 'if (phplm_collapse[' . $cnt . '] == 1) ' . $toggle_function_name . "('" . $cnt . "');\n";
+				$toggle .= 'if (hplm_collapse[\'' . $menu_name . $cnt. '\'] == 1) ' . $toggle_function_name . "('".$menu_name . $cnt . "');\n";
 			}
 		}
 
@@ -1241,58 +1241,29 @@ function newTreeMenu(
 	'</tr>' . "\n" .
 	'</table>' . "\n";
 
+
+	$t = new Template_PHPLIB();
+	$t->setFile('tplfile', 'js/treemenu.js');
+	$t->setVar(array(
+		'menu_name'	=> $menu_name,
+		'toggle_function_name'		=> $toggle_function_name,
+		'img_collapse'			=> $img_collapse,
+		'img_collapse_corner'		=> $img_collapse_corner,
+		'img_collapse_corner_first'	=> $img_collapse_corner_first,
+		'img_collapse_first'		=> $img_collapse_first,
+		'img_expand'			=> $img_expand,
+		'img_expand_corner'		=> $img_expand_corner,
+		'img_expand_corner_first'	=> $img_expand_corner_first,
+		'img_expand_first'		=> $img_expand_first,
+		'img_folder_closed'		=> $img_folder_closed,
+		'img_folder_open'		=> $img_folder_open
+	));
+	$toggle_function = $t->parse('out', 'tplfile');
+
 	$toggle_function =
 	'<script language="JavaScript" type="text/javascript">' . "\n" .
 	'<!--' . "\n" .
-	'function '.$toggle_function_name.'(nodeid)
-	{
-		if ((!DOM || Opera56 || Konqueror22) && !IE4) {
-			return;
-		}
-		layersMoved = 0;
-		parseExpandString();
-		parseCollapseString();
-		if (!IE4) {
-			sonLayer = document.getElementById("jt" + nodeid + "son");
-			nodeLayer = document.getElementById("jt" + nodeid + "node");
-			folderLayer = document.getElementById("jt" + nodeid + "folder");
-		} else {
-			sonLayer = document.all("jt" + nodeid + "son");
-			nodeLayer = document.all("jt" + nodeid + "node");
-			folderLayer = document.all("jt" + nodeid + "folder");
-		}
-		if (sonLayer.style.display == "none") {
-			sonLayer.style.display = "block";
-			if (nodeLayer.src.indexOf("'.$img_expand.'") > -1) {
-				nodeLayer.src = "'.$img_collapse.'";
-			} else if (nodeLayer.src.indexOf("'.$img_expand_first.'") > -1) {
-				nodeLayer.src = "'.$img_collapse_first.'";
-			} else if (nodeLayer.src.indexOf("'.$img_expand_corner.'") > -1) {
-				nodeLayer.src = "'.$img_collapse_corner.'";
-			} else {
-				nodeLayer.src = "'.$img_collapse_corner_first.'";
-			}
-			folderLayer.src = "'.$img_folder_open.'";
-			phplm_expand[nodeid] = 1;
-			phplm_collapse[nodeid] = 0;
-		} else {
-			sonLayer.style.display = "none";
-			if (nodeLayer.src.indexOf("'.$img_collapse.'") > -1) {
-				nodeLayer.src = "'.$img_expand.'";
-			} else if (nodeLayer.src.indexOf("'.$img_collapse_first.'") > -1) {
-				nodeLayer.src = "'.$img_expand_first.'";
-			} else if (nodeLayer.src.indexOf("'.$img_collapse_corner.'") > -1) {
-				nodeLayer.src = "'.$img_expand_corner.'";
-			} else {
-				nodeLayer.src = "'.$img_expand_corner_first.'";
-			}
-			folderLayer.src = "'.$img_folder_closed.'";
-			phplm_expand[nodeid] = 0;
-			phplm_collapse[nodeid] = 1;
-		}
-		saveExpandString();
-		saveCollapseString();
-	}'.
+	$toggle_function .
 	'// -->' . "\n" .
 	'</script>' . "\n";
 
