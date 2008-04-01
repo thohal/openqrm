@@ -1,22 +1,3 @@
 #!/bin/bash
 # this is the functions file for the nagios2-plugin
 
-OPENQRM_SERVER_DEFAULT_DOMAIN="openqrm"
-OPENQRM_PLUGIN_NAGIOS2_CONF_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/etc/templates/openqrm-plugin-nagios2-configuration.template"
-OPENQRM_PLUGIN_NAGIOS2_CONF="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/etc/nagios2.conf"
-OPENQRM_PLUGIN_NAGIOS2_LEASE_DIR="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/var/state/dhcp"
-
-
-function openqrm_plugin_nagios2_ipcalc() {
-	# 1 param = ipadress
-	# 2 param = subnetmask
-	# displays network
-	if [ -f /etc/debian_version ]; then
-		OPENQRM_PLUGIN_NAGIOS2_NETWORK=`ipcalc $1 $2 | grep -i network | awk {' print $2 '} | cut -d'/' -f1`
-	elif [ -f /etc/redhat-release ]; then
-		OPENQRM_PLUGIN_NAGIOS2_NETWORK=`ipcalc -s -n $1 $2 2>/dev/null | cut -d'=' -f 2`
-	elif [ -f /etc/SuSE-release ]; then
-		OPENQRM_PLUGIN_NAGIOS2_NETWORK=`ipcalc $1 $2 | grep -i network | awk {' print $2 '} | cut -d'/' -f1`
-	fi
-	echo $OPENQRM_PLUGIN_NAGIOS2_NETWORK
-}

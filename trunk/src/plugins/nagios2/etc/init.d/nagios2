@@ -1,0 +1,42 @@
+#!/bin/bash
+
+export `eval cat /proc/cmdline`	
+. /var/openqrm/openqrm-resource.conf
+export OPENQRM_SERVER_BASE_DIR=$resource_basedir
+. $resource_basedir/openqrm/include/openqrm-functions
+
+
+function nagios2_start() {
+	echo "Starting the openQRM nagios2-plugin"
+	nagios2_stop 1>/dev/null 2>&1
+	wget -q -O /dev/stdout "http://$resource_openqrmserver/openqrm/boot-service/openqrmserver_public_key" > /root/.ssh/authorized_keys 
+	return 0
+}
+
+
+function nagios2_stop() {
+	echo "Stopping the openQRM nagios2 plugin"
+	return 0
+}
+
+
+
+case "$1" in
+	start)
+		nagios2_start
+		;;
+	stop)
+		nagios2_stop
+		;;
+	restart)
+		nagios2_stop
+		sleep 1
+		nagios2_start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+
+esac
+exit $?
+
