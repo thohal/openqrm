@@ -1,7 +1,7 @@
 #!/bin/bash
 # openqrm-client	openQRM init script for the managed resources
 #
-# chkconfig: 345 98 19
+# chkconfig: 2345 98 19
 # description: openQRM is the next generation Linux Data Center management
 
 # support for LSB init scripts
@@ -9,7 +9,7 @@
 # Provides:
 # Required-Start: $all
 # Required-Stop: $all
-# Default-Start:   3 4 5
+# Default-Start:  2 3 4 5
 # Default-Stop: 0 1 2 6
 # Short-Description: openQRM init script for the managed resources
 # Description: openQRM init script for the managed resources
