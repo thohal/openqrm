@@ -44,7 +44,7 @@ function plugin_display($admin) {
 			$disp = $disp."$plugin_name ";
 			if ("$admin" == "admin") {
 				$disp = $disp."<a href=\"plugin-action.php?plugin_name=$plugin_name&plugin_command=init_plugin\">";
-				$disp = $disp."<img width=20 height=20 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\">";
+				$disp = $disp."<img width=20 height=20 border=0 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\">";
 				$disp = $disp."</a>";
 			}
 			$disp = $disp."<br>";	
@@ -64,17 +64,17 @@ function plugin_display($admin) {
 			$plugin_icon_default=$plugin_icon;
 		}
 	
-		$disp .= "<img src=\"$plugin_icon_default\">";
+		$disp .= "<img border=0 src=\"$plugin_icon_default\">";
 		$disp = $disp."$plugin_name ";
 		if ("$admin" == "admin") {
 			$disp = $disp."<a href=\"plugin-action.php?plugin_name=$plugin_name&plugin_command=uninstall_plugin\">";
-			$disp = $disp."<img width=20 height=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\">";
+			$disp = $disp."<img width=20 height=20 border=0 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\">";
 			$disp = $disp."</a>";
 			$disp = $disp."/ <a href=\"plugin-action.php?plugin_name=$plugin_name&plugin_command=start_plugin\">";
-			$disp = $disp."<img width=20 height=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\">";
+			$disp = $disp."<img width=20 height=20 border=0 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\">";
 			$disp = $disp."</a>";
 			$disp = $disp."/ <a href=\"plugin-action.php?plugin_name=$plugin_name&plugin_command=stop_plugin\">";
-			$disp = $disp."<img width=20 height=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\">";
+			$disp = $disp."<img width=20 height=20 border=0 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\">";
 			$disp = $disp."</a>";
 		}
 		$disp = $disp."<br>";	

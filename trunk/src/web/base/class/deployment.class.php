@@ -4,8 +4,11 @@
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
+require_once "$RootDir/class/event.class.php";
 
 global $DEPLOYMENT_INFO_TABLE;
+$event = new event();
+global $event;
 
 class deployment {
 
@@ -22,6 +25,7 @@ var $type = '';
 // returns an deployment from the db selected by id, type or name
 function get_instance($id, $name, $type) {
 	global $DEPLOYMENT_INFO_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	if ("$id" != "") {
 		$deployment_array = &$db->Execute("select * from $DEPLOYMENT_INFO_TABLE where deployment_id=$id");
@@ -30,7 +34,7 @@ function get_instance($id, $name, $type) {
 	} else if ("$type" != "") {
 		$deployment_array = &$db->Execute("select * from $DEPLOYMENT_INFO_TABLE where deployment_type='$type'");
 	} else {
-		echo "ERROR: Could not create instance of deployment without data";
+		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "deployment.class.php", "Could not create instance of deployment without data", "", "", 0, 0, 0);
 		exit(-1);
 	}
 	foreach ($deployment_array as $index => $deployment) {
@@ -69,10 +73,11 @@ function get_instance_by_type($type) {
 // checks if given deployment id is free in the db
 function is_id_free($deployment_id) {
 	global $DEPLOYMENT_INFO_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	$rs = &$db->Execute("select deployment_id from $DEPLOYMENT_INFO_TABLE where deployment_id=$deployment_id");
 	if (!$rs)
-		print $db->ErrorMsg();
+		$event->log("is_id_free", $_SERVER['REQUEST_TIME'], 2, "deployment.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
 	if ($rs->EOF) {
 		return true;
@@ -85,14 +90,15 @@ function is_id_free($deployment_id) {
 // adds deployment to the database
 function add($deployment_fields) {
 	global $DEPLOYMENT_INFO_TABLE;
+	global $event;
 	if (!is_array($deployment_fields)) {
-		print("deployment_field not well defined");
+		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "deployment.class.php", "Deployment_field not well defined", "", "", 0, 0, 0);
 		return 1;
 	}
 	$db=openqrm_get_db_connection();
 	$result = $db->AutoExecute($DEPLOYMENT_INFO_TABLE, $deployment_fields, 'INSERT');
 	if (! $result) {
-		print("Failed adding new deployment to database");
+		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "deployment.class.php", "Failed adding new deployment to database", "", "", 0, 0, 0);
 	}
 }
 

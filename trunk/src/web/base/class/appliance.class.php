@@ -14,8 +14,11 @@ require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/kernel.class.php";
+require_once "$RootDir/class/event.class.php";
 
 global $APPLIANCE_INFO_TABLE;
+$event = new event();
+global $event;
 
 class appliance {
 
@@ -51,13 +54,14 @@ var $event = '';
 // returns an appliance from the db selected by id or name
 function get_instance($id, $name) {
 	global $APPLIANCE_INFO_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	if ("$id" != "") {
 		$appliance_array = &$db->Execute("select * from $APPLIANCE_INFO_TABLE where appliance_id=$id");
 	} else if ("$name" != "") {
 		$appliance_array = &$db->Execute("select * from $APPLIANCE_INFO_TABLE where appliance_name='$name'");
 	} else {
-		echo "ERROR: Could not create instance of appliance without data";
+		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
 		exit(-1);
 	}
 	foreach ($appliance_array as $index => $appliance) {
@@ -110,10 +114,11 @@ function get_instance_by_name($name) {
 // checks if given appliance id is free in the db
 function is_id_free($appliance_id) {
 	global $APPLIANCE_INFO_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	$rs = &$db->Execute("select appliance_id from $APPLIANCE_INFO_TABLE where appliance_id=$appliance_id");
 	if (!$rs)
-		print $db->ErrorMsg();
+		$event->log("is_id_free", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
 	if ($rs->EOF) {
 		return true;
@@ -126,14 +131,15 @@ function is_id_free($appliance_id) {
 // adds appliance to the database
 function add($appliance_fields) {
 	global $APPLIANCE_INFO_TABLE;
+	global $event;
 	if (!is_array($appliance_fields)) {
-		print("appliance_field not well defined");
+		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", "Appliance_field not well defined", "", "", 0, 0, 0);
 		return 1;
 	}
 	$db=openqrm_get_db_connection();
 	$result = $db->AutoExecute($APPLIANCE_INFO_TABLE, $appliance_fields, 'INSERT');
 	if (! $result) {
-		print("Failed adding new appliance to database");
+		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", "Failed adding new appliance to database", "", "", 0, 0, 0);
 	}
 }
 
@@ -142,15 +148,16 @@ function add($appliance_fields) {
 // updates appliance in the database
 function update($appliance_id, $appliance_fields) {
 	global $APPLIANCE_INFO_TABLE;
+	global $event;
 	if ($appliance_id < 0 || ! is_array($appliance_fields)) {
-		print("Unable to update appliance $appliance_id");
+		$event->log("update", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", "Unable to update appliance $appliance_id", "", "", 0, 0, 0);
 		return 1;
 	}
 	$db=openqrm_get_db_connection();
 	unset($appliance_fields["appliance_id"]);
 	$result = $db->AutoExecute($APPLIANCE_INFO_TABLE, $appliance_fields, 'UPDATE', "appliance_id = $appliance_id");
 	if (! $result) {
-		print("Failed updating appliance $appliance_id");
+		$event->log("update", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", "Failed updating appliance $appliance_id", "", "", 0, 0, 0);
 	}
 }
 
@@ -197,10 +204,11 @@ function stop() {
 // returns appliance name by appliance_id
 function get_name($appliance_id) {
 	global $APPLIANCE_INFO_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	$appliance_set = &$db->Execute("select appliance_name from $APPLIANCE_INFO_TABLE where appliance_id=$appliance_id");
 	if (!$appliance_set) {
-		print $db->ErrorMsg();
+		$event->log("get_name", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	} else {
 		if (!$appliance_set->EOF) {
 			return $appliance_set->fields["appliance_name"];
@@ -213,10 +221,11 @@ function get_name($appliance_id) {
 // returns capabilities string by appliance_id
 function get_capabilities($appliance_id) {
 	global $APPLIANCE_INFO_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	$appliance_set = &$db->Execute("select appliance_capabilities from $APPLIANCE_INFO_TABLE where appliance_id=$appliance_id");
 	if (!$appliance_set) {
-		print $db->ErrorMsg();
+		$event->log("get_capabilities", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	} else {
 		if ((!$appliance_set->EOF) && ($appliance_set->fields["appliance_capabilities"]!=""))  {
 			return $appliance_set->fields["appliance_capabilities"];
@@ -256,11 +265,12 @@ function get_list() {
 // displays the appliance-overview
 function display_overview($start, $count) {
 	global $APPLIANCE_INFO_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	$recordSet = &$db->SelectLimit("select * from $APPLIANCE_INFO_TABLE where appliance_id>=$start order by appliance_id ASC", $count);
 	$appliance_array = array();
 	if (!$recordSet) {
-		print $db->ErrorMsg();
+		$event->log("display_overview", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	} else {
 		while (!$recordSet->EOF) {
 			array_push($appliance_array, $recordSet->fields);

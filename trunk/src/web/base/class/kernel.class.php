@@ -6,7 +6,11 @@
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
+require_once "$RootDir/class/event.class.php";
+
 global $KERNEL_INFO_TABLE;
+$event = new event();
+global $event;
 
 class kernel {
 
@@ -22,13 +26,14 @@ var $capabilities = '';
 // returns a kernel from the db selected by id or name
 function get_instance($id, $name) {
 	global $KERNEL_INFO_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	if ("$id" != "") {
 		$kernel_array = &$db->Execute("select * from $KERNEL_INFO_TABLE where kernel_id=$id");
 	} else if ("$name" != "") {
 		$kernel_array = &$db->Execute("select * from $KERNEL_INFO_TABLE where kernel_name='$name'");
 	} else {
-		echo "ERROR: Could not create instance of kernel without data";
+		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "kernel.class.php", "Could not create instance of kernel without data", "", "", 0, 0, 0);
 		exit(-1);
 	}
 	foreach ($kernel_array as $index => $kernel) {
@@ -63,10 +68,11 @@ function get_instance_by_name($name) {
 // checks if given kernel id is free in the db
 function is_id_free($kernel_id) {
 	global $KERNEL_INFO_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	$rs = &$db->Execute("select kernel_id from $KERNEL_INFO_TABLE where kernel_id=$kernel_id");
 	if (!$rs)
-		print $db->ErrorMsg();
+		$event->log("is_id_free", $_SERVER['REQUEST_TIME'], 2, "kernel.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
 	if ($rs->EOF) {
 		return true;
@@ -79,29 +85,31 @@ function is_id_free($kernel_id) {
 // adds kernel to the database
 function add($kernel_fields) {
 	global $KERNEL_INFO_TABLE;
+	global $event;
 	if (!is_array($kernel_fields)) {
-		print("kernel_field not well defined");
+		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "kernel.class.php", "Kernel_field not well defined", "", "", 0, 0, 0);
 		return 1;
 	}
 	$db=openqrm_get_db_connection();
 	$result = $db->AutoExecute($KERNEL_INFO_TABLE, $kernel_fields, 'INSERT');
 	if (! $result) {
-		print("Failed adding new kernel to database");
+		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "kernel.class.php", "Failed adding new kernel to database", "", "", 0, 0, 0);
 	}
 }
 
 // updates kernel in the database
 function update($kernel_id, $kernel_fields) {
 	global $KERNEL_INFO_TABLE;
+	global $event;
 	if ($kernel_id < 0 || ! is_array($kernel_fields)) {
-		print("Unable to update kernel $kernel_id");
+		$event->log("update", $_SERVER['REQUEST_TIME'], 2, "kernel.class.php", "Unable to update kernel $kernel_id", "", "", 0, 0, 0);
 		return 1;
 	}
 	$db=openqrm_get_db_connection();
 	unset($kernel_fields["kernel_id"]);
 	$result = $db->AutoExecute($KERNEL_INFO_TABLE, $kernel_fields, 'UPDATE', "kernel_id = $kernel_id");
 	if (! $result) {
-		print("Failed updating kernel $kernel_id");
+		$event->log("update", $_SERVER['REQUEST_TIME'], 2, "kernel.class.php", "Failed updating kernel $kernel_id", "", "", 0, 0, 0);
 	}
 }
 
@@ -123,10 +131,11 @@ function remove_by_name($kernel_name) {
 // returns kernel_name by kernel_id
 function get_name($kernel_id) {
 	global $KERNEL_INFO_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	$kernel_set = &$db->Execute("select kernel_name from $KERNEL_INFO_TABLE where kernel_id=$kernel_id");
 	if (!$kernel_set) {
-		print $db->ErrorMsg();
+		$event->log("get_name", $_SERVER['REQUEST_TIME'], 2, "kernel.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	} else {
 		if (!$kernel_set->EOF) {
 			return $kernel_set->fields["kernel_name"];
@@ -139,11 +148,12 @@ function get_name($kernel_id) {
 // returns the number of available kernels
 function get_count() {
 	global $KERNEL_INFO_TABLE;
+	global $event;
 	$count=0;
 	$db=openqrm_get_db_connection();
 	$rs = $db->Execute("select count(kernel_id) as num from $KERNEL_INFO_TABLE");
 	if (!$rs) {
-		print $db->ErrorMsg();
+		$event->log("get_name", $_SERVER['REQUEST_TIME'], 2, "kernel.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	} else {
 		$count = $rs->fields["num"];
 	}
@@ -167,11 +177,12 @@ function get_list() {
 // displays the kernel-overview
 function display_overview($start, $count) {
 	global $KERNEL_INFO_TABLE;
+	global $event;
 	$db=openqrm_get_db_connection();
 	$recordSet = &$db->SelectLimit("select * from $KERNEL_INFO_TABLE where kernel_id>=$start order by kernel_id ASC", $count);
 	$kernel_array = array();
 	if (!$recordSet) {
-		print $db->ErrorMsg();
+		$event->log("display_overview", $_SERVER['REQUEST_TIME'], 2, "kernel.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	} else {
 		while (!$recordSet->EOF) {
 			array_push($kernel_array, $recordSet->fields);
