@@ -19,6 +19,9 @@ install:
 	# base/include
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include
 	. $(OPENQRM_SERVER_CONF) && cp base/include/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/
+	# base/js
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/js
+	. $(OPENQRM_SERVER_CONF) && cp base/js/*.js $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/js/
 	# base/class
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/class
 	. $(OPENQRM_SERVER_CONF) && cp base/class/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/class/
