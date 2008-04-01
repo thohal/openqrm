@@ -1,2 +1,2 @@
-..|Events
-...|Event List|server/event/event-overview.php
+.|Events
+..|Event List|server/event/event-overview.php

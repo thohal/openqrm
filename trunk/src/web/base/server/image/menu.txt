@@ -1,2 +1,2 @@
-..|Images
-...|Overview|server/image/image-overview.php
+.|Images
+..|Overview|server/image/image-overview.php

@@ -5,4 +5,3 @@
 #	Alt
 #	IMG
 #	Target
-.|Data-Center

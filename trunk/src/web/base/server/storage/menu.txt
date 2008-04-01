@@ -1,2 +1,2 @@
-..|Storage
-...|Overview|server/storage/storage-overview.php
+.|Storage
+..|Overview|server/storage/storage-overview.php

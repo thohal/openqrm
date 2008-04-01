@@ -1,2 +1,2 @@
-..|Kernels
-...|Overview|server/kernel/kernel-overview.php
+.|Kernels
+..|Overview|server/kernel/kernel-overview.php

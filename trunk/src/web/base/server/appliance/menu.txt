@@ -1,2 +1,2 @@
-..|Appliances
-...|Overview|server/appliance/appliance-overview.php
+.|Appliances
+..|Overview|server/appliance/appliance-overview.php
