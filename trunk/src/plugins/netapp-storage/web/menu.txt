@@ -1,0 +1,11 @@
+#	Title
+#	Href
+#	Alt
+#	IMG
+#	Target
+.|NetApp-storage
+..|Volumes|plugins/netapp-storage/netapp-storage-manager.php?currenttab=tab0
+..|Filesystem|plugins/netapp-storage/netapp-storage-manager.php?currenttab=tab1
+..|NFS|plugins/netapp-storage/netapp-storage-manager.php?currenttab=tab2
+..|Iscsi|plugins/netapp-storage/netapp-storage-manager.php?currenttab=tab3
+..|Admin|plugins/netapp-storage/netapp-storage-manager.php?currenttab=tab4

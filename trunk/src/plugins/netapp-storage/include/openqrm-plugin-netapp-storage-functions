@@ -1,0 +1,56 @@
+#!/bin/bash
+# this is the functions file for the netapp-storage-plugin
+
+NETAPP_STORAGE_LOCK_FILE=/var/run/netapp-storage/netapp-storage-plugin.lock
+NETAPP_STORAGE_LOCK_DELAY=5
+NETAPP_STORAGE_LOCK_RETRY=100
+NETAPP_STORAGE_LOCK_TIMEOUT=500
+
+
+################ common netapp-storage functions
+
+# logs for netapp_storage
+function netapp_storage_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "netapp-storage plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function netapp_storage_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $NETAPP_STORAGE_LOCK_FILE` ]; then
+		mkdir -p `dirname $NETAPP_STORAGE_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $NETAPP_STORAGE_LOCK_DELAY -r $NETAPP_STORAGE_LOCK_RETRY -l $NETAPP_STORAGE_LOCK_TIMEOUT $NETAPP_STORAGE_LOCK_FILE
+				RET=$?
+				netapp_storage_log netapp_storage_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $NETAPP_STORAGE_LOCK_FILE
+				RET=$?
+				netapp_storage_log netapp_storage_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			netapp_storage_log netapp_storage_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ netapp-storage functions
+
+
+
+
+

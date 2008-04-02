@@ -1,0 +1,62 @@
+#!/bin/bash
+# init script for the openQRM netapp-storage-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/include/openqrm-plugin-netapp-storage-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/etc/openqrm-plugin-netapp-storage.conf
+
+function openqrm_plugin_netapp_storage_start() {
+	echo "Starting the openQRM netapp-storage-plugin"
+	openqrm_plugin_netapp_storage_stop 1>/dev/null 2>&1
+}
+
+
+function openqrm_plugin_netapp_storage_stop() {
+	echo "Stopping the openQRM netapp-storage-plugin"
+}
+
+function openqrm_plugin_netapp_storage_uninstall() {
+	echo "Uninstalling the openQRM netapp-storage-plugin"
+	openqrm_plugin_netapp_storage_stop
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp-storage
+}
+
+function openqrm_plugin_netapp_storage_init() {
+	echo "Initializing the openQRM netapp-storage-plugin"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp-storage
+	
+}
+
+
+case "$1" in
+	start)
+		openqrm_plugin_netapp_storage_start
+		;;
+	stop)
+		openqrm_plugin_netapp_storage_stop
+		;;
+	restart)
+		openqrm_plugin_netapp_storage_stop
+		sleep 1
+		openqrm_plugin_netapp_storage_start
+		;;
+	init)
+		openqrm_plugin_netapp_storage_init
+		;;
+	uninstall)
+		openqrm_plugin_netapp_storage_uninstall
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+

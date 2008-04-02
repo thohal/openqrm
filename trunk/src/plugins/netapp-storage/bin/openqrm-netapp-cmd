@@ -1,0 +1,44 @@
+#!/usr/bin/expect -f
+# this is an expect script to automatically run commands on a netapp-filer
+#
+
+if {[llength $argv]<2} {
+        send_user "usage: $argv0 <netapp-ip> <command> \[password\]\n"
+        exit
+}
+
+set NETAPP_IP [lindex $argv 0]
+set NETAPP_CMD [lindex $argv 1]
+set NETAPP_PASSWORD [lindex $argv 2]
+
+send_user "Running comand $NETAPP_CMD on $NETAPP_IP\n"
+
+set force_conservative 0  ;# set to 1 to force conservative mode even if
+			  ;# script wasn't run conservatively originally
+if {$force_conservative} {
+	set send_slow {1 .1}
+	proc send {ignore arg} {
+		sleep .1
+		exp_send -s -- $arg
+	}
+}
+
+
+
+set timeout -1
+spawn /bin/bash
+match_max 100000
+expect "*$ "
+send -- "ssh root@$NETAPP_IP\r"
+expect "root@$NETAPP_IP's password:" {
+	send -- "$NETAPP_PASSWORD\r"
+	expect "*> "
+	send -- "$NETAPP_CMD\r"
+	expect "*> "
+} \
+   "*> " {
+	send -- "$NETAPP_CMD\r"
+	expect "*> "
+}
+exit
+
