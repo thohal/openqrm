@@ -4,4 +4,4 @@
 #	IMG
 #	Target
 .|Lvm-storage
-..|Lvm-storage Manager|plugins/lvm-storage/lvm-storage-manager.php
+..|Volume Groups|plugins/lvm-storage/lvm-storage-manager.php
