@@ -19,14 +19,36 @@ function openqrm_plugin_lvm-storage_stop() {
 }
 
 function openqrm_plugin_lvm-storage_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "lvm-storage: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "lvm-storage: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
 	echo "Uninstalling the openQRM lvm-storage-plugin"
 	openqrm_plugin_lvm-storage_stop
+	openqrm_server_remove_storagetype $USERNAME $PASSWORD lvm-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/lvm-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-lvm-storage.tgz
 }
 
 function openqrm_plugin_lvm-storage_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "lvm-storage: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "lvm-storage: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
 	echo "Initializing the openQRM lvm-storage-plugin"
+	openqrm_server_add_storagetype $USERNAME $PASSWORD lvm-storage "Lvm Storage Server (nfs/iscsi/aoe)"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/lvm-storage
 	# link the boot-service
@@ -34,6 +56,8 @@ function openqrm_plugin_lvm-storage_init() {
 	
 }
 
+USER=$2
+PASS=$3
 
 case "$1" in
 	start)
@@ -48,10 +72,10 @@ case "$1" in
 		openqrm_plugin_lvm-storage_start
 		;;
 	init)
-		openqrm_plugin_lvm-storage_init
+		openqrm_plugin_lvm-storage_init $USER $PASS
 		;;
 	uninstall)
-		openqrm_plugin_lvm-storage_uninstall
+		openqrm_plugin_lvm-storage_uninstall $USER $PASS
 		;;
 	*)
 		echo "Usage: $0 {start|stop|restart|init|uninstall}"

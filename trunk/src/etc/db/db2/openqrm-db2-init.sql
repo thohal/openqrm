@@ -175,8 +175,19 @@ drop table virtualization_info
 create table virtualization_info(
 	virtualization_id bigint,						\
 	virtualization_name varchar(50),				\
-	virtualization_type varchar(20)					\
+	virtualization_type varchar(20),				\
+	virtualization_mapping varchar(255)				\
 );
+
+# plugg-able storage-server types
+drop table storagetype_info
+create table storagetype_info(
+	storagetype_id bigint,						\
+	storagetype_description varchar(50),		\
+	storagetype_name varchar(20),				\
+	storagetype_mapping varchar(255)			\
+);
+
 
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared) values (1, 'idle', 'openqrm', 'ram', 'ram', 'ext2', 1)
 insert into resource_info (resource_id, resource_localboot, resource_openqrmserver, resource_ip) values (0, 1, 'OPENQRM_SERVER_IP_ADDRESS', 'OPENQRM_SERVER_IP_ADDRESS')

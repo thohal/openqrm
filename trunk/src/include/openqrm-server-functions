@@ -241,6 +241,49 @@ function openqrm_server_remove_virtualization_type() {
 
 
 
+# --------------------------------------------------------------------
+# ------------------------- storagetype functions -------------------------
+# --------------------------------------------------------------------
+
+# function to add a storagetype method to the openQRM-server db
+# this function is used by the init+uninstall functions of the storagetype plugins
+# param 1	: username
+# param 2	: password
+# param 3	: storagetype type
+# param 4	: storagetype name
+function openqrm_server_add_storagetype() {
+	OPENQRM_USER=$1
+	OPENQRM_USER_PASSWORD=$2
+	OPENQRM_SERVER_STORAGETYPE_NAME=$3
+	OPENQRM_SERVER_STORAGETYPE_DESCRIPTION=$4
+	echo "openQRM-server: Adding storagetype $OPENQRM_SERVER_STORAGETYPE_NAME  to the openQRM-server" | logger
+	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/storage/storage-action.php?storage_command=add_storagetype_type&storagetype_name=$OPENQRM_SERVER_STORAGETYPE_NAME&storagetype_description=$OPENQRM_SERVER_STORAGETYPE_DESCRIPTION"; then
+		echo "ERROR: Could not add storagetype $OPENQRM_SERVER_STORAGETYPE_NAME to the openQRM-server!" | logger
+		return 1
+	fi
+	return 0
+}
+
+# function to remove a storagetype method to the openQRM-server db
+# this function is used by the init+uninstall functions of the storagetype plugins
+# param 1	: username
+# param 2	: password
+# param 3	: storagetype type
+function openqrm_server_remove_storagetype() {
+	OPENQRM_USER=$1
+	OPENQRM_USER_PASSWORD=$2
+	OPENQRM_SERVER_STORAGETYPE_NAME=$3
+	echo "openQRM-server: Removing storagetype $OPENQRM_SERVER_STORAGETYPE_NAME  from the openQRM-server" | logger
+	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/storage/storage-action.php?storage_command=remove_storagetype_type&storagetype_name=$OPENQRM_SERVER_STORAGETYPE_NAME"; then
+		echo "ERROR: Could not remove storagetype $OPENQRM_SERVER_STORAGETYPE_NAME from the openQRM-server!" | logger
+		return 1
+	fi
+	return 0
+}
+
+
+
+
 
 # --------------------------------------------------------------------
 # ------------------------- resource functions -----------------------

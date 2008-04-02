@@ -166,7 +166,17 @@ drop table virtualization_info;
 create table virtualization_info(
 	virtualization_id INTEGER NOT NULL PRIMARY KEY,
 	virtualization_name VARCHAR2(50),
-	virtualization_type VARCHAR2(20)
+	virtualization_type VARCHAR2(20),
+	virtualization_mapping VARCHAR2(255)
+);
+
+# plugg-able storage-server types
+drop table storagetype_info;
+create table storagetype_info(
+	storagetype_id INTEGER NOT NULL PRIMARY KEY,
+	storagetype_description VARCHAR2(50),
+	storagetype_name VARCHAR2(20),
+	storagetype_mapping VARCHAR2(255)
 );
 
 

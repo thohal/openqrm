@@ -17,10 +17,12 @@ require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/deployment.class.php";
+require_once "$RootDir/class/storagetype.class.php";
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 global $IMAGE_INFO_TABLE;
 global $DEPLOYMENT_INFO_TABLE;
+global $STORAGETYPE_INFO_TABLE;
 
 $event = new event();
 
@@ -49,6 +51,16 @@ foreach ($_REQUEST as $key => $value) {
 	}
 }
 
+$storagetype_id = $_REQUEST["storagetype_id"];
+$storagetype_name = $_REQUEST["storagetype_name"];
+$storagetype_description = $_REQUEST["storagetype_description"];
+foreach ($_REQUEST as $key => $value) {
+	if (strncmp($key, "storagetype_", 12) == 0) {
+		$storagetype_fields[$key] = $value;
+	}
+}
+
+
 	$event->log("$storage_command", $_SERVER['REQUEST_TIME'], 5, "storage-action", "Processing command $storage_command on storage $storage_name", "", "", 0, 0, 0);
 	switch ($storage_command) {
 		case 'new_storage':
@@ -70,6 +82,17 @@ foreach ($_REQUEST as $key => $value) {
 		case 'remove_by_name':
 			$storage = new storage();
 			$storage->remove_by_name($storage_name);
+			break;
+
+		case 'add_storagetype_type':
+			$storagetype = new storagetype();
+			$storagetype_fields["storagetype_id"]=openqrm_db_get_free_id('storagetype_id', $STORAGETYPE_INFO_TABLE);
+			$storagetype->add($storagetype_fields);
+			break;
+
+		case 'remove_storagetype_type':
+			$storagetype = new storagetype();
+			$storagetype->remove_by_name($storagetype_name);
 			break;
 
 		default:

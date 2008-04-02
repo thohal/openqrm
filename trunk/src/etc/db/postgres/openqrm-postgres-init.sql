@@ -164,9 +164,18 @@ drop table virtualization_info;
 create table virtualization_info(
 	virtualization_id int8 NOT NULL PRIMARY KEY,
 	virtualization_name char(50),
-	virtualization_type char(20)
+	virtualization_type char(20),
+	virtualization_mapping char(255)
 );
 
+# plugg-able storage-server types
+drop table storagetype_info;
+create table storagetype_info(
+	storagetype_id int8 NOT NULL PRIMARY KEY,
+	storagetype_description char(50),
+	storagetype_name char(20),
+	storagetype_mapping char(255)
+);
 
 
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared) values ('1', 'idle', 'openQRM', 'ram', 'ram', 'ext2', '1');

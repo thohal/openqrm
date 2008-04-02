@@ -15,6 +15,7 @@ class virtualization {
 var $id = '';
 var $name = '';
 var $type = '';
+var $mapping = '';
 
 
 
@@ -39,10 +40,9 @@ function get_instance($id, $name, $type) {
 	}
 	foreach ($virtualization_array as $index => $virtualization) {
 		$this->id = $virtualization["virtualization_id"];
-
-		$this->id = $virtualization["virtualization_id"];
 		$this->name = $virtualization["virtualization_name"];
 		$this->type = $virtualization["virtualization_type"];
+		$this->mapping = $virtualization["virtualization_mapping"];
 	}
 	return $this;
 }

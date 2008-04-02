@@ -19,18 +19,42 @@ function openqrm_plugin_netapp_storage_stop() {
 }
 
 function openqrm_plugin_netapp_storage_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "netapp-storage: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "netapp-storage: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
 	echo "Uninstalling the openQRM netapp-storage-plugin"
 	openqrm_plugin_netapp_storage_stop
+	openqrm_server_remove_storagetype $USERNAME $PASSWORD netapp-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp-storage
 }
 
 function openqrm_plugin_netapp_storage_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "lvm-storage: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "lvm-storage: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
 	echo "Initializing the openQRM netapp-storage-plugin"
+	openqrm_server_add_storagetype $USERNAME $PASSWORD netapp-storage "NetApp Filer (nfs/iscsi)"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp-storage
 	
 }
 
+USER=$2
+PASS=$3
 
 case "$1" in
 	start)
@@ -45,10 +69,10 @@ case "$1" in
 		openqrm_plugin_netapp_storage_start
 		;;
 	init)
-		openqrm_plugin_netapp_storage_init
+		openqrm_plugin_netapp_storage_init $USER $PASS
 		;;
 	uninstall)
-		openqrm_plugin_netapp_storage_uninstall
+		openqrm_plugin_netapp_storage_uninstall $USER $PASS
 		;;
 	*)
 		echo "Usage: $0 {start|stop|restart|init|uninstall}"

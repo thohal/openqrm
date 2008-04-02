@@ -170,9 +170,18 @@ create table deployment_info(
 create table virtualization_info(
 	virtualization_id INT(5) NOT NULL PRIMARY KEY,
 	virtualization_name VARCHAR(50),
-	virtualization_type VARCHAR(20)
+	virtualization_type VARCHAR(20),
+	virtualization_mapping VARCHAR(255)
 );
 
+# plugg-able storage-server types
+create table storagetype_info(
+	storagetype_id INT(5) NOT NULL PRIMARY KEY,
+	storagetype_description VARCHAR(50),
+	storagetype_name VARCHAR(20),
+	storagetype_mapping VARCHAR(255)
+	
+);
 
 # initial data
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared) values ('1', 'idle', 'openqrm', 'ram', 'ram', 'ext2', '1');
