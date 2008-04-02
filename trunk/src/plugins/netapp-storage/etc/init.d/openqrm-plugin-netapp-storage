@@ -33,6 +33,7 @@ function openqrm_plugin_netapp_storage_uninstall() {
 	openqrm_plugin_netapp_storage_stop
 	openqrm_server_remove_storagetype $USERNAME $PASSWORD netapp-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp-storage
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storagetype-capabilities.netapp-storage-menu.html
 }
 
 function openqrm_plugin_netapp_storage_init() {
@@ -50,6 +51,8 @@ function openqrm_plugin_netapp_storage_init() {
 	openqrm_server_add_storagetype $USERNAME $PASSWORD netapp-storage "NetApp Filer (nfs/iscsi)"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp-storage
+	# linking the storagetype-menu
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storagetype-capabilities.netapp-storage-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storagetype-capabilities.netapp-storage-menu.html
 	
 }
 

@@ -34,6 +34,7 @@ function openqrm_plugin_lvm-storage_uninstall() {
 	openqrm_server_remove_storagetype $USERNAME $PASSWORD lvm-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/lvm-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-lvm-storage.tgz
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storagetype-capabilities.lvm-storage-menu.html
 }
 
 function openqrm_plugin_lvm-storage_init() {
@@ -53,6 +54,8 @@ function openqrm_plugin_lvm-storage_init() {
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/lvm-storage
 	# link the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/boot-service-lvm-storage.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-lvm-storage.tgz
+	# linking the storagetype-menu
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/storagetype-capabilities.lvm-storage-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storagetype-capabilities.lvm-storage-menu.html
 	
 }
 

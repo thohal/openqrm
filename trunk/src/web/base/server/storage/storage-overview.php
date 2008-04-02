@@ -4,6 +4,7 @@
 <?php
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+$BaseDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/storage.class.php";
@@ -144,6 +145,7 @@ function storage_form() {
 		$deployment_select = htmlobject_select('storage_deployment_type', $deployment_list, 'Deployment type', $deployment_list);
 		$disp = $disp.$deployment_select;
 
+		$storagetype_id = $storagetype_name['0'];
 		$resource_tmp = new resource();
 		$resource_array = $resource_tmp->display_overview(0, 10);
 		foreach ($resource_array as $index => $resource_db) {
@@ -175,7 +177,9 @@ function storage_form() {
 		$disp = $disp.htmlobject_textarea('storage_comment', array("value" => '', "label" => 'Comment'));
 
 	   	// making the storage capabilities parameters plugg-able
-   		$storagetype_menu_file = "$BaseDir/boot-service/storagetype-capabilities.$deployment_tmp->type"."-menu.html";
+	   	$storagetype = new $storagetype();
+	   	$storagetype->get_instance_by_id($storagetype_id);
+   		$storagetype_menu_file = "$BaseDir/boot-service/storagetype-capabilities.$storagetype->name"."-menu.html";
    		if (file_exists($storagetype_menu_file)) {
    			$storagetype_menu = file_get_contents("$storagetype_menu_file");
 		    $disp = $disp.$storagetype_menu;
