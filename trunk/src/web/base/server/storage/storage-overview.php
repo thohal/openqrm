@@ -7,6 +7,7 @@ $RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/storage.class.php";
+require_once "$RootDir/class/storagetype.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
@@ -105,58 +106,89 @@ function storage_display($admin) {
 
 
 function storage_form() {
+
+	$storagetype = new storagetype();
+	$storagetype_list = array();
+	$storagetype_list = $storagetype->get_list();
+	$dep_is_selected = $_REQUEST["dep_is_selected"];
+	$storagetype_name = array($_REQUEST["storagetype_name"]);
+	global $BaseDir;
+
 	$deployment = new deployment();
 	$deployment_list = array();
 	$deployment_list = $deployment->get_list();
 	# remove ramdisk deployment which does not need a storage server
 	array_splice($deployment_list, 0, 1);
 
+
 	$disp = "<h1>New Storage</h1>";
 	$disp = $disp."<br>";
-	$disp = $disp."<form action='storage-action.php' method=post>";
-	$disp = $disp.htmlobject_input('storage_name', array("value" => '', "label" => 'Insert Storage name'), 'text', 20);
+	$disp = $disp."<form action='storage-overview.php?currenttab=tab1' method=post>";
+	$storagetype_select = htmlobject_select('storagetype_name', $storagetype_list, 'Storage Type', $storagetype_name);
+	$disp = $disp.$storagetype_select;
+	$disp = $disp."<br>";
 
+	if (!strlen($dep_is_selected)) {
+	
+		$disp = $disp."<input type=hidden name=dep_is_selected value='yes'>";
+		$disp = $disp."<input type=submit value='select'>";
+		$disp = $disp."<br>";
+		$disp = $disp."<br>";
+		$disp = $disp."</form>";
 
-	$deployment_select = htmlobject_select('storage_deployment_type', $deployment_list, 'Deployment type', $deployment_list);
-	$disp = $disp.$deployment_select;
+	} else {
+		$disp = $disp."</form>";
 
-	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(0, 10);
-	foreach ($resource_array as $index => $resource_db) {
-		$resource = new resource();
-		$resource->get_instance_by_id($resource_db["resource_id"]);
-		if ("$resource->id" != "0") {
-			$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
-		    $disp = $disp."<input type='radio' name='storage_resource_id' value='$resource->id'>";
-			$disp = $disp." $resource->id $resource->hostname ";
-			if ("$resource->localboot" == "0") {
-				$disp = $disp." net";
+		$disp = $disp."<form action='storage-action.php' method=post>";
+		$disp = $disp.htmlobject_input('storage_name', array("value" => '', "label" => 'Insert Storage name'), 'text', 20);
+		$deployment_select = htmlobject_select('storage_deployment_type', $deployment_list, 'Deployment type', $deployment_list);
+		$disp = $disp.$deployment_select;
+
+		$resource_tmp = new resource();
+		$resource_array = $resource_tmp->display_overview(0, 10);
+		foreach ($resource_array as $index => $resource_db) {
+			$resource = new resource();
+			$resource->get_instance_by_id($resource_db["resource_id"]);
+			if ("$resource->id" != "0") {
+				$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
+			    $disp = $disp."<input type='radio' name='storage_resource_id' value='$resource->id'>";
+				$disp = $disp." $resource->id $resource->hostname ";
+				if ("$resource->localboot" == "0") {
+					$disp = $disp." net";
+				} else {
+					$disp = $disp." local";
+				}
+				$disp = $disp." $resource->kernel ";
+				$disp = $disp." $resource->image ";
+				$disp = $disp." $resource->ip $resource->mac $resource->state ";
+				$disp = $disp."</div>";
 			} else {
-				$disp = $disp." local";
+				$disp = $disp."<br>";
+				$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
+			    $disp = $disp."<input type='radio' name='storage_resource_id' value='$resource->id'>";
+				$disp = $disp." $resource->id &nbsp; openQRM-server";
+				$disp = $disp." $resource->ip  ";
+				$disp = $disp."</div>";
+				$disp = $disp."<br>";
 			}
-			$disp = $disp." $resource->kernel ";
-			$disp = $disp." $resource->image ";
-			$disp = $disp." $resource->ip $resource->mac $resource->state ";
-			$disp = $disp."</div>";
-
-		} else {
-			$disp = $disp."<br>";
-			$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
-		    $disp = $disp."<input type='radio' name='storage_resource_id' value='$resource->id'>";
-			$disp = $disp." $resource->id &nbsp; openQRM-server";
-			$disp = $disp." $resource->ip  ";
-			$disp = $disp."</div>";
-			$disp = $disp."<br>";
 		}
-	}
-	$disp = $disp.htmlobject_textarea('storage_comment', array("value" => '', "label" => 'Comment'));
-	$disp = $disp.htmlobject_textarea('storage_capabilities', array("value" => '', "label" => 'Storage Capabilities'));
+		$disp = $disp.htmlobject_textarea('storage_comment', array("value" => '', "label" => 'Comment'));
 
-	$disp = $disp."<input type=hidden name=storage_command value='new_storage'>";
-	$disp = $disp."<input type=submit value='Add'>";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."";
+	   	// making the storage capabilities parameters plugg-able
+   		$storagetype_menu_file = "$BaseDir/boot-service/storagetype-capabilities.$deployment_tmp->type"."-menu.html";
+   		if (file_exists($storagetype_menu_file)) {
+   			$storagetype_menu = file_get_contents("$storagetype_menu_file");
+		    $disp = $disp.$storagetype_menu;
+   		} else {
+			$disp = $disp.htmlobject_textarea('storage_capabilities', array("value" => '', "label" => 'Storage Capabilities'));
+		}
+
+		$disp = $disp."<input type=hidden name=storage_command value='new_storage'>";
+		$disp = $disp."<input type=submit value='Add'>";
+		$disp = $disp."";
+		$disp = $disp."";
+		$disp = $disp."";
+	}
 	$disp = $disp."";
 	$disp = $disp."";
 	$disp = $disp."</form>";

@@ -1,17 +1,7 @@
 <html>
 <head>
 <title>openQRM Image actions</title>
-<?php
-	$dep_is_selected = $_REQUEST["dep_is_selected"];
-	$image_type = $_REQUEST["image_type"];
-	if (!strlen($dep_is_selected)) {
-		echo "<meta http-equiv=\"refresh\" content=\"0; URL=image-overview.php?currenttab=tab2&strMsg=Processing image command\">";
-	} else {
-		echo "<meta http-equiv=\"refresh\" content=\"0; URL=image-overview.php?currenttab=tab1&dep_is_selected=$dep_is_selected&image_type=$image_type&strMsg=Image-type-loaded\">";
-		exit();
-	}
-?>
-
+<meta http-equiv="refresh" content="0; URL=image-overview.php?currenttab=tab2&strMsg=Processing image command">
 </head>
 <body>
 

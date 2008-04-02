@@ -73,11 +73,9 @@ function image_form() {
 	global $BaseDir;
 
 	$disp = "<b>New Image</b>";
-	$disp = $disp."<form action='image-action.php' method=post>";
+	$disp = $disp."<form action='image-overview.php?currenttab=tab1' method=post>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp.htmlobject_input('image_name', array("value" => '', "label" => 'Insert Image name'), 'text', 20);
-	$disp = $disp.htmlobject_input('image_version', array("value" => '', "label" => 'Image version'), 'text', 20);
 
 	$deployment_select = htmlobject_select('image_type', $deployment_list, 'Deployment type', $image_type);
 	$disp = $disp.$deployment_select;
@@ -89,9 +87,15 @@ function image_form() {
 		$disp = $disp."<input type=submit value='select'>";
 		$disp = $disp."<br>";
 		$disp = $disp."<br>";
+		$disp = $disp."</form>";
 
 	} else {
-	
+		$disp = $disp."</form>";
+		
+		$disp = $disp."<form action='image-action.php' method=post>";
+		$disp = $disp.htmlobject_input('image_name', array("value" => '', "label" => 'Insert Image name'), 'text', 20);
+		$disp = $disp.htmlobject_input('image_version', array("value" => '', "label" => 'Image version'), 'text', 20);
+
 		$image_type = $image_type['0'];
 		$deployment_tmp = new deployment();
 		$deployment_tmp->get_instance_by_id($image_type);
@@ -148,6 +152,7 @@ function image_form() {
 		$disp = $disp.htmlobject_textarea('image_capabilities', array("value" => '', "label" => 'Image Capabilities'));
 
 		$disp = $disp."<input type=hidden name=image_command value='new_image'>";
+		$disp = $disp."<input type=hidden name=image_type value=$image_type>";
 		$disp = $disp."<input type=submit value='add'>";
 		$disp = $disp."";
 		$disp = $disp."";
