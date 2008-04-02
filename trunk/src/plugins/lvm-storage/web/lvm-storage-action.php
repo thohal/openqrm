@@ -2,12 +2,14 @@
 $lvm_storage_command = $_REQUEST["lvm_storage_command"];
 $lvm_storage_id = $_REQUEST["lvm_storage_id"];
 $lvm_volume_group = $_REQUEST["lvm_volume_group"];
+$source_tab=$_REQUEST["source_tab"];
+
 ?>
 
 <html>
 <head>
 <title>openQRM Lvm-storage actions</title>
-<meta http-equiv="refresh" content="0; URL=lvm-storage-manager.php?currenttab=tab1&strMsg=Processing <?php echo $lvm_storage_command; ?> on storage <?php echo $lvm_storage_id; ?>">
+<meta http-equiv="refresh" content="0; URL=lvm-storage-manager.php?currenttab=<?php echo $source_tab; ?>&lvm_storage_id=<?php echo $lvm_storage_id; ?>&lvm_volume_group=<?php echo $lvm_volume_group; ?>&strMsg=Processing <?php echo $lvm_storage_command; ?> on storage <?php echo $lvm_storage_id; ?>">
 </head>
 <body>
 
@@ -28,7 +30,7 @@ global $OPENQRM_SERVER_BASE_DIR;
 
 // place for the storage stat files
 $StorageDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/lvm-storage/storage';
-
+// global event for logging
 $event = new event();
 
 // user/role authentication
@@ -72,6 +74,7 @@ unset($lvm_storage_fields["lvm_storage_command"]);
 			$storage_resource->get_instance_by_id($storage->resource_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage post_vg -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$storage_resource->send_command($storage_resource->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'refresh_lv':

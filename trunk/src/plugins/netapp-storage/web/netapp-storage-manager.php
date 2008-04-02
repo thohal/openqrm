@@ -20,7 +20,7 @@ global $netapp_storage_id;
 
 function netapp_select_storage() {
 
-	$disp = "<b>Select NetApp Filer</b>";
+	$disp = "<h1>Select NetApp Filer</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."Please select a NetApp-Filer from the list below";
@@ -59,7 +59,7 @@ function netapp_select_storage() {
 function netapp_volume_display($netapp_storage_id) {
 	global $netapp_storage_id;
 
-	$disp = "<b>Volume Admin</b>";
+	$disp = "<h1>Volume Admin</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$storage = new storage();
@@ -102,7 +102,7 @@ function netapp_volume_display($netapp_storage_id) {
 function netapp_fs_display($netapp_storage_id) {
 	global $netapp_storage_id;
 
-	$disp = "<b>Filesystem Admin</b>";
+	$disp = "<h1>Filesystem Admin</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 
@@ -148,7 +148,7 @@ function netapp_fs_display($netapp_storage_id) {
 function netapp_nfs_display($netapp_storage_id) {
 	global $netapp_storage_id;
 
-	$disp = "<b>NFS Admin</b>";
+	$disp = "<h1>NFS Admin</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 
@@ -191,7 +191,7 @@ function netapp_nfs_display($netapp_storage_id) {
 function netapp_iscsi_display($netapp_storage_id) {
 	global $netapp_storage_id;
 
-	$disp = "<b>Iscsi Admin</b>";
+	$disp = "<h1>Iscsi Admin</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 
@@ -236,7 +236,7 @@ function netapp_iscsi_display($netapp_storage_id) {
 function netapp_admin_display($netapp_storage_id) {
 	global $netapp_storage_id;
 
-	$disp = "<b>Filer Admin GUI</b>";
+	$disp = "<h1>Filer Admin GUI</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 
