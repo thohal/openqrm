@@ -1,5 +1,10 @@
 
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+<style>
+.htmlobject_tab_box {
+	width:600px;
+}
+</style>
 
 <?php
 
