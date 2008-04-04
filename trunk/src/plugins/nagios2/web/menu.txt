@@ -4,3 +4,8 @@
 #	IMG
 #	Target
 .|Nagios2|http://localhost/nagios2
+..|Nagios2 Tactical Overview|http://localhost/nagios2/cgi-bin/tac.cgi
+..|Nagios2 Service Detail|http://localhost/nagios2/cgi-bin/status.cgi?host=all
+..|Nagios2 Host Detail|http://localhost/nagios2/cgi-bin/status.cgi?hostgroup=all&style=hostdetail
+..|Nagios2 Status Map|http://localhost/nagios2/cgi-bin/statusmap.cgi?host=all
+
