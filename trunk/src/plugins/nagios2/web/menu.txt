@@ -4,8 +4,37 @@
 #	IMG
 #	Target
 .|Nagios2|http://localhost/nagios2
-..|Nagios2 Tactical Overview|http://localhost/nagios2/cgi-bin/tac.cgi
-..|Nagios2 Service Detail|http://localhost/nagios2/cgi-bin/status.cgi?host=all
-..|Nagios2 Host Detail|http://localhost/nagios2/cgi-bin/status.cgi?hostgroup=all&style=hostdetail
-..|Nagios2 Status Map|http://localhost/nagios2/cgi-bin/statusmap.cgi?host=all
+..|Nagios2 Overview|http://localhost/nagios2/cgi-bin/tac.cgi
+..|Nagios2 Services|http://localhost/nagios2/cgi-bin/status.cgi?host=all
+..|Nagios2 Hosts|http://localhost/nagios2/cgi-bin/status.cgi?hostgroup=all&style=hostdetail
+..|Nagios2 Host-Group|http://localhost/nagios2/cgi-bin/status.cgi?hostgroup=all&style=overview
+...|Nagios2 Host-Group Summary|http://localhost/nagios2/cgi-bin/status.cgi?hostgroup=all&style=summary
+...|Nagios2 Host-Group Grid|http://localhost/nagios2/cgi-bin/status.cgi?hostgroup=all&style=grid 
+..|Nagios2 Service-Group|http://localhost/nagios2/cgi-bin/status.cgi?servicegroup=all&style=overviewall
+...|Nagios2 Service-Group Summary|http://localhost/nagios2/cgi-bin/status.cgi?servicegroup=all&style=summary
+...|Nagios2 Service-Group Grid|http://localhost/nagios2/cgi-bin/status.cgi?servicegroup=all&style=grid
+..|Nagios2 Status-Map|http://localhost/nagios2/cgi-bin/statusmap.cgi?host=all
+..|Nagios2 Problems|http://localhost/nagios2/
+...|Nagios2 Problems Service|http://localhost/nagios2/cgi-bin/status.cgi?host=all&servicestatustypes=28up=al
+...|Nagios2 Problems Host|http://localhost/nagios2/cgi-bin/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12
+...|Nagios2 Problems Network|http://localhost/nagios2/cgi-bin/outages.cgi
+..|Nagios2 Comments|http://localhost/nagios2/cgi-bin/extinfo.cgi?&type=3
+..|Nagios2 Downtime|http://localhost/nagios2/cgi-bin/extinfo.cgi?&type=6
+..|Nagios2 Comments|http://localhost/nagios2/cgi-bin/extinfo.cgi?&type=3
+..|Nagios2 Reporting|http://localhost/nagios2/
+...|Nagios2 Reporting Trends|http://localhost/nagios2/cgi-bin/trends.cgi
+...|Nagios2 Reporting Availability|http://localhost/nagios2/cgi-bin/avail.cgi
+...|Nagios2 Reporting Alerts|http://localhost/nagios2/
+....|Nagios2 Reporting Alerts Histogram|http://localhost/nagios2/cgi-bin/histogram.cgi
+....|Nagios2 Reporting Alerts History|http://localhost/nagios2/cgi-bin/history.cgi?host=allram.
+....|Nagios2 Reporting Alerts Summary|http://localhost/nagios2/cgi-bin/summary.cgi
+...|Nagios2 Reporting Notifications|http://localhost/nagios2/cgi-bin/notifications.cgi?contact=all
+...|Nagios2 Reporting Event-Log|http://localhost/nagios2/cgi-bin/showlog.cgi
+..|Nagios2 Configuration|http://localhost/nagios2/
+...|Nagios2 Configuration Process|http://localhost/nagios2/cgi-bin/extinfo.cgi?&type=0
+...|Nagios2 Configuration Performance|http://localhost/nagios2/cgi-bin/extinfo.cgi?&type=4
+...|Nagios2 Configuration Scheduling|http://localhost/nagios2/cgi-bin/extinfo.cgi?&type=7
+...|Nagios2 Configuration Scheduling|http://localhost/nagios2/cgi-bin/config.cgi
+
+
 
