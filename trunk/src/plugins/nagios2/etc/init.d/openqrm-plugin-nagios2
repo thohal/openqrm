@@ -24,6 +24,7 @@ function openqrm_plugin_nagios2_stop() {
 
 function openqrm_plugin_nagios2_init() {
 	echo "Initializing the openQRM nagios2 plugin"
+	CURRENT_DIR=`pwd`
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios2
 	# link the boot-service
@@ -35,7 +36,20 @@ function openqrm_plugin_nagios2_init() {
 	fi
 	cp -f /root/.ssh/id_dsa.pub $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrmserver_public_key
 	chmod 644 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrmserver_public_key
-
+	# nagios auth
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/.htpasswd /etc/nagios2/htpasswd.users
+	# Add openqrm to nagios-contacts - not perfect, but working first :)
+	sed -i "s/root/openqrm/g" /etc/nagios2/conf.d/contacts_nagios2.cfg
+	# theme nagios
+	. etc/build.conf/nuvola.conf
+	mkdir -p $OPENQRM_TEMP_DIR/nuvola_inst/
+	tar -C $OPENQRM_TEMP_DIR/nuvola_inst/ -zxvf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/theme/nagios-nuvola-$OPENQRM_SOURCE_VERSION.tar.gz
+	cp -r $OPENQRM_TEMP_DIR/nuvola_inst/html/* /usr/share/nagios2/htdocs/
+	rm -rf $OPENQRM_TEMP_DIR/nuvola_inst/
+ 	# Fix WebGUI for Debian
+ 	sed -i "s/nagios\/cgi-bin/nagios2\/cgi-bin/g"  /usr/share/nagios2/htdocs/config.js
+ 
+	cd $CURRENT_DIR
 	return 0
 }
 
@@ -47,6 +61,7 @@ function openqrm_plugin_nagios2_uninstall() {
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios2
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-nagios2.tgz
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrmserver_public_key
+	rm -f /etc/nagios2/htpasswd.users
 }
 
 

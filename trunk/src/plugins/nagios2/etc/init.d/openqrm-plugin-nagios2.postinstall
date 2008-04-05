@@ -1,14 +1,2 @@
 #!/bin/bash
 # this is the openqrm-plugin-nagios2 postinstall script
-
-# Add openqrm to nagios-contacts - not perfect, but working first :)
-sed -i "s/root/openqrm/g" /etc/nagios2/conf.d/contacts_nagios2.cfg
- 
- # make nagios looking pretty
- wget http://wiki.linuxfellaz.net/nagios/nagios-nuvola-1.0.3.tar.gz
- tar -zxvf nagios-nuvola-1.0.3.tar.gz;cp -r html/* /usr/share/nagios2/htdocs/
- #rm -rf html && rm nagios-nuvola-1.0.3.tar.gz
- 
- # Fix WebGUI for Debian
- sed -i "s/nagios\/cgi-bin/nagios2\/cgi-bin/g"  /usr/share/nagios2/htdocs/config.js
- 
