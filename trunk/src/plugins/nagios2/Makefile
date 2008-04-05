@@ -19,6 +19,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp include/openqrm* $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/include/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/web
 	. $(OPENQRM_SERVER_CONF) && cp web/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/web/
+	. $(OPENQRM_SERVER_CONF) && cp web/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/web/
 	. $(OPENQRM_SERVER_CONF) && tar -C $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2 -czvf $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/web/boot-service-nagios2.tgz etc/init.d/nagios2
 
 uninstall:
