@@ -91,7 +91,7 @@ function manage_nfs() {
 	case "$1" in
 		add)
 			if [ "$2" != "snap" ]; then
-				lvm_storage_log qrm-lvm-nfs-manage "NOTICE: creating ext3 filesytem on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
+				lvm_storage_log manage_nfs "NOTICE: creating ext3 filesytem on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
 				if ! mkfs.ext3 /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME; then
 					lvm_storage_log lvm-storage-functions "ERROR: Could not create ext3 filesytem on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
 					manage_fstab remove
