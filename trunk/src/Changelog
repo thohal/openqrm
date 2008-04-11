@@ -21,4 +21,4 @@
 							added local, nfs and iscsi deployment types (also plugg-able)
 							added appliance based deployment mechanism
 11.4.2008	-	Matt		moved cvs repository to svn
-							
+							and added svn-commit mails					
