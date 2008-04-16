@@ -1,0 +1,180 @@
+#!/bin/bash
+# this is the root-mount initrd-service
+# which proivdes function to mount/remount the remote
+# aoe-rootfs according to the image_deployment_parameters at /mnt
+
+# aoe-storage
+# Required defines in the image_deploy_paramters
+#
+#
+# Optional parameters 
+# IMAGE_NFS_MOUNT_OPTIONS			- can be e.g. set to proto=tcp for the install/transform phase
+# IMAGE_INSTALL_FROM				- can be set to an (aoe) location from
+#									  which the image will be installed at
+#									  deployment time
+#									  syntax is : ip_of_aoe-server:path_to_target_image
+# IMAGE_INSTALL_FROM_LOCAL_DEVICE	- set to a local harddisk device (e.g. /dev/hda1) this
+#									  option will install the aoe-storage image on 
+#									  boot-time from the local-device configured in the image-parameters
+#
+# IMAGE_INSTALL_FROM_LOCAL_DEVICE_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
+#
+# IMAGE_TRANSFORM_TO_LOCAL_DEVICE	- set to a local harddisk device (e.g. /dev/hda1) this option will transfrom
+#									  the aoe-storage image on boot-time to the
+#									  local-device configured in the image-parameters
+#
+# IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
+#
+#
+# get the deployment parameters from openqrm.conf
+OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
+. $OPENQRM_RESOURCE_PARAMETER_FILE
+eval $image_deployment_parameter
+
+# nfs-options for the install+transform phase
+if [ "$IMAGE_NFS_MOUNT_OPTIONS" != "" ]; then
+	IMAGE_NFS_MOUNT_OPTIONS=",$IMAGE_NFS_MOUNT_OPTIONS"
+fi
+
+#######################################################################
+# required functions ##################################################
+#######################################################################
+
+function mount_rootfs() {
+
+	# get aoe-interfaces via wget from the openQRM-servers boot-service dir
+	wget -q -O /sbin/aoe-interfaces http://$resource_openqrmserver/openqrm/boot-service/aoe-interfaces
+	# get the aoe-discover via wget from the openQRM-servers boot-service dir
+	wget -q -O /sbin/aoe-discover http://$resource_openqrmserver/openqrm/boot-service/aoe-discover
+	# get the aoe-stat via wget from the openQRM-servers boot-service dir
+	wget -q -O /sbin/aoe-stat http://$resource_openqrmserver/openqrm/boot-service/aoe-stat
+	# get the aoe-mkdevs via wget from the openQRM-servers boot-service dir
+	wget -q -O /sbin/aoe-mkdevs http://$resource_openqrmserver/openqrm/boot-service/aoe-mkdevs
+	# get the aoe-mkshelf via wget from the openQRM-servers boot-service dir
+	wget -q -O /sbin/aoe-mkshelf http://$resource_openqrmserver/openqrm/boot-service/aoe-mkshelf
+	chmod +x /sbin/aoe*
+
+	# load aoe related modules
+	mkdir /dev/etherd
+	aoe-mkdevs /dev/etherd
+	modprobe aoe
+
+	# discover
+	RESOURCE_INTERFACE=`ifconfig | grep eth[0-9]:oq | cut -d':' -f1`
+	echo "aoe-storage: Discoverying Aoe-target $image_storage_server_ip on $RESOURCE_INTERFACE"
+	aoe-interfaces $RESOURCE_INTERFACE
+	aoe-discover
+	aoe-stat
+
+	# finallly mount
+	if ! mount -t $image_rootfstype $image_rootdevice /mnt; then
+		echo "ERROR: Could not mount $image_rootdevice via aoe"
+		# give a shell for the admin
+		/bin/bash
+	else
+		echo "aoe-storage: Mounted $image_rootdevice rw"
+	fi
+	
+	if  [ "$IMAGE_INSTALL_FROM" != "" ]; then
+		install_rootfs
+	else
+		echo "aoe-storage: Skipping install phase"
+	fi
+	if  [ "$IMAGE_INSTALL_FROM_LOCAL_DEVICE" != "" ]; then
+		install_rootfs_from_local
+	else
+		echo "aoe-storage: Skipping install from local phase"
+	fi
+	if  [ "$IMAGE_TRANSFORM_TO_LOCAL" != "" ]; then
+		transform_rootfs_to_local
+	else
+		echo "aoe-storage: Skipping transform to local phase"
+	fi
+}
+
+
+function remount_rootfs() {
+
+	REMOUNT_LOOP=0
+	# remont /mnt ro
+	while ! mount -t $image_rootfstype -o ro,remount $image_rootdevice /mnt; do
+		echo -n "."
+		sleep 1
+		REMOUNT_LOOP=$[ REMOUNT_LOOP + 1 ]
+		if [ "$REMOUNT_LOOP" == "10" ]; then
+			echo "ERROR: aoe-storage could not remount /mnt "
+			/bin/bash
+		fi
+	done
+	echo "aoe-storage: Re-mounted $image_rootdevice ro"
+	
+}
+
+
+function create_fstab() {
+	rm -f $IMAGE_FSTAB
+	echo "$image_rootdevice   /     $image_rootfstype  defaults   0 0" >> $IMAGE_FSTAB
+}
+
+
+#######################################################################
+# optional functions ##################################################
+#######################################################################
+
+function install_rootfs() {
+	modprobe sunrpc 1>/dev/null 2>&1
+	modprobe lockd 1>/dev/null 2>&1
+	modprobe nfs 1>/dev/null 2>&1
+	rm -rf /dev/null
+	mknod -m 666 /dev/null c 1 3
+	portmap
+	echo "aoe-storage: Installing $resource_image from $IMAGE_INSTALL_FROM"
+	mkdir -p /mnt2
+	if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_INSTALL_FROM /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM by nfs"
+		# give a shell for the admin
+		/bin/bash
+	fi
+	echo "aoe-storage: Starting copying. This can take a while ...."
+	cp -af /mnt2/.* /mnt/
+	cp -af /mnt2/* /mnt/
+	echo "aoe-storage: Copying finished. Continuing boot-up"
+	umount /mnt2
+	rmdir /mnt2
+	killall portmap
+}
+
+
+function install_rootfs_from_local() {
+	modprobe ext3 1>/dev/null 2>&1
+	mkdir -p /mnt2
+	if ! mount -t $IMAGE_INSTALL_FROM_LOCAL_DEVICE_FS_TYPE -o ro $IMAGE_INSTALL_FROM_LOCAL_DEVICE /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM_LOCAL_DEVICE / $IMAGE_INSTALL_FROM_LOCAL_DEVICE_FS_TYPE"
+		# give a shell for the admin
+		/bin/bash
+	fi
+	echo "aoe-storage: Starting install phase from local device."
+	cp -af /mnt2/.* /mnt/
+	cp -af /mnt2/* /mnt/
+	umount /mnt2
+	rmdir /mnt2
+}
+
+
+function transform_rootfs_to_local() {
+	modprobe ext3 1>/dev/null 2>&1
+	mkdir -p /mnt2
+	if ! mount -t $IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE -o rw $IMAGE_TRANSFORM_TO_LOCAL_DEVICE /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_TRANSFORM_TO_LOCAL_DEVICE / $IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE"
+		# give a shell for the admin
+		/bin/bash
+	fi
+	echo "aoe-storage: Starting install phase to local device"
+	cp -af /mnt/.* /mnt2/
+	cp -af /mnt/* /mnt2/
+	umount /mnt2
+	rmdir /mnt2
+}
+
+
+
