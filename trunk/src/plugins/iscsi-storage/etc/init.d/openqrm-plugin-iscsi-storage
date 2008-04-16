@@ -37,6 +37,9 @@ function openqrm_plugin_iscsi_storage_uninstall() {
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.iscsi-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.iscsi-menu.html
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storagetype-capabilities.iscsi-storage-menu.html	
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-iscsi-storage.tgz
+
 	# remove only if lvm-storage is not enabled
 	if ! ls $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins | grep lvm-storage 1>/dev/null 2>&1; then
 		if ! ls $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins | grep netapp-storage 1>/dev/null 2>&1; then
@@ -63,10 +66,15 @@ function openqrm_plugin_iscsi_storage_init() {
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-storage
 	# linking the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/boot-service-iscsi-storage.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-iscsi-storage.tgz
+	# linking the root mount hook
 	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/root-mount.iscsi-deployment
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/root-mount.iscsi-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.iscsi-deployment
 	# linking the image-menu
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/image-deployment-parameter.iscsi-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.iscsi-menu.html
+	# linking the storagetype-menu
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/storagetype-capabilities.iscsi-storage-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storagetype-capabilities.iscsi-storage-menu.html
+
 	# copying iscsid to boot-service dir
 	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsid ]; then
 		cp -f `which iscsid` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/

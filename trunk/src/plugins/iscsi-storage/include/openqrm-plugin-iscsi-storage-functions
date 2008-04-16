@@ -1,3 +1,113 @@
 #!/bin/bash
 # this is the functions file for the iscsi-storage-plugin
 
+
+# iscsi-target config file
+IETDCONF=/etc/ietd.conf
+# some definitions
+DEFAULT_IMAGE_SIZE=5000
+ISCSI_MGMT_LOCK_FILE=/var/run/iscsi-storage/iscsi-storage-plugin.lock
+ISCSI_MGMT_LOCK_DELAY=5
+ISCSI_MGMT_LOCK_RETRY=100
+ISCSI_MGMT_LOCK_TIMEOUT=500
+ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY="/target"
+ISCSI_TARGET_URL=http://iscsitarget.sourceforge.net/
+
+################ common iscsi-storage functions
+
+# logs for iscsi_storage
+function iscsi_storage_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "iscsi-storage plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function iscsi_storage_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $ISCSI_MGMT_LOCK_FILE` ]; then
+		mkdir -p `dirname $ISCSI_MGMT_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $ISCSI_MGMT_LOCK_DELAY -r $ISCSI_MGMT_LOCK_RETRY -l $ISCSI_MGMT_LOCK_TIMEOUT $ISCSI_MGMT_LOCK_FILE
+				RET=$?
+				iscsi_storage_log iscsi_storage_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $ISCSI_MGMT_LOCK_FILE
+				RET=$?
+				iscsi_storage_log iscsi_storage_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			iscsi_storage_log iscsi_storage_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ iscsi-storage functions
+
+
+
+
+function check_iscsi_target() {
+	# iscsi-target installed ?
+	if ! ls $IETDCONF 1>/dev/null; then
+		echo "ERROR: Iscsi Enterprise Target not installed !"
+		echo "ERROR: For managing Iscsi filesystem-images please download and install from"
+		echo "       $ISCSI_TARGET_URL"
+		iscsi_storage_log iscsi-storage-functions "ERROR: Iscsi Enterprise Target not installed !"
+		iscsi_storage_lock release
+		return 1
+	fi			
+}
+
+
+
+function manage_iscsi() {
+
+	if ! check_iscsi_target; then
+		return
+	fi
+	case "$1" in
+		add)
+			# create the image file
+			dd if=/dev/zero of=$ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME bs=1M count=$ISCSI_IMAGE_SIZE
+			IMAGE_LUN=`cat $IETDCONF | grep Lun | awk {' print $2 '} | sort -n -r | head -n 1`
+			IMAGE_LUN=$(( IMAGE_LUN + 1 ))
+			echo "	Lun $IMAGE_LUN Path=$ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME,Type=fileio" >> $IETDCONF
+			nohup /etc/init.d/iscsi-target restart
+			;;
+		remove)
+			cat $IETDCONF | sed -e "s#.*$ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME.*##g" > /tmp/ietd.conf.tmp-update
+			/bin/mv -f /tmp/ietd.conf.tmp-update $IETDCONF
+			nohup /etc/init.d/iscsi-target restart
+			rm -f $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME
+			;;
+	esac
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

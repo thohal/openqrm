@@ -4,3 +4,4 @@
 #	IMG
 #	Target
 .|Iscsi-Storage
+..|Luns|plugins/iscsi-storage/iscsi-storage-manager.php
