@@ -7,7 +7,7 @@ $source_tab=$_REQUEST["source_tab"];
 
 <html>
 <head>
-<title>openQRM Lvm-storage actions</title>
+<title>openQRM Nfs-storage actions</title>
 <meta http-equiv="refresh" content="0; URL=nfs-storage-manager.php?currenttab=<?php echo $source_tab; ?>&nfs_storage_id=<?php echo $nfs_storage_id; ?>&strMsg=Processing <?php echo $nfs_storage_command; ?> on storage <?php echo $nfs_storage_id; ?>">
 </head>
 <body>
