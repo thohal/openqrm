@@ -101,7 +101,7 @@ case "$NFS_COMMAND" in
 		
 		# check that source fs-images exist
 		if [ ! -d $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME ]; then
-			echo "ERROR: Could not find source image /$NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME on the storage-server"
+			echo "ERROR: Could not find source image $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME on the storage-server"
 			exit 1
 		fi
 		echo -n "Creating snapshot from image $NFS_IMAGE_NAME -> $NFS_IMAGE_SNAPSHOT_NAME"
