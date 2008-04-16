@@ -1,3 +1,0 @@
-#!/bin/bash
-# this is the openqrm-plugin-iscsi-deployment preremove script
-`dirname $0`/openqrm-plugin-iscsi-deployment stop

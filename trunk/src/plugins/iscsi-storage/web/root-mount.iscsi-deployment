@@ -3,7 +3,7 @@
 # which proivdes function to mount/remount the remote
 # iscsi-rootfs according to the image_deployment_parameters at /mnt
 
-# iscsi-deployment
+# iscsi-storage
 # Required defines in the image_deploy_paramters
 #
 # IMAGE_TARGET						- target name of the Iscsi-target server
@@ -17,13 +17,13 @@
 #									  deployment time
 #									  syntax is : ip_of_iscsi-server:path_to_target_image
 # IMAGE_INSTALL_FROM_LOCAL_DEVICE	- set to a local harddisk device (e.g. /dev/hda1) this
-#									  option will install the iscsi-deployment image on 
+#									  option will install the iscsi-storage image on 
 #									  boot-time from the local-device configured in the image-parameters
 #
 # IMAGE_INSTALL_FROM_LOCAL_DEVICE_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
 #
 # IMAGE_TRANSFORM_TO_LOCAL_DEVICE	- set to a local harddisk device (e.g. /dev/hda1) this option will transfrom
-#									  the iscsi-deployment image on boot-time to the
+#									  the iscsi-storage image on boot-time to the
 #									  local-device configured in the image-parameters
 #
 # IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
@@ -91,7 +91,7 @@ EOF
 	sleep 2
 
 	# discover
-	echo "iscsi-deployment: Discoverying Iscsi-target $image_storage_server_ip:3260"
+	echo "iscsi-storage: Discoverying Iscsi-target $image_storage_server_ip:3260"
 	iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260
 
 	# login
@@ -103,23 +103,23 @@ EOF
 		# give a shell for the admin
 		/bin/bash
 	else
-		echo "iscsi-deployment: Mounted $image_rootdevice rw"
+		echo "iscsi-storage: Mounted $image_rootdevice rw"
 	fi
 	
 	if  [ "$IMAGE_INSTALL_FROM" != "" ]; then
 		install_rootfs
 	else
-		echo "iscsi-deployment: Skipping install phase"
+		echo "iscsi-storage: Skipping install phase"
 	fi
 	if  [ "$IMAGE_INSTALL_FROM_LOCAL_DEVICE" != "" ]; then
 		install_rootfs_from_local
 	else
-		echo "iscsi-deployment: Skipping install from local phase"
+		echo "iscsi-storage: Skipping install from local phase"
 	fi
 	if  [ "$IMAGE_TRANSFORM_TO_LOCAL" != "" ]; then
 		transform_rootfs_to_local
 	else
-		echo "iscsi-deployment: Skipping transform to local phase"
+		echo "iscsi-storage: Skipping transform to local phase"
 	fi
 }
 
@@ -133,11 +133,11 @@ function remount_rootfs() {
 		sleep 1
 		REMOUNT_LOOP=$[ REMOUNT_LOOP + 1 ]
 		if [ "$REMOUNT_LOOP" == "10" ]; then
-			echo "ERROR: iscsi-deployment could not remount /mnt "
+			echo "ERROR: iscsi-storage could not remount /mnt "
 			/bin/bash
 		fi
 	done
-	echo "iscsi-deployment: Re-mounted $image_rootdevice ro"
+	echo "iscsi-storage: Re-mounted $image_rootdevice ro"
 	
 }
 
@@ -159,17 +159,17 @@ function install_rootfs() {
 	rm -rf /dev/null
 	mknod -m 666 /dev/null c 1 3
 	portmap
-	echo "iscsi-deployment: Installing $resource_image from $IMAGE_INSTALL_FROM"
+	echo "iscsi-storage: Installing $resource_image from $IMAGE_INSTALL_FROM"
 	mkdir -p /mnt2
 	if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_INSTALL_FROM /mnt2; then
 		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM by nfs"
 		# give a shell for the admin
 		/bin/bash
 	fi
-	echo "iscsi-deployment: Starting copying. This can take a while ...."
+	echo "iscsi-storage: Starting copying. This can take a while ...."
 	cp -af /mnt2/.* /mnt/
 	cp -af /mnt2/* /mnt/
-	echo "iscsi-deployment: Copying finished. Continuing boot-up"
+	echo "iscsi-storage: Copying finished. Continuing boot-up"
 	umount /mnt2
 	rmdir /mnt2
 	killall portmap
@@ -184,7 +184,7 @@ function install_rootfs_from_local() {
 		# give a shell for the admin
 		/bin/bash
 	fi
-	echo "iscsi-deployment: Starting install phase from local device."
+	echo "iscsi-storage: Starting install phase from local device."
 	cp -af /mnt2/.* /mnt/
 	cp -af /mnt2/* /mnt/
 	umount /mnt2
@@ -200,7 +200,7 @@ function transform_rootfs_to_local() {
 		# give a shell for the admin
 		/bin/bash
 	fi
-	echo "iscsi-deployment: Starting install phase to local device"
+	echo "iscsi-storage: Starting install phase to local device"
 	cp -af /mnt/.* /mnt2/
 	cp -af /mnt/* /mnt2/
 	umount /mnt2
