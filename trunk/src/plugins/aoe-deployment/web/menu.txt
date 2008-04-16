@@ -1,6 +1,0 @@
-#	Title
-#	Href
-#	Alt
-#	IMG
-#	Target
-.|Aoe-deployment

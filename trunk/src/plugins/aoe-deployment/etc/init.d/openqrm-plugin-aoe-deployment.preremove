@@ -1,3 +1,0 @@
-#!/bin/bash
-# this is the openqrm-plugin-aoe-deployment preremove script
-`dirname $0`/openqrm-plugin-aoe-deployment stop
