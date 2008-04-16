@@ -1,0 +1,153 @@
+#!/bin/bash
+# this is the root-mount initrd-service
+# which proivdes function to mount/remount the remote
+# nfs-rootfs according to the image_deployment_parameters at /mnt
+
+# nfs-storage
+# Required defines in the image_deploy_paramters
+# IMAGE_ROOT_DIR				- set to the path to the rootfs on the NFS-server
+# Optional parameters 
+# IMAGE_NFS_MOUNT_OPTIONS			- can be e.g. set to proto=tcp
+# IMAGE_INSTALL_FROM				- can be set to an (nfs) location from
+#									  which the image will be installed at
+#									  deployment time
+#									  syntax is : ip_of_nfs-server:path_to_target_image
+# IMAGE_INSTALL_FROM_LOCAL_DEVICE	- set to "y" or "Y" this option will install
+#									  the nfs-storage image on boot-time from the
+#									  local-device configured in the image-parameters
+#
+# IMAGE_TRANSFORM_TO_LOCAL			- set to "y" or "Y" this option will transfrom
+#									  the nfs-storage image on boot-time to the
+#									  local-device configured in the image-parameters
+#
+#
+#
+# get the deployment parameters from openqrm.conf
+OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
+. $OPENQRM_RESOURCE_PARAMETER_FILE
+eval $image_deployment_parameter
+
+if [ "$IMAGE_NFS_MOUNT_OPTIONS" != "" ]; then
+	IMAGE_NFS_MOUNT_OPTIONS=",$IMAGE_NFS_MOUNT_OPTIONS"
+fi
+
+#######################################################################
+# required functions ##################################################
+#######################################################################
+
+function mount_rootfs() {
+	modprobe sunrpc 1>/dev/null 2>&1
+	modprobe lockd 1>/dev/null 2>&1
+	modprobe nfs 1>/dev/null 2>&1
+	rm -rf /dev/null
+	mknod -m 666 /dev/null c 1 3
+	portmap
+
+	if ! mount -t nfs -o rw,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_ROOT_DIR /mnt; then
+		echo "ERROR: Could not mount $image_storage_server_ip:$IMAGE_ROOT_DIR by nfs"
+		# give a shell for the admin
+		/bin/bash
+	else
+		echo "nfs-storage: Mounted $image_storage_server_ip:$IMAGE_ROOT_DIR rw"
+	fi
+	
+	if  [ "$IMAGE_INSTALL_FROM" != "" ]; then
+		install_rootfs
+	else
+		echo "nfs-storage: Skipping install phase"
+	fi
+	if  [ "$IMAGE_INSTALL_FROM_LOCAL_DEVICE" != "" ]; then
+		install_rootfs_from_local
+	else
+		echo "nfs-storage: Skipping install from local phase"
+	fi
+	if  [ "$IMAGE_TRANSFORM_TO_LOCAL" != "" ]; then
+		transform_rootfs_to_local
+	else
+		echo "nfs-storage: Skipping transform to local phase"
+	fi
+}
+
+
+function remount_rootfs() {
+
+	# Debian/Ubuntu Systems want their nfs-rootfs in rw mode
+	# so we return here for now
+	return
+
+	# remont /mnt ro
+	while ! mount -t nfs -o ro,remount,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_ROOT_DIR /mnt; do
+		echo -n "."
+		sleep 1
+		REMOUNT_LOOP=$[ REMOUNT_LOOP + 1 ]
+		if [ "$REMOUNT_LOOP" == "10" ]; then
+			echo "ERROR: nfs-storage could not remount /mnt "
+			/bin/bash
+		fi
+	done
+	echo "nfs-storage: Re-mounted $image_storage_server_ip:$IMAGE_ROOT_DIR ro"
+	killall portmap
+	
+}
+
+
+function create_fstab() {
+	rm -f $IMAGE_FSTAB
+	echo "0.0.0.0:$IMAGE_ROOT_DIR   /   nfs  defaults   0 0" >> $IMAGE_FSTAB
+}
+
+
+#######################################################################
+# optional functions ##################################################
+#######################################################################
+
+function install_rootfs() {
+	echo "nfs-storage: Installing $resource_image from $IMAGE_INSTALL_FROM"
+	mkdir -p /mnt2
+	if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_INSTALL_FROM /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM by nfs"
+		# give a shell for the admin
+		/bin/bash
+	fi
+	echo "nfs-storage: Starting copying. This can take a while ...."
+	cp -af /mnt2/.* /mnt/
+	cp -af /mnt2/* /mnt/
+	echo "nfs-storage: Copying finished. Continuing boot-up"
+	umount /mnt2
+	rmdir /mnt2
+}
+
+
+function install_rootfs_from_local() {
+	modprobe ext3 1>/dev/null 2>&1
+	mkdir -p /mnt2
+	if ! mount -t $image_rootfstype -o ro $image_rootdevice /mnt2; then
+		echo "ERROR: Could not mount $image_rootdevice / $image_rootfstype"
+		# give a shell for the admin
+		/bin/bash
+	fi
+	echo "nfs-storage: Starting install phase from local device."
+	cp -af /mnt2/.* /mnt/
+	cp -af /mnt2/* /mnt/
+	umount /mnt2
+	rmdir /mnt2
+}
+
+
+function transform_rootfs_to_local() {
+	modprobe ext3 1>/dev/null 2>&1
+	mkdir -p /mnt2
+	if ! mount -t $image_rootfstype -o rw $image_rootdevice /mnt2; then
+		echo "ERROR: Could not mount $image_rootdevice / $image_rootfstype"
+		# give a shell for the admin
+		/bin/bash
+	fi
+	echo "nfs-storage: Starting install phase to local device"
+	cp -af /mnt/.* /mnt2/
+	cp -af /mnt/* /mnt2/
+	umount /mnt2
+	rmdir /mnt2
+}
+
+
+

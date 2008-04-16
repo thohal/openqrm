@@ -31,10 +31,36 @@ function openqrm_plugin_lvm-storage_uninstall() {
 	fi
 	echo "Uninstalling the openQRM lvm-storage-plugin"
 	openqrm_plugin_lvm-storage_stop
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD lvm-aoe
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD lvm-iscsi
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD lvm-nfs
 	openqrm_server_remove_storagetype $USERNAME $PASSWORD lvm-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/lvm-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-lvm-storage.tgz
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storagetype-capabilities.lvm-storage-menu.html
+
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.lvm-aoe-deployment
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.lvm-iscsi-deployment 
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.lvm-nfs-deployment
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.lvm-aoe-menu.html
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.lvm-iscsi-menu.html
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.lvm-nfs-menu.html
+
+	# remove only if nfs/iscsi/aoe is not enabled
+	if ! ls $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins | grep iscsi-storage 1>/dev/null 2>&1; then
+		if ! ls $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins | grep netapp-storage 1>/dev/null 2>&1; then
+			rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsid
+			rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsiadm
+		fi
+	fi
+	if ! ls $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins | grep aoe-storage 1>/dev/null 2>&1; then
+		rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-interfaces
+		rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-discover
+		rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-stat
+		rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-mkdevs
+		rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-mkshelf
+	fi
+
 }
 
 function openqrm_plugin_lvm-storage_init() {
@@ -50,12 +76,53 @@ function openqrm_plugin_lvm-storage_init() {
 	fi
 	echo "Initializing the openQRM lvm-storage-plugin"
 	openqrm_server_add_storagetype $USERNAME $PASSWORD lvm-storage "Lvm Storage Server (nfs/iscsi/aoe)"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD lvm-aoe "Aoe-root deployment"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD lvm-iscsi "Iscsi-root deployment"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD lvm-nfs "Nfs-root deployment"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/lvm-storage
 	# link the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/boot-service-lvm-storage.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-lvm-storage.tgz
 	# linking the storagetype-menu
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/storagetype-capabilities.lvm-storage-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storagetype-capabilities.lvm-storage-menu.html
+	# linking the root mount hooks
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/root-mount.lvm-aoe-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.lvm-aoe-deployment
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/root-mount.lvm-iscsi-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.lvm-iscsi-deployment
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/root-mount.lvm-nfs-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.lvm-nfs-deployment
+	# linking the image deployment parameters menu
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/image-deployment-parameter.lvm-aoe-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.lvm-aoe-menu.html
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/image-deployment-parameter.lvm-iscsi-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.lvm-iscsi-menu.html
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/image-deployment-parameter.lvm-nfs-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.lvm-nfs-menu.html
+
+	# copying iscsid to boot-service dir
+	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsid ]; then
+		cp -f `which iscsid` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
+	fi
+	# copying iscsiadm to boot-service dir
+	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsiadm ]; then
+		cp -f `which iscsiadm` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
+	fi
+
+	# copying aoe-interfaces to boot-service dir
+	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-interfaces ]; then
+		cp -f `which aoe-interfaces` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
+	fi
+	# copying aoe-discover to boot-service dir
+	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-discover ]; then
+		cp -f `which aoe-discover` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
+	fi
+	# copying aoe-stat to boot-service dir
+	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-stat ]; then
+		cp -f `which aoe-stat` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
+	fi
+	# copying aoe-mkdevs to boot-service dir
+	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-mkdevs ]; then
+		cp -f `which aoe-mkdevs` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
+	fi
+	# copying aoe-mkshelf to boot-service dir
+	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-mkshelf ]; then
+		cp -f `which aoe-mkshelf` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
+	fi
 	
 }
 
