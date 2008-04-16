@@ -37,7 +37,8 @@ function openqrm_plugin_nfs_storage_uninstall() {
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nfs-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.nfs-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.nfs-menu.html
-	
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storagetype-capabilities.nfs-storage-menu.html	
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-nfs-storage.tgz
 }
 
 function openqrm_plugin_nfs_storage_init() {
@@ -57,10 +58,14 @@ function openqrm_plugin_nfs_storage_init() {
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nfs-storage
 	# linking the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/web/boot-service-nfs-storage.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-nfs-storage.tgz
+	# linking the root mount hook
 	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/web/root-mount.nfs-deployment
 	ln -s $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/web/root-mount.nfs-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.nfs-deployment
 	# linking the image-menu
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/web/image-deployment-parameter.nfs-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.nfs-menu.html
+	# linking the storagetype-menu
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/web/storagetype-capabilities.nfs-storage-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storagetype-capabilities.nfs-storage-menu.html
 }
 
 USER=$2

@@ -1,0 +1,136 @@
+#!/bin/bash
+
+# this script automatically manages nfs and iscsi on nfs
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/include/openqrm-plugin-nfs-storage-functions
+. /var/openqrm/openqrm-resource.conf
+OPENQRM_POSTENCODE="$resource_basedir/openqrm/sbin/openqrm-postencode.py"
+
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+
+function nfs_storage_usage() {
+	echo "Usage : $0 add/remove/snap/list <-n image-name>"
+	echo "             [-s image-snapshot-name]"
+	echo "        $0 post_exports <-u username> <-p password>"
+	exit 1
+}
+
+
+NFS_COMMAND=$1
+shift
+
+while [ $# -ne 0 ]; do
+	case "$1" in
+		-n)
+			NFS_IMAGE_NAME=$2
+			shift
+			;;
+		-s)
+			NFS_IMAGE_SNAPSHOT_NAME=$2
+			shift
+			;;
+		-u)
+			NFS_OPENQRM_USERNAME=$2
+			shift
+			;;
+		-p)
+			NFS_OPENQRM_PASSWORD=$2
+			shift
+			;;
+		*)
+			echo "ERROR: Free commandline arguments are not allowed"
+			nfs_storage_usage
+			exit 6
+			;;
+	esac
+	shift
+done
+
+
+
+
+# main
+if [ "$NFS_COMMAND" == "" ]; then
+	nfs_storage_usage
+fi
+
+if [ "$NFS_COMMAND" == "post_exports" ]; then
+	if [ "$NFS_OPENQRM_USERNAME" == "" ]; then
+		nfs_storage_usage
+	fi
+	if [ "$NFS_OPENQRM_PASSWORD" == "" ]; then
+		nfs_storage_usage
+	fi
+else
+	if [ "$NFS_COMMAND" != "list" ]; then
+		if [ "$NFS_IMAGE_NAME" == "" ]; then
+			nfs_storage_usage
+		fi
+	fi
+fi
+
+case "$NFS_COMMAND" in 
+
+	add)
+		echo -n "Creating NFS export for image $NFS_IMAGE_NAME"
+		# add to exports
+		nfs_storage_lock aquire
+		manage_nfs add
+		nfs_storage_lock release
+		;;
+
+	remove)
+		echo -n "Removing NFS export for image $NFS_IMAGE_NAME"
+		nfs_storage_lock aquire
+		manage_nfs remove
+		nfs_storage_lock release
+		;;
+
+	snap)
+		if [ "$NFS_IMAGE_SNAPSHOT_NAME" == "" ]; then
+			echo "ERROR: Please give a name for the snapshot using the -s cmdline parmeter"
+			echo
+			nfs_storage_usage
+		fi
+		
+		# check that source fs-images exist
+		if [ ! -d $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME ]; then
+			echo "ERROR: Could not find source image /$NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME on the storage-server"
+			exit 1
+		fi
+		echo -n "Creating snapshot from image $NFS_IMAGE_NAME -> $NFS_IMAGE_SNAPSHOT_NAME"
+		mkdir -p $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_SNAPSHOT_NAME
+		cp -aR $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME/* $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_SNAPSHOT_NAME/
+		export NFS_IMAGE_NAME=$NFS_IMAGE_SNAPSHOT_NAME
+		nfs_storage_lock aquire
+		manage_nfs add snap
+		nfs_storage_lock release
+		;;
+
+	list)
+		ls $NFS_STORAGE_SERVER_IMAGE_DIRECTORY
+		;;
+	post_exports)
+		echo "Posting current nfs-exports to the openQRM-server"
+		STORAGE_STATUS_TMP=$resource_id.nfs.stat
+		exportfs -v > $STORAGE_STATUS_TMP
+		if ! wget -q -O /dev/null --http-user=$NFS_OPENQRM_USERNAME --http-password=$NFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$resource_openqrmserver/openqrm/base/plugins/nfs-storage/nfs-storage-action.php?nfs_storage_command=get_storage; then
+			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!"
+			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!" | logger
+		fi
+		rm -f $STORAGE_STATUS_TMP
+		rm -f $STORAGE_STATUS_TMP.post
+		;;
+	*)
+		nfs_storage_usage
+		;;
+
+
+esac
+

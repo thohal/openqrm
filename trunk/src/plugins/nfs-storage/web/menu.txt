@@ -4,3 +4,4 @@
 #	IMG
 #	Target
 .|Nfs-Storage
+..|Exports|plugins/nfs-storage/nfs-storage-manager.php
