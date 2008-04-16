@@ -109,7 +109,7 @@ case "$NFS_COMMAND" in
 		cp -aR $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME/* $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_SNAPSHOT_NAME/
 		export NFS_IMAGE_NAME=$NFS_IMAGE_SNAPSHOT_NAME
 		nfs_storage_lock aquire
-		manage_nfs add snap
+		manage_nfs add
 		nfs_storage_lock release
 		;;
 
