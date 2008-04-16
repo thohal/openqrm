@@ -1,0 +1,147 @@
+#!/bin/bash
+
+# this script automatically manages aoe
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/include/openqrm-plugin-aoe-storage-functions
+. /var/openqrm/openqrm-resource.conf
+OPENQRM_POSTENCODE="$resource_basedir/openqrm/sbin/openqrm-postencode.py"
+
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+
+function aoe_storage_usage() {
+	echo "Usage : $0 add/remove/snap/list <-n image-name> "
+	echo "             [-m size in MB]"
+	echo "             [-s image-snapshot-name]"
+	echo "        $0 post_luns <-u username> <-p password>"
+	exit 1
+}
+
+
+AOE_COMMAND=$1
+shift
+
+while [ $# -ne 0 ]; do
+	case "$1" in
+		-n)
+			AOE_IMAGE_NAME=$2
+			shift
+			;;
+		-s)
+			AOE_IMAGE_SNAPSHOT_NAME=$2
+			shift
+			;;
+		-m)
+			AOE_IMAGE_SIZE=$2
+			shift
+			;;
+		-u)
+			AOE_OPENQRM_USERNAME=$2
+			shift
+			;;
+		-p)
+			AOE_OPENQRM_PASSWORD=$2
+			shift
+			;;
+		*)
+			echo "ERROR: Free commandline arguments are not allowed"
+			aoe_storage_usage
+			exit 6
+			;;
+	esac
+	shift
+done
+
+
+
+
+# main
+if [ "$AOE_COMMAND" == "" ]; then
+	aoe_storage_usage
+fi
+
+if [ "$AOE_COMMAND" == "post_luns" ]; then
+	if [ "$AOE_OPENQRM_USERNAME" == "" ]; then
+		aoe_storage_usage
+	fi
+	if [ "$AOE_OPENQRM_PASSWORD" == "" ]; then
+		aoe_storage_usage
+	fi
+else
+	if [ "$AOE_COMMAND" != "list" ]; then
+		if [ "$AOE_IMAGE_NAME" == "" ]; then
+			aoe_storage_usage
+		fi
+	fi
+fi
+
+case "$AOE_COMMAND" in 
+
+	add)
+		if [ "$AOE_IMAGE_SIZE" == "" ]; then
+			AOE_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
+			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
+		fi
+		export AOE_IMAGE_SIZE
+		echo -n "Creating AOE Shelf for image $AOE_IMAGE_NAME"
+		mkdir -p $AOE_STORAGE_SERVER_IMAGE_DIRECTORY
+		# add to exports
+		aoe_storage_lock aquire
+		manage_aoe add
+		aoe_storage_lock release
+		;;
+
+	remove)
+		echo -n "Removing AOE shelf for image $AOE_IMAGE_NAME"
+		aoe_storage_lock aquire
+		manage_aoe remove
+		aoe_storage_lock release
+		;;
+
+	snap)
+		if [ "$AOE_IMAGE_SNAPSHOT_NAME" == "" ]; then
+			echo "ERROR: Please give a name for the snapshot using the -s cmdline parmeter"
+			echo
+			aoe_storage_usage
+		fi
+		
+		# check that source fs-images exist
+		if [ ! -f $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME ]; then
+			echo "ERROR: Could not find source image $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME on the storage-server"
+			exit 1
+		fi
+		echo -n "Creating snapshot from image $AOE_IMAGE_NAME -> $AOE_IMAGE_SNAPSHOT_NAME"
+		mkdir -p $AOE_STORAGE_SERVER_IMAGE_DIRECTORY
+		cp -a $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_SNAPSHOT_NAME
+		export AOE_IMAGE_NAME=$AOE_IMAGE_SNAPSHOT_NAME
+		aoe_storage_lock aquire
+		manage_aoe add
+		aoe_storage_lock release
+		;;
+
+	list)
+		ls $AOE_STORAGE_SERVER_IMAGE_DIRECTORY
+		;;
+	post_luns)
+		echo "Posting current aoe-luns to the openQRM-server"
+		STORAGE_STATUS_TMP=$resource_id.aoe.stat
+		cat $VBLADECONF > $STORAGE_STATUS_TMP
+		if ! wget -q -O /dev/null --http-user=$AOE_OPENQRM_USERNAME --http-password=$AOE_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$resource_openqrmserver/openqrm/base/plugins/aoe-storage/aoe-storage-action.php?aoe_storage_command=get_storage; then
+			echo "ERROR: Could not post the aoe-export status to the openQRM-server at $resource_openqrmserver!"
+			echo "ERROR: Could not post the aoe-export status to the openQRM-server at $resource_openqrmserver!" | logger
+		fi
+		rm -f $STORAGE_STATUS_TMP
+		rm -f $STORAGE_STATUS_TMP.post
+		;;
+	*)
+		aoe_storage_usage
+		;;
+
+
+esac
+

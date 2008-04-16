@@ -36,6 +36,8 @@ function openqrm_plugin_aoe_storage_uninstall() {
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aoe-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.aoe-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.aoe-menu.html
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storagetype-capabilities.aoe-storage-menu.html	
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-aoe-storage.tgz
 	# remove only if lvm-storage is not enabled
 	if ! ls $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins | grep lvm-storage 1>/dev/null 2>&1; then
 		rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-interfaces
@@ -63,10 +65,14 @@ function openqrm_plugin_aoe_storage_init() {
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aoe-storage
 	# linking the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/boot-service-aoe-storage.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-aoe-storage.tgz
+	# linking the root mount hook
 	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/root-mount.aoe-deployment
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/root-mount.aoe-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.aoe-deployment
 	# linking the image-menu
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/image-deployment-parameter.aoe-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.aoe-menu.html
+	# linking the storagetype-menu
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/storagetype-capabilities.aoe-storage-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storagetype-capabilities.aoe-storage-menu.html
 
 	# copying aoe-interfaces to boot-service dir
 	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-interfaces ]; then

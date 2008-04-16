@@ -4,3 +4,4 @@
 #	IMG
 #	Target
 .|Aoe-Storage
+..|Shelfs|plugins/aoe-storage/aoe-storage-manager.php

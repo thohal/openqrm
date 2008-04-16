@@ -1,3 +1,129 @@
 #!/bin/bash
 # this is the functions file for the aoe-storage-plugin
 
+VBLADECONF=/etc/vblade/vblade.conf
+# some definitions
+DEFAULT_IMAGE_SIZE=5000
+AOE_MGMT_LOCK_FILE=/var/run/aoe-storage/aoe-storage-plugin.lock
+AOE_MGMT_LOCK_DELAY=5
+AOE_MGMT_LOCK_RETRY=100
+AOE_MGMT_LOCK_TIMEOUT=500
+AOE_STORAGE_SERVER_IMAGE_DIRECTORY="/coraid"
+
+
+################ common aoe-storage functions
+
+# logs for aoe_storage
+function aoe_storage_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "aoe-storage plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function aoe_storage_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $AOE_MGMT_LOCK_FILE` ]; then
+		mkdir -p `dirname $AOE_MGMT_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $AOE_MGMT_LOCK_DELAY -r $AOE_MGMT_LOCK_RETRY -l $AOE_MGMT_LOCK_TIMEOUT $AOE_MGMT_LOCK_FILE
+				RET=$?
+				aoe_storage_log aoe_storage_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $AOE_MGMT_LOCK_FILE
+				RET=$?
+				aoe_storage_log aoe_storage_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			aoe_storage_log aoe_storage_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ aoe-storage functions
+
+
+
+function check_vblade() {
+	# vblade installed ?
+	if ! which vbladed 1>/dev/null; then
+		echo "ERROR: Vblade is not installed !"
+		echo "ERROR: For managing Aoe filesystem-images please install 'vblade'"
+		aoe_storage_log aoe-storage-functions "ERROR: Vblade is not installed !"
+		aoe_storage_lock release
+		return 1
+	fi			
+}
+
+
+function manage_aoe() {
+
+	if ! check_vblade; then
+		return
+	fi
+	if [ ! -f $VBLADECONF ]; then
+		mkdir -p `dirname $VBLADECONF`
+		echo "# this is the vblade configuration file created by openQRM" > $VBLADECONF
+		echo "" >> $VBLADECONF
+	fi
+	
+	case "$1" in
+		add)
+			dd if=/dev/zero of=$AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME bs=1M count=$AOE_IMAGE_SIZE
+			# currently just one static shelf !
+			AOE_SHELF=1
+			# slots are dynamic
+			AOE_SLOT=`cat $VBLADECONF | grep disk | awk {' print $3 '} | sort -n -r | head -n 1`
+			AOE_SLOT=$(( AOE_SLOT + 1 ))
+			AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '}`
+			echo "disk $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME" >> $VBLADECONF
+			# start vbladed
+			vbladed $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME
+			# this is a trick !
+			# vbladed used waitpid which blocks qrm-execd, using nohup, screen or & does not help so we restart the openqrm-client
+			/etc/init.d/openqrm-client restart &
+			;;
+		remove)
+			for VBLADE_PID in `ps ax | grep vblade | grep -w $AOE_IMAGE_NAME | awk {' print $1 '}`; do
+				kill $VBLADE_PID
+			done
+			sync			
+			cat $VBLADECONF | sed -e "s#.*$AOE_IMAGE_NAME.*##g" > /tmp/vblade.conf.tmp-update
+			/bin/mv -f /tmp/vblade.conf.tmp-update $VBLADECONF
+			rm -f $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME
+			;;
+	esac
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
