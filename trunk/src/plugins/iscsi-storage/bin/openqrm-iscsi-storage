@@ -1,0 +1,147 @@
+#!/bin/bash
+
+# this script automatically manages iscsi
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/include/openqrm-plugin-iscsi-storage-functions
+. /var/openqrm/openqrm-resource.conf
+OPENQRM_POSTENCODE="$resource_basedir/openqrm/sbin/openqrm-postencode.py"
+
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+
+function iscsi_storage_usage() {
+	echo "Usage : $0 add/remove/snap/list <-n image-name> "
+	echo "             [-m size in MB]"
+	echo "             [-s image-snapshot-name]"
+	echo "        $0 post_luns <-u username> <-p password>"
+	exit 1
+}
+
+
+ISCSI_COMMAND=$1
+shift
+
+while [ $# -ne 0 ]; do
+	case "$1" in
+		-n)
+			ISCSI_IMAGE_NAME=$2
+			shift
+			;;
+		-s)
+			ISCSI_IMAGE_SNAPSHOT_NAME=$2
+			shift
+			;;
+		-m)
+			ISCSI_IMAGE_SIZE=$2
+			shift
+			;;
+		-u)
+			ISCSI_OPENQRM_USERNAME=$2
+			shift
+			;;
+		-p)
+			ISCSI_OPENQRM_PASSWORD=$2
+			shift
+			;;
+		*)
+			echo "ERROR: Free commandline arguments are not allowed"
+			iscsi_storage_usage
+			exit 6
+			;;
+	esac
+	shift
+done
+
+
+
+
+# main
+if [ "$ISCSI_COMMAND" == "" ]; then
+	iscsi_storage_usage
+fi
+
+if [ "$ISCSI_COMMAND" == "post_luns" ]; then
+	if [ "$ISCSI_OPENQRM_USERNAME" == "" ]; then
+		iscsi_storage_usage
+	fi
+	if [ "$ISCSI_OPENQRM_PASSWORD" == "" ]; then
+		iscsi_storage_usage
+	fi
+else
+	if [ "$ISCSI_COMMAND" != "list" ]; then
+		if [ "$ISCSI_IMAGE_NAME" == "" ]; then
+			iscsi_storage_usage
+		fi
+	fi
+fi
+
+case "$ISCSI_COMMAND" in 
+
+	add)
+		if [ "$ISCSI_IMAGE_SIZE" == "" ]; then
+			ISCSI_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
+			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
+		fi
+		export ISCSI_IMAGE_SIZE
+		echo -n "Creating ISCSI Lun for image $ISCSI_IMAGE_NAME"
+		mkdir -p $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY
+		# add to exports
+		iscsi_storage_lock aquire
+		manage_iscsi add
+		iscsi_storage_lock release
+		;;
+
+	remove)
+		echo -n "Removing ISCSI export for image $ISCSI_IMAGE_NAME"
+		iscsi_storage_lock aquire
+		manage_iscsi remove
+		iscsi_storage_lock release
+		;;
+
+	snap)
+		if [ "$ISCSI_IMAGE_SNAPSHOT_NAME" == "" ]; then
+			echo "ERROR: Please give a name for the snapshot using the -s cmdline parmeter"
+			echo
+			iscsi_storage_usage
+		fi
+		
+		# check that source fs-images exist
+		if [ ! -f $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME ]; then
+			echo "ERROR: Could not find source image $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME on the storage-server"
+			exit 1
+		fi
+		echo -n "Creating snapshot from image $ISCSI_IMAGE_NAME -> $ISCSI_IMAGE_SNAPSHOT_NAME"
+		mkdir -p $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY
+		cp -a $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_SNAPSHOT_NAME
+		export ISCSI_IMAGE_NAME=$ISCSI_IMAGE_SNAPSHOT_NAME
+		iscsi_storage_lock aquire
+		manage_iscsi add
+		iscsi_storage_lock release
+		;;
+
+	list)
+		ls $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY
+		;;
+	post_luns)
+		echo "Posting current iscsi-luns to the openQRM-server"
+		STORAGE_STATUS_TMP=$resource_id.iscsi.stat
+		cat $IETDCONF > $STORAGE_STATUS_TMP
+		if ! wget -q -O /dev/null --http-user=$ISCSI_OPENQRM_USERNAME --http-password=$ISCSI_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$resource_openqrmserver/openqrm/base/plugins/iscsi-storage/iscsi-storage-action.php?iscsi_storage_command=get_storage; then
+			echo "ERROR: Could not post the iscsi-export status to the openQRM-server at $resource_openqrmserver!"
+			echo "ERROR: Could not post the iscsi-export status to the openQRM-server at $resource_openqrmserver!" | logger
+		fi
+		rm -f $STORAGE_STATUS_TMP
+		rm -f $STORAGE_STATUS_TMP.post
+		;;
+	*)
+		iscsi_storage_usage
+		;;
+
+
+esac
+
