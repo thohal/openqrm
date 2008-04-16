@@ -3,7 +3,7 @@
 # which proivdes function to mount/remount the remote
 # nfs-rootfs according to the image_deployment_parameters at /mnt
 
-# nfs-deployment
+# nfs-storage
 # Required defines in the image_deploy_paramters
 # IMAGE_ROOT_DIR				- set to the path to the rootfs on the NFS-server
 # Optional parameters 
@@ -13,11 +13,11 @@
 #									  deployment time
 #									  syntax is : ip_of_nfs-server:path_to_target_image
 # IMAGE_INSTALL_FROM_LOCAL_DEVICE	- set to "y" or "Y" this option will install
-#									  the nfs-deployment image on boot-time from the
+#									  the nfs-storage image on boot-time from the
 #									  local-device configured in the image-parameters
 #
 # IMAGE_TRANSFORM_TO_LOCAL			- set to "y" or "Y" this option will transfrom
-#									  the nfs-deployment image on boot-time to the
+#									  the nfs-storage image on boot-time to the
 #									  local-device configured in the image-parameters
 #
 #
@@ -48,23 +48,23 @@ function mount_rootfs() {
 		# give a shell for the admin
 		/bin/bash
 	else
-		echo "nfs-deployment: Mounted $image_storage_server_ip:$IMAGE_ROOT_DIR rw"
+		echo "nfs-storage: Mounted $image_storage_server_ip:$IMAGE_ROOT_DIR rw"
 	fi
 	
 	if  [ "$IMAGE_INSTALL_FROM" != "" ]; then
 		install_rootfs
 	else
-		echo "nfs-deployment: Skipping install phase"
+		echo "nfs-storage: Skipping install phase"
 	fi
 	if  [ "$IMAGE_INSTALL_FROM_LOCAL_DEVICE" != "" ]; then
 		install_rootfs_from_local
 	else
-		echo "nfs-deployment: Skipping install from local phase"
+		echo "nfs-storage: Skipping install from local phase"
 	fi
 	if  [ "$IMAGE_TRANSFORM_TO_LOCAL" != "" ]; then
 		transform_rootfs_to_local
 	else
-		echo "nfs-deployment: Skipping transform to local phase"
+		echo "nfs-storage: Skipping transform to local phase"
 	fi
 }
 
@@ -81,11 +81,11 @@ function remount_rootfs() {
 		sleep 1
 		REMOUNT_LOOP=$[ REMOUNT_LOOP + 1 ]
 		if [ "$REMOUNT_LOOP" == "10" ]; then
-			echo "ERROR: nfs-deployment could not remount /mnt "
+			echo "ERROR: nfs-storage could not remount /mnt "
 			/bin/bash
 		fi
 	done
-	echo "nfs-deployment: Re-mounted $image_storage_server_ip:$IMAGE_ROOT_DIR ro"
+	echo "nfs-storage: Re-mounted $image_storage_server_ip:$IMAGE_ROOT_DIR ro"
 	killall portmap
 	
 }
@@ -102,17 +102,17 @@ function create_fstab() {
 #######################################################################
 
 function install_rootfs() {
-	echo "nfs-deployment: Installing $resource_image from $IMAGE_INSTALL_FROM"
+	echo "nfs-storage: Installing $resource_image from $IMAGE_INSTALL_FROM"
 	mkdir -p /mnt2
 	if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_INSTALL_FROM /mnt2; then
 		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM by nfs"
 		# give a shell for the admin
 		/bin/bash
 	fi
-	echo "nfs-deployment: Starting copying. This can take a while ...."
+	echo "nfs-storage: Starting copying. This can take a while ...."
 	cp -af /mnt2/.* /mnt/
 	cp -af /mnt2/* /mnt/
-	echo "nfs-deployment: Copying finished. Continuing boot-up"
+	echo "nfs-storage: Copying finished. Continuing boot-up"
 	umount /mnt2
 	rmdir /mnt2
 }
@@ -126,7 +126,7 @@ function install_rootfs_from_local() {
 		# give a shell for the admin
 		/bin/bash
 	fi
-	echo "nfs-deployment: Starting install phase from local device."
+	echo "nfs-storage: Starting install phase from local device."
 	cp -af /mnt2/.* /mnt/
 	cp -af /mnt2/* /mnt/
 	umount /mnt2
@@ -142,7 +142,7 @@ function transform_rootfs_to_local() {
 		# give a shell for the admin
 		/bin/bash
 	fi
-	echo "nfs-deployment: Starting install phase to local device"
+	echo "nfs-storage: Starting install phase to local device"
 	cp -af /mnt/.* /mnt2/
 	cp -af /mnt/* /mnt2/
 	umount /mnt2

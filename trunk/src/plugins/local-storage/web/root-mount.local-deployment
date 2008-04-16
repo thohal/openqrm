@@ -3,9 +3,9 @@
 # which proivdes function to mount/remount the remote
 # local-rootfs according to the image_deployment_parameters at /mnt
 #
-# local-deployment INSTALL
+# local-storage INSTALL
 # Required defines in the image_deploy_paramters
-# IMAGE_INSTALL_FROM		- set to the server-location (path) of the local-deployment image
+# IMAGE_INSTALL_FROM		- set to the server-location (path) of the local-storage image
 #							  which should be installed (restored) on the local device.
 #							  syntax is : /path_to_target_image
 #
@@ -13,9 +13,9 @@
 # IMAGE_NFS_MOUNT_OPTIONS	- can be e.g. set to tcp
 #
 #
-# local-deployment GRAB
+# local-storage GRAB
 # Required defines in the image_deploy_paramters
-# IMAGE_GRAB_TO				- set to the server-location (path) the local-deployment image should
+# IMAGE_GRAB_TO				- set to the server-location (path) the local-storage image should
 #						  	  be transfered to. syntax is : /path_to_target_image
 #
 # IMAGE_INSTALL_FROM_NFS	- set to the server-location (path) of the nfs-deployment image
@@ -41,12 +41,12 @@ function mount_rootfs() {
 	if  [ "$IMAGE_GRAB_TO" != "" ]; then
 		grab_rootfs
 	else
-		echo "local-deployment: Skipping grab phase"
+		echo "local-storage: Skipping grab phase"
 	fi
 	if  [ "$IMAGE_INSTALL_FROM" != "" ]; then
 		install_rootfs
 	else
-		echo "local-deployment: Skipping install phase"
+		echo "local-storage: Skipping install phase"
 	fi
 
 	if ! mount -t $image_rootfstype -o rw $image_rootdevice /mnt; then
@@ -54,18 +54,18 @@ function mount_rootfs() {
 		# give a shell for the admin
 		/bin/bash
 	else
-		echo "local-deployment: Mounted $image_rootdevice rw"
+		echo "local-storage: Mounted $image_rootdevice rw"
 	fi
 
 	if  [ "$IMAGE_TRANSFORM_TO_NFS" != "" ]; then
 		transform_rootfs_to_nfs
 	else
-		echo "local-deployment: Skipping transformation phase to nfs"
+		echo "local-storage: Skipping transformation phase to nfs"
 	fi
 	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
 		install_rootfs_from_nfs
 	else
-		echo "local-deployment: Skipping install phase from nfs"
+		echo "local-storage: Skipping install phase from nfs"
 	fi
 
 }
@@ -79,11 +79,11 @@ function remount_rootfs() {
 		sleep 1
 		REMOUNT_LOOP=$[ REMOUNT_LOOP + 1 ]
 		if [ "$REMOUNT_LOOP" == "10" ]; then
-			echo "ERROR: local-deployment could not remount /mnt "
+			echo "ERROR: local-storage could not remount /mnt "
 			/bin/bash
 		fi
 	done
-	echo "local-deployment: Re-mounted $image_rootdevice ro"
+	echo "local-storage: Re-mounted $image_rootdevice ro"
 }
 
 
@@ -100,11 +100,11 @@ function create_fstab() {
 
 
 function grab_rootfs() {
-	echo "local-deployment: Grabbing $resource_image from $image_rootdevice to image_storage_server_ip:$IMAGE_GRAB_TO"
+	echo "local-storage: Grabbing $resource_image from $image_rootdevice to image_storage_server_ip:$IMAGE_GRAB_TO"
 	# getting partimage
 	if [ ! -x /sbin/partimage ]; then
 		cd /sbin
-		echo "local-deployment: Getting partimage util"
+		echo "local-storage: Getting partimage util"
 		if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/partimage; then
 			/bin/bash
 		fi
@@ -125,7 +125,7 @@ function grab_rootfs() {
 		/bin/bash
 	fi
 
-	echo "local-deployment: Started grab-pase. This can take a while ...."
+	echo "local-storage: Started grab-pase. This can take a while ...."
 	# grabbing the root partition
 	partimage -z1 --nocheck --overwrite --nodesc -f3 -b save $image_rootdevice /mnt2/$image_name
 	# saving the mbr
@@ -133,7 +133,7 @@ function grab_rootfs() {
 	dd if=$ROOT_DISK of=/mnt2/$image_name.mbr count=1 bs=512
 	# saving the extend partitions
 	sfdisk -d $ROOT_DISK > /mnt2/$image_name.sf
-	echo "local-deployment: Grab-phase finished. Continuing boot-up"
+	echo "local-storage: Grab-phase finished. Continuing boot-up"
 
 	umount /mnt2
 	rmdir /mnt2
@@ -144,11 +144,11 @@ function grab_rootfs() {
 
 
 function install_rootfs() {
-	echo "local-deployment: Installing $resource_image from $image_storage_server_ip:$IMAGE_INSTALL_FROM to $image_rootdevice"
+	echo "local-storage: Installing $resource_image from $image_storage_server_ip:$IMAGE_INSTALL_FROM to $image_rootdevice"
 	# getting partimage
 	if [ ! -x /sbin/partimage ]; then
 		cd /sbin
-		echo "local-deployment: Getting partimage util"
+		echo "local-storage: Getting partimage util"
 		if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/partimage; then
 			/bin/bash
 		fi
@@ -169,14 +169,14 @@ function install_rootfs() {
 		/bin/bash
 	fi
 
-	echo "local-deployment: Started install-phase. This can take a while ...."
+	echo "local-storage: Started install-phase. This can take a while ...."
 	# restoring the mbr
 	ROOT_DISK=`echo $image_rootdevice | sed -e "s/[0-9]//g"`
 	dd if=/mnt2/$image_name.mbr of=$ROOT_DISK
 	# restoring the extented partition layout
 	sfdisk $ROOT_DISK < /mnt2/$image_name.sf
 	partimage -b restore $image_rootdevice /mnt2/$image_name.000
-	echo "local-deployment: Install-phase finished. Continuing boot-up"
+	echo "local-storage: Install-phase finished. Continuing boot-up"
 
 	umount /mnt2
 	rmdir /mnt2
@@ -187,7 +187,7 @@ function install_rootfs() {
 
 
 function transform_rootfs_to_nfs() {
-	echo "local-deployment: Transforming $resource_image from $image_rootdevice to $image_storage_server_ip:$IMAGE_TRANSFORM_TO_NFS"
+	echo "local-storage: Transforming $resource_image from $image_rootdevice to $image_storage_server_ip:$IMAGE_TRANSFORM_TO_NFS"
 	# mounting target location
 	modprobe sunrpc 1>/dev/null 2>&1
 	modprobe lockd 1>/dev/null 2>&1
@@ -202,10 +202,10 @@ function transform_rootfs_to_nfs() {
 		# give a shell for the admin
 		/bin/bash
 	fi
-	echo "local-deployment: Started tranformation phase to nfs. This can take a while ...."
+	echo "local-storage: Started tranformation phase to nfs. This can take a while ...."
 	cp -af /mnt/.* /mnt2/
 	cp -af /mnt/* /mnt2/
-	echo "local-deployment: Transform phase to nfs finished. Continuing boot-up"
+	echo "local-storage: Transform phase to nfs finished. Continuing boot-up"
 
 	umount /mnt2
 	rmdir /mnt2
@@ -216,7 +216,7 @@ function transform_rootfs_to_nfs() {
 
 
 function install_rootfs_from_nfs() {
-	echo "local-deployment: Installing $resource_image from nfs $image_storage_server_ip:$IMAGE_INSTALL_FROM_NFS"
+	echo "local-storage: Installing $resource_image from nfs $image_storage_server_ip:$IMAGE_INSTALL_FROM_NFS"
 	# mounting source location
 	modprobe sunrpc 1>/dev/null 2>&1
 	modprobe lockd 1>/dev/null 2>&1
@@ -231,10 +231,10 @@ function install_rootfs_from_nfs() {
 		# give a shell for the admin
 		/bin/bash
 	fi
-	echo "local-deployment: Started install phase from nfs. This can take a while ...."
+	echo "local-storage: Started install phase from nfs. This can take a while ...."
 	cp -af /mnt2/.* /mnt/
 	cp -af /mnt2/* /mnt/
-	echo "local-deployment: Install phase from nfs finished. Continuing boot-up"
+	echo "local-storage: Install phase from nfs finished. Continuing boot-up"
 
 	umount /mnt2
 	rmdir /mnt2

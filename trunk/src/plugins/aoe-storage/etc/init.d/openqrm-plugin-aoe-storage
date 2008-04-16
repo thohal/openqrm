@@ -34,7 +34,7 @@ function openqrm_plugin_aoe_storage_uninstall() {
 	openqrm_server_remove_deployment_type $USERNAME $PASSWORD aoe
 	openqrm_server_remove_storagetype $USERNAME $PASSWORD aoe-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aoe-storage
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.aoe-storage
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.aoe-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.aoe-menu.html
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-interfaces
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-discover
@@ -60,8 +60,8 @@ function openqrm_plugin_aoe_storage_init() {
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aoe-storage
 	# linking the boot-service
-	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/root-mount.aoe-storage
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/root-mount.aoe-storage $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.aoe-storage
+	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/root-mount.aoe-deployment
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/root-mount.aoe-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.aoe-deployment
 	# linking the image-menu
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/image-deployment-parameter.aoe-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.aoe-menu.html
 	# copying aoe-interfaces to boot-service dir

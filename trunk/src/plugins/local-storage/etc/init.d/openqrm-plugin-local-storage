@@ -1,0 +1,92 @@
+#!/bin/bash
+# init script for the openQRM local-storage-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/include/openqrm-plugin-local-storage-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/etc/openqrm-plugin-local-storage.conf
+
+
+function openqrm_plugin_local_storage_start() {
+	echo "Starting the openQRM local-storage-plugin"
+}
+
+
+function openqrm_plugin_local_storage_stop() {
+	echo "Stopping the openQRM local-storage-plugin"
+}
+
+function openqrm_plugin_local_storage_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "local-storage: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "local-storage: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM local-storage-plugin"
+	openqrm_plugin_local_storage_stop
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD local
+	openqrm_server_remove_storagetype $USERNAME $PASSWORD local-storage
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-storage
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.local-deployment
+}
+
+function openqrm_plugin_local_storage_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "local-storage: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "local-storage: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Initializing the openQRM local-storage-plugin"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD local "Local-deployment"
+	openqrm_server_add_storagetype $USERNAME $PASSWORD local-storage "Local Storage Server"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-storage
+	# linking the boot-service
+	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web/root-mount.local-deployment
+	ln -s $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web/root-mount.local-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.local-deployment
+	ln -s $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web/partimage $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/partimage
+}
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_local_storage_start
+		;;
+	stop)
+		openqrm_plugin_local_storage_stop
+		;;
+	restart)
+		openqrm_plugin_local_storage_stop
+		sleep 1
+		openqrm_plugin_local_storage_start
+		;;
+	init)
+		openqrm_plugin_local_storage_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_local_storage_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+
