@@ -47,7 +47,7 @@ function netapp_select_storage() {
 				$STORAGE_TYPE=str_replace("\\\"", "", $STORAGE_TYPE);
 			}
 		}
-		if ("$STORAGE_TYPE" == "netapp") {
+		if ("$STORAGE_TYPE" == "netapp-storage") {
 			$disp = $disp."<div id=\"storage\" nowrap=\"true\">";
 			$disp = $disp."<form action='netapp-storage-manager.php' method=post>";
 			$disp = $disp."$storage->id $storage->name $storage->resource_id/$storage_resource->ip $storage->deployment_type/$storage_deployment->type ";
@@ -84,17 +84,91 @@ function netapp_volume_display($netapp_storage_id) {
 	$disp = $disp."</form>";
 	$disp = $disp."</div>";
 
-	$storage_vg_list="storage/$storage_resource->id.vol.lst";
+	$disp = $disp."<br>";
+
+	$disp = $disp."<div id=\"vol_add\" nowrap=\"true\">";
+	$disp = $disp."<form action='netapp-storage-action.php' method=post>";
+	$disp = $disp."<input type=hidden name=netapp_storage_id value=$storage->id>";
+	$disp = $disp."<input type=hidden name=netapp_storage_command value='add_volume'>";
+	$disp = $disp."<input type=hidden name=source_tab value='tab0'>";
+	$disp = $disp."Create new volume named ";
+	$disp = $disp.htmlobject_input('netapp_storage_volume_name', array("value" => '', "label" => ''), 'text', 20);
+	$disp = $disp." with size ";
+	$disp = $disp.htmlobject_input('netapp_storage_volume_size', array("value" => '1000M', "label" => ''), 'text', 10);
+	$disp = $disp."on Aggregate ";
+	$disp = $disp.htmlobject_input('netapp_storage_volume_aggr', array("value" => 'aggrX', "label" => ''), 'text', 10);
+
+	$disp = $disp."<input type=submit value='Create'>";
+	$disp = $disp."</form>";
+	$disp = $disp."</div>";
+
+	$disp = $disp."<br>";
+
+	$storage_vg_list="storage/$storage->id.vol.lst";
 	$loop=0;
 	if (file_exists($storage_vg_list)) {
 		$storage_vg_content=file($storage_vg_list);
 		foreach ($storage_vg_content as $index => $volume) {
 			if ($loop > 3) {
+
 				$disp = $disp.$volume;
+				if (strstr($volume, "raid")) {
+					$volume=trim($volume);
+					$volume_name_end=strpos($volume, " ");
+					$netapp_storage_volume_name=substr($volume, 0, $volume_name_end);
+					$disp = $disp." <a href=\"netapp-storage-action.php?source_tab=tab0&netapp_storage_command=remove_volume&netapp_storage_id=$storage->id&netapp_storage_volume_name=$netapp_storage_volume_name\"> Remove</a>";
+				}
+
 				$disp = $disp."<br>";
 			}
 			$loop++;
 		}
+	} else {
+		$disp = $disp."<br> no view available<br> $storage_vg_list";
+	}
+	return $disp;
+}
+
+
+
+
+
+function netapp_aggr_display($netapp_storage_id) {
+	global $netapp_storage_id;
+
+	$disp = "<h1>Aggregate Admin</h1>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+
+	$storage = new storage();
+	$storage->get_instance_by_id($netapp_storage_id);
+	$storage_resource = new resource();
+	$storage_resource->get_instance_by_id($storage->resource_id);
+	$storage_deployment = new deployment();
+	$storage_deployment->get_instance_by_id($storage->deployment_type);
+
+	$disp = $disp."<div id=\"storage\" nowrap=\"true\">";
+	$disp = $disp."<form action='netapp-storage-action.php' method=post>";
+	$disp = $disp."$storage->id $storage->name $storage->resource_id/$storage_resource->ip $storage->deployment_type/$storage_deployment->type ";
+	$disp = $disp."<input type=hidden name=netapp_storage_id value=$storage->id>";
+	$disp = $disp."<input type=hidden name=netapp_storage_command value='aggr_list'>";
+	$disp = $disp."<input type=hidden name=source_tab value='tab1'>";
+	$disp = $disp."<input type=submit value='Refresh'>";
+	$disp = $disp."</form>";
+	$disp = $disp."</div>";
+
+	$storage_vg_list="storage/$storage->id.aggr.lst";
+	$loop=0;
+	if (file_exists($storage_vg_list)) {
+		$storage_vg_content=file($storage_vg_list);
+		foreach ($storage_vg_content as $index => $aggr) {
+			if ($loop > 3) {
+				$disp = $disp.$aggr;
+				$disp = $disp."<br>";
+			}
+			$loop++;
+		}
+
 	} else {
 		$disp = $disp."<br> no view available<br> $storage_vg_list";
 	}
@@ -123,12 +197,12 @@ function netapp_fs_display($netapp_storage_id) {
 	$disp = $disp."$storage->id $storage->name $storage->resource_id/$storage_resource->ip $storage->deployment_type/$storage_deployment->type ";
 	$disp = $disp."<input type=hidden name=netapp_storage_id value=$storage->id>";
 	$disp = $disp."<input type=hidden name=netapp_storage_command value='fs_list'>";
-	$disp = $disp."<input type=hidden name=source_tab value='tab1'>";
+	$disp = $disp."<input type=hidden name=source_tab value='tab2'>";
 	$disp = $disp."<input type=submit value='Refresh'>";
 	$disp = $disp."</form>";
 	$disp = $disp."</div>";
 
-	$storage_vg_list="storage/$storage_resource->id.fs.lst";
+	$storage_vg_list="storage/$storage->id.fs.lst";
 	$loop=0;
 	if (file_exists($storage_vg_list)) {
 		$storage_vg_content=file($storage_vg_list);
@@ -169,12 +243,12 @@ function netapp_nfs_display($netapp_storage_id) {
 	$disp = $disp."$storage->id $storage->name $storage->resource_id/$storage_resource->ip $storage->deployment_type/$storage_deployment->type ";
 	$disp = $disp."<input type=hidden name=netapp_storage_id value=$storage->id>";
 	$disp = $disp."<input type=hidden name=netapp_storage_command value='nfs_list'>";
-	$disp = $disp."<input type=hidden name=source_tab value='tab2'>";
+	$disp = $disp."<input type=hidden name=source_tab value='tab3'>";
 	$disp = $disp."<input type=submit value='Refresh'>";
 	$disp = $disp."</form>";
 	$disp = $disp."</div>";
 
-	$storage_vg_list="storage/$storage_resource->id.nfs.lst";
+	$storage_vg_list="storage/$storage->id.nfs.lst";
 	$loop=0;
 	if (file_exists($storage_vg_list)) {
 		$storage_vg_content=file($storage_vg_list);
@@ -212,12 +286,12 @@ function netapp_iscsi_display($netapp_storage_id) {
 	$disp = $disp."$storage->id $storage->name $storage->resource_id/$storage_resource->ip $storage->deployment_type/$storage_deployment->type ";
 	$disp = $disp."<input type=hidden name=netapp_storage_id value=$storage->id>";
 	$disp = $disp."<input type=hidden name=netapp_storage_command value='iscsi_list'>";
-	$disp = $disp."<input type=hidden name=source_tab value='tab3'>";
+	$disp = $disp."<input type=hidden name=source_tab value='tab4'>";
 	$disp = $disp."<input type=submit value='Refresh'>";
 	$disp = $disp."</form>";
 	$disp = $disp."</div>";
 
-	$storage_vg_list="storage/$storage_resource->id.iscsi.lst";
+	$storage_vg_list="storage/$storage->id.iscsi.lst";
 	$loop=0;
 	if (file_exists($storage_vg_list)) {
 		$storage_vg_content=file($storage_vg_list);
@@ -271,8 +345,10 @@ if ($OPENQRM_USER->role == "administrator") {
 		$output[] = array('label' => 'Select', 'value' => netapp_select_storage());
 		$output[] = array('label' => 'Select', 'value' => netapp_select_storage());
 		$output[] = array('label' => 'Select', 'value' => netapp_select_storage());
+		$output[] = array('label' => 'Select', 'value' => netapp_select_storage());
 	} else {
 		$output[] = array('label' => 'Volumes', 'value' => netapp_volume_display($netapp_storage_id));
+		$output[] = array('label' => 'Aggregates', 'value' => netapp_aggr_display($netapp_storage_id));
 		$output[] = array('label' => 'Filesystem', 'value' => netapp_fs_display($netapp_storage_id));
 		$output[] = array('label' => 'NFS', 'value' => netapp_nfs_display($netapp_storage_id));
 		$output[] = array('label' => 'Iscsi', 'value' => netapp_iscsi_display($netapp_storage_id));
