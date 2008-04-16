@@ -76,9 +76,9 @@ function openqrm_plugin_lvm-storage_init() {
 	fi
 	echo "Initializing the openQRM lvm-storage-plugin"
 	openqrm_server_add_storagetype $USERNAME $PASSWORD lvm-storage "Lvm Storage Server (nfs/iscsi/aoe)"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD lvm-aoe "Aoe-root deployment"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD lvm-iscsi "Iscsi-root deployment"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD lvm-nfs "Nfs-root deployment"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD lvm-aoe "Lvm Aoe-root"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD lvm-iscsi "Lvm Iscsi-root"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD lvm-nfs "Lvm Nfs-root"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/lvm-storage
 	# link the boot-service
