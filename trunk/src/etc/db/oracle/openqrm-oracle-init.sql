@@ -54,7 +54,6 @@ create table image_info(
 	image_rootdevice VARCHAR2(20),
 	image_rootfstype VARCHAR2(10),
 	image_storageid INTEGER,
-	# freetext parameter for the deployment plugin
 	image_deployment_parameter VARCHAR2(255),
 	image_isshared INTEGER,
 	image_comment VARCHAR2(255),
@@ -80,7 +79,7 @@ create table appliance_info(
 	appliance_resources INTEGER,
 	appliance_highavailable INTEGER,
 	appliance_virtual INTEGER,
-	appliance_virtualization_method VARCHAR2(20),
+	appliance_virtualization VARCHAR2(20),
 	appliance_virtualization_host INTEGER,
 	appliance_state VARCHAR2(20),
 	appliance_comment VARCHAR2(100),
@@ -153,7 +152,6 @@ create table image_service(
 	service VARCHAR2(50)
 );
 
-# plugg-able deployment types
 drop table deployment_info;
 create table deployment_info(
 	deployment_id INTEGER NOT NULL PRIMARY KEY,
@@ -161,7 +159,6 @@ create table deployment_info(
 	deployment_type VARCHAR2(20)
 );
 
-# plugg-able virtualization types
 drop table virtualization_info;
 create table virtualization_info(
 	virtualization_id INTEGER NOT NULL PRIMARY KEY,
@@ -170,7 +167,6 @@ create table virtualization_info(
 	virtualization_mapping VARCHAR2(255)
 );
 
-# plugg-able storage-server types
 drop table storagetype_info;
 create table storagetype_info(
 	storagetype_id INTEGER NOT NULL PRIMARY KEY,

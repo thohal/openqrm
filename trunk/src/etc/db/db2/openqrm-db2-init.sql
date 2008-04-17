@@ -84,7 +84,7 @@ create table appliance_info(				\
 	appliance_resources bigint,			\
 	appliance_highavailable bigint,			\
 	appliance_virtual bigint,			\
-	appliance_virtualization_method varchar(20),	\
+	appliance_virtualization varchar(20),	\
 	appliance_virtualization_host bigint,			\
 	appliance_state varchar(20),			\
 	appliance_comment varchar(100),			\

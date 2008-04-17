@@ -39,7 +39,7 @@ var $ssi = '';
 var $resources = '';
 var $highavailable = '';
 var $virtual = '';
-var $virtualization_method = '';
+var $virtualization = '';
 var $virtualization_host = '';
 var $state = '';
 var $comment = '';
@@ -82,7 +82,7 @@ function get_instance($id, $name) {
 		$this->resources = $appliance["appliance_resources"];
 		$this->highavailable = $appliance["appliance_highavailable"];
 		$this->virtual = $appliance["appliance_virtual"];
-		$this->virtualization_method = $appliance["appliance_virtualization_method"];
+		$this->virtualization = $appliance["appliance_virtualization"];
 		$this->virtualization_host = $appliance["appliance_virtualization_host"];
 		$this->state = $appliance["appliance_state"];
 		$this->comment = $appliance["appliance_comment"];

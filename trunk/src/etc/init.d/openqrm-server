@@ -15,7 +15,7 @@
 # Description: openQRM-server init script
 ### END INIT INFO
 
-PATH=/usr/bin:/sbin:/bin:/usr/sbin
+PATH=/usr/bin:/sbin:/bin:/usr/sbin:$PATH
 export PATH
 LOCKFILE=/var/lock/subsys/openqrm-server
 mkdir -p $(dirname $LOCKFILE)
@@ -84,6 +84,19 @@ function openqrm_server_init() {
 
 	elif [ -f /etc/redhat-release ]; then
 		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
+
+		if ! grep openqrm $OPENQRM_WEBSERVER_CONFIG 1>/dev/null; then
+			echo "Adjusting $OPENQRM_WEBSERVER_CONFIG for openQRM"
+			cat $OPENQRM_WEBSERVER_CONFIG | sed -e "s#</VirtualHost>##" > $OPENQRM_WEBSERVER_CONFIG.openqrm
+			echo "<VirtualHost *:80>" >> $OPENQRM_WEBSERVER_CONFIG.openqrm
+			cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> $OPENQRM_WEBSERVER_CONFIG.openqrm
+			echo "</VirtualHost>" >> $OPENQRM_WEBSERVER_CONFIG.openqrm
+			mv $OPENQRM_WEBSERVER_CONFIG.openqrm $OPENQRM_WEBSERVER_CONFIG
+			OPENQRM_WEBSERVER_INIT restart
+		else
+			echo "Found $OPENQRM_WEBSERVER_CONFIG already adjusted for openQRM"
+		fi
+
 	elif [ -f /etc/SuSE-release ]; then
 		# for suse's default web-server configuration symlinks do not work
 		# since we do not want to touch the webservers config we copy and link back

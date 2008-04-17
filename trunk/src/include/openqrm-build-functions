@@ -280,7 +280,7 @@ EOF
 	echo "shadow:     files" >> nsswitch.conf
 	echo "group:      files" >> nsswitch.conf
 	# cp libnss
-	cp -aR /lib/libnss_* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/	
+	cp -aR /lib/libnss_files* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/	
 	# installing hwdata, libkudzu and hwsetup
 	cp -aR $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwdata-knoppix/hwdata-install/* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
 	cp -a $OPENQRM_SOURCE_KUDZU_DIR/libkudzu.a $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/

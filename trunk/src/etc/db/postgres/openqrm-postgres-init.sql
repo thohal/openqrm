@@ -79,7 +79,7 @@ create table appliance_info(
 	appliance_resources int8,
 	appliance_highavailable int8,
 	appliance_virtual int8,
-	appliance_virtualization_method char(20),
+	appliance_virtualization char(20),
 	appliance_virtualization_host int8,
 	appliance_state char(20),
 	appliance_comment char(100),

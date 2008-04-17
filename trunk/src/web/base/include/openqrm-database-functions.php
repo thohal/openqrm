@@ -9,6 +9,8 @@ if (file_exists('/usr/share/cacti/lib/adodb/adodb.inc.php')) {
     require_once ('/usr/share/php/adodb/adodb.inc.php');
 } else if (file_exists($RootDir.'include/adodb/adodb.inc.php')) {
     require_once ($RootDir.'include/adodb/adodb.inc.php');
+} else if (file_exists('/usr/share/adodb/adodb.inc.php')) {
+	require_once ('/usr/share/adodb/adodb.inc.php');
 } else {
 	echo 'ERROR: Could not find adodb on this system!';
 }
