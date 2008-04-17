@@ -92,7 +92,7 @@ function openqrm_server_init() {
 			cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> $OPENQRM_WEBSERVER_CONFIG.openqrm
 			echo "</VirtualHost>" >> $OPENQRM_WEBSERVER_CONFIG.openqrm
 			mv $OPENQRM_WEBSERVER_CONFIG.openqrm $OPENQRM_WEBSERVER_CONFIG
-			OPENQRM_WEBSERVER_INIT restart
+			$OPENQRM_WEBSERVER_INIT restart
 		else
 			echo "Found $OPENQRM_WEBSERVER_CONFIG already adjusted for openQRM"
 		fi
