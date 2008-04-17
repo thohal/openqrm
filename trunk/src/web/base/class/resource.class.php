@@ -3,8 +3,8 @@
 // This class represents a resource in openQRM (physical hardware or virtual machine)
 
 
-$RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
-$BootServiceDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/boot-service/';
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
+$BootServiceDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/boot-service/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/class/plugin.class.php";

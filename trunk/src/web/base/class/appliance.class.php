@@ -9,7 +9,7 @@
 // - available and required resources (resource.class)
 
 
-$RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/image.class.php";

@@ -7,7 +7,7 @@
 
 <?php
 
-$RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";

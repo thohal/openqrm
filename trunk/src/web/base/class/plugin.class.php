@@ -2,7 +2,7 @@
 
 // This class represents a plugin in openQRM
 
-$RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once ($RootDir.'include/openqrm-server-config.php');
 require_once "$RootDir/class/folder.class.php";
 

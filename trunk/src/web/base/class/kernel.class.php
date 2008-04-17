@@ -4,7 +4,7 @@
 // A Kernel can be used to deploy an (server-)image (image.class)
 // to a resource (resource.class) via an appliance (appliance.class)
 
-$RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/class/event.class.php";
 

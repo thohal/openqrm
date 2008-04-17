@@ -2,7 +2,7 @@
 
 // This class represents an event in the openQRM engine
 
-$RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 global $EVENT_INFO_TABLE;
 
