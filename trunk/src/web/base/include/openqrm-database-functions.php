@@ -1,4 +1,9 @@
 <?php
+// PutEnv("LD_LIBRARY_PATH=/u01/app/oracle/product/11.1.0/db_1/lib");
+// PutEnv("ORACLE_HOME=/u01/app/oracle/product/11.1.0/db_1");
+// PutEnv("TNS_ADMIN=/u01/app/oracle/product/11.1.0/db_1");
+define('ADODB_ASSOC_CASE',0);
+
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once ($RootDir.'include/openqrm-server-config.php');
 
@@ -57,23 +62,25 @@ global $KERNEL_INFO_TABLE, $IMAGE_INFO_TABLE, $RESOURCE_INFO_TABLE, $EVENT_INFO_
 // returns a db-connection
 function openqrm_get_db_connection() {
 	// to get lowercase column name form e.g. oracle
-	if (!defined('ADODB_ASSOC_CASE')) {
-		define('ADODB_ASSOC_CASE',0);
-	}
+	define('ADODB_ASSOC_CASE',0);
 	global $OPENQRM_DATABASE_TYPE;
 	global $OPENQRM_DATABASE_SERVER;
 	global $OPENQRM_DATABASE_NAME;
 	global $OPENQRM_DATABASE_USER;
 	global $OPENQRM_DATABASE_PASSWORD;
 	
-	if ("$OPENQRM_DATABASE_TYPE" == "oracle") {
-		$OPENQRM_DATABASE_TYPE="oci8po";
-	}
-	
 	if ("$OPENQRM_DATABASE_TYPE" == "db2") {
 		$db = &ADONewConnection('db2');
 		$dsn = "$OPENQRM_DATABASE_NAME";
 		$db->Connect($dsn);
+
+	} else if ("$OPENQRM_DATABASE_TYPE" == "oracle") {
+		// we need to use the oci8po driver because it is the 
+		// only oracle driver supporting to set the column-names to lowercase
+		// via define('ADODB_ASSOC_CASE',0);
+		$db = NewADOConnection("oci8po");
+		$db->Connect($OPENQRM_DATABASE_NAME, $OPENQRM_DATABASE_USER, $OPENQRM_DATABASE_PASSWORD);
+
 	} else {
 		if (strlen($OPENQRM_DATABASE_PASSWORD)) {
 			$dsn = "$OPENQRM_DATABASE_TYPE://$OPENQRM_DATABASE_USER:$OPENQRM_DATABASE_PASSWORD@$OPENQRM_DATABASE_SERVER/$OPENQRM_DATABASE_NAME?persist";
