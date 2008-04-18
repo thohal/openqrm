@@ -136,7 +136,7 @@ function log($name, $time, $priority, $source, $description, $comment, $capabili
 
 	// check if log already exists, if yes, just update the date
 	$db=openqrm_get_db_connection();
-	$rs = &$db->Execute("select event_id from $EVENT_INFO_TABLE where event_description='$description' and event_source='$source' and event_name='$name' order by event_id DESC limit 1");
+	$rs = &$db->Execute("select event_id from $EVENT_INFO_TABLE where event_description='$description' and event_source='$source' and event_name='$name' order by event_id DESC");
 	if (!$rs)
 		$this->log("log", $_SERVER['REQUEST_TIME'], 2, "event.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
