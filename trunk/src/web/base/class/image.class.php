@@ -199,7 +199,7 @@ function get_count($image_type) {
 // returns a list of all image names
 function get_list() {
 	global $IMAGE_INFO_TABLE;
-	$query = "select image_id, image_name from $IMAGE_INFO_TABLE";
+	$query = "select image_id, image_name from $IMAGE_INFO_TABLE order by image_id ASC";
 	$image_name_array = array();
 	$image_name_array = openqrm_db_get_result_double ($query);
 	return $image_name_array;
