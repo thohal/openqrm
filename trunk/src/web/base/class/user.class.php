@@ -1,5 +1,10 @@
 <?php
-		
+
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
+require_once "$RootDir/include/openqrm-database-functions.php";
+require_once "$RootDir/class/event.class.php";
+global $USER_INFO_TABLE;
+
 class user
 {
 /**
@@ -183,70 +188,68 @@ var $_role_table = '';
 	}
 	//-----------------------------------------------------------------------------------
 	function query_insert(){
+		global $USER_INFO_TABLE;
 		$this->id = openqrm_db_get_free_id('user_id', $this->_user_table);
-		$query = '
+		$query = "
 			INSERT INTO 
-				`user_info` (
-					`user_id` ,
-					`user_name` ,
-					`user_password` ,
-					`user_gender` ,
-					`user_first_name` ,
-					`user_last_name` ,
-					`user_department` ,
-					`user_office` ,
-					`user_role` ,
-					`user_last_update_time` ,
-					`user_description` ,
-					`user_capabilities` ,
-					`user_state`
+				$USER_INFO_TABLE (
+					user_id,
+					user_name,
+					user_password,
+					user_gender,
+					user_first_name,
+					user_last_name,
+					user_department,
+					user_office,
+					user_role,
+					user_last_update_time,
+					user_description,
+					user_capabilities,
+					user_state
 				)
 			VALUES (
-					"'.$this->id.'",
-					"'.$this->name.'",
-					"'.$this->password.'",
-					"'.$this->gender.'",
-					"'.$this->first_name.'",
-					"'.$this->last_name.'",
-					"'.$this->department.'",
-					"'.$this->office.'",
-					'.$this->role.',
-					"'.$this->last_update_time.'",
-					"'.$this->description.'",
-					"'.$this->capabilities.'",
-					"'.$this->state.'"
+					'$this->id',
+					'$this->name',
+					'$this->password',
+					'$this->gender',
+					'$this->first_name',
+					'$this->last_name',
+					'$this->department',
+					'$this->office',
+					'$this->role',
+					'$this->last_update_time',
+					'$this->description',
+					'$this->capabilities',
+					'$this->state.'
 				)
-		';
+		";
 		
 		$this->change_htpasswd('insert');
 		return openqrm_db_get_result($query);
 	}
 	//-----------------------------------------------------------------------------------
 	function query_update(){
-	
-		$strSet = '';
+		global $USER_INFO_TABLE;
+		$user_fields = array();
 		if($this->password != '') {
-			$strSet .= '`user_password` = "'.$this->password.'",';
+			$user_fields['user_password']=$this->password;
 			$this->change_htpasswd('update');
 		}
-			$strSet .= '`user_gender` = "'.$this->gender.'",';
-			$strSet .= '`user_first_name` = "'.$this->first_name.'",';
-			$strSet .= '`user_last_name` = 	"'.$this->last_name.'",';
-			$strSet .= '`user_department` = "'.$this->department.'",';
-			$strSet .= '`user_office` = "'.$this->office.'",';
-			$strSet .= '`user_role` = '.$this->role.',';
-			$strSet .= '`user_last_update_time` = "'.$this->last_update_time.'",';
-			$strSet .= '`user_description` = "'.$this->description.'",';
-			$strSet .= '`user_capabilities` = "'.$this->capabilities.'",';
-			$strSet .= '`user_state` = "'.$this->state.'"';
-	
-		$query = '
-			UPDATE	`user_info`
-			SET		'. $strSet .'				
-			WHERE user_name = "'.$this->name.'"
-				AND user_id = "'.$this->id.'"
-		';
-		return openqrm_db_get_result($query);
+		$user_fields['user_gender']=$this->gender;
+		$user_fields['user_first_name']=$this->first_name;
+		$user_fields['user_last_name']=$this->last_name;
+		$user_fields['user_department']=$this->department;
+		$user_fields['user_office']=$this->office;
+		$user_fields['user_role']=$this->role;
+		$user_fields['user_last_update_time']=$this->last_update_time;
+		$user_fields['user_description']=$this->description;
+		$user_fields['user_capabilities']=$this->capabilities;
+		$user_fields['user_state']=$this->state;
+		$db=openqrm_get_db_connection();
+		$result = $db->AutoExecute($USER_INFO_TABLE, $user_fields, 'UPDATE', "user_name = '$this->name'");
+		if (! $result) {
+			$event->log("query_update", $_SERVER['REQUEST_TIME'], 2, "user.class.php", "Failed updating user", "", "", 0, 0, 0);
+		}
 	}
 	//-----------------------------------------------------------------------------------
 	function query_delete(){
@@ -260,7 +263,7 @@ var $_role_table = '';
 	//-----------------------------------------------------------------------------------
     function check_user_exists() {
 		$query = "
-			SELECT user_name as `Name`
+			SELECT user_name
 			FROM $this->_user_table
 			WHERE user_name = '".$this->name."'
 		";
