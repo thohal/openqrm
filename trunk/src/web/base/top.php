@@ -1,5 +1,5 @@
 <?php
-error_reporting(E_ALL);
+// error_reporting(E_ALL);
 $thisfile = basename($_SERVER['PHP_SELF']);
 require_once('include/htmlobject.inc.php');
 require_once('include/user.inc.php');
