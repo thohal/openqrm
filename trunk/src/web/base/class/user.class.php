@@ -162,24 +162,23 @@ var $_role_table = '';
 	}
 	//-----------------------------------------------------------------------------------
 	function query_select(){
-		$query = '
+		$query = " 
 			SELECT 
-				user_id as `Userid`,
-				user_gender as `Gender`,
-				user_first_name as `Firstname`,
-				user_last_name as `Lastname`,
-				user_description as `Description`,
-				user_department as `Department`,
-				user_office as `Office`,
-				user_capabilities as `Capabilities`,
-				user_state as `State`,
-				user_role as `Role`,
-				user_last_update_time as `Update`,
-				user_password as `Password`
-			FROM '.$this->_user_table.'				
-			WHERE user_name = "'.$this->name.'"
-			LIMIT 1
-		';
+				user_id,
+				user_gender,
+				user_first_name,
+				user_last_name,
+				user_description,
+				user_department,
+				user_office,
+				user_capabilities,
+				user_state,
+				user_role,
+				user_last_update_time,
+				user_password
+			FROM $this->_user_table				
+			WHERE user_name = '$this->name'
+		";
 		return $query;
 	}
 	//-----------------------------------------------------------------------------------
@@ -246,7 +245,6 @@ var $_role_table = '';
 			SET		'. $strSet .'				
 			WHERE user_name = "'.$this->name.'"
 				AND user_id = "'.$this->id.'"
-			LIMIT 1
 		';
 		return openqrm_db_get_result($query);
 	}
@@ -255,7 +253,6 @@ var $_role_table = '';
 		$query = "
 			DELETE FROM $this->_user_table
 			WHERE user_name = '".$this->name."'
-			LIMIT 1
 		";
 		$this->change_htpasswd('delete');
 		return openqrm_db_get_result($query);
@@ -266,7 +263,6 @@ var $_role_table = '';
 			SELECT user_name as `Name`
 			FROM $this->_user_table
 			WHERE user_name = '".$this->name."'
-			LIMIT 1
 		";
 		$result = openqrm_db_get_result_single($query);
 		
@@ -289,7 +285,6 @@ var $_role_table = '';
 			FROM $this->_user_table, $this->_role_table
 			WHERE user_name = '".$this->name."' 
 				AND user_role = role_id
-			LIMIT 1
 		";
 		$result = openqrm_db_get_result_double($query);
 		$this->role = $result[0];
