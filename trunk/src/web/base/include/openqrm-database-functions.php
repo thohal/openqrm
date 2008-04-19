@@ -1,12 +1,14 @@
 <?php
-// PutEnv("LD_LIBRARY_PATH=/u01/app/oracle/product/11.1.0/db_1/lib");
-// PutEnv("ORACLE_HOME=/u01/app/oracle/product/11.1.0/db_1");
-// PutEnv("TNS_ADMIN=/u01/app/oracle/product/11.1.0/db_1");
-define('ADODB_ASSOC_CASE',0);
-
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once ($RootDir.'include/openqrm-server-config.php');
 
+if (strlen($ORACLE_HOME))  {
+        PutEnv("LD_LIBRARY_PATH=$OPENQRM_LD_LIBRARY_PATH");
+        PutEnv("ORACLE_HOME=$OPENQRM_ORACLE_HOME");
+        PutEnv("TNS_ADMIN=$OPENQRM_TNS_ADMIN");
+}
+
+define('ADODB_ASSOC_CASE',0);
 // different locations of adodb for suse/redhat/debian
 if (file_exists('/usr/share/cacti/lib/adodb/adodb.inc.php')) {
     require_once ('/usr/share/cacti/lib/adodb/adodb.inc.php');
