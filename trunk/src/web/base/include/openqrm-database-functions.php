@@ -2,7 +2,7 @@
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once ($RootDir.'include/openqrm-server-config.php');
 
-if (strlen($ORACLE_HOME))  {
+if (strlen($OPENQRM_ORACLE_HOME))  {
         PutEnv("LD_LIBRARY_PATH=$OPENQRM_LD_LIBRARY_PATH");
         PutEnv("ORACLE_HOME=$OPENQRM_ORACLE_HOME");
         PutEnv("TNS_ADMIN=$OPENQRM_TNS_ADMIN");
