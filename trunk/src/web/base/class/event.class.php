@@ -7,14 +7,30 @@ require_once "$RootDir/include/openqrm-database-functions.php";
 global $EVENT_INFO_TABLE;
 
 // priorities :
-define("LOG_EMERG", 0);
-define("LOG_ALERT", 1);
-define("LOG_CRIT", 2);
-define("LOG_ERR", 3);
-define("LOG_WARNING", 4);
-define("LOG_NOTICE", 5);
-define("LOG_INFO", 6);
-define("LOG_DEBUG", 7);
+if (!defined("LOG_EMERG")) {
+	define("LOG_EMERG", 0);
+}
+if (!defined("LOG_ALERT")) {
+	define("LOG_ALERT", 1);
+}
+if (!defined("LOG_CRIT")) {
+	define("LOG_CRIT", 2);
+}
+if (!defined("LOG_ERR")) {
+	define("LOG_ERR", 3);
+}
+if (!defined("LOG_WARNING")) {
+	define("LOG_WARNING", 4);
+}
+if (!defined("LOG_NOTICE")) {
+	define("LOG_NOTICE", 5);
+}
+if (!defined("LOG_INFO")) {
+	define("LOG_INFO", 6);
+}
+if (!defined("LOG_DEBUG")) {
+	define("LOG_DEBUG", 7);
+}
 
 
 class event {

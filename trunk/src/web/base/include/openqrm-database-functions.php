@@ -8,7 +8,9 @@ if (isset($OPENQRM_ORACLE_HOME))  {
         PutEnv("TNS_ADMIN=$OPENQRM_TNS_ADMIN");
 }
 
-define('ADODB_ASSOC_CASE',0);
+if (!defined("ADODB_ASSOC_CASE")) {
+	define('ADODB_ASSOC_CASE',0);
+}
 // different locations of adodb for suse/redhat/debian
 if (file_exists('/usr/share/cacti/lib/adodb/adodb.inc.php')) {
     require_once ('/usr/share/cacti/lib/adodb/adodb.inc.php');
@@ -64,7 +66,6 @@ global $KERNEL_INFO_TABLE, $IMAGE_INFO_TABLE, $RESOURCE_INFO_TABLE, $EVENT_INFO_
 // returns a db-connection
 function openqrm_get_db_connection() {
 	// to get lowercase column name form e.g. oracle
-	define('ADODB_ASSOC_CASE',0);
 	global $OPENQRM_DATABASE_TYPE;
 	global $OPENQRM_DATABASE_SERVER;
 	global $OPENQRM_DATABASE_NAME;
