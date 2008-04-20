@@ -15,7 +15,7 @@ if [ "$WHOAMI" != "root" ]; then
 fi
 
 function lvm_storage_usage() {
-	echo "Usage : $0 add/remove/snap/list <-n image-name> <-v volume-group> <-t nfs/iscsi/aoe>"
+	echo "Usage : $0 add/remove/snap/list <-n image-name> <-v volume-group> <-t lvm-nfs/lvm-iscsi/lvm-aoe>"
 	echo "             [-m size in MB]"
 	echo "             [-s image-snapshot-name]"
 	echo "        $0 post_vg <-u username> <-p password>"
@@ -131,20 +131,20 @@ case "$LVM_COMMAND" in
 
 		lvcreate -L$LVM_IMAGE_SIZE -n$LVM_IMAGE_NAME $LVM_STORAGE_SERVER_VOLUME_GROUP
 
-		if [ "$LVM_IMAGE_TYPE" == "iscsi" ]; then
+		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi" ]; then
 			echo "Detected Iscsi-image. Adding to $IETDCONF"
 			check_iscsi_target
 			lvm_storage_lock aquire
 			manage_iscsi add
 			lvm_storage_lock release
-		elif [ "$LVM_IMAGE_TYPE" == "nfs" ]; then
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs" ]; then
 			# we mount them and add to exports
 			echo "Detected NFS-image. Mounting and adding $LVM_IMAGE_NAME to /etc/fstab + /etc/exports"
 			lvm_storage_lock aquire
 			manage_fstab add
 			manage_nfs add
 			lvm_storage_lock release
-		elif [ "$LVM_IMAGE_TYPE" == "aoe" ]; then
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe" ]; then
 			echo "Detected Aoe-image. Adding to $VBLADECONF"
 			check_vblade
 			lvm_storage_lock aquire
@@ -158,19 +158,19 @@ case "$LVM_COMMAND" in
 
 		echo -n "Removing logical volume $LVM_IMAGE_NAME on volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
 
-		if [ "$LVM_IMAGE_TYPE" == "iscsi" ]; then
+		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi" ]; then
 			echo "Detected Iscsi-image. Removing from $IETDCONF"
 			check_iscsi_target
 			lvm_storage_lock aquire
 			manage_iscsi remove
 			lvm_storage_lock release
-		elif [ "$LVM_IMAGE_TYPE" == "nfs" ]; then
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs" ]; then
 			echo "Detected NFS-image. Removing from /etc/exports"
 			lvm_storage_lock aquire
 			manage_nfs remove
 			manage_fstab remove
 			lvm_storage_lock release
-		elif [ "$LVM_IMAGE_TYPE" == "aoe" ]; then
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe" ]; then
 			echo "Detected Aoe-image. Removing from $VBLADECONF"
 			check_vblade
 			lvm_storage_lock aquire
@@ -208,19 +208,19 @@ case "$LVM_COMMAND" in
 		lvcreate --size $LVM_IMAGE_SIZE""m --snapshot --name $LVM_IMAGE_SNAPSHOT_NAME /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
 		export LVM_IMAGE_NAME=$LVM_IMAGE_SNAPSHOT_NAME
 
-		if [ "$LVM_IMAGE_TYPE" == "iscsi" ]; then
+		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi" ]; then
 			echo "Detected Iscsi-image. Adding to $IETDCONF"
 			check_iscsi_target
 			lvm_storage_lock aquire
 			manage_iscsi add
 			lvm_storage_lock release
-		elif [ "$LVM_IMAGE_TYPE" == "nfs" ]; then
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs" ]; then
 			echo "Detected NFS-image. Mounting and adding $IMAGE_NAME to /etc/fstab + /etc/exports"
 			lvm_storage_lock aquire
 			manage_fstab add
 			manage_nfs add snap
 			lvm_storage_lock release
-		elif [ "$LVM_IMAGE_TYPE" == "aoe" ]; then
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe" ]; then
 			echo "Detected Aoe-image. Adding to $VBLADECONF"
 			check_vblade
 			lvm_storage_lock aquire
