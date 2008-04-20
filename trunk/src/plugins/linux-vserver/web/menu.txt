@@ -1,0 +1,7 @@
+#	Title
+#	Href
+#	Alt
+#	IMG
+#	Target
+.|Linux-VServer
+..|VM Manager|plugins/linux-vserver/linux-vserver-manager.php

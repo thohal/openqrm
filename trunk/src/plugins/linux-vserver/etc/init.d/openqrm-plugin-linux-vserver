@@ -1,0 +1,90 @@
+#!/bin/bash
+# init script for the openQRM linux-vserver-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/include/openqrm-plugin-linux-vserver-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/openqrm-plugin-linux-vserver.conf
+
+function openqrm_plugin_linux_vserver_start() {
+	echo "Starting the openQRM linux-vserver-plugin"
+	openqrm_plugin_linux_vserver_stop 1>/dev/null 2>&1
+}
+
+
+function openqrm_plugin_linux_vserver_stop() {
+	echo "Stopping the openQRM linux-vserver-plugin"
+}
+
+function openqrm_plugin_linux_vserver_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "linux-vserver: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "linux-vserver: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM linux-vserver-plugin"
+	openqrm_plugin_linux_vserver_stop
+	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD linux-vserver
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/linux-vserver
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-linux-vserver.tgz
+}
+
+function openqrm_plugin_linux_vserver_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "linux-vserver: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "linux-vserver: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Initializing the openQRM linux-vserver-plugin"
+	# adding virtualization type	
+	openqrm_server_add_virtualization_type $USERNAME $PASSWORD linux-vserver "Xen Virtualization"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/linux-vserver
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/web/boot-service-linux-vserver.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-linux-vserver.tgz
+	
+}
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_linux_vserver_start
+		;;
+	stop)
+		openqrm_plugin_linux_vserver_stop
+		;;
+	restart)
+		openqrm_plugin_linux_vserver_stop
+		sleep 1
+		openqrm_plugin_linux_vserver_start
+		;;
+	init)
+		openqrm_plugin_linux_vserver_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_linux_vserver_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+
