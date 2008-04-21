@@ -24,6 +24,10 @@ function initialize_database() {
 		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/g"	\
 		> $OPENQRM_DATABASE_INIT_TMP
 	chmod 777 $OPENQRM_DATABASE_INIT_TMP
+	su - postgres -c "dropdb $OPENQRM_DATABASE_NAME" 1>/dev/null 2>&1
+	su - postgres -c "createdb $OPENQRM_DATABASE_NAME"
+	su - postgres -c "dropuser -s -d -r $OPENQRM_DATABASE_USER" 1>/dev/null 2>&1
+	su - postgres -c "createuser -s -d -r $OPENQRM_DATABASE_USER"
 	su - postgres -c "$POSTGRES_CLIENT -d $OPENQRM_DATABASE_NAME --set openqrmdbuser=$OPENQRM_DATABASE_USER -f $OPENQRM_DATABASE_INIT_TMP"
 	RET=$?
 	rm -f $OPENQRM_DATABASE_INIT_TMP

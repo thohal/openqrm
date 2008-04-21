@@ -36,7 +36,7 @@ create table resource_info(
 
 drop table kernel_info;
 create table kernel_info(
-	kernel_id int8  NOT NULL PRIMARY KEY,,
+	kernel_id int8  NOT NULL PRIMARY KEY,
 	kernel_name char(50),
 	kernel_version char(50),
 	kernel_capabilities char(255)
@@ -45,14 +45,13 @@ create table kernel_info(
 
 drop table image_info;
 create table image_info(
-	image_id int8  NOT NULL PRIMARY KEY,,
+	image_id int8  NOT NULL PRIMARY KEY,
 	image_name char(50),
 	image_version char(30),
 	image_type char(20),
 	image_rootdevice char(20),
 	image_rootfstype char(10),
 	image_storageid int8,
-	# freetext parameter for the deployment plugin
 	image_deployment_parameter char(255),
 	image_isshared int8,
 	image_comment char(255),
@@ -88,7 +87,7 @@ create table appliance_info(
 
 drop table event_info;
 create table event_info(
-	event_id int8 NOT NULL PRIMARY KEY,,
+	event_id int8 NOT NULL PRIMARY KEY,
 	event_name char(50),
 	event_time char(50),
 	event_priority int8,
@@ -105,7 +104,7 @@ create table event_info(
 
 drop table user_info;
 create table user_info(
-	user_id int8 NOT NULL PRIMARY KEY,,
+	user_id int8 NOT NULL PRIMARY KEY,
 	user_name char(20),
 	user_password char(20),
 	user_gender char(1),
@@ -123,14 +122,14 @@ create table user_info(
 
 drop table role_info;
 create table role_info(
-	role_id int8 NOT NULL PRIMARY KEY,,
+	role_id int8 NOT NULL PRIMARY KEY,
 	role_name char(20)
 );
 
 
 drop table storage_info;
 create table storage_info(
-	storage_id int8 NOT NULL PRIMARY KEY,,
+	storage_id int8 NOT NULL PRIMARY KEY,
 	storage_name char(20),
 	storage_resource_id int8,
 	storage_deployment_type int8,
@@ -151,7 +150,6 @@ create table image_service(
 	service char(50)
 );
 
-# plugg-able deployment types
 drop table deployment_info;
 create table deployment_info(
 	deployment_id int8 NOT NULL PRIMARY KEY,
@@ -159,7 +157,6 @@ create table deployment_info(
 	deployment_type char(20)
 );
 
-# plugg-able virtualization types
 drop table virtualization_info;
 create table virtualization_info(
 	virtualization_id int8 NOT NULL PRIMARY KEY,
@@ -168,7 +165,6 @@ create table virtualization_info(
 	virtualization_mapping char(255)
 );
 
-# plugg-able storage-server types
 drop table storagetype_info;
 create table storagetype_info(
 	storagetype_id int8 NOT NULL PRIMARY KEY,
@@ -193,5 +189,11 @@ grant all on kernel_info to :openqrmdbuser;
 grant all on image_info to :openqrmdbuser;
 grant all on event_info to :openqrmdbuser;
 grant all on user_info to :openqrmdbuser;
-
-
+grant all on appliance_info to :openqrmdbuser;
+grant all on role_info to :openqrmdbuser;
+grant all on storage_info to :openqrmdbuser;
+grant all on resource_service to :openqrmdbuser;
+grant all on image_service to :openqrmdbuser;
+grant all on deployment_info to :openqrmdbuser;
+grant all on virtualization_info to :openqrmdbuser;
+grant all on storagetype_info to :openqrmdbuser;
