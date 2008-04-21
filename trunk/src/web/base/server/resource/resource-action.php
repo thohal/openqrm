@@ -26,7 +26,7 @@ global $RESOURCE_INFO_TABLE;
 $event = new event();
 
 // user/role authentication
-if ($OPENQRM_USER->role != "administrator") {
+if (!strstr($OPENQRM_USER->role, "administrator")) {
 	$event->log("authorization", $_SERVER['REQUEST_TIME'], 1, "resource-action", "Un-Authorized access to resource-actions from $OPENQRM_USER->name", "", "", 0, 0, 0);
 	exit();
 }

@@ -21,7 +21,7 @@ require_once "$RootDir/class/openqrm_server.class.php";
 $event = new event();
 
 // user/role authentication
-if ($OPENQRM_USER->role != "administrator") {
+if (!strstr($OPENQRM_USER->role, "administrator")) {
 	$event->log("authorization", $_SERVER['REQUEST_TIME'], 1, "plugin-action", "Un-Authorized access to plugin-actions from $OPENQRM_USER->name", "", "", 0, 0, 0);
 	exit();
 }
