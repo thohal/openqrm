@@ -98,7 +98,7 @@ function get_instance($id, $mac, $ip) {
 		$this->capabilities = $resource["resource_capabilities"];
 		$this->lastgood = $resource["resource_lastgood"];
 		$this->state = $resource["resource_state"];
-		$this->event = $resource["resource_evemnt"];
+		$this->event = $resource["resource_event"];
 	}
 	return $this;
 }
