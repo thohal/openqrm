@@ -24,7 +24,7 @@ function get_ip_address() {
 	global $RESOURCE_INFO_TABLE;
 	global $event;
 	$db=openqrm_get_db_connection();
-	$rs = $db->Execute("select resource_openqrmserver from $RESOURCE_INFO_TABLE where resource_id='0'");
+	$rs = $db->Execute("select resource_openqrmserver from $RESOURCE_INFO_TABLE where resource_id=0");
 	if (!$rs)
 		$event->log("get_ip_address", $_SERVER['REQUEST_TIME'], 2, "openqrm_server.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else

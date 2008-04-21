@@ -71,9 +71,10 @@ function openqrm_get_db_connection() {
 	global $OPENQRM_DATABASE_PASSWORD;
 	
 	if ("$OPENQRM_DATABASE_TYPE" == "db2") {
-		$db = &ADONewConnection('odbc_db2');
-		$dsn = "driver={IBM db2 odbc DRIVER};Database=$OPENQRM_DATABASE_NAME;hostname=$OPENQRM_DATABASE_SERVER;port=50000;protocol=TCPIP;uid=$OPENQRM_DATABASE_USER; pwd=$OPENQRM_DATABASE_PASSWORD";
-		$db->Connect($dsn);
+		$db = &ADONewConnection('odbc');
+		$db->PConnect($OPENQRM_DATABASE_NAME,$OPENQRM_DATABASE_USER,$OPENQRM_DATABASE_PASSWORD);
+		$db->SetFetchMode(ADODB_FETCH_ASSOC);
+		return $db;
 
 	} else if ("$OPENQRM_DATABASE_TYPE" == "oracle") {
 		// we need to use the oci8po driver because it is the 
