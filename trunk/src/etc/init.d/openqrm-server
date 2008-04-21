@@ -109,7 +109,7 @@ function openqrm_server_init() {
 			# allow FollowSymlinks
 			cat /etc/apache2/default-server.conf | sed -e "s/Options None/Options +Indexes +FollowSymLinks/" | sed -e "s/AllowOverride all/AllowOverride None/" > /etc/apache2/default-server.conf.new
 			mv -f /etc/apache2/default-server.conf.new /etc/apache2/default-server.conf
-			OPENQRM_WEBSERVER_INIT restart
+			$OPENQRM_WEBSERVER_INIT restart
 		else
 			echo "Found $OPENQRM_WEBSERVER_CONFIG already adjusted for openQRM"
 		fi
