@@ -65,7 +65,7 @@ function openqrm_server_init() {
 	$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions init
 
 	# link the web application directory to the documentroot
-
+	HTPASSWD="htpasswd"
 	if [ -f /etc/debian_version ]; then
 		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
 
@@ -98,20 +98,29 @@ function openqrm_server_init() {
 		fi
 
 	elif [ -f /etc/SuSE-release ]; then
-		# for suse's default web-server configuration symlinks do not work
-		# since we do not want to touch the webservers config we copy and link back
-		mkdir -p $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
-		mv $OPENQRM_SERVER_BASE_DIR/openqrm/web/* $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
-		rmdir $OPENQRM_SERVER_BASE_DIR/openqrm/web
-		ln -sf $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm $OPENQRM_SERVER_BASE_DIR/openqrm/web
+		HTPASSWD="htpasswd2"
+		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
+		if ! grep openqrm $OPENQRM_WEBSERVER_CONFIG 1>/dev/null; then
+			echo "Adjusting $OPENQRM_WEBSERVER_CONFIG for openQRM"
+			echo "<VirtualHost *:80>" >> $OPENQRM_WEBSERVER_CONFIG
+			cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> $OPENQRM_WEBSERVER_CONFIG
+			echo "</VirtualHost>" >> $OPENQRM_WEBSERVER_CONFIG
+			# we need to adjust the default-server.conf for Suse to
+			# allow FollowSymlinks
+			cat /etc/apache2/default-server.conf | sed -e "s/Options None/Options +Indexes +FollowSymLinks/" | sed -e "s/AllowOverride all/AllowOverride None/" > /etc/apache2/default-server.conf.new
+			mv -f /etc/apache2/default-server.conf.new /etc/apache2/default-server.conf
+			OPENQRM_WEBSERVER_INIT restart
+		else
+			echo "Found $OPENQRM_WEBSERVER_CONFIG already adjusted for openQRM"
+		fi
 	fi
 
 	# create the .htaccess file
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-htaccess.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htaccess
 	# create the default admin user
-	htpasswd -bc $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd openqrm openqrm
+	$HTPASSWD -bc $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd openqrm openqrm
 	# create the default anonymous user
-	htpasswd -b $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd anonymous openqrm
+	$HTPASSWD -b $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd anonymous openqrm
 	chmod 666 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd
 
 	# here we create + add the default kernel+kernel-version to the openQRM-server
@@ -119,6 +128,8 @@ function openqrm_server_init() {
 	DEFAULT_KERNEL_VERSION=`uname -r`
 	echo "Creating the default kernel version $DEFAULT_KERNEL_VERSION"
 	if [ -f /etc/debian_version ]; then
+		INITRD_TYPE="initramfs"
+	elif [ -f /etc/SuSE-release ]; then
 		INITRD_TYPE="initramfs"
 	else
 		INITRD_TYPE="ext2"
