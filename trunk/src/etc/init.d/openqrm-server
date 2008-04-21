@@ -107,7 +107,7 @@ function openqrm_server_init() {
 			echo "</VirtualHost>" >> $OPENQRM_WEBSERVER_CONFIG
 			# we need to adjust the default-server.conf for Suse to
 			# allow FollowSymlinks
-			cat /etc/apache2/default-server.conf | sed -e "s/Options None/Options +Indexes +FollowSymLinks/" | sed -e "s/AllowOverride.*/AllowOverride All/" > /etc/apache2/default-server.conf.new
+			cat /etc/apache2/default-server.conf | sed -e "s/Options.*/Options +Indexes +FollowSymLinks/" | sed -e "s/AllowOverride.*/AllowOverride All/" > /etc/apache2/default-server.conf.new
 			mv -f /etc/apache2/default-server.conf.new /etc/apache2/default-server.conf
 			$OPENQRM_WEBSERVER_INIT restart
 		else
