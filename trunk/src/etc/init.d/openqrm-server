@@ -113,6 +113,16 @@ function openqrm_server_init() {
 		else
 			echo "Found $OPENQRM_WEBSERVER_CONFIG already adjusted for openQRM"
 		fi
+		# check for custom/manual installed adodb because there 
+		# is no pre-packaged adodb rpm for suse available
+		if [ -f /usr/share/adodb/adodb.inc.php ]; then
+			echo "Found Adodb at /usr/share/adodb"		
+		else
+			echo "ERROR: Adodb was not found on this system !"
+			echo "Please download adodb > 5.04 from http://adodb.sourceforge.net/"
+			echo "and install it at /usr/share/adodb/ and try again."
+			exit -1
+		fi
 	fi
 
 	# create the .htaccess file
