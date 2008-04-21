@@ -88,7 +88,7 @@ $output = array();
 // all users
 $output[] = array('label' => 'Plugin-List', 'value' => plugin_display(""));
 // if admin
-if ($OPENQRM_USER->role == "administrator") {
+if (strstr($OPENQRM_USER->role, "administrator")) {
 	$output[] = array('label' => 'Plugin-Manager', 'value' => plugin_display("admin"));
 }
 

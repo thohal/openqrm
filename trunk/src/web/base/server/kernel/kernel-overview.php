@@ -113,7 +113,7 @@ $output = array();
 // all user
 $output[] = array('label' => 'Kernel-List', 'value' => kernel_display(""));
 // if admin
-if ($OPENQRM_USER->role == "administrator") {
+if (strstr($OPENQRM_USER->role, "administrator")) {
 	$output[] = array('label' => 'New', 'value' => kernel_form());
 	$output[] = array('label' => 'Kernel-Admin', 'value' => kernel_display("admin"));
 	$edit_kernel_id = $_REQUEST["edit_kernel_id"];

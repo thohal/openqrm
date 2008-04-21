@@ -254,7 +254,7 @@ $output = array();
 // all user
 $output[] = array('label' => 'Resource-List', 'value' => resource_display(""));
 // if admin
-if ($OPENQRM_USER->role == "administrator") {
+if (strstr($OPENQRM_USER->role, "administrator")) {
 	$output[] = array('label' => 'New', 'value' => resource_form());
 	$output[] = array('label' => 'Resource-Admin', 'value' => resource_display("admin"));
 }

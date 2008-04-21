@@ -133,7 +133,7 @@ $output = array();
 // all user
 $output[] = array('label' => 'Event-List', 'value' => event_display(""));
 // if admin
-if ($OPENQRM_USER->role == "administrator") {
+if (strstr($OPENQRM_USER->role, "administrator")) {
 	$output[] = array('label' => 'Event-Admin', 'value' => event_display("admin"));
 }
 

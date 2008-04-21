@@ -276,7 +276,7 @@ $output = array();
 // all user
 $output[] = array('label' => 'Storage-List', 'value' => storage_display(""));
 // if admin
-if ($OPENQRM_USER->role == "administrator") {
+if (strstr($OPENQRM_USER->role, "administrator")) {
 	$output[] = array('label' => 'New', 'value' => storage_form());
 	$output[] = array('label' => 'Storage-Admin', 'value' => storage_display("admin"));
 	$edit_storage_id = $_REQUEST["edit_storage_id"];

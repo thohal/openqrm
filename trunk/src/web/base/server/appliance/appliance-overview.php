@@ -254,7 +254,7 @@ $output = array();
 // all user
 $output[] = array('label' => 'Appliances', 'value' => appliance_display(""));
 // if admin
-if ($OPENQRM_USER->role == "administrator") {
+if (strstr($OPENQRM_USER->role, "administrator")) {
 	$output[] = array('label' => 'Add Appliance', 'value' => appliance_form());
 	$output[] = array('label' => 'Appliance Admin', 'value' => appliance_display("admin"));
 	$edit_appliance_id = $_REQUEST["edit_appliance_id"];
