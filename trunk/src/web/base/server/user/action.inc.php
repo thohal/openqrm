@@ -16,7 +16,7 @@ switch ($_REQUEST['action']) {
 				$strMsg .= 'Login must not be empty<br>';
 				$error = true;			
 			} else {
-				if(strtolower($OPENQRM_USER->role) == 'administrator' || htmlobject_request('name') == $OPENQRM_USER->name) {
+				if(strstr($OPENQRM_USER->role, "administrator") || htmlobject_request('name') == $OPENQRM_USER->name) {
 					$strCheck = $user->check_string_name(htmlobject_request('name'));
 					if ($strCheck != '') {
 						$strMsg .= 'Login must be '.$strCheck.'<br>';
@@ -29,7 +29,7 @@ switch ($_REQUEST['action']) {
 			}
 			//--------------------------------------------------
 			$user->get_role_name();
-			if(strtolower($OPENQRM_USER->role) != 'administrator' && htmlobject_request('role') != $user->role['value'] && $error === false) {
+			if(strstr($OPENQRM_USER->role, "administrator") && htmlobject_request('role') != $user->role['value'] && $error === false) {
 				$strMsg .= 'You are not allowed to change Role<br>';
 				$error = true;
 			}
@@ -97,7 +97,7 @@ switch ($_REQUEST['action']) {
 	//  Delete User 1
 	//--------------------------------------------------	
 	case 'user_delete':
-		if(strtolower($OPENQRM_USER->role) == 'administrator' || htmlobject_request('name') == $OPENQRM_USER->name) {	
+		if(strstr($OPENQRM_USER->role, "administrator") || htmlobject_request('name') == $OPENQRM_USER->name) {	
 			$url = $thisfile.'?delete=1&currenttab='.$_REQUEST['currenttab'].'&name='.htmlobject_request('name');
 		} else {
 			$strMsg .= 'You are not allowed to delete Users<br>';
@@ -108,7 +108,7 @@ switch ($_REQUEST['action']) {
 	//  Delete User 2
 	//--------------------------------------------------	
 	case 'user_delete_2':
-		if(strtolower($OPENQRM_USER->role) == 'administrator' || htmlobject_request('name') == $OPENQRM_USER->name) {	
+		if(strstr($OPENQRM_USER->role, "administrator") || htmlobject_request('name') == $OPENQRM_USER->name) {	
 			$user = new user(htmlobject_request('name'));
 			$user->query_delete();
 			$strMsg .= 'User <b>'.htmlobject_request('name').'</b> deleted<br>';		

@@ -8,9 +8,10 @@ if(htmlobject_request('action') != '') {
 	require_once('action.inc.php');
 }
 
-if(strtolower($OPENQRM_USER->role) == 'administrator' && htmlobject_request('name') != '') {
+
+if(htmlobject_request('name') != '') {
 	$user = new user(htmlobject_request('name'));
-} else {
+} else if (strstr($OPENQRM_USER->role, "administrator")) {
 	$user = new user($_SERVER['PHP_AUTH_USER']);
 }
 
@@ -101,7 +102,7 @@ $switch
 $output = array();
 $output[] = array('label' => 'Account', 'value' => $account_output);
 
-if(strtolower($OPENQRM_USER->role) == 'administrator') {
+if (strstr($OPENQRM_USER->role, "administrator")) {
 
 	//---------------------------------------------------------
 	$ar_edit = array();
