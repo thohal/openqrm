@@ -12,9 +12,7 @@ if (!defined("ADODB_ASSOC_CASE")) {
 	define('ADODB_ASSOC_CASE',0);
 }
 // different locations of adodb for suse/redhat/debian
-if (file_exists('/usr/share/cacti/lib/adodb/adodb.inc.php')) {
-    require_once ('/usr/share/cacti/lib/adodb/adodb.inc.php');
-} else if (file_exists('/usr/share/php/adodb/adodb.inc.php')) {
+if (file_exists('/usr/share/php/adodb/adodb.inc.php')) {
     require_once ('/usr/share/php/adodb/adodb.inc.php');
 } else if (file_exists($RootDir.'include/adodb/adodb.inc.php')) {
     require_once ($RootDir.'include/adodb/adodb.inc.php');
