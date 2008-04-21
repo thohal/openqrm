@@ -71,8 +71,8 @@ function openqrm_get_db_connection() {
 	global $OPENQRM_DATABASE_PASSWORD;
 	
 	if ("$OPENQRM_DATABASE_TYPE" == "db2") {
-		$db = &ADONewConnection('db2');
-		$dsn = "$OPENQRM_DATABASE_NAME";
+		$db = &ADONewConnection('odbc_db2');
+		$dsn = "driver={IBM db2 odbc DRIVER};Database=$OPENQRM_DATABASE_NAME;hostname=$OPENQRM_DATABASE_SERVER;port=50000;protocol=TCPIP;uid=$OPENQRM_DATABASE_USER; pwd=$OPENQRM_DATABASE_PASSWORD";
 		$db->Connect($dsn);
 
 	} else if ("$OPENQRM_DATABASE_TYPE" == "oracle") {
