@@ -55,13 +55,16 @@ function openqrm_check_build_requirements() {
 	# check which command to use for checking the requirements
 	if [ -f /etc/debian_version ]; then
 		OPENQRM_PACKAGE_TYPE=deb
-		OPENQRM_REQUIREMENTS_CHECK_COMMAND="dpkg -s"
+		OPENQRM_REQUIREMENTS_CHECK_COMMAND="dpkg -L"
+		OPENQRM_PACKAGE_INSTALL_CMD="apt-get install"
 	elif [ -f /etc/redhat-release ]; then
 		OPENQRM_PACKAGE_TYPE=rpm
 		OPENQRM_REQUIREMENTS_CHECK_COMMAND="rpm -qs"
+		OPENQRM_PACKAGE_INSTALL_CMD="yum install"
 	elif [ -f /etc/SuSE-release ]; then
 		OPENQRM_PACKAGE_TYPE=rpm
 		OPENQRM_REQUIREMENTS_CHECK_COMMAND="rpm -qs"
+		OPENQRM_PACKAGE_INSTALL_CMD="yum install"
 	else
 		echo "NOTICE: Could not find out which compile-requirements to use"
 		echo "        Please make sure to have all needed components installed!"
@@ -75,8 +78,11 @@ function openqrm_check_build_requirements() {
 		if $OPENQRM_REQUIREMENTS_CHECK_COMMAND $DEP 1>/dev/null 2>&1; then
 			echo "-> found $DEP installed"
 		else
-			echo "ERROR: $DEP not installed. Please install to continue"
-			return 1
+			echo "NOTICE: Trying to automatically install $DEP ..."
+			if ! $OPENQRM_PACKAGE_INSTALL_CMD $DEP; then
+				echo "ERROR: $DEP could not be installed. Please install manually to continue"
+				return 1
+			fi
 		fi
 	done
 
@@ -89,8 +95,11 @@ function openqrm_check_build_requirements() {
 			if $OPENQRM_REQUIREMENTS_CHECK_COMMAND $DEP 1>/dev/null 2>&1; then
 				echo "-> found $DEP installed"
 			else
-				echo "ERROR: $DEP not installed. Please install to continue"
-				return 1
+				echo "NOTICE: Trying to automatically install $DEP ..."
+				if ! $OPENQRM_PACKAGE_INSTALL_CMD $DEP; then
+					echo "ERROR: $DEP could not be installed. Please install manually to continue"
+					return 1
+				fi
 			fi
 		done
 	done
