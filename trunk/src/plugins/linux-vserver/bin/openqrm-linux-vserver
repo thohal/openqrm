@@ -3,13 +3,11 @@
 # this script automatically manages linux-vserver
 OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/include/openqrm-plugin-linux-vserver-functions
 . /var/openqrm/openqrm-resource.conf
 OPENQRM_POSTENCODE="$resource_basedir/openqrm/sbin/openqrm-postencode.py"
-OPENQRM_LINUX_VSERVER_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/templates/openqrm-linux-vserver-vm"
-# using the linux-vserver-tools domain location
-OPENQRM_VM_DIR=/var/lib/vservers/
-
+OPENQRM_LINUX_VSERVER_IDLE_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/templates/openqrm-initrd-default.tgz"
 
 # let only root run this script
 WHOAMI=`whoami`
@@ -18,9 +16,9 @@ if [ "$WHOAMI" != "root" ]; then
 	exit 6
 fi
 
-function linux-vserver_usage() {
+function linux_vserver_usage() {
 	echo "Usage : $0 start/stop/reboot/delete/list <-n vm-name>"
-	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-i ip-address> <-r memory> [-d disk-size -s swap-size]"
+	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-i ip-address>"
 	echo "        $0 post_vm_list <-u username> <-p password>"
 	exit 1
 }
@@ -43,18 +41,6 @@ while [ $# -ne 0 ]; do
 			LINUX_VSERVER_VM_IP=$2
 			shift
 			;;
-		-r)
-			LINUX_VSERVER_VM_RAM=$2
-			shift
-			;;
-		-d)
-			LINUX_VSERVER_VM_DISK=$2
-			shift
-			;;
-		-s)
-			LINUX_VSERVER_VM_SWAP=$2
-			shift
-			;;
 		-u)
 			LINUX_VSERVER_OPENQRM_USERNAME=$2
 			shift
@@ -65,7 +51,7 @@ while [ $# -ne 0 ]; do
 			;;
 		*)
 			echo "ERROR: Free commandline arguments are not allowed"
-			linux-vserver_usage
+			linux_vserver_usage
 			exit 6
 			;;
 	esac
@@ -77,21 +63,21 @@ done
 
 # main
 if [ "$LINUX_VSERVER_COMMAND" == "" ]; then
-	linux-vserver_usage
+	linux_vserver_usage
 fi
 
 if [ "$LINUX_VSERVER_COMMAND" == "post_vm_list" ]; then
 		if [ "$LINUX_VSERVER_OPENQRM_USERNAME" == "" ]; then
-			linux-vserver_usage
+			linux_vserver_usage
 		fi
 		if [ "$LINUX_VSERVER_OPENQRM_PASSWORD" == "" ]; then
-			linux-vserver_usage
+			linux_vserver_usage
 		fi
 else
 
 	if [ "$LINUX_VSERVER_COMMAND" != "list" ]; then
 		if [ "$LINUX_VSERVER_VM_NAME" == "" ]; then
-			linux-vserver_usage
+			linux_vserver_usage
 		fi
 	fi
 fi
@@ -101,20 +87,18 @@ case "$LINUX_VSERVER_COMMAND" in
 
 	create)
 		if [ "$LINUX_VSERVER_VM_MAC" == "" ]; then
-			linux-vserver_usage
+			linux_vserver_usage
 		fi
 		if [ "$LINUX_VSERVER_VM_IP" == "" ]; then
-			linux-vserver_usage
+			linux_vserver_usage
 		fi
-		if [ "$LINUX_VSERVER_VM_RAM" == "" ]; then
-			linux-vserver_usage
-		fi
-		echo "Creating Linux-VServer vm $LINUX_VSERVER_VM_NAME -> /etc/linux-vserver/$LINUX_VSERVER_VM_NAME.cfg"
+		CURRENT_DIR=`pwd`
+		echo "Creating Linux-VServer vm $LINUX_VSERVER_VM_NAME -> /etc/vservers/$LINUX_VSERVER_VM_NAME"
 		# gathering some infos
 		if [ "$LINUX_VSERVER_VM_IP" == "dhcp" ]; then
 			echo "-> gathering an ip-address for $LINUX_VSERVER_VM_MAC ..."
-			if ! linux-vserver_get_next_ip $LINUX_VSERVER_VM_MAC; then
-				return 1			
+			if ! linux_vserver_get_next_ip $LINUX_VSERVER_VM_MAC; then
+				exit 1			
 			fi
 			export LINUX_VSERVER_VM_IP=$PARTITION_IP
 			export OPENQRM_LINUX_VSERVER_SUBNET_MASK=$PARTITION_SUBNET
@@ -124,42 +108,111 @@ case "$LINUX_VSERVER_COMMAND" in
 		export OPENQRM_LINUX_VSERVER_DEFAULT_GATEWAY=`route -n | grep ^0.0.0.0 | head -n1 | awk {' print $2 '}`
 		export OPENQRM_RESOURCE_ID=-1
 		export OPENQRM_KERNEL_VERSION=`uname -r`
-		# creating the cfg
-		cat $OPENQRM_LINUX_VSERVER_VM_TEMPLATE |	\
-			sed -e "s/@@LINUX_VSERVER_VM_NAME@@/$LINUX_VSERVER_VM_NAME/g" |	\
-			sed -e "s/@@KERNEL_NAME@@/$resource_kernel/g" |	\
-			sed -e "s/@@KERNEL_VERSION@@/$OPENQRM_KERNEL_VERSION/g" |	\
-			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$LINUX_VSERVER_VM_RAM/g" |	\
-			sed -e "s/@@OPENQRM_RESOURCE_ID@@/$OPENQRM_RESOURCE_ID/g" |	\
-			sed -e "s/@@OPENQRM_RESOURCE_IP@@/$LINUX_VSERVER_VM_IP/g" |	\
-			sed -e "s/@@OPENQRM_RESOURCE_MAC@@/$LINUX_VSERVER_VM_MAC/g" |	\
-			sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$resource_openqrmserver/g" | \
-			sed -e "s/@@OPENQRM_LINUX_VSERVER_SUBNET_MASK@@/$OPENQRM_LINUX_VSERVER_SUBNET_MASK/g" | \
-			sed -e "s/@@OPENQRM_LINUX_VSERVER_DEFAULT_GATEWAY@@/$OPENQRM_LINUX_VSERVER_DEFAULT_GATEWAY/g" \
-			> /etc/linux-vserver/$LINUX_VSERVER_VM_NAME.cfg
+		# find the next free interface name
+		LAST_NETWORK_INTERFACE=`ifconfig -a | grep ^eth | grep -v :oq | awk {' print $1 '} | sort | tail -n1 | sed -e "s/eth//g"`
+		FIRST_FREE_NETWORK_INTERFACE=$(( LAST_NETWORK_INTERFACE + 1 ))
+		LINUX_VSERVER_VM_INTERFACE="eth$FIRST_FREE_NETWORK_INTERFACE"
 
-		# disk + swap
-		if [ "$LINUX_VSERVER_VM_DISK" != "" ] && [ "$LINUX_VSERVER_VM_SWAP" != "" ]; then
-			echo "-> Creating disk + swap"
-			mkdir -p $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME
-			dd if=/dev/zero of=$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/disk.img bs=1M count=$LINUX_VSERVER_VM_DISK
-			mkfs.ext3 -F $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/disk.img
-			dd if=/dev/zero of=$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/swap.img bs=1M count=$LINUX_VSERVER_VM_SWAP
-			mkswap -f $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/swap.img
-			cat >> /etc/linux-vserver/$LINUX_VSERVER_VM_NAME.cfg << EOF
-root        = '/dev/hda1 ro'
-disk        = [ 'file:$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/disk.img,hda1,w', 'file:$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/swap.img,hda2,w' ]
+		# creating the config dirs
+		mkdir -p $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME
+		mkdir -p $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/apps
+		mkdir -p $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/apps/pkgmgmt
+		mkdir -p $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/apps/init
+		mkdir -p $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/uts
+		mkdir -p $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/interfaces
+		mkdir -p $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/interfaces/0
+		mkdir -p $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/cpuset
+		# creating the config files
+		touch $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/apps/pkgmgmt/internal
+		echo "$LINUX_VSERVER_VM_NAME" > $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/name
+		echo "$LINUX_VSERVER_VM_NAME" > $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/uts/nodename
+		if [ "$OPENQRM_LINUX_VSERVER_SUBNET_MASK" == "255.255.255.0" ]; then
+			echo "24" > $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/interfaces/0/prefix
+		elif [ "$OPENQRM_LINUX_VSERVER_SUBNET_MASK" == "255.255.0.0" ]; then
+			echo "16" > $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/interfaces/0/prefix
+		elif [ "$OPENQRM_LINUX_VSERVER_SUBNET_MASK" == "255.0.0.0" ]; then
+			echo "8" > $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/interfaces/0/prefix
+		else
+			echo "8" > $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/interfaces/0/prefix
+		fi		
+		echo "$LINUX_VSERVER_VM_INTERFACE" > $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/interfaces/0/dev
+		echo "$LINUX_VSERVER_VM_IP" > $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/interfaces/0/ip
+		echo "$LINUX_VSERVER_VM_MAC" > $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/interfaces/0/mac
+		cat >> $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/fstab << EOF
+none    /proc           proc    defaults                0 0
+none    /tmp            tmpfs   size=16m,mode=1777      0 0
+none    /dev/pts        devpts  gid=5,mode=620          0 0
 EOF
+
+		# creating the config links
+		cd $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/
+		ln -s /var/run/vservers/$LINUX_VSERVER_VM_NAME run
+		ln -s $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME vdir
+
+		# create the vm fs from the initrd-template
+		mkdir -p $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME
+		cd $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME
+		tar -xzf $OPENQRM_LINUX_VSERVER_IDLE_TEMPLATE
+		mkdir -p $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/tmp
+		mkdir -p $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/dev/pts
+
+		# adapt rc
+		rm -f $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/etc/rc.d/rc
+		cat >> $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/etc/rc.d/rc << EOF
+#!/bin/bash
+INIT=\$1
+if [ "\$INIT" == "6" ]; then
+        $OPENQRM_SERVER_BASE_DIR/openqrm/etc/init.d/openqrm-client stop
+        killall bash
+        killall rc
+fi
+nohup /etc/init.d/rcS 
+while (true); do sleep 10; done &
+EOF
+		chmod +x $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/etc/rc.d/rc
+
+		# adapt rcS
+		rm -f $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/etc/rc.d/init.d/rcS
+		cat >> $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/etc/rc.d/init.d/rcS << EOF
+#!/bin/bash
+export SHELL=/bin/bash
+export \$(eval cat /proc/cmdline)
+echo "openQRM resource \$id is starting rcS" > /dev/console
+$OPENQRM_SERVER_BASE_DIR/openqrm/etc/init.d/openqrm-client start
+/bin/bash
+EOF
+		chmod +x $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/etc/rc.d/init.d/rcS
+		cd $CURRENT_DIR
+		# copy the openQRM dir
+		mkdir $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_SERVER_BASE_DIR/
+		cp -aR $OPENQRM_SERVER_BASE_DIR/openqrm $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_SERVER_BASE_DIR/
+
+		# send new resource to openQRM to get resource-config
+		mkdir -p `dirname $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE`
+		wget -q -O $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE "http://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$OPENQRM_RESOURCE_ID&resource_mac=$LINUX_VSERVER_VM_MAC&resource_ip=$LINUX_VSERVER_VM_IP"
+
+		# bring up vethd interface
+		if ! linux_vserver_manage_vif start $LINUX_VSERVER_VM_NAME; then
+			exit 1
 		fi
-		vserver $LINUX_VSERVER_VM_NAME start
+		# start as idle
+		nohup vserver $LINUX_VSERVER_VM_NAME start
 		;;
 	start)
 		echo "Starting Linux-VServer vm $LINUX_VSERVER_VM_NAME"
-		vserver $LINUX_VSERVER_VM_NAME start
+		# bring up vethd interface
+		if ! linux_vserver_manage_vif start $LINUX_VSERVER_VM_NAME; then
+			exit 1
+		fi
+		nohup vserver $LINUX_VSERVER_VM_NAME start
 		;;
 	stop)
 		echo "Stopping Linux-VServer vm $LINUX_VSERVER_VM_NAME"
 		vserver $LINUX_VSERVER_VM_NAME stop
+		# bring down vethd interface
+		if ! linux_vserver_manage_vif stop $LINUX_VSERVER_VM_NAME; then
+			exit 1			
+		fi
 		;;
 	reboot)
 		echo "Rebooting Linux-VServer vm $LINUX_VSERVER_VM_NAME"
@@ -167,7 +220,12 @@ EOF
 		;;
 	delete)
 		echo "Removing Linux-VServer vm $LINUX_VSERVER_VM_NAME"
-		vserver $LINUX_VSERVER_VM_NAME delete
+		vserver $LINUX_VSERVER_VM_NAME stop
+		echo 'y' | vserver $LINUX_VSERVER_VM_NAME delete
+		# bring down vethd interface
+		if ! linux_vserver_manage_vif stop $LINUX_VSERVER_VM_NAME; then
+			exit 1			
+		fi
 		;;
 	list)
 		echo "Listing Linux-VServer vms"
@@ -190,7 +248,7 @@ EOF
 		rm -f $VM_LIST_TMP.post
 		;;
 	*)
-		linux-vserver_usage
+		linux_vserver_usage
 		;;
 
 

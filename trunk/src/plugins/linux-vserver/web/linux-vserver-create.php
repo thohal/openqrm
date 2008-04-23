@@ -34,9 +34,6 @@ function linux_vserver_create() {
 	$disp = $disp.htmlobject_input('linux_vserver_name', array("value" => '', "label" => 'VM name'), 'text', 20);
 	$disp = $disp.htmlobject_input('linux_vserver_mac', array("value" => $suggested_mac, "label" => 'Mac address'), 'text', 20);
 	$disp = $disp.htmlobject_input('linux_vserver_ip', array("value" => 'dhcp', "label" => 'Ip address'), 'text', 20);
-	$disp = $disp.htmlobject_input('linux_vserver_ram', array("value" => '256', "label" => 'Memory (MB)'), 'text', 10);
-	$disp = $disp.htmlobject_input('linux_vserver_disk', array("value" => '2000', "label" => 'Disk (MB)'), 'text', 10);
-	$disp = $disp.htmlobject_input('linux_vserver_swap', array("value" => '500', "label" => 'Swap (MB)'), 'text', 10);
 	$disp = $disp."<input type=hidden name=linux_vserver_id value=$linux_vserver_id>";
 	$disp = $disp."<input type=hidden name=linux_vserver_command value='new'>";
 	$disp = $disp."<br>";

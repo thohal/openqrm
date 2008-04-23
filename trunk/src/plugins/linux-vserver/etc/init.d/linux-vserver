@@ -1,68 +1,41 @@
 #!/bin/bash
-# this is the boot-service init script for the Xen-hosts
+# this is the boot-service init script for the Linux-VServer-hosts
 
 export `eval cat /proc/cmdline`	
 . /var/openqrm/openqrm-resource.conf
 export OPENQRM_SERVER_BASE_DIR=$resource_basedir
-. $resource_basedir/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/include/openqrm-plugin-linux-vserver-functions
 
-# only run on linux-vserver hosts
-grep -q "control_d" /proc/linux-vserver/capabilities 2>/dev/null || exit 0
 
-function linux-vserver_start() {
+function linux_vserver_start() {
 	echo "Starting the openQRM linux-vserver-plugin"
-	linux-vserver_stop 1>/dev/null 2>&1
-
-	# linux-vserver interface -> the one not bounded to the rootfs
-	OPENQRM_INTERFACE=`ifconfig | grep $resource_mac | grep :oq | cut -d':' -f1`
-	LINUX-VSERVER_INTERFACE=`ifconfig | grep ^eth | grep -v $OPENQRM_INTERFACE | head -n1 | awk {' print $1 '}`
-	if [ -x /etc/linux-vserver/scripts/network-bridge ]; then
-		/etc/linux-vserver/scripts/network-bridge start vifnum=0 bridge=linux-vserverbr0 netdev=$LINUX-VSERVER_INTERFACE 
-	fi
-
+	linux_vserver_stop 1>/dev/null 2>&1
 	# download the initrd
-	if ! wget -q -O /boot/initrd-$resource_kernel.img http://$resource_openqrmserver/openqrm/boot-service/initrd-$resource_kernel.img; then
-		echo "ERROR: Could not download http://$resource_openqrmserver/openqrm/boot-service/initrd-$resource_kernel.img"
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/templates
+	if ! wget -q -O $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/templates/openqrm-initrd-default.tgz http://$resource_openqrmserver/openqrm/boot-service/openqrm-initrd-default.tgz; then
+		echo "ERROR: Could not download http://$resource_openqrmserver/openqrm/boot-service/openqrm-initrd-default.tgz"
 		return 1
 	fi
-	# adjust Xen-config	and enable migration
-	if [ -f /etc/linux-vserver/linux-vserverd-config.sxp ]; then
-		cat /etc/linux-vserver/linux-vserverd-config.sxp |	\
-			sed -e "s/^(linux-vserverd-relocation-hosts-allow/#(linux-vserverd-relocation-hosts-allow/g" |	\
-			sed -e "s/^#(linux-vserverd-relocation-hosts-allow '')/(linux-vserverd-relocation-hosts-allow '')/g" |	\
-			sed -e "s/^#(linux-vserverd-relocation-port 8002)/(linux-vserverd-relocation-port 8002)/g" |	\
-			sed -e "s/^#(linux-vserverd-relocation-address '')/(linux-vserverd-relocation-address '')/g" > /tmp/linux-vserverd-config.sxp.openqrm
-		mv -f /tmp/linux-vserverd-config.sxp.openqrm /etc/linux-vserver/linux-vserverd-config.sxp
-	fi
-	# restart linux-vserver
-	if [ -x /etc/init.d/linux-vserverd ]; then
-		/etc/init.d/linux-vserverd stop
-		/etc/init.d/linux-vserverd start
-	fi
-
 }
 
 
-function linux-vserver_stop() {
+function linux_vserver_stop() {
 	echo "Stopping the openQRM linux-vserver-plugin"
-	/etc/init.d/linux-vserverd stop
 }
-
-
-
 
 
 case "$1" in
 	start)
-		linux-vserver_start
+		linux_vserver_start
 		;;
 	stop)
-		linux-vserver_stop
+		linux_vserver_stop
 		;;
 	restart)
-		linux-vserver_stop
+		linux_vserver_stop
 		sleep 1
-		linux-vserver_start
+		linux_vserver_start
 		;;
 	*)
 		echo "Usage: $0 {start|stop|restart}"

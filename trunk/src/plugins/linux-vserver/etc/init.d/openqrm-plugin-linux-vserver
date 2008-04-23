@@ -34,6 +34,7 @@ function openqrm_plugin_linux_vserver_uninstall() {
 	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD linux-vserver
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/linux-vserver
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-linux-vserver.tgz
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-initrd-default.tgz
 }
 
 function openqrm_plugin_linux_vserver_init() {
@@ -49,12 +50,13 @@ function openqrm_plugin_linux_vserver_init() {
 	fi
 	echo "Initializing the openQRM linux-vserver-plugin"
 	# adding virtualization type	
-	openqrm_server_add_virtualization_type $USERNAME $PASSWORD linux-vserver "Xen Virtualization"
+	openqrm_server_add_virtualization_type $USERNAME $PASSWORD linux-vserver "Linux-VServer Virtualization"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/linux-vserver
 	# link the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/web/boot-service-linux-vserver.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-linux-vserver.tgz
-	
+	# link the intird-template
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-default.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-initrd-default.tgz
 }
 
 USER=$2

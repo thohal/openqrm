@@ -37,11 +37,6 @@ if ($OPENQRM_USER->role != "administrator") {
 $linux_vserver_name = $_REQUEST["linux_vserver_name"];
 $linux_vserver_mac = $_REQUEST["linux_vserver_mac"];
 $linux_vserver_ip = $_REQUEST["linux_vserver_ip"];
-$linux_vserver_ram = $_REQUEST["linux_vserver_ram"];
-$linux_vserver_disk = $_REQUEST["linux_vserver_disk"];
-$linux_vserver_swap = $_REQUEST["linux_vserver_swap"];
-$linux_vserver_migrate_to_id = $_REQUEST["linux_vserver_migrate_to_id"];
-$linux_vserver_migrate_type = $_REQUEST["linux_vserver_migrate_type"];
 
 $linux_vserver_fields = array();
 foreach ($_REQUEST as $key => $value) {
@@ -58,7 +53,7 @@ unset($linux_vserver_fields["linux_vserver_command"]);
 			// send command to linux-vserver-host to create the new vm
 			$linux_vserver = new resource();
 			$linux_vserver->get_instance_by_id($linux_vserver_id);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver create -n $linux_vserver_name -m $linux_vserver_mac -i $linux_vserver_ip -r $linux_vserver_ram -d $linux_vserver_disk -s $linux_vserver_swap -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver create -n $linux_vserver_name -m $linux_vserver_mac -i $linux_vserver_ip";
 			$linux_vserver->send_command($linux_vserver->ip, $resource_command);
 			// add vm to openQRM
 			$resource_new = new resource();
@@ -103,37 +98,10 @@ unset($linux_vserver_fields["linux_vserver_command"]);
 			$linux_vserver->send_command($linux_vserver->ip, $resource_command);
 			break;
 
-		case 'remove':
-			$linux_vserver = new resource();
-			$linux_vserver->get_instance_by_id($linux_vserver_id);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver remove -n $linux_vserver_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$linux_vserver->send_command($linux_vserver->ip, $resource_command);
-			break;
-
-		case 'add':
-			$linux_vserver = new resource();
-			$linux_vserver->get_instance_by_id($linux_vserver_id);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver add -n $linux_vserver_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$linux_vserver->send_command($linux_vserver->ip, $resource_command);
-			break;
-
 		case 'delete':
 			$linux_vserver = new resource();
 			$linux_vserver->get_instance_by_id($linux_vserver_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver delete -n $linux_vserver_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$linux_vserver->send_command($linux_vserver->ip, $resource_command);
-			break;
-
-		case 'migrate':
-			$linux_vserver = new resource();
-			$linux_vserver->get_instance_by_id($linux_vserver_id);
-			$destination = new resource();
-			$destination->get_instance_by_id($linux_vserver_migrate_to_id);
-			if ("$linux_vserver_migrate_type" == "1") {
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver migrate -n $linux_vserver_name -i $destination->ip -t live -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			} else {
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver migrate -n $linux_vserver_name -i $destination->ip -t regular -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			}
 			$linux_vserver->send_command($linux_vserver->ip, $resource_command);
 			break;
 
