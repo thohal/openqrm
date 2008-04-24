@@ -86,6 +86,15 @@ function openqrm_check_build_requirements() {
 		fi
 	done
 
+
+	# check if the build tmp directory is writable
+	if [ ! -d "$OPENQRM_BUILD_TMP_DIR" -o ! -w "$OPENQRM_BUILD_TMP_DIR" -o ! -x "$OPENQRM_BUILD_TMP_DIR" ]; then
+		echo "ERROR: $OPENQRM_BUILD_TMP_DIR must exist and be writable by user `whoami`."
+		return 1;
+	fi
+
+
+
 	# get a list of plugins for checking their requirements
 	OPENQRM_PACKAGE_COMPONENT_LIST=`ls $OPENQRM_SOURCE_DIR/plugins | grep -v Makefile | grep -v CVS`
 	for OPENQRM_PLUGIN in $OPENQRM_PACKAGE_COMPONENT_LIST; do

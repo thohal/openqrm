@@ -2,7 +2,7 @@
 # this script helps the "make" to call functions 
 # from within the Makefile
 
-OPENQRM_SERVER_BASE_DIR=`dirname $0`
+OPENQRM_SERVER_BASE_DIR=`pwd`/`dirname $0`
 OPENQRM_SOURCE_DIR=$OPENQRM_SERVER_BASE_DIR
 . $OPENQRM_SOURCE_DIR/etc/openqrm-server.conf
 . $OPENQRM_SOURCE_DIR/include/openqrm-functions
