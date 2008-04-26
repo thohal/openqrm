@@ -1,6 +1,6 @@
 #!/bin/bash
 # this is the postinstall script for the packaging stage
 
-chmod +x /opt/openqrm/etc/init.d/openqrm-server
-ln -sf /opt/openqrm/etc/init.d/openqrm-server /etc/init.d/openqrm-server
+chmod +x /usr/share/openqrm/etc/init.d/openqrm-server
+ln -sf /usr/share/openqrm/etc/init.d/openqrm-server /etc/init.d/openqrm-server
 /etc/init.d/openqrm-server start
