@@ -6,12 +6,15 @@ configure:
 
 compile:
 	make openqrm-exec-port-monitor
+	. $(OPENQRM_SERVER_CONF) &&  mkdir -p $$OPENQRM_BUILD_TMP_DIR/openqrm-build/exec-port-monitor
+	. $(OPENQRM_SERVER_CONF) &&  mv  openqrm-exec-port-monitor $$OPENQRM_BUILD_TMP_DIR/openqrm-build/exec-port-monitor/
+	
 
 install:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make install' as root" && exit 1)
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-execd $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
-	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-exec-port-monitor $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
+	. $(OPENQRM_SERVER_CONF) && cp -a $$OPENQRM_BUILD_TMP_DIR/openqrm-build/exec-port-monitor/openqrm-exec-port-monitor $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-monitord $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
 	. $(OPENQRM_SERVER_CONF) && chmod +x $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm*
 
@@ -21,9 +24,10 @@ uninstall:
 	. $(OPENQRM_SERVER_CONF) && rmdir $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin
 
 clean:
-	rm -f openqrm-exec-port-monitor
 
 realclean:	clean
+	rm -f $$OPENQRM_BUILD_TMP_DIR/openqrm-build/exec-port-monitor/openqrm-exec-port-monitor
+	rmdir $$OPENQRM_BUILD_TMP_DIR/openqrm-build/exec-port-monitor; exit 0
 
 all:	configure compile
 	
