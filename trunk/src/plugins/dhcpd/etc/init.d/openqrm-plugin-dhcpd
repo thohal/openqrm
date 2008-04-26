@@ -39,7 +39,7 @@ function openqrm_plugin_dhcpd_init() {
 	chmod -R 777 $OPENQRM_PLUGIN_DHCPD_LEASE_DIR
 
 	# calculate the defaults
-	OPENQRM_SERVER_NETWORK=`openqrm_plugin_dhcpd_ipcalc $OPENQRM_SERVER_IP_ADDRESS $OPENQRM_SERVER_SUBNET_MASK`
+	OPENQRM_SERVER_NETWORK=`openqrm_plugin_dhcpd_get_netaddr $OPENQRM_SERVER_IP_ADDRESS $OPENQRM_SERVER_SUBNET_MASK`
 	IP1=`echo $OPENQRM_SERVER_NETWORK | cut -d'.' -f 1-3`
 	IP2=`echo $OPENQRM_SERVER_NETWORK | cut -d'.' -f 4`
 	IP2=$(( IP2 + 1 ))
