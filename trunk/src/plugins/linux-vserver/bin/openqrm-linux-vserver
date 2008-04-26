@@ -9,6 +9,7 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PW
 OPENQRM_POSTENCODE="$resource_basedir/openqrm/sbin/openqrm-postencode.py"
 OPENQRM_LINUX_VSERVER_IDLE_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/templates/openqrm-initrd-default.tgz"
 
+
 # let only root run this script
 WHOAMI=`whoami`
 if [ "$WHOAMI" != "root" ]; then
@@ -108,8 +109,15 @@ case "$LINUX_VSERVER_COMMAND" in
 		export OPENQRM_LINUX_VSERVER_DEFAULT_GATEWAY=`route -n | grep ^0.0.0.0 | head -n1 | awk {' print $2 '}`
 		export OPENQRM_RESOURCE_ID=-1
 		export OPENQRM_KERNEL_VERSION=`uname -r`
+
 		# find the next free interface name
-		LAST_NETWORK_INTERFACE=`ifconfig -a | grep ^eth | grep -v :oq | awk {' print $1 '} | sort | tail -n1 | sed -e "s/eth//g"`
+		if [ -f $OPENQRM_VIF_CONFIG ]; then
+			# ask config file
+			LAST_NETWORK_INTERFACE=`cat $OPENQRM_VIF_CONFIG | sort | tail -n1 |  awk {' print $1 '} | sed -e "s/eth//g"`
+		else
+			# ask ifconfig
+			LAST_NETWORK_INTERFACE=`ifconfig -a | grep ^eth | grep -v :oq | awk {' print $1 '} | sort | tail -n1 | sed -e "s/eth//g"`
+		fi
 		FIRST_FREE_NETWORK_INTERFACE=$(( LAST_NETWORK_INTERFACE + 1 ))
 		LINUX_VSERVER_VM_INTERFACE="eth$FIRST_FREE_NETWORK_INTERFACE"
 
@@ -191,6 +199,8 @@ EOF
 		mkdir -p `dirname $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE`
 		wget -q -O $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE "http://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$OPENQRM_RESOURCE_ID&resource_mac=$LINUX_VSERVER_VM_MAC&resource_ip=$LINUX_VSERVER_VM_IP"
 
+		# add to a main vif config file, start all at init
+		echo "$LINUX_VSERVER_VM_INTERFACE $LINUX_VSERVER_VM_NAME" >> $OPENQRM_VIF_CONFIG
 		# bring up vethd interface
 		if ! linux_vserver_manage_vif start $LINUX_VSERVER_VM_NAME; then
 			exit 1
@@ -200,18 +210,51 @@ EOF
 		;;
 	start)
 		echo "Starting Linux-VServer vm $LINUX_VSERVER_VM_NAME"
-		# bring up vethd interface
-		if ! linux_vserver_manage_vif start $LINUX_VSERVER_VM_NAME; then
-			exit 1
-		fi
+		# source current parameters of the vm
+		- $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE
+		# update parameters for the resource
+		wget -q -O $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE "http://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
+		# check if assigned to an appliance or idle 
+		if [ "$image_type" != "ram" ]; then
+			eval $image_deployment_parameter
+			# get the root-mount functions according the deployment type
+			wget -q -O $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/root-mount.$image_type-deployment"
+			# adapt root-mount functions of the deployment method
+			sed -i -e "s#/mnt2#XXXXX#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
+			sed -i -e "s#/mnt#$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
+			sed -i -e "s#XXXXX#/mnt2#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
+			# mount the fs-image
+			. $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
+			mount_rootfs
+
+			# copy the resource-config to the fs-image
+			mkdir -p /$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/`dirname $OPENQRM_RESOURCE_PARAMETER_FILE`
+			cp -f $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE /$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/`dirname $OPENQRM_RESOURCE_PARAMETER_FILE`
+			# add openqrm-client
+			mkdir $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_SERVER_BASE_DIR/
+			cp -aR $OPENQRM_SERVER_BASE_DIR/openqrm $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_SERVER_BASE_DIR/
+			# adapt sshd-config
+			if [ ! -f /etc/ssh/sshd_config.lv_openqrm ]; then
+				cp -f /etc/ssh/sshd_config /etc/ssh/sshd_config.lv_openqrm
+			fi
+			bind_sshd $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME $resource_ip
+		if
 		nohup vserver $LINUX_VSERVER_VM_NAME start
 		;;
 	stop)
 		echo "Stopping Linux-VServer vm $LINUX_VSERVER_VM_NAME"
+		# source current parameters of the vm
+		- $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE
+		# check if assigned to an appliance or idle 
+		if [ "$image_type" != "ram" ]; then
+			# restore sshd-conf
+			cp -f /etc/ssh/sshd_config.lv_openqrm /etc/ssh/sshd_config
+		fi
+		# stop vm
 		vserver $LINUX_VSERVER_VM_NAME stop
-		# bring down vethd interface
-		if ! linux_vserver_manage_vif stop $LINUX_VSERVER_VM_NAME; then
-			exit 1			
+		if [ "$image_type" != "ram" ]; then
+			# umount
+			umount $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME
 		fi
 		;;
 	reboot)
@@ -221,11 +264,15 @@ EOF
 	delete)
 		echo "Removing Linux-VServer vm $LINUX_VSERVER_VM_NAME"
 		vserver $LINUX_VSERVER_VM_NAME stop
+		# get vif interface name
+		LINUX_VSERVER_VM_INTERFACE=`cat $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/interfaces/0/mac`
+		# remove physically
 		echo 'y' | vserver $LINUX_VSERVER_VM_NAME delete
 		# bring down vethd interface
 		if ! linux_vserver_manage_vif stop $LINUX_VSERVER_VM_NAME; then
 			exit 1			
 		fi
+		sed -i -e "s/$LINUX_VSERVER_VM_INTERFACE.*//g" $OPENQRM_VIF_CONFIG
 		;;
 	list)
 		echo "Listing Linux-VServer vms"
