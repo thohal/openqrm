@@ -27,7 +27,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp bin/openqrm* $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/
 	. $(OPENQRM_SERVER_CONF) && cp $$OPENQRM_BUILD_TMP_DIR/openqrm-build/veth/veth-1.0/veth/vethd $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/
 	. $(OPENQRM_SERVER_CONF) && chmod +x $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm*
-	. $(OPENQRM_SERVER_CONF) && tar -C $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver -czvf $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/web/boot-service-linux-vserver.tgz include/ bin/ etc/init.d/linux-vserver etc/templates/openqrm-linux-vserver-vm
+	. $(OPENQRM_SERVER_CONF) && tar -C $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver -czvf $$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/web/boot-service-linux-vserver.tgz include/ bin/ etc/init.d/linux-vserver
 
 uninstall:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make uninstall' as root" && exit 1)
