@@ -4,3 +4,4 @@
 #	IMG
 #	Target
 .|Dhcpd
+..|About|plugins/dhcpd/dhcpd-about.php
