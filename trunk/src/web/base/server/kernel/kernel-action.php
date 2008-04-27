@@ -6,7 +6,7 @@ $kernel_name = $_REQUEST["kernel_name"];
 <html>
 <head>
 <title>openQRM Kernel actions</title>
-<meta http-equiv="refresh" content="0; URL=kernel-overview.php?currenttab=tab2&strMsg=Processing <?php echo $kernel_command; ?> on <?php echo $kernel_name; ?>">
+<meta http-equiv="refresh" content="0; URL=kernel-overview.php?currenttab=tab0&strMsg=Processing <?php echo $kernel_command; ?> on <?php echo $kernel_name; ?>">
 </head>
 <body>
 
