@@ -3,5 +3,7 @@
 #	Alt
 #	IMG
 #	Target
-.|SSH-Terminal|http://localhost:8022
+.|SSH-Terminal
+..|About|plugins/sshterm/sshterm-about.php
+..|openQRM|http://localhost:8022
 ..|SSH-Manager|plugins/sshterm/sshterm-manager.php

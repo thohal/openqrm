@@ -4,3 +4,4 @@
 #	IMG
 #	Target
 .|Tftpd
+..|About|plugins/tftpd/tftpd-about.php
