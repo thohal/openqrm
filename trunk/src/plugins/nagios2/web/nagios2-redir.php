@@ -1,7 +1,7 @@
 <?php
 $re = $_REQUEST["re"];
 
-$RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base';
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base';
 require_once "$RootDir/class/openqrm_server.class.php";
 
 $openqrm_server = new openqrm_server();
