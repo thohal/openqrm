@@ -1,0 +1,42 @@
+.htmlobject_tab_box {
+	width:700px;
+}
+.htmlobject_td {
+	padding:5px !important;
+}
+.htmlobject_td.image_id {
+	text-align:center;
+	width:25px;
+	vertical-align:top;
+}
+.htmlobject_td.image_name {
+	text-align:left;
+	width:110px;
+	vertical-align:top;
+}
+.htmlobject_td.image_version {
+	text-align:left;
+	width:110px;
+	vertical-align:top;
+}
+.htmlobject_td.image_comment {
+	text-align:left;
+	width:110px;
+	vertical-align:top;
+}
+.htmlobject_td.image_capabilities {
+	text-align:left;
+	width:320px;
+	vertical-align:top;
+}
+.htmlobject_td.identifier {
+	text-align:center;
+	vertical-align:top;
+}
+
+.tr_hover {
+background-color:#eee;
+}
+.tr_click {
+background-color:#ddd;
+}

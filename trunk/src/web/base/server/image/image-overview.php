@@ -1,64 +1,101 @@
-
-<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-
 <?php
-
-// error_reporting(E_ALL);
-
+$thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/storage.class.php";
-require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
-function image_display($admin) {
-	$image_tmp = new image();
-	$OPENQRM_KERNEL_COUNT_RAMDISK = $image_tmp->get_count("ram");
-	$OPENQRM_KERNEL_COUNT_LOCAL = $image_tmp->get_count("local");
-
-	if ("$admin" == "admin") {
-		$disp = "<b>Image Admin</b>";
-	} else {
-		$disp = "<b>Image overview</b>";
+function redirect($strMsg, $currenttab = 'tab0', $url = '') {
+	global $thisfile;
+	if($url == '') {
+		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
 	}
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."All ramdisk images: $OPENQRM_KERNEL_COUNT_RAMDISK";
-	$disp = $disp."<br>";
-	$disp = $disp."All local images: $OPENQRM_KERNEL_COUNT_LOCAL";
-	$disp = $disp."<br>";
-	$image_array = $image_tmp->display_overview(0, 10);
+	header("Location: $url");
+	exit;
+}
+
+
+if(htmlobject_request('action') != '') {
+$strMsg = '';
+
+	switch (htmlobject_request('action')) {
+		case 'remove':
+			$image = new image();
+			foreach($_REQUEST['identifier'] as $id) {
+				$strMsg .= $image->remove($id);
+			}
+			redirect($strMsg);
+			break;
+	}
+
+}
+
+
+// we need to include the resource.class after the redirect to not send any header
+require_once "$RootDir/class/resource.class.php";
+
+
+function image_display() {
+	global $OPENQRM_USER;
+	global $thisfile;
+
+	$image_tmp = new image();
+	$table = new htmlobject_db_table('image_id');
+
+	$disp = '<h1>Image List</h1>';
+	$disp .= '<br>';
+
+	$arHead = array();
+	$arHead['image_id'] = array();
+	$arHead['image_id']['title'] ='ID';
+
+	$arHead['image_name'] = array();
+	$arHead['image_name']['title'] ='Name';
+
+	$arHead['image_version'] = array();
+	$arHead['image_version']['title'] ='Version';
+
+	$arHead['image_comment'] = array();
+	$arHead['image_comment']['title'] ='Comment';
+
+	$arHead['image_capabilities'] = array();
+	$arHead['image_capabilities']['title'] ='Capabilities';
+
+	$arBody = array();
+	$image_array = $image_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
+
 	foreach ($image_array as $index => $image_db) {
 		$image = new image();
 		$image->get_instance_by_id($image_db["image_id"]);
+		$arBody[] = array(
+			'image_id' => $image_db["image_id"],
+			'image_name' => $image_db["image_name"],
+			'image_version' => $image_db["image_version"],
+			'image_comment' => $image_db["image_comment"],
+			'image_capabilities' => $image_db["image_capabilities"],
+		);
 
-		$disp = $disp."<div id=\"image\" nowrap=\"true\">";
-		$disp = $disp."<form action='image-action.php' method=post>";
-		$disp = $disp."$image->id $image->name ";
-		$disp = $disp."<input type=hidden name=image_id value=$image->id>";
-		$disp = $disp."<input type=hidden name=image_name value=$image->name>";
-		$disp = $disp."<input type=hidden name=image_command value='remove'";
-		if ("$admin" == "admin") {
-			$disp = $disp."<input type=submit value='remove'>";
-		}
-		$disp = $disp."</form>";
-
-		$disp = $disp."<form action='image-overview.php?currenttab=tab3' method=post>";
-		$disp = $disp."<input type=hidden name=image_id value=$image->id>";
-		$disp = $disp."<input type=hidden name=edit_image_id value=$image->id>";
-		$disp = $disp."<input type=hidden name=image_name value=$image->name>";
-		if ("$admin" == "admin") {
-			$disp = $disp."<input type=submit value='edit'>";
-		}
-		$disp = $disp."</form>";
-
-
-		$disp = $disp."</div>";
 	}
-	return $disp;
+
+	$table->id = 'Tabelle';
+	$table->css = 'htmlobject_table';
+	$table->border = 1;
+	$table->cellspacing = 0;
+	$table->cellpadding = 3;
+	$table->form_action = $thisfile;
+	$table->head = $arHead;
+	$table->body = $arBody;
+	if ($OPENQRM_USER->role == "administrator") {
+		$table->bottom = array('remove');
+		$table->identifier = 'image_id';
+	}
+	$table->max = $image_tmp->get_count();
+	#$table->limit = 10;
+	
+	return $disp.$table->get_string();
 }
 
 
@@ -168,7 +205,7 @@ function image_form() {
 function image_edit($image_id) {
 
 	if (!strlen($image_id))  {
-		echo "No Image selected!";
+		$disp = "No Image selected!";
 		exit(0);	
 	}
 
@@ -252,20 +289,17 @@ function image_edit($image_id) {
 
 
 $output = array();
-// all user
-$output[] = array('label' => 'Images', 'value' => image_display(""));
-// if admin
-if (strstr($OPENQRM_USER->role, "administrator")) {
-	$output[] = array('label' => 'Add Image', 'value' => image_form());
-	$output[] = array('label' => 'Image Admin', 'value' => image_display("admin"));
-	$edit_image_id = $_REQUEST["edit_image_id"];
-	if (strlen($edit_image_id)) {
-		$output[] = array('label' => 'Edit Image', 'value' => image_edit($edit_image_id));
-	}
+$output[] = array('label' => 'Images', 'value' => image_display());
+$output[] = array('label' => 'Add Image', 'value' => image_form());
+$edit_image_id = $_REQUEST["edit_image_id"];
+if (strlen($edit_image_id)) {
+	$output[] = array('label' => 'Edit Image', 'value' => image_edit($edit_image_id));
 }
 
-echo htmlobject_tabmenu($output);
-
 ?>
-
+<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+<link rel="stylesheet" type="text/css" href="image.css" />
+<?php
+echo htmlobject_tabmenu($output);
+?>
 

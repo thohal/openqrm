@@ -41,6 +41,7 @@ function kernel_display() {
 	$table = new htmlobject_db_table('kernel_id');
 
 	$disp = '<h1>Kernel List</h1>';
+	$disp .= '<br>';
 
 	$arHead = array();
 	$arHead['kernel_id'] = array();
@@ -83,8 +84,6 @@ function kernel_display() {
 		$table->identifier = 'kernel_id';
 	}
 	$table->max = $kernel_tmp->get_count();
-	$table->lang_label_sort = 'sortiere nach';
-	$table->lang_button_refresh = 'aktualisieren';
 	#$table->limit = 10;
 	
 	return $disp.$table->get_string();

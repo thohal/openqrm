@@ -180,12 +180,12 @@ function get_capabilities($image_id) {
 }
 
 // returns the number of images for an image type
-function get_count($image_type) {
+function get_count() {
 	global $IMAGE_INFO_TABLE;
 	global $event;
 	$count=0;
 	$db=openqrm_get_db_connection();
-	$rs = $db->Execute("select count(image_id) as num from $IMAGE_INFO_TABLE where image_type='$image_type'");
+	$rs = $db->Execute("select count(image_id) as num from $IMAGE_INFO_TABLE");
 	if (!$rs) {
 		$event->log("get_count", $_SERVER['REQUEST_TIME'], 2, "image.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	} else {
@@ -208,11 +208,11 @@ function get_list() {
 
 
 // displays the image-overview
-function display_overview($start, $count) {
+function display_overview($offset, $limit, $sort, $order) {
 	global $IMAGE_INFO_TABLE;
 	global $event;
 	$db=openqrm_get_db_connection();
-	$recordSet = &$db->SelectLimit("select * from $IMAGE_INFO_TABLE where image_id>=$start order by image_id ASC", $count);
+	$recordSet = &$db->SelectLimit("select * from $IMAGE_INFO_TABLE order by $sort $order", $limit, $offset);
 	$image_array = array();
 	if (!$recordSet) {
 		$event->log("display_overview", $_SERVER['REQUEST_TIME'], 2, "image.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);

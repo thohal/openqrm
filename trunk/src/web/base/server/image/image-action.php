@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>openQRM Image actions</title>
-<meta http-equiv="refresh" content="0; URL=image-overview.php?currenttab=tab2&strMsg=Processing image command">
+<meta http-equiv="refresh" content="0; URL=image-overview.php?currenttab=tab0&strMsg=Processing image command">
 </head>
 <body>
 

@@ -31,6 +31,15 @@ $strMsg = '';
 			}
 			redirect($strMsg);
 			break;
+		case 'acknowledge':
+			$event = new event();
+			foreach($_REQUEST['identifier'] as $id) {
+				$event_fields=array();
+				$event_fields["event_status"]=1;
+				$strMsg .= $event->update($id, $event_fields);
+			}
+			redirect($strMsg);
+			break;
 	}
 
 }
@@ -106,12 +115,10 @@ global $thisfile;
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('remove');
+		$table->bottom = array('remove', 'acknowledge');
 		$table->identifier = 'event_id';
 	}
 	$table->max = $event_tmp->get_count();
-	$table->lang_label_sort = 'sortiere nach';
-	$table->lang_button_refresh = 'aktualisieren';
 	#$table->limit = 10;
 	
 	return $disp.$table->get_string();
