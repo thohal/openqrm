@@ -23,7 +23,8 @@ function dhcpd_about() {
 	$disp = $disp." An automatic configured Dhcpd-server is provided by this plugin.";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."How to use :";
+	$disp = $disp."<b>How to use :</b>";
+	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."No manual configuration is needed for the dhcpd-plugin. It automatically configures a dhcpd.conf file during initialization.";
 	$disp = $disp." To manual add resources for static ip-assignment please find the dhcpd.conf used by the plugin at :";
