@@ -65,6 +65,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/event
 	. $(OPENQRM_SERVER_CONF) && cp base/server/event/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/event/
 	. $(OPENQRM_SERVER_CONF) && cp base/server/event/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/event/
+	. $(OPENQRM_SERVER_CONF) && cp base/server/event/*.css $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/event/
 	# base/plugins/aa_plugins
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/aa_plugins
 	. $(OPENQRM_SERVER_CONF) && cp base/plugins/aa_plugins/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/aa_plugins/
