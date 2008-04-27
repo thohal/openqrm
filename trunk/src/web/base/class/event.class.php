@@ -3,34 +3,18 @@
 // This class represents an event in the openQRM engine
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
-require_once "$RootDir/include/openqrm-database-functions.php";
+require_once($RootDir.'/include/openqrm-database-functions.php');
 global $EVENT_INFO_TABLE;
 
 // priorities :
-if (!defined("LOG_EMERG")) {
-	define("LOG_EMERG", 0);
-}
-if (!defined("LOG_ALERT")) {
-	define("LOG_ALERT", 1);
-}
-if (!defined("LOG_CRIT")) {
-	define("LOG_CRIT", 2);
-}
-if (!defined("LOG_ERR")) {
-	define("LOG_ERR", 3);
-}
-if (!defined("LOG_WARNING")) {
-	define("LOG_WARNING", 4);
-}
-if (!defined("LOG_NOTICE")) {
-	define("LOG_NOTICE", 5);
-}
-if (!defined("LOG_INFO")) {
-	define("LOG_INFO", 6);
-}
-if (!defined("LOG_DEBUG")) {
-	define("LOG_DEBUG", 7);
-}
+define("LOG_EMERG", 0);
+define("LOG_ALERT", 1);
+define("LOG_CRIT", 2);
+define("LOG_ERR", 3);
+define("LOG_WARNING", 4);
+define("LOG_NOTICE", 5);
+define("LOG_INFO", 6);
+define("LOG_DEBUG", 7);
 
 
 class event {
@@ -279,10 +263,10 @@ function get_list() {
 
 
 // displays the event-overview
-function display_overview($start, $count) {
+function display_overview($offset, $limit, $sort, $order) {
 	global $EVENT_INFO_TABLE;
 	$db=openqrm_get_db_connection();
-	$recordSet = &$db->SelectLimit("select * from $EVENT_INFO_TABLE where event_id>=$start order by event_id DESC", $count);
+	$recordSet = &$db->SelectLimit("select * from $EVENT_INFO_TABLE order by $sort $order", $limit, $offset);
 	$event_array = array();
 	if (!$recordSet) {
 		$this->log("display_overview", $_SERVER['REQUEST_TIME'], 2, "event.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
