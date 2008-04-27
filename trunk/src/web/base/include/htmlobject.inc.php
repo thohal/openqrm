@@ -3,7 +3,9 @@ $ClassDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/class/';
 
 require_once($ClassDir.'PHPLIB.php');
 require_once($ClassDir.'htmlobject.class.php');
-require_once($ClassDir.'htmlobject_head.class.php');
+require_once($ClassDir.'htmlobject.box.class.php');
+require_once($ClassDir.'htmlobject.table.class.php');
+require_once($ClassDir.'htmlobject.head.class.php');
 
 //---------------------------------------------------------------
 /**

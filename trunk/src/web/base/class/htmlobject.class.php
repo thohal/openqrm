@@ -159,62 +159,6 @@ var $_init_select;
 	}
 }
 
-//--------------------------------------------------------------------------------------
-
-class htmlobject_box extends htmlobject
-{
-
-/**
-* Attribute name (should the the same as Attribute id)
-* @access public
-* @var string
-*/
-var $label = '';
-/**
-* Attribute name (should the the same as Attribute id)
-* @access public
-* @var object
-*/
-var $content = '';
-/**
-* Attribute name (should the the same as Attribute id)
-* @access public
-* @var string
-*/
-var $css_left = 'left';
-/**
-* Attribute name (should the the same as Attribute id)
-* @access public
-* @var string
-*/
-var $css_right = 'right';
-
-/**
-* internal use only
-*/
-
-	function init_htmlobject_box() {
-		if ($this->label == '')		{ $this->label = '&#160;'; }
-		if ($this->content == '')	{ $this->content = '&#160;'; }
-		if ($this->css_left != '') 	{ $this->css_left = ' class="'.$this->css_left.'"'; }
-		if ($this->css_right != '') { $this->css_right = ' class="'.$this->css_right.'"'; }
-	}
-
-	function get_string() {
-	$_strReturn = '';
-		$this->init_htmlobject();
-		$this->init_htmlobject_box();
-		$_strReturn = '
-		<div'.$this->_init_htmlobject.'>
-		<div'.$this->css_left.'><label for="'.$this->content->id.'">'.$this->label.'</label></div>
-		<div'.$this->css_right.'>'.$this->content->get_string().'</div>
-		<div style="line-height:0px;height:0px;clear:both;" class="floatbreaker">&#160;</div>
-		</div>
-		';
-	return $_strReturn;
-	}
-}
-
 //-----------------------------------------------------------------------
 
 class htmlobject_input extends htmlobject
@@ -403,6 +347,18 @@ var $align = '';
 */
 var $bgcolor = '';
 /**
+* colspan
+* @access public
+* @var int
+*/
+var $colspan = '';
+/**
+* td type
+* @access public
+* @var enum (td,th)
+*/
+var $type = 'td';
+/**
 * vertical align
 * @access public
 * @var enum (top | middle | bottom | baseline)
@@ -425,6 +381,7 @@ var $_init_td;
 	$this->_init_td = '';
 		if ($this->align != '') { $this->_init_td .= ' align="'.$this->align.'"'; }
 		if ($this->bgcolor != '') { $this->_init_td .= ' bgcolor="'.$this->bgcolor.'"'; }
+		if ($this->colspan != '') { $this->_init_td .= ' colspan="'.$this->colspan.'"'; }
 		if ($this->valign != '') { $this->_init_td .= ' valign="'.$this->valign.'"'; }
 	}
 
@@ -432,13 +389,12 @@ var $_init_td;
 	$_strReturn = '';
 		$this->init_htmlobject();
 		$this->init_td();
-		$_strReturn = "\n<td$this->_init_htmlobject$this->_init_td>";
+		$_strReturn = "\n<$this->type$this->_init_htmlobject$this->_init_td>";
 		$_strReturn .= $this->text;
-		$_strReturn .= "</td>";
+		$_strReturn .= "</$this->type>";
 	return $_strReturn;
 	}
 }
-
 //------------------------------------------------------------------
 
 class htmlobject_tr extends htmlobject
