@@ -1,6 +1,3 @@
-<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-<link rel="stylesheet" type="text/css" href="event.css" />
-
 <?php
 #error_reporting(0);
 $thisfile = basename($_SERVER['PHP_SELF']);
@@ -123,6 +120,9 @@ global $thisfile;
 
 $output = array();
 $output[] = array('label' => 'Event-List', 'value' => event_display(""));
+?>
+<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+<link rel="stylesheet" type="text/css" href="event.css" />
+<?php
 echo htmlobject_tabmenu($output);
-
 ?>
