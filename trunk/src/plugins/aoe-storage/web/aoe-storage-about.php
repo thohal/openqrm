@@ -26,7 +26,7 @@ function aoe_about() {
 	$disp = $disp."<b>Aoe-storage type :</b>";
 	$disp = $disp."A linux-box (resource) with 'vblade' installed should be used to create";
 	$disp = $disp." a new Storage-server through the openQRM-GUI. The Aoe-storage system can be either";
-	$disp = $disp." deployed via openQRM or integrated into openQRM within the 'local-server' plugin.";
+	$disp = $disp." deployed via openQRM or integrated into openQRM with the 'local-server' plugin.";
 	$disp = $disp."openQRM then automatically manages the vblade disks on the Aoe-storage server.";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";

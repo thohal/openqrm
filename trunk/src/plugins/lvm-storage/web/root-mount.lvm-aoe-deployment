@@ -9,7 +9,7 @@
 #
 # Optional parameters 
 # IMAGE_NFS_MOUNT_OPTIONS			- can be e.g. set to proto=tcp for the install/transform phase
-# IMAGE_INSTALL_FROM				- can be set to an (aoe) location from
+# IMAGE_INSTALL_FROM				- can be set to an (nfs) location from
 #									  which the image will be installed at
 #									  deployment time
 #									  syntax is : ip_of_aoe-server:path_to_target_image
@@ -20,8 +20,7 @@
 # IMAGE_INSTALL_FROM_LOCAL_DEVICE_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
 #
 # IMAGE_TRANSFORM_TO_LOCAL_DEVICE	- set to a local harddisk device (e.g. /dev/hda1) this option will transfrom
-#									  the aoe-storage image on boot-time to the
-#									  local-device configured in the image-parameters
+#									  the image on boot-time to the local-device configured in the image-parameters
 #
 # IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
 #

@@ -25,10 +25,10 @@ function iscsi_about() {
 	$disp = $disp."<br>";
 	$disp = $disp."<b>Iscsi-storage type :</b>";
 	$disp = $disp."<br>";
-	$disp = $disp."A linux-box (resource) with 'vblade' installed should be used to create";
+	$disp = $disp."A linux-box (resource) with the Enterprise Iscsi-target installed should be used to create";
 	$disp = $disp." a new Storage-server through the openQRM-GUI. The Iscsi-storage system can be either";
-	$disp = $disp." deployed via openQRM or integrated into openQRM within the 'local-server' plugin.";
-	$disp = $disp."openQRM then automatically manages the vblade disks on the Iscsi-storage server.";
+	$disp = $disp." deployed via openQRM or integrated into openQRM with the 'local-server' plugin.";
+	$disp = $disp."openQRM then automatically manages the Iscsi-disks (Luns) on the Iscsi-storage server.";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<b>Iscsi-deployment type :</b>";

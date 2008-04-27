@@ -4,6 +4,7 @@
 #	IMG
 #	Target
 .|Nagios2
+..|About|plugins/nagios2/nagios2-about.php
 ..|Overview|plugins/nagios2/nagios2-redir.php?re=cgi-bin/tac.cgi'
 ..|Services|plugins/nagios2/nagios2-redir.php?re='cgi-bin/status.cgi?host=all'
 ..|Hosts|plugins/nagios2/nagios2-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=hostdetail'

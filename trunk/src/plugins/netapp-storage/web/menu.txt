@@ -4,6 +4,7 @@
 #	IMG
 #	Target
 .|NetApp-storage
+..|About|plugins/netapp-storage/netapp-storage-about.php
 ..|Volumes|plugins/netapp-storage/netapp-storage-manager.php?currenttab=tab0
 ..|Aggregates|plugins/netapp-storage/netapp-storage-manager.php?currenttab=tab1
 ..|Filesystem|plugins/netapp-storage/netapp-storage-manager.php?currenttab=tab2

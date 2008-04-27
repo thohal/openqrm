@@ -30,7 +30,7 @@ function local_storage_about() {
 	$disp = $disp."<b>Local-storage storage type :</b>";
 	$disp = $disp."A linux-box (resource) which has NFS-server installed should be used to create";
 	$disp = $disp." a new Storage-server through the openQRM-GUI. The Local-storage system can be either";
-	$disp = $disp." deployed via openQRM or integrated into openQRM within the 'local-server' plugin.";
+	$disp = $disp." deployed via openQRM or integrated into openQRM with the 'local-server' plugin.";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<b>Local-storage deployment type :</b>";
