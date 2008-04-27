@@ -10,7 +10,7 @@
 
 // error_reporting(E_ALL);
 
-$RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
