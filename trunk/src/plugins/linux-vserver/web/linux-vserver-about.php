@@ -15,7 +15,7 @@ require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
 function linux_vserver_about() {
-
+	global $OPENQRM_SERVER_BASE_DIR;
 	$disp = "<h1><img border=0 src=\"/openqrm/base/plugins/linux-vserver/img/plugin.png\"> Linux-VServer plugin</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."The linux-vserver-plugin ";
@@ -34,7 +34,7 @@ function linux_vserver_about() {
 	$disp = $disp."</li><li>";
 	$disp = $disp."Create a Linux-VServer kernel from a Linux-VServer host via the openqrm client";
 	$disp = $disp."<br>";
-	$disp = $disp." [openQRM-base-dir]/openqrm/bin/openqrm bootimage [kernel-name] [kernel-version] [path-to-a-rootfs] [ext2/initramfs]";
+	$disp = $disp." $OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm bootimage [kernel-name] [kernel-version] [path-to-a-rootfs] [ext2/initramfs]";
 	$disp = $disp."</li><li>";
 	$disp = $disp." (Currently you additional need to add the kernel-name + version to the openQRM-server via the GUI)";
 	$disp = $disp."<br>";
