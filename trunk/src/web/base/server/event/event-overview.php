@@ -2,12 +2,44 @@
 <link rel="stylesheet" type="text/css" href="event.css" />
 
 <?php
+#error_reporting(0);
 $thisfile = basename($_SERVER['PHP_SELF']);
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
+
+function redirect($strMsg, $currenttab = 'tab0', $url = '') {
+global $thisfile;
+
+	if($url == '') {
+		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
+	}
+	header("Location: $url");
+	exit;
+}
+
+
+
+
+if(htmlobject_request('action') != '') {
+$strMsg = '';
+
+	switch (htmlobject_request('action')) {
+		case 'remove':
+			$event = new event();
+			foreach($_REQUEST['identifier'] as $id) {
+				$strMsg .= $event->remove($id);
+			}
+			redirect($strMsg);
+			break;
+	}
+
+}
+
+
+
 
 function event_display() {
 global $OPENQRM_USER;
@@ -77,7 +109,7 @@ global $thisfile;
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('delete');
+		$table->bottom = array('remove');
 		$table->identifier = 'event_id';
 	}
 	$table->max = $event_tmp->get_count();

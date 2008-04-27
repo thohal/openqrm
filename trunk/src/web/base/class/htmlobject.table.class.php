@@ -267,7 +267,7 @@ var $_body = array();
 		$order->name = 'order';
 		$order->text_index = array("value" => "value", "text" => "text");
 		$order->text = array(array("value" => "ASC", "text" => "ASC"),array("value" => "DESC", "text" => "DESC"));
-		$order->selected = array($_REQUEST['order']);	
+		$order->selected = array($this->order);	
 	
 		$limit_input = new htmlobject_select();
 		$limit_input->name = 'limit';
