@@ -198,11 +198,11 @@ function get_list() {
 
 
 // displays the storage-overview
-function display_overview($start, $count) {
+function display_overview($offset, $limit, $sort, $order) {
 	global $STORAGE_INFO_TABLE;
 	global $event;
 	$db=openqrm_get_db_connection();
-	$recordSet = &$db->SelectLimit("select * from $STORAGE_INFO_TABLE where storage_id>=$start order by storage_id ASC", $count);
+	$recordSet = &$db->SelectLimit("select * from $STORAGE_INFO_TABLE order by $sort $order", $limit, $offset);
 	$storage_array = array();
 	if (!$recordSet) {
 		$event->log("display_overview", $_SERVER['REQUEST_TIME'], 2, "storage.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);

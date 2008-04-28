@@ -1,107 +1,108 @@
-
-<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-
 <?php
-
+$thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
-require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/storagetype.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
-function storage_display($admin) {
-	global $RootDir;
-	$storage_tmp = new storage();
-	$OPENQRM_STORAGE_COUNT = $storage_tmp->get_count();
 
-	if ("$admin" == "admin") {
-		$disp = "<h1>Storage Admin</h1>";
-	} else {
-		$disp = "<h1>Storage overview</h1>";
+function redirect($strMsg, $currenttab = 'tab0', $url = '') {
+	global $thisfile;
+	if($url == '') {
+		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
 	}
-	$disp = $disp."<br>";
-	$disp = $disp."<div id=\"all_storage\" nowrap=\"true\">";
-	$disp = $disp."Available storage server: $OPENQRM_STORAGE_COUNT";
-	$disp = $disp."</div>";
+	header("Location: $url");
+	exit;
+}
 
-	$disp = $disp."<hr>";
 
-	$disp .= "<table>";
-	$disp .= "<tr><td>";
-	$disp .= "";
-	$disp .= "</td><td>";
-	$disp .= "type";
-	$disp .= "</td><td>";
-	$disp .= "id";
-	$disp .= "</td><td>";
-	$disp .= "name";
-	$disp .= "</td><td>";
-	$disp .= "ip";
-	$disp .= "</td><td>";
-	$disp .= "resource";
-	$disp .= "</td></tr>";
+if(htmlobject_request('action') != '') {
+$strMsg = '';
 
-	$storage_array = $storage_tmp->display_overview(0, 10);
+	switch (htmlobject_request('action')) {
+		case 'remove':
+			$storage = new storage();
+			foreach($_REQUEST['identifier'] as $id) {
+				$strMsg .= $storage->remove($id);
+			}
+			redirect($strMsg);
+			break;
+	}
+
+}
+
+
+
+
+// we need to include the resource.class after the redirect to not send any header
+require_once "$RootDir/class/resource.class.php";
+
+
+function storage_display() {
+	global $OPENQRM_USER;
+	global $thisfile;
+
+	$storage_tmp = new storage();
+	$table = new htmlobject_db_table('storage_id');
+
+	$disp = '<h1>Storage List</h1>';
+	$disp .= '<br>';
+
+	$arHead = array();
+	$arHead['storage_id'] = array();
+	$arHead['storage_id']['title'] ='ID';
+
+	$arHead['storage_name'] = array();
+	$arHead['storage_name']['title'] ='Name';
+
+	$arHead['storage_deployment_type'] = array();
+	$arHead['storage_deployment_type']['title'] ='Type';
+
+	$arHead['storage_resource_id'] = array();
+	$arHead['storage_resource_id']['title'] ='Resource';
+
+	$arHead['storage_comment'] = array();
+	$arHead['storage_comment']['title'] ='Comment';
+
+	$arHead['storage_capabilities'] = array();
+	$arHead['storage_capabilities']['title'] ='Capabilities';
+
+	$arBody = array();
+	$storage_array = $storage_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
+
 	foreach ($storage_array as $index => $storage_db) {
 		$storage = new storage();
 		$storage->get_instance_by_id($storage_db["storage_id"]);
-		$storage_resource = new resource();
-		$storage_resource->get_instance_by_id($storage->resource_id);
-		$storage_deployment = new deployment();
-		$storage_deployment->get_instance_by_id($storage->deployment_type);
-
-		$disp .= "<tr><td>";
-		$storage_deployment_icon_path="$RootDir/plugins/$storage_deployment->type-deployment/img/storage.png";
-		$storage_deployment_icon="/openqrm/base/plugins/$storage_deployment->type-deployment/img/storage.png";
-		$storage_deployment_icon_default="/openqrm/base/img/storage.png";
-		if (file_exists($storage_deployment_icon_path)) {
-			$storage_deployment_icon_default=$storage_deployment_icon;
-		}
-		$disp .= "<img src=\"$storage_deployment_icon_default\">";
-		$disp .= "</td><td>";
-		$disp .= "$storage_deployment->type";
-		$disp .= "</td><td>";
-		$disp = $disp."<div id=\"storage\" nowrap=\"true\">";
-		$disp = $disp."<form action='storage-action.php' method=post>";
-		$disp = $disp."$storage->id";
-		$disp .= "</td><td>";
-		$disp .= "$storage->name";
-		$disp .= "</td><td>";
-		$disp .= "$storage_resource->ip";
-		$disp .= "</td><td>";
-		$disp .= "$storage->resource_id";
-		$disp .= "</td><td>";
-		$disp = $disp."<input type=hidden name=storage_id value=$storage->id>";
-		$disp = $disp."<input type=hidden name=storage_name value=$storage->name>";
-		$disp = $disp."<input type=hidden name=storage_command value='remove'>";
-		$disp .= "</td><td>";
-		if ("$admin" == "admin") {
-			$disp = $disp."<input type=submit value='Remove'>";
-		}
-		$disp = $disp."</form>";
-		$disp .= "</td><td>";
-		$disp = $disp."<form action='storage-overview.php?currenttab=tab3' method=post>";
-		$disp = $disp."<input type=hidden name=storage_id value=$storage->id>";
-		$disp = $disp."<input type=hidden name=storage_name value=$storage->name>";
-		$disp = $disp."<input type=hidden name=edit_storage_id value=$storage->id>";
-		$disp .= "</td><td>";
-		if ("$admin" == "admin") {
-			$disp = $disp."<input type=submit value='Edit'>";
-		}
-		$disp = $disp."</form>";
-
-		$disp = $disp."</div>";
-
-		$disp .= "</td>";
-		$disp .= "</tr>";
+		$arBody[] = array(
+			'storage_id' => $storage_db["storage_id"],
+			'storage_name' => $storage_db["storage_name"],
+			'storage_deployment_type' => $storage_db["storage_deployment_type"],
+			'storage_resource_id' => $storage_db["storage_resource_id"],
+			'storage_comment' => $storage_db["storage_comment"],
+			'storage_capabilities' => $storage_db["storage_capabilities"],
+		);
 
 	}
-	$disp .= "</table>";
-	$disp = $disp."<hr>";
-	return $disp;
+
+	$table->id = 'Tabelle';
+	$table->css = 'htmlobject_table';
+	$table->border = 1;
+	$table->cellspacing = 0;
+	$table->cellpadding = 3;
+	$table->form_action = $thisfile;
+	$table->head = $arHead;
+	$table->body = $arBody;
+	if ($OPENQRM_USER->role == "administrator") {
+		$table->bottom = array('remove', 'edit');
+		$table->identifier = 'storage_id';
+	}
+	$table->max = $storage_tmp->get_count();
+	#$table->limit = 10;
+	
+	return $disp.$table->get_string();
 }
 
 
@@ -273,20 +274,25 @@ function storage_edit($storage_id) {
 
 
 $output = array();
-// all user
-$output[] = array('label' => 'Storage-List', 'value' => storage_display(""));
-// if admin
-if (strstr($OPENQRM_USER->role, "administrator")) {
-	$output[] = array('label' => 'New', 'value' => storage_form());
-	$output[] = array('label' => 'Storage-Admin', 'value' => storage_display("admin"));
-	$edit_storage_id = $_REQUEST["edit_storage_id"];
-	if (strlen($edit_storage_id)) {
-		$output[] = array('label' => 'Edit Storage', 'value' => storage_edit($edit_storage_id));
+$output[] = array('label' => 'Storage-List', 'value' => storage_display());
+$output[] = array('label' => 'New', 'value' => storage_form());
+
+if(htmlobject_request('action') != '') {
+	switch (htmlobject_request('action')) {
+		case 'edit':
+			foreach($_REQUEST['identifier'] as $id) {
+				$output[] = array('label' => 'Edit Storage', 'value' => storage_edit($id));
+			}
+			break;
 	}
 }
 
-echo htmlobject_tabmenu($output);
 
+?>
+<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+<link rel="stylesheet" type="text/css" href="storage.css" />
+<?php
+echo htmlobject_tabmenu($output);
 ?>
 
 

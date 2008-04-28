@@ -6,7 +6,7 @@ $storage_name = $_REQUEST["storage_name"];
 <html>
 <head>
 <title>openQRM Storage actions</title>
-<meta http-equiv="refresh" content="0; URL=storage-overview.php?currenttab=tab2&strMsg=Processing <?php echo $storage_command; ?> on <?php echo $storage_name; ?>">
+<meta http-equiv="refresh" content="0; URL=storage-overview.php?currenttab=tab0&strMsg=Processing <?php echo $storage_command; ?> on <?php echo $storage_name; ?>">
 </head>
 <body>
 
