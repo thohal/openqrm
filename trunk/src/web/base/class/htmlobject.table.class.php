@@ -96,7 +96,7 @@ var $_body = array();
 	//----------------------------------------------------------------------------------------
 	function htmlobject_db_table_init() {
 		$this->_num_rows = count($this->body);
-		$this->_num_cols = count($this->body[0]);
+		$this->_num_cols = count($this->head);
 		if($this->identifier != '') { $this->_num_cols = $this->_num_cols +1; }
 	}
 	
