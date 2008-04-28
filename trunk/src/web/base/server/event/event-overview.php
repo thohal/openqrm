@@ -55,6 +55,7 @@ global $thisfile;
 	$table = new htmlobject_db_table('event_priority');
 
 	$disp = '<h1>Event List</h1>';
+	$disp .= '<br>';
 
 	$arHead = array();
 	$arHead['event_priority'] = array();

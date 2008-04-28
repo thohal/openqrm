@@ -8,6 +8,7 @@ require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
+
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	global $thisfile;
 	if($url == '') {
@@ -32,6 +33,8 @@ $strMsg = '';
 	}
 
 }
+
+
 
 
 // we need to include the resource.class after the redirect to not send any header
@@ -89,7 +92,7 @@ function image_display() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('remove');
+		$table->bottom = array('remove', 'edit');
 		$table->identifier = 'image_id';
 	}
 	$table->max = $image_tmp->get_count();
@@ -291,10 +294,17 @@ function image_edit($image_id) {
 $output = array();
 $output[] = array('label' => 'Images', 'value' => image_display());
 $output[] = array('label' => 'Add Image', 'value' => image_form());
-$edit_image_id = $_REQUEST["edit_image_id"];
-if (strlen($edit_image_id)) {
-	$output[] = array('label' => 'Edit Image', 'value' => image_edit($edit_image_id));
+
+if(htmlobject_request('action') != '') {
+	switch (htmlobject_request('action')) {
+		case 'edit':
+			foreach($_REQUEST['identifier'] as $id) {
+				$output[] = array('label' => 'Edit Image', 'value' => image_edit($id));
+			}
+			break;
+	}
 }
+
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
