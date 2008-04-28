@@ -16,6 +16,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-execd $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
 	. $(OPENQRM_SERVER_CONF) && cp -a $$OPENQRM_BUILD_TMP_DIR/openqrm-build/exec-port-monitor/openqrm-exec-port-monitor $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-monitord $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
+	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-postencode.py $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
 	. $(OPENQRM_SERVER_CONF) && chmod +x $$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm*
 
 uninstall:
