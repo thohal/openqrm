@@ -102,11 +102,11 @@ function nfs_storage_display($nfs_storage_id) {
 				$export_name = trim($nfs);
 				$real_image_name = strrchr($export_name, '/');
 				$real_image_name = substr($real_image_name, 1);
+				$real_image_name = trim($real_image_name);
+				$firstws = strpos($real_image_name, '<');
+				$real_image_name = substr($real_image_name, 0, $firstws-1);
 				$disp = $disp.$nfs;
 				$disp = $disp." <a href=\"nfs-storage-action.php?source_tab=tab0&nfs_storage_command=remove_export&nfs_storage_id=$nfs_storage_id&nfs_storage_image_name=$real_image_name\">Remove</a>";
-				$disp = $disp."<br>";
-			} else if (strstr($nfs, ")")) {
-				$disp = $disp.$nfs;
 				$disp = $disp."<br>";
 				$disp = $disp."<br>";
 				$disp = $disp."Clone image ";
