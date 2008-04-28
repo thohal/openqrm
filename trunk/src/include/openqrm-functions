@@ -8,6 +8,7 @@ if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
 fi
 # some static defines
 OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
+export LANG=C
 
 # A more portable "chkconfig". 
 # Uses chkconfig or rc.d-update as found, if not then "manual".

@@ -15,6 +15,7 @@
 # Description: openQRM init script for the managed resources
 ### END INIT INFO
 
+export LANG=C
 PATH=/usr/bin:/sbin:/bin:/usr/sbin
 export PATH
 LOCKFILE=/var/lock/subsys/openqrm

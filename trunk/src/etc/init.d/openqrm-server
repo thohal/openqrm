@@ -15,6 +15,7 @@
 # Description: openQRM-server init script
 ### END INIT INFO
 
+export LANG=C
 PATH=/usr/bin:/sbin:/bin:/usr/sbin:$PATH
 export PATH
 LOCKFILE=/var/lock/subsys/openqrm-server

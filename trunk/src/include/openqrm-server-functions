@@ -2,6 +2,7 @@
 # this is the server function file for openQRM
 # only server functions should go in here
 
+export LANG=C
 if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
 	echo "ERROR: Please export OPENQRM_SERVER_BASE_DIR before sourcing $0"
 	exit 1
