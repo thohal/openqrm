@@ -146,7 +146,7 @@ function image_form() {
 
 		// storage-server list select with radio buttons
 		$storage_tmp = new storage();
-		$storage_array = $storage_tmp->display_overview(0, 10);
+		$storage_array = $storage_tmp->display_overview(0, 10, 'storage_id', 'ASC');
 		foreach ($storage_array as $index => $storage_db) {
 	
 			$resource = new resource();
@@ -238,7 +238,7 @@ function image_edit($image_id) {
 
 	// storage-server list select with radio buttons
 	$storage_tmp = new storage();
-	$storage_array = $storage_tmp->display_overview(0, 10);
+	$storage_array = $storage_tmp->display_overview(0, 10, 'storage_id', 'ASC');
 	foreach ($storage_array as $index => $storage_db) {
 	
 		$resource = new resource();

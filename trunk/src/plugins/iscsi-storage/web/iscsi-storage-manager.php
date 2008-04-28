@@ -27,7 +27,7 @@ function iscsi_select_storage() {
 	$disp = $disp."Please select a Iscsi-storage from the list below";
 	$disp = $disp."<br>";
 	$storage_tmp = new storage();
-	$storage_array = $storage_tmp->display_overview(0, 10);
+	$storage_array = $storage_tmp->display_overview(0, 10, 'storage_id', 'ASC');
 	foreach ($storage_array as $index => $storage_db) {
 		$storage = new storage();
 		$storage->get_instance_by_id($storage_db["storage_id"]);

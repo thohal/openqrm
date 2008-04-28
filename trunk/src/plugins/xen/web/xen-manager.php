@@ -35,7 +35,7 @@ function xen_display($admin) {
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$xen_tmp = new appliance();
-	$xen_array = $xen_tmp->display_overview(0, 10);
+	$xen_array = $xen_tmp->display_overview(0, 10, 'appliance_id', 'ASC');
 
 	foreach ($xen_array as $index => $xen_db) {
 		if (strstr($xen_db["appliance_capabilities"], "xen")) {

@@ -31,7 +31,7 @@ function sshterm_display($admin) {
 	$disp .= "</td><td>";
 	$disp .= "</td></tr>";
 
-	$resource_array = $resource_tmp->display_overview(0, 10);
+	$resource_array = $resource_tmp->display_overview(0, 10, 'resource_id', 'ASC');
 	foreach ($resource_array as $index => $resource_db) {
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);

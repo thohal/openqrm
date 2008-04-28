@@ -35,7 +35,7 @@ function linux_vserver_display($admin) {
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$linux_vserver_tmp = new appliance();
-	$linux_vserver_array = $linux_vserver_tmp->display_overview(0, 10);
+	$linux_vserver_array = $linux_vserver_tmp->display_overview(0, 10, 'appliance_id', 'ASC');
 
 	foreach ($linux_vserver_array as $index => $linux_vserver_db) {
 		if (strstr($linux_vserver_db["appliance_capabilities"], "linux-vserver")) {

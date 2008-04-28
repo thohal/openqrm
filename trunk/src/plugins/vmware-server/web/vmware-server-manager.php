@@ -35,7 +35,7 @@ function vmware_server_display($admin) {
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$vmware_server_tmp = new appliance();
-	$vmware_server_array = $vmware_server_tmp->display_overview(0, 10);
+	$vmware_server_array = $vmware_server_tmp->display_overview(0, 10, 'appliance_id', 'ASC');
 
 	foreach ($vmware_server_array as $index => $vmware_server_db) {
 		if (strstr($vmware_server_db["appliance_capabilities"], "vmware-server")) {

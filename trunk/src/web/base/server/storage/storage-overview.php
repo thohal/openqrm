@@ -148,7 +148,7 @@ function storage_form() {
 
 		$storagetype_id = $storagetype_name['0'];
 		$resource_tmp = new resource();
-		$resource_array = $resource_tmp->display_overview(0, 10);
+		$resource_array = $resource_tmp->display_overview(0, 10, 'resource_id', 'ASC');
 		foreach ($resource_array as $index => $resource_db) {
 			$resource = new resource();
 			$resource->get_instance_by_id($resource_db["resource_id"]);
@@ -225,7 +225,7 @@ function storage_edit($storage_id) {
 	$disp = $disp.$deployment_select;
 
 	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(0, 10);
+	$resource_array = $resource_tmp->display_overview(0, 10, 'resource_id', 'ASC');
 	foreach ($resource_array as $index => $resource_db) {
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);
