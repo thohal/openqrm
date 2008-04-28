@@ -80,7 +80,7 @@ function kernel_display() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('remove');
+		$table->bottom = array('remove', 'edit');
 		$table->identifier = 'kernel_id';
 	}
 	$table->max = $kernel_tmp->get_count();
@@ -145,9 +145,15 @@ function kernel_edit($kernel_id) {
 $output = array();
 $output[] = array('label' => 'Kernel-Admin', 'value' => kernel_display());
 $output[] = array('label' => 'New', 'value' => kernel_form());
-$edit_kernel_id = $_REQUEST["edit_kernel_id"];
-if (strlen($edit_kernel_id)) {
-	$output[] = array('label' => 'Edit Kernel', 'value' => kernel_edit($edit_kernel_id));
+
+if(htmlobject_request('action') != '') {
+	switch (htmlobject_request('action')) {
+		case 'edit':
+			foreach($_REQUEST['identifier'] as $id) {
+				$output[] = array('label' => 'Edit Kernel', 'value' => kernel_edit($id));
+			}
+			break;
+	}
 }
 
 

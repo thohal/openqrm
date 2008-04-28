@@ -448,11 +448,11 @@ function check_all_states() {
 
 
 // displays the resource-overview
-function display_overview($start, $count) {
+function display_overview($offset, $limit, $sort, $order) {
 	global $RESOURCE_INFO_TABLE;
 	global $event;
 	$db=openqrm_get_db_connection();
-	$recordSet = &$db->SelectLimit("select * from $RESOURCE_INFO_TABLE where resource_id>=$start order by resource_id ASC", $count);
+	$recordSet = &$db->SelectLimit("select * from $RESOURCE_INFO_TABLE order by $sort $order", $limit, $offset);
 	$resource_array = array();
 	if (!$recordSet) {
 		$event->log("display_overview", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);

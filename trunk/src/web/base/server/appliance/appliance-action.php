@@ -6,7 +6,7 @@ $appliance_name = $_REQUEST["appliance_name"];
 <html>
 <head>
 <title>openQRM Appliance actions</title>
-<meta http-equiv="refresh" content="0; URL=appliance-overview.php?currenttab=tab2&strMsg=Processing <?php echo $appliance_command; ?> on <?php echo $appliance_name; ?>">
+<meta http-equiv="refresh" content="0; URL=appliance-overview.php?currenttab=tab0&strMsg=Processing <?php echo $appliance_command; ?> on <?php echo $appliance_name; ?>">
 </head>
 <body>
 

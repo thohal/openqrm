@@ -263,11 +263,11 @@ function get_list() {
 
 
 // displays the appliance-overview
-function display_overview($start, $count) {
+function display_overview($offset, $limit, $sort, $order) {
 	global $APPLIANCE_INFO_TABLE;
 	global $event;
 	$db=openqrm_get_db_connection();
-	$recordSet = &$db->SelectLimit("select * from $APPLIANCE_INFO_TABLE where appliance_id>=$start order by appliance_id ASC", $count);
+	$recordSet = &$db->SelectLimit("select * from $APPLIANCE_INFO_TABLE order by $sort $order", $limit, $offset);
 	$appliance_array = array();
 	if (!$recordSet) {
 		$event->log("display_overview", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);

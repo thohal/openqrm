@@ -42,6 +42,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/resource
 	. $(OPENQRM_SERVER_CONF) && cp base/server/resource/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/resource/
 	. $(OPENQRM_SERVER_CONF) && cp base/server/resource/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/resource/
+	. $(OPENQRM_SERVER_CONF) && cp base/server/resource/*.css $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/resource/
 	# base/server/user
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/user
 	. $(OPENQRM_SERVER_CONF) && cp base/server/user/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/user/
@@ -54,6 +55,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/appliance
 	. $(OPENQRM_SERVER_CONF) && cp base/server/appliance/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/appliance/
 	. $(OPENQRM_SERVER_CONF) && cp base/server/appliance/*.php $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/appliance/
+	. $(OPENQRM_SERVER_CONF) && cp base/server/appliance/*.css $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/appliance/
 	# base/server/storage
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/storage
 	. $(OPENQRM_SERVER_CONF) && cp base/server/storage/*.txt $$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/storage/

@@ -1,15 +1,75 @@
-
-<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-
 <?php
-
+$thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/kernel.class.php";
+require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
+
+function redirect($strMsg, $currenttab = 'tab0', $url = '') {
+	global $thisfile;
+	if($url == '') {
+		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
+	}
+	//	using meta refresh here because the appliance and resourc class pre-sending header output
+	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
+}
+
+
+if(htmlobject_request('action') != '') {
+$strMsg = '';
+$openqrm_server = new openqrm_server();
+$OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
+global $OPENQRM_SERVER_IP_ADDRESS;
+
+	switch (htmlobject_request('action')) {
+		case 'start':
+			foreach($_REQUEST['identifier'] as $id) {
+				$appliance = new appliance();
+				$appliance->get_instance_by_id($id);
+				$resource = new resource();
+				$resource->get_instance_by_id($appliance->resources);
+				$kernel = new kernel();
+				$kernel->get_instance_by_id($appliance->kernelid);
+				// send command to the openQRM-server
+				$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac $kernel->name");
+				// start appliance
+				$strMsg .= $appliance->start();
+			}
+			redirect($strMsg);
+			break;
+
+		case 'stop':
+			foreach($_REQUEST['identifier'] as $id) {
+				$appliance = new appliance();
+				$appliance->get_instance_by_id($id);
+				$resource = new resource();
+				$resource->get_instance_by_id($appliance->resources);
+				$kernel = new kernel();
+				$kernel->get_instance_by_id($appliance->kernelid);
+				// send command to the openQRM-server
+				$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
+				// start appliance
+				$strMsg .= $appliance->stop();
+			}
+			redirect($strMsg);
+			break;
+
+		case 'remove':
+			$appliance = new appliance();
+			foreach($_REQUEST['identifier'] as $id) {
+				$strMsg .= $appliance->remove($id);
+			}
+			redirect($strMsg);
+			break;
+	}
+
+}
+
+
 
 function appliance_htmlobject_select($name, $value, $title = '', $selected = '') {
 		$html = new htmlobject_select();
@@ -21,60 +81,73 @@ function appliance_htmlobject_select($name, $value, $title = '', $selected = '')
 		return $html->get_string();
 }
 
-function appliance_display($admin) {
-	$appliance_tmp = new appliance();
-	$OPENQRM_APPLIANCES_COUNT = $appliance_tmp->get_count();
 
-	if ("$admin" == "admin") {
-		$disp = "<b>Appliance Admin</b>";
-	} else {
-		$disp = "<b>Appliance overview</b>";
-	}
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."All appliances: $OPENQRM_APPLIANCES_COUNT";
-	$disp = $disp."<br>";
-	$appliance_array = $appliance_tmp->display_overview(0, 10);
+function appliance_display() {
+	global $OPENQRM_USER;
+	global $thisfile;
+
+	$appliance_tmp = new appliance();
+	$table = new htmlobject_db_table('appliance_id');
+
+	$disp = '<h1>Appliance List</h1>';
+	$disp .= '<br>';
+
+	$arHead = array();
+	$arHead['appliance_id'] = array();
+	$arHead['appliance_id']['title'] ='ID';
+
+	$arHead['appliance_name'] = array();
+	$arHead['appliance_name']['title'] ='Name';
+
+	$arHead['appliance_kernelid'] = array();
+	$arHead['appliance_kernelid']['title'] ='Kernel';
+
+	$arHead['appliance_imageid'] = array();
+	$arHead['appliance_imageid']['title'] ='Image';
+
+	$arHead['appliance_resources'] = array();
+	$arHead['appliance_resources']['title'] ='Resource';
+
+	$arHead['appliance_comment'] = array();
+	$arHead['appliance_comment']['title'] ='Comment';
+
+	$arHead['appliance_capabilities'] = array();
+	$arHead['appliance_capabilities']['title'] ='Capabilities';
+
+	$arBody = array();
+	$appliance_array = $appliance_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
+
 	foreach ($appliance_array as $index => $appliance_db) {
 		$appliance = new appliance();
 		$appliance->get_instance_by_id($appliance_db["appliance_id"]);
+		$arBody[] = array(
+			'appliance_id' => $appliance_db["appliance_id"],
+			'appliance_name' => $appliance_db["appliance_name"],
+			'appliance_kernelid' => $appliance_db["appliance_kernelid"],
+			'appliance_imageid' => $appliance_db["appliance_imageid"],
+			'appliance_resources' => $appliance_db["appliance_resources"],
+			'appliance_comment' => $appliance_db["appliance_comment"],
+			'appliance_capabilities' => $appliance_db["appliance_capabilities"],
+		);
 
-		$disp = $disp."<div id=\"appliance\" nowrap=\"true\">";
-
-		$disp = $disp."<form action='appliance-action.php' method=post>";
-		$disp = $disp."$appliance->id $appliance->name ";
-
-		$appliance_resource = new resource();
-		$appliance_resource->get_instance_by_id($appliance->resources);
-		$disp = $disp."$appliance_resource->ip ";
-		$disp = $disp."$appliance_resource->mac ";
-
-		$disp = $disp."<input type=hidden name=appliance_id value=$appliance->id>";
-		$disp = $disp."<input type=hidden name=appliance_name value=$appliance->name>";
-		if ("$admin" == "admin") {
-
-			$appliance_action_ar = array();
-			$appliance_action_ar[] = array("value"=>'', "label"=>'',);
-			$appliance_action_ar[] = array("value"=>'start', "label"=>'Start',);
-			$appliance_action_ar[] = array("value"=>'stop', "label"=>'Stop',);
-			$appliance_action_ar[] = array("value"=>'remove', "label"=>'remove',);
-			$appliance_action_selected_ar[] = array("value"=>'', "label"=>'',);
-			$select = appliance_htmlobject_select('appliance_command', $appliance_action_ar, '', $appliance_action_selected_ar);
-			$disp = $disp.$select;
-			$disp = $disp." <input type=submit value='Apply'>";
-			$disp = $disp."</form>";
-
-			$disp = $disp."<form action='appliance-overview.php?currenttab=tab3' method=post>";
-			$disp = $disp."<input type=hidden name=appliance_id value=$appliance->id>";
-			$disp = $disp."<input type=hidden name=appliance_name value=$appliance->name>";
-			$disp = $disp."<input type=hidden name=edit_appliance_id value=$appliance->id>";
-			$disp = $disp." <input type=submit value='Edit'>";
-
-			$disp = $disp."</form>";
-		}
-		$disp = $disp."</div>";
 	}
-	return $disp;
+
+	$table->id = 'Tabelle';
+	$table->css = 'htmlobject_table';
+	$table->border = 1;
+	$table->cellspacing = 0;
+	$table->cellpadding = 3;
+	$table->form_action = $thisfile;
+	$table->head = $arHead;
+	$table->body = $arBody;
+	if ($OPENQRM_USER->role == "administrator") {
+		$table->bottom = array('start', 'stop', 'edit', 'remove');
+		$table->identifier = 'appliance_id';
+	}
+	$table->max = $appliance_tmp->get_count();
+	#$table->limit = 10;
+	
+	return $disp.$table->get_string();
 }
 
 
@@ -110,7 +183,7 @@ function appliance_form() {
 	$disp = $disp."<hr>";
 
 	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(0, 10);
+	$resource_array = $resource_tmp->display_overview(0, 10, 'resource_id', 'ASC');
 	foreach ($resource_array as $index => $resource_db) {
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);
@@ -136,6 +209,7 @@ function appliance_form() {
     $disp = $disp."<input type='checkbox' name='appliance_ssi' value='1'> SSI<br>";
     $disp = $disp."<input type='checkbox' name='appliance_highavailable' value='1'> High-Available<br>";
     $disp = $disp."<input type='checkbox' name='appliance_virtual' value='1'> Virtual<br>";
+	$disp = $disp.htmlobject_textarea('appliance_comment', array("value" => '', "label" => 'Comment'));
 	$disp = $disp."<input type=hidden name=appliance_command value='new_appliance'>";
 	$disp = $disp."<input type=submit value='add'>";
 	$disp = $disp."";
@@ -187,7 +261,7 @@ function appliance_edit($appliance_id) {
 	$disp = $disp."<hr>";
 
 	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(0, 10);
+	$resource_array = $resource_tmp->display_overview(0, 10, 'resource_id', 'ASC');
 	foreach ($resource_array as $index => $resource_db) {
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);
@@ -235,6 +309,8 @@ function appliance_edit($appliance_id) {
 	    $disp = $disp."<input type='checkbox' checked name='appliance_virtual' value='1'> Virtual<br>";
 	}
 
+	$disp = $disp.htmlobject_textarea('appliance_comment', array("value" => $appliance->comment, "label" => 'Comment'));
+
 	$disp = $disp."<input type=hidden name=appliance_id value=$appliance_id>";
 	$disp = $disp."<input type=hidden name=appliance_command value='update_appliance'>";
 	$disp = $disp."<input type=submit value='Update'>";
@@ -251,20 +327,25 @@ function appliance_edit($appliance_id) {
 
 
 $output = array();
-// all user
-$output[] = array('label' => 'Appliances', 'value' => appliance_display(""));
-// if admin
-if (strstr($OPENQRM_USER->role, "administrator")) {
-	$output[] = array('label' => 'Add Appliance', 'value' => appliance_form());
-	$output[] = array('label' => 'Appliance Admin', 'value' => appliance_display("admin"));
-	$edit_appliance_id = $_REQUEST["edit_appliance_id"];
-	if (strlen($edit_appliance_id)) {
-		$output[] = array('label' => 'Edit Appliance', 'value' => appliance_edit($edit_appliance_id));
+$output[] = array('label' => 'Appliances', 'value' => appliance_display());
+$output[] = array('label' => 'Add Appliance', 'value' => appliance_form());
+
+if(htmlobject_request('action') != '') {
+	switch (htmlobject_request('action')) {
+		case 'edit':
+			foreach($_REQUEST['identifier'] as $id) {
+				$output[] = array('label' => 'Edit Appliance', 'value' => appliance_edit($id));
+			}
+			break;
 	}
 }
 
-echo htmlobject_tabmenu($output);
 
+?>
+<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+<link rel="stylesheet" type="text/css" href="appliance.css" />
+<?php
+echo htmlobject_tabmenu($output);
 ?>
 
 

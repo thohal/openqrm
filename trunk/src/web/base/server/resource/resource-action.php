@@ -6,7 +6,7 @@ $resource_id = $_REQUEST["resource_id"];
 <html>
 <head>
 <title>openQRM Resource actions</title>
-<meta http-equiv="refresh" content="0; URL=resource-overview.php?currenttab=tab1&strMsg=Processing <?php echo $resource_command; ?> on <?php echo $resource_id; ?>">
+<meta http-equiv="refresh" content="0; URL=resource-overview.php?currenttab=tab0&strMsg=Processing <?php echo $resource_command; ?> on <?php echo $resource_id; ?>">
 </head>
 <body>
 
