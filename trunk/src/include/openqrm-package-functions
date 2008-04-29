@@ -96,7 +96,7 @@ function openqrm_package() {
 
 	# which components to build
 	OPENQRM_PACKAGE_COMPONENT_LIST=`ls $OPENQRM_SOURCE_DIR/plugins | grep -v Makefile | grep -v CVS`
-	OPENQRM_PACKAGE_COMPONENT_LIST="openqrm-server "`echo $OPENQRM_PACKAGE_COMPONENT_LIST | sed -e "s/\n//g"`
+	OPENQRM_PACKAGE_COMPONENT_LIST="openqrm-server-entire openqrm-server "`echo $OPENQRM_PACKAGE_COMPONENT_LIST | sed -e "s/\n//g"`
 	echo "Packing the following components : $OPENQRM_PACKAGE_COMPONENT_LIST"
 
 	########################## RPM PACKAGING ##########################
@@ -109,7 +109,7 @@ function openqrm_package() {
 
 			echo "Starting rpm packaging for $OPENQRM_PACKAGE_COMPONENT"
 			# check if to package the openqrm-server or plugins
-			if [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server" ]; then
+			if [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server" ] || [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server-entire" ]; then
 				# we package the server (without any plugins)
 				echo "Packaging the openQRM-server"
 				OPENQRM_PACKAGE_NAME=$OPENQRM_PACKAGE_COMPONENT
@@ -130,9 +130,10 @@ function openqrm_package() {
 				OPENQRM_PACKAGE_POSTINSTALL="sh /usr/share/openqrm/etc/init.d/openqrm-server.postinstall"
 				OPENQRM_PACKAGE_PREREMOVE="sh /usr/share/openqrm/etc/init.d/openqrm-server.preremove"
 
-				# set if files should include openqrm-server or just a plugin
-				OPENQRM_BUILD_POSTINSTALL="rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/*"
-
+				if [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server" ]; then
+					# set if files should include openqrm-server or just a plugin
+					OPENQRM_BUILD_POSTINSTALL="rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/*"
+				fi
 				# create spec file from template
 				cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-rpm.spec |	\
 					sed -e "s/OPENQRM_PACKAGE_NAME/$OPENQRM_PACKAGE_NAME/g" |	\
@@ -223,7 +224,7 @@ function openqrm_package() {
 			echo "Starting deb packaging for $OPENQRM_PACKAGE_COMPONENT"
 
 			# check if to package the openqrm-server or plugins
-			if [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server" ]; then
+			if [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server" ] || [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server-entire" ]; then
 				# we package the server (without any plugins)
 				echo "Packaging the openQRM-server"
 				OPENQRM_PACKAGE_NAME=$OPENQRM_PACKAGE_COMPONENT
@@ -255,8 +256,10 @@ function openqrm_package() {
 				# copy package content
 				mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_SERVER_BASE_DIR
 				cp -aR $OPENQRM_SERVER_BASE_DIR/openqrm $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_SERVER_BASE_DIR/
-				rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/*
 
+				if [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server" ]; then
+					rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/*
+				fi
 				# build the deb package
 				dpkg-deb --build $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE
 
