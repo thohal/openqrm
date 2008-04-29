@@ -66,8 +66,7 @@ function import_kernel() {
 	tftp $OPENQRM_SERVER_IP_ADDRESS -g -r boot/modules-$kernel_name.tgz -l modules-$kernel_name.tgz
 	tar -C / -xzf /tmp_download/modules-$kernel_name.tgz
 	rm -f modules-$kernel_name.tgz
-	umount /tmp_download
-	rmdir /tmp_download
+	sync
 	mkdir -p /boot
 	mount -t tmpfs none /boot
 	cd /boot
@@ -82,6 +81,8 @@ function import_kernel() {
 	modprobe ide-generic
 	modprobe ide-disk
 	hwsetup -p
+	umount /tmp_download
+	rmdir /tmp_download
 
 }
 
