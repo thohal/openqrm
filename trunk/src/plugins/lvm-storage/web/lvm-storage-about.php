@@ -52,7 +52,7 @@ function lvm_about() {
 	$disp = $disp."Please check the 'nfs/aoe/iscsi-storage' plugin for detailed usage information.";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<b>Additional Lvm image-parameters :</b>";
+	$disp = $disp."<b>Additional Lvm image-parameters for 'lvm-iscsi' and 'lvm-aoe':</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."IMAGE_INSTALL_FROM=[nfs-storage:path-to-existing-nfs-image]";
@@ -84,6 +84,33 @@ function lvm_about() {
 	$disp = $disp."<br>";
 	$disp = $disp."Should be set to a local harddisk device fs-type (e.g. ext3) in combination with the IMAGE_TRANSFORM_TO_LOCAL_DEVICE parameter.";
 	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+
+	$disp = $disp."<b>Additional Lvm image-parameters for 'lvm-nfs':</b>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."IMAGE_INSTALL_FROM=[nfs-storage:path-to-existing-nfs-image]";
+	$disp = $disp."<br>";
+	$disp = $disp."This parameter can be set to an (nfs) location from which the image will be installed at";
+	$disp = $disp." deployment time.";
+	$disp = $disp."<br>";
+	$disp = $disp."The syntax is : ip_of_nfs-server:path_to_target_image";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."IMAGE_INSTALL_FROM_LOCAL_DEVICE=y";
+	$disp = $disp."<br>";
+	$disp = $disp."Set to 'y' this parameter installs the nfs-image from the local harddisk device configured as 'root-device' in the image-parameters.";
+	$disp = $disp." The image-parameter 'root-device-type' should be also set for this mechanism.";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."IMAGE_TRANSFORM_TO_LOCAL=y";
+	$disp = $disp."<br>";
+	$disp = $disp."If this parameter is set to 'y' the nfs-image is transferred to the a local harddisk device configured as 'root-device' in the image-parameters (e.g. /dev/hda1).";
+	$disp = $disp." The image-parameter 'root-device-type' should be also set for this mechanism.";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+
 	return $disp;
 }
 

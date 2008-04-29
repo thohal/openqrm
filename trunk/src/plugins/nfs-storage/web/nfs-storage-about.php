@@ -76,7 +76,7 @@ function nfs_about() {
 	$disp = $disp." The image-parameter 'root-device-type' should be also set for this mechanism.";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."IMAGE_TRANSFORM_TO_LOCAL_DEVICE=y";
+	$disp = $disp."IMAGE_TRANSFORM_TO_LOCAL=y";
 	$disp = $disp."<br>";
 	$disp = $disp."If this parameter is set to 'y' the nfs-image is transferred to the a local harddisk device configured as 'root-device' in the image-parameters (e.g. /dev/hda1).";
 	$disp = $disp." The image-parameter 'root-device-type' should be also set for this mechanism.";
