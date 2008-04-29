@@ -93,7 +93,9 @@ function bytes_to_mega() {
 
 # uptime
 function find_uptime() {
-	current_uptime=`cat /proc/uptime | cut -d'.' -f 1`
+	if [ -f /proc/uptime ]; then
+		current_uptime=`cat /proc/uptime | cut -d'.' -f 1`
+	fi
 	if [ -z "$current_uptime" ]; then
 		current_uptime=0
 	fi
@@ -103,8 +105,10 @@ function find_uptime() {
 
 # cpu_number
 function find_cpu_number() {
-	current_cpu_number=`grep '^cpu[0-9]' /proc/stat | wc -l`
-	current_cpu_number=${current_cpu_number// /}
+	if [ -f /proc/stat ]; then
+		current_cpu_number=`grep '^cpu[0-9]' /proc/stat | wc -l`
+		current_cpu_number=${current_cpu_number// /}
+	fi
 	if [ -z "$current_cpu_number" ]; then
 		current_cpu_number=0
 	fi
@@ -112,8 +116,10 @@ function find_cpu_number() {
 
 # cpu_speed
 function find_cpu_speed() {
-	current_cpu_speed=(`cat /proc/cpuinfo | grep "cpu.*MHz"`)
-	current_cpu_speed=${current_cpu_speed[3]/\.*/}
+	if [ -f /proc/cpuinfo ]; then
+		current_cpu_speed=(`cat /proc/cpuinfo | grep "cpu.*MHz"`)
+		current_cpu_speed=${current_cpu_speed[3]/\.*/}
+	fi
 	if [ -z "$current_cpu_speed" ]; then
 		current_cpu_speed=0
 	fi
@@ -122,8 +128,10 @@ function find_cpu_speed() {
 
 # cpu_model
 function find_cpu_model() {
-	current_cpu_model=`cat /proc/cpuinfo | grep "model.*name" | head -n 1 | tr -s ' ' | cut -d' ' -f 3-`
-	current_cpu_model=`urlencodestring $current_cpu_model`
+	if [ -f /proc/cpuinfo ]; then
+		current_cpu_model=`cat /proc/cpuinfo | grep "model.*name" | head -n 1 | tr -s ' ' | cut -d' ' -f 3-`
+		current_cpu_model=`urlencodestring $current_cpu_model`
+	fi
 	if [ -z "current_cpu_model" ]; then 
 		current_cpu_model=0
 	fi
@@ -131,16 +139,20 @@ function find_cpu_model() {
 
 # mem_total
 function find_mem_total() {
-	current_mem_total=`cat /proc/meminfo | awk '/MemTotal:/ { print int($2/1024) };'`
+	if [ -f /proc/meminfo ]; then
+		current_mem_total=`cat /proc/meminfo | awk '/MemTotal:/ { print int($2/1024) };'`
+	fi
 }
 
 # mem_used
 function find_mem_used() {
-	if [ -z "$current_mem_total" ]; then
-		current_mem_total=`cat /proc/meminfo | awk '/MemTotal:/ { print int($2/1024) };'`
+	if [ -f /proc/meminfo ]; then
+		if [ -z "$current_mem_total" ]; then
+			current_mem_total=`cat /proc/meminfo | awk '/MemTotal:/ { print int($2/1024) };'`
+		fi
+		current_mem_free=`cat /proc/meminfo | awk '/MemFree:/ { print int($2/1024) };'`
+		current_mem_used=$((current_mem_total - current_mem_free))
 	fi
-	current_mem_free=`cat /proc/meminfo | awk '/MemFree:/ { print int($2/1024) };'`
-	current_mem_used=$((current_mem_total - current_mem_free))
 	if [ -z "$current_mem_used" ]; then
 		current_mem_used=0
 	fi
@@ -149,16 +161,20 @@ function find_mem_used() {
 
 # swap_total
 function find_swap_total() {
-	current_swap_total=`cat /proc/meminfo | awk '/SwapTotal:/ { print int($2/1024) };'`
+	if [ -f /proc/meminfo ]; then
+		current_swap_total=`cat /proc/meminfo | awk '/SwapTotal:/ { print int($2/1024) };'`
+	fi
 }
 
 # swap_used
 function find_swap_used() {
-	if [ -z "$current_swap_total" ]; then
-		current_swap_total=`cat /proc/meminfo | awk '/SwapTotal:/ { print int($2/1024) };'`
+	if [ -f /proc/meminfo ]; then
+		if [ -z "$current_swap_total" ]; then
+			current_swap_total=`cat /proc/meminfo | awk '/SwapTotal:/ { print int($2/1024) };'`
+		fi
+		current_swap_free=`cat /proc/meminfo | awk '/SwapFree:/ { print int($2/1024) };'`
+		current_swap_used=$((current_swap_total - current_swap_free))
 	fi
-	current_swap_free=`cat /proc/meminfo | awk '/SwapFree:/ { print int($2/1024) };'`
-	current_swap_used=$((current_swap_total - current_swap_free))
 	if [ -z "$current_swap_used" ]; then
 		current_swap_used=0
 	fi
@@ -177,7 +193,9 @@ function find_hostname() {
 
 # cpu_load
 function find_cpu_load() {
-	current_cpu_load=`cat /proc/loadavg | cut -d' ' -f 1`
+	if [ -f /proc/loadavg ]; then
+		current_cpu_load=`cat /proc/loadavg | cut -d' ' -f 1`
+	fi
 	if [ -z "$current_cpu_load" ]; then
 		current_cpu_load=0
 	fi
