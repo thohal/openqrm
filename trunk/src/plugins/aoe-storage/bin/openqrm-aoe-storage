@@ -4,8 +4,15 @@
 OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/include/openqrm-plugin-aoe-storage-functions
-. /var/openqrm/openqrm-resource.conf
-OPENQRM_POSTENCODE="$resource_basedir/openqrm/sbin/openqrm-postencode.py"
+OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
+if [ -f /var/openqrm/openqrm-resource.conf ]; then
+	. /var/openqrm/openqrm-resource.conf
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	OPENQRM_SERVER_IP=localhost
+	resource_id=0
+fi
 
 # let only root run this script
 WHOAMI=`whoami`
@@ -131,7 +138,7 @@ case "$AOE_COMMAND" in
 		echo "Posting current aoe-luns to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.aoe.stat
 		cat $VBLADECONF > $STORAGE_STATUS_TMP
-		if ! wget -q -O /dev/null --http-user=$AOE_OPENQRM_USERNAME --http-password=$AOE_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$resource_openqrmserver/openqrm/base/plugins/aoe-storage/aoe-storage-action.php?aoe_storage_command=get_storage; then
+		if ! wget -q -O /dev/null --http-user=$AOE_OPENQRM_USERNAME --http-password=$AOE_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/aoe-storage/aoe-storage-action.php?aoe_storage_command=get_storage; then
 			echo "ERROR: Could not post the aoe-export status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the aoe-export status to the openQRM-server at $resource_openqrmserver!" | logger
 		fi
