@@ -5,7 +5,7 @@ export OPENQRM_SERVER_CONF=$(shell pwd)/../etc/openqrm-server.conf
 configure:
 
 compile:
-	make openqrm-exec-port-monitor
+	LDFLAGS=-static make openqrm-exec-port-monitor
 	. $(OPENQRM_SERVER_CONF) &&  mkdir -p $$OPENQRM_BUILD_TMP_DIR/openqrm-build/exec-port-monitor
 	. $(OPENQRM_SERVER_CONF) &&  mv  openqrm-exec-port-monitor $$OPENQRM_BUILD_TMP_DIR/openqrm-build/exec-port-monitor/
 	
