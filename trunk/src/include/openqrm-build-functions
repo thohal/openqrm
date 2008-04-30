@@ -317,11 +317,13 @@ EOF
 	done
 
 	# creating the initrd devices
+	cp -a $OPENQRM_SOURCE_DIR_FULL_PATH/etc/build.conf/initrd-devices.conf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/
 	rm -rf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/dev
-	$OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/busybox makedevs -d $OPENQRM_SOURCE_DIR_FULL_PATH/etc/build.conf/initrd-devices.conf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
+#	$OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/busybox makedevs -d $OPENQRM_SOURCE_DIR_FULL_PATH/etc/build.conf/initrd-devices.conf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
+	mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/dev
 	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/dev/
-	ln -sf tty0 systty
-	ln -sf ram1 ram
+#	ln -sf tty0 systty
+#	ln -sf ram1 ram
 
 	# create rcS
 	rm -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/rc.d/init.d/rcS
@@ -361,7 +363,7 @@ function openqrm_pack_default_initrd_template() {
 	# pack
 	CURRENT_DIR=`pwd`
 	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
-	tar -czf $OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-default.tgz *
+	tar -czf $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-default.tgz *
 	cd $CURRENT_DIR
 }
 

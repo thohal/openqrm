@@ -165,8 +165,13 @@ function prepare_net_init() {
 
 # main
 mount -t proc proc /proc
+# creating the devices
+echo "Creating the devices ..."
+makedevs -d /etc/initrd-devices.conf /
 mkdir -p /dev/fd
 ln -sf /proc/self/fd /dev/fd
+ln -sf /dev/tty0 /dev/systty
+ln -sf /dev/ram1 /dev/ram
 echo 0x0100 > /proc/sys/kernel/real-root-dev
 echo 6 > /proc/sys/kernel/printk
 syslogd &&  klogd
@@ -178,6 +183,7 @@ eval `cat /proc/cmdline`
 if grep -q sysfs /proc/filesystems ; then
 	mount -t sysfs none /sys
 fi
+
 # collecting some infos from /proc/cmdline
 OPENQRM_RESOURCE_MAC_ADDRESS=`echo $BOOTIF | sed -e "s/-/:/g"  | sed -e "s/^01://g" | tr '[:lower:]' '[:upper:]'`
 OPENQRM_RESOURCE_MANAGED_INTERFACE=`ifconfig -a | grep $OPENQRM_RESOURCE_MAC_ADDRESS | awk {' print $1 '}`
