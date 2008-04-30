@@ -19,10 +19,12 @@ case "$NAGIOS_CHECK_CMD" in
         parents					localhost
 		}
 		" > $NAGIOS_CONF_DIR/$HOSTNAME.cfg
+		/etc/init.d/nagios2 restart
 		;;
 	remove)
 		echo "removing $HOSTNAME"
 		rm $NAGIOS_CONF_DIR/$HOSTNAME.cfg
+		/etc/init.d/nagios2 restart
 		;;
 	*)
 		echo "Usage: $0 {add|remove}"
