@@ -1,0 +1,20 @@
+#!/bin/bash
+
+NAGIOS_CHECK_CMD=$1
+RESOURCE_ID=$2
+RESOURCE_IP=$3
+HOSTNAME="resource$RESOURCE_ID"
+
+
+case "$NAGIOS_CHECK_CMD" in
+	add)
+		echo "adding .."
+		;;
+	remove)
+		echo "removing .."
+		;;
+	*)
+		echo "Usage: $0 {add|remove}"
+		exit 1
+		;;
+esac
