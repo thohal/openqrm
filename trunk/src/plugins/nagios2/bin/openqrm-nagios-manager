@@ -1,5 +1,6 @@
 #!/bin/bash
 
+NAGIOS_CONF_DIR=/etc/nagios2/conf.d
 NAGIOS_CHECK_CMD=$1
 RESOURCE_ID=$2
 RESOURCE_IP=$3
@@ -8,10 +9,20 @@ HOSTNAME="resource$RESOURCE_ID"
 
 case "$NAGIOS_CHECK_CMD" in
 	add)
-		echo "adding .."
+		echo "adding $HOSTNAME"
+		echo "
+		define host{
+        use                     generic-host            ; Name of host template to use
+        host_name               $HOSTNAME
+        alias                   $HOSTNAME
+        address                 $RESSOURCE_IP
+        parents					localhost
+		}
+		" > $NAGIOS_CONF_DIR/$HOSTNAME.cfg
 		;;
 	remove)
-		echo "removing .."
+		echo "removing $HOSTNAME"
+		rm $NAGIOS_CONF_DIR/$HOSTNAME.cfg
 		;;
 	*)
 		echo "Usage: $0 {add|remove}"
