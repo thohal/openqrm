@@ -15,7 +15,7 @@ case "$NAGIOS_CHECK_CMD" in
         use                     generic-host            ; Name of host template to use
         host_name               $HOSTNAME
         alias                   $HOSTNAME
-        address                 $RESSOURCE_IP
+        address                 $RESOURCE_IP
         parents					localhost
 		}
 		" > $NAGIOS_CONF_DIR/$HOSTNAME.cfg
