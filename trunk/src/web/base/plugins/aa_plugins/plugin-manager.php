@@ -67,7 +67,7 @@ $identifier = htmlobject_request('identifier');
 			$event = new event();
 			foreach($identifier as $id) {
 				if (in_array($id, $plugins_enabled)) {
-					$return = $openqrm_server->send_command("openqrm_server_plugin_command $plugin_name start");
+					$return = $openqrm_server->send_command("openqrm_server_plugin_command $id start");
 					if($return === true) {
 						$strMsg .= 'started '.$id.'<br>';
 					} else {
@@ -83,7 +83,7 @@ $identifier = htmlobject_request('identifier');
 			$event = new event();
 			foreach($identifier as $id) {
 				if (in_array($id, $plugins_enabled)) {
-					$return = $openqrm_server->send_command("openqrm_server_plugin_command $plugin_name stop");
+					$return = $openqrm_server->send_command("openqrm_server_plugin_command $id stop");
 					if($return === true) {
 						$strMsg .= 'stoped '.$id.'<br>';
 					} else {
