@@ -21,7 +21,7 @@ global $OPENQRM_SERVER_BASE_DIR;
 
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {
-	$event->log("authorization", $_SERVER['REQUEST_TIME'], 1, "lvm-action", "Un-Authorized access to lvm-actions from $OPENQRM_USER->name", "", "", 0, 0, 0);
+	$event->log("authorization", $_SERVER['REQUEST_TIME'], 1, "local-server-action", "Un-Authorized access to lvm-actions from $OPENQRM_USER->name", "", "", 0, 0, 0);
 	exit();
 }
 
