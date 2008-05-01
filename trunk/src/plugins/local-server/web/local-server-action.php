@@ -103,7 +103,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$resource_fields["resource_image"]=$image->name;
 			$resource_fields["resource_imageid"]=$image_fields["image_id"];
 			// set capabilites
-			$resource_fields["resource_capsabilities"]="local-server";
+			$resource_fields["resource_capabilities"]="local-server";
 			$resource->update_info($local_server_id, $resource_fields);
 
 			break;
