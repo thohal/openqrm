@@ -19,7 +19,8 @@ global $thisfile;
 		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
 	}
 	sleep(1);
-	header("Location: $url");
+	//header("Location: $url");
+	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
 
