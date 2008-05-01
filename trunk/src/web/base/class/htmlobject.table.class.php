@@ -98,7 +98,7 @@ var $_body = array();
 	//----------------------------------------------------------------------------------------
 	function htmlobject_db_table_init() {
 		$this->_num_rows = count($this->body);
-		$this->_num_cols = count($this->body[0]);
+		$this->_num_cols = count($this->head);
 		if($this->identifier != '') { $this->_num_cols = $this->_num_cols +1; }
 	}
 	
@@ -142,6 +142,20 @@ var $_body = array();
 			$this->_body = $this->body;
 		}
 	}
+	//--------------------------------------------------------------------------------------- build table sort			
+	#if(isset($this->bottom[0])) {
+		$tr = new htmlobject_tr();
+		$tr->css = 'htmlobject_tr';
+		$tr->id = 'tr_'. uniqid();
+	
+		$td = new htmlobject_td();
+		$td->colspan = $this->_num_cols;
+		$td->type = 'td';
+		$td->css = 'htmlobject_td sorttable';
+		$td->text = $this->get_form_navi();
+		$tr->add($td);
+		parent::add($tr);
+	#}
 	//--------------------------------------------------------------------------------------- build table head	
 	if(count($this->head) > 0) {
 		$tr = new htmlobject_tr();
@@ -229,9 +243,6 @@ var $_body = array();
 	//--------------------------------------------------------------------------------------- build form
 	$_strReturn = $this->get_js();
 	$_strReturn .= '<form action="'.$this->form_action.'" method="GET">';
-	if($this->limit > 0) {
-		$_strReturn .= $this->get_form_navi();
-	}
 	$_strReturn .= parent::get_string();
 	$_strReturn .= '</form>';
 	return $_strReturn;
@@ -344,16 +355,23 @@ var $_body = array();
 			$max = $this->max;
 		}
 
-		$strReturn .= '<table cellpadding="0" cellspacing="0"><tr>';
+		$strReturn .= '<table cellpadding="0" cellspacing="0" id="SortTable"><tr>';
 		$strReturn .= '<td>';
 		$strReturn .= 	$max_input->get_string().
+				
+				'<label for"'.$sort->id.'">'.
 				$this->lang_label_sort.
 				$sort->get_string().
 				$order->get_string().
+				'<label>'.
+				'<label for"'.$offset_input->id.'">'.
 				$this->lang_label_offset.
 				$offset_input->get_string().
+				'<label>'.
+				'<label for"'.$limit_input->id.'">'.
 				$this->lang_label_limit.
 				$limit_input->get_string().
+				'<label>'.
 				$action->get_string();
 
 		$strReturn .= '</td></tr><tr><td align="right">';		

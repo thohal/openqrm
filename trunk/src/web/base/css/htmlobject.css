@@ -182,18 +182,61 @@ border-right: 1px solid #91a7b4;
 }
 
 /* Table */
+.htmlobject_table {
+	border:0px none;
+	border-spacing:5px;
+}
 .htmlobject_td {
-	padding:5px !important;
+	border-left :1px solid #cccccc;
+	border-right :1px solid #dddddd;
+	border-top :1px solid #cccccc;
+	border-bottom :1px solid #dddddd;
+	padding:5px;
+	color:black  !important;
+	font-size: 12px  !important;
+}
+.htmlobject_tr th{
+	background:#eee;
+	text-align:left;
+	border-left :1px solid #cccccc;
+	border-right :1px solid #dddddd;
+	border-top :1px solid #cccccc;
+	border-bottom :1px solid #dddddd;
+	padding:5px;
+	color:black  !important;
+	font-size: 13px  !important;
 }
 .htmlobject_td.identifier {
 	text-align:center;
 	vertical-align:top;
 }
+.htmlobject_td.sorttable {
+	border :0px none;
+}
+.htmlobject_td.sorttable select,
+.htmlobject_td.sorttable input {
+	border :1px solid #cccccc;
+}
+.htmlobject_td.sorttable label {
+	margin : 0 0 0 5px;
+}
 .htmlobject_td.bottom {
 	text-align:right;
+	border :0px none;
 }
+#SortTable {
+	float:right !important;
+}
+#SortTable td{
+	padding: 5px 0 0 0;
+}
+
 .tr_hover {
 	background-color:#eee;
+	border-left :0px none;
+	border-right :1px solid gray !important;
+	border-top :0px none;
+	border-bottom :1px solid gray !important;
 }
 .tr_click {
 	background-color:#ddd;
