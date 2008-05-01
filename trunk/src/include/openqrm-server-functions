@@ -312,6 +312,7 @@ function openqrm_server_create_pxe_config() {
 		for OPENQRM_PLUGIN in `ls $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/`; do
 			if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/include/openqrm-plugin-$OPENQRM_PLUGIN-assign-hook ]; then
 				. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/include/openqrm-plugin-$OPENQRM_PLUGIN-assign-hook
+				OPENQRM_PLUGIN=`echo $OPENQRM_PLUGIN | sed -e "s/-/_/g"`
 				$OPENQRM_PLUGIN""_assign_hook $RESOURCE_ID $KERNEL_NAME $RESOURCE_PXELINUXCFG_FILE
 			fi
 		done
