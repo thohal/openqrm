@@ -50,6 +50,19 @@ function openqrm_integrate_local_server() {
 	. $resource_basedir/openqrm/include/openqrm-functions
 	openqrm_chkconfig add openqrm-client
 	$resource_basedir/openqrm/etc/init.d/openqrm-client start
+	
+	# now we send the local-integration signal to create
+	# the local-server storage, image and appliance
+	if ! wget -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "http://$OPENQRM_SERVER/openqrm/base/plugins/local-server/local-server-action.php?local_server_command=integrate&local_server_id=$resource_id&local_server_root_device=$local_server_root_device&local_server_kernel_version=$local_server_kernel_version"; then
+		echo "ERROR: Could not create the appliance resource$resouce_id on the openQRM-server!"
+		sleep 2
+		echo "NOTCIE: Removing the system from openQRM because of errors !"
+		openqrm_remove_local_server $USER $PASSWORD $OPENQRM_SERVER
+		return 1
+	fi
+	
+	
+	
 }
 
 function openqrm_remove_local_server() {
