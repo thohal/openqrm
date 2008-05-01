@@ -19,17 +19,43 @@ function openqrm_plugin_local-server_stop() {
 }
 
 function openqrm_plugin_local-server_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "local-server: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "local-server: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
 	echo "Uninstalling the openQRM local-server-plugin"
 	openqrm_plugin_local-server_stop
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD local-server
+	openqrm_server_remove_storagetype $USERNAME $PASSWORD local-server
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-server
 }
 
 function openqrm_plugin_local-server_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "local-server: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "local-server: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
 	echo "Initializing the openQRM local-server-plugin"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD local-server "Local-installed server"
+	openqrm_server_add_storagetype $USERNAME $PASSWORD local-server "Local-installed server"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-server/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-server
 }
 
+USER=$2
+PASS=$3
 
 case "$1" in
 	start)
@@ -44,10 +70,10 @@ case "$1" in
 		openqrm_plugin_local-server_start
 		;;
 	init)
-		openqrm_plugin_local-server_init
+		openqrm_plugin_local-server_init $USER $PASS
 		;;
 	uninstall)
-		openqrm_plugin_local-server_uninstall
+		openqrm_plugin_local-server_uninstall $USER $PASS
 		;;
 	*)
 		echo "Usage: $0 {start|stop|restart|init|uninstall}"

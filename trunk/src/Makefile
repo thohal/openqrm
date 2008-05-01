@@ -49,7 +49,12 @@ package: all
 	@. $(OPENQRM_SERVER_CONF) && DESTINATION_DIR=$$OPENQRM_PACKAGE_TMP_DIR/packageroot make install
 	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_package
 
-reinstall: uninstall clean all install start
+reinstall: 
+	sudo make uninstall
+	make clean
+	make all
+	sudo make install
+	sudo make start
 
 check:
 	@chmod +x make-assistant

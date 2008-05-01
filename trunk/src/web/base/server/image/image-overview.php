@@ -109,6 +109,8 @@ function image_form() {
 	$deployment_list = array();
 	$deployment_list = $deployment->get_list();
 	$dep_is_selected = $_REQUEST["dep_is_selected"];
+	// remove the ramdisk-type from the list
+	array_splice($deployment_list, 0, 1);
 	$image_type = array($_REQUEST["image_type"]);
 	global $BaseDir;
 
