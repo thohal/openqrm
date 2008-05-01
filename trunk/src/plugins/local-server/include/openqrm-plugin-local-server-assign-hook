@@ -1,0 +1,26 @@
+#!/bin/bash
+# This function gets called after writing the resource pxe-config file
+# It re-writes the config localboot
+
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+
+
+function local_server_assign_hook() {
+
+	local OPENQRM_RESOURCE_ID=$1
+	local OPENQRM_KERNEL_NAME=$2
+	local OPENQRM_RESOURCE_PXELINUXCFG_FILE=$3
+	local OPENQRM_RESOURCE_MAC=`echo $OPENQRM_RESOURCE_PXELINUXCFG_FILE | sed -e "s/01-//g" | sed -e "s/-/:/g"`
+
+	if ! echo $OPENQRM_KERNEL_NAME | grep default 1>/dev/null; then
+		echo "local-server-plugin: Running assign hook with $OPENQRM_RESOURCE_ID $OPENQRM_KERNEL_NAME $OPENQRM_RESOURCE_PXELINUXCFG_FILE"
+		echo "local-server-plugin: Running assign hook with $OPENQRM_RESOURCE_ID $OPENQRM_KERNEL_NAME $OPENQRM_RESOURCE_PXELINUXCFG_FILE" | logger
+
+		# get more infos about the resource
+		openqrm_get_resource_parameter $OPENQRM_RESOURCE_MAC
+
+	fi
+
+}
+
