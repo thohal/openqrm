@@ -5,12 +5,12 @@
 }
 .htmlobject_td.plugin_name {
 	text-align:center;
-	width:200px;
-	vertical-align:top;
+	width:300px;
+	vertical-align:middle;
 }
 .htmlobject_td.plugin_enabled {
 	text-align:left;
 	width:100px;
-	vertical-align:top;
+	vertical-align:middle;
 }
 
