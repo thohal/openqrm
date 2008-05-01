@@ -39,7 +39,7 @@ var $_num_rows;
 var $_num_cols;
 var $_body = array();
 
-	function htmlobject_db_table($field = '') {
+	function htmlobject_db_table($field = '', $order = '') {
 
 	//- limit
 
@@ -57,6 +57,9 @@ var $_body = array();
 
 		if(isset($_REQUEST['order']) &&  $_REQUEST['order'] != '') {
 			$this->order = $_REQUEST['order'];
+		}
+		if($order != '' && $this->order == '') {
+			$this->order = $order;
 		}
 
 	//- sort
@@ -96,7 +99,7 @@ var $_body = array();
 	//----------------------------------------------------------------------------------------
 	function htmlobject_db_table_init() {
 		$this->_num_rows = count($this->body);
-		$this->_num_cols = count($this->head);
+		$this->_num_cols = count($this->body[0]);
 		if($this->identifier != '') { $this->_num_cols = $this->_num_cols +1; }
 	}
 	
@@ -118,7 +121,22 @@ var $_body = array();
 			} else {
 				$max = $this->max;
 			}
+			$this->arr_sort();			
 			for($i = $this->offset; $i < $max; $i++) {
+			
+				/*
+				foreach($this->body[$i] as $key => $value) {
+					if(isset($this->head[$i][$key]['exec']) == false) {
+						$this->body[$i][$key]['exec'] = false;
+					} 
+					if($v['sortable'] == true) {
+						$value[] = array("value" => $key_2, "label" => $v['title']);
+					}
+				}
+				*/
+				#echo key($this->body[$i]);
+			
+			
 				$this->_body[$i] = $this->body[$i];
 			}
 		} else {

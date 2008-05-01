@@ -1,0 +1,16 @@
+.htmlobject_td.plugin_icon {
+	text-align:center;
+	width:25px;
+	vertical-align:top;
+}
+.htmlobject_td.plugin_name {
+	text-align:center;
+	width:200px;
+	vertical-align:top;
+}
+.htmlobject_td.plugin_enabled {
+	text-align:left;
+	width:100px;
+	vertical-align:top;
+}
+

@@ -45,10 +45,12 @@ function send_command($server_command) {
 	if(!$fp) {
 		$event->log("send_command", $_SERVER['REQUEST_TIME'], 2, "openqrm_server.class.php", "Could not connect to the openQRM-Server", "", "", 0, 0, 0);
 		$event->log("send_command", $_SERVER['REQUEST_TIME'], 2, "openqrm_server.class.php", "$errstr ($errno)", "", "", 0, 0, 0);
-		exit();
+		return false;
+	} else {
+		fputs($fp,"$server_command");
+		fclose($fp);
+		return true;
 	}
-	fputs($fp,"$server_command");
-	fclose($fp);
 }
 
 
