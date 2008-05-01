@@ -189,6 +189,9 @@ border-right: 1px solid #91a7b4;
 	text-align:center;
 	vertical-align:top;
 }
+.htmlobject_td.bottom {
+	text-align:right;
+}
 .tr_hover {
 	background-color:#eee;
 }
