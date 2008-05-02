@@ -9,7 +9,7 @@ OPENQRM_POSTENCODE="$resource_basedir/openqrm/sbin/openqrm-postencode.py"
 OPENQRM_XEN_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/templates/openqrm-xen-vm"
 # using the xen-tools domain location
 OPENQRM_VM_DIR=`grep ^dir /etc/xen-tools/xen-tools.conf | cut -d'=' -f2 | awk {' print $1 '}`"/domains/"
-
+export LANG=C
 
 # let only root run this script
 WHOAMI=`whoami`

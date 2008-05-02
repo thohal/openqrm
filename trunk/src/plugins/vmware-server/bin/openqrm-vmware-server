@@ -9,7 +9,7 @@ OPENQRM_POSTENCODE="$resource_basedir/openqrm/sbin/openqrm-postencode.py"
 OPENQRM_VMWARE_SERVER_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/etc/templates/openqrm-vmware-server-vm"
 # using the vmware-server-tools domain location
 OPENQRM_VM_DIR="/var/lib/vmware/openqrm/"
-
+export LANG=C
 
 # let only root run this script
 WHOAMI=`whoami`

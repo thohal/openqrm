@@ -4,6 +4,7 @@
 # The system then can (should) be set to netboot to gain the full
 # advantages and flexibility of the openQRM management platform
 OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
+export LANG=C
 
 
 function usage() {

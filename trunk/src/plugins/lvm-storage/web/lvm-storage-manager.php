@@ -1,5 +1,6 @@
 
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+<link rel="stylesheet" type="text/css" href="lvm-storage.css" />
 
 <?php
 
@@ -80,7 +81,10 @@ function lvm_storage_display($lvm_storage_id) {
 	$disp = $disp."<input type=hidden name=source_tab value='tab0'>";
 	$disp = $disp."<input type=submit value='Refresh'>";
 	$disp = $disp."</form>";
+	$disp = $disp."</div>";
+	$disp = $disp."<br>";
 
+	$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
 	$storage_vg_list="storage/$storage_resource->id.vg.stat";
 	if (file_exists($storage_vg_list)) {
 		$storage_vg_content=file($storage_vg_list);
@@ -89,7 +93,7 @@ function lvm_storage_display($lvm_storage_id) {
 			if (strstr($lvm, "VG Name")) {
 				$volume_name = substr($lvm, 10, -1);
 				$volume_name = trim($volume_name);
-				$disp = $disp." VG Name <a href=\"lvm-storage-manager.php?currenttab=tab1&lvm_volume_group=$volume_name&lvm_storage_id=$storage->id\">$volume_name</a>";
+				$disp = $disp." VG Name <b><a href=\"lvm-storage-manager.php?currenttab=tab1&lvm_volume_group=$volume_name&lvm_storage_id=$storage->id\">$volume_name</a></b>";
 				$disp = $disp."<br>";
 			} else {
 				$disp = $disp.$lvm;
@@ -146,6 +150,7 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
 	$disp = $disp." <input type=submit value='Add'>";
 	$disp = $disp."</form>";
 	$disp = $disp."<br>";
+	$disp = $disp."</div>";
 
 	$disp = $disp."<hr>";
 
@@ -155,13 +160,17 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
 	if (file_exists($storage_lv_list)) {
 		$storage_lv_content=file($storage_lv_list);
 		foreach ($storage_lv_content as $index => $lvm) {
+
+				if (strstr($lvm, "---")) {
+					$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
+				}
 				// find volume name
 				if (strstr($lvm, "LV Name")) {
 					$logical_volume_name = substr($lvm, 10, -1);
 					$logical_volume_name = trim($logical_volume_name);
 					$real_logical_volume_name = strrchr($logical_volume_name, '/');
 					$real_logical_volume_name = substr($real_logical_volume_name, 1);
-					$disp = $disp." VG Name $logical_volume_name  <a href=\"lvm-storage-action.php?source_tab=tab1&lvm_storage_command=remove_lv&lvm_storage_id=$lvm_storage_id&lvm_volume_group=$lvm_volume_group&lvm_storage_logcial_volume_name=$real_logical_volume_name\">Remove</a>";
+					$disp = $disp." VG Name $logical_volume_name  <b><a href=\"lvm-storage-action.php?source_tab=tab1&lvm_storage_command=remove_lv&lvm_storage_id=$lvm_storage_id&lvm_volume_group=$lvm_volume_group&lvm_storage_logcial_volume_name=$real_logical_volume_name\">Remove</a></b>";
 					$disp = $disp."<br>";
 				} else {
 					$disp = $disp.$lvm;
@@ -170,6 +179,7 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
 
 				// find the last line of each lv and display cloning options
 				if (strstr($lvm, "Block device")) {
+					$disp = $disp."</div>";
 					$disp = $disp."<form action='lvm-storage-action.php' method=post>";
 					$disp = $disp."<br>";
 					$disp = $disp."<b>Create Clone :</b>";
@@ -189,15 +199,12 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
 					$disp = $disp."<br>";
 					$disp = $disp."</form>";
 				}
-
-
 		}
 
 	} else {
 		$disp = $disp."<br> no view available<br> $storage_lv_list";
 	}
 
-	$disp = $disp."</div>";
 	return $disp;
 }
 
