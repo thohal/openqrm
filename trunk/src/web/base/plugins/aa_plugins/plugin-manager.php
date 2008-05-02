@@ -118,14 +118,19 @@ $arHead['plugin_started']['title'] ='Started';
 
 $arBody = array();
 $i = 0;
+$plugin_started="/openqrm/base/plugins/aa_plugins/img/start.png";
+$plugin_stopped="/openqrm/base/plugins/aa_plugins/img/stop.png";
+$plugin_enabled="/openqrm/base/plugins/aa_plugins/img/enable.png";
+$plugin_disabled="/openqrm/base/plugins/aa_plugins/img/disable.png";
+
 foreach ($plugins_available as $index => $plugin_name) {
 	$arBody[$i] = array();
 	if (!in_array($plugin_name, $plugins_enabled)) {
 			
 		$arBody[$i]['plugin_icon'] = '<img src="'.$imgDir.'plugin.png">';
 		$arBody[$i]['plugin_name'] = $plugin_name;
-		$arBody[$i]['plugin_enabled'] = 'false';
-		$arBody[$i]['plugin_started'] = 'false';
+		$arBody[$i]['plugin_enabled'] = '<img src="'.$plugin_disabled.'">';
+		$arBody[$i]['plugin_started'] = '<img src="'.$plugin_stopped.'">';
 
 	} else {
 	
@@ -138,12 +143,12 @@ foreach ($plugins_available as $index => $plugin_name) {
 			
 		$arBody[$i]['plugin_icon'] = '<img src="'.$plugin_icon_default.'">';
 		$arBody[$i]['plugin_name'] = $plugin_name;
-		$arBody[$i]['plugin_enabled'] = 'true';
+		$arBody[$i]['plugin_enabled'] = '<img src="'.$plugin_enabled.'">';
 		// started ?
 		if (!in_array($plugin_name, $plugins_started)) {
-			$arBody[$i]['plugin_started'] = 'false';
+			$arBody[$i]['plugin_started'] = '<img src="'.$plugin_stopped.'">';
 		} else {
-			$arBody[$i]['plugin_started'] = 'true';
+			$arBody[$i]['plugin_started'] = '<img src="'.$plugin_started.'">';
 		}
 
 
