@@ -26,6 +26,7 @@ require_once "$RootDir/class/openqrm_server.class.php";
 global $IMAGE_INFO_TABLE;
 global $DEPLOYMENT_INFO_TABLE;
 global $OPENQRM_SERVER_BASE_DIR;
+$refresh_delay=5;
 
 // place for the storage stat files
 $StorageDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/aoe-storage/storage';
@@ -84,6 +85,7 @@ unset($aoe_storage_fields["aoe_storage_command"]);
 			$storage_deployment->get_instance_by_id($storage->deployment_type);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/bin/openqrm-aoe-storage add -n $aoe_storage_image_name -m $aoe_storage_image_size";
 			$storage_resource->send_command($storage_resource->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'remove_lun':
@@ -95,6 +97,7 @@ unset($aoe_storage_fields["aoe_storage_command"]);
 			$storage_deployment->get_instance_by_id($storage->deployment_type);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/bin/openqrm-aoe-storage remove -n $aoe_storage_image_name";
 			$storage_resource->send_command($storage_resource->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'snap_lun':
@@ -106,6 +109,7 @@ unset($aoe_storage_fields["aoe_storage_command"]);
 			$storage_deployment->get_instance_by_id($storage->deployment_type);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/bin/openqrm-aoe-storage snap -n $aoe_storage_image_name -s $aoe_storage_image_snapshot_name -m $aoe_storage_image_size";
 			$storage_resource->send_command($storage_resource->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 		default:
 			$event->log("$aoe_storage_command", $_SERVER['REQUEST_TIME'], 3, "aoe-storage-action", "No such aoe-storage command ($aoe_storage_command)", "", "", 0, 0, 0);

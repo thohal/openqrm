@@ -27,6 +27,7 @@ global $DEPLOYMENT_INFO_TABLE;
 global $OPENQRM_SERVER_BASE_DIR;
 // delay for sending multiple cmds to the netapp filer
 $NETAPP_CMD_DELAY=1;
+$refresh_delay=5;
 
 // place for the storage stat files
 $StorageDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/netapp-storage/storage';
@@ -79,6 +80,7 @@ switch ($netapp_storage_command) {
 	case 'volume_list':
 		$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"vol status\" \"$NETAPP_PASSWORD\" > $StorageDir/$netapp_storage_id.vol.lst";
 		$output = shell_exec($openqrm_server_command);
+		sleep($refresh_delay);
 		break;
 
 	case 'add_volume':
@@ -114,7 +116,7 @@ switch ($netapp_storage_command) {
 		} else {
 			$event->log("$netapp_storage_command", $_SERVER['REQUEST_TIME'], 5, "netapp-storage-action", "Deplyoment-type $deployment->type is not supported by Netapp", "", "", 0, 0, 0);
 		}
-		
+		sleep($refresh_delay);
 		break;
 
 	case 'remove_volume':
@@ -148,26 +150,30 @@ switch ($netapp_storage_command) {
 		// destroy
 		$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"vol destroy /vol/$netapp_storage_fields[netapp_storage_volume_name] -f\" \"$NETAPP_PASSWORD\"";
 		$output = shell_exec($openqrm_server_command);
-
+		sleep($refresh_delay);
 		break;
 
 	case 'aggr_list':
 		$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"aggr status -v\" \"$NETAPP_PASSWORD\" > $StorageDir/$netapp_storage_id.aggr.lst";
 		$output = shell_exec($openqrm_server_command);
+		sleep($refresh_delay);
 		break;
 
 	case 'fs_list':
 		$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"df -h\" \"$NETAPP_PASSWORD\" > $StorageDir/$netapp_storage_id.fs.lst";
 		$output = shell_exec($openqrm_server_command);
+		sleep($refresh_delay);
 		break;
 
 	case 'nfs_list':
 		$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"exportfs\" \"$NETAPP_PASSWORD\" > $StorageDir/$netapp_storage_id.nfs.lst";
 		$output = shell_exec($openqrm_server_command);
+		sleep($refresh_delay);
 		break;
 	case 'iscsi_list':
 		$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"lun show -v\" \"$NETAPP_PASSWORD\" > $StorageDir/$netapp_storage_id.iscsi.lst";
 		$output = shell_exec($openqrm_server_command);
+		sleep($refresh_delay);
 		break;
 	default:
 		$event->log("$netapp_storage_command", $_SERVER['REQUEST_TIME'], 3, "netapp-storage-action", "No such netapp-storage command ($netapp_storage_command)", "", "", 0, 0, 0);

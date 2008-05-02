@@ -27,6 +27,7 @@ require_once "$RootDir/class/openqrm_server.class.php";
 global $IMAGE_INFO_TABLE;
 global $DEPLOYMENT_INFO_TABLE;
 global $OPENQRM_SERVER_BASE_DIR;
+$refresh_delay=5;
 
 // place for the storage stat files
 $StorageDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/lvm-storage/storage';
@@ -84,6 +85,7 @@ unset($lvm_storage_fields["lvm_storage_command"]);
 			$storage_resource->get_instance_by_id($storage->resource_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage post_lv -u $OPENQRM_USER->name -p $OPENQRM_USER->password -v $lvm_volume_group";
 			$storage_resource->send_command($storage_resource->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'add_lv':
@@ -95,6 +97,7 @@ unset($lvm_storage_fields["lvm_storage_command"]);
 			$storage_deployment->get_instance_by_id($storage->deployment_type);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage add -n $lvm_storage_logcial_volume_name -v $lvm_volume_group -t $storage_deployment->type -m $lvm_storage_logcial_volume_size";
 			$storage_resource->send_command($storage_resource->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'remove_lv':
@@ -106,6 +109,7 @@ unset($lvm_storage_fields["lvm_storage_command"]);
 			$storage_deployment->get_instance_by_id($storage->deployment_type);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage remove -n $lvm_storage_logcial_volume_name -v $lvm_volume_group -t $storage_deployment->type";
 			$storage_resource->send_command($storage_resource->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'snap_lv':
@@ -117,6 +121,7 @@ unset($lvm_storage_fields["lvm_storage_command"]);
 			$storage_deployment->get_instance_by_id($storage->deployment_type);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage snap -n $lvm_storage_logcial_volume_name -v $lvm_volume_group -t $storage_deployment->type -s $lvm_storage_logcial_volume_snapshot_name -m $lvm_storage_logcial_volume_size";
 			$storage_resource->send_command($storage_resource->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 		default:
 			$event->log("$lvm_storage_command", $_SERVER['REQUEST_TIME'], 3, "lvm-storage-action", "No such lvm-storage command ($lvm_storage_command)", "", "", 0, 0, 0);

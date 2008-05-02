@@ -26,6 +26,7 @@ require_once "$RootDir/class/openqrm_server.class.php";
 global $IMAGE_INFO_TABLE;
 global $DEPLOYMENT_INFO_TABLE;
 global $OPENQRM_SERVER_BASE_DIR;
+$refresh_delay=5;
 
 // place for the storage stat files
 $StorageDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/nfs-storage/storage';
@@ -83,6 +84,7 @@ unset($nfs_storage_fields["nfs_storage_command"]);
 			$storage_deployment->get_instance_by_id($storage->deployment_type);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/bin/openqrm-nfs-storage add -n $nfs_storage_image_name";
 			$storage_resource->send_command($storage_resource->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'remove_export':
@@ -94,6 +96,7 @@ unset($nfs_storage_fields["nfs_storage_command"]);
 			$storage_deployment->get_instance_by_id($storage->deployment_type);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/bin/openqrm-nfs-storage remove -n $nfs_storage_image_name";
 			$storage_resource->send_command($storage_resource->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'snap_export':
@@ -105,6 +108,7 @@ unset($nfs_storage_fields["nfs_storage_command"]);
 			$storage_deployment->get_instance_by_id($storage->deployment_type);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/bin/openqrm-nfs-storage snap -n $nfs_storage_image_name -s $nfs_storage_image_snapshot_name";
 			$storage_resource->send_command($storage_resource->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 		default:
 			$event->log("$nfs_storage_command", $_SERVER['REQUEST_TIME'], 3, "nfs-storage-action", "No such nfs-storage command ($nfs_storage_command)", "", "", 0, 0, 0);
