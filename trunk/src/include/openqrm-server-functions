@@ -138,20 +138,35 @@ function openqrm_server_create_kernel() {
 
 
 
-# function to add a kernel to the openQRM-server db
-# param 1	: kernel name
-# param 2	: kernel-version
-function openqrm_server_add_kernel() {
-	OPENQRM_USER=$1
-	OPENQRM_USER_PASSWORD=$2
-	OPENQRM_SERVER_KERNEL_NAME=$3
-	OPENQRM_SERVER_KERNEL_VERSION=$4
-	echo "openQRM-server: Adding kernel $OPENQRM_SERVER_KERNEL_NAME version $OPENQRM_SERVER_KERNEL_VERSION" | logger
-	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/kernel/kernel-action.php?kernel_command=new_kernel&kernel_name=$OPENQRM_SERVER_KERNEL_NAME&kernel_version=$OPENQRM_SERVER_KERNEL_VERSION"; then
-		echo "ERROR: Could not add kernel $OPENQRM_SERVER_KERNEL_NAME to the openQRM-server!" | logger
-		return 1
-	fi
-	return 0
+# function to add/remove a kernel to the openQRM-server db
+# param 1	: add/remove
+# param 2	: user
+# param 3	: password
+# param 4	: kernel name
+# param 5	: kernel-version
+function openqrm_server_manage_kernel() {
+	OPENQRM_USER=$2
+	OPENQRM_USER_PASSWORD=$3
+	OPENQRM_SERVER_KERNEL_NAME=$4
+	OPENQRM_SERVER_KERNEL_VERSION=$5
+	case "$1" in
+		add)
+			echo "openQRM-server: Adding kernel $OPENQRM_SERVER_KERNEL_NAME version $OPENQRM_SERVER_KERNEL_VERSION" | logger
+			if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/kernel/kernel-action.php?kernel_command=new_kernel&kernel_name=$OPENQRM_SERVER_KERNEL_NAME&kernel_version=$OPENQRM_SERVER_KERNEL_VERSION"; then
+				echo "ERROR: Could not add kernel $OPENQRM_SERVER_KERNEL_NAME to the openQRM-server!" | logger
+				return 1
+			fi
+			return 0
+			;;
+		remove)
+			echo "openQRM-server: Removing kernel $OPENQRM_SERVER_KERNEL_NAME" | logger
+			if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/kernel/kernel-action.php?kernel_command=remove_by_name&kernel_name=$OPENQRM_SERVER_KERNEL_NAME"; then
+				echo "ERROR: Could not remove kernel $OPENQRM_SERVER_KERNEL_NAME to the openQRM-server!" | logger
+				return 1
+			fi
+			return 0
+			;;
+	esac
 }
 
 

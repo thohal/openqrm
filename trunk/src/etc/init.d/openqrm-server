@@ -146,7 +146,7 @@ function openqrm_server_init() {
 		INITRD_TYPE="ext2"
 	fi
 	openqrm_server_create_kernel default $DEFAULT_KERNEL_VERSION / $INITRD_TYPE
-	if ! openqrm_server_add_kernel openqrm openqrm default $DEFAULT_KERNEL_VERSION; then
+	if ! openqrm_server_manage_kernel add openqrm openqrm default $DEFAULT_KERNEL_VERSION; then
 		echo "WARNING: Could not add the default kernel!"
 		echo "         Please check your Apache-configuration according openQRM"
 		exit -1

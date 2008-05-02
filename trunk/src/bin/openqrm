@@ -12,22 +12,119 @@ fi
 function openqrm_usage() {
 	echo "Usage:"
 	echo "`basename $0` help			- This help screen"
-	echo "`basename $0` bootimage		- Managing boot-images"
+	echo "- Managing boot-images -"
+	echo "`basename $0` bootimage add -n <name> -v <version> -u <username> -p <password> [-l <location> -i <initramfs/ext2>]"
+	echo "`basename $0` bootimage remove -n <name> -u <username> -p <password>"
 }
 
 
-BOOT_IMAGE_NAME=$2
-BOOT_IMAGE_VERSION=$3
-BOOT_IMAGE_LOCATION=$4
-BOOT_IMAGE_INITRD_TYPE=$5
 
-
+# main
 case "$1" in
-
 	bootimage)
-		openqrm_server_create_kernel $BOOT_IMAGE_NAME $BOOT_IMAGE_VERSION $BOOT_IMAGE_LOCATION $BOOT_IMAGE_INITRD_TYPE
+		shift
+		if [ $# == 0 ]; then
+			openqrm_usage
+			exit 0
+		fi
+
+		case "$1" in
+			add)
+				shift
+				if [ $# == 0 ]; then
+					openqrm_usage
+					exit 0
+				fi
+				while [ $# -ne 0 ]; do
+					case "$1" in
+						-n)
+							BOOT_IMAGE_NAME=$2
+							shift
+							;;
+						-v)
+							BOOT_IMAGE_VERSION=$2
+							shift
+							;;			
+						-l)
+							BOOT_IMAGE_LOCATION=$2
+							shift
+							;;
+						-i)
+							BOOT_IMAGE_INITRD_TYPE=$2
+							shift
+							;;
+						-u)
+							OPENQRM_USERNAME=$2
+							shift
+							;;
+						-p)
+							OPENQRM_PASSWORD=$2
+							shift
+							;;
+					esac
+					shift
+				done
+				if [ "$BOOT_IMAGE_NAME" == "" ] || [ "$BOOT_IMAGE_VERSION" == "" ] || [ "$OPENQRM_USERNAME" == "" ] || [ "$OPENQRM_PASSWORD" == "" ]; then
+					openqrm_usage
+					exit 1
+				fi
+				if [ "$BOOT_IMAGE_LOCATION" == "" ]; then
+					BOOT_IMAGE_LOCATION=/
+				fi
+				openqrm_server_create_kernel $BOOT_IMAGE_NAME $BOOT_IMAGE_VERSION $BOOT_IMAGE_LOCATION $BOOT_IMAGE_INITRD_TYPE
+				if ! openqrm_server_manage_kernel add $OPENQRM_USERNAME $OPENQRM_PASSWORD $BOOT_IMAGE_NAME $BOOT_IMAGE_VERSION; then
+					echo "WARNING: Could not add the kernel to the openQRM-server!"
+					exit -1
+				fi
+				;;
+
+			remove)
+				shift
+				if [ $# == 0 ]; then
+					openqrm_usage
+					exit 0
+				fi
+				while [ $# -ne 0 ]; do
+					case "$1" in
+						-n)
+							BOOT_IMAGE_NAME=$2
+							shift
+							;;
+						-u)
+							OPENQRM_USERNAME=$2
+							shift
+							;;
+						-p)
+							OPENQRM_PASSWORD=$2
+							shift
+							;;
+					esac
+					shift
+				done
+				if [ "$BOOT_IMAGE_NAME" == "" ] || [ "$OPENQRM_USERNAME" == "" ] || [ "$OPENQRM_PASSWORD" == "" ]; then
+					openqrm_usage
+					exit 1
+				fi
+				rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/vmlinuz-$BOOT_IMAGE_NAME
+				rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/System.map-$BOOT_IMAGE_NAME
+				rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/modules-$BOOT_IMAGE_NAME.tgz
+				rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$BOOT_IMAGE_NAME.img
+				if ! openqrm_server_manage_kernel remove $OPENQRM_USERNAME $OPENQRM_PASSWORD $BOOT_IMAGE_NAME $BOOT_IMAGE_VERSION; then
+					echo "WARNING: Could not remove the kernel to the openQRM-server!"
+					exit -1
+				fi
+				;;
+
+		esac
 		;;
+
+
+
+
 	*)
 		openqrm_usage
 		;;
+
 esac
+
+
