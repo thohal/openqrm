@@ -95,7 +95,7 @@ function openqrm_package() {
 	echo "Creating $OPENQRM_PACKAGE_TYPE packages for openQRM-server ver. $OPENQRM_SERVER_VERSION for $OPENQRM_PACKAGE_DISTRIBUTION"
 
 	# which components to build
-	OPENQRM_PACKAGE_COMPONENT_LIST=`ls $OPENQRM_SOURCE_DIR/plugins | grep -v Makefile | grep -v CVS`
+	OPENQRM_PACKAGE_COMPONENT_LIST=`ls $OPENQRM_SOURCE_DIR/plugins | grep -v Makefile`
 	OPENQRM_PACKAGE_COMPONENT_LIST="openqrm-server-entire openqrm-server "`echo $OPENQRM_PACKAGE_COMPONENT_LIST | sed -e "s/\n//g"`
 	echo "Packing the following components : $OPENQRM_PACKAGE_COMPONENT_LIST"
 
@@ -131,8 +131,20 @@ function openqrm_package() {
 				OPENQRM_PACKAGE_PREREMOVE="sh /usr/share/openqrm/etc/init.d/openqrm-server.preremove"
 
 				if [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server" ]; then
-					# set if files should include openqrm-server or just a plugin
+					# set if we want to just build openqrm-server without any plugins
 					OPENQRM_BUILD_POSTINSTALL="rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/*"
+				else
+					# we want to have the entire openQRM in one package
+					# so we need to sum up the server + plugin dependencies
+					for `ls $OPENQRM_SOURCE_DIR/plugins | grep -v Makefile`; do
+
+						. $OPENQRM_PACKAGE_TMP_DIR/packageroot/$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/etc/$OPENQRM_PACKAGE_NAME"".conf
+
+						ALL_PLUGIN_DEPENDENCIES= "$ALL_PLUGIN_DEPENDENCIES, "
+					
+					done
+
+
 				fi
 				# create spec file from template
 				cat $OPENQRM_PACKAGE_TMP_DIR/packageroot/$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-rpm.spec |	\
