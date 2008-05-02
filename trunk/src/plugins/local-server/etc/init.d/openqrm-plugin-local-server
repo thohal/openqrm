@@ -10,11 +10,13 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 
 function openqrm_plugin_local_server_start() {
 	echo "Starting the openQRM local-server-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-server/.running
 }
 
 
 function openqrm_plugin_local_server_stop() {
 	echo "Stopping the openQRM local-server-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-server/.running
 }
 
 function openqrm_plugin_local_server_uninstall() {

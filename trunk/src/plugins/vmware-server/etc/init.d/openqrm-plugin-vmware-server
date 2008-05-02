@@ -10,12 +10,13 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 
 function openqrm_plugin_vmware_server_start() {
 	echo "Starting the openQRM vmware-server-plugin"
-	openqrm_plugin_vmware_server_stop 1>/dev/null 2>&1
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-server/.running
 }
 
 
 function openqrm_plugin_vmware_server_stop() {
 	echo "Stopping the openQRM vmware-server-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-server/.running
 }
 
 function openqrm_plugin_vmware_server_uninstall() {

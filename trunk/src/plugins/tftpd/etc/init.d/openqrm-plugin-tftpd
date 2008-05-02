@@ -16,12 +16,14 @@ function openqrm_plugin_tftpd_start() {
 
 	# start tftp service
 	/usr/sbin/in.tftpd -l -s $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/tftpd/.running
 }
 
 
 function openqrm_plugin_tftpd_stop() {
 	echo "Stopping the openQRM tftpd-plugin"
 	killall in.tftpd 1>/dev/null 2>&1
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/tftpd/.running
 }
 
 function openqrm_plugin_tftpd_uninstall() {

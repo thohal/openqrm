@@ -12,11 +12,13 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 
 function openqrm_plugin_nfs_storage_start() {
 	echo "Starting the openQRM nfs-storage-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nfs-storage/.running
 }
 
 
 function openqrm_plugin_nfs_storage_stop() {
 	echo "Stopping the openQRM nfs-storage-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nfs-storage/.running
 }
 
 function openqrm_plugin_nfs_storage_uninstall() {

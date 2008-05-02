@@ -30,7 +30,7 @@ function available() {
 }
 
 
-// return a list of enabledplugins
+// return a list of enabled plugins
 function enabled() {
 	global $RootDir;
 	$plugin_array = array();
@@ -46,6 +46,24 @@ function enabled() {
 	return $plugin_array;
 }
 
+// return a list of started plugins
+function started() {
+	global $RootDir;
+	$plugin_array = array();
+	$plugins = new Folder();
+	$plugins->getFolders($RootDir.'plugins/');
+	foreach ($plugins->folders as $plugin) {
+		if ("$plugin" != "aa_plugins") {
+			$plugin=basename(dirname(realpath($RootDir.'plugins/'.$plugin)));
+			$plugin_status="$RootDir/plugins/$plugin/.running";
+			if (file_exists($plugin_status)) {
+				array_push($plugin_array, $plugin);
+			}
+		}
+
+	}
+	return $plugin_array;
+}
 // ---------------------------------------------------------------------------------
 
 }

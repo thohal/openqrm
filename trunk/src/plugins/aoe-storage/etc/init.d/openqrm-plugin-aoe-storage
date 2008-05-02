@@ -11,11 +11,13 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 
 function openqrm_plugin_aoe_storage_start() {
 	echo "Starting the openQRM aoe-storage-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aoe-storage/.running
 }
 
 
 function openqrm_plugin_aoe_storage_stop() {
 	echo "Stopping the openQRM aoe-storage-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aoe-storage/.running
 }
 
 function openqrm_plugin_aoe_storage_uninstall() {

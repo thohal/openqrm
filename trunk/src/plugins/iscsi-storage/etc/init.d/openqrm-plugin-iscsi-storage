@@ -12,11 +12,13 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 
 function openqrm_plugin_iscsi_storage_start() {
 	echo "Starting the openQRM iscsi-storage-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-storage/.running
 }
 
 
 function openqrm_plugin_iscsi_storage_stop() {
 	echo "Stopping the openQRM iscsi-storage-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-storage/.running
 }
 
 function openqrm_plugin_iscsi_storage_uninstall() {

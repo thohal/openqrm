@@ -11,12 +11,14 @@ function openqrm_plugin_sshterm_start() {
 	echo "Starting the openQRM sshterm-plugin"
 	openqrm_plugin_sshterm_stop 1>/dev/null 2>&1
 	ajaxterm 1>/dev/null 2>&1 &
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sshterm/.running
 	return 0
 }
 
 function openqrm_plugin_sshterm_stop() {
 	echo "Stopping the openQRM sshterm plugin"
 	killall  python /usr/share/ajaxterm/ajaxterm.py 1>/dev/null 2>&1
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sshterm/.running
 	return 0
 }
 

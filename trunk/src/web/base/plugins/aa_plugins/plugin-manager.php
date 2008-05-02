@@ -9,6 +9,7 @@ require_once ($RootDir.'include/openqrm-server-config.php');
 $plugin = new plugin();
 $plugins_available = $plugin->available();
 $plugins_enabled = $plugin->enabled();
+$plugins_started = $plugin->started();
 
 $imgDir = '/openqrm/base/plugins/aa_plugins/img/';
 
@@ -112,6 +113,9 @@ $arHead['plugin_name']['title'] ='Plugin';
 $arHead['plugin_enabled'] = array();
 $arHead['plugin_enabled']['title'] ='Enabled';
 
+$arHead['plugin_started'] = array();
+$arHead['plugin_started']['title'] ='Started';
+
 $arBody = array();
 $i = 0;
 foreach ($plugins_available as $index => $plugin_name) {
@@ -121,6 +125,7 @@ foreach ($plugins_available as $index => $plugin_name) {
 		$arBody[$i]['plugin_icon'] = '<img src="'.$imgDir.'plugin.png">';
 		$arBody[$i]['plugin_name'] = $plugin_name;
 		$arBody[$i]['plugin_enabled'] = 'false';
+		$arBody[$i]['plugin_started'] = 'false';
 
 	} else {
 	
@@ -134,6 +139,13 @@ foreach ($plugins_available as $index => $plugin_name) {
 		$arBody[$i]['plugin_icon'] = '<img src="'.$plugin_icon_default.'">';
 		$arBody[$i]['plugin_name'] = $plugin_name;
 		$arBody[$i]['plugin_enabled'] = 'true';
+		// started ?
+		if (!in_array($plugin_name, $plugins_started)) {
+			$arBody[$i]['plugin_started'] = 'false';
+		} else {
+			$arBody[$i]['plugin_started'] = 'true';
+		}
+
 
 	}
 

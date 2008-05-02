@@ -10,12 +10,13 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 
 function openqrm_plugin_xen_start() {
 	echo "Starting the openQRM xen-plugin"
-	openqrm_plugin_xen_stop 1>/dev/null 2>&1
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/xen/.running
 }
 
 
 function openqrm_plugin_xen_stop() {
 	echo "Stopping the openQRM xen-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/xen/.running
 }
 
 function openqrm_plugin_xen_uninstall() {

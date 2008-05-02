@@ -19,6 +19,8 @@ function openqrm_plugin_dhcpd_start() {
 		echo "ERROR: Could not find the dhcpd (ver.3) binary"
 		exit 1
 	fi
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dhcpd/.running
+	
 }
 
 
@@ -26,6 +28,7 @@ function openqrm_plugin_dhcpd_stop() {
 	echo "Stopping the openQRM dhcpd plugin"
 	killall dhcpd 1>/dev/null 2>&1
 	killall dhcpd3 1>/dev/null 2>&1
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dhcpd/.running
 	return 0
 }
 
