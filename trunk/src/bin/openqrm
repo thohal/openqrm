@@ -13,15 +13,15 @@ function openqrm_usage() {
 	echo "Usage:"
 	echo "`basename $0` help			- This help screen"
 	echo "- Managing boot-images -"
-	echo "`basename $0` bootimage add -n <name> -v <version> -u <username> -p <password> [-l <location> -i <initramfs/ext2>]"
-	echo "`basename $0` bootimage remove -n <name> -u <username> -p <password>"
+	echo "`basename $0` kernel add -n <name> -v <version> -u <username> -p <password> [-l <location> -i <initramfs/ext2>]"
+	echo "`basename $0` kernel remove -n <name> -u <username> -p <password>"
 }
 
 
 
 # main
 case "$1" in
-	bootimage)
+	kernel)
 		shift
 		if [ $# == 0 ]; then
 			openqrm_usage
