@@ -33,6 +33,11 @@ Login: <a href="server/user/user.php" target="MainFrame"><?php echo OPENQRM_USER
 	<div class="events_total">total<span id="events_total"></span>
 </div>
 
+<div class="div_box" id="Appliance_box">
+	<div class="appliances_headline">Appliances</div>
+	<div class="appliances_active_">active<span id="appliances_active"></div>
+	<div class="appliances_total">total<span id="appliances_total"></span>
+</div>
 
 
 
