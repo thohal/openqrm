@@ -9,8 +9,12 @@
 	vertical-align:middle;
 }
 .htmlobject_td.plugin_enabled {
-	text-align:left;
-	width:100px;
+	text-align:center;
+	width:50px;
 	vertical-align:middle;
 }
-
+.htmlobject_td.plugin_started {
+	text-align:center;
+	width:50px;
+	vertical-align:middle;
+}

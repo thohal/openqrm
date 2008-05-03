@@ -118,10 +118,10 @@ $arHead['plugin_started']['title'] ='Started';
 
 $arBody = array();
 $i = 0;
-$plugin_started="/openqrm/base/plugins/aa_plugins/img/start.png";
-$plugin_stopped="/openqrm/base/plugins/aa_plugins/img/stop.png";
-$plugin_enabled="/openqrm/base/plugins/aa_plugins/img/enable.png";
-$plugin_disabled="/openqrm/base/plugins/aa_plugins/img/disable.png";
+$plugin_started='<img src="/openqrm/base/plugins/aa_plugins/img/start.png" border="0">';
+$plugin_stopped='<img src="/openqrm/base/plugins/aa_plugins/img/stop.png" border="0">';
+$plugin_enabled='<img src="/openqrm/base/plugins/aa_plugins/img/disable.png" border="0">';
+$plugin_disabled='<img src="/openqrm/base/plugins/aa_plugins/img/enable.png" border="0">';
 
 foreach ($plugins_available as $index => $plugin_name) {
 	$arBody[$i] = array();
@@ -129,8 +129,8 @@ foreach ($plugins_available as $index => $plugin_name) {
 			
 		$arBody[$i]['plugin_icon'] = '<img src="'.$imgDir.'plugin.png">';
 		$arBody[$i]['plugin_name'] = $plugin_name;
-		$arBody[$i]['plugin_enabled'] = '<img src="'.$plugin_disabled.'">';
-		$arBody[$i]['plugin_started'] = '<img src="'.$plugin_stopped.'">';
+		$arBody[$i]['plugin_enabled'] = '<a href="'.$thisfile.'?action=enable&identifier[]='.$plugin_name.'">'.$plugin_disabled.'</a>';
+		$arBody[$i]['plugin_started'] = '&#160;';
 
 	} else {
 	
@@ -143,12 +143,12 @@ foreach ($plugins_available as $index => $plugin_name) {
 			
 		$arBody[$i]['plugin_icon'] = '<img src="'.$plugin_icon_default.'">';
 		$arBody[$i]['plugin_name'] = $plugin_name;
-		$arBody[$i]['plugin_enabled'] = '<img src="'.$plugin_enabled.'">';
+		$arBody[$i]['plugin_enabled'] = '<a href="'.$thisfile.'?action=disable&identifier[]='.$plugin_name.'">'.$plugin_enabled.'</a>';
 		// started ?
 		if (!in_array($plugin_name, $plugins_started)) {
-			$arBody[$i]['plugin_started'] = '<img src="'.$plugin_stopped.'">';
+			$arBody[$i]['plugin_started'] = '<a href="'.$thisfile.'?action=start&identifier[]='.$plugin_name.'">'.$plugin_stopped.'</a>';
 		} else {
-			$arBody[$i]['plugin_started'] = '<img src="'.$plugin_started.'">';
+			$arBody[$i]['plugin_started'] = '<a href="'.$thisfile.'?action=stop&identifier[]='.$plugin_name.'">'.$plugin_started.'</a>';
 		}
 
 
@@ -157,7 +157,7 @@ foreach ($plugins_available as $index => $plugin_name) {
 $i++;
 }
 
-$table_1 = new htmlobject_db_table('plugin_enabled', 'DESC');
+$table_1 = new htmlobject_db_table('plugin_enabled', 'ASC');
 $table_1->id = 'Tabelle';
 $table_1->css = 'htmlobject_table';
 $table_1->border = 1;
