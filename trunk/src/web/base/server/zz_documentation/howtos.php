@@ -8,8 +8,17 @@ require_once "$RootDir/include/htmlobject.inc.php";
 function documentation_howtos() {
 
 	$disp = "<h1>HowTo's</h1>";
-	$disp = $disp."";
-	$disp = $disp."";
+	$disp = $disp."<br>";
+	$disp = $disp."This section provides HowTo's (and links to HowTo's) guiding how to manage different scenarios with openQRM.";
+	$disp = $disp."<ul>";
+	$disp = $disp."<li>";
+	$disp = $disp."<a href='quickstart.php'>Get started</a>.";
+	$disp = $disp."</li><li>";
+	$disp = $disp."(soon come)";
+	$disp = $disp."</li><li>";
+	$disp = $disp."</li>";
+	$disp = $disp."</ul>";
+	$disp = $disp."<br>";
 	$disp = $disp."";
 	$disp = $disp."";
 	$disp = $disp."";
