@@ -70,6 +70,11 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp base/server/event/*.txt $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/event/
 	. $(OPENQRM_SERVER_CONF) && cp base/server/event/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/event/
 	. $(OPENQRM_SERVER_CONF) && cp base/server/event/*.css $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/event/
+	# base/server/zz_documentation
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/zz_documentation
+	. $(OPENQRM_SERVER_CONF) && cp base/server/zz_documentation/*.txt $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/zz_documentation/
+	. $(OPENQRM_SERVER_CONF) && cp base/server/zz_documentation/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/zz_documentation/
+	. $(OPENQRM_SERVER_CONF) && cp base/server/zz_documentation/*.css $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/zz_documentation/
 	# base/plugins/aa_plugins
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/aa_plugins
 	. $(OPENQRM_SERVER_CONF) && cp base/plugins/aa_plugins/*.txt $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/aa_plugins/

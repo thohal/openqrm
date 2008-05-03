@@ -1,0 +1,11 @@
+.|Documentation
+..|Introduction|server/zz_documentation/introduction.php
+...|Glossary|server/zz_documentation/glossary.php
+...|Concept|server/zz_documentation/concept.php
+...|Architecture|server/zz_documentation/architecture.php
+..|Requirements|server/zz_documentation/requirements.php
+..|Installation|server/zz_documentation/installation.php
+..|HowTo|server/zz_documentation/howtos.php
+...|Quick Start|server/zz_documentation/quickstart.php
+..|Plugins|server/zz_documentation/plugins.php
+..|Development|server/zz_documentation/development.php
