@@ -11,6 +11,8 @@ require_once('include/user.inc.php');
 	$html->add_meta('cache-control','no-cache');
 	$html->add_meta('pragma','no-cache');
 	$html->add_style('css/top.css');
+	$html->add_script('js/xmlhttprequest.js');
+	$html->add_script('js/top.js');
 	$html->title = 'Top';
 	
 	echo $html->get_string();
@@ -25,7 +27,17 @@ Login: <a href="server/user/user.php" target="MainFrame"><?php echo OPENQRM_USER
 </div>
 
 <div class="main">
-<div class="div_box">&#160;</div>
+<div class="div_box" id="Event_box">
+	<div class="events_headline">Events</div>
+	<div class="events_critical_">error<span id="events_critical"></div>
+	<div class="events_total">total<span id="events_total"></span>
+</div>
+
+
+
+
+
+
 <div class="div_box">&#160;</div>
 <div class="div_box">&#160;</div>
 <div class="div_box">&#160;</div>
@@ -33,6 +45,12 @@ Login: <a href="server/user/user.php" target="MainFrame"><?php echo OPENQRM_USER
 </div>
 
 <div class="bottom-line">&#160;</div>
+
+
+<script>
+	init();
+</script>
+
 
 </body>
 </html>
