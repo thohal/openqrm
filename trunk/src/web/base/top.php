@@ -23,29 +23,36 @@ require_once('include/user.inc.php');
 <img src="img/logo.png">
 </div>
 <div class="top">
-Login: <a href="server/user/user.php" target="MainFrame"><?php echo OPENQRM_USER_NAME; ?></a>
+
+
+<a id="Event_box" href="server/event/event-overview.php" target="MainFrame">Error(s) <span id="events_critical"></span></a>
+<a id="Docu_box" href="server/event/event-overview.php" target="MainFrame">Documentation</a>
+<a id="Login_box" href="server/user/user.php" target="MainFrame"><?php echo OPENQRM_USER_NAME; ?></a>
+
+<div class="floatbreaker">&#160;</div>
 </div>
+
+<style>
+
+
+</style>
 
 <div class="main">
-<div class="div_box" id="Event_box">
-	<div class="events_headline">Events</div>
-	<div class="events_critical_">error<span id="events_critical"></div>
-	<div class="events_total">total<span id="events_total"></span>
-</div>
-
 <div class="div_box" id="Appliance_box">
-	<div class="appliances_headline">Appliances</div>
-	<div class="appliances_active_">active<span id="appliances_active"></div>
-	<div class="appliances_total">total<span id="appliances_total"></span>
+	<div class="appliances headline">Appliances</div>
+	<div class="appliances active">active <span id="appliances_active">&#160;</span></div>
+	<div class="appliances total">total <span id="appliances_total">&#160;</span></div>
+	<div class="floatbreaker">&#160;</div>
+</div>
+<div class="div_box" id="Resource_box">
+	<div class="resources headline">Resources</div>
+	<div class="resources active">active <span id="resources_active">&#160;</span></div>
+	<div class="resources error">error <span id="resources_error">&#160;</span></div>
+	<div class="resources off">off <span id="resources_off">&#160;</span></div>
+	<div class="resources total">total <span id="resources_total">&#160;</span></div>
+	<div class="floatbreaker">&#160;</div>
 </div>
 
-
-
-
-
-<div class="div_box">&#160;</div>
-<div class="div_box">&#160;</div>
-<div class="div_box">&#160;</div>
 <div class="floatbreaker">&#160;</div>
 </div>
 
