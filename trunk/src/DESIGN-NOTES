@@ -58,7 +58,7 @@ commands needed for initialyzing the plugin after installation.
 (it does not enable the plugin but just prepare it so it could get enabled)
 
 plugins preremove stage:
-	base-dir/openqrm/plugins/[plugin-name]/etc/init.d/openqrm-plugin-[plugin-name].postinstall
+	base-dir/openqrm/plugins/[plugin-name]/etc/init.d/openqrm-plugin-[plugin-name].preremove
 This preremove script must exist for packaging. It should run the
 commands needed to stop and uninitialyze the plugin after installation.
 (it does not disable the plugin but just prepare it so it could get disabled)
