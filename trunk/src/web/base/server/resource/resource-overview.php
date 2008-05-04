@@ -137,7 +137,7 @@ function resource_display() {
 		}
 
 		$arBody[] = array(
-			'resource_state' => "<img width=24 height=24 src=$state_icon>",
+			'resource_state' => "<img src=$state_icon>",
 			'resource_icon' => "<img width=32 height=32 src=$resource_icon_default>",
 			'resource_id' => $resource_db["resource_id"],
 			'resource_hostname' => $resource_db["resource_hostname"],
