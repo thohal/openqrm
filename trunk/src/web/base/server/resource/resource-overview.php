@@ -88,9 +88,6 @@ function resource_display() {
 	$arHead['resource_hostname'] = array();
 	$arHead['resource_hostname']['title'] ='Name';
 
-	$arHead['resource_localboot'] = array();
-	$arHead['resource_localboot']['title'] ='Boot';
-
 	$arHead['resource_kernelid'] = array();
 	$arHead['resource_kernelid']['title'] ='Kernel';
 
@@ -141,7 +138,6 @@ function resource_display() {
 			'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 			'resource_id' => $resource_db["resource_id"],
 			'resource_hostname' => $resource_db["resource_hostname"],
-			'resource_localboot' => $resource_db["resource_localboot"],
 			'resource_kernel' => $resource_db["resource_kernel"],
 			'resource_image' => $resource_db["resource_image"],
 			'resource_ip' => $resource_db["resource_ip"],
