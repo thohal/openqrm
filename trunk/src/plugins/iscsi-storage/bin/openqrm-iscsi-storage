@@ -102,6 +102,10 @@ case "$ISCSI_COMMAND" in
 		iscsi_storage_lock aquire
 		manage_iscsi add
 		iscsi_storage_lock release
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$ISCSI_OPENQRM_USERNAME" != "" ] && [ "$ISCSI_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_luns -u $ISCSI_OPENQRM_USERNAME -p $ISCSI_OPENQRM_PASSWORD
+		fi
 		;;
 
 	remove)
@@ -109,6 +113,10 @@ case "$ISCSI_COMMAND" in
 		iscsi_storage_lock aquire
 		manage_iscsi remove
 		iscsi_storage_lock release
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$ISCSI_OPENQRM_USERNAME" != "" ] && [ "$ISCSI_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_luns -u $ISCSI_OPENQRM_USERNAME -p $ISCSI_OPENQRM_PASSWORD
+		fi
 		;;
 
 	snap)
@@ -128,8 +136,12 @@ case "$ISCSI_COMMAND" in
 		cp -a $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_SNAPSHOT_NAME
 		export ISCSI_IMAGE_NAME=$ISCSI_IMAGE_SNAPSHOT_NAME
 		iscsi_storage_lock aquire
-		manage_iscsi add
+		manage_iscsi add snap
 		iscsi_storage_lock release
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$ISCSI_OPENQRM_USERNAME" != "" ] && [ "$ISCSI_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_luns -u $ISCSI_OPENQRM_USERNAME -p $ISCSI_OPENQRM_PASSWORD
+		fi
 		;;
 
 	list)
