@@ -5,5 +5,5 @@
 #	Target
 .|SSH-Terminal
 ..|About|plugins/sshterm/sshterm-about.php
-..|openQRM|http://localhost:8022
+..|openQRM|plugins/sshterm/sshterm-manager.php?action=login&identifier[]=0
 ..|SSH-Manager|plugins/sshterm/sshterm-manager.php
