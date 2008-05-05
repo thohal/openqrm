@@ -53,13 +53,13 @@ function storage_display() {
 
 	$arHead = array();
 	$arHead['storage_id'] = array();
-	$arHead['storage_id']['title'] ='ID';
+	$arHead['storage_id']['title'] ='';
 
 	$arHead['storage_state'] = array();
 	$arHead['storage_state']['title'] ='';
 
 	$arHead['storage_icon'] = array();
-	$arHead['storage_icon']['title'] ='';
+	$arHead['storage_icon']['title'] ='ID';
 
 	$arHead['storage_name'] = array();
 	$arHead['storage_name']['title'] ='Name';
@@ -72,9 +72,6 @@ function storage_display() {
 
 	$arHead['storage_comment'] = array();
 	$arHead['storage_comment']['title'] ='Comment';
-
-	$arHead['storage_capabilities'] = array();
-	$arHead['storage_capabilities']['title'] ='Capabilities';
 
 	$arBody = array();
 	$storage_array = $storage_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
@@ -108,10 +105,9 @@ function storage_display() {
 			'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 			'storage_id' => $storage_db["storage_id"],
 			'storage_name' => $storage_db["storage_name"],
-			'storage_deployment_type' => $storage_db["storage_deployment_type"],
-			'storage_resource_id' => $storage_db["storage_resource_id"],
+			'storage_deployment_type' => $storage_deployment->type,
+			'storage_resource_id' => "$storage_resource->id/$storage_resource->ip",
 			'storage_comment' => $storage_db["storage_comment"],
-			'storage_capabilities' => $storage_db["storage_capabilities"],
 		);
 
 	}
