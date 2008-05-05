@@ -110,9 +110,18 @@ function lvm_select_storage() {
 		}
 		if ("$STORAGE_TYPE" == "lvm-storage") {
 			$storage_count++;
+			$resource_icon_default="/openqrm/base/img/resource.png";
+			$storage_icon="/openqrm/base/plugins/lvm-storage/img/storage.png";
+			$state_icon="/openqrm/base/img/$storage_resource->state.png";
+			if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+				$state_icon="/openqrm/base/img/unknown.png";
+			}
+			if (file_exists($_SERVER["DOCUMENT_ROOT"].$storage_icon)) {
+				$resource_icon_default=$storage_icon;
+			}
 			$arBody[] = array(
-				'storage_state' => $storage_resource->state,
-				'storage_icon' => $storage_db["storage_id"],
+				'storage_state' => "<img src=$state_icon>",
+				'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 				'storage_id' => $storage->id,
 				'storage_name' => $storage->name,
 				'storage_resource_id' => $storage->resource_id,
@@ -123,6 +132,7 @@ function lvm_select_storage() {
 			);
 		}
 	}
+
 
 
 	$table->id = 'Tabelle';
@@ -190,9 +200,18 @@ function lvm_storage_display($lvm_storage_id) {
 	$arBody = array();
 
 	$storage_count++;
+	$resource_icon_default="/openqrm/base/img/resource.png";
+	$storage_icon="/openqrm/base/plugins/lvm-storage/img/storage.png";
+	$state_icon="/openqrm/base/img/$storage_resource->state.png";
+	if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+		$state_icon="/openqrm/base/img/unknown.png";
+	}
+	if (file_exists($_SERVER["DOCUMENT_ROOT"].$storage_icon)) {
+		$resource_icon_default=$storage_icon;
+	}
 	$arBody[] = array(
-		'storage_state' => $storage_resource->state,
-		'storage_icon' => $storage_db["storage_id"],
+		'storage_state' => "<img src=$state_icon>",
+		'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 		'storage_id' => $storage->id,
 		'storage_name' => $storage->name,
 		'storage_resource_id' => $storage->resource_id,
@@ -295,9 +314,18 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
 	$arBody = array();
 
 	$storage_count++;
+	$resource_icon_default="/openqrm/base/img/resource.png";
+	$storage_icon="/openqrm/base/plugins/lvm-storage/img/storage.png";
+	$state_icon="/openqrm/base/img/$storage_resource->state.png";
+	if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+		$state_icon="/openqrm/base/img/unknown.png";
+	}
+	if (file_exists($_SERVER["DOCUMENT_ROOT"].$storage_icon)) {
+		$resource_icon_default=$storage_icon;
+	}
 	$arBody[] = array(
-		'storage_state' => $storage_resource->state,
-		'storage_icon' => "<input type=hidden name=lvm_volume_group value=$lvm_volume_group>",
+		'storage_state' => "<img src=$state_icon><input type=hidden name=lvm_volume_group value=$lvm_volume_group>",
+		'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 		'storage_id' => $storage->id,
 		'storage_name' => $storage->name,
 		'storage_resource_id' => $storage->resource_id,
