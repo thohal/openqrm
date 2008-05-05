@@ -91,6 +91,10 @@ case "$NFS_COMMAND" in
 		nfs_storage_lock aquire
 		manage_nfs add
 		nfs_storage_lock release
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$NFS_OPENQRM_USERNAME" != "" ] && [ "$NFS_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_exports -u $NFS_OPENQRM_USERNAME -p $NFS_OPENQRM_PASSWORD
+		fi
 		;;
 
 	remove)
@@ -98,6 +102,9 @@ case "$NFS_COMMAND" in
 		nfs_storage_lock aquire
 		manage_nfs remove
 		nfs_storage_lock release
+		if [ "$NFS_OPENQRM_USERNAME" != "" ] && [ "$NFS_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_exports -u $NFS_OPENQRM_USERNAME -p $NFS_OPENQRM_PASSWORD
+		fi
 		;;
 
 	snap)
@@ -119,6 +126,9 @@ case "$NFS_COMMAND" in
 		nfs_storage_lock aquire
 		manage_nfs add
 		nfs_storage_lock release
+		if [ "$NFS_OPENQRM_USERNAME" != "" ] && [ "$NFS_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_exports -u $NFS_OPENQRM_USERNAME -p $NFS_OPENQRM_PASSWORD
+		fi
 		;;
 
 	list)
