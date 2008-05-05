@@ -198,8 +198,6 @@ function lvm_storage_display($lvm_storage_id) {
 
 	$storage_count=1;
 	$arBody = array();
-
-	$storage_count++;
 	$resource_icon_default="/openqrm/base/img/resource.png";
 	$storage_icon="/openqrm/base/plugins/lvm-storage/img/storage.png";
 	$state_icon="/openqrm/base/img/$storage_resource->state.png";
@@ -312,8 +310,6 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
 
 	$storage_count=1;
 	$arBody = array();
-
-	$storage_count++;
 	$resource_icon_default="/openqrm/base/img/resource.png";
 	$storage_icon="/openqrm/base/plugins/lvm-storage/img/storage.png";
 	$state_icon="/openqrm/base/img/$storage_resource->state.png";
