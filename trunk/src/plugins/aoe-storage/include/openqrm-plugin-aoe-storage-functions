@@ -81,7 +81,9 @@ function manage_aoe() {
 	
 	case "$1" in
 		add)
-			dd if=/dev/zero of=$AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME bs=1M count=$AOE_IMAGE_SIZE
+			if [ "$2" != "snap" ]; then
+				dd if=/dev/zero of=$AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME bs=1M count=$AOE_IMAGE_SIZE
+			fi
 			# currently just one static shelf !
 			AOE_SHELF=1
 			# slots are dynamic
