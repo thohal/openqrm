@@ -5,6 +5,11 @@
 	border-width:5px;
     border-style:solid;
     border-color:#91a7b4;
-    color: #ffffff;
+    color: #ffffff !important;
 
+}
+
+.eterminalhighlight	{
+    color: #ffffff !important;
+	font-size: 20px !important;
 }

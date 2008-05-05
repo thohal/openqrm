@@ -160,6 +160,11 @@ case "$LVM_COMMAND" in
 			lvm_storage_lock release
 		fi
 
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP
+		fi
+
 		;;
 
 	remove)
@@ -191,6 +196,12 @@ case "$LVM_COMMAND" in
 		sleep 2
 		lvchange -a n /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
 		lvremove -f /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
+
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP
+		fi
+
 		;;
 
 	snap)
@@ -234,6 +245,11 @@ case "$LVM_COMMAND" in
 			lvm_storage_lock aquire
 			manage_vblade add
 			lvm_storage_lock release
+		fi
+
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP
 		fi
 		;;
 
