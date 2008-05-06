@@ -11,7 +11,7 @@ set NETAPP_IP [lindex $argv 0]
 set NETAPP_CMD [lindex $argv 1]
 set NETAPP_PASSWORD [lindex $argv 2]
 
-send_user "Running comand $NETAPP_CMD on $NETAPP_IP\n"
+send_user "Running command $NETAPP_CMD on $NETAPP_IP\n"
 
 set force_conservative 0  ;# set to 1 to force conservative mode even if
 			  ;# script wasn't run conservatively originally

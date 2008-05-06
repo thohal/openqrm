@@ -10,13 +10,13 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 
 function openqrm_plugin_netapp_storage_start() {
 	echo "Starting the openQRM netapp-storage-plugin"
-	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp/.running
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp-storage/.running
 }
 
 
 function openqrm_plugin_netapp_storage_stop() {
 	echo "Stopping the openQRM netapp-storage-plugin"
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp/.running
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp-storage/.running
 }
 
 function openqrm_plugin_netapp_storage_uninstall() {
