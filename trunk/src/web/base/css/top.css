@@ -31,6 +31,14 @@ div {
 	border-left: 1px solid #33CCFF;
 */
 }
+.watch {
+	position:absolute;
+	top:10px;
+	left:235px;
+	color:white;
+	font-family:arial;
+	font-size:12px;
+}
 
 .top {
 	color: #646464;

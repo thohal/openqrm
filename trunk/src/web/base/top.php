@@ -19,16 +19,72 @@ require_once('include/user.inc.php');
 ?>
 <body>
 
+
+<script type="text/javascript">
+
+/***********************************************
+* Local Time script- © Dynamic Drive (http://www.dynamicdrive.com)
+* This notice MUST stay intact for legal use
+* Visit http://www.dynamicdrive.com/ for this script and 100s more.
+***********************************************/
+
+var weekdaystxt=["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+function showLocalTime(container, servermode, offsetMinutes){
+if (!document.getElementById || !document.getElementById(container)) return
+this.container=document.getElementById(container)
+var servertimestring=(servermode=="server-php")? '<?php print date("F d, Y H:i:s", time())?>' : (servermode=="server-ssi")? '<!--#config timefmt="%B %d, %Y %H:%M:%S"--><!--#echo var="DATE_LOCAL" -->' : '<%= Now() %>'
+this.localtime=this.serverdate=new Date(servertimestring)
+this.localtime.setTime(this.serverdate.getTime()+offsetMinutes*60*1000) //add user offset to server time
+this.updateTime()
+this.updateContainer()
+}
+
+showLocalTime.prototype.updateTime=function(){
+var thisobj=this
+this.localtime.setSeconds(this.localtime.getSeconds()+1)
+setTimeout(function(){thisobj.updateTime()}, 1000) //update time every second
+}
+
+showLocalTime.prototype.updateContainer=function(){
+var thisobj=this
+var hour=this.localtime.getHours()
+var minutes=this.localtime.getMinutes()
+var seconds=this.localtime.getSeconds()
+
+var dayofweek=weekdaystxt[this.localtime.getDay()]
+this.container.innerHTML= dayofweek + ' ' + formatField(hour)+":"+formatField(minutes)+":"+formatField(seconds);
+setTimeout(function(){thisobj.updateContainer()}, 1000) //update container every second
+}
+
+function formatField(num, isHour){
+if (typeof isHour!="undefined"){ //if this is the hour field
+var hour=(num>12)? num-12 : num
+return (hour==0)? 12 : hour
+}
+return (num<=9)? "0"+num : num//if this is minute or sec field
+}
+
+</script>
+
 <div class="logo">
 <img src="img/logo.png">
+<?php echo $OPENQRM_SERVER_VERSION; ?>
 </div>
+
+<div class="watch">
+<span id="timecontainer"></span>
+<script type="text/javascript">
+new showLocalTime("timecontainer", "server-php", 0, "xx")
+</script>
+</div>
+
+
+
 <div class="top">
-
-
 <a id="Event_box" href="server/event/event-overview.php" target="MainFrame">Error(s) <span id="events_critical"></span></a>
 <a id="Docu_box" href="server/event/event-overview.php" target="MainFrame">Documentation</a>
 <a id="Login_box" href="server/user/user.php" target="MainFrame"><?php echo OPENQRM_USER_NAME; ?></a>
-
 <div class="floatbreaker">&#160;</div>
 </div>
 
