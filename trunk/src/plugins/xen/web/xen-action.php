@@ -6,7 +6,7 @@ $xen_id = $_REQUEST["xen_id"];
 <html>
 <head>
 <title>openQRM Xen actions</title>
-<meta http-equiv="refresh" content="0; URL=xen-manager.php?currenttab=tab1&strMsg=Processing <?php echo $xen_command; ?>">
+<meta http-equiv="refresh" content="0; URL=xen-manager.php?xen_id=<?php echo $xen_id; ?>&currenttab=tab0&strMsg=Processing <?php echo $xen_command; ?>">
 </head>
 <body>
 
@@ -22,6 +22,7 @@ require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 global $OPENQRM_SERVER_BASE_DIR;
 global $RESOURCE_INFO_TABLE;
+$refresh_delay=10;
 
 // place for the xen stat files
 $XenDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/xen/xen-stat';
@@ -76,6 +77,7 @@ unset($xen_fields["xen_command"]);
 			$kernel_xen = new kernel();
 			$kernel_xen->get_instance_by_id($xen->kernelid);
 			$resource_new->assign($resource_id, $kernel_xen->id, $kernel_xen->name, 1, "idle");
+			sleep($refresh_delay);
 			break;
 
 		case 'start':
@@ -83,6 +85,7 @@ unset($xen_fields["xen_command"]);
 			$xen->get_instance_by_id($xen_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen start -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'stop':
@@ -90,6 +93,7 @@ unset($xen_fields["xen_command"]);
 			$xen->get_instance_by_id($xen_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen stop -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'kill':
@@ -97,6 +101,7 @@ unset($xen_fields["xen_command"]);
 			$xen->get_instance_by_id($xen_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen kill -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'reboot':
@@ -104,6 +109,7 @@ unset($xen_fields["xen_command"]);
 			$xen->get_instance_by_id($xen_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen reboot -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'remove':
@@ -111,6 +117,7 @@ unset($xen_fields["xen_command"]);
 			$xen->get_instance_by_id($xen_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen remove -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'add':
@@ -118,6 +125,7 @@ unset($xen_fields["xen_command"]);
 			$xen->get_instance_by_id($xen_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen add -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'delete':
@@ -125,6 +133,7 @@ unset($xen_fields["xen_command"]);
 			$xen->get_instance_by_id($xen_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen delete -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'migrate':
@@ -138,6 +147,7 @@ unset($xen_fields["xen_command"]);
 				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen migrate -n $xen_name -i $destination->ip -t regular -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			}
 			$xen->send_command($xen->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		case 'get_xen':
@@ -157,6 +167,7 @@ unset($xen_fields["xen_command"]);
 			$xen->get_instance_by_id($xen_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
+			sleep($refresh_delay);
 			break;
 
 		default:

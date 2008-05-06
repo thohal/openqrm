@@ -158,35 +158,60 @@ EOF
 		fi
 		xm new /etc/xen/$XEN_VM_NAME.cfg
 		xm start $XEN_VM_NAME
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
 		;;
 	add)
 		echo "Adding Xen vm $XEN_VM_NAME"
 		xm new /etc/xen/$XEN_VM_NAME.cfg
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
 		;;
 	start)
 		echo "Starting Xen vm $XEN_VM_NAME"
 		xm start $XEN_VM_NAME
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
 		;;
 	stop)
 		echo "Stopping Xen vm $XEN_VM_NAME"
 		xm shutdown $XEN_VM_NAME
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
 		;;
 	kill)
 		echo "Force-stop Xen vm $XEN_VM_NAME"
 		xm destroy $XEN_VM_NAME
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
 		;;
 	reboot)
 		echo "Rebooting Xen vm $XEN_VM_NAME"
 		xm reboot $XEN_VM_NAME
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
 		;;
 	remove)
 		echo "Removing Xen vm $XEN_VM_NAME"
 		xm delete $XEN_VM_NAME
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
 		;;
 	delete)
 		echo "Deleting Xen vm $XEN_VM_NAME"
 		rm -f /etc/xen/$XEN_VM_NAME.*
 		rm -rf $OPENQRM_VM_DIR/$XEN_VM_NAME
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
 		;;
 	migrate)
 		echo "Migrating Xen vm $XEN_VM_NAME to $XEN_VM_IP ($XEN_MIGRATION_TYPE)"
@@ -194,6 +219,9 @@ EOF
 			xm migrate $XEN_VM_NAME $XEN_VM_IP -l
 		else
 			xm migrate $XEN_VM_NAME $XEN_VM_IP
+		fi
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
 		fi
 		;;
 	list)
