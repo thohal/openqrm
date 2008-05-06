@@ -52,7 +52,7 @@ function lvm_select_storage() {
 	global $OPENQRM_USER;
 	global $thisfile;
 
-	$table = new htmlobject_db_table('kernel_id');
+	$table = new htmlobject_db_table('storage_id');
 
 	$disp = "<h1>Select Lvm-storage</h1>";
 	$disp = $disp."<br>";
@@ -167,7 +167,7 @@ function lvm_storage_display($lvm_storage_id) {
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 
-	$table = new htmlobject_db_table('kernel_id');
+	$table = new htmlobject_db_table('storage_id');
 	$arHead = array();
 	$arHead['storage_state'] = array();
 	$arHead['storage_state']['title'] ='';
@@ -279,7 +279,7 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 
-	$table = new htmlobject_db_table('kernel_id');
+	$table = new htmlobject_db_table('storage_id');
 	$arHead = array();
 	$arHead['storage_state'] = array();
 	$arHead['storage_state']['title'] ='';

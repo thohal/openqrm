@@ -41,7 +41,7 @@ if(htmlobject_request('action') != '') {
 function aoe_select_storage() {
 	global $OPENQRM_USER;
 	global $thisfile;
-	$table = new htmlobject_db_table('kernel_id');
+	$table = new htmlobject_db_table('storage_id');
 
 	$disp = "<h1>Select Aoe-storage</h1>";
 	$disp = $disp."<br>";
@@ -154,7 +154,7 @@ function aoe_storage_display($aoe_storage_id) {
 	$storage_deployment = new deployment();
 	$storage_deployment->get_instance_by_id($storage->deployment_type);
 
-	$table = new htmlobject_db_table('kernel_id');
+	$table = new htmlobject_db_table('storage_id');
 
 	$disp = "<h1>Select Aoe-storage</h1>";
 	$disp = $disp."<br>";

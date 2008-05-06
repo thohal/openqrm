@@ -41,7 +41,7 @@ if(htmlobject_request('action') != '') {
 function nfs_select_storage() {
 	global $OPENQRM_USER;
 	global $thisfile;
-	$table = new htmlobject_db_table('kernel_id');
+	$table = new htmlobject_db_table('storage_id');
 
 	$disp = "<h1>Select Nfs-storage</h1>";
 	$disp = $disp."<br>";
@@ -151,7 +151,7 @@ function nfs_storage_display($nfs_storage_id) {
 	$storage_deployment = new deployment();
 	$storage_deployment->get_instance_by_id($storage->deployment_type);
 
-	$table = new htmlobject_db_table('kernel_id');
+	$table = new htmlobject_db_table('storage_id');
 
 	$disp = "<h1>Select Nfs-storage</h1>";
 	$disp = $disp."<br>";
