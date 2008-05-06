@@ -207,7 +207,6 @@ EOF
 		# add #'s at the beginning to make later parsing easier
 		cat $VM_LIST_TMP | sed -e "s/^/#/g" > $VM_LIST_TMP.up
 		mv -f $VM_LIST_TMP.up $VM_LIST_TMP
-		echo "<br>Available inactive Xen vms :<br>" >> $VM_LIST_TMP
 		for cfg in `ls /etc/xen/*.cfg`; do
 			basename $cfg >> $VM_LIST_TMP
 		done

@@ -19,7 +19,7 @@ $xen_id = $_REQUEST["xen_id"];
 function xen_create() {
 	global $xen_id;
 
-	$disp = "<b>Xen Create VM</b>";
+	$disp = "<b>Create VM on Xen-Host $xen_id</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$xen = new resource();
