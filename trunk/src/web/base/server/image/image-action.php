@@ -14,6 +14,7 @@ require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/class/event.class.php";
+require_once "$RootDir/include/htmlobject.inc.php";
 global $IMAGE_INFO_TABLE;
 global $DEPLOYMENT_INFO_TABLE;
 
@@ -46,6 +47,30 @@ foreach ($_REQUEST as $key => $value) {
 		$deployment_fields[$key] = $value;
 	}
 }
+
+// parse the identifier array to get the id
+if(htmlobject_request('action') != '') {
+	switch (htmlobject_request('action')) {
+		case 'add':
+			foreach($_REQUEST['identifier'] as $id) {
+				if(!strlen($image_fields["image_storageid"])) {
+					$image_fields["image_storageid"]=$id;
+				}
+				continue;
+			}
+			break;
+		case 'update':
+			foreach($_REQUEST['identifier'] as $id) {
+				if(!strlen($image_fields["image_storageid"])) {
+					$image_fields["image_storageid"]=$id;
+				}
+				continue;
+			}
+			break;
+	}
+}
+
+
 
 	$event->log("$image_command", $_SERVER['REQUEST_TIME'], 5, "image-action", "Processing image $image_command on Image $image_name", "", "", 0, 0, 0);
 	switch ($image_command) {

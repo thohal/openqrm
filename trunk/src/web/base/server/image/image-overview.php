@@ -104,6 +104,7 @@ function image_display() {
 
 
 function image_form() {
+	global $OPENQRM_USER;
 
 	$deployment = new deployment();
 	$deployment_list = array();
@@ -115,71 +116,33 @@ function image_form() {
 	global $BaseDir;
 
 	$disp = "<b>New Image</b>";
-	$disp = $disp."<form action='image-overview.php?currenttab=tab1' method=post>";
 	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-
-	$deployment_select = htmlobject_select('image_type', $deployment_list, 'Deployment type', $image_type);
-	$disp = $disp.$deployment_select;
 	$disp = $disp."<br>";
 
 	if (!strlen($dep_is_selected)) {
 	
+		$disp = $disp."<form action='image-overview.php?currenttab=tab1' method=post>";
+		$deployment_select = htmlobject_select('image_type', $deployment_list, 'Deployment type', $image_type);
+		$disp = $disp.$deployment_select;
 		$disp = $disp."<input type=hidden name=dep_is_selected value='yes'>";
 		$disp = $disp."<input type=submit value='select'>";
-		$disp = $disp."<br>";
-		$disp = $disp."<br>";
 		$disp = $disp."</form>";
 
 	} else {
-		$disp = $disp."</form>";
-		
-		$disp = $disp."<form action='image-action.php' method=post>";
-		$disp = $disp.htmlobject_input('image_name', array("value" => '', "label" => 'Insert Image name'), 'text', 20);
-		$disp = $disp.htmlobject_input('image_version', array("value" => '', "label" => 'Image version'), 'text', 20);
-
 		$image_type = $image_type['0'];
 		$deployment_tmp = new deployment();
 		$deployment_tmp->get_instance_by_id($image_type);
-		$disp = $disp."Select $deployment_tmp->type Storage server";
-		$disp = $disp."<br>";
-		$disp = $disp."<br>";
-		$disp = $disp."<hr>";
 
-		// storage-server list select with radio buttons
-		$storage_tmp = new storage();
-		$storage_array = $storage_tmp->display_overview(0, 10, 'storage_id', 'ASC');
-		foreach ($storage_array as $index => $storage_db) {
-	
-			$resource = new resource();
-			$resource->get_instance_by_id($storage_db["storage_resource_id"]);
-			if ("$resource->id" != "0") {
-				$disp = $disp."<div id=\"storage\" nowrap=\"true\">";
-			    $disp = $disp."<input type='radio' name='image_storageid' value='$resource->id'>";
-				$disp = $disp." Storage $resource->id $resource->hostname ";
-				$disp = $disp." $resource->ip $resource->mac $resource->state ";
-				$disp = $disp."</div>";
-			} else {
-				$disp = $disp."<br>";
-				$disp = $disp."<div id=\"storage\" nowrap=\"true\">";
-			    $disp = $disp."<input type='radio' name='image_storageid' value='$resource->id'>";
-				$disp = $disp." $resource->id &nbsp; openQRM-server";
-				$disp = $disp." $resource->ip  ";
-				$disp = $disp."</div>";
-				$disp = $disp."<br>";
-			}
-		}
-
-		$disp = $disp."<hr>";
+		$disp = $disp."<form action='image-action.php' method=post>";
+		$disp = $disp."<input type=hidden name=image_type value=$image_type>";
+		$disp = $disp.htmlobject_input('image_name', array("value" => '', "label" => 'Name'), 'text', 20);
+		$disp = $disp.htmlobject_input('image_version', array("value" => '', "label" => 'Version'), 'text', 20);
+		$disp = $disp.htmlobject_input('image_rootdevice', array("value" => '', "label" => 'Root-device'), 'text', 20);
+		$disp = $disp.htmlobject_input('image_rootfstype', array("value" => '', "label" => 'Root-fs type'), 'text', 20);
+	    $disp = $disp."<input type='checkbox' name='image_isshared' value='0'> Shared<br>";
 		$disp = $disp."<br>";
+		$disp = $disp."Type : $deployment_tmp->type <br>";
 		$disp = $disp."<br>";
-
-		$disp = $disp.htmlobject_input('image_rootdevice', array("value" => '', "label" => 'Image root-device'), 'text', 20);
-		$disp = $disp.htmlobject_input('image_rootfstype', array("value" => '', "label" => 'Image root-fs type'), 'text', 20);
-	    $disp = $disp."<input type='checkbox' name='image_isshared' value='0'> Shared Image<br>";
-		$disp = $disp."<br>";
-		$disp = $disp."<br>";
-    
     	// making the deployment parameters plugg-able
     	$deployment_menu_file = "$BaseDir/boot-service/image-deployment-parameter.$deployment_tmp->type"."-menu.html";
     	if (file_exists($deployment_menu_file)) {
@@ -188,21 +151,111 @@ function image_form() {
     	} else {
 			$disp = $disp.htmlobject_textarea('image_deployment_parameter', array("value" => '', "label" => 'Deployment parameter'));
 		}
-
 		$disp = $disp."<br>";
 		$disp = $disp.htmlobject_textarea('image_comment', array("value" => '', "label" => 'Comment'));
-		$disp = $disp.htmlobject_textarea('image_capabilities', array("value" => '', "label" => 'Image Capabilities'));
+		$disp = $disp.htmlobject_textarea('image_capabilities', array("value" => '', "label" => 'Capabilities'));
 
 		$disp = $disp."<input type=hidden name=image_command value='new_image'>";
 		$disp = $disp."<input type=hidden name=image_type value=$image_type>";
-		$disp = $disp."<input type=submit value='add'>";
-		$disp = $disp."";
-		$disp = $disp."";
+
+		$disp = $disp."<br>";
+		$disp = $disp."<hr>";
+
+		$storage_tmp = new storage();
+		$table = new htmlobject_db_table('storage_id');	
+
+		$disp .= "<h1>Select $deployment_tmp->type Storage server</h1>";
+		$disp .= '<br>';
+
+		$arHead = array();
+		$arHead['storage_id'] = array();
+		$arHead['storage_id']['title'] ='';
+
+		$arHead['storage_state'] = array();
+		$arHead['storage_state']['title'] ='';
+
+		$arHead['storage_icon'] = array();
+		$arHead['storage_icon']['title'] ='ID';
+
+		$arHead['storage_name'] = array();
+		$arHead['storage_name']['title'] ='Name';
+
+		$arHead['storage_deployment_type'] = array();
+		$arHead['storage_deployment_type']['title'] ='Type';
+
+		$arHead['storage_resource_id'] = array();
+		$arHead['storage_resource_id']['title'] ='Resource';
+
+		$arHead['storage_comment'] = array();
+		$arHead['storage_comment']['title'] ='Comment';
+
+		$arBody = array();
+		$storage_array = $storage_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
+
+		foreach ($storage_array as $index => $storage_db) {
+
+			if ($deployment_tmp->id == $storage_db["storage_deployment_type"]) {
+		
+			$storage = new storage();
+			$storage->get_instance_by_id($storage_db["storage_id"]);
+			$storage_resource = new resource();
+			$storage_resource->get_instance_by_id($storage->resource_id);
+			$storage_deployment = new deployment();
+			$storage_deployment->get_instance_by_id($storage->deployment_type);
+			$cap_array = explode(" ", $storage->capabilities);
+			foreach ($cap_array as $index => $capabilities) {
+				if (strstr($capabilities, "STORAGE_TYPE")) {
+					$STORAGE_TYPE=str_replace("STORAGE_TYPE=\\\"", "", $capabilities);
+					$STORAGE_TYPE=str_replace("\\\"", "", $STORAGE_TYPE);
+				}
+			}
+			$resource_icon_default="/openqrm/base/img/resource.png";
+			$storage_icon="/openqrm/base/plugins/$STORAGE_TYPE/img/storage.png";
+			$state_icon="/openqrm/base/img/$storage_resource->state.png";
+			if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+				$state_icon="/openqrm/base/img/unknown.png";
+			}
+			if (file_exists($_SERVER["DOCUMENT_ROOT"].$storage_icon)) {
+				$resource_icon_default=$storage_icon;
+			}
+
+			$arBody[] = array(
+				'storage_state' => "<img src=$state_icon>",
+				'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+				'storage_id' => $storage_db["storage_id"],
+				'storage_name' => $storage_db["storage_name"],
+				'storage_deployment_type' => $storage_deployment->type,
+				'storage_resource_id' => "$storage_resource->id/$storage_resource->ip",
+				'storage_comment' => $storage_db["storage_comment"],
+			);
+
+		}
+
+		}
+
+		$table->id = 'Tabelle';
+		$table->css = 'htmlobject_table';
+		$table->border = 1;
+		$table->cellspacing = 0;
+		$table->cellpadding = 3;
+		$table->form_action = "image-action.php";
+		$table->head = $arHead;
+		$table->body = $arBody;
+		if ($OPENQRM_USER->role == "administrator") {
+			$table->bottom = array('add');
+			$table->identifier = 'storage_id';
+		}
+		$table->max = $storage_tmp->get_count();
+		#$table->limit = 10;
+
+		$disp = $disp.$table->get_string();
+
+		$disp = $disp."<hr>";
+		$disp = $disp."<br>";
+		$disp = $disp."<br>";
+		$disp = $disp."</form>";
+
 	}
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."</form>";
 	return $disp;
 }
 
@@ -295,13 +348,13 @@ function image_edit($image_id) {
 
 $output = array();
 $output[] = array('label' => 'Images', 'value' => image_display());
-$output[] = array('label' => 'Add Image', 'value' => image_form());
+$output[] = array('label' => 'New', 'value' => image_form());
 
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'edit':
 			foreach($_REQUEST['identifier'] as $id) {
-				$output[] = array('label' => 'Edit Image', 'value' => image_edit($id));
+				$output[] = array('label' => 'Edit', 'value' => image_edit($id));
 			}
 			break;
 	}
