@@ -93,6 +93,12 @@ function appliance_display() {
 	$disp .= '<br>';
 
 	$arHead = array();
+	$arHead['appliance_state'] = array();
+	$arHead['appliance_state']['title'] ='';
+
+	$arHead['appliance_icon'] = array();
+	$arHead['appliance_icon']['title'] ='';
+
 	$arHead['appliance_id'] = array();
 	$arHead['appliance_id']['title'] ='ID';
 
@@ -120,7 +126,22 @@ function appliance_display() {
 	foreach ($appliance_array as $index => $appliance_db) {
 		$appliance = new appliance();
 		$appliance->get_instance_by_id($appliance_db["appliance_id"]);
+		$resource = new resource();
+		$resource->get_instance_by_id($appliance_db["appliance_resources"]);
+		$resource_icon_default="/openqrm/base/img/resource.png";
+		$state_icon="/openqrm/base/img/$resource->state.png";
+		// idle ?
+		if (("$resource->imageid" == "1") && ("$resource->state" == "active")) {
+			$state_icon="/openqrm/base/img/idle.png";
+		}
+		if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+			$state_icon="/openqrm/base/img/unknown.png";
+		}
+
+
 		$arBody[] = array(
+			'appliance_state' => "<img src=$state_icon>",
+			'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 			'appliance_id' => $appliance_db["appliance_id"],
 			'appliance_name' => $appliance_db["appliance_name"],
 			'appliance_kernelid' => $appliance_db["appliance_kernelid"],
