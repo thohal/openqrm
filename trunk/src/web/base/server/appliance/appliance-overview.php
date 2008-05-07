@@ -441,7 +441,7 @@ function appliance_edit($appliance_id) {
 
 $output = array();
 $output[] = array('label' => 'Appliances', 'value' => appliance_display());
-$output[] = array('label' => 'Add', 'value' => appliance_form());
+$output[] = array('label' => 'New', 'value' => appliance_form());
 
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
