@@ -431,17 +431,28 @@ function check_all_states() {
 		$resource_id=$rs->fields['resource_id'];
 		$resource_lastgood=$rs->fields['resource_lastgood'];
 		$resource_state=$rs->fields['resource_state'];
+		$check_time=$_SERVER['REQUEST_TIME'];
+
+		// resolve errors for all active resources
+		if (("$resource_state" == "active") && ($resource_id != 0)) {
+			if (($check_time - $resource_lastgood) < $RESOURCE_TIME_OUT) {
+				// resolve error event
+				$event->resolve_by_resource("check_all_states", $resource_id);
+			}
+		}
+
+		// check for statistics (errors) for all resources which are not offline
 		if ("$resource_state" != "off") {
-			$check_time=$_SERVER['REQUEST_TIME'];
 			if (($check_time - $resource_lastgood) > $RESOURCE_TIME_OUT) {
 				$resource_fields=array();
 				$resource_fields["resource_state"]="error";
 				$resource_error = new resource();
 				$resource_error->update_info($resource_id, $resource_fields);
 				// log error event
-				$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 1, "resource.class.php", "Resource $resource_id is in error state", "", "", 0, 0, 0);
+				$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 1, "resource.class.php", "Resource $resource_id is in error state", "", "", 0, 0, $resource_id);
 			}
 		}
+
 		$rs->MoveNext();
 	}
 }

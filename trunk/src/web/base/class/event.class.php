@@ -217,6 +217,13 @@ function remove_by_name($event_name) {
 	$rs = $db->Execute("delete from $EVENT_INFO_TABLE where event_name='$event_name'");
 }
 
+// resolves error event from the database by resource-id
+function resolve_by_resource($event_name, $resource_id) {
+	global $EVENT_INFO_TABLE;
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute("delete from $EVENT_INFO_TABLE where event_resource_id=$resource_id and event_priority<3 and event_name='$event_name'");
+}
+
 
 // returns event_name by event_id
 function get_name($event_id) {
