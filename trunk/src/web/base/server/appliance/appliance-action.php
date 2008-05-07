@@ -19,6 +19,7 @@ require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/class/event.class.php";
+require_once "$RootDir/include/htmlobject.inc.php";
 global $APPLIANCE_INFO_TABLE;
 
 $event = new event();
@@ -59,6 +60,29 @@ foreach ($_REQUEST as $key => $value) {
 		$deployment_fields[$key] = $value;
 	}
 }
+
+// parse the identifier array to get the id
+if(htmlobject_request('action') != '') {
+	switch (htmlobject_request('action')) {
+		case 'add':
+			foreach($_REQUEST['identifier'] as $id) {
+				if(!strlen($appliance_fields["appliance_resources"])) {
+					$appliance_fields["appliance_resources"]=$id;
+				}
+				continue;
+			}
+			break;
+		case 'update':
+			foreach($_REQUEST['identifier'] as $id) {
+				if(!strlen($appliance_fields["appliance_resources"])) {
+					$appliance_fields["appliance_resources"]=$id;
+				}
+				continue;
+			}
+			break;
+	}
+}
+
 
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();

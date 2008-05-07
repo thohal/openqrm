@@ -137,16 +137,19 @@ function appliance_display() {
 		if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
 			$state_icon="/openqrm/base/img/unknown.png";
 		}
-
+		$kernel = new kernel();
+		$kernel->get_instance_by_id($appliance_db["appliance_kernelid"]);
+		$image = new image();
+		$image->get_instance_by_id($appliance_db["appliance_imageid"]);
 
 		$arBody[] = array(
 			'appliance_state' => "<img src=$state_icon>",
 			'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 			'appliance_id' => $appliance_db["appliance_id"],
 			'appliance_name' => $appliance_db["appliance_name"],
-			'appliance_kernelid' => $appliance_db["appliance_kernelid"],
-			'appliance_imageid' => $appliance_db["appliance_imageid"],
-			'appliance_resources' => $appliance_db["appliance_resources"],
+			'appliance_kernelid' => $kernel->name,
+			'appliance_imageid' => $image->name,
+			'appliance_resources' => "$resource->id/$resource->ip",
 			'appliance_comment' => $appliance_db["appliance_comment"],
 			'appliance_capabilities' => $appliance_db["appliance_capabilities"],
 		);
@@ -174,6 +177,8 @@ function appliance_display() {
 
 
 function appliance_form() {
+	global $OPENQRM_USER;
+	global $thisfile;
 
 	$image = new image();
 	$image_list = array();
@@ -199,24 +204,6 @@ function appliance_form() {
 	$image_select = appliance_htmlobject_select('appliance_imageid', $image_list, 'Select image', $image_list);
 	$disp = $disp.$image_select;
 	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."Select Resource";
-	$disp = $disp."<hr>";
-
-	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(0, 10, 'resource_id', 'ASC');
-	foreach ($resource_array as $index => $resource_db) {
-		$resource = new resource();
-		$resource->get_instance_by_id($resource_db["resource_id"]);
-		if ("$resource->id" != "0") {
-			$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
-		    $disp = $disp."<input type='radio' name='appliance_resources' value='$resource->id'>";
-			$disp = $disp." $resource->id $resource->hostname ";
-			$disp = $disp." $resource->ip $resource->mac $resource->state ";
-			$disp = $disp."</div>";
-		}
-	}
-
 	$disp = $disp."<hr>";
 	$disp = $disp."Requirements";
 	$disp = $disp."<br>";
@@ -232,23 +219,88 @@ function appliance_form() {
     $disp = $disp."<input type='checkbox' name='appliance_virtual' value='1'> Virtual<br>";
 	$disp = $disp.htmlobject_textarea('appliance_comment', array("value" => '', "label" => 'Comment'));
 	$disp = $disp."<input type=hidden name=appliance_command value='new_appliance'>";
-	$disp = $disp."<input type=submit value='add'>";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."";
+
+	$disp = $disp."<br>";
+	$disp = $disp."<hr>";
+
+	$table = new htmlobject_db_table('resource_id');
+
+	$disp = $disp."<h1>Select Resource</h1>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."Please select a Resource from the list below";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+
+	$arHead = array();
+	$arHead['resource_state'] = array();
+	$arHead['resource_state']['title'] ='';
+
+	$arHead['resource_icon'] = array();
+	$arHead['resource_icon']['title'] ='';
+
+	$arHead['resource_id'] = array();
+	$arHead['resource_id']['title'] ='ID';
+
+	$arHead['resource_name'] = array();
+	$arHead['resource_name']['title'] ='Name';
+
+	$arHead['resource_ip'] = array();
+	$arHead['resource_ip']['title'] ='Ip';
+
+	$resource_count=0;
+	$arBody = array();
+	$resource_tmp = new resource();
+	$resource_array = $resource_tmp->display_overview(1, 100, 'resource_id', 'ASC');
+	foreach ($resource_array as $index => $resource_db) {
+		$resource = new resource();
+		$resource->get_instance_by_id($resource_db["resource_id"]);
+
+		$resource_count++;
+		$resource_icon_default="/openqrm/base/img/resource.png";
+		$state_icon="/openqrm/base/img/$resource->state.png";
+		if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+			$state_icon="/openqrm/base/img/unknown.png";
+		}
+		$arBody[] = array(
+			'resource_state' => "<img src=$state_icon>",
+			'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+			'resource_id' => $resource->id,
+			'resource_name' => $resource->hostname,
+			'resource_ip' => $resource->ip,
+		);
+	}
+
+	$table->id = 'Tabelle';
+	$table->css = 'htmlobject_table';
+	$table->border = 1;
+	$table->cellspacing = 0;
+	$table->cellpadding = 3;
+	$table->form_action = "appliance-action.php";
+	$table->head = $arHead;
+	$table->body = $arBody;
+	if ($OPENQRM_USER->role == "administrator") {
+		$table->bottom = array('add');
+		$table->identifier = 'resource_id';
+	}
+	$table->max = $resource_count;
+	$disp = $disp.$table->get_string();
+	
 	$disp = $disp."</form>";
+	$disp = $disp."<hr>";
 	return $disp;
 }
 
-function appliance_edit($appliance_id) {
 
+
+
+function appliance_edit($appliance_id) {
 	if (!strlen($appliance_id))  {
 		echo "No Appliance selected!";
 		exit(0);
 	}
-
+	global $OPENQRM_USER;
+	global $thisfile;
 
 	$appliance = new appliance();
 	$appliance->get_instance_by_id($appliance_id);
@@ -277,28 +329,6 @@ function appliance_edit($appliance_id) {
 	$image_select = appliance_htmlobject_select('appliance_imageid', $image_list, 'Select image', $image_list);
 	$disp = $disp.$image_select;
 	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."Select Resource";
-	$disp = $disp."<hr>";
-
-	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(0, 10, 'resource_id', 'ASC');
-	foreach ($resource_array as $index => $resource_db) {
-		$resource = new resource();
-		$resource->get_instance_by_id($resource_db["resource_id"]);
-		if ("$resource->id" != "0") {
-			$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
-			if ("$resource->id" == "$appliance->resources") {
-			    $disp = $disp."<input type='radio' checked name='appliance_resources' value='$resource->id'>";
-			} else {
-			    $disp = $disp."<input type='radio' name='appliance_resources' value='$resource->id'>";
-			}
-			$disp = $disp." $resource->id $resource->hostname ";
-			$disp = $disp." $resource->ip $resource->mac $resource->state ";
-			$disp = $disp."</div>";
-		}
-	}
-
 	$disp = $disp."<hr>";
 	$disp = $disp."Requirements";
 	$disp = $disp."<br>";
@@ -334,13 +364,75 @@ function appliance_edit($appliance_id) {
 
 	$disp = $disp."<input type=hidden name=appliance_id value=$appliance_id>";
 	$disp = $disp."<input type=hidden name=appliance_command value='update_appliance'>";
-	$disp = $disp."<input type=submit value='Update'>";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."";
+
+	$disp = $disp."<br>";
+	$disp = $disp."<hr>";
+
+	$table = new htmlobject_db_table('resource_id');
+
+	$disp = $disp."<h1>Select Resource</h1>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."Please select a Resource from the list below";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+
+	$arHead = array();
+	$arHead['resource_state'] = array();
+	$arHead['resource_state']['title'] ='';
+
+	$arHead['resource_icon'] = array();
+	$arHead['resource_icon']['title'] ='';
+
+	$arHead['resource_id'] = array();
+	$arHead['resource_id']['title'] ='ID';
+
+	$arHead['resource_name'] = array();
+	$arHead['resource_name']['title'] ='Name';
+
+	$arHead['resource_ip'] = array();
+	$arHead['resource_ip']['title'] ='Ip';
+
+	$resource_count=0;
+	$arBody = array();
+	$resource_tmp = new resource();
+	$resource_array = $resource_tmp->display_overview(1, 100, 'resource_id', 'ASC');
+	foreach ($resource_array as $index => $resource_db) {
+		$resource = new resource();
+		$resource->get_instance_by_id($resource_db["resource_id"]);
+
+		$resource_count++;
+		$resource_icon_default="/openqrm/base/img/resource.png";
+		$state_icon="/openqrm/base/img/$resource->state.png";
+		if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+			$state_icon="/openqrm/base/img/unknown.png";
+		}
+		$arBody[] = array(
+			'resource_state' => "<img src=$state_icon>",
+			'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+			'resource_id' => $resource->id,
+			'resource_name' => $resource->hostname,
+			'resource_ip' => $resource->ip,
+		);
+	}
+
+	$table->id = 'Tabelle';
+	$table->css = 'htmlobject_table';
+	$table->border = 1;
+	$table->cellspacing = 0;
+	$table->cellpadding = 3;
+	$table->form_action = "appliance-action.php";
+	$table->head = $arHead;
+	$table->body = $arBody;
+	if ($OPENQRM_USER->role == "administrator") {
+		$table->bottom = array('update');
+		$table->identifier = 'resource_id';
+	}
+	$table->max = $resource_count;
+	$disp = $disp.$table->get_string();
+	
 	$disp = $disp."</form>";
+	$disp = $disp."<hr>";
 	return $disp;
 }
 
@@ -349,13 +441,13 @@ function appliance_edit($appliance_id) {
 
 $output = array();
 $output[] = array('label' => 'Appliances', 'value' => appliance_display());
-$output[] = array('label' => 'Add Appliance', 'value' => appliance_form());
+$output[] = array('label' => 'Add', 'value' => appliance_form());
 
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'edit':
 			foreach($_REQUEST['identifier'] as $id) {
-				$output[] = array('label' => 'Edit Appliance', 'value' => appliance_edit($id));
+				$output[] = array('label' => 'Edit', 'value' => appliance_edit($id));
 			}
 			break;
 	}
