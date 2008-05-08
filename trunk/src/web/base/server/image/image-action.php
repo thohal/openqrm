@@ -1,7 +1,11 @@
+<?php
+$image_command = $_REQUEST["image_command"];
+?>
+
 <html>
 <head>
 <title>openQRM Image actions</title>
-<meta http-equiv="refresh" content="0; URL=image-overview.php?currenttab=tab0&strMsg=Processing image command">
+<meta http-equiv="refresh" content="0; URL=image-overview.php?currenttab=tab0&strMsg=Processing <?php echo $image_command; ?> command">
 </head>
 <body>
 
@@ -26,7 +30,6 @@ if (!strstr($OPENQRM_USER->role, "administrator")) {
 	exit();
 }
 
-$image_command = $_REQUEST["image_command"];
 $image_id = $_REQUEST["image_id"];
 $image_name = $_REQUEST["image_name"];
 $image_type = $_REQUEST["image_type"];

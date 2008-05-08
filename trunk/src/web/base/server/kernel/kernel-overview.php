@@ -44,6 +44,9 @@ function kernel_display() {
 	$disp .= '<br>';
 
 	$arHead = array();
+	$arHead['kernel_icon'] = array();
+	$arHead['kernel_icon']['title'] ='';
+
 	$arHead['kernel_id'] = array();
 	$arHead['kernel_id']['title'] ='ID';
 
@@ -59,10 +62,12 @@ function kernel_display() {
 	$arBody = array();
 	$kernel_array = $kernel_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 
+	$kernel_icon = "/openqrm/base/img/kernel.png";
 	foreach ($kernel_array as $index => $kernel_db) {
 		$kernel = new kernel();
 		$kernel->get_instance_by_id($kernel_db["kernel_id"]);
 		$arBody[] = array(
+			'kernel_icon' => "<img width=20 height=20 src=$kernel_icon>",
 			'kernel_id' => $kernel_db["kernel_id"],
 			'kernel_name' => $kernel_db["kernel_name"],
 			'kernel_version' => $kernel_db["kernel_version"],
