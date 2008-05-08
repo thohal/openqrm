@@ -133,6 +133,7 @@ function storage_display() {
 
 
 function storage_form() {
+	global $OPENQRM_USER;
 
 	$storagetype = new storagetype();
 	$storagetype_list = array();
@@ -150,56 +151,24 @@ function storage_form() {
 
 	$disp = "<h1>New Storage</h1>";
 	$disp = $disp."<br>";
-	$disp = $disp."<form action='storage-overview.php?currenttab=tab1' method=post>";
-	$storagetype_select = htmlobject_select('storagetype_name', $storagetype_list, 'Storage Type', $storagetype_name);
-	$disp = $disp.$storagetype_select;
 	$disp = $disp."<br>";
 
 	if (!strlen($dep_is_selected)) {
-	
+		$disp = $disp."<form action='storage-overview.php?currenttab=tab1' method=post>";
+		$storagetype_select = htmlobject_select('storagetype_name', $storagetype_list, 'Storage Type', $storagetype_name);
+		$disp = $disp.$storagetype_select;
 		$disp = $disp."<input type=hidden name=dep_is_selected value='yes'>";
 		$disp = $disp."<input type=submit value='select'>";
-		$disp = $disp."<br>";
 		$disp = $disp."<br>";
 		$disp = $disp."</form>";
 
 	} else {
-		$disp = $disp."</form>";
 
+		$storagetype_id = $storagetype_name['0'];
 		$disp = $disp."<form action='storage-action.php' method=post>";
 		$disp = $disp.htmlobject_input('storage_name', array("value" => '', "label" => 'Insert Storage name'), 'text', 20);
 		$deployment_select = htmlobject_select('storage_deployment_type', $deployment_list, 'Deployment type', $deployment_list);
 		$disp = $disp.$deployment_select;
-
-		$storagetype_id = $storagetype_name['0'];
-		$resource_tmp = new resource();
-		$resource_array = $resource_tmp->display_overview(0, 10, 'resource_id', 'ASC');
-		foreach ($resource_array as $index => $resource_db) {
-			$resource = new resource();
-			$resource->get_instance_by_id($resource_db["resource_id"]);
-			if ("$resource->id" != "0") {
-				$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
-			    $disp = $disp."<input type='radio' name='storage_resource_id' value='$resource->id'>";
-				$disp = $disp." $resource->id $resource->hostname ";
-				if ("$resource->localboot" == "0") {
-					$disp = $disp." net";
-				} else {
-					$disp = $disp." local";
-				}
-				$disp = $disp." $resource->kernel ";
-				$disp = $disp." $resource->image ";
-				$disp = $disp." $resource->ip $resource->mac $resource->state ";
-				$disp = $disp."</div>";
-			} else {
-				$disp = $disp."<br>";
-				$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
-			    $disp = $disp."<input type='radio' name='storage_resource_id' value='$resource->id'>";
-				$disp = $disp." $resource->id &nbsp; openQRM-server";
-				$disp = $disp." $resource->ip  ";
-				$disp = $disp."</div>";
-				$disp = $disp."<br>";
-			}
-		}
 		$disp = $disp.htmlobject_textarea('storage_comment', array("value" => '', "label" => 'Comment'));
 
 	   	// making the storage capabilities parameters plugg-able
@@ -214,10 +183,81 @@ function storage_form() {
 		}
 
 		$disp = $disp."<input type=hidden name=storage_command value='new_storage'>";
-		$disp = $disp."<input type=submit value='Add'>";
-		$disp = $disp."";
-		$disp = $disp."";
-		$disp = $disp."";
+
+		$resource_tmp = new resource();
+		$table = new htmlobject_db_table('resource_id');
+
+		$disp .= '<h1>Resource List</h1>';
+		$disp .= '<br>';
+
+		$arHead = array();
+		$arHead['resource_state'] = array();
+		$arHead['resource_state']['title'] ='';
+
+		$arHead['resource_icon'] = array();
+		$arHead['resource_icon']['title'] ='';
+
+		$arHead['resource_id'] = array();
+		$arHead['resource_id']['title'] ='ID';
+
+		$arHead['resource_hostname'] = array();
+		$arHead['resource_hostname']['title'] ='Name';
+
+		$arHead['resource_ip'] = array();
+		$arHead['resource_ip']['title'] ='Ip';
+
+		$arBody = array();
+		$resource_array = $resource_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
+
+		foreach ($resource_array as $index => $resource_db) {
+			// prepare the values for the array
+			$resource = new resource();
+			$resource->get_instance_by_id($resource_db["resource_id"]);
+			$mem_total = $resource_db['resource_memtotal'];
+			$mem_used = $resource_db['resource_memused'];
+			$mem = "$mem_used/$mem_total";
+			$swap_total = $resource_db['resource_swaptotal'];
+			$swap_used = $resource_db['resource_swapused'];
+			$swap = "$swap_used/$swap_total";
+			if ($resource->id == 0) {
+				$resource_icon_default="/openqrm/base/img/logo.png";
+			} else {
+				$resource_icon_default="/openqrm/base/img/resource.png";
+			}
+			$state_icon="/openqrm/base/img/$resource->state.png";
+			// idle ?
+			if (("$resource->imageid" == "1") && ("$resource->state" == "active")) {
+				$state_icon="/openqrm/base/img/idle.png";
+			}
+			if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+				$state_icon="/openqrm/base/img/unknown.png";
+			}
+
+			$arBody[] = array(
+				'resource_state' => "<img src=$state_icon>",
+				'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+				'resource_id' => $resource_db["resource_id"],
+				'resource_hostname' => $resource_db["resource_hostname"],
+				'resource_ip' => $resource_db["resource_ip"],
+			);
+
+		}
+
+		$table->id = 'Tabelle';
+		$table->css = 'htmlobject_table';
+		$table->border = 1;
+		$table->cellspacing = 0;
+		$table->cellpadding = 3;
+		$table->form_action = "storage-action.php";
+		$table->head = $arHead;
+		$table->body = $arBody;
+		if ($OPENQRM_USER->role == "administrator") {
+			$table->bottom = array('add');
+			$table->identifier = 'resource_id';
+		}
+		$table->max = $resource_tmp->get_count('all');
+		$disp = $disp.$table->get_string();
+
 	}
 	$disp = $disp."";
 	$disp = $disp."";
@@ -231,7 +271,7 @@ function storage_edit($storage_id) {
 		echo "No Storage selected!";
 		exit(0);
 	}
-
+	global $OPENQRM_USER;
 	$storage = new storage();
 	$storage->get_instance_by_id($storage_id);
 
@@ -245,52 +285,86 @@ function storage_edit($storage_id) {
 	$disp = $disp."<br>";
 	$disp = $disp."<form action='storage-action.php' method=post>";
 	$disp = $disp.htmlobject_input('storage_name', array("value" => $storage->name, "label" => 'Storage name'), 'text', 20);
-
 	$deployment_select = htmlobject_select('storage_deployment_type', $deployment_list, 'Deployment type', $deployment_list);
 	$disp = $disp.$deployment_select;
-
-	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(0, 10, 'resource_id', 'ASC');
-	foreach ($resource_array as $index => $resource_db) {
-		$resource = new resource();
-		$resource->get_instance_by_id($resource_db["resource_id"]);
-		if ("$resource->id" != "0") {
-			$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
-			if ("$resource->id" == "$storage->resource_id") {
-			    $disp = $disp."<input type='radio' checked name='storage_resource_id' value='$resource->id'>";
-			 } else {
-			    $disp = $disp."<input type='radio' name='storage_resource_id' value='$resource->id'>";
-			 }
-			$disp = $disp." $resource->id $resource->hostname ";
-			$disp = $disp." $resource->kernel ";
-			$disp = $disp." $resource->image ";
-			$disp = $disp." $resource->ip $resource->mac $resource->state ";
-			$disp = $disp."</div>";
-
-		} else {
-			$disp = $disp."<br>";
-			$disp = $disp."<div id=\"resource\" nowrap=\"true\">";
-			if ("$resource->id" == "$storage->resource_id") {
-			    $disp = $disp."<input type='radio' checked name='storage_resource_id' value='$resource->id'>";
-			 } else {
-			    $disp = $disp."<input type='radio' name='storage_resource_id' value='$resource->id'>";
-			}
-			$disp = $disp." $resource->id &nbsp; openQRM-server";
-			$disp = $disp." $resource->ip  ";
-			$disp = $disp."</div>";
-			$disp = $disp."<br>";
-		}
-	}
-
-	$disp = $disp.htmlobject_textarea('storage_comment', array("value" => '', "label" => 'Comment'));
-	$disp = $disp.htmlobject_textarea('storage_capabilities', array("value" => '', "label" => 'Storage Capabilities'));
-
+	$disp = $disp.htmlobject_textarea('storage_comment', array("value" => $storage->comment, "label" => 'Comment'));
+	$disp = $disp.htmlobject_textarea('storage_capabilities', array("value" => $storage->capabilities, "label" => 'Storage Capabilities'));
 	$disp = $disp."<input type=hidden name=storage_id value=$storage_id>";
 	$disp = $disp."<input type=hidden name=storage_command value='update'>";
-	$disp = $disp."<input type=submit value='Update'>";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."";
+
+	$resource_tmp = new resource();
+	$table = new htmlobject_db_table('resource_id');
+
+	$disp .= '<h1>Resource List</h1>';
+	$disp .= '<br>';
+
+	$arHead = array();
+	$arHead['resource_state'] = array();
+	$arHead['resource_state']['title'] ='';
+
+	$arHead['resource_icon'] = array();
+	$arHead['resource_icon']['title'] ='';
+
+	$arHead['resource_id'] = array();
+	$arHead['resource_id']['title'] ='ID';
+
+	$arHead['resource_hostname'] = array();
+	$arHead['resource_hostname']['title'] ='Name';
+
+	$arHead['resource_ip'] = array();
+	$arHead['resource_ip']['title'] ='Ip';
+
+	$arBody = array();
+	$resource_array = $resource_tmp->display_overview($table->offset, $table->limit, 'resource_id', 'ASC');
+
+	foreach ($resource_array as $index => $resource_db) {
+		// prepare the values for the array
+		$resource = new resource();
+		$resource->get_instance_by_id($resource_db["resource_id"]);
+		$mem_total = $resource_db['resource_memtotal'];
+		$mem_used = $resource_db['resource_memused'];
+		$mem = "$mem_used/$mem_total";
+		$swap_total = $resource_db['resource_swaptotal'];
+		$swap_used = $resource_db['resource_swapused'];
+		$swap = "$swap_used/$swap_total";
+		if ($resource->id == 0) {
+			$resource_icon_default="/openqrm/base/img/logo.png";
+		} else {
+			$resource_icon_default="/openqrm/base/img/resource.png";
+		}
+		$state_icon="/openqrm/base/img/$resource->state.png";
+		// idle ?
+		if (("$resource->imageid" == "1") && ("$resource->state" == "active")) {
+			$state_icon="/openqrm/base/img/idle.png";
+		}
+		if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+			$state_icon="/openqrm/base/img/unknown.png";
+		}
+		$arBody[] = array(
+			'resource_state' => "<img src=$state_icon>",
+			'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+			'resource_id' => $resource_db["resource_id"],
+			'resource_hostname' => $resource_db["resource_hostname"],
+			'resource_ip' => $resource_db["resource_ip"],
+		);
+
+	}
+
+	$table->id = 'Tabelle';
+	$table->css = 'htmlobject_table';
+	$table->border = 1;
+	$table->cellspacing = 0;
+	$table->cellpadding = 3;
+	$table->form_action = "storage-action.php";
+	$table->head = $arHead;
+	$table->body = $arBody;
+	if ($OPENQRM_USER->role == "administrator") {
+		$table->bottom = array('update');
+		$table->identifier = 'resource_id';
+	}
+	$table->max = $resource_tmp->get_count('all');
+
+	$disp = $disp.$table->get_string();
 	$disp = $disp."";
 	$disp = $disp."";
 	$disp = $disp."</form>";

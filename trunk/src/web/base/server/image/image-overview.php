@@ -340,7 +340,7 @@ function image_edit($image_id) {
 	$arHead['storage_comment']['title'] ='Comment';
 
 	$arBody = array();
-	$storage_array = $storage_tmp->display_overview(0, 10, 'storage_id', 'ASC');
+	$storage_array = $storage_tmp->display_overview($table->offset, $table->limit, 'storage_id', 'ASC');
 
 	foreach ($storage_array as $index => $storage_db) {
 

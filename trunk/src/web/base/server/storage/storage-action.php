@@ -20,6 +20,7 @@ require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/class/storagetype.class.php";
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
+require_once "$RootDir/include/htmlobject.inc.php";
 global $IMAGE_INFO_TABLE;
 global $DEPLOYMENT_INFO_TABLE;
 global $STORAGETYPE_INFO_TABLE;
@@ -57,6 +58,28 @@ $storagetype_description = $_REQUEST["storagetype_description"];
 foreach ($_REQUEST as $key => $value) {
 	if (strncmp($key, "storagetype_", 12) == 0) {
 		$storagetype_fields[$key] = $value;
+	}
+}
+
+// parse the identifier array to get the id
+if(htmlobject_request('action') != '') {
+	switch (htmlobject_request('action')) {
+		case 'add':
+			foreach($_REQUEST['identifier'] as $id) {
+				if(!strlen($image_fields["storage_resource_id"])) {
+					$storage_fields["storage_resource_id"]=$id;
+				}
+				continue;
+			}
+			break;
+		case 'update':
+			foreach($_REQUEST['identifier'] as $id) {
+				if(!strlen($image_fields["storage_resource_id"])) {
+					$storage_fields["storage_resource_id"]=$id;
+				}
+				continue;
+			}
+			break;
 	}
 }
 
