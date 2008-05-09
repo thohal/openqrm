@@ -13,7 +13,7 @@ openQRM is the next generation data-center management platform.
 
 %files
 %defattr(-,root,root)
-/usr/share/openqrm/*
+/usr/lib/openqrm/*
 
 %prep
 %setup
@@ -24,8 +24,8 @@ make
 %install
 make install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/usr/share
-cp -aR /usr/share/openqrm $RPM_BUILD_ROOT/usr/share/
+mkdir -p $RPM_BUILD_ROOT/usr/lib
+cp -aR /usr/lib/openqrm $RPM_BUILD_ROOT/usr/lib/
 OPENQRM_BUILD_POSTINSTALL
 
 %post
