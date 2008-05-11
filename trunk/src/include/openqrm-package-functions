@@ -33,15 +33,15 @@ function openqrm_install_os_dependency() {
 
 	# check which dependencies to use
     if [ -f /etc/debian_version ]; then
-        local OPENQRM_PACKAGE_INSTALL_CMD="apt-get install"
+        local OPENQRM_PACKAGE_INSTALL_CMD="sudo apt-get install"
     elif [ -f /etc/redhat-release ]; then
-        local OPENQRM_PACKAGE_INSTALL_CMD="yum install"
+        local OPENQRM_PACKAGE_INSTALL_CMD="su -c yum install"
     elif [ -f /etc/SuSE-release ]; then
-        local OPENQRM_PACKAGE_INSTALL_CMD="zypper --non-interactive install"
+        local OPENQRM_PACKAGE_INSTALL_CMD="su -c zypper --non-interactive install"
 	fi
 
 	if [ ! -f /etc/SuSE-release ]; then
-		"$OPENQRM_PACKAGE_INSTALL_CMD" "$PACKAGE"
+		$OPENQRM_PACKAGE_INSTALL_CMD $PACKAGE
 		return $?
 	else
 		# special handling for SUSE and zypper. We get a 0 return code,
