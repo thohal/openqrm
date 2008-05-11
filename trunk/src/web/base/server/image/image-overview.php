@@ -167,7 +167,7 @@ function image_form() {
 		$disp = $disp."<hr>";
 
 		$storage_tmp = new storage();
-		$table = new htmlobject_db_table('storage_id');	
+		$table = new htmlobject_db_table('storage_resource_id');	
 
 		$disp .= "<h1>Select $deployment_tmp->type Storage server</h1>";
 		$disp .= '<br>';
@@ -247,7 +247,7 @@ function image_form() {
 		$table->body = $arBody;
 		if ($OPENQRM_USER->role == "administrator") {
 			$table->bottom = array('add');
-			$table->identifier = 'storage_id';
+			$table->identifier = 'storage_resource_id';
 		}
 		$table->max = $storage_tmp->get_count();
 		#$table->limit = 10;
@@ -312,7 +312,7 @@ function image_edit($image_id) {
 	$disp = $disp."<hr>";
 
 	$storage_tmp = new storage();
-	$table = new htmlobject_db_table('storage_id');	
+	$table = new htmlobject_db_table('storage_resource_id');	
 
 	$disp .= "<h1>Select $deployment_tmp->type Storage server</h1>";
 	$disp .= '<br>';
@@ -390,7 +390,7 @@ function image_edit($image_id) {
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('update');
-		$table->identifier = 'storage_id';
+		$table->identifier = 'storage_resource_id';
 	}
 	$table->max = $storage_tmp->get_count();
 	#$table->limit = 10;
