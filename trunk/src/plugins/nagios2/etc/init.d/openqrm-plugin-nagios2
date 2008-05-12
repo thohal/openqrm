@@ -43,7 +43,7 @@ function openqrm_plugin_nagios2_init() {
 	# Add openqrm to nagios-contacts - not perfect, but working first :)
 	sed -i "s/root/openqrm/g" /etc/nagios2/conf.d/contacts_nagios2.cfg
 	# theme nagios
-	. etc/build.conf/nuvola.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/etc/build.conf/nuvola.conf
 	mkdir -p $OPENQRM_TEMP_DIR/nuvola_inst/
 	tar -C $OPENQRM_TEMP_DIR/nuvola_inst/ -zxvf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/theme/nagios-nuvola-$OPENQRM_SOURCE_VERSION.tar.gz
 	cp -r $OPENQRM_TEMP_DIR/nuvola_inst/html/* /usr/share/nagios2/htdocs/
