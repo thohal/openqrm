@@ -13,7 +13,7 @@ function openqrm_usage() {
 	echo "Usage:"
 	echo "`basename $0` help			- This help screen"
 	echo "- Managing boot-images -"
-	echo "`basename $0` kernel add -n <name> -v <version> -u <username> -p <password> [-l <location> -i <initramfs/ext2>]"
+	echo "`basename $0` kernel add -n <name> -v <version> -u <username> -p <password> [-l <location> -i <initramfs/ext2> -t <path-to-initrd-template-file>]"
 	echo "`basename $0` kernel remove -n <name> -u <username> -p <password>"
 }
 
@@ -53,6 +53,10 @@ case "$1" in
 							BOOT_IMAGE_INITRD_TYPE=$2
 							shift
 							;;
+						-t)
+							BOOT_IMAGE_INITRD_TEMPLATE=$2
+							shift
+							;;
 						-u)
 							OPENQRM_USERNAME=$2
 							shift
@@ -71,7 +75,13 @@ case "$1" in
 				if [ "$BOOT_IMAGE_LOCATION" == "" ]; then
 					BOOT_IMAGE_LOCATION=/
 				fi
-				openqrm_server_create_kernel $BOOT_IMAGE_NAME $BOOT_IMAGE_VERSION $BOOT_IMAGE_LOCATION $BOOT_IMAGE_INITRD_TYPE
+				if [ "$BOOT_IMAGE_INITRD_TYPE" == "" ]; then
+					BOOT_IMAGE_INITRD_TYPE="ext2"
+				fi
+				if [ "$BOOT_IMAGE_INITRD_TEMPLATE" == "" ]; then
+					BOOT_IMAGE_INITRD_TEMPLATE=$OPENQRM_DEFAULT_INITRD_TEMPLATE
+				fi
+				openqrm_server_create_kernel $BOOT_IMAGE_NAME $BOOT_IMAGE_VERSION $BOOT_IMAGE_LOCATION $BOOT_IMAGE_INITRD_TYPE $BOOT_IMAGE_INITRD_TEMPLATE
 				if ! openqrm_server_manage_kernel add $OPENQRM_USERNAME $OPENQRM_PASSWORD $BOOT_IMAGE_NAME $BOOT_IMAGE_VERSION; then
 					echo "WARNING: Could not add the kernel to the openQRM-server!"
 					exit -1

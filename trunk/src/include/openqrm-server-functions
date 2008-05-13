@@ -52,9 +52,13 @@ function openqrm_server_create_kernel() {
 	OPENQRM_SERVER_KERNEL_LOCATION=$3
 	# OPENQRM_SERVER_KERNEL_TYPE can be "ext2" or "initramfs"
 	OPENQRM_SERVER_KERNEL_TYPE=$4
+	OPENQRM_SERVER_INITRD_TEMPLATE=$5
 	
 	if [ "$OPENQRM_SERVER_KERNEL_TYPE" == "" ]; then
 		export OPENQRM_SERVER_KERNEL_TYPE="ext2"
+	fi
+	if [ "$OPENQRM_SERVER_INITRD_TEMPLATE" == "" ]; then
+		export OPENQRM_SERVER_INITRD_TEMPLATE=$OPENQRM_DEFAULT_INITRD_TEMPLATE
 	fi
 	
 	echo "Creating kernel $OPENQRM_SERVER_KERNEL_NAME version $OPENQRM_SERVER_KERNEL_VERSION ($OPENQRM_SERVER_KERNEL_TYPE initrd)"
@@ -73,7 +77,8 @@ function openqrm_server_create_kernel() {
 		fi
 	done
 	# unpack the initrd-template
-	tar -C $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME -xzf $OPENQRM_DEFAULT_INITRD_TEMPLATE
+	echo "-> using initrd-template from $OPENQRM_SERVER_INITRD_TEMPLATE"
+	tar -C $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME -xzf $OPENQRM_SERVER_INITRD_TEMPLATE
 
 	# check size
 	OPENQRM_INITRD_SIZE=`du -s $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/ | awk {' print $1 '}`
