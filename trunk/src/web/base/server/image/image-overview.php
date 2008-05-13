@@ -192,6 +192,9 @@ function image_form() {
 		$arHead['storage_resource_id'] = array();
 		$arHead['storage_resource_id']['title'] ='Resource';
 
+		$arHead['storage_resource_id'] = array();
+		$arHead['storage_resource_id']['title'] ='Ip';
+
 		$arHead['storage_comment'] = array();
 		$arHead['storage_comment']['title'] ='Comment';
 
@@ -231,7 +234,8 @@ function image_form() {
 					'storage_id' => $storage_db["storage_id"],
 					'storage_name' => $storage_db["storage_name"],
 					'storage_deployment_type' => $storage_deployment->type,
-					'storage_resource_id' => "$storage_resource->id/$storage_resource->ip",
+					'storage_resource_id' => "$storage_resource->id",
+					'storage_resource_ip' => "$storage_resource->ip",
 					'storage_comment' => $storage_db["storage_comment"],
 				);
 			}
@@ -336,6 +340,9 @@ function image_edit($image_id) {
 	$arHead['storage_resource_id'] = array();
 	$arHead['storage_resource_id']['title'] ='Resource';
 
+	$arHead['storage_resource_id'] = array();
+	$arHead['storage_resource_id']['title'] ='Ip';
+
 	$arHead['storage_comment'] = array();
 	$arHead['storage_comment']['title'] ='Comment';
 
@@ -374,7 +381,8 @@ function image_edit($image_id) {
 				'storage_id' => $storage_db["storage_id"],
 				'storage_name' => $storage_db["storage_name"],
 				'storage_deployment_type' => $storage_deployment->type,
-				'storage_resource_id' => "$storage_resource->id/$storage_resource->ip",
+				'storage_resource_id' => "$storage_resource->id",
+				'storage_resource_ip' => "$storage_resource->ip",
 				'storage_comment' => $storage_db["storage_comment"],
 			);
 		}
