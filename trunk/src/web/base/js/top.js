@@ -2,9 +2,9 @@ function init() {
 get_events();
 get_appliances();
 get_resources();
-js_events = window.setInterval("get_events()", 1500);	
-js_appliances = window.setInterval("get_appliances()", 1500);
-js_resources = window.setInterval("get_resources()", 1500);	
+js_events = window.setInterval("get_events()", 15000);	
+js_appliances = window.setInterval("get_appliances()", 15000);
+js_resources = window.setInterval("get_resources()", 15000);	
 }
 
 
