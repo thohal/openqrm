@@ -30,25 +30,17 @@ export OPENQRM_PACKAGE_DISTRIBUTION=`openqrm_get_distro`
 #
 function openqrm_install_os_dependency() {
 	local PACKAGE=$1
-
 	# check which dependencies to use
     if [ -f /etc/debian_version ]; then
-        local OPENQRM_PACKAGE_INSTALL_CMD="sudo apt-get install"
+    	sudo apt-get install $PACKAGE
     elif [ -f /etc/redhat-release ]; then
-        local OPENQRM_PACKAGE_INSTALL_CMD="su -c yum install"
+		su - root -c "yum install $PACKAGE"
     elif [ -f /etc/SuSE-release ]; then
-        local OPENQRM_PACKAGE_INSTALL_CMD="su -c zypper --non-interactive install"
-	fi
-
-	if [ ! -f /etc/SuSE-release ]; then
-		$OPENQRM_PACKAGE_INSTALL_CMD $PACKAGE
-		return $?
-	else
 		# special handling for SUSE and zypper. We get a 0 return code,
 		# even if the requested package is not available. This wrapper
 		# returns 1 if the package is not found.
 		local TMPFILE=$OPENQRM_BUILD_TMP_DIR/$(basename $0).$RANDOM.txt
-		LC_ALL=C $OPENQRM_PACKAGE_INSTALL_CMD "$PACKAGE" 2>&1 | tee "$TMPFILE"
+		LC_ALL=C su - root -c "zypper --non-interactive install $PACKAGE" 2>&1 | tee "$TMPFILE"
 		local RETURNCODE=${PIPESTATUS[0]}
 		if cat "$TMPFILE" | grep -c "not found" >/dev/null ; then
 			rm "$TMPFILE"
