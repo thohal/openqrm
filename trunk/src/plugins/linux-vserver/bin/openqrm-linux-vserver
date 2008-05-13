@@ -25,6 +25,14 @@ function linux_vserver_usage() {
 }
 
 
+function linux_vserver_restart_exec() {
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	killall openqrm-exec-port-monitor 1>/dev/null 2>&1
+	killall openqrm-execd 1>/dev/null 2>&1
+	$resource_basedir/openqrm/sbin/openqrm-exec-port-monitor $resource_ip $resource_execdport | $resource_basedir/openqrm/sbin/openqrm-execd &
+}
+
+
 LINUX_VSERVER_COMMAND=$1
 shift
 
@@ -208,23 +216,27 @@ EOF
 			exit 1
 		fi
 		# start as idle
-		nohup vserver $LINUX_VSERVER_VM_NAME start
+		nohup vserver $LINUX_VSERVER_VM_NAME start &
+		# restart openqrm-exec
+		linux_vserver_restart_exec
 		;;
 	start)
 		echo "Starting Linux-VServer vm $LINUX_VSERVER_VM_NAME"
 		# source current parameters of the vm
-		- $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE
+		. $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE
 		# update parameters for the resource
 		wget -q -O $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE "http://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
+		. $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE
 		# check if assigned to an appliance or idle 
 		if [ "$image_type" != "ram" ]; then
 			eval $image_deployment_parameter
 			# get the root-mount functions according the deployment type
-			wget -q -O $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/root-mount.$image_type-deployment"
+			wget -q -O $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment "http://$resource_openqrmserver/openqrm/boot-service/root-mount.$image_type-deployment"
 			# adapt root-mount functions of the deployment method
 			sed -i -e "s#/mnt2#XXXXX#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
 			sed -i -e "s#/mnt#$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
 			sed -i -e "s#XXXXX#/mnt2#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
+			sed -i -e "s#/var/openqrm/openqrm-resource.conf#$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
 			# mount the fs-image
 			. $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
 			mount_rootfs
@@ -236,17 +248,19 @@ EOF
 			mkdir $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_SERVER_BASE_DIR/
 			cp -aR $OPENQRM_SERVER_BASE_DIR/openqrm $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_SERVER_BASE_DIR/
 			# adapt sshd-config
-			if [ ! -f /etc/ssh/sshd_config.lv_openqrm ]; then
-				cp -f /etc/ssh/sshd_config /etc/ssh/sshd_config.lv_openqrm
+			if [ ! -f $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/etc/ssh/sshd_config.lv_openqrm ]; then
+				cp -f $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/etc/ssh/sshd_config /etc/ssh/sshd_config.lv_openqrm
 			fi
 			bind_sshd $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME $resource_ip
-		if
-		nohup vserver $LINUX_VSERVER_VM_NAME start
+		fi
+		nohup vserver $LINUX_VSERVER_VM_NAME start &
+		# restart openqrm-exec
+		linux_vserver_restart_exec
 		;;
 	stop)
 		echo "Stopping Linux-VServer vm $LINUX_VSERVER_VM_NAME"
 		# source current parameters of the vm
-		- $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE
+		. $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE
 		# check if assigned to an appliance or idle 
 		if [ "$image_type" != "ram" ]; then
 			# restore sshd-conf
@@ -261,13 +275,14 @@ EOF
 		;;
 	reboot)
 		echo "Rebooting Linux-VServer vm $LINUX_VSERVER_VM_NAME"
-		vserver $LINUX_VSERVER_VM_NAME restart
+		nohup vserver $LINUX_VSERVER_VM_NAME restart &
+		linux_vserver_restart_exec
 		;;
 	delete)
 		echo "Removing Linux-VServer vm $LINUX_VSERVER_VM_NAME"
+		LINUX_VSERVER_VM_INTERFACE=`cat $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/interfaces/0/dev`
 		vserver $LINUX_VSERVER_VM_NAME stop
 		# get vif interface name
-		LINUX_VSERVER_VM_INTERFACE=`cat $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/interfaces/0/mac`
 		# remove physically
 		echo 'y' | vserver $LINUX_VSERVER_VM_NAME delete
 		# bring down vethd interface
@@ -288,7 +303,7 @@ EOF
 		cat $VM_LIST_TMP | sed -e "s/^/#/g" > $VM_LIST_TMP.up
 		mv -f $VM_LIST_TMP.up $VM_LIST_TMP
 		echo "<br>Available inactive Linux-VServer vms :<br>" >> $VM_LIST_TMP
-		ls /etc/vservers/ | grep -v newvserver-vars >> $VM_LIST_TMP
+		ls /etc/vservers/ | grep -v newvserver-vars | grep -v openqrm-vif.conf >> $VM_LIST_TMP
 		if ! wget -q -O /dev/null --http-user=$LINUX_VSERVER_OPENQRM_USERNAME --http-password=$LINUX_VSERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$resource_openqrmserver/openqrm/base/plugins/linux-vserver/linux-vserver-action.php?linux_vserver_command=get_linux_vserver; then
 			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!" | logger
