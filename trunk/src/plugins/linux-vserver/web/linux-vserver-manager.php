@@ -1,5 +1,6 @@
 
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+<link rel="stylesheet" type="text/css" href="linux-vserver.css" />
 
 <?php
 
@@ -13,6 +14,23 @@ require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
+global $OPENQRM_SERVER_BASE_DIR;
+$refresh_delay=5;
+
+// running the actions
+if(htmlobject_request('action') != '') {
+	switch (htmlobject_request('action')) {
+		case 'refresh':
+			foreach($_REQUEST['identifier'] as $id) {
+				$linux_vserver = new resource();
+				$linux_vserver->get_instance_by_id($id);
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+				$linux_vserver->send_command($linux_vserver->ip, $resource_command);
+				sleep($refresh_delay);
+			}
+			break;
+	}
+}
 
 function linux_vserver_htmlobject_select($name, $value, $title = '', $selected = '') {
 		$html = new htmlobject_select();
@@ -25,15 +43,39 @@ function linux_vserver_htmlobject_select($name, $value, $title = '', $selected =
 }
 
 
-function linux_vserver_display($admin) {
+function linux_vserver_select() {
+	global $OPENQRM_USER;
+	global $thisfile;
+	$table = new htmlobject_db_table('linux_vserver_id');
 
-	if ("$admin" == "admin") {
-		$disp = "<b>Linux-VServer Admin</b>";
-	} else {
-		$disp = "<b>Linux-VServer overview</b>";
-	}
+	$disp = "<h1>Select linux-vserver-Host</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
+	$disp = $disp."Please select a linux-vserver-Host from the list below";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+
+	$arHead = array();
+	$arHead['linux_vserver_state'] = array();
+	$arHead['linux_vserver_state']['title'] ='';
+
+	$arHead['linux_vserver_icon'] = array();
+	$arHead['linux_vserver_icon']['title'] ='';
+
+	$arHead['linux_vserver_id'] = array();
+	$arHead['linux_vserver_id']['title'] ='ID';
+
+	$arHead['linux_vserver_name'] = array();
+	$arHead['linux_vserver_name']['title'] ='Name';
+
+	$arHead['linux_vserver_resource_ip'] = array();
+	$arHead['linux_vserver_resource_ip']['title'] ='Ip';
+
+	$arHead['linux_vserver_comment'] = array();
+	$arHead['linux_vserver_comment']['title'] ='Comment';
+
+	$linux_vserver_count=0;
+	$arBody = array();
 	$linux_vserver_tmp = new appliance();
 	$linux_vserver_array = $linux_vserver_tmp->display_overview(0, 10, 'appliance_id', 'ASC');
 
@@ -41,94 +83,65 @@ function linux_vserver_display($admin) {
 		if (strstr($linux_vserver_db["appliance_capabilities"], "linux-vserver")) {
 			$linux_vserver_resource = new resource();
 			$linux_vserver_resource->get_instance_by_id($linux_vserver_db["appliance_resources"]);
-
-			// refresh
-			$disp = $disp."<div id=\"linux-vserver\" nowrap=\"true\">";
-			$disp = $disp."<form action='linux-vserver-action.php' method=post>";
-			$disp = $disp."$linux_vserver_resource->id $linux_vserver_resource->ip ";
-			$disp = $disp."<input type=hidden name=linux_vserver_id value=$linux_vserver_resource->id>";
-			$disp = $disp."<input type=hidden name=linux_vserver_command value='refresh_vm_list'>";
-			if ("$admin" == "admin") {
-				$disp = $disp."<input type=submit value='Refresh'>";
+			$linux_vserver_count++;
+			$resource_icon_default="/openqrm/base/img/resource.png";
+			$linux_vserver_icon="/openqrm/base/plugins/linux-vserver/img/plugin.png";
+			$state_icon="/openqrm/base/img/$linux_vserver_resource->state.png";
+			if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+				$state_icon="/openqrm/base/img/unknown.png";
 			}
-			$disp = $disp."</form>";
-			// create
-			$disp = $disp."<form action='linux-vserver-create.php' method=post>";
-			$disp = $disp."<input type=hidden name=linux_vserver_id value=$linux_vserver_resource->id>";
-			if ("$admin" == "admin") {
-				$disp = $disp."<input type=submit value='Create'>";
+			if (file_exists($_SERVER["DOCUMENT_ROOT"].$linux_vserver_icon)) {
+				$resource_icon_default=$linux_vserver_icon;
 			}
-			$disp = $disp."</form>";
-
-			$disp = $disp."<br>";
-			$disp = $disp."<br>";
-
-			$loop=0;
-			$linux_vserver_vm_list_file="linux-vserver-stat/$linux_vserver_resource->id.vm_list";
-			if (file_exists($linux_vserver_vm_list_file)) {
-				$linux_vserver_vm_list_content=file($linux_vserver_vm_list_file);
-				foreach ($linux_vserver_vm_list_content as $index => $linux_vserver) {
-					// find vms
-					if ((!strstr($linux_vserver, "#")) && (!strstr($linux_vserver, "<br>"))) {
-						$linux_vserver_name = trim($linux_vserver);
-						$disp = $disp." $linux_vserver_name ";
-						if ("$admin" == "admin") {
-							$disp = $disp."  <a href=\"linux-vserver-action.php?linux_vserver_name=$linux_vserver_name&linux_vserver_command=start&linux_vserver_id=$linux_vserver_resource->id\">Start</a>";
-							$disp = $disp." / ";
-							$disp = $disp."<a href=\"linux-vserver-action.php?linux_vserver_name=$linux_vserver_name&linux_vserver_command=delete&linux_vserver_id=$linux_vserver_resource->id\">Remove</a>";
-							$disp = $disp."<br>";
-						}
-						$disp = $disp."<br>";
-
-					} else if (!strstr($linux_vserver, "<br>")) {
-						$linux_vserver_data = str_replace("#", "", $linux_vserver);
-						$linux_vserver_name = str_replace("#", "", $linux_vserver);
-						$linux_vserver_name = strrchr($linux_vserver_name, " ");
-
-						// skip Names and root vm entry
-						$loop++;
-						if ($loop > 2) {
-							$disp = $disp." $linux_vserver_data ";
-							if ("$admin" == "admin") {
-								$disp = $disp."<a href=\"linux-vserver-action.php?linux_vserver_name=$linux_vserver_name&linux_vserver_command=stop&linux_vserver_id=$linux_vserver_resource->id\">Stop</a>";
-								$disp = $disp." / ";
-								$disp = $disp."<a href=\"linux-vserver-action.php?linux_vserver_name=$linux_vserver_name&linux_vserver_command=reboot&linux_vserver_id=$linux_vserver_resource->id\">Reboot</a>";
-								$disp = $disp."<br>";
-							}
-							$disp = $disp."<br>";
-							$disp = $disp."<br>";
-						}
-
-
-					} else if (strstr($linux_vserver, "<br>")) {
-						// title
-						$disp = $disp.$linux_vserver;
-						$disp = $disp."<hr>";
-					}
-
-				}
-			} else {
-				$disp = $disp."<br> no view available<br> $linux_vserver_vm_list_file";
-			}
-
-			$disp = $disp."</div>";
+			$arBody[] = array(
+				'linux_vserver_state' => "<img src=$state_icon>",
+				'linux_vserver_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+				'linux_vserver_id' => $linux_vserver_db["appliance_id"],
+				'linux_vserver_name' => $linux_vserver_resource->hostname,
+				'linux_vserver_resource_ip' => $linux_vserver_resource->ip,
+				'linux_vserver_comment' => $linux_vserver_resource->comment,
+			);
 		}
 	}
-	return $disp;
+	$table->id = 'Tabelle';
+	$table->css = 'htmlobject_table';
+	$table->border = 1;
+	$table->cellspacing = 0;
+	$table->cellpadding = 3;
+	$table->form_action = $thisfile;
+	$table->head = $arHead;
+	$table->body = $arBody;
+	if ($OPENQRM_USER->role == "administrator") {
+		$table->bottom = array('select');
+		$table->identifier = 'linux_vserver_id';
+	}
+	$table->max = $linux_vserver_count;
+	return $disp.$table->get_string();
 }
 
 
 
 $output = array();
-// all user
-$output[] = array('label' => 'Linux-VServer', 'value' => linux_vserver_display(""));
-// if admin
-if ($OPENQRM_USER->role == "administrator") {
-	$output[] = array('label' => 'Linux-VServer Admin', 'value' => linux_vserver_display("admin"));
+$linux_vserver_id = $_REQUEST["linux_vserver_id"];
+if(htmlobject_request('action') != '') {
+	switch (htmlobject_request('action')) {
+		case 'select':
+			foreach($_REQUEST['identifier'] as $id) {
+				$output[] = array('label' => 'Linux-VServer Admin', 'value' => linux_vserver_display($id));
+			}
+			break;
+		case 'refresh':
+			foreach($_REQUEST['identifier'] as $id) {
+				$output[] = array('label' => 'Linux-VServer Admin', 'value' => linux_vserver_display($id));
+			}
+			break;
+	}
+} else if (strlen($linux_vserver_id)) {
+	$output[] = array('label' => 'Linux-VServer Admin', 'value' => linux_vserver_display($linux_vserver_id));
+} else  {
+	$output[] = array('label' => 'Linux-VServer Admin', 'value' => linux_vserver_select());
 }
 
 echo htmlobject_tabmenu($output);
 
 ?>
-
-
