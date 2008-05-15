@@ -52,10 +52,13 @@ function openqrm_plugin_dhcpd_init() {
 	IP2=$(( IP2 - 1 ))
 	OPENQRM_PLUGIN_DHCPD_IP_RANGE_LAST="$IP1.$IP2"
 	OPENQRM_SERVER_DNS=`cat /etc/resolv.conf | grep -m 1 "nameserver" | awk {' print $2 '} | head -n1 2>/dev/null`
-	OPENQRM_SERVER_DEFAULT_GATEWAY=`route -n | grep -m 1 '^0.0.0.0' | awk {' print $2 '} | head -n1 2>/dev/null`
+	OPENQRM_SERVER_DEFAULT_GATEWAY=`route -n | grep '^0.0.0.0'  | grep $OPENQRM_SERVER_INTERFACE  | awk {' print $2 '} | head -n1 2>/dev/null`
 	OPENQRM_SERVER_DOMAIN=`cat /etc/resolv.conf | grep -m 1 "search" | awk '{print $2'} | head -n1 2>/dev/null`
 	if [ "$OPENQRM_SERVER_DOMAIN" == "" ]; then
 		OPENQRM_SERVER_DOMAIN=$OPENQRM_SERVER_DEFAULT_DOMAIN
+	fi
+	if [ "$OPENQRM_SERVER_DNS" == "" ]; then
+		OPENQRM_SERVER_DNS=$OPENQRM_SERVER_IP_ADDRESS
 	fi
 	# create default dhcpd configuration
 	cat $OPENQRM_PLUGIN_DHCPD_CONF_TEMPLATE |	\
