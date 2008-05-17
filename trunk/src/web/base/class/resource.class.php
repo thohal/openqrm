@@ -420,6 +420,7 @@ function generate_mac() {
 function check_all_states() {
 	global $RESOURCE_INFO_TABLE;
 	global $RESOURCE_TIME_OUT;
+	global $RootDir;
 	global $event;
 	$resource_list = array();
 	$db=openqrm_get_db_connection();
@@ -450,6 +451,19 @@ function check_all_states() {
 				$resource_error->update_info($resource_id, $resource_fields);
 				// log error event
 				$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 1, "resource.class.php", "Resource $resource_id is in error state", "", "", 0, 0, $resource_id);
+
+				// check for plugin which may want to handle the error event
+				$plugin = new plugin();
+				$enabled_plugins = $plugin->enabled();
+				foreach ($enabled_plugins as $index => $plugin_name) {
+					$plugin_ha_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-ha-hook.php";
+					if (file_exists($plugin_ha_hook)) {
+						$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 1, "resource.class.php", "Found $plugin_name handling the resource error.", "", "", 0, 0, $resource_id);
+						require_once "$plugin_ha_hook";
+						openqrm_ha_hook($resource_id);
+						break;
+					}
+				}
 			}
 		}
 
