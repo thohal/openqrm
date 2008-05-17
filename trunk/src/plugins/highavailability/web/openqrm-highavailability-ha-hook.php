@@ -24,11 +24,13 @@ function openqrm_ha_hook($resource_id) {
 	$appliance_list->get_list();
 	$appliance = new appliance();
 	foreach ($appliance_list as $index => $appliance_db) {
-		$appliance->get_instance_by_id($appliance_db["appliance_id"]);
-		if ($appliance->resources == $resource_id) {
-			// we found the appliance of the resource !
-			$resource_serves_appliance=1;
-			break;
+		if(strlen($appliance_db["appliance_id"])) {
+			$appliance->get_instance_by_id($appliance_db["appliance_id"]);
+			if ($appliance->resources == $resource_id) {
+				// we found the appliance of the resource !
+				$resource_serves_appliance=1;
+				break;
+			}
 		}
 	}
 	// log ha error, do not handle resources which are not in use for now
