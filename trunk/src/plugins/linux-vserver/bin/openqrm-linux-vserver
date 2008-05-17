@@ -302,7 +302,6 @@ EOF
 		# add #'s at the beginning to make later parsing easier
 		cat $VM_LIST_TMP | sed -e "s/^/#/g" > $VM_LIST_TMP.up
 		mv -f $VM_LIST_TMP.up $VM_LIST_TMP
-		echo "<br>Available inactive Linux-VServer vms :<br>" >> $VM_LIST_TMP
 		ls /etc/vservers/ | grep -v newvserver-vars | grep -v openqrm-vif.conf >> $VM_LIST_TMP
 		if ! wget -q -O /dev/null --http-user=$LINUX_VSERVER_OPENQRM_USERNAME --http-password=$LINUX_VSERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$resource_openqrmserver/openqrm/base/plugins/linux-vserver/linux-vserver-action.php?linux_vserver_command=get_linux_vserver; then
 			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!"

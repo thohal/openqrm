@@ -6,7 +6,7 @@ $linux_vserver_id = $_REQUEST["linux_vserver_id"];
 <html>
 <head>
 <title>openQRM Linux-VServer actions</title>
-<meta http-equiv="refresh" content="0; URL=linux-vserver-manager.php?currenttab=tab1&strMsg=Processing <?php echo $linux_vserver_command; ?>">
+<meta http-equiv="refresh" content="0; URL=linux-vserver-manager.php?currenttab=tab0&strMsg=Processing <?php echo $linux_vserver_command; ?>">
 </head>
 <body>
 
@@ -40,7 +40,7 @@ $linux_vserver_ip = $_REQUEST["linux_vserver_ip"];
 
 $linux_vserver_fields = array();
 foreach ($_REQUEST as $key => $value) {
-	if (strncmp($key, "linux_vserver_", 4) == 0) {
+	if (strncmp($key, "linux_vserver_", 14) == 0) {
 		$linux_vserver_fields[$key] = $value;
 	}
 }
@@ -81,13 +81,6 @@ unset($linux_vserver_fields["linux_vserver_command"]);
 			$linux_vserver = new resource();
 			$linux_vserver->get_instance_by_id($linux_vserver_id);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver stop -n $linux_vserver_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$linux_vserver->send_command($linux_vserver->ip, $resource_command);
-			break;
-
-		case 'kill':
-			$linux_vserver = new resource();
-			$linux_vserver->get_instance_by_id($linux_vserver_id);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver kill -n $linux_vserver_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$linux_vserver->send_command($linux_vserver->ip, $resource_command);
 			break;
 
