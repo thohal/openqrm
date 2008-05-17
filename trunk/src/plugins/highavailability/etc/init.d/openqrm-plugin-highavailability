@@ -1,0 +1,66 @@
+#!/bin/bash
+# init script for the openQRM highavailability plugin
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/highavailability/include/openqrm-plugin-highavailability-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/highavailability/etc/openqrm-plugin-highavailability.conf
+
+function openqrm_plugin_highavailability_start() {
+	echo "Starting the openQRM highavailability-plugin"
+	openqrm_plugin_highavailability_stop 1>/dev/null 2>&1
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/highavailability/.running	
+}
+
+
+function openqrm_plugin_highavailability_stop() {
+	echo "Stopping the openQRM highavailability plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/highavailability/.running
+	return 0
+}
+
+
+function openqrm_plugin_highavailability_init() {
+	echo "Initializing the openQRM highavailability plugin"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/highavailability/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/highavailability
+	return 0
+}
+
+
+function openqrm_plugin_highavailability_uninstall() {
+	echo "Uninstalling the openQRM highavailability plugin"
+	openqrm_plugin_highavailability_stop
+	# unlinking the web dir
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/highavailability
+}
+
+
+
+case "$1" in
+	start)
+		openqrm_plugin_highavailability_start
+		;;
+	stop)
+		openqrm_plugin_highavailability_stop
+		;;
+	restart)
+		openqrm_plugin_highavailability_stop
+		sleep 1
+		openqrm_plugin_highavailability_start
+		;;
+	init)
+		openqrm_plugin_highavailability_init
+		;;
+	uninstall)
+		openqrm_plugin_highavailability_uninstall
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+

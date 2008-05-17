@@ -1,0 +1,7 @@
+#	Title
+#	Href
+#	Alt
+#	IMG
+#	Target
+.|Highavailability
+..|About|plugins/highavailability/highavailability-about.php
