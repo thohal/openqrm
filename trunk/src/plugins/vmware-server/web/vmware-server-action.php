@@ -42,7 +42,7 @@ $vmware_server_disk = $_REQUEST["vmware_server_disk"];
 
 $vmware_server_fields = array();
 foreach ($_REQUEST as $key => $value) {
-	if (strncmp($key, "vmware_server_", 15) == 0) {
+	if (strncmp($key, "vmware_server_", 14) == 0) {
 		$vmware_server_fields[$key] = $value;
 	}
 }
