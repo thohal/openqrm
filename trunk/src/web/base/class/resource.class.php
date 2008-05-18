@@ -182,6 +182,7 @@ function add($resource_fields) {
 	global $RESOURCE_INFO_TABLE;
 	global $OPENQRM_RESOURCE_BASE_DIR;
 	global $event;
+	global $RootDir;
 	$openqrm_server = new openqrm_server();
 	$OPENQRM_SERVER_IP_ADDRESS = $openqrm_server->get_ip_address();
 	if (!is_array($resource_fields)) {
@@ -204,13 +205,42 @@ function add($resource_fields) {
 	if (! $result) {
 		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "Failed adding new resource to database", "", "", 0, 0, 0);
 	}
+	// new resource hook
+	$plugin = new plugin();
+	$enabled_plugins = $plugin->enabled();
+	foreach ($enabled_plugins as $index => $plugin_name) {
+		$plugin_new_resource_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-resource-hook.php";
+		if (file_exists($plugin_new_resource_hook)) {
+			$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 1, "resource.class.php", "Found plugin $plugin_name handling new-resource event.", "", "", 0, 0, $resource_id);
+			require_once "$plugin_new_resource_hook";
+			openqrm_resource("add", $resource_fields);
+		}
+	}
+
 }
 
 // removes resource from the database
 function remove($resource_id, $resource_mac) {
+	global $OPENQRM_EXEC_PORT;
 	global $RESOURCE_INFO_TABLE;
+	global $RootDir;
+	global $event;
+	$openqrm_server = new openqrm_server();
+	$OPENQRM_SERVER_IP_ADDRESS = $openqrm_server->get_ip_address();
 	$db=openqrm_get_db_connection();
 	$rs = $db->Execute("delete from $RESOURCE_INFO_TABLE where resource_id=$resource_id and resource_mac='$resource_mac'");
+	// remove resource hook
+	$plugin = new plugin();
+	$enabled_plugins = $plugin->enabled();
+	foreach ($enabled_plugins as $index => $plugin_name) {
+		$plugin_new_resource_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-resource-hook.php";
+		if (file_exists($plugin_new_resource_hook)) {
+			$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 1, "resource.class.php", "Found plugin $plugin_name handling remove-resource event.", "", "", 0, 0, $resource_id);
+			require_once "$plugin_new_resource_hook";
+			$resource_fields["resource_id"]=$resource_id;
+			openqrm_resource("remove", $resource_fields);
+		}
+	}
 }
 
 
