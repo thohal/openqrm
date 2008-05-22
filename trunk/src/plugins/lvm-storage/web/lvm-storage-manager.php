@@ -228,6 +228,7 @@ function lvm_storage_display($lvm_storage_id) {
 	$table->cellspacing = 0;
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
+	$table->sort = '';
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
