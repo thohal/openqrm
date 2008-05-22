@@ -48,6 +48,8 @@ if(htmlobject_request('action') != '') {
 					if (strstr($capabilities, "STORAGE_PASSWORD")) {
 						$NETAPP_PASSWORD=str_replace("STORAGE_PASSWORD=\\\"", "", $capabilities);
 						$NETAPP_PASSWORD=str_replace("\\\"", "", $NETAPP_PASSWORD);
+						$NETAPP_PASSWORD=str_replace("STORAGE_PASSWORD=\"", "", $NETAPP_PASSWORD);
+						$NETAPP_PASSWORD=str_replace("\"", "", $NETAPP_PASSWORD);
 					}
 				}
 				// which component ?
@@ -141,6 +143,8 @@ function netapp_select_storage($component) {
 		foreach ($cap_array as $index => $capabilities) {
 			if (strstr($capabilities, "STORAGE_TYPE")) {
 				$STORAGE_TYPE=str_replace("STORAGE_TYPE=\\\"", "", $capabilities);
+				$STORAGE_TYPE=str_replace("\\\"", "", $STORAGE_TYPE);
+				$STORAGE_TYPE=str_replace("STORAGE_TYPE=\\\"", "", $STORAGE_TYPE);
 				$STORAGE_TYPE=str_replace("\\\"", "", $STORAGE_TYPE);
 			}
 		}

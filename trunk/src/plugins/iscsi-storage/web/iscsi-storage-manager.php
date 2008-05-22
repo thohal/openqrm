@@ -96,6 +96,8 @@ function iscsi_select_storage() {
 			if (strstr($capabilities, "STORAGE_TYPE")) {
 				$STORAGE_TYPE=str_replace("STORAGE_TYPE=\\\"", "", $capabilities);
 				$STORAGE_TYPE=str_replace("\\\"", "", $STORAGE_TYPE);
+				$STORAGE_TYPE=str_replace("STORAGE_TYPE=\"", "", $STORAGE_TYPE);
+				$STORAGE_TYPE=str_replace("\"", "", $STORAGE_TYPE);
 			}
 		}
 		if ("$STORAGE_TYPE" == "iscsi-storage") {
