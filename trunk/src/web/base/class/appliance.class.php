@@ -136,6 +136,9 @@ function add($appliance_fields) {
 		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", "Appliance_field not well defined", "", "", 0, 0, 0);
 		return 1;
 	}
+	// set stop time to now
+	$now=$_SERVER['REQUEST_TIME'];
+	$appliance_fields['appliance_stoptime']=$now;
 	$db=openqrm_get_db_connection();
 	$result = $db->AutoExecute($APPLIANCE_INFO_TABLE, $appliance_fields, 'INSERT');
 	if (! $result) {
@@ -188,6 +191,14 @@ function start() {
 	// assign + reboot resource
 	$resource->assign($resource->id, $kernel->id, $kernel->name, $image->id, $image->name);
 	$resource->send_command("$resource->ip", "reboot");
+
+	// unset stoptime + update starttime
+	$now=$_SERVER['REQUEST_TIME'];
+	$appliance_fields = array();
+	$appliance_fields['appliance_stoptime']='';
+	$appliance_fields['appliance_starttime']=$now;
+	$this->update($this->id, $appliance_fields);
+
 }
 
 
@@ -197,6 +208,13 @@ function stop() {
 	$resource->get_instance_by_id($this->resources);
 	$resource->assign($resource->id, "1", "default", "1", "idle");
 	$resource->send_command("$resource->ip", "reboot");
+	
+	// update stoptime !
+	$now=$_SERVER['REQUEST_TIME'];
+	$appliance_fields = array();
+	$appliance_fields['appliance_stoptime']=$now;
+	$this->update($this->id, $appliance_fields);
+	
 }
 
 

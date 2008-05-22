@@ -271,6 +271,7 @@ function get_parameter($resource_id) {
 	global $RESOURCE_INFO_TABLE;
 	global $KERNEL_INFO_TABLE;
 	global $IMAGE_INFO_TABLE;
+	global $APPLIANCE_INFO_TABLE;
 	global $BootServiceDir;
 	global $event;
 	$db=openqrm_get_db_connection();
@@ -321,6 +322,18 @@ function get_parameter($resource_id) {
 		$recordSet->Close();
 		echo "image_storage_server_ip=$image_storage_server_ip\n";
 	}
+	// appliance parameter
+	$recordSet = &$db->Execute("select * from $APPLIANCE_INFO_TABLE where appliance_resources=$resource_id and appliance_stoptime='0'");
+	if (!$recordSet)
+		$event->log("get_parameter", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	else
+	while (!$recordSet->EOF) {
+		array_walk($recordSet->fields, 'print_array');
+		$recordSet->MoveNext();
+	}
+	$recordSet->Close();
+
+
 	$db->Close();
 
 	$plugin = new plugin();
