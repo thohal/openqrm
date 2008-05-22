@@ -378,7 +378,7 @@ var $_init_td;
 }
 //------------------------------------------------------------------
 
-class htmlobject_tr extends htmlobject_td
+class htmlobject_tr extends htmlobject
 {
 /**
 * Content of tr
@@ -418,7 +418,7 @@ var $_init_tr;
 }
 //------------------------------------------------------------------
 
-class htmlobject_table extends htmlobject_tr
+class htmlobject_table extends htmlobject
 {
 /**
 * align
