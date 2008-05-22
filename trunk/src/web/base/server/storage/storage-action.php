@@ -1,17 +1,4 @@
 <?php
-$storage_command = $_REQUEST["storage_command"];
-$storage_name = $_REQUEST["storage_name"];
-?>
-
-<html>
-<head>
-<title>openQRM Storage actions</title>
-<meta http-equiv="refresh" content="0; URL=storage-overview.php?currenttab=tab0&strMsg=Processing <?php echo $storage_command; ?> on <?php echo $storage_name; ?>">
-</head>
-<body>
-
-<?php
-
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/include/user.inc.php";
@@ -25,6 +12,10 @@ global $IMAGE_INFO_TABLE;
 global $DEPLOYMENT_INFO_TABLE;
 global $STORAGETYPE_INFO_TABLE;
 
+
+$storage_command = htmlobject_request("storage_command");
+$storage_name = htmlobject_request("storage_name");
+
 $event = new event();
 
 // user/role authentication
@@ -33,7 +24,7 @@ if (!strstr($OPENQRM_USER->role, "administrator")) {
 	exit();
 }
 
-$storage_id = $_REQUEST["storage_id"];
+$storage_id = htmlobject_request("storage_id");
 $storage_fields = array();
 foreach ($_REQUEST as $key => $value) {
 	if (strncmp($key, "storage_", 8) == 0) {
@@ -42,9 +33,9 @@ foreach ($_REQUEST as $key => $value) {
 }
 unset($storage_fields["storage_command"]);
 
-$deployment_id = $_REQUEST["deployment_id"];
-$deployment_name = $_REQUEST["deployment_name"];
-$deployment_type = $_REQUEST["deployment_type"];
+$deployment_id = htmlobject_request("deployment_id");
+$deployment_name = htmlobject_request("deployment_name");
+$deployment_type = htmlobject_request("deployment_type");
 $deployment_fields = array();
 foreach ($_REQUEST as $key => $value) {
 	if (strncmp($key, "deployment_", 10) == 0) {
@@ -52,9 +43,9 @@ foreach ($_REQUEST as $key => $value) {
 	}
 }
 
-$storagetype_id = $_REQUEST["storagetype_id"];
-$storagetype_name = $_REQUEST["storagetype_name"];
-$storagetype_description = $_REQUEST["storagetype_description"];
+$storagetype_id = htmlobject_request("storagetype_id");
+$storagetype_name = htmlobject_request("storagetype_name");
+$storagetype_description = htmlobject_request("storagetype_description");
 foreach ($_REQUEST as $key => $value) {
 	if (strncmp($key, "storagetype_", 12) == 0) {
 		$storagetype_fields[$key] = $value;
@@ -125,4 +116,10 @@ if(htmlobject_request('action') != '') {
 	}
 ?>
 
+<html>
+<head>
+<title>openQRM Storage actions</title>
+<meta http-equiv="refresh" content="0; URL=storage-overview.php?currenttab=tab0&strMsg=Processing <?php echo $storage_command; ?> on <?php echo $storage_name; ?>">
+</head>
+<body>
 </body>

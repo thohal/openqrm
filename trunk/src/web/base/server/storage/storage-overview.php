@@ -9,6 +9,34 @@ require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
 
+$storage_id = htmlobject_request("storage_id");
+$storage_fields = array();
+foreach ($_REQUEST as $key => $value) {
+	if (strncmp($key, "storage_", 8) == 0) {
+		$storage_fields[$key] = $value;
+	}
+}
+unset($storage_fields["storage_command"]);
+
+$deployment_id = htmlobject_request("deployment_id");
+$deployment_name = htmlobject_request("deployment_name");
+$deployment_type = htmlobject_request("deployment_type");
+$deployment_fields = array();
+foreach ($_REQUEST as $key => $value) {
+	if (strncmp($key, "deployment_", 10) == 0) {
+		$deployment_fields[$key] = $value;
+	}
+}
+
+$storagetype_id = htmlobject_request("storagetype_id");
+$storagetype_name = htmlobject_request("storagetype_name");
+$storagetype_description = htmlobject_request("storagetype_description");
+foreach ($_REQUEST as $key => $value) {
+	if (strncmp($key, "storagetype_", 12) == 0) {
+		$storagetype_fields[$key] = $value;
+	}
+}
+
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	global $thisfile;
 	if($url == '') {
@@ -133,13 +161,14 @@ function storage_display() {
 
 
 function storage_form() {
-	global $OPENQRM_USER;
+	global $OPENQRM_USER, $thisfile;
+
 
 	$storagetype = new storagetype();
 	$storagetype_list = array();
 	$storagetype_list = $storagetype->get_list();
-	$dep_is_selected = $_REQUEST["dep_is_selected"];
-	$storagetype_name = array($_REQUEST["storagetype_name"]);
+	$dep_is_selected = htmlobject_request("dep_is_selected");
+	$storagetype_name = array(htmlobject_request("storagetype_name"));
 	global $BaseDir;
 
 	$deployment = new deployment();
@@ -149,27 +178,14 @@ function storage_form() {
 	array_splice($deployment_list, 0, 1);
 
 
-	$disp = "<h1>New Storage</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-
-	if (!strlen($dep_is_selected)) {
-		$disp = $disp."<form action='storage-overview.php?currenttab=tab1' method=post>";
-		$storagetype_select = htmlobject_select('storagetype_name', $storagetype_list, 'Storage Type', $storagetype_name);
-		$disp = $disp.$storagetype_select;
-		$disp = $disp."<input type=hidden name=dep_is_selected value='yes'>";
-		$disp = $disp."<input type=submit value='select'>";
-		$disp = $disp."<br>";
-		$disp = $disp."</form>";
-
-	} else {
+	if (strlen($dep_is_selected)) {
+		$store = "<h1>New Storage</h1>";
 
 		$storagetype_id = $storagetype_name['0'];
-		$disp = $disp."<form action='storage-action.php' method=post>";
-		$disp = $disp.htmlobject_input('storage_name', array("value" => '', "label" => 'Insert Storage name'), 'text', 20);
+		$store .=htmlobject_input('storage_name', array("value" => '', "label" => 'Insert Storage name'), 'text', 20);
 		$deployment_select = htmlobject_select('storage_deployment_type', $deployment_list, 'Deployment type', $deployment_list);
-		$disp = $disp.$deployment_select;
-		$disp = $disp.htmlobject_textarea('storage_comment', array("value" => '', "label" => 'Comment'));
+		$store .=$deployment_select;
+		$store .=htmlobject_textarea('storage_comment', array("value" => '', "label" => 'Comment'));
 
 	   	// making the storage capabilities parameters plugg-able
 	   	$storagetype = new $storagetype();
@@ -177,17 +193,22 @@ function storage_form() {
    		$storagetype_menu_file = "$BaseDir/boot-service/storagetype-capabilities.$storagetype->name"."-menu.html";
    		if (file_exists($storagetype_menu_file)) {
    			$storagetype_menu = file_get_contents("$storagetype_menu_file");
-		    $disp = $disp.$storagetype_menu;
+		    $store .=$storagetype_menu;
    		} else {
-			$disp = $disp.htmlobject_textarea('storage_capabilities', array("value" => '', "label" => 'Storage Capabilities'));
+			$store .=htmlobject_textarea('storage_capabilities', array("value" => '', "label" => 'Storage Capabilities'));
 		}
 
-		$disp = $disp."<input type=hidden name=storage_command value='new_storage'>";
+		$store .="<input type=hidden name=storage_command value='new_storage'>";
+//--------------------------
+
+
 
 		$resource_tmp = new resource();
 		$table = new htmlobject_db_table('resource_id');
 
-		$disp .= '<h1>Resource List</h1>';
+		$table->add_headrow($store);
+
+		$disp = '<h1>Resource List</h1>';
 		$disp .= '<br>';
 
 		$arHead = array();
@@ -256,12 +277,20 @@ function storage_form() {
 			$table->identifier = 'resource_id';
 		}
 		$table->max = $resource_tmp->get_count('all');
-		$disp = $disp.$table->get_string();
+		$disp .=$table->get_string();
 
 	}
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."</form>";
+
+	if (!strlen($dep_is_selected)) {
+		$disp = '<form action="'.$thisfile.'?currenttab=tab1" method="post">';
+		$storagetype_select = htmlobject_select('storagetype_name', $storagetype_list, 'Storage Type', $storagetype_name);
+		$disp .= $storagetype_select;
+		$disp .= "<input type=hidden name=dep_is_selected value='yes'>";
+		$disp .= "<input type=submit value='select'>";
+		$disp .= "<br>";
+		$disp .= "</form>";
+	}
+
 	return $disp;
 }
 
@@ -282,15 +311,15 @@ function storage_edit($storage_id) {
 	array_splice($deployment_list, 0, 1);
 
 	$disp = "<h1>Edit Storage</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<form action='storage-action.php' method=post>";
-	$disp = $disp.htmlobject_input('storage_name', array("value" => $storage->name, "label" => 'Storage name'), 'text', 20);
+	$disp .="<br>";
+	$disp .='<form action="storage-action.php" method="post">';
+	$disp .=htmlobject_input('storage_name', array("value" => $storage->name, "label" => 'Storage name'), 'text', 20);
 	$deployment_select = htmlobject_select('storage_deployment_type', $deployment_list, 'Deployment type', $deployment_list);
-	$disp = $disp.$deployment_select;
-	$disp = $disp.htmlobject_textarea('storage_comment', array("value" => $storage->comment, "label" => 'Comment'));
-	$disp = $disp.htmlobject_textarea('storage_capabilities', array("value" => $storage->capabilities, "label" => 'Storage Capabilities'));
-	$disp = $disp."<input type=hidden name=storage_id value=$storage_id>";
-	$disp = $disp."<input type=hidden name=storage_command value='update'>";
+	$disp .=$deployment_select;
+	$disp .=htmlobject_textarea('storage_comment', array("value" => $storage->comment, "label" => 'Comment'));
+	$disp .=htmlobject_textarea('storage_capabilities', array("value" => $storage->capabilities, "label" => 'Storage Capabilities'));
+	$disp .="<input type=hidden name=storage_id value=$storage_id>";
+	$disp .="<input type=hidden name=storage_command value='update'>";
 
 	$resource_tmp = new resource();
 	$table = new htmlobject_db_table('resource_id');
@@ -364,10 +393,10 @@ function storage_edit($storage_id) {
 	}
 	$table->max = $resource_tmp->get_count('all');
 
-	$disp = $disp.$table->get_string();
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."</form>";
+	$disp .=$table->get_string();
+	$disp .="";
+	$disp .="";
+	$disp .="</form>";
 	return $disp;
 }
 
