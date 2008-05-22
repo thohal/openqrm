@@ -360,10 +360,10 @@ var $_init_td;
 
 	function init_td() {
 	$this->_init_td = '';
-		if ($this->align != '') { $this->_init_td .= ' align="'.$this->align.'"'; }
-		if ($this->bgcolor != '') { $this->_init_td .= ' bgcolor="'.$this->bgcolor.'"'; }
+		#if ($this->align != '') { $this->_init_td .= ' align="'.$this->align.'"'; }
+		#if ($this->bgcolor != '') { $this->_init_td .= ' bgcolor="'.$this->bgcolor.'"'; }
 		if ($this->colspan != '') { $this->_init_td .= ' colspan="'.$this->colspan.'"'; }
-		if ($this->valign != '') { $this->_init_td .= ' valign="'.$this->valign.'"'; }
+		#if ($this->valign != '') { $this->_init_td .= ' valign="'.$this->valign.'"'; }
 	}
 
 	function get_string() {
