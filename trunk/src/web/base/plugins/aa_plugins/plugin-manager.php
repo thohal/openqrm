@@ -12,6 +12,7 @@ $plugins_enabled = $plugin->enabled();
 $plugins_started = $plugin->started();
 
 $imgDir = '/openqrm/base/plugins/aa_plugins/img/';
+global $OPENQRM_SERVER_BASE_DIR;
 
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 global $thisfile;
@@ -110,6 +111,12 @@ $arHead['plugin_icon']['sortable'] = false;
 $arHead['plugin_name'] = array();
 $arHead['plugin_name']['title'] ='Plugin';
 
+$arHead['plugin_type'] = array();
+$arHead['plugin_type']['title'] ='Type';
+
+$arHead['plugin_description'] = array();
+$arHead['plugin_description']['title'] ='Description';
+
 $arHead['plugin_enabled'] = array();
 $arHead['plugin_enabled']['title'] ='Enabled';
 
@@ -125,10 +132,26 @@ $plugin_disabled='<img src="/openqrm/base/plugins/aa_plugins/img/enable.png" bor
 
 foreach ($plugins_available as $index => $plugin_name) {
 	$arBody[$i] = array();
+	$plugin_config="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$plugin_name/etc/openqrm-plugin-$plugin_name.conf";
+	$plugin_description="";
+	$plugin_type="";
+	$config_array=file($plugin_config);
+	foreach ($config_array as $index => $line) {
+	    if (strstr($line, "OPENQRM_PLUGIN_DESCRIPTION")) {
+		    $plugin_description=str_replace("OPENQRM_PLUGIN_DESCRIPTION=", "", $line);
+		    $plugin_description=str_replace("\"", "", $plugin_description);
+	    }
+	    if (strstr($line, "OPENQRM_PLUGIN_TYPE")) {
+		    $plugin_type=str_replace("OPENQRM_PLUGIN_TYPE=", "", $line);
+		    $plugin_type=str_replace("\"", "", $plugin_type);
+	    }
+	}
 	if (!in_array($plugin_name, $plugins_enabled)) {
 			
 		$arBody[$i]['plugin_icon'] = '<img src="'.$imgDir.'plugin.png">';
 		$arBody[$i]['plugin_name'] = $plugin_name;
+		$arBody[$i]['plugin_type'] = $plugin_type;
+		$arBody[$i]['plugin_description'] = $plugin_description;
 		$arBody[$i]['plugin_enabled'] = '<a href="'.$thisfile.'?action=enable&identifier[]='.$plugin_name.'">'.$plugin_disabled.'</a>';
 		$arBody[$i]['plugin_started'] = '&#160;';
 
@@ -143,6 +166,8 @@ foreach ($plugins_available as $index => $plugin_name) {
 			
 		$arBody[$i]['plugin_icon'] = '<img src="'.$plugin_icon_default.'">';
 		$arBody[$i]['plugin_name'] = $plugin_name;
+		$arBody[$i]['plugin_type'] = $plugin_type;
+		$arBody[$i]['plugin_description'] = $plugin_description;
 		$arBody[$i]['plugin_enabled'] = '<a href="'.$thisfile.'?action=disable&identifier[]='.$plugin_name.'">'.$plugin_enabled.'</a>';
 		// started ?
 		if (!in_array($plugin_name, $plugins_started)) {
