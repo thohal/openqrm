@@ -3,10 +3,11 @@
 # this script automatically manages aoe
 OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/include/openqrm-plugin-aoe-storage-functions
 OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
-if [ -f /var/openqrm/openqrm-resource.conf ]; then
-	. /var/openqrm/openqrm-resource.conf
+if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
 	OPENQRM_SERVER_IP=$resource_openqrmserver
 elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
@@ -30,6 +31,21 @@ function aoe_storage_usage() {
 	exit 1
 }
 
+
+function aoe_restart_exec() {
+	if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+		. $OPENQRM_RESOURCE_PARAMETER_FILE
+		OPENQRM_SYSTEM_IP=$resource_ip
+		OPENQRM_EXEC_PORT=$resource_execdport
+	elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+		. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+		openqrm_server_get_config
+		OPENQRM_SYSTEM_IP=$OPENQRM_SERVER_IP_ADDRESS
+	fi
+	killall openqrm-exec-port-monitor 1>/dev/null 2>&1
+	killall openqrm-execd 1>/dev/null 2>&1
+	$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec-port-monitor $OPENQRM_SYSTEM_IP $OPENQRM_EXEC_PORT | $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-execd &
+}
 
 AOE_COMMAND=$1
 shift
@@ -102,6 +118,9 @@ case "$AOE_COMMAND" in
 		aoe_storage_lock aquire
 		manage_aoe add
 		aoe_storage_lock release
+		# this is a trick !
+		# vbladed used waitpid which blocks qrm-execd, using nohup, screen or & does not help so we restart the openqrm-client
+		aoe_restart_exec
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$AOE_OPENQRM_USERNAME" != "" ] && [ "$AOE_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_luns -u $AOE_OPENQRM_USERNAME -p $AOE_OPENQRM_PASSWORD

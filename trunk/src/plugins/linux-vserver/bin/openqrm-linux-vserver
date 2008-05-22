@@ -5,7 +5,6 @@ OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/include/openqrm-plugin-linux-vserver-functions
-. /var/openqrm/openqrm-resource.conf
 OPENQRM_POSTENCODE="$resource_basedir/openqrm/sbin/openqrm-postencode.py"
 OPENQRM_LINUX_VSERVER_IDLE_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/templates/openqrm-initrd-default.tgz"
 export LANG=C
@@ -26,10 +25,18 @@ function linux_vserver_usage() {
 
 
 function linux_vserver_restart_exec() {
-	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+		. $OPENQRM_RESOURCE_PARAMETER_FILE
+		OPENQRM_SYSTEM_IP=$resource_ip
+		OPENQRM_EXEC_PORT=$resource_execdport
+	elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+		. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+		openqrm_server_get_config
+		OPENQRM_SYSTEM_IP=$OPENQRM_SERVER_IP_ADDRESS
+	fi
 	killall openqrm-exec-port-monitor 1>/dev/null 2>&1
 	killall openqrm-execd 1>/dev/null 2>&1
-	$resource_basedir/openqrm/sbin/openqrm-exec-port-monitor $resource_ip $resource_execdport | $resource_basedir/openqrm/sbin/openqrm-execd &
+	$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec-port-monitor $OPENQRM_SYSTEM_IP $OPENQRM_EXEC_PORT | $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-execd &
 }
 
 

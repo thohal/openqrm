@@ -93,9 +93,6 @@ function manage_aoe() {
 			echo "disk $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME" >> $VBLADECONF
 			# start vbladed
 			vbladed $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME
-			# this is a trick !
-			# vbladed used waitpid which blocks qrm-execd, using nohup, screen or & does not help so we restart the openqrm-client
-			/etc/init.d/openqrm-client restart &
 			;;
 		remove)
 			for VBLADE_PID in `ps ax | grep vblade | grep -w $AOE_IMAGE_NAME | awk {' print $1 '}`; do
