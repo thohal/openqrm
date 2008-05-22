@@ -181,7 +181,7 @@ var $_bottomrow = array();
 		if(isset($_REQUEST['sort']) &&  $_REQUEST['sort'] != '') {
 			$this->sort = $_REQUEST['sort'];
 		}
-		if($field != '' && $this->sort == '') {
+		else if($field != '') {
 			$this->sort = $field;
 		}
 		if(isset($_REQUEST['offset']) &&  $_REQUEST['offset'] != '') {
@@ -617,10 +617,36 @@ var $_bottomrow = array();
 	}
 }//-- end class
 
+
 class htmlobject_db_table extends htmlobject_table_builder 
 {
 	function htmlobject_db_table($field = '', $order = '') {
 		parent::htmlobject_table_builder($field, $order);
+	}
+}
+
+class htmlobject_simple_table extends htmlobject_table_builder 
+{
+var $identifier_checked = true;
+var $identifier_disabled = true;
+	
+	function get_indentifier($key, $ident) {
+	$td = '';
+		if($this->identifier != '') {
+			$html = new htmlobject_input();
+			$html->id = $ident;
+			$html->name = 'identifier[]';
+			$html->value = $this->body[$key][$this->identifier];
+			$html->type = 'checkbox';
+			$html->checked = $this->identifier_checked;
+			$html->disabled = $this->identifier_disabled;
+					
+			$td = new htmlobject_td();
+			$td->type = 'td';
+			$td->css = 'htmlobject_td identifier';
+			$td->text = $html->get_string();
+		}
+	return $td;
 	}
 }
 ?>
