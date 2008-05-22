@@ -192,8 +192,8 @@ function image_form() {
 		$arHead['storage_resource_id'] = array();
 		$arHead['storage_resource_id']['title'] ='Resource';
 
-		$arHead['storage_resource_id'] = array();
-		$arHead['storage_resource_id']['title'] ='Ip';
+		$arHead['storage_resource_ip'] = array();
+		$arHead['storage_resource_ip']['title'] ='Ip';
 
 		$arHead['storage_comment'] = array();
 		$arHead['storage_comment']['title'] ='Comment';
