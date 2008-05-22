@@ -199,6 +199,11 @@ function start() {
 	$appliance_fields['appliance_starttime']=$now;
 	$this->update($this->id, $appliance_fields);
 
+	// update resource state to transition
+	$resource_fields=array();
+	$resource_fields["resource_state"]="transition";
+	$resource->update_info($resource->id, $resource_fields);
+
 }
 
 
@@ -214,6 +219,11 @@ function stop() {
 	$appliance_fields = array();
 	$appliance_fields['appliance_stoptime']=$now;
 	$this->update($this->id, $appliance_fields);
+
+	// update resource state to transition
+	$resource_fields=array();
+	$resource_fields["resource_state"]="transition";
+	$resource->update_info($resource->id, $resource_fields);
 	
 }
 
