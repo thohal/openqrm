@@ -287,7 +287,7 @@ var $_bottomrow = array();
 	* @return object|string htmlobject_tr or empty string
 	*/
 	//----------------------------------------------------------------------------------------		
-	function get_table_body($val) {
+	function get_table_body($key, $val) {
 		$ident = 'id'. uniqid();
 		
 		$tr = new htmlobject_tr();
@@ -308,7 +308,7 @@ var $_bottomrow = array();
 			}
 			//--------------------------------------------------------------- identifier
 			if($this->identifier != '') {
-				$tr->add($this->get_indentifier($ident));
+				$tr->add($this->get_indentifier($key, $ident));
 			}
 		return $tr;
 	}
@@ -534,13 +534,13 @@ var $_bottomrow = array();
 	* @return object|string
 	*/
 	//----------------------------------------------------------------------------------------		
-	function get_indentifier($ident) {
+	function get_indentifier($key, $ident) {
 	$td = '';
 		if($this->identifier != '') {
 			$html = new htmlobject_input();
 			$html->id = $ident;
 			$html->name = 'identifier[]';
-			$html->value = $this->body[$key_1][$this->identifier];
+			$html->value = $this->body[$key][$this->identifier];
 			$html->type = 'checkbox';
 					
 			$td = new htmlobject_td();
@@ -599,8 +599,8 @@ var $_bottomrow = array();
 		htmlobject_table::add($this->get_sort());
 		htmlobject_table::add($this->get_table_head());
 		// build table body
-		foreach ($this->_body as $value) {
-			htmlobject_table::add($this->get_table_body($value));
+		foreach ($this->_body as $key => $value) {
+			htmlobject_table::add($this->get_table_body($key, $value));
 		}
 		// build table bottom
 		htmlobject_table::add($this->get_table_bottom());
