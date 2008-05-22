@@ -6,6 +6,8 @@ require_once($ClassDir.'htmlobject.class.php');
 require_once($ClassDir.'htmlobject.box.class.php');
 require_once($ClassDir.'htmlobject.table.class.php');
 require_once($ClassDir.'htmlobject.head.class.php');
+require_once($ClassDir.'htmlobject.tabs.class.php');
+require_once($ClassDir.'htmlobject.preloader.class.php');
 
 //---------------------------------------------------------------
 /**
