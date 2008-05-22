@@ -44,18 +44,16 @@ function aoe_select_storage() {
 	$table = new htmlobject_db_table('storage_id');
 
 	$disp = "<h1>Select Aoe-storage</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."Please select a Aoe-storage server from the list below";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
+	$disp = $disp."<h3>Please select a Aoe-storage server from the list below</h3>";
 
 	$arHead = array();
 	$arHead['storage_state'] = array();
 	$arHead['storage_state']['title'] ='';
+	$arHead['storage_state']['sortable'] = false;
 
 	$arHead['storage_icon'] = array();
 	$arHead['storage_icon']['title'] ='';
+	$arHead['storage_icon']['sortable'] = false;
 
 	$arHead['storage_id'] = array();
 	$arHead['storage_id']['title'] ='ID';
@@ -64,7 +62,7 @@ function aoe_select_storage() {
 	$arHead['storage_name']['title'] ='Name';
 
 	$arHead['storage_resource_id'] = array();
-	$arHead['storage_resource_id']['title'] ='Resource';
+	$arHead['storage_resource_id']['title'] ='Res.';
 
 	$arHead['storage_resource_ip'] = array();
 	$arHead['storage_resource_ip']['title'] ='Ip';
@@ -74,6 +72,7 @@ function aoe_select_storage() {
 
 	$arHead['storage_comment'] = array();
 	$arHead['storage_comment']['title'] ='Comment';
+	$arHead['storage_comment']['sortable'] = false;
 
 	$arHead['storage_capabilities'] = array();
 	$arHead['storage_capabilities']['title'] ='Capabilities';
@@ -156,11 +155,9 @@ function aoe_storage_display($aoe_storage_id) {
 	$storage_deployment = new deployment();
 	$storage_deployment->get_instance_by_id($storage->deployment_type);
 
-	$table = new htmlobject_simple_table();
+	$table = new htmlobject_table_identifiers_checked();
 
 	$disp = "<h1>Select Aoe-storage</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 
 	$arHead = array();
 	$arHead['storage_state'] = array();
@@ -176,7 +173,7 @@ function aoe_storage_display($aoe_storage_id) {
 	$arHead['storage_name']['title'] ='Name';
 
 	$arHead['storage_resource_id'] = array();
-	$arHead['storage_resource_id']['title'] ='Resource';
+	$arHead['storage_resource_id']['title'] ='Res.';
 
 	$arHead['storage_resource_ip'] = array();
 	$arHead['storage_resource_ip']['title'] ='Ip';
@@ -219,6 +216,7 @@ function aoe_storage_display($aoe_storage_id) {
 	$table->cellspacing = 0;
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
+	$table->sort = '';
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -228,8 +226,7 @@ function aoe_storage_display($aoe_storage_id) {
 	$table->max = $storage_count;
 	$disp = $disp.$table->get_string();
 
-	$disp = $disp."<br>";
-	$disp = $disp."Add Aoe export :";
+	$disp = $disp."<h3>Add Aoe export :</h3>";
 	$disp = $disp."<div id=\"storage\" nowrap=\"true\">";
 	$disp = $disp."<form action='aoe-storage-action.php' method=post>";
 	$disp = $disp.htmlobject_input('aoe_storage_image_name', array("value" => '', "label" => 'Name'), 'text', 20);

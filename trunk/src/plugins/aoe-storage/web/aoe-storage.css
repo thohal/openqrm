@@ -13,3 +13,40 @@
     color: #ffffff !important;
 	font-size: 20px !important;
 }
+
+.storage_state {
+vertical-align:top;
+text-align:center;
+}
+.storage_icon {
+vertical-align:top;
+text-align:center;
+}
+.storage_id {
+vertical-align:top;
+text-align:center;
+}
+.storage_name {
+vertical-align:top;
+text-align:left;
+}
+.storage_resource_id{
+vertical-align:top;
+text-align:left;
+}
+.storage_resource_ip{
+vertical-align:top;
+text-align:left;
+}
+.storage_deployment_type{
+vertical-align:top;
+text-align:left;
+}
+.storage_comment{
+vertical-align:top;
+text-align:left;
+}
+.storage_capabilities {
+vertical-align:top;
+text-align:left;
+}

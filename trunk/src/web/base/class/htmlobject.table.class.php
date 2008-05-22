@@ -625,28 +625,66 @@ class htmlobject_db_table extends htmlobject_table_builder
 	}
 }
 
-class htmlobject_simple_table extends htmlobject_table_builder 
+class htmlobject_table_identifiers_checked extends htmlobject_table_builder 
 {
-var $identifier_checked = true;
-var $identifier_disabled = true;
+
+var $_identifiers = array();
 	
 	function get_indentifier($key, $ident) {
-	$td = '';
 		if($this->identifier != '') {
 			$html = new htmlobject_input();
 			$html->id = $ident;
 			$html->name = 'identifier[]';
 			$html->value = $this->body[$key][$this->identifier];
-			$html->type = 'checkbox';
-			$html->checked = $this->identifier_checked;
-			$html->disabled = $this->identifier_disabled;
-					
-			$td = new htmlobject_td();
-			$td->type = 'td';
-			$td->css = 'htmlobject_td identifier';
-			$td->text = $html->get_string();
+			$html->type = 'hidden';
+			
+			$this->_identifiers[] = $html->get_string();
 		}
-	return $td;
+	}
+
+	function get_table_head() {
+	$tr = '';
+		if(count($this->head) > 0) {
+			$tr = new htmlobject_tr();
+			$tr->css = 'htmlobject_tr';
+			$tr->id = 'tr_'. uniqid();
+		
+			foreach($this->head as $key_2 => $value) {
+				if($value['title'] == '') { $value['title'] = '&#160;'; }
+				$td = new htmlobject_td();
+				$td->type = 'th';
+				$td->css = 'htmlobject_td '.$key_2;
+				$td->text = $value['title'];
+				$tr->add($td);
+			}
+		}
+	return $tr;
+	}
+
+	function get_table_bottom () {
+	$tr = '';
+		if(isset($this->bottom[0])) {
+			$tr = new htmlobject_tr();
+			$tr->css = 'htmlobject_tr';
+			$tr->id = 'tr_'. uniqid();
+		
+			$td = new htmlobject_td();
+			$td->colspan = $this->_num_cols;
+			$td->type = 'td';
+			$td->css = 'htmlobject_td bottom';
+			$str = '';
+			foreach($this->bottom as $key_2 => $v) {
+				$html = new htmlobject_input();
+				$html->name = 'action';
+				$html->value = $v;
+				$html->type = 'submit';
+				$str .= $html->get_string();
+			}
+			$str .= join("", $this->_identifiers);
+			$td->text = $str;
+			$tr->add($td);	
+		}
+	return $tr;	
 	}
 }
 ?>
