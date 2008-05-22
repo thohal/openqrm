@@ -126,7 +126,7 @@ function vmware_server_select() {
 function vmware_server_display($appliance_id) {
 	global $OPENQRM_USER;
 	global $thisfile;
-	$table = new htmlobject_db_table('vmware_server_id');
+	$table = new htmlobject_table_identifiers_checked('vmware_server_id');
 
 	$disp = "<h1>VMware-Server-Admin</h1>";
 	$disp = $disp."<br>";

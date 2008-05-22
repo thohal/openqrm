@@ -153,7 +153,7 @@ function nfs_storage_display($nfs_storage_id) {
 	$storage_deployment = new deployment();
 	$storage_deployment->get_instance_by_id($storage->deployment_type);
 
-	$table = new htmlobject_db_table('storage_id');
+	$table = new htmlobject_table_identifiers_checked('storage_id');
 
 	$disp = "<h1>Select Nfs-storage</h1>";
 	$disp = $disp."<br>";

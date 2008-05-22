@@ -125,7 +125,7 @@ function xen_select() {
 function xen_display($appliance_id) {
 	global $OPENQRM_USER;
 	global $thisfile;
-	$table = new htmlobject_db_table('xen_id');
+	$table = new htmlobject_table_identifiers_checked('xen_id');
 
 	$disp = "<h1>Xen-Admin</h1>";
 	$disp = $disp."<br>";

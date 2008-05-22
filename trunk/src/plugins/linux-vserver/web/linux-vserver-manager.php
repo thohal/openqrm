@@ -126,7 +126,7 @@ function linux_vserver_select() {
 function linux_vserver_display($appliance_id) {
 	global $OPENQRM_USER;
 	global $thisfile;
-	$table = new htmlobject_db_table('linux_vserver_id');
+	$table = new htmlobject_table_identifiers_checked('linux_vserver_id');
 
 	$disp = "<h1>Linux-VServer-Admin</h1>";
 	$disp = $disp."<br>";

@@ -169,7 +169,7 @@ function lvm_storage_display($lvm_storage_id) {
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 
-	$table = new htmlobject_db_table('storage_id');
+	$table = new htmlobject_table_identifiers_checked('storage_id');
 	$arHead = array();
 	$arHead['storage_state'] = array();
 	$arHead['storage_state']['title'] ='';
@@ -281,7 +281,7 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 
-	$table = new htmlobject_db_table('storage_id');
+	$table = new htmlobject_table_identifiers_checked('storage_id');
 	$arHead = array();
 	$arHead['storage_state'] = array();
 	$arHead['storage_state']['title'] ='';
