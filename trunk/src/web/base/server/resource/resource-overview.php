@@ -88,11 +88,11 @@ function resource_display() {
 	$arHead['resource_hostname'] = array();
 	$arHead['resource_hostname']['title'] ='Name';
 
-	$arHead['resource_kernelid'] = array();
-	$arHead['resource_kernelid']['title'] ='Kernel';
+	$arHead['resource_kernel'] = array();
+	$arHead['resource_kernel']['title'] ='Kernel';
 
-	$arHead['resource_imageid'] = array();
-	$arHead['resource_imageid']['title'] ='Image';
+	$arHead['resource_image'] = array();
+	$arHead['resource_image']['title'] ='Image';
 
 	$arHead['resource_ip'] = array();
 	$arHead['resource_ip']['title'] ='Ip';

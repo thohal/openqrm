@@ -106,7 +106,6 @@ global $thisfile;
 
 	}
 
-	$table = new htmlobject_db_table();
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
