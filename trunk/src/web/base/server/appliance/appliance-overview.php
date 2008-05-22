@@ -129,14 +129,15 @@ function appliance_display() {
 		$resource = new resource();
 		$resource->get_instance_by_id($appliance_db["appliance_resources"]);
 		$resource_icon_default="/openqrm/base/img/resource.png";
-		$state_icon="/openqrm/base/img/$resource->state.png";
-		// idle ?
-		if (("$resource->imageid" == "1") && ("$resource->state" == "active")) {
-			$state_icon="/openqrm/base/img/idle.png";
+		// active or inactive
+		$active_state_icon="/openqrm/base/img/active.png";
+		$inactive_state_icon="/openqrm/base/img/idle.png";
+		if ("$appliance->stoptime" == "0") {
+			$state_icon=$active_state_icon;
+		} else {
+			$state_icon=$inactive_state_icon;
 		}
-		if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
-			$state_icon="/openqrm/base/img/unknown.png";
-		}
+
 		$kernel = new kernel();
 		$kernel->get_instance_by_id($appliance_db["appliance_kernelid"]);
 		$image = new image();

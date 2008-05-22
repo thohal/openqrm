@@ -78,16 +78,21 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$kernel->add($kernel_fields);
 		
 			// create appliance
-			$appliance_fields["appliance_id"]=openqrm_db_get_free_id('appliance_id', $APPLIANCE_INFO_TABLE);
+			$next_appliance_id=openqrm_db_get_free_id('appliance_id', $APPLIANCE_INFO_TABLE);
+			$appliance_fields["appliance_id"]=$next_appliance_id;
 			$appliance_fields["appliance_name"]="resource$local_server_id";
 			$appliance_fields["appliance_kernelid"]=$kernel_fields["kernel_id"];
 			$appliance_fields["appliance_imageid"]=$image_fields["image_id"];
 			$appliance_fields["appliance_resources"]="$local_server_id";
 			$appliance_fields["appliance_capabilities"]='local-server';
 			$appliance_fields["appliance_comment"]="Local-server appliance resource $local_server_id";
-
 			$appliance = new appliance();
 			$appliance->add($appliance_fields);
+			// set start time, reset stoptime
+			$now=$_SERVER['REQUEST_TIME'];
+			$appliance_fields["appliance_starttime"]=$now;
+			$appliance_fields["appliance_stoptime"]=0;
+			$appliance->update($next_appliance_id, $appliance_fields);
 
 			// set resource to localboot
 			$resource = new resource();
