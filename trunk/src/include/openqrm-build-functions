@@ -396,6 +396,10 @@ tty4::askfirst:-/bin/bash
 ::shutdown:/sbin/halt
 
 EOF
+	# create symlink to /lib64 for 64bit systems
+	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
+	ln -sf lib lib64
+	
 	cd $CURRENT_DIR
 }
 
