@@ -34,6 +34,14 @@ function openqrm_plugin_tftpd_uninstall() {
 
 function openqrm_plugin_tftpd_init() {
 	echo "Initializing the openQRM tftpd-plugin"
+	# make sure tftp is not running already
+	if [ -f /etc/debian_version ]; then
+		/etc/init.d/tftpd-hpa stop
+		update-rc.d -f tftpd-hpa remove
+	else
+		sed -i -e "s/disable.*/disable = yes/" /etc/xinetd.d/tftp
+		/etc/init.d/xinetd restart
+	fi
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/tftpd/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/tftpd
 }
