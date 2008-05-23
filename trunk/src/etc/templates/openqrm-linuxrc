@@ -219,6 +219,8 @@ ifconfig $OPENQRM_RESOURCE_MANAGED_INTERFACE:oq $OPENQRM_RESOURCE_IP_ADDRESS net
 if [ "$OPENQRM_RESOURCE_DEFAULT_GATEWAY" != "0.0.0.0" ]; then
 	route add default gw $OPENQRM_RESOURCE_DEFAULT_GATEWAY
 fi
+# force a small delay for the networkcard to initialyze
+ping -c 5 -q $OPENQRM_SERVER_IP_ADDRESS > /dev/null
 
 # get resource parameter
 echo "Getting resource-parameters ..."
@@ -226,7 +228,17 @@ if [ "$id" == "-1" ]; then
 	echo "New resource detected ! Adding to the openQRM-server at $OPENQRM_SERVER_IP_ADDRESS"
 fi	
 # sending resource-id will add the resource if not existing (-1 = new resource)
-wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$id&resource_mac=$OPENQRM_RESOURCE_MAC_ADDRESS&resource_ip=$OPENQRM_RESOURCE_IP_ADDRESS"
+# loop get-parameters in case the network card is still not ready initialyzed
+NETWORKCARD_LOOP=0
+while ! wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$id&resource_mac=$OPENQRM_RESOURCE_MAC_ADDRESS&resource_ip=$OPENQRM_RESOURCE_IP_ADDRESS"; do
+	if [ "$NETWORKCARD_LOOP" == "10" ]; then
+		echo "ERROR: Could not reach the openQRM-Server at $OPENQRM_SERVER_IP_ADDRESS!"
+		# give a shell for the admin
+		/bin/bash
+	fi
+	NETWORKCARD_LOOP=$(( NETWORKCARD_LOOP + 1 ))
+	sleep 5
+done
 . $OPENQRM_RESOURCE_PARAMETER_FILE
 
 # get kernel + modules by tftp
@@ -241,10 +253,24 @@ tar -xzf openqrm-client.tgz
 rm -f openqrm-client.tgz
 $resource_basedir/openqrm/etc/init.d/openqrm-client start
 
-# if any deployment plugin is enabled, handle over the control
-# -> deployment plugins will take care to mount the root fs
-#    and do the pivot_root if needed
-if [ "$image_type" != "ram" ]; then
+if [ "$image_type" == "ram" ] || [ "$image_type" == "" ]; then
+	# send idle/available
+	echo "Sending idle/available to openQRM-server at $OPENQRM_SERVER_IP_ADDRESS"
+	wget -q -O /dev/null "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-monitor.php?resource_command=update_status&resource_id=$resource_id&resource_state=idle&resource_event=available"
+	hostname idle$resource_id
+	# rcs0 will be started here from init
+	
+	# for initramfs initrds we start a shell here
+	if [ -x /init ]; then
+		echo "Detected initrd as initramfs, starting a shell"
+		/bin/bash
+	fi	
+
+else
+	# if any deployment plugin is enabled, handle over the control
+	# -> deployment plugins will take care to mount the root fs
+	#    and do the pivot_root if needed
+
 	eval $image_deployment_parameter
 	cd /
 	wget -q "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/root-mount.$image_type-deployment"
@@ -323,19 +349,5 @@ if [ "$image_type" != "ram" ]; then
 	fi
 	# here the system will do a normal init 
 	# from the mounted rootfs image	
-
-else
-	# send idle/available
-	echo "Sending idle/available to openQRM-server at $OPENQRM_SERVER_IP_ADDRESS"
-	wget -q -O /dev/null "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-monitor.php?resource_command=update_status&resource_id=$resource_id&resource_state=idle&resource_event=available"
-	hostname idle$resource_id
-	# rcs0 will be started here from init
-	
-	# for initramfs initrds we start a shell here
-	if [ -x /init ]; then
-		echo "Detected initrd as initramfs, starting a shell"
-		/bin/bash
-	fi	
-	
 fi
 
