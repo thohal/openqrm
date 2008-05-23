@@ -88,10 +88,11 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$appliance_fields["appliance_comment"]="Local-server appliance resource $local_server_id";
 			$appliance = new appliance();
 			$appliance->add($appliance_fields);
-			// set start time, reset stoptime
+			// set start time, reset stoptime, set state
 			$now=$_SERVER['REQUEST_TIME'];
 			$appliance_fields["appliance_starttime"]=$now;
 			$appliance_fields["appliance_stoptime"]=0;
+			$appliance_fields['appliance_state']='active';
 			$appliance->update($next_appliance_id, $appliance_fields);
 
 			// set resource to localboot
@@ -100,7 +101,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$openqrm_server->send_command("openqrm_server_set_boot local $local_server_id $resource->mac 0.0.0.0");
 			$resource->set_localboot($local_server_id, 1);
 
-			// update resource fiedls with kernel + image
+			// update resource fields with kernel + image
 			$kernel->get_instance_by_id($kernel_fields["kernel_id"]);
 			$resource_fields["resource_kernel"]=$kernel->name;
 			$resource_fields["resource_kernelid"]=$kernel_fields["kernel_id"];

@@ -156,36 +156,6 @@ function log($name, $time, $priority, $source, $description, $comment, $capabili
 		$event_fields["event_image_id"]=$image_id;
 		$event_fields["event_resource_id"]=$resource_id;
 		$this->add($event_fields);
-		// add to syslog
-		$syslog_str="openQRM $source: ($name) $description";
-		$syslog_prio="LOG_ERR";
-		switch($priority) {
-			case 0:
-			    $syslog_prio=LOG_WARNING;
-				break;
-			case 1:
-			    $syslog_prio=LOG_WARNING;
-				break;
-			case 2:
-			    $syslog_prio=LOG_WARNING;
-				break;
-			case 3:
-			    $syslog_prio=LOG_WARNING;
-				break;
-			case 4:
-			    $syslog_prio=LOG_WARNING;
-				break;
-			case 5:
-			    $syslog_prio=LOG_NOTICE;
-				break;
-			case 6:
-			    $syslog_prio=LOG_INFO;
-				break;
-			case 7:
-			    $syslog_prio=LOG_DEBUG;
-				break;
-		}
-		syslog($syslog_prio, $syslog_str);
 
 	} else {
 	
@@ -200,6 +170,36 @@ function log($name, $time, $priority, $source, $description, $comment, $capabili
 		$this->update($event_id, $event_fields);
 	}
 
+	// add to syslog
+	$syslog_str="openQRM $source: ($name) $description";
+	$syslog_prio="LOG_ERR";
+	switch($priority) {
+		case 0:
+		    $syslog_prio=LOG_WARNING;
+			break;
+		case 1:
+		    $syslog_prio=LOG_WARNING;
+			break;
+		case 2:
+		    $syslog_prio=LOG_WARNING;
+			break;
+		case 3:
+		    $syslog_prio=LOG_WARNING;
+			break;
+		case 4:
+		    $syslog_prio=LOG_WARNING;
+			break;
+		case 5:
+		    $syslog_prio=LOG_NOTICE;
+			break;
+		case 6:
+		    $syslog_prio=LOG_INFO;
+			break;
+		case 7:
+		    $syslog_prio=LOG_DEBUG;
+			break;
+	}
+	syslog($syslog_prio, $syslog_str);
 }
 
 
