@@ -1,16 +1,22 @@
 #!/bin/bash
 # this is the functions file for the linux-vserver-plugin
 
-if [ -f /var/openqrm/openqrm-resource.conf ]; then
-	. /var/openqrm/openqrm-resource.conf
+export LANG=C
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	echo "ERROR: Please export OPENQRM_SERVER_BASE_DIR before sourcing $0"
+	exit 1
 fi
-VETH="$resource_basedir/openqrm/plugins/linux-vserver/bin/vethd"
+
+VETH="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/vethd"
 LINUX_VSERVER_VDEVICE_NAME="lvif"
 # using the linux-vserver-tools domain location
 OPENQRM_VM_DIR=/var/lib/vservers/
 OPENQRM_VM_CONFIG_DIR=/etc/vservers/
 OPENQRM_VIF_CONFIG="$OPENQRM_VM_CONFIG_DIR/openqrm-vif.conf"
-
+LINUX_VSERVER_LOCK_FILE=/var/run/lvm-storage/lvm-storage-plugin.lock
+LINUX_VSERVER_LOCK_DELAY=5
+LINUX_VSERVER_LOCK_RETRY=100
+LINUX_VSERVER_LOCK_TIMEOUT=500
 ################ common linux-vserver functions
 
 # logs for linux-vserver
@@ -27,18 +33,18 @@ function linux_vserver_lock() {
 	local COMMAND=$1
 	local RET=1
 	
-	if [ ! -d `dirname $LVM_MGMT_LOCK_FILE` ]; then
-		mkdir -p `dirname $LVM_MGMT_LOCK_FILE`
+	if [ ! -d `dirname $LINUX_VSERVER_LOCK_FILE` ]; then
+		mkdir -p `dirname $LINUX_VSERVER_LOCK_FILE`
 	fi
 	case "$COMMAND" in
 		aquire)
-				lockfile -s $LVM_MGMT_LOCK_DELAY -r $LVM_MGMT_LOCK_RETRY -l $LVM_MGMT_LOCK_TIMEOUT $LVM_MGMT_LOCK_FILE
+				lockfile -s $LINUX_VSERVER_LOCK_DELAY -r $LINUX_VSERVER_LOCK_RETRY -l $LINUX_VSERVER_LOCK_TIMEOUT $LINUX_VSERVER_LOCK_FILE
 				RET=$?
 				linux_vserver_log linux_vserver_lock "Aquired the lock"
 				return $RET
 				;;
 		release)
-				/bin/rm -f $LVM_MGMT_LOCK_FILE
+				/bin/rm -f $LINUX_VSERVER_LOCK_FILE
 				RET=$?
 				linux_vserver_log linux_vserver_lock "Released the lock"
 				return $RET

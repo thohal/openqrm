@@ -1,11 +1,18 @@
 #!/bin/bash
 # this is the functions file for the xen-plugin
 
-if [ -f /var/openqrm/openqrm-resource.conf ]; then
-	. /var/openqrm/openqrm-resource.conf
+export LANG=C
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	echo "ERROR: Please export OPENQRM_SERVER_BASE_DIR before sourcing $0"
+	exit 1
 fi
-VETH="$resource_basedir/openqrm/plugins/xen/bin/vethd"
+
+VETH="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/vethd"
 XEN_VDEVICE_NAME="xendhcp"
+XEN_LOCK_FILE=/var/run/lvm-storage/lvm-storage-plugin.lock
+XEN_LOCK_DELAY=5
+XEN_LOCK_RETRY=100
+XEN_LOCK_TIMEOUT=500
 
 ################ common xen functions
 
@@ -23,18 +30,18 @@ function xen_lock() {
 	local COMMAND=$1
 	local RET=1
 	
-	if [ ! -d `dirname $LVM_MGMT_LOCK_FILE` ]; then
-		mkdir -p `dirname $LVM_MGMT_LOCK_FILE`
+	if [ ! -d `dirname $XEN_LOCK_FILE` ]; then
+		mkdir -p `dirname $XEN_LOCK_FILE`
 	fi
 	case "$COMMAND" in
 		aquire)
-				lockfile -s $LVM_MGMT_LOCK_DELAY -r $LVM_MGMT_LOCK_RETRY -l $LVM_MGMT_LOCK_TIMEOUT $LVM_MGMT_LOCK_FILE
+				lockfile -s $XEN_LOCK_DELAY -r $XEN_LOCK_RETRY -l $XEN_LOCK_TIMEOUT $XEN_LOCK_FILE
 				RET=$?
 				xen_log xen_lock "Aquired the lock"
 				return $RET
 				;;
 		release)
-				/bin/rm -f $LVM_MGMT_LOCK_FILE
+				/bin/rm -f $XEN_LOCK_FILE
 				RET=$?
 				xen_log xen_lock "Released the lock"
 				return $RET

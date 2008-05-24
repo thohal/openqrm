@@ -1,11 +1,21 @@
 #!/bin/bash
 # this is the boot-service init script for the Xen-hosts
 
-export `eval cat /proc/cmdline`	
-. /var/openqrm/openqrm-resource.conf
-export OPENQRM_SERVER_BASE_DIR=$resource_basedir
-. $resource_basedir/openqrm/include/openqrm-functions
-
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/include/openqrm-plugin-xen-functions
+if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+	OPENQRM_INTERFACE=`ifconfig | grep $resource_mac | grep :oq | cut -d':' -f1`
+elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+	OPENQRM_INTERFACE=$OPENQRM_SERVER_INTERFACE
+	resource_kernel=xen
+fi
 # only run on xen hosts
 grep -q "control_d" /proc/xen/capabilities 2>/dev/null || exit 0
 
@@ -14,15 +24,14 @@ function xen_start() {
 	xen_stop 1>/dev/null 2>&1
 
 	# xen interface -> the one not bounded to the rootfs
-	OPENQRM_INTERFACE=`ifconfig | grep $resource_mac | grep :oq | cut -d':' -f1`
 	XEN_INTERFACE=`ifconfig | grep ^eth | grep -v $OPENQRM_INTERFACE | head -n1 | awk {' print $1 '}`
 	if [ -x /etc/xen/scripts/network-bridge ]; then
 		/etc/xen/scripts/network-bridge start vifnum=0 bridge=xenbr0 netdev=$XEN_INTERFACE 
 	fi
 
 	# download the initrd
-	if ! wget -q -O /boot/initrd-$resource_kernel.img http://$resource_openqrmserver/openqrm/boot-service/initrd-$resource_kernel.img; then
-		echo "ERROR: Could not download http://$resource_openqrmserver/openqrm/boot-service/initrd-$resource_kernel.img"
+	if ! wget -q -O /boot/initrd-$resource_kernel.img http://$OPENQRM_SERVER_IP/openqrm/boot-service/initrd-$resource_kernel.img; then
+		echo "ERROR: Could not download http://$OPENQRM_SERVER_IP/openqrm/boot-service/initrd-$resource_kernel.img"
 		return 1
 	fi
 	# adjust Xen-config	and enable migration

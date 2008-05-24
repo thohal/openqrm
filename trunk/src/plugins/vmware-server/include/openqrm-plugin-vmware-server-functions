@@ -1,8 +1,9 @@
 #!/bin/bash
 # this is the functions file for the vmware-server-plugin
-
-. /var/openqrm/openqrm-resource.conf
-
+VMWARE_SERVER_LOCK_FILE=/var/run/lvm-storage/lvm-storage-plugin.lock
+VMWARE_SERVER_LOCK_DELAY=5
+VMWARE_SERVER_LOCK_RETRY=100
+VMWARE_SERVER_LOCK_TIMEOUT=500
 ################ common vmware-server functions
 
 # logs for vmware-server
@@ -19,18 +20,18 @@ function vmware_server_lock() {
 	local COMMAND=$1
 	local RET=1
 	
-	if [ ! -d `dirname $LVM_MGMT_LOCK_FILE` ]; then
-		mkdir -p `dirname $LVM_MGMT_LOCK_FILE`
+	if [ ! -d `dirname $VMWARE_SERVER_LOCK_FILE` ]; then
+		mkdir -p `dirname $VMWARE_SERVER_LOCK_FILE`
 	fi
 	case "$COMMAND" in
 		aquire)
-				lockfile -s $LVM_MGMT_LOCK_DELAY -r $LVM_MGMT_LOCK_RETRY -l $LVM_MGMT_LOCK_TIMEOUT $LVM_MGMT_LOCK_FILE
+				lockfile -s $VMWARE_SERVER_LOCK_DELAY -r $VMWARE_SERVER_LOCK_RETRY -l $VMWARE_SERVER_LOCK_TIMEOUT $VMWARE_SERVER_LOCK_FILE
 				RET=$?
 				vmware_server_log vmware_server_lock "Aquired the lock"
 				return $RET
 				;;
 		release)
-				/bin/rm -f $LVM_MGMT_LOCK_FILE
+				/bin/rm -f $VMWARE_SERVER_LOCK_FILE
 				RET=$?
 				vmware_server_log vmware_server_lock "Released the lock"
 				return $RET

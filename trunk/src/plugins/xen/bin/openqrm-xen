@@ -3,9 +3,22 @@
 # this script automatically manages xen
 OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/include/openqrm-plugin-xen-functions
-. /var/openqrm/openqrm-resource.conf
-OPENQRM_POSTENCODE="$resource_basedir/openqrm/sbin/openqrm-postencode.py"
+if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+	SYSTEM_IP=$resource_ip
+elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+	SYSTEM_IP=$OPENQRM_SERVER_IP_ADDRESS
+	resource_id=0
+	resource_kernel=xen
+fi
+OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
 OPENQRM_XEN_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/templates/openqrm-xen-vm"
 # using the xen-tools domain location
 OPENQRM_VM_DIR=`grep ^dir /etc/xen-tools/xen-tools.conf | cut -d'=' -f2 | awk {' print $1 '}`"/domains/"
@@ -114,17 +127,19 @@ case "$XEN_COMMAND" in
 		if [ "$XEN_VM_RAM" == "" ]; then
 			xen_usage
 		fi
+		xen_lock aquire
 		echo "Creating Xen vm $XEN_VM_NAME -> /etc/xen/$XEN_VM_NAME.cfg"
 		# gathering some infos
 		if [ "$XEN_VM_IP" == "dhcp" ]; then
 			echo "-> gathering an ip-address for $XEN_VM_MAC ..."
 			if ! xen_get_next_ip $XEN_VM_MAC; then
 				return 1			
+				xen_lock release
 			fi
 			export XEN_VM_IP=$PARTITION_IP
 			export OPENQRM_XEN_SUBNET_MASK=$PARTITION_SUBNET
 		else
-			export OPENQRM_XEN_SUBNET_MASK=`ifconfig | grep $resource_ip | cut -d':' -f3 | awk {' print $1 '}`
+			export OPENQRM_XEN_SUBNET_MASK=`ifconfig | grep $SYSTEM_IP | cut -d':' -f3 | awk {' print $1 '}`
 		fi
 		export OPENQRM_XEN_DEFAULT_GATEWAY=`route -n | grep ^0.0.0.0 | head -n1 | awk {' print $2 '}`
 		export OPENQRM_RESOURCE_ID=-1
@@ -138,7 +153,7 @@ case "$XEN_COMMAND" in
 			sed -e "s/@@OPENQRM_RESOURCE_ID@@/$OPENQRM_RESOURCE_ID/g" |	\
 			sed -e "s/@@OPENQRM_RESOURCE_IP@@/$XEN_VM_IP/g" |	\
 			sed -e "s/@@OPENQRM_RESOURCE_MAC@@/$XEN_VM_MAC/g" |	\
-			sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$resource_openqrmserver/g" | \
+			sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$OPENQRM_SERVER_IP/g" | \
 			sed -e "s/@@OPENQRM_XEN_SUBNET_MASK@@/$OPENQRM_XEN_SUBNET_MASK/g" | \
 			sed -e "s/@@OPENQRM_XEN_DEFAULT_GATEWAY@@/$OPENQRM_XEN_DEFAULT_GATEWAY/g" \
 			> /etc/xen/$XEN_VM_NAME.cfg
@@ -162,58 +177,74 @@ EOF
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
 		fi
+		xen_lock release
 		;;
 	add)
+		xen_lock aquire
 		echo "Adding Xen vm $XEN_VM_NAME"
 		xm new /etc/xen/$XEN_VM_NAME.cfg
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
 		fi
+		xen_lock release
 		;;
 	start)
+		xen_lock aquire
 		echo "Starting Xen vm $XEN_VM_NAME"
 		xm start $XEN_VM_NAME
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
 		fi
+		xen_lock release
 		;;
 	stop)
+		xen_lock aquire
 		echo "Stopping Xen vm $XEN_VM_NAME"
 		xm shutdown $XEN_VM_NAME
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
 		fi
+		xen_lock release
 		;;
 	kill)
+		xen_lock aquire
 		echo "Force-stop Xen vm $XEN_VM_NAME"
 		xm destroy $XEN_VM_NAME
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
 		fi
+		xen_lock release
 		;;
 	reboot)
+		xen_lock aquire
 		echo "Rebooting Xen vm $XEN_VM_NAME"
 		xm reboot $XEN_VM_NAME
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
 		fi
+		xen_lock release
 		;;
 	remove)
+		xen_lock aquire
 		echo "Removing Xen vm $XEN_VM_NAME"
 		xm delete $XEN_VM_NAME
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
 		fi
+		xen_lock release
 		;;
 	delete)
+		xen_lock aquire
 		echo "Deleting Xen vm $XEN_VM_NAME"
 		rm -f /etc/xen/$XEN_VM_NAME.*
 		rm -rf $OPENQRM_VM_DIR/$XEN_VM_NAME
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
 		fi
+		xen_lock release
 		;;
 	migrate)
+		xen_lock aquire
 		echo "Migrating Xen vm $XEN_VM_NAME to $XEN_VM_IP ($XEN_MIGRATION_TYPE)"
 		if [ "$XEN_MIGRATION_TYPE" == "live" ]; then
 			xm migrate $XEN_VM_NAME $XEN_VM_IP -l
@@ -223,6 +254,7 @@ EOF
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
 		fi
+		xen_lock release
 		;;
 	list)
 		echo "Listing Xen vms"
@@ -238,7 +270,7 @@ EOF
 		for cfg in `ls /etc/xen/*.cfg`; do
 			basename $cfg >> $VM_LIST_TMP
 		done
-		if ! wget -q -O /dev/null --http-user=$XEN_OPENQRM_USERNAME --http-password=$XEN_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$resource_openqrmserver/openqrm/base/plugins/xen/xen-action.php?xen_command=get_xen; then
+		if ! wget -q -O /dev/null --http-user=$XEN_OPENQRM_USERNAME --http-password=$XEN_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/xen/xen-action.php?xen_command=get_xen; then
 			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!" | logger
 		fi

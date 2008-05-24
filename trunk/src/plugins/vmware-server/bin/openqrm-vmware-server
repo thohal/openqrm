@@ -3,9 +3,19 @@
 # this script automatically manages vmware-server
 OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/include/openqrm-plugin-vmware-server-functions
-. /var/openqrm/openqrm-resource.conf
-OPENQRM_POSTENCODE="$resource_basedir/openqrm/sbin/openqrm-postencode.py"
+if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+	resource_id=0
+fi
+OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
 OPENQRM_VMWARE_SERVER_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/etc/templates/openqrm-vmware-server-vm"
 # using the vmware-server-tools domain location
 OPENQRM_VM_DIR="/var/lib/vmware/openqrm/"
@@ -98,6 +108,7 @@ case "$VMWARE_SERVER_COMMAND" in
 		if [ "$VMWARE_SERVER_VM_RAM" == "" ]; then
 			vmware-server_usage
 		fi
+		vmware_server_lock aquire
 		echo "Creating VMware vm $VMWARE_SERVER_VM_NAME -> $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx"
 		# creating the vmx
 		mkdir -p $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/
@@ -127,47 +138,62 @@ EOF
 		vmware-cmd -s register $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
 		# start
 		vmware-cmd $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx start
+		vmware_server_lock release
 		;;
 	add)
+		vmware_server_lock aquire
 		echo "Adding VMware vm $VMWARE_SERVER_VM_NAME"
 		vmware-cmd -s register $VMWARE_SERVER_VM_NAME
+		vmware_server_lock release
 		;;
 	start)
+		vmware_server_lock aquire
 		echo "Starting VMware vm $VMWARE_SERVER_VM_NAME"
 		vmware-cmd $VMWARE_SERVER_VM_NAME start
+		vmware_server_lock release
 		;;
 	stop)
+		vmware_server_lock aquire
 		echo "Stopping VMware vm $VMWARE_SERVER_VM_NAME"
 		vmware-cmd $VMWARE_SERVER_VM_NAME stop hard
+		vmware_server_lock release
 		;;
 	reboot)
+		vmware_server_lock aquire
 		echo "Rebooting VMware vm $VMWARE_SERVER_VM_NAME"
 		vmware-cmd $VMWARE_SERVER_VM_NAME reset hard
+		vmware_server_lock release
 		;;
 	remove)
+		vmware_server_lock aquire
 		echo "Removing VMware vm $VMWARE_SERVER_VM_NAME"
 		vmware-cmd -s unregister $VMWARE_SERVER_VM_NAME
+		vmware_server_lock release
 		;;
 	delete)
+		vmware_server_lock aquire
 		echo "Deleting VMware vm $VMWARE_SERVER_VM_NAME"
 		rm -rf `dirname $VMWARE_SERVER_VM_NAME`
+		vmware_server_lock release
 		;;
 	list)
 		echo "Listing VMware vms"
 		vmware-cmd -l
 		;;
 	post_vm_list)
+		vmware_server_lock aquire
 		echo "Posting vm list to the openQRM-server"
 		VM_LIST_TMP=$resource_id.vm_list
 		vmware-cmd -l > $VM_LIST_TMP
 		# and the not active vms
 		find $OPENQRM_VM_DIR/../* -name *.vmx | sed -e "s/^/#/g" >> $VM_LIST_TMP
-		if ! wget -q -O /dev/null --http-user=$VMWARE_SERVER_OPENQRM_USERNAME --http-password=$VMWARE_SERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$resource_openqrmserver/openqrm/base/plugins/vmware-server/vmware-server-action.php?vmware_server_command=get_vmware_server; then
-			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!"
-			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!" | logger
+		if ! wget -q -O /dev/null --http-user=$VMWARE_SERVER_OPENQRM_USERNAME --http-password=$VMWARE_SERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/vmware-server/vmware-server-action.php?vmware_server_command=get_vmware_server; then
+			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!"
+			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
 		fi
 		rm -f $VM_LIST_TMP
 		rm -f $VM_LIST_TMP.post
+		vmware_server_lock release
 		;;
 	*)
 		vmware-server_usage

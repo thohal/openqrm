@@ -1,11 +1,18 @@
 #!/bin/bash
 # this is the boot-service init script for the Linux-VServer-hosts
 
-export `eval cat /proc/cmdline`	
-. /var/openqrm/openqrm-resource.conf
-export OPENQRM_SERVER_BASE_DIR=$resource_basedir
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/include/openqrm-plugin-linux-vserver-functions
+if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+fi
 
 
 function linux_vserver_start() {
@@ -13,8 +20,8 @@ function linux_vserver_start() {
 	linux_vserver_stop 1>/dev/null 2>&1
 	# download the initrd
 	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/templates
-	if ! wget -q -O $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/templates/openqrm-initrd-default.tgz http://$resource_openqrmserver/openqrm/boot-service/openqrm-initrd-default.tgz; then
-		echo "ERROR: Could not download http://$resource_openqrmserver/openqrm/boot-service/openqrm-initrd-default.tgz"
+	if ! wget -q -O $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/templates/openqrm-initrd-default.tgz http://$OPENQRM_SERVER_IP/openqrm/boot-service/openqrm-initrd-default.tgz; then
+		echo "ERROR: Could not download http://$OPENQRM_SERVER_IP/openqrm/boot-service/openqrm-initrd-default.tgz"
 		return 1
 	fi
 	# start all vifs

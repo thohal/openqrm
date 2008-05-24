@@ -5,7 +5,19 @@ OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/include/openqrm-plugin-linux-vserver-functions
-OPENQRM_POSTENCODE="$resource_basedir/openqrm/sbin/openqrm-postencode.py"
+if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+	SYSTEM_IP=$resource_ip
+elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+	SYSTEM_IP=$OPENQRM_SERVER_IP_ADDRESS
+	resource_id=0
+fi
+OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
 OPENQRM_LINUX_VSERVER_IDLE_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/templates/openqrm-initrd-default.tgz"
 export LANG=C
 
@@ -109,17 +121,19 @@ case "$LINUX_VSERVER_COMMAND" in
 			linux_vserver_usage
 		fi
 		CURRENT_DIR=`pwd`
+		linux_vserver_lock aquire
 		echo "Creating Linux-VServer vm $LINUX_VSERVER_VM_NAME -> /etc/vservers/$LINUX_VSERVER_VM_NAME"
 		# gathering some infos
 		if [ "$LINUX_VSERVER_VM_IP" == "dhcp" ]; then
 			echo "-> gathering an ip-address for $LINUX_VSERVER_VM_MAC ..."
 			if ! linux_vserver_get_next_ip $LINUX_VSERVER_VM_MAC; then
+				linux_vserver_lock release
 				exit 1			
 			fi
 			export LINUX_VSERVER_VM_IP=$PARTITION_IP
 			export OPENQRM_LINUX_VSERVER_SUBNET_MASK=$PARTITION_SUBNET
 		else
-			export OPENQRM_LINUX_VSERVER_SUBNET_MASK=`ifconfig | grep $resource_ip | cut -d':' -f3 | awk {' print $1 '}`
+			export OPENQRM_LINUX_VSERVER_SUBNET_MASK=`ifconfig | grep $SYSTEM_IP | cut -d':' -f3 | awk {' print $1 '}`
 		fi
 		export OPENQRM_LINUX_VSERVER_DEFAULT_GATEWAY=`route -n | grep ^0.0.0.0 | head -n1 | awk {' print $2 '}`
 		export OPENQRM_RESOURCE_ID=-1
@@ -214,31 +228,34 @@ EOF
 
 		# send new resource to openQRM to get resource-config
 		mkdir -p `dirname $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE`
-		wget -q -O $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE "http://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$OPENQRM_RESOURCE_ID&resource_mac=$LINUX_VSERVER_VM_MAC&resource_ip=$LINUX_VSERVER_VM_IP"
+		wget -q -O $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$OPENQRM_RESOURCE_ID&resource_mac=$LINUX_VSERVER_VM_MAC&resource_ip=$LINUX_VSERVER_VM_IP"
 
 		# add to a main vif config file, start all at init
 		echo "$LINUX_VSERVER_VM_INTERFACE $LINUX_VSERVER_VM_NAME" >> $OPENQRM_VIF_CONFIG
 		# bring up vethd interface
 		if ! linux_vserver_manage_vif start $LINUX_VSERVER_VM_NAME; then
+			linux_vserver_lock release
 			exit 1
 		fi
 		# start as idle
 		nohup vserver $LINUX_VSERVER_VM_NAME start &
 		# restart openqrm-exec
 		linux_vserver_restart_exec
+		linux_vserver_lock release
 		;;
 	start)
+		linux_vserver_lock aquire
 		echo "Starting Linux-VServer vm $LINUX_VSERVER_VM_NAME"
 		# source current parameters of the vm
 		. $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE
 		# update parameters for the resource
-		wget -q -O $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE "http://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
+		wget -q -O $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
 		. $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE
 		# check if assigned to an appliance or idle 
 		if [ "$image_type" != "ram" ]; then
 			eval $image_deployment_parameter
 			# get the root-mount functions according the deployment type
-			wget -q -O $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment "http://$resource_openqrmserver/openqrm/boot-service/root-mount.$image_type-deployment"
+			wget -q -O $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment "http://$OPENQRM_SERVER_IP/openqrm/boot-service/root-mount.$image_type-deployment"
 			# adapt root-mount functions of the deployment method
 			sed -i -e "s#/mnt2#XXXXX#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
 			sed -i -e "s#/mnt#$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
@@ -263,8 +280,10 @@ EOF
 		nohup vserver $LINUX_VSERVER_VM_NAME start &
 		# restart openqrm-exec
 		linux_vserver_restart_exec
+		linux_vserver_lock release
 		;;
 	stop)
+		linux_vserver_lock aquire
 		echo "Stopping Linux-VServer vm $LINUX_VSERVER_VM_NAME"
 		# source current parameters of the vm
 		. $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE
@@ -279,13 +298,17 @@ EOF
 			# umount
 			umount $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME
 		fi
+		linux_vserver_lock release
 		;;
 	reboot)
+		linux_vserver_lock aquire
 		echo "Rebooting Linux-VServer vm $LINUX_VSERVER_VM_NAME"
 		nohup vserver $LINUX_VSERVER_VM_NAME restart &
 		linux_vserver_restart_exec
+		linux_vserver_lock release
 		;;
 	delete)
+		linux_vserver_lock aquire
 		echo "Removing Linux-VServer vm $LINUX_VSERVER_VM_NAME"
 		LINUX_VSERVER_VM_INTERFACE=`cat $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/interfaces/0/dev`
 		vserver $LINUX_VSERVER_VM_NAME stop
@@ -295,14 +318,17 @@ EOF
 		# bring down vethd interface
 		if ! linux_vserver_manage_vif stop $LINUX_VSERVER_VM_NAME; then
 			exit 1			
+			linux_vserver_lock release
 		fi
 		sed -i -e "s/$LINUX_VSERVER_VM_INTERFACE.*//g" $OPENQRM_VIF_CONFIG
+		linux_vserver_lock release
 		;;
 	list)
 		echo "Listing Linux-VServer vms"
 		vserver-stat
 		;;
 	post_vm_list)
+		linux_vserver_lock aquire
 		echo "Posting vm list to the openQRM-server"
 		VM_LIST_TMP=$resource_id.vm_list
 		vserver-stat > $VM_LIST_TMP
@@ -310,12 +336,13 @@ EOF
 		cat $VM_LIST_TMP | sed -e "s/^/#/g" > $VM_LIST_TMP.up
 		mv -f $VM_LIST_TMP.up $VM_LIST_TMP
 		ls /etc/vservers/ | grep -v newvserver-vars | grep -v openqrm-vif.conf >> $VM_LIST_TMP
-		if ! wget -q -O /dev/null --http-user=$LINUX_VSERVER_OPENQRM_USERNAME --http-password=$LINUX_VSERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$resource_openqrmserver/openqrm/base/plugins/linux-vserver/linux-vserver-action.php?linux_vserver_command=get_linux_vserver; then
-			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!"
-			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!" | logger
+		if ! wget -q -O /dev/null --http-user=$LINUX_VSERVER_OPENQRM_USERNAME --http-password=$LINUX_VSERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/linux-vserver/linux-vserver-action.php?linux_vserver_command=get_linux_vserver; then
+			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!"
+			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
 		fi
 		rm -f $VM_LIST_TMP
 		rm -f $VM_LIST_TMP.post
+		linux_vserver_lock release
 		;;
 	*)
 		linux_vserver_usage
