@@ -16,22 +16,23 @@ global $event;
 
 
 
-function openqrm_nagios2_resource($cmd, $resource_fields) {
+function openqrm_dhcpd_resource($cmd, $resource_fields) {
 	global $event;
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $OPENQRM_EXEC_PORT;
 	$resource_id=$resource_fields["resource_id"];
 	$resource_ip=$resource_fields["resource_ip"];
-	$event->log("openqrm_new_resource", $_SERVER['REQUEST_TIME'], 2, "openqrm-resource-hook.php", "Handling $cmd event $resource_id/$resource_ip openQRM $OPENQRM_SERVER_IP_ADDRESS execport $OPENQRM_EXEC_PORT", "", "", 0, 0, $resource_id);
+	$resource_mac=$resource_fields["resource_mac"];
+	$event->log("openqrm_new_resource", $_SERVER['REQUEST_TIME'], 2, "openqrm-dhcpd-resource-hook.php", "Handling $cmd event $resource_id/$resource_ip/$resource_mac openQRM $OPENQRM_SERVER_IP_ADDRESS execport $OPENQRM_EXEC_PORT", "", "", 0, 0, $resource_id);
 	switch($cmd) {
 		case "add":
 			$openqrm_server = new openqrm_server();
-			$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/bin/openqrm-nagios-manager add $resource_id $resource_ip");
+			$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/bin/openqrm-dhcpd-manager add $resource_id $resource_mac $resource_ip");
 			break;
 		case "remove":
 			$openqrm_server = new openqrm_server();
-			$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/bin/openqrm-nagios-manager remove $resource_id");
+			$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/bin/openqrm-dhcpd-manager remove $resource_id $resource_mac");
 			break;
 		
 	}

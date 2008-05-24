@@ -1,0 +1,31 @@
+#!/bin/bash
+
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/include/openqrm-plugin-dhcpd-functions
+DHCPD_CONF="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf"
+DHCPD_CMD=$1
+RESOURCE_ID=$2
+RESOURCE_MAC=$3
+RESOURCE_IP=$4
+HOSTNAME="resource$RESOURCE_ID"
+export LANG=C
+
+
+case "$DHCPD_CMD" in
+	add)
+		echo "adding $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP"
+		echo "adding $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP" | logger
+
+		;;
+	remove)
+		echo "removing $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP"
+		echo "removing $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP" | logger
+
+		;;
+	*)
+		echo "Usage: $0 {add|remove} <resource-id> <resource_mac> [resource_ip]"
+		exit 1
+		;;
+esac
