@@ -6,6 +6,13 @@ require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
+require_once "$RootDir/class/openqrm_server.class.php";
+require_once "$RootDir/include/openqrm-server-config.php";
+global $OPENQRM_SERVER_BASE_DIR;
+global $OPENQRM_EXEC_PORT;
+$openqrm_server = new openqrm_server();
+$OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
+global $OPENQRM_SERVER_IP_ADDRESS;
 
 
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {

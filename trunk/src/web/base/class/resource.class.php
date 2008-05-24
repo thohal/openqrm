@@ -227,8 +227,7 @@ function remove($resource_id, $resource_mac) {
 	global $event;
 	$openqrm_server = new openqrm_server();
 	$OPENQRM_SERVER_IP_ADDRESS = $openqrm_server->get_ip_address();
-	$db=openqrm_get_db_connection();
-	$rs = $db->Execute("delete from $RESOURCE_INFO_TABLE where resource_id=$resource_id and resource_mac='$resource_mac'");
+
 	// remove resource hook
 	$plugin = new plugin();
 	$enabled_plugins = $plugin->enabled();
@@ -241,6 +240,9 @@ function remove($resource_id, $resource_mac) {
 			openqrm_resource("remove", $resource_fields);
 		}
 	}
+
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute("delete from $RESOURCE_INFO_TABLE where resource_id=$resource_id and resource_mac='$resource_mac'");
 }
 
 
