@@ -508,8 +508,8 @@ function check_all_states() {
 					if (file_exists($plugin_ha_hook)) {
 						$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 1, "resource.class.php", "Found $plugin_name handling the resource error.", "", "", 0, 0, $resource_id);
 						require_once "$plugin_ha_hook";
-						openqrm_ha_hook($resource_id);
-						break;
+						$ha_function="openqrm_"."$plugin_name"."_ha_hook";
+						$ha_function($resource_id);
 					}
 				}
 			}

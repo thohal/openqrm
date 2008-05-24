@@ -12,7 +12,7 @@ $event = new event();
 global $event;
 
 
-function openqrm_ha_hook($resource_id) {
+function openqrm_highavailability_ha_hook($resource_id) {
 	global $event;
 	$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 2, "openqrm-highavailability-ha-hook.php", "Handling error event of resource $resource_id", "", "", 0, 0, $resource_id);
 	$resource_serves_appliance=0;
