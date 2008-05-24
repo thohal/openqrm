@@ -211,7 +211,7 @@ function add($resource_fields) {
 	foreach ($enabled_plugins as $index => $plugin_name) {
 		$plugin_new_resource_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-resource-hook.php";
 		if (file_exists($plugin_new_resource_hook)) {
-			$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 1, "resource.class.php", "Found plugin $plugin_name handling new-resource event.", "", "", 0, 0, $resource_id);
+			$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling new-resource event.", "", "", 0, 0, $resource_id);
 			require_once "$plugin_new_resource_hook";
 			$resource_function="openqrm_"."$plugin_name"."_resource";
 			$resource_function("add", $resource_fields);
@@ -235,7 +235,7 @@ function remove($resource_id, $resource_mac) {
 	foreach ($enabled_plugins as $index => $plugin_name) {
 		$plugin_new_resource_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-resource-hook.php";
 		if (file_exists($plugin_new_resource_hook)) {
-			$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 1, "resource.class.php", "Found plugin $plugin_name handling remove-resource event.", "", "", 0, 0, $resource_id);
+			$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling remove-resource event.", "", "", 0, 0, $resource_id);
 			require_once "$plugin_new_resource_hook";
 			$resource_fields["resource_id"]=$resource_id;
 			$resource_fields["resource_mac"]=$resource_mac;

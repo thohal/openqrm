@@ -23,7 +23,7 @@ function openqrm_nagios2_resource($cmd, $resource_fields) {
 	global $OPENQRM_EXEC_PORT;
 	$resource_id=$resource_fields["resource_id"];
 	$resource_ip=$resource_fields["resource_ip"];
-	$event->log("openqrm_new_resource", $_SERVER['REQUEST_TIME'], 2, "openqrm-resource-hook.php", "Handling $cmd event $resource_id/$resource_ip openQRM $OPENQRM_SERVER_IP_ADDRESS execport $OPENQRM_EXEC_PORT", "", "", 0, 0, $resource_id);
+	$event->log("openqrm_new_resource", $_SERVER['REQUEST_TIME'], 5, "openqrm-nagios2-resource-hook.php", "Handling $cmd event $resource_id/$resource_ip", "", "", 0, 0, $resource_id);
 	switch($cmd) {
 		case "add":
 			$openqrm_server = new openqrm_server();
