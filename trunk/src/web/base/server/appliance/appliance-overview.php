@@ -90,14 +90,15 @@ function appliance_display() {
 	$table = new htmlobject_db_table('appliance_id');
 
 	$disp = '<h1>Appliance List</h1>';
-	$disp .= '<br>';
 
 	$arHead = array();
 	$arHead['appliance_state'] = array();
 	$arHead['appliance_state']['title'] ='';
+	$arHead['appliance_state']['sortable'] = false;
 
 	$arHead['appliance_icon'] = array();
 	$arHead['appliance_icon']['title'] ='';
+	$arHead['appliance_icon']['sortable'] = false;
 
 	$arHead['appliance_id'] = array();
 	$arHead['appliance_id']['title'] ='ID';
@@ -191,47 +192,40 @@ function appliance_form() {
 	$kernel_list = array();
 	$kernel_list = $kernel->get_list();
 
-	$disp = "<b>New Appliance</b>";
-	$disp = $disp."<form action='appliance-action.php' method=post>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp.htmlobject_input('appliance_name', array("value" => '', "label" => 'Appliance name'), 'text', 20);
-	$disp = $disp."<br>";
-	$disp = $disp."Kernel ";
-	$kernel_select = appliance_htmlobject_select('appliance_kernelid', $kernel_list, '', $kernel_list);
-	$disp = $disp.$kernel_select;
-	$disp = $disp."<br>";
-	$disp = $disp."Server-Image ";
-	$image_select = appliance_htmlobject_select('appliance_imageid', $image_list, 'Select image', $image_list);
-	$disp = $disp.$image_select;
-	$disp = $disp."<br>";
-	$disp = $disp."<hr>";
-	$disp = $disp."Requirements";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp.htmlobject_input('appliance_cpuspeed', array("value" => '', "label" => 'CPU-Speed'), 'text', 20);
-	$disp = $disp.htmlobject_input('appliance_cpumodel', array("value" => '', "label" => 'CPU-Model'), 'text', 20);
-	$disp = $disp.htmlobject_input('appliance_memtotal', array("value" => '', "label" => 'Memory'), 'text', 20);
-	$disp = $disp.htmlobject_input('appliance_swaptotal', array("value" => '', "label" => 'Swap'), 'text', 20);
-	$disp = $disp.htmlobject_input('appliance_capabilities', array("value" => '', "label" => 'Capabilities'), 'text', 255);
-    $disp = $disp."<input type='checkbox' name='appliance_cluster' value='1'> Cluster<br>";
-    $disp = $disp."<input type='checkbox' name='appliance_ssi' value='1'> SSI<br>";
-    $disp = $disp."<input type='checkbox' name='appliance_highavailable' value='1'> High-Available<br>";
-    $disp = $disp."<input type='checkbox' name='appliance_virtual' value='1'> Virtual<br>";
-	$disp = $disp.htmlobject_textarea('appliance_comment', array("value" => '', "label" => 'Comment'));
-	$disp = $disp."<input type=hidden name=appliance_command value='new_appliance'>";
+	$disp = "<h1>New Appliance</h1>";
+	$disp .= "<input type='checkbox' name='appliance_cluster' value='1'> Cluster<br>";
+	$disp .= "<input type='checkbox' name='appliance_ssi' value='1'> SSI<br>";
+	$disp .= "<input type='checkbox' name='appliance_highavailable' value='1'> High-Available<br>";
+	$disp .= "<input type='checkbox' name='appliance_virtual' value='1'> Virtual<br>";
+	$disp .= htmlobject_textarea('appliance_comment', array("value" => '', "label" => 'Comment'));
+	$disp .= "<input type=hidden name=appliance_command value='new_appliance'>";
 
-	$disp = $disp."<br>";
-	$disp = $disp."<hr>";
+	$disp .= "<br>";
+
+
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './' . 'appliance_tpl.php');
+	$t->setVar(array(
+		'ap_name'	=> htmlobject_input('appliance_name', array("value" => '', "label" => 'Appliance name'), 'text', 20),
+		'ap_kernelid'	=> htmlobject_select('appliance_kernelid', $kernel_list, 'Kernel', $kernel_list),
+		'ap_imageid'	=> htmlobject_select('appliance_imageid', $image_list, 'Server-Image', $image_list),
+		'ap_cpuspeed'	=> htmlobject_input('appliance_cpuspeed', array("value" => '', "label" => 'CPU-Speed'), 'text', 20),
+		'ap_cpumodel'	=> htmlobject_input('appliance_cpumodel', array("value" => '', "label" => 'CPU-Model'), 'text', 20),
+		'ap_memtotal'	=> htmlobject_input('appliance_memtotal', array("value" => '', "label" => 'Memory'), 'text', 20),
+		'ap_swaptotal'	=> htmlobject_input('appliance_swaptotal', array("value" => '', "label" => 'Swap'), 'text', 20),
+		'ap_capability'	=> htmlobject_input('appliance_capabilities', array("value" => '', "label" => 'Capabilities'), 'text', 255),
+	));
+	
+	#echo $t->parse('out', 'tplfile');
+
+
 
 	$table = new htmlobject_db_table('resource_id');
+	$table->add_headrow($t->parse('out', 'tplfile'));
+	$table->add_headrow("<h3>Select Resource</h3>Please select a Resource from the list below");
 
-	$disp = $disp."<h1>Select Resource</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."Please select a Resource from the list below";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
+
 
 	$arHead = array();
 	$arHead['resource_state'] = array();
@@ -285,10 +279,9 @@ function appliance_form() {
 		$table->identifier = 'resource_id';
 	}
 	$table->max = $resource_count;
-	$disp = $disp.$table->get_string();
+	$disp .= $table->get_string();
 	
-	$disp = $disp."</form>";
-	$disp = $disp."<hr>";
+	$disp .= "</form>";
 	return $disp;
 }
 
@@ -317,66 +310,66 @@ function appliance_edit($appliance_id) {
 	$kernel_list = $kernel->get_list();
 
 	$disp = "<b>Edit Appliance</b>";
-	$disp = $disp."<form action='appliance-action.php' method=post>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp.htmlobject_input('appliance_name', array("value" => $appliance->name, "label" => 'Appliance name'), 'text', 20);
-	$disp = $disp."<br>";
-	$disp = $disp."Kernel ";
+	$disp .= "<form action='appliance-action.php' method=post>";
+	$disp .= "<br>";
+	$disp .= "<br>";
+	$disp .= htmlobject_input('appliance_name', array("value" => $appliance->name, "label" => 'Appliance name'), 'text', 20);
+	$disp .= "<br>";
+	$disp .= "Kernel ";
 	$kernel_select = appliance_htmlobject_select('appliance_kernelid', $kernel_list, '', $kernel_list);
-	$disp = $disp.$kernel_select;
-	$disp = $disp."<br>";
-	$disp = $disp."Server-Image ";
+	$disp .= $kernel_select;
+	$disp .= "<br>";
+	$disp .= "Server-Image ";
 	$image_select = appliance_htmlobject_select('appliance_imageid', $image_list, 'Select image', $image_list);
-	$disp = $disp.$image_select;
-	$disp = $disp."<br>";
-	$disp = $disp."<hr>";
-	$disp = $disp."Requirements";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp.htmlobject_input('appliance_cpuspeed', array("value" => $appliance->cpuspeed, "label" => 'CPU-Speed'), 'text', 20);
-	$disp = $disp.htmlobject_input('appliance_cpumodel', array("value" => $appliance->cpumodel, "label" => 'CPU-Model'), 'text', 20);
-	$disp = $disp.htmlobject_input('appliance_memtotal', array("value" => $appliance->memtotal, "label" => 'Memory'), 'text', 20);
-	$disp = $disp.htmlobject_input('appliance_swaptotal', array("value" => $appliance->swaptotal, "label" => 'Swap'), 'text', 20);
-	$disp = $disp.htmlobject_input('appliance_capabilities', array("value" => $appliance->capabilities, "label" => 'Capabilities'), 'text', 255);
+	$disp .= $image_select;
+	$disp .= "<br>";
+	$disp .= "<hr>";
+	$disp .= "<h3>Requirements</h3>";
+	$disp .= "<br>";
+	$disp .= "<br>";
+	$disp .= htmlobject_input('appliance_cpuspeed', array("value" => $appliance->cpuspeed, "label" => 'CPU-Speed'), 'text', 20);
+	$disp .= htmlobject_input('appliance_cpumodel', array("value" => $appliance->cpumodel, "label" => 'CPU-Model'), 'text', 20);
+	$disp .= htmlobject_input('appliance_memtotal', array("value" => $appliance->memtotal, "label" => 'Memory'), 'text', 20);
+	$disp .= htmlobject_input('appliance_swaptotal', array("value" => $appliance->swaptotal, "label" => 'Swap'), 'text', 20);
+	$disp .= htmlobject_input('appliance_capabilities', array("value" => $appliance->capabilities, "label" => 'Capabilities'), 'text', 255);
 
 	if ($appliance->cluster == "0") {
-	    $disp = $disp."<input type='checkbox' name='appliance_cluster' value='1'> Cluster<br>";
+	    $disp .= "<input type='checkbox' name='appliance_cluster' value='1'> Cluster<br>";
 	} else {
-	    $disp = $disp."<input type='checkbox' checked name='appliance_cluster' value='1'> Cluster<br>";
+	    $disp .= "<input type='checkbox' checked name='appliance_cluster' value='1'> Cluster<br>";
 	}
 	if ($appliance->ssi == "0") {
-	    $disp = $disp."<input type='checkbox' name='appliance_ssi' value='1'> SSI<br>";
+	    $disp .= "<input type='checkbox' name='appliance_ssi' value='1'> SSI<br>";
 	} else {
-	    $disp = $disp."<input type='checkbox' checked name='appliance_ssi' value='1'> SSI<br>";
+	    $disp .= "<input type='checkbox' checked name='appliance_ssi' value='1'> SSI<br>";
 	}
 	if ($appliance->highavailable == "0") {
-	    $disp = $disp."<input type='checkbox' name='appliance_highavailable' value='1'> High-Available<br>";
+	    $disp .= "<input type='checkbox' name='appliance_highavailable' value='1'> High-Available<br>";
 	} else {
-	    $disp = $disp."<input type='checkbox' checked name='appliance_highavailable' value='1'> High-Available<br>";
+	    $disp .= "<input type='checkbox' checked name='appliance_highavailable' value='1'> High-Available<br>";
 	}
 	if ($appliance->virtual == "0") {
-	    $disp = $disp."<input type='checkbox' name='appliance_virtual' value='1'> Virtual<br>";
+	    $disp .= "<input type='checkbox' name='appliance_virtual' value='1'> Virtual<br>";
 	} else {
-	    $disp = $disp."<input type='checkbox' checked name='appliance_virtual' value='1'> Virtual<br>";
+	    $disp .= "<input type='checkbox' checked name='appliance_virtual' value='1'> Virtual<br>";
 	}
 
-	$disp = $disp.htmlobject_textarea('appliance_comment', array("value" => $appliance->comment, "label" => 'Comment'));
+	$disp .= htmlobject_textarea('appliance_comment', array("value" => $appliance->comment, "label" => 'Comment'));
 
-	$disp = $disp."<input type=hidden name=appliance_id value=$appliance_id>";
-	$disp = $disp."<input type=hidden name=appliance_command value='update_appliance'>";
+	$disp .= "<input type=hidden name=appliance_id value=$appliance_id>";
+	$disp .= "<input type=hidden name=appliance_command value='update_appliance'>";
 
-	$disp = $disp."<br>";
-	$disp = $disp."<hr>";
+	$disp .= "<br>";
+	$disp .= "<hr>";
 
 	$table = new htmlobject_db_table('resource_id');
 
-	$disp = $disp."<h1>Select Resource</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."Please select a Resource from the list below";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
+	$disp .= "<h1>Select Resource</h1>";
+	$disp .= "<br>";
+	$disp .= "<br>";
+	$disp .= "Please select a Resource from the list below";
+	$disp .= "<br>";
+	$disp .= "<br>";
 
 	$arHead = array();
 	$arHead['resource_state'] = array();
@@ -430,10 +423,10 @@ function appliance_edit($appliance_id) {
 		$table->identifier = 'resource_id';
 	}
 	$table->max = $resource_count;
-	$disp = $disp.$table->get_string();
+	$disp .= $table->get_string();
 	
-	$disp = $disp."</form>";
-	$disp = $disp."<hr>";
+	$disp .= "</form>";
+	$disp .= "<hr>";
 	return $disp;
 }
 

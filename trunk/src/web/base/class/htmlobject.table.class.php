@@ -321,7 +321,7 @@ var $_bottomrow = array();
 	//----------------------------------------------------------------------------------------	
 	function get_table_bottom () {
 	$tr = '';
-		if(isset($this->bottom[0])) {
+		if(isset($this->bottom[0]) && isset($this->body[0])) {
 			$tr = new htmlobject_tr();
 			$tr->css = 'htmlobject_tr';
 			$tr->id = 'tr_'. uniqid();
@@ -592,8 +592,8 @@ var $_bottomrow = array();
 		// build table
 		$this->init_table_builder();
 		// build table head
-		foreach ($this->_headrow as $key => $row) {
-			$row->arr_tr[$key]->colspan = $this->_num_cols;
+		foreach ($this->_headrow as $row) {
+			$row->arr_tr[0]->colspan = $this->_num_cols;
 			htmlobject_table::add($row);
 		}
 		htmlobject_table::add($this->get_sort());
@@ -604,8 +604,8 @@ var $_bottomrow = array();
 		}
 		// build table bottom
 		htmlobject_table::add($this->get_table_bottom());
-		foreach ($this->_bottomrow as $key => $row) {
-			$row->arr_tr[$key]->colspan = $this->_num_cols;
+		foreach ($this->_bottomrow as $row) {
+			$row->arr_tr[0]->colspan = $this->_num_cols;
 			htmlobject_table::add($row);
 		}
 		// build form

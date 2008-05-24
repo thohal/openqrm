@@ -12,9 +12,27 @@ global $IMAGE_INFO_TABLE;
 global $DEPLOYMENT_INFO_TABLE;
 global $STORAGETYPE_INFO_TABLE;
 
+$strMsg = '';
+$error = 0;
 
 $storage_command = htmlobject_request("storage_command");
 $storage_name = htmlobject_request("storage_name");
+if($storage_name != '') {
+	if (ereg("^[A-Za-z0-9_-]*$", $pass) === false) {
+		$strMsg .= 'storage name must be [A-Za-z0-9_-]';
+		$error = 1;
+	}
+} else {
+	$strMsg .= 'storage name must not be empty';
+	$error = 1;
+}
+if (htmlobject_request('identifier') == '') {
+	$strMsg .= 'please select a rescoure first';
+	$error = 1;
+}
+
+
+if($error == 0) {
 
 $event = new event();
 
@@ -114,12 +132,18 @@ if(htmlobject_request('action') != '') {
 			break;
 
 	}
+
+
+
+}
 ?>
+
+
 
 <html>
 <head>
 <title>openQRM Storage actions</title>
-<meta http-equiv="refresh" content="0; URL=storage-overview.php?currenttab=tab0&strMsg=Processing <?php echo $storage_command; ?> on <?php echo $storage_name; ?>">
+<meta http-equiv="refresh" content="0; URL=storage-overview.php?currenttab=tab0&strMsg<?php echo $strMsg; ?>">
 </head>
 <body>
 </body>
