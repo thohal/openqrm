@@ -5,6 +5,51 @@ OPENQRM_SERVER_DEFAULT_DOMAIN="openqrm"
 OPENQRM_PLUGIN_DHCPD_CONF_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/templates/openqrm-plugin-dhcpd-configuration.template"
 OPENQRM_PLUGIN_DHCPD_CONF="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf"
 OPENQRM_PLUGIN_DHCPD_LEASE_DIR="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/var/state/dhcp"
+DHCPD_LOCK_FILE=/var/run/dhcpd/dhcpd-plugin.lock
+DHCPD_LOCK_DELAY=5
+DHCPD_LOCK_RETRY=100
+DHCPD_LOCK_TIMEOUT=500
+
+
+# logs for dhcpd
+function dhcpd_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "dhcpd plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function dhcpd_lock() {
+	local COMMAND=$1
+	local RET=1
+	if [ ! -d `dirname $DHCPD_LOCK_FILE` ]; then
+		mkdir -p `dirname $DHCPD_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $DHCPD_LOCK_DELAY -r $DHCPD_LOCK_RETRY -l $DHCPD_LOCK_TIMEOUT $DHCPD_LOCK_FILE
+				RET=$?
+				dhcpd_log dhcpd_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $DHCPD_LOCK_FILE
+				RET=$?
+				dhcpd_log dhcpd_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			dhcpd_log dhcpd_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+
 
 
 #
@@ -50,3 +95,5 @@ sub ntoa
 }
 EOF
 }
+
+

@@ -5,6 +5,7 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PW
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/include/openqrm-plugin-dhcpd-functions
 DHCPD_CONF="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf"
+DHCPD_HOST_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/templates/openqrm-plugin-dhcpd-host.template"
 DHCPD_CMD=$1
 RESOURCE_ID=$2
 RESOURCE_MAC=$3
@@ -15,17 +16,33 @@ export LANG=C
 
 case "$DHCPD_CMD" in
 	add)
-		echo "adding $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP"
-		echo "adding $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP" | logger
-
+		dhcpd_lock aquire
+		dhcpd_log openqrm-dhcpd-manager "adding $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP"
+		grep -B 1000000 "^# end_static_ips" $DHCPD_CONF | sed -e "s/^# end_static_ips.*//g" > $DHCPD_CONF.first_part
+		grep -A 1000000 "^# end_static_ips" $DHCPD_CONF > $DHCPD_CONF.last_part
+		cat $DHCPD_HOST_TEMPLATE | \
+			sed -e "s/DHCPD_RESOURCE_HOSTNAME/$HOSTNAME/g" |	\
+			sed -e "s/DHCPD_RESOURCE_MAC/$RESOURCE_MAC/g" |	\
+			sed -e "s/DHCPD_RESOURCE_IP/$RESOURCE_IP/g" > $DHCPD_CONF.host_part
+		cat $DHCPD_CONF.first_part $DHCPD_CONF.host_part $DHCPD_CONF.last_part > $DHCPD_CONF
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd stop
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start
+		dhcpd_lock release
 		;;
 	remove)
-		echo "removing $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP"
-		echo "removing $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP" | logger
-
+		dhcpd_lock aquire
+		dhcpd_log openqrm-dhcpd-manager "removing $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP"
+		# first - resource
+		grep -B 10000 -A 4 "^host $HOSTNAME {" /usr/lib/openqrm/plugins/dhcpd/etc/dhcpd.conf | sed -e :a -e '$d;N;2,5ba' -e 'P;D' > $DHCPD_CONF.first_part
+		# after resource
+		grep -A 10000 "^host $HOSTNAME {" /usr/lib/openqrm/plugins/dhcpd/etc/dhcpd.conf | sed '1,5d' > $DHCPD_CONF.last_part
+		cat $DHCPD_CONF.first_part $DHCPD_CONF.last_part > $DHCPD_CONF
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd stop
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start
+		dhcpd_lock release
 		;;
 	*)
-		echo "Usage: $0 {add|remove} <resource-id> <resource_mac> [resource_ip]"
+		dhcpd_log openqrm-dhcpd-manager "Usage: $0 {add|remove} <resource-id> <resource_mac> [resource_ip]"
 		exit 1
 		;;
 esac

@@ -34,6 +34,18 @@ group {
 		range OPENQRM_PLUGIN_DHCPD_IP_RANGE_FIRST OPENQRM_PLUGIN_DHCPD_IP_RANGE_LAST;
 		filename "/pxelinux.0";
 
+
+# ! Please do NOT remove these lines ################
+# start_static_ips ##################################
+
+
+
+
+
+
+
+# end_static_ips ####################################
+
 	}
 }
 
