@@ -17,18 +17,22 @@ $error = 0;
 
 $storage_command = htmlobject_request("storage_command");
 $storage_name = htmlobject_request("storage_name");
-if($storage_name != '') {
-	if (ereg("^[A-Za-z0-9_-]*$", $pass) === false) {
-		$strMsg .= 'storage name must be [A-Za-z0-9_-]';
+
+
+if(htmlobject_request("action") == 'add') {
+	if($storage_name != '') {
+		if (ereg("^[A-Za-z0-9_-]*$", $pass) === false) {
+			$strMsg .= 'storage name must be [A-Za-z0-9_-]<br/>';
+			$error = 1;
+		}
+	} else {
+		$strMsg .= "storage name must not be empty<br/>";
 		$error = 1;
 	}
-} else {
-	$strMsg .= 'storage name must not be empty';
-	$error = 1;
-}
-if (htmlobject_request('identifier') == '') {
-	$strMsg .= 'please select a rescoure first';
-	$error = 1;
+	if (htmlobject_request('identifier') == '') {
+		$strMsg .= 'please select a rescoure first<br/>';
+		$error = 1;
+	}
 }
 
 
@@ -143,7 +147,7 @@ if(htmlobject_request('action') != '') {
 <html>
 <head>
 <title>openQRM Storage actions</title>
-<meta http-equiv="refresh" content="0; URL=storage-overview.php?currenttab=tab0&strMsg<?php echo $strMsg; ?>">
+<meta http-equiv="refresh" content="0; URL=storage-overview.php?currenttab=tab0&strMsg=<?php echo $strMsg; ?>">
 </head>
 <body>
 </body>
