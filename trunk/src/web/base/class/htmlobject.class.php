@@ -211,8 +211,8 @@ var $_init_input;
 
 	function init_input() {
 	$this->_init_input = '';
-		if ($this->checked != '')  		{ $this->_init_input .= ' checked'; }
-		if ($this->disabled === true)	{ $this->_init_input .= ' disabled'; }
+		if ($this->checked != '')  		{ $this->_init_input .= ' checked="checked"'; }
+		if ($this->disabled === true)	{ $this->_init_input .= ' disabled="disabled"'; }
 		if ($this->maxlength != '')		{ $this->_init_input .= ' maxlength="'.$this->maxlength.'"'; }
 		if ($this->name != '')  		{ $this->_init_input .= ' name="'.$this->name.'"'; }
 		if ($this->size != '')			{ $this->_init_input .= ' size="'.$this->size.'"'; }

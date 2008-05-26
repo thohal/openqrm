@@ -54,6 +54,24 @@ var $bottom = array();
 */
 var $identifier = '';
 /**
+* type of identifier input
+* @access public
+* @var enum $identifier_type possible values [checkbox, radio]
+*/
+var $identifier_type = 'checkbox';
+/**
+* array of identifiers to be checked
+* @access public
+* @var array()
+*/
+var $identifier_checked = array();
+/**
+* array of identifiers to be disabled
+* @access public
+* @var array()
+*/
+var $identifier_disabled = array();
+/**
 * url to process request
 * <code>
 * $thisfile = basename($_SERVER['PHP_SELF']);
@@ -260,7 +278,7 @@ var $_bottomrow = array();
 			$tr = new htmlobject_tr();
 			$tr->css = 'htmlobject_tr';
 			$tr->id = 'tr_'. uniqid();
-		
+
 			foreach($this->head as $key_2 => $value) {
 				if($value['title'] == '') { $value['title'] = '&#160;'; }
 				$td = new htmlobject_td();
@@ -268,6 +286,7 @@ var $_bottomrow = array();
 				$td->css = 'htmlobject_td '.$key_2;
 				$td->text = $value['title'];
 				$tr->add($td);
+
 			}
 			if($this->identifier != '') {
 				$td = new htmlobject_td();
@@ -287,13 +306,13 @@ var $_bottomrow = array();
 	* @return object|string htmlobject_tr or empty string
 	*/
 	//----------------------------------------------------------------------------------------		
-	function get_table_body($key, $val) {
+	function get_table_body($key, $val, $i) {
 		$ident = 'id'. uniqid();
 		
 		$tr = new htmlobject_tr();
-		$tr->css = 'htmlobject_tr';
+		$tr->css = 'htmlobject_tr ' .$i;
 		$tr->id = 'tr_'. uniqid();
-		$tr->handler = 'onmouseover="tr_hover(this);" onmouseout="tr_hover(this);" onclick="tr_click(this, \''.$ident.'\')"';		
+		$tr->handler = $this->get_js_tr($ident);		
 
 		foreach($val as $key_2 => $v) {
 			if($v == '') { $v = '&#160;'; }
@@ -541,7 +560,13 @@ var $_bottomrow = array();
 			$html->id = $ident;
 			$html->name = 'identifier[]';
 			$html->value = $this->body[$key][$this->identifier];
-			$html->type = 'checkbox';
+			$html->type = $this->identifier_type;
+			if(in_array($key, $this->identifier_checked)) {
+				$html->checked = true;
+			}
+			if(in_array($key, $this->identifier_disabled)) {
+				$html->disabled = true;
+			}
 					
 			$td = new htmlobject_td();
 			$td->type = 'td';
@@ -580,6 +605,16 @@ var $_bottomrow = array();
 	}
 	//----------------------------------------------------------------------------------------
 	/**
+	* returns JS for tr
+	* @access public
+	* @return string
+	*/
+	//----------------------------------------------------------------------------------------	
+	function  get_js_tr($ident) {
+		return 'onmouseover="tr_hover(this);" onmouseout="tr_hover(this);" onclick="tr_click(this, \''.$ident.'\')"';
+	}
+	//----------------------------------------------------------------------------------------
+	/**
 	* builds html table
 	* @access public
 	* @param  $name string
@@ -599,8 +634,11 @@ var $_bottomrow = array();
 		htmlobject_table::add($this->get_sort());
 		htmlobject_table::add($this->get_table_head());
 		// build table body
+		$i = 'odd';
 		foreach ($this->_body as $key => $value) {
-			htmlobject_table::add($this->get_table_body($key, $value));
+			htmlobject_table::add($this->get_table_body($key, $value, $i));
+			if($i == 'odd') $i = 'even';
+			else  $i = 'odd';
 		}
 		// build table bottom
 		htmlobject_table::add($this->get_table_bottom());
@@ -685,6 +723,36 @@ var $_identifiers = array();
 			$tr->add($td);	
 		}
 	return $tr;	
+	}
+}
+class htmlobject_table_identifiers_radio extends htmlobject_table_builder 
+{
+	function htmlobject_table_identifiers_radio($field = '', $order = '') {
+		parent::htmlobject_table_builder($field, $order);
+	}
+	
+
+	//----------------------------------------------------------------------------------------
+	/**
+	* returns JS for tr hover and click function
+	* @access public
+	* @return string
+	*/
+	//----------------------------------------------------------------------------------------	
+	function  get_js() {
+	$_strReturn = '';
+		$_strReturn .= "\n";
+		$_strReturn .= '<script>'."\n";
+		$_strReturn .= 'function tr_hover(element) {'."\n";
+		$_strReturn .= '	x = element.className.match(/tr_hover/g);'."\n";
+		$_strReturn .= '	if(x == null) {	element.className = element.className + " tr_hover"; }'."\n";
+		$_strReturn .= '	else { element.className = element.className.replace(/ tr_hover/g, "");	}'."\n";
+		$_strReturn .= '}'."\n";
+		$_strReturn .= 'function tr_click(element, arg) {'."\n";
+		$_strReturn .= '	document.getElementById(arg).checked = true;'."\n";
+		$_strReturn .= '}'."\n";
+		$_strReturn .= '</script>'."\n";
+	return $_strReturn;
 	}
 }
 ?>
