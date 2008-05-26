@@ -22,10 +22,12 @@ if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'refresh':
 			foreach($_REQUEST['identifier'] as $id) {
-				$linux_vserver = new resource();
-				$linux_vserver->get_instance_by_id($id);
+				$vmware_appliance = new appliance();
+				$vmware_appliance->get_instance_by_id($id);
+				$vmware_server = new resource();
+				$vmware_server->get_instance_by_id($vmware_appliance->resources);
 				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/bin/openqrm-vmware-server post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-				$linux_vserver->send_command($linux_vserver->ip, $resource_command);
+				$vmware_server->send_command($vmware_server->ip, $resource_command);
 				sleep($refresh_delay);
 			}
 			break;
@@ -68,6 +70,9 @@ function vmware_server_select() {
 	$arHead['vmware_server_name'] = array();
 	$arHead['vmware_server_name']['title'] ='Name';
 
+	$arHead['vmware_server_resource_id'] = array();
+	$arHead['vmware_server_resource_id']['title'] ='Res.ID';
+
 	$arHead['vmware_server_resource_ip'] = array();
 	$arHead['vmware_server_resource_ip']['title'] ='Ip';
 
@@ -97,9 +102,10 @@ function vmware_server_select() {
 				'vmware_server_state' => "<img src=$state_icon>",
 				'vmware_server_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 				'vmware_server_id' => $vmware_server_db["appliance_id"],
-				'vmware_server_name' => $vmware_server_resource->hostname,
+				'vmware_server_name' => $vmware_server_db["appliance_name"],
+				'vmware_server_resource_id' => $vmware_server_resource->id,
 				'vmware_server_resource_ip' => $vmware_server_resource->ip,
-				'vmware_server_comment' => $vmware_server_resource->comment,
+				'vmware_server_comment' => $vmware_server_db["appliance_comment"],
 			);
 		}
 	}
@@ -145,11 +151,17 @@ function vmware_server_display($appliance_id) {
 	$arHead['vmware_server_name'] = array();
 	$arHead['vmware_server_name']['title'] ='Name';
 
+	$arHead['vmware_server_resource_id'] = array();
+	$arHead['vmware_server_resource_id']['title'] ='Res.ID';
+
 	$arHead['vmware_server_resource_ip'] = array();
 	$arHead['vmware_server_resource_ip']['title'] ='Ip';
 
 	$arHead['vmware_server_comment'] = array();
 	$arHead['vmware_server_comment']['title'] ='';
+
+	$arHead['vmware_server_create'] = array();
+	$arHead['vmware_server_create']['title'] ='';
 
 	$vmware_server_count=1;
 	$arBody = array();
@@ -166,15 +178,17 @@ function vmware_server_display($appliance_id) {
 	if (file_exists($_SERVER["DOCUMENT_ROOT"].$vmware_server_icon)) {
 		$resource_icon_default=$vmware_server_icon;
 	}
-	$vmware_server_create_button="<a href=\"vmware-server-create.php?vmware_server_id=$vmware_server_resource->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> VM</b></a>";
+	$vmware_server_create_button="<a href=\"vmware-server-create.php?vmware_server_id=$vmware_server_tmp->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> VM</b></a>";
 	// here we take the resource id as the identifier because
 	// we need to run commands on the resource ip
 	$arBody[] = array(
 		'vmware_server_state' => "<img src=$state_icon>",
 		'vmware_server_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 		'vmware_server_id' => $vmware_server_tmp->id,
-		'vmware_server_name' => $vmware_server_resource->hostname,
+		'vmware_server_name' => $vmware_server_tmp->name,
+		'vmware_server_resource_id' => $vmware_server_resource->id,
 		'vmware_server_resource_ip' => $vmware_server_resource->ip,
+		'vmware_server_comment' => $vmware_server_tmp->comment,
 		'vmware_server_create' => $vmware_server_create_button,
 	);
 	$table->id = 'Tabelle';
@@ -211,13 +225,13 @@ function vmware_server_display($appliance_id) {
 				$disp = $disp. $vmware_short_name;
 				$disp = $disp."</div>";
 				$disp = $disp."<br>";
-				$disp = $disp."  <a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=start&vmware_server_id=$vmware_server_resource->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>";
+				$disp = $disp."  <a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=start&vmware_server_id=$vmware_server_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>";
 				$disp = $disp." / ";
-				$disp = $disp."<a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=stop&vmware_server_id=$vmware_server_resource->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Stop</a>";
+				$disp = $disp."<a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=stop&vmware_server_id=$vmware_server_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Stop</a>";
 				$disp = $disp." / ";
-				$disp = $disp."<a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=reboot&vmware_server_id=$vmware_server_resource->id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"> Reboot</a>";
+				$disp = $disp."<a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=reboot&vmware_server_id=$vmware_server_tmp->id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"> Reboot</a>";
 				$disp = $disp." / ";
-				$disp = $disp."<a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=remove&vmware_server_id=$vmware_server_resource->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Remove</a>";
+				$disp = $disp."<a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=remove&vmware_server_id=$vmware_server_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Remove</a>";
 				$disp = $disp."<br>";
 				$disp = $disp."<br>";
 				$vmware_vm_registered[] = $vmware_short_name;
@@ -245,9 +259,9 @@ function vmware_server_display($appliance_id) {
 					$disp = $disp. $vmware_short_name;
 					$disp = $disp."</div>";
 					$disp = $disp."<br>";
-					$disp = $disp."  <a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=add&vmware_server_id=$vmware_server_resource->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Add</a>";
+					$disp = $disp."  <a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=add&vmware_server_id=$vmware_server_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Add</a>";
 					$disp = $disp." / ";
-					$disp = $disp."  <a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=delete&vmware_server_id=$vmware_server_resource->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Delete</a>";
+					$disp = $disp."  <a href=\"vmware-server-action.php?vmware_server_name=$vmware_server_name&vmware_server_command=delete&vmware_server_id=$vmware_server_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Delete</a>";
 					$disp = $disp."<br>";
 					$disp = $disp."<br>";
 				}
@@ -259,9 +273,6 @@ function vmware_server_display($appliance_id) {
 	$disp = $disp."<hr>";
 	return $disp;
 }
-
-
-
 
 
 
