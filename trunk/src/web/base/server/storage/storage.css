@@ -32,11 +32,29 @@
 .htmlobject_td.identifier {
 	text-align:center;
 	vertical-align:top;
+	width:20px;
 }
 
-.tr_hover {
-background-color:#eee;
+.htmlobject_td.resource_state {
+	text-align:center;
+	vertical-align:top;
+	width:20px;
 }
-.tr_click {
-background-color:#ddd;
+.htmlobject_td.resource_id {
+	text-align:center;
+	vertical-align:top;
+	width:20px;
+}
+.htmlobject_td.resource_icon {
+	text-align:center;
+	vertical-align:top;
+	width:25px;
+}
+.htmlobject_td.head {
+	border: 0px none;
+}
+
+.htmlobject_box textarea {
+	width: 600px;
+	height: 50px;
 }
