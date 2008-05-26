@@ -561,7 +561,7 @@ var $_bottomrow = array();
 			$html->name = 'identifier[]';
 			$html->value = $this->body[$key][$this->identifier];
 			$html->type = $this->identifier_type;
-			if(in_array($key, $this->identifier_checked)) {
+			if(in_array($this->body[$key][$this->identifier], $this->identifier_checked)) {
 				$html->checked = true;
 			}
 			if(in_array($key, $this->identifier_disabled)) {
@@ -731,7 +731,6 @@ class htmlobject_table_identifiers_radio extends htmlobject_table_builder
 		parent::htmlobject_table_builder($field, $order);
 	}
 	
-
 	//----------------------------------------------------------------------------------------
 	/**
 	* returns JS for tr hover and click function
