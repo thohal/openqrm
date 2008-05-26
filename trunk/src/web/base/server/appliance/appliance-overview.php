@@ -252,7 +252,7 @@ function appliance_form() {
 	$resource_count=0;
 	$arBody = array();
 	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(1, 100, 'resource_id', 'ASC');
+	$resource_array = $resource_tmp->display_overview(0, 100, 'resource_id', 'ASC');
 	foreach ($resource_array as $index => $resource_db) {
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);
@@ -397,7 +397,7 @@ function appliance_edit($appliance_id) {
 	$resource_count=0;
 	$arBody = array();
 	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(1, 100, 'resource_id', 'ASC');
+	$resource_array = $resource_tmp->display_overview(0, 100, 'resource_id', 'ASC');
 	foreach ($resource_array as $index => $resource_db) {
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);

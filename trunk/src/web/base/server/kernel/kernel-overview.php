@@ -60,7 +60,7 @@ function kernel_display() {
 	$arHead['kernel_capabilities']['title'] ='Capabilities';
 
 	$arBody = array();
-	$kernel_array = $kernel_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
+	$kernel_array = $kernel_tmp->display_overview(1, $table->limit, $table->sort, $table->order);
 
 	$kernel_icon = "/openqrm/base/img/kernel.png";
 	foreach ($kernel_array as $index => $kernel_db) {

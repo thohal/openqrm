@@ -71,7 +71,7 @@ function image_display() {
 	$arHead['image_capabilities']['title'] ='Capabilities';
 
 	$arBody = array();
-	$image_array = $image_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
+	$image_array = $image_tmp->display_overview(1, $table->limit, $table->sort, $table->order);
 	$image_icon = "/openqrm/base/img/image.png";
 
 	foreach ($image_array as $index => $image_db) {
