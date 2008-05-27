@@ -1,2 +1,3 @@
 .|Storage
 ..|Overview|server/storage/storage-overview.php
+..|Overview (beta)|server/storage/storage-index.php
