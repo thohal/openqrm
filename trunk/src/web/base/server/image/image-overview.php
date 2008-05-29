@@ -245,7 +245,7 @@ function image_form() {
 		$table->body = $arBody;
 		if ($OPENQRM_USER->role == "administrator") {
 			$table->bottom = array('add');
-			$table->identifier = 'storage_resource_id';
+			$table->identifier = 'storage_id';
 		}
 		$table->max = $storage_tmp->get_count();
 		#$table->limit = 10;
@@ -392,7 +392,7 @@ function image_edit($image_id) {
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('update');
-		$table->identifier = 'storage_resource_id';
+		$table->identifier = 'storage_id';
 	}
 	$table->max = $storage_tmp->get_count();
 	#$table->limit = 10;

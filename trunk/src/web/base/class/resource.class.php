@@ -315,7 +315,10 @@ function get_parameter($resource_id) {
 	$recordSet->Close();
 	// storage parameter
 	if (strlen($image_storageid)) {
-		$recordSet = &$db->Execute("select resource_ip from $RESOURCE_INFO_TABLE where resource_id=$image_storageid");
+		$storage = new storage();
+		$storage->get_instance_by_id($image_storageid);
+		$storage_resource_id = $storage->resource_id;
+		$recordSet = &$db->Execute("select resource_ip from $RESOURCE_INFO_TABLE where resource_id=$storage_resource_id");
 		if (!$recordSet)
 			$event->log("get_parameter", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 		else
