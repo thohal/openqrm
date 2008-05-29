@@ -10,7 +10,7 @@ fi
 OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
 export LANG=C
 
-# A more portable "chkconfig". 
+# A more portable "chkconfig".
 # Uses chkconfig or rc.d-update as found, if not then "manual".
 function openqrm_chkconfig() {
 	action="$1"
@@ -25,11 +25,11 @@ function openqrm_chkconfig() {
 		return 1
 	fi
 
-	
+
 	# For Redhat/SuSe
 	if [ -x /sbin/chkconfig ] ; then
 		case $action in
-			add)	
+			add)
 				local do_chkconfig=1
 				# check if the init is not configured
 				chkconfig --list ${service} > /dev/null 2>&1 && do_chkconfig=
@@ -38,7 +38,7 @@ function openqrm_chkconfig() {
 				if [ -z "$do_chkconfig" ]; then
 					do_chkconfig=1
 					local runlevel=$(grep initdefault /etc/inittab | grep id |cut -d ':' -f2)
-					for f in /etc/rc${runlevel}.d/S??${service} /etc/init.d/rc${runlevel}.d/S??${service}; do	
+					for f in /etc/rc${runlevel}.d/S??${service} /etc/init.d/rc${runlevel}.d/S??${service}; do
 						[ -e $f ] && do_chkconfig=
 					done
 				fi
@@ -57,14 +57,14 @@ function openqrm_chkconfig() {
 					chkconfig --del ${service}
 				fi
 				;;
-			
+
 		esac
 	# For Debian
 	elif [ -x /usr/sbin/update-rc.d ] ; then
 		# according to manuals, update-rc.d does nothing if links already exist
 		if [ $action == "add" ] ; then
 			local -a chkconfig_spec=($(grep 'chkconfig:' /etc/init.d/${service} | cut -d ':' -f2- ))
-			
+
 			if [[ -n "${chkconfig_spec[0]}" &&  "${chkconfig_spec[0]}" != '-' ]]; then
 				local runlevels="$(echo ${chkconfig_spec[0]} | sed 's/\(.\)/\1 /g')"
 				args="start ${chkconfig_spec[1]} $runlevels . stop ${chkconfig_spec[2]} 0 1 6 ."
@@ -86,7 +86,7 @@ function openqrm_chkconfig() {
 		        rcdir=/etc/rc${runlevel}.d
 		fi
 
-		if [ $action == "add" ] ; then 
+		if [ $action == "add" ] ; then
 			if [ ! -f $rcdir/S??${service} ] && [ -f /etc/init.d/${service} ] ; then
 			       ln -s /etc/init.d/${service} $rcdir/S91${service}
 			fi
@@ -168,7 +168,7 @@ function openqrm_get_distro()
 				echo "suse"
 				;;
 		esac
-		
+
 	elif [ -f $ROOT_DIR/etc/debian_version ]; then
 		RELEASE=$(cat $ROOT_DIR/etc/debian_version | head -1)
 		case $RELEASE in
@@ -185,13 +185,102 @@ function openqrm_get_distro()
 
 }
 
+#
+# get the distribution name
+# $1:      root directory of the installation (optional; default is "/")
+# returns: one of fedora|rhel|suse|ubuntu|debian|unknown
+#
+function openqrm_get_distro_name()
+{
+	local ROOT_DIR=${1:-/}
+	if [-f "$ROOT_DIR/etc/fedora-release" ]; then 
+		echo "fedora"
+	elif [ -f "$ROOT_DIR/etc/redhat-release" ]; then
+		# CentOS uses /etc/redhat-release, too
+		echo 'rhel';
+	elif [ -f "$ROOT_DIR/etc/UnitedLinux-release" ]; then
+		echo "suse"
+	elif [ -f "$ROOT_DIR/etc/SuSE-release" ]; then
+		echo "suse"
+	elif [ -f "$ROOT_DIR/etc/ubuntu_version" ]; then
+		echo "ubuntu"
+	elif [ -f "$ROOT_DIR/etc/debian_version" ]; then
+		echo "debian"
+	else
+		echo "unknown"
+	fi
+}
 
+#
+# get the distribution's version
+#
+# you can choose to get the result as integer or as string. Use the integer
+# output if you want to have a condition like distro_version > 100 (equals 10.0)
+# Use string output for user-visible display. Default is "string".
+#
+# Note one Debian specific feature: if testing/unstable is installed (there is no 
+# version number for these), "string" will return "testing/unstable", "integer" 
+# returns -1!
+# 
+# Note that old Redhat releases (before 2003, ending with Redhat 9) are NOT
+# supported. There is only RedHat Enterprise (RHEL) and Fedora.
+#
+# integer will return 
+# - version * 10 (e.g. 103 instead of 10.3) for Debian and SUSE
+# - version for RHEL/CentOS and Fedora
+#
+# FIXME: use lsb_release as soon as it is usable by many distributions 
+# (required since LSB 3.0, but not installed by default on RHEL/CentOS)
+# 
+#
+# $1:      string|integer return as integer or as string (optional; default is string)
+# $2:      root directory of the installation (optional; default is "/")
+# returns: the distribution's version number
+#
+function openqrm_get_distro_version()
+{
+	local RETURN_AS=$1
+	if [ "$1" == '' ]; then
+		RETURN_AS=string
+	fi
 
-
-
-
-
-
-
-
-
+	case `openqrm_get_distro_name()` in
+		"suse")
+			# tested with: openSUSE 10.3
+			# XXX: This is not tested for SLES/SLED yet
+			if [ $RETURN_AS == 'string' ]; then
+				local VERSION=$(cat "$ROOT_DIR/etc/SuSE-release" | tail -1 | sed 's/VERSION = \([0-9]\+\.[0-9]\)/\1/')
+				echo $VERSION
+			elif [ $RETURN_AS == 'integer' ]; then
+				local VERSION=$(cat "$ROOT_DIR/etc/SuSE-release" | tail -1 | sed 's/VERSION = \([0-9]\+\)\.\([0-9]\)/\1\2/')
+				echo $VERSION
+			fi
+		;;
+		"rhel")
+			# tested with: CentOS 5.1
+			# XXX: RHEL/CentOS does not give us the service release number (e.g. only 5 instead of 5.1)
+			local VERSION=$(cat "$ROOT_DIR/etc/redhat-release" | head -n1 | sed 's/.*release \([0-9]\+\).*/\1/')
+                        echo $VERSION
+		;;
+		"fedora")
+			# tested with: Fedora Core 3, Fedora Core 6, Fedora 8
+                        local VERSION=$(cat "$ROOT_DIR/etc/fedora-release" | head -n1 | sed 's/.*release \([0-9]\+\) .*/\1/')
+                        echo $VERSION
+		;;
+		"debian")
+			# tested with: 4.0 (etch), unstable/testing
+			if [ $RETURN_AS == 'string' ]; then
+                                local VERSION=$(cat "$ROOT_DIR/etc/debian_version")
+                                echo $VERSION
+                        elif [ $RETURN_AS == 'integer' ]; then
+				if [ `cat "$ROOT_DIR/etc/debian_version"` == 'testing/unstable' ]; then
+					echo -1
+				else
+                                	local VERSION=$(cat "$ROOT_DIR/etc/debian_version" | sed 's/\([0-9]\+\)\.\([0-9]\)/\1\2/')
+                                	echo $VERSION
+				fi
+                        fi
+    		*)
+    		echo 0
+    esac
+}
