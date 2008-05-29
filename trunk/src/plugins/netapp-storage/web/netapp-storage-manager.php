@@ -139,7 +139,7 @@ function netapp_select_storage($component) {
 		$storage_type = new storagetype();
 		$storage_type->get_instance_by_id($storage->type);
 		// is netapp ?
-		if ("$storage_type->name" == "aoe-storage") {
+		if ("$storage_type->name" == "netapp-storage") {
 			$storage_count++;
 			$resource_icon_default="/openqrm/base/img/resource.png";
 			$storage_icon="/openqrm/base/plugins/netapp-storage/img/storage.png";
