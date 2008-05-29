@@ -279,8 +279,10 @@ function openqrm_get_distro_version()
                                 	local VERSION=$(cat "$ROOT_DIR/etc/debian_version" | sed 's/\([0-9]\+\)\.\([0-9]\)/\1\2/')
                                 	echo $VERSION
 				fi
-                        fi
+			fi
+			;;
     		*)
     		echo 0
+    		;;
     esac
 }
