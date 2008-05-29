@@ -36,7 +36,6 @@ function openqrm_plugin_netapp_storage_uninstall() {
 	openqrm_server_remove_deployment_type $USERNAME $PASSWORD netapp-nfs
 	openqrm_server_remove_storagetype $USERNAME $PASSWORD netapp-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp-storage
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storagetype-capabilities.netapp-storage-menu.html
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.netapp-iscsi-deployment 
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.netapp-nfs-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image-deployment-parameter.netapp-iscsi-menu.html
@@ -68,8 +67,6 @@ function openqrm_plugin_netapp_storage_init() {
 	openqrm_server_add_deployment_type $USERNAME $PASSWORD netapp-nfs netapp-storage "NetApp Nfs-root"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp-storage
-	# linking the storagetype-menu
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storagetype-capabilities.netapp-storage-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storagetype-capabilities.netapp-storage-menu.html
 
 	# linking the root mount hooks
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/root-mount.netapp-iscsi-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.netapp-iscsi-deployment
