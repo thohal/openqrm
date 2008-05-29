@@ -61,22 +61,7 @@ $error = 0;
 				}
 				$storage = new storage();
 				$storage_fields["storage_id"]=openqrm_db_get_free_id('storage_id', $STORAGE_INFO_TABLE);
-
-#$storagetype = new storagetype();
-#$storagetype_list = $storagetype->get_list();
-#$storagetype_name = array(htmlobject_request("storagetype_name"));
-#$storagetype_id = $storagetype_name['0'];
-#$storagetype_id = $storagetype_name['0'];
-// making the storage capabilities parameters plugg-able
-#$storagetype = new $storagetype();
-#$storagetype->get_instance_by_id($storagetype_id);
-#$storagetype_menu_file = "$BaseDir/boot-service/storagetype-capabilities.$storagetype->name"."-menu.html";
-#if (file_exists($storagetype_menu_file)) {
-#	$storagetype_menu = file_get_contents("$storagetype_menu_file");
-#    $store .=$storagetype_menu;
-#} else {
-//$storage_fields["storage_capabilities"]
-#}
+				$storage_fields["storage_capabilities"]="STORAGE_TYPE=\"    \"";
 				$storage->add($storage_fields);
 				$strMsg .= 'added new storage <b>'.$storage_fields["storage_name"].'</b><br>';
 				
@@ -168,18 +153,17 @@ function storage_edit($storage_id='') {
 	global $OPENQRM_USER, $BaseDir;
 
 
-	$deployment = new deployment();
-	$deployment_list = array();
-	$deployment_list = $deployment->get_list();
-	# remove ramdisk deployment which does not need a storage server
-	array_splice($deployment_list, 0, 1);
+	$storagetype = new storagetype();
+	$storagetype_list = array();
+	$storagetype_list = $storagetype->get_list();
+	array_splice($storagetype_list, 0, 1);
 
 
 	if($storage_id == '') {
 
 		$store = "<h1>New Storage</h1>";
 		$store .= htmlobject_input('storage_name', array("value" => htmlobject_request('storage_name'), "label" => 'Storage name'), 'text', 20);
-		$store .= htmlobject_select('storage_deployment_type', $deployment_list, 'Deployment type', array(htmlobject_request('storage_deployment_type')));
+		$store .= htmlobject_select('storage_storagetype_type', $storagetype_list, 'Deployment type', array(htmlobject_request('storage_storagetype_type')));
 		#$store .= htmlobject_textarea('storage_capabilities', array("value" => htmlobject_request('storage_capabilities'), "label" => 'Storage Capabilities'));
 		$store .= htmlobject_textarea('storage_comment', array("value" => htmlobject_request('storage_comment'), "label" => 'Comment'));
 	}
@@ -194,7 +178,6 @@ function storage_edit($storage_id='') {
 		$store = "<h1>Edit Storage</h1>";
 		$store .= htmlobject_input('storage_name', array("value" => $storage->name, "label" => 'Storage name'), 'text', 20);
 		
-		# remove ramdisk deployment which does not need a storage server
 		$int = $storage->deployment_type-2;
 		$html = new htmlobject_div();
 		$html->text = $deployment_list[$int]['label'];

@@ -19,23 +19,6 @@ $storage_command = htmlobject_request("storage_command");
 $storage_name = htmlobject_request("storage_name");
 
 
-if(htmlobject_request("action") == 'add') {
-	if($storage_name != '') {
-		if (ereg("^[A-Za-z0-9_-]*$", $pass) === false) {
-			$strMsg .= 'storage name must be [A-Za-z0-9_-]<br/>';
-			$error = 1;
-		}
-	} else {
-		$strMsg .= "storage name must not be empty<br/>";
-		$error = 1;
-	}
-	if (htmlobject_request('identifier') == '') {
-		$strMsg .= 'please select a rescoure first<br/>';
-		$error = 1;
-	}
-}
-
-
 if($error == 0) {
 
 $event = new event();
@@ -99,27 +82,6 @@ if(htmlobject_request('action') != '') {
 
 	$event->log("$storage_command", $_SERVER['REQUEST_TIME'], 5, "storage-action", "Processing command $storage_command on storage $storage_name", "", "", 0, 0, 0);
 	switch ($storage_command) {
-		case 'new_storage':
-			$storage = new storage();
-			$storage_fields["storage_id"]=openqrm_db_get_free_id('storage_id', $STORAGE_INFO_TABLE);
-			$storage->add($storage_fields);
-			break;
-
-		case 'update':
-			$storage = new storage();
-			$storage->update($storage_id, $storage_fields);
-			break;
-
-		case 'remove':
-			$storage = new storage();
-			$storage->remove($storage_id);
-			break;
-
-		case 'remove_by_name':
-			$storage = new storage();
-			$storage->remove_by_name($storage_name);
-			break;
-
 		case 'add_storagetype_type':
 			$storagetype = new storagetype();
 			$storagetype_fields["storagetype_id"]=openqrm_db_get_free_id('storagetype_id', $STORAGETYPE_INFO_TABLE);
