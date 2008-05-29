@@ -34,7 +34,7 @@ function openqrm_plugin_iscsi_storage_uninstall() {
 	fi
 	echo "Uninstalling the openQRM iscsi-storage-plugin"
 	openqrm_plugin_iscsi_storage_stop
-	openqrm_server_remove_deployment_type $USERNAME $PASSWORD iscsi
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD iscsi-storage
 	openqrm_server_remove_storagetype $USERNAME $PASSWORD iscsi-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.iscsi-deployment
@@ -63,8 +63,8 @@ function openqrm_plugin_iscsi_storage_init() {
 		echo
 	fi
 	echo "Initializing the openQRM iscsi-storage-plugin"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD iscsi "Iscsi-root deployment"
 	openqrm_server_add_storagetype $USERNAME $PASSWORD iscsi-storage "Iscsi Storage Server"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD iscsi-storage "Iscsi-root deployment"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-storage
 	# linking the boot-service

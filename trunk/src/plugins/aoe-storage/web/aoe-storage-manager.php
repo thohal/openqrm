@@ -148,7 +148,7 @@ function aoe_storage_display($aoe_storage_id) {
 
 	$table = new htmlobject_table_identifiers_checked();
 
-	$disp = "<h1>Select Aoe-storage</h1>";
+	$disp = "<h1>Aoe-storage $storage->name</h1>";
 
 	$arHead = array();
 	$arHead['storage_state'] = array();
