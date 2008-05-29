@@ -133,7 +133,7 @@ create table storage_info(
 	storage_id INTEGER NOT NULL PRIMARY KEY,
 	storage_name VARCHAR2(20),
 	storage_resource_id INTEGER,
-	storage_deployment_type INTEGER,
+	storage_type INTEGER,
 	storage_comment VARCHAR2(100),
 	storage_capabilities VARCHAR2(255),
 	storage_state VARCHAR2(20)

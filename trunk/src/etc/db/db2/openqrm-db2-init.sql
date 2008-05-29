@@ -139,7 +139,7 @@ create table storage_info(				\
 	storage_id bigint not null,			\
 	storage_name varchar(20),			\
 	storage_resource_id bigint,			\
-	storage_deployment_type bigint,			\
+	storage_type bigint,			\
 	storage_comment varchar(100),			\
 	storage_capabilities varchar(255),		\
 	storage_state varchar(20),			\

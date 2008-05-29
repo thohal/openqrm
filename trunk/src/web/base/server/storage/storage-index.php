@@ -5,7 +5,6 @@ $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/storagetype.class.php";
-require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
 
@@ -67,8 +66,8 @@ function storage_display() {
 	$arHead['storage_name'] = array();
 	$arHead['storage_name']['title'] ='Name';
 
-	$arHead['storage_deployment_type'] = array();
-	$arHead['storage_deployment_type']['title'] ='Type';
+	$arHead['storage_type'] = array();
+	$arHead['storage_type']['title'] ='Type';
 
 	$arHead['storage_resource_id'] = array();
 	$arHead['storage_resource_id']['title'] ='Resource';
@@ -88,17 +87,10 @@ function storage_display() {
 		$storage->get_instance_by_id($storage_db["storage_id"]);
 		$storage_resource = new resource();
 		$storage_resource->get_instance_by_id($storage->resource_id);
-		$storage_deployment = new deployment();
-		$storage_deployment->get_instance_by_id($storage->deployment_type);
-		$cap_array = explode(" ", $storage->capabilities);
-		foreach ($cap_array as $index => $capabilities) {
-			if (strstr($capabilities, "STORAGE_TYPE")) {
-				$STORAGE_TYPE=str_replace("STORAGE_TYPE=\\\"", "", $capabilities);
-				$STORAGE_TYPE=str_replace("\\\"", "", $STORAGE_TYPE);
-			}
-		}
+		$storage_type = new storagetype();
+		$storage_type->get_instance_by_id($storage->type);
 		$resource_icon_default="/openqrm/base/img/resource.png";
-		$storage_icon="/openqrm/base/plugins/$STORAGE_TYPE/img/storage.png";
+		$storage_icon="/openqrm/base/plugins/$storage_type->name/img/storage.png";
 		$state_icon="/openqrm/base/img/$storage_resource->state.png";
 		if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
 			$state_icon="/openqrm/base/img/unknown.png";
@@ -112,7 +104,7 @@ function storage_display() {
 			'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 			'storage_id' => $storage_db["storage_id"],
 			'storage_name' => $storage_db["storage_name"],
-			'storage_deployment_type' => $storage_deployment->type,
+			'storage_type' => $storage_type->name,
 			'storage_resource_id' => "$storage_resource->id/$storage_resource->ip",
 			'storage_comment' => $storage_db["storage_comment"],
 			'storage_edit' => '<a href="storage-edit.php?storage_id='.$storage_db["storage_id"].'">edit</a>',

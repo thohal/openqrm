@@ -38,8 +38,8 @@ function get_instance($id, $name) {
 	}
 	foreach ($storagetype_array as $index => $storagetype) {
 		$this->id = $storagetype["storagetype_id"];
+		$this->description = $storagetype["storagetype_description"];
 		$this->name = $storagetype["storagetype_name"];
-		$this->type = $storagetype["storagetype_description"];
 		$this->mapping = $storagetype["storagetype_mapping"];
 	}
 	return $this;
@@ -115,7 +115,7 @@ function remove_by_name($name) {
 // returns a list of all storagetype names
 function get_list() {
 	global $STORAGETYPE_INFO_TABLE;
-	$query = "select storagetype_id, storagetype_name from $STORAGETYPE_INFO_TABLE";
+	$query = "select storagetype_id, storagetype_description from $STORAGETYPE_INFO_TABLE";
 	$storagetype_name_array = array();
 	$storagetype_name_array = openqrm_db_get_result_double ($query);
 	return $storagetype_name_array;

@@ -5,7 +5,6 @@ $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/storagetype.class.php";
-require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
 
@@ -61,7 +60,9 @@ $error = 0;
 				}
 				$storage = new storage();
 				$storage_fields["storage_id"]=openqrm_db_get_free_id('storage_id', $STORAGE_INFO_TABLE);
-				$storage_fields["storage_capabilities"]="STORAGE_TYPE=\"    \"";
+				$storage_storagetype_type=htmlobject_request('storage_storagetype_type');
+//				$storage_fields["storage_capabilities"]="STORAGE_TYPE=\"$storage_storagetype_type\"";
+				$storage_fields["storage_type"]="$storage_storagetype_type";
 				$storage->add($storage_fields);
 				$strMsg .= 'added new storage <b>'.$storage_fields["storage_name"].'</b><br>';
 				
@@ -156,14 +157,12 @@ function storage_edit($storage_id='') {
 	$storagetype = new storagetype();
 	$storagetype_list = array();
 	$storagetype_list = $storagetype->get_list();
-	array_splice($storagetype_list, 0, 1);
-
 
 	if($storage_id == '') {
 
 		$store = "<h1>New Storage</h1>";
 		$store .= htmlobject_input('storage_name', array("value" => htmlobject_request('storage_name'), "label" => 'Storage name'), 'text', 20);
-		$store .= htmlobject_select('storage_storagetype_type', $storagetype_list, 'Deployment type', array(htmlobject_request('storage_storagetype_type')));
+		$store .= htmlobject_select('storage_type', $storagetype_list, 'Storage type', array(htmlobject_request('storage_type')));
 		#$store .= htmlobject_textarea('storage_capabilities', array("value" => htmlobject_request('storage_capabilities'), "label" => 'Storage Capabilities'));
 		$store .= htmlobject_textarea('storage_comment', array("value" => htmlobject_request('storage_comment'), "label" => 'Comment'));
 	}
@@ -174,23 +173,25 @@ function storage_edit($storage_id='') {
 		$storage = new storage();
 		$storage->get_instance_by_id($storage_id);
 		$storage_resource_id = $storage->resource_id;
-	
+		$storage_type = new storagetype();
+		$storage_type->get_instance_by_id($storage->type);
+
 		$store = "<h1>Edit Storage</h1>";
 		$store .= htmlobject_input('storage_name', array("value" => $storage->name, "label" => 'Storage name'), 'text', 20);
 		
-		$int = $storage->deployment_type-2;
+		$int = $storage->type;
 		$html = new htmlobject_div();
-		$html->text = $deployment_list[$int]['label'];
-		$html->id = 'htmlobject_storage_deployment_type';
+		$html->text = "<b>$storage_type->description</b>";
+		$html->id = 'htmlobject_storage_type';
 
 		$box = new htmlobject_box();
-		$box->id = 'htmlobject_box_storage_deployment_type';
+		$box->id = 'htmlobject_box_storage_type';
 		$box->css = 'htmlobject_box';
-		$box->label = 'Deployment type';
+		$box->label = 'Storage type';
 		$box->content = $html;
 
 		$store .= $box->get_string();
-		$store .= htmlobject_input('storage_deployment_type', array("value" => $storage->deployment_type, "label" => ''), 'hidden');
+		$store .= htmlobject_input('storage_type', array("value" => $storage->type, "label" => ''), 'hidden');
 
 		$store .= htmlobject_textarea('storage_capabilities', array("value" => $storage->capabilities, "label" => 'Storage Capabilities'));
 		$store .= htmlobject_textarea('storage_comment', array("value" => $storage->comment, "label" => 'Comment'));

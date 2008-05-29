@@ -15,7 +15,7 @@ class storage {
 var $id = '';
 var $name = '';
 var $resource_id = '';
-var $deployment_type = '';
+var $type = '';
 var $state = '';
 var $comment = '';
 var $capabilities = '';
@@ -43,7 +43,7 @@ function get_instance($id, $name) {
 		$this->id = $storage["storage_id"];
 		$this->name = $storage["storage_name"];
 		$this->resource_id = $storage["storage_resource_id"];
-		$this->deployment_type = $storage["storage_deployment_type"];
+		$this->type = $storage["storage_type"];
 		$this->state = $storage["storage_state"];
 		$this->comment = $storage["storage_comment"];
 		$this->capabilities = $storage["storage_capabilities"];

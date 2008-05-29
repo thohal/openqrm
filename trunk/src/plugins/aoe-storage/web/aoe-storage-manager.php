@@ -11,8 +11,8 @@ $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/storage.class.php";
+require_once "$RootDir/class/storagetype.class.php";
 require_once "$RootDir/class/resource.class.php";
-require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
 
@@ -67,8 +67,8 @@ function aoe_select_storage() {
 	$arHead['storage_resource_ip'] = array();
 	$arHead['storage_resource_ip']['title'] ='Ip';
 
-	$arHead['storage_deployment_type'] = array();
-	$arHead['storage_deployment_type']['title'] ='Deployment';
+	$arHead['storage_type'] = array();
+	$arHead['storage_type']['title'] ='Type';
 
 	$arHead['storage_comment'] = array();
 	$arHead['storage_comment']['title'] ='Comment';
@@ -86,19 +86,10 @@ function aoe_select_storage() {
 		$storage->get_instance_by_id($storage_db["storage_id"]);
 		$storage_resource = new resource();
 		$storage_resource->get_instance_by_id($storage->resource_id);
-		$storage_deployment = new deployment();
-		$storage_deployment->get_instance_by_id($storage->deployment_type);
-		// is netapp ?
-		$cap_array = explode(" ", $storage->capabilities);
-		foreach ($cap_array as $index => $capabilities) {
-			if (strstr($capabilities, "STORAGE_TYPE")) {
-				$STORAGE_TYPE=str_replace("STORAGE_TYPE=\\\"", "", $capabilities);
-				$STORAGE_TYPE=str_replace("\\\"", "", $STORAGE_TYPE);
-				$STORAGE_TYPE=str_replace("STORAGE_TYPE=\"", "", $STORAGE_TYPE);
-				$STORAGE_TYPE=str_replace("\"", "", $STORAGE_TYPE);
-			}
-		}
-		if ("$STORAGE_TYPE" == "aoe-storage") {
+		$storage_type = new storagetype();
+		$storage_type->get_instance_by_id($storage->type);
+		// is aoe storage ?
+		if ("$storage_type->name" == "aoe-storage") {
 			$storage_count++;
 			$resource_icon_default="/openqrm/base/img/resource.png";
 			$storage_icon="/openqrm/base/plugins/aoe-storage/img/storage.png";
@@ -116,7 +107,7 @@ function aoe_select_storage() {
 				'storage_name' => $storage->name,
 				'storage_resource_id' => $storage->resource_id,
 				'storage_resource_ip' => $storage_resource->ip,
-				'storage_deployment_type' => "$storage->deployment_type/$storage_deployment->type",
+				'storage_type' => "$storage->deployment_type/$storage_type->description",
 				'storage_comment' => $storage_resource->comment,
 				'storage_capabilities' => $storage_resource->capabilities,
 			);
@@ -152,8 +143,8 @@ function aoe_storage_display($aoe_storage_id) {
 	$storage->get_instance_by_id($aoe_storage_id);
 	$storage_resource = new resource();
 	$storage_resource->get_instance_by_id($storage->resource_id);
-	$storage_deployment = new deployment();
-	$storage_deployment->get_instance_by_id($storage->deployment_type);
+	$storage_type = new storagetype();
+	$storage_type->get_instance_by_id($storage->type);
 
 	$table = new htmlobject_table_identifiers_checked();
 
@@ -178,8 +169,8 @@ function aoe_storage_display($aoe_storage_id) {
 	$arHead['storage_resource_ip'] = array();
 	$arHead['storage_resource_ip']['title'] ='Ip';
 
-	$arHead['storage_deployment_type'] = array();
-	$arHead['storage_deployment_type']['title'] ='Deployment';
+	$arHead['storage_type'] = array();
+	$arHead['storage_type']['title'] ='Type';
 
 	$arHead['storage_comment'] = array();
 	$arHead['storage_comment']['title'] ='Comment';
@@ -205,7 +196,7 @@ function aoe_storage_display($aoe_storage_id) {
 		'storage_name' => $storage->name,
 		'storage_resource_id' => $storage->resource_id,
 		'storage_resource_ip' => $storage_resource->ip,
-		'storage_deployment_type' => "$storage->deployment_type/$storage_deployment->type",
+		'storage_type' => "$storage->type/$storage_type->description",
 		'storage_comment' => $storage_resource->comment,
 		'storage_capabilities' => $storage_resource->capabilities,
 	);

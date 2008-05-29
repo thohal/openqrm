@@ -139,7 +139,7 @@ create table storage_info(
 	storage_id INT(5) NOT NULL PRIMARY KEY,
 	storage_name VARCHAR(20),
 	storage_resource_id INT(5),
-	storage_deployment_type INT(5),
+	storage_type INT(5),
 	storage_comment VARCHAR(100),
 	storage_capabilities VARCHAR(255),
 	storage_state VARCHAR(20)

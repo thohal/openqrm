@@ -12,16 +12,9 @@ global $IMAGE_INFO_TABLE;
 global $DEPLOYMENT_INFO_TABLE;
 global $STORAGETYPE_INFO_TABLE;
 
-$strMsg = '';
-$error = 0;
-
 $storage_command = htmlobject_request("storage_command");
-$storage_name = htmlobject_request("storage_name");
-
-
-if($error == 0) {
-
 $event = new event();
+$strMsg = '';
 
 // user/role authentication
 if (!strstr($OPENQRM_USER->role, "administrator")) {
@@ -29,24 +22,7 @@ if (!strstr($OPENQRM_USER->role, "administrator")) {
 	exit();
 }
 
-$storage_id = htmlobject_request("storage_id");
-$storage_fields = array();
-foreach ($_REQUEST as $key => $value) {
-	if (strncmp($key, "storage_", 8) == 0) {
-		$storage_fields[$key] = $value;
-	}
-}
-unset($storage_fields["storage_command"]);
 
-$deployment_id = htmlobject_request("deployment_id");
-$deployment_name = htmlobject_request("deployment_name");
-$deployment_type = htmlobject_request("deployment_type");
-$deployment_fields = array();
-foreach ($_REQUEST as $key => $value) {
-	if (strncmp($key, "deployment_", 10) == 0) {
-		$deployment_fields[$key] = $value;
-	}
-}
 
 $storagetype_id = htmlobject_request("storagetype_id");
 $storagetype_name = htmlobject_request("storagetype_name");
@@ -57,51 +33,31 @@ foreach ($_REQUEST as $key => $value) {
 	}
 }
 
-// parse the identifier array to get the id
-if(htmlobject_request('action') != '') {
-	switch (htmlobject_request('action')) {
-		case 'add':
-			foreach($_REQUEST['identifier'] as $id) {
-				if(!strlen($image_fields["storage_resource_id"])) {
-					$storage_fields["storage_resource_id"]=$id;
-				}
-				continue;
-			}
-			break;
-		case 'update':
-			foreach($_REQUEST['identifier'] as $id) {
-				if(!strlen($image_fields["storage_resource_id"])) {
-					$storage_fields["storage_resource_id"]=$id;
-				}
-				continue;
-			}
-			break;
-	}
+
+$event->log("$storage_command", $_SERVER['REQUEST_TIME'], 5, "storage-action", "Processing command $storage_command on storage $storage_name", "", "", 0, 0, 0);
+switch ($storage_command) {
+	case 'add_storagetype_type':
+		$storagetype = new storagetype();
+		$storagetype_fields["storagetype_id"]=openqrm_db_get_free_id('storagetype_id', $STORAGETYPE_INFO_TABLE);
+		$storagetype->add($storagetype_fields);
+		$strMsg="Adding storage-type $storagetype_name";
+		$event->log("$storage_command", $_SERVER['REQUEST_TIME'], 5, "storage-action", "$strMsg", "", "", 0, 0, 0);
+		break;
+
+	case 'remove_storagetype_type':
+		$storagetype = new storagetype();
+		$storagetype->remove_by_name($storagetype_name);
+		$strMsg="Removing storage-type $storagetype_name";
+		$event->log("$storage_command", $_SERVER['REQUEST_TIME'], 5, "storage-action", "$strMsg", "", "", 0, 0, 0);
+		break;
+
+	default:
+		$event->log("$storage_command", $_SERVER['REQUEST_TIME'], 3, "storage-action", "No such event command ($storage_command)", "", "", 0, 0, 0);
+		break;
 }
 
 
-	$event->log("$storage_command", $_SERVER['REQUEST_TIME'], 5, "storage-action", "Processing command $storage_command on storage $storage_name", "", "", 0, 0, 0);
-	switch ($storage_command) {
-		case 'add_storagetype_type':
-			$storagetype = new storagetype();
-			$storagetype_fields["storagetype_id"]=openqrm_db_get_free_id('storagetype_id', $STORAGETYPE_INFO_TABLE);
-			$storagetype->add($storagetype_fields);
-			break;
 
-		case 'remove_storagetype_type':
-			$storagetype = new storagetype();
-			$storagetype->remove_by_name($storagetype_name);
-			break;
-
-		default:
-			$event->log("$storage_command", $_SERVER['REQUEST_TIME'], 3, "storage-action", "No such event command ($storage_command)", "", "", 0, 0, 0);
-			break;
-
-	}
-
-
-
-}
 ?>
 
 
