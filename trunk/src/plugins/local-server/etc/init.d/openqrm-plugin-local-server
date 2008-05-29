@@ -49,8 +49,8 @@ function openqrm_plugin_local_server_init() {
 		echo
 	fi
 	echo "Initializing the openQRM local-server-plugin"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD local-server "Local-installed server"
 	openqrm_server_add_storagetype $USERNAME $PASSWORD local-server "Local-installed server"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD local-server local-server "Local-installed server"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-server/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-server
 }

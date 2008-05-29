@@ -192,9 +192,10 @@ function openqrm_server_add_deployment_type() {
 	OPENQRM_USER=$1
 	OPENQRM_USER_PASSWORD=$2
 	OPENQRM_SERVER_DEPLOYMENT_TYPE=$3
-	OPENQRM_SERVER_DEPLOYMENT_NAME=$4
+	OPENQRM_SERVER_DEPLOYMENT_STORAGE_TYPE=$4
+	OPENQRM_SERVER_DEPLOYMENT_NAME=$5
 	echo "openQRM-server: Adding deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE  to the openQRM-server" | logger
-	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/image/image-action.php?image_command=add_deployment_type&deployment_type=$OPENQRM_SERVER_DEPLOYMENT_TYPE&deployment_name=$OPENQRM_SERVER_DEPLOYMENT_NAME"; then
+	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/image/image-action.php?image_command=add_deployment_type&deployment_type=$OPENQRM_SERVER_DEPLOYMENT_TYPE&deployment_storagetype=$OPENQRM_SERVER_DEPLOYMENT_STORAGE_TYPE&deployment_name=$OPENQRM_SERVER_DEPLOYMENT_NAME"; then
 		echo "ERROR: Could not add deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE to the openQRM-server!" | logger
 		return 1
 	fi

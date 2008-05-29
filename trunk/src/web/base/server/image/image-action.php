@@ -44,6 +44,7 @@ unset($image_fields["image_command"]);
 
 $deployment_id = $_REQUEST["deployment_id"];
 $deployment_name = $_REQUEST["deployment_name"];
+$deployment_storagetype = $_REQUEST["deployment_storagetype"];
 $deployment_type = $_REQUEST["deployment_type"];
 $deployment_fields = array();
 foreach ($_REQUEST as $key => $value) {
@@ -51,6 +52,7 @@ foreach ($_REQUEST as $key => $value) {
 		$deployment_fields[$key] = $value;
 	}
 }
+
 
 // parse the identifier array to get the id
 if(htmlobject_request('action') != '') {
@@ -111,7 +113,8 @@ if(htmlobject_request('action') != '') {
 			$deployment_fields["deployment_id"]=openqrm_db_get_free_id('deployment_id', $DEPLOYMENT_INFO_TABLE);
 			// map to storagetype
 			$storage_type = new storagetype();
-			$storage_type->get_instance_by_name($deployment_type);
+			$storage_type->get_instance_by_name($deployment_storagetype);
+			unset($deployment_fields["deployment_storagetype"]);
 			$deployment_fields["deployment_storagetype_id"]=$storage_type->id;
 			$deployment->add($deployment_fields);
 			break;

@@ -63,7 +63,7 @@ function openqrm_plugin_aoe_storage_init() {
 	fi
 	echo "Initializing the openQRM aoe-storage-plugin"
 	openqrm_server_add_storagetype $USERNAME $PASSWORD aoe-storage "Aoe/Coraid Storage Server"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD aoe-storage "Aoe-root deployment"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD aoe-storage aoe-storage "Aoe-root deployment"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aoe-storage
 	# linking the boot-service

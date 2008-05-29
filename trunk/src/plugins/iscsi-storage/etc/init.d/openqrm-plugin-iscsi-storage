@@ -64,7 +64,7 @@ function openqrm_plugin_iscsi_storage_init() {
 	fi
 	echo "Initializing the openQRM iscsi-storage-plugin"
 	openqrm_server_add_storagetype $USERNAME $PASSWORD iscsi-storage "Iscsi Storage Server"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD iscsi-storage "Iscsi-root deployment"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD iscsi-storage iscsi-storage "Iscsi-root deployment"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-storage
 	# linking the boot-service
