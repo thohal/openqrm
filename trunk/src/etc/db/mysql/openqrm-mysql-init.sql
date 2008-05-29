@@ -162,6 +162,7 @@ create table image_service (
 # plugg-able deployment types
 create table deployment_info(
 	deployment_id INT(5) NOT NULL PRIMARY KEY,
+	deployment_storagetype_id INT(5),
 	deployment_name VARCHAR(50),
 	deployment_type VARCHAR(20)
 );

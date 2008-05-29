@@ -164,6 +164,7 @@ create table image_service (				\
 drop table deployment_info
 create table deployment_info(				\
 	deployment_id bigint not null,			\
+	deployment_storagetype_id bigint		\
 	deployment_name varchar(50),			\
 	deployment_type varchar(20)			\
 )

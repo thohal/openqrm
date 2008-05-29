@@ -153,6 +153,7 @@ create table image_service(
 drop table deployment_info;
 create table deployment_info(
 	deployment_id int8 NOT NULL PRIMARY KEY,
+	deployment_storagetype_id int8,
 	deployment_name char(50),
 	deployment_type char(20)
 );
