@@ -186,8 +186,8 @@ function image_form() {
 		$arHead['storage_name'] = array();
 		$arHead['storage_name']['title'] ='Name';
 
-		$arHead['storage_deployment_type'] = array();
-		$arHead['storage_deployment_type']['title'] ='Type';
+		$arHead['storage_type'] = array();
+		$arHead['storage_type']['title'] ='Type';
 
 		$arHead['storage_resource_id'] = array();
 		$arHead['storage_resource_id']['title'] ='Resource';
@@ -203,23 +203,17 @@ function image_form() {
 
 		foreach ($storage_array as $index => $storage_db) {
 
-			if ($deployment_tmp->id == $storage_db["storage_deployment_type"]) {
+			if ($deployment_tmp->storagetype_id == $storage_db["storage_type"]) {
 		
 				$storage = new storage();
 				$storage->get_instance_by_id($storage_db["storage_id"]);
 				$storage_resource = new resource();
 				$storage_resource->get_instance_by_id($storage->resource_id);
 				$storage_deployment = new deployment();
-				$storage_deployment->get_instance_by_id($storage->deployment_type);
-				$cap_array = explode(" ", $storage->capabilities);
-				foreach ($cap_array as $index => $capabilities) {
-					if (strstr($capabilities, "STORAGE_TYPE")) {
-						$STORAGE_TYPE=str_replace("STORAGE_TYPE=\\\"", "", $capabilities);
-						$STORAGE_TYPE=str_replace("\\\"", "", $STORAGE_TYPE);
-					}
-				}
+				$storage_deployment->get_instance_by_id($image_type);
+
 				$resource_icon_default="/openqrm/base/img/resource.png";
-				$storage_icon="/openqrm/base/plugins/$STORAGE_TYPE/img/storage.png";
+				$storage_icon="/openqrm/base/plugins/$storage_deployment->type/img/storage.png";
 				$state_icon="/openqrm/base/img/$storage_resource->state.png";
 				if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
 					$state_icon="/openqrm/base/img/unknown.png";
@@ -233,7 +227,7 @@ function image_form() {
 					'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 					'storage_id' => $storage_db["storage_id"],
 					'storage_name' => $storage_db["storage_name"],
-					'storage_deployment_type' => $storage_deployment->type,
+					'storage_type' => "$storage->type / $storage_deployment->type",
 					'storage_resource_id' => "$storage_resource->id",
 					'storage_resource_ip' => "$storage_resource->ip",
 					'storage_comment' => $storage_db["storage_comment"],
