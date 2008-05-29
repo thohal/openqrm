@@ -60,9 +60,8 @@ $error = 0;
 				}
 				$storage = new storage();
 				$storage_fields["storage_id"]=openqrm_db_get_free_id('storage_id', $STORAGE_INFO_TABLE);
-				$storage_storagetype_type=htmlobject_request('storage_storagetype_type');
-//				$storage_fields["storage_capabilities"]="STORAGE_TYPE=\"$storage_storagetype_type\"";
-				$storage_fields["storage_type"]="$storage_storagetype_type";
+				$storage_type=htmlobject_request('storage_type');
+				$storage_fields["storage_type"]="$storage_type";
 				$storage->add($storage_fields);
 				$strMsg .= 'added new storage <b>'.$storage_fields["storage_name"].'</b><br>';
 				
