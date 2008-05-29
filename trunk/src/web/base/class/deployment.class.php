@@ -13,6 +13,7 @@ global $event;
 class deployment {
 
 var $id = '';
+var $storagetype_id = '';
 var $name = '';
 var $type = '';
 
@@ -41,6 +42,7 @@ function get_instance($id, $name, $type) {
 		$this->id = $deployment["deployment_id"];
 
 		$this->id = $deployment["deployment_id"];
+		$this->storagetype_id = $deployment["deployment_storagetype_id"];
 		$this->name = $deployment["deployment_name"];
 		$this->type = $deployment["deployment_type"];
 	}
