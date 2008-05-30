@@ -183,7 +183,7 @@ insert into image_info (image_id, image_name, image_version, image_type, image_r
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared) values ('1', 'idle', 'openqrm', 'ram', 'ram', 'ext2', '1');
 insert into resource_info (resource_id, resource_localboot, resource_kernel, resource_image, resource_openqrmserver, resource_ip) values ('0', '1', 'local', 'local', 'OPENQRM_SERVER_IP_ADDRESS', 'OPENQRM_SERVER_IP_ADDRESS');
 insert into deployment_info (deployment_id, deployment_name, deployment_type) values ('1', 'Ramdisk Deployment', 'ram');
-insert into virtualization_info (virtualization_id, virtualization_name, virtualization_type) values ('1', 'Physical Systems', 'physical');
+insert into virtualization_info (virtualization_id, virtualization_name, virtualization_type) values ('1', 'Physical System', 'physical');
 insert into user_info (user_id, user_name, user_password, user_gender, user_first_name, user_last_name, user_department, user_office, user_role, user_last_update_time, user_description, user_capabilities, user_state) values (0, 'openqrm', 'openqrm', '-', '-', '-', '-', '-', 0, '-', 'default admin user', '-', 'activated');
 insert into user_info (user_id, user_name, user_password, user_gender, user_first_name, user_last_name, user_department, user_office, user_role, user_last_update_time, user_description, user_capabilities, user_state) values (1, 'anonymous', 'openqrm', '-', '-', '-', '-', '-', 1, '-', 'default readonly user', '-', 'activated');
 insert into role_info (role_id, role_name) values (0, 'administrator');
