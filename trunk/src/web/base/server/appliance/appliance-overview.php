@@ -190,6 +190,8 @@ function appliance_form() {
 	$kernel = new kernel();
 	$kernel_list = array();
 	$kernel_list = $kernel->get_list();
+	// remove the openqrm kernelfrom the list
+	array_splice($kernel_list, 0, 1);
 
 	$disp = "<b>New Appliance</b>";
 	$disp = $disp."<form action='appliance-action.php' method=post>";
@@ -315,6 +317,9 @@ function appliance_edit($appliance_id) {
 	$kernel = new kernel();
 	$kernel_list = array();
 	$kernel_list = $kernel->get_list();
+	// remove the openqrm kernelfrom the list
+	array_splice($kernel_list, 0, 1);
+
 
 	$disp = "<b>Edit Appliance</b>";
 	$disp = $disp."<form action='appliance-action.php' method=post>";
