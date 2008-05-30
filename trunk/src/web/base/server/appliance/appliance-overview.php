@@ -36,6 +36,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 					// an appliance with resource auto-select enabled
 					$appliance_virtualization=$appliance->virtualization;
 					$appliance->find_resource($appliance_virtualization);
+					$appliance->get_instance_by_id($id);
 				}
 				$resource->get_instance_by_id($appliance->resources);
 				$kernel = new kernel();
@@ -292,7 +293,7 @@ function appliance_form() {
 	);
 
 	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(1, 100, 'resource_id', 'ASC');
+	$resource_array = $resource_tmp->display_overview(0, 100, 'resource_id', 'ASC');
 	foreach ($resource_array as $index => $resource_db) {
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);
@@ -463,7 +464,7 @@ function appliance_edit($appliance_id) {
 	);
 
 	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(1, 100, 'resource_id', 'ASC');
+	$resource_array = $resource_tmp->display_overview(0, 100, 'resource_id', 'ASC');
 	foreach ($resource_array as $index => $resource_db) {
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);

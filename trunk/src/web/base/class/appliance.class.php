@@ -326,8 +326,8 @@ function find_resource($appliance_virtualization) {
 
 	// if we find an resource which fits to the appliance we update it 
 	$appliance_fields = array();
-	$appliance_fields['resources'] = $new_resource_id;
-	$this->update($appliance->id, $appliance_fields);
+	$appliance_fields['appliance_resources'] = $new_resource_id;
+	$this->update($this->id, $appliance_fields);
 
 	return $this;
 }
