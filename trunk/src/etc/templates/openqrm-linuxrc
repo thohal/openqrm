@@ -124,7 +124,7 @@ function create_fstab_commons() {
 	IFS=$OLD_IFS
 	if [ -f $IMAGE_FSTAB_STATIC ]; then
 		echo "Found $IMAGE_FSTAB_STATIC, adding to $IMAGE_FSTAB"
-		cat $IMAGE_FSTAB_STATIC >> $FSTAB_QRM
+		cat $IMAGE_FSTAB_STATIC >> $IMAGE_FSTAB
 	fi
 
 }
