@@ -6,6 +6,7 @@ require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/kernel.class.php";
+require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
@@ -127,9 +128,18 @@ function appliance_display() {
 		$appliance = new appliance();
 		$appliance->get_instance_by_id($appliance_db["appliance_id"]);
 		$resource = new resource();
-		$resource->get_instance_by_id($appliance_db["appliance_resources"]);
-		$resource_icon_default="/openqrm/base/img/resource.png";
+		$appliance_resources=$appliance_db["appliance_resources"];
+		if ($appliance_resources >=0) {
+			// an appliance with a pre-selected resource
+			$resource->get_instance_by_id($appliance_resources);
+			$appliance_resources = "$resource->id/$resource->ip";
+		} else {
+			// an appliance with resource auto-select enabled
+			$appliance_resources = "auto-select";
+		}
+
 		// active or inactive
+		$resource_icon_default="/openqrm/base/img/resource.png";
 		$active_state_icon="/openqrm/base/img/active.png";
 		$inactive_state_icon="/openqrm/base/img/idle.png";
 		if ("$appliance->stoptime" == "0") {
@@ -150,7 +160,7 @@ function appliance_display() {
 			'appliance_name' => $appliance_db["appliance_name"],
 			'appliance_kernelid' => $kernel->name,
 			'appliance_imageid' => $image->name,
-			'appliance_resources' => "$resource->id/$resource->ip",
+			'appliance_resources' => "$appliance_resources",
 			'appliance_comment' => $appliance_db["appliance_comment"],
 			'appliance_capabilities' => $appliance_db["appliance_capabilities"],
 		);
@@ -193,6 +203,10 @@ function appliance_form() {
 	// remove the openqrm kernelfrom the list
 	array_splice($kernel_list, 0, 1);
 
+	$virtualization = new virtualization();
+	$virtualization_list = array();
+	$virtualization_list = $virtualization->get_list();
+
 	$disp = "<b>New Appliance</b>";
 	$disp = $disp."<form action='appliance-action.php' method=post>";
 	$disp = $disp."<br>";
@@ -216,10 +230,18 @@ function appliance_form() {
 	$disp = $disp.htmlobject_input('appliance_memtotal', array("value" => '', "label" => 'Memory'), 'text', 20);
 	$disp = $disp.htmlobject_input('appliance_swaptotal', array("value" => '', "label" => 'Swap'), 'text', 20);
 	$disp = $disp.htmlobject_input('appliance_capabilities', array("value" => '', "label" => 'Capabilities'), 'text', 255);
-    $disp = $disp."<input type='checkbox' name='appliance_cluster' value='1'> Cluster<br>";
-    $disp = $disp."<input type='checkbox' name='appliance_ssi' value='1'> SSI<br>";
-    $disp = $disp."<input type='checkbox' name='appliance_highavailable' value='1'> High-Available<br>";
-    $disp = $disp."<input type='checkbox' name='appliance_virtual' value='1'> Virtual<br>";
+	// select resource type
+	$disp = $disp."<br>";
+	$disp = $disp."Resource-Type ";
+	$resourcetype_select = appliance_htmlobject_select('resourcetype', $virtualization_list, 'Select Resource-Type', $virtualization_list);
+	$disp = $disp.$resourcetype_select;
+	$disp = $disp."<br>";
+
+//    $disp = $disp."<input type='checkbox' name='appliance_cluster' value='1'> Cluster<br>";
+//    $disp = $disp."<input type='checkbox' name='appliance_ssi' value='1'> SSI<br>";
+//    $disp = $disp."<input type='checkbox' name='appliance_highavailable' value='1'> High-Available<br>";
+//    $disp = $disp."<input type='checkbox' name='appliance_virtual' value='1'> Virtual<br>";
+
 	$disp = $disp.htmlobject_textarea('appliance_comment', array("value" => '', "label" => 'Comment'));
 	$disp = $disp."<input type=hidden name=appliance_command value='new_appliance'>";
 
@@ -253,6 +275,17 @@ function appliance_form() {
 
 	$resource_count=0;
 	$arBody = array();
+
+	$auto_resource_icon="/openqrm/base/img/resource.png";
+	$auto_state_icon="/openqrm/base/img/active.png";
+	$arBody[] = array(
+		'resource_state' => "<img src=$auto_state_icon>",
+		'resource_icon' => "<img width=24 height=24 src=$auto_resource_icon>",
+		'resource_id' => '',
+		'resource_name' => "auto-select resource",
+		'resource_ip' => "0.0.0.0",
+	);
+
 	$resource_tmp = new resource();
 	$resource_array = $resource_tmp->display_overview(0, 100, 'resource_id', 'ASC');
 	foreach ($resource_array as $index => $resource_db) {
@@ -320,6 +353,9 @@ function appliance_edit($appliance_id) {
 	// remove the openqrm kernelfrom the list
 	array_splice($kernel_list, 0, 1);
 
+	$virtualization = new virtualization();
+	$virtualization_list = array();
+	$virtualization_list = $virtualization->get_list();
 
 	$disp = "<b>Edit Appliance</b>";
 	$disp = $disp."<form action='appliance-action.php' method=post>";
@@ -345,6 +381,14 @@ function appliance_edit($appliance_id) {
 	$disp = $disp.htmlobject_input('appliance_swaptotal', array("value" => $appliance->swaptotal, "label" => 'Swap'), 'text', 20);
 	$disp = $disp.htmlobject_input('appliance_capabilities', array("value" => $appliance->capabilities, "label" => 'Capabilities'), 'text', 255);
 
+	// select resource type
+	$disp = $disp."<br>";
+	$disp = $disp."Resource-Type ";
+	$resourcetype_select = appliance_htmlobject_select('resourcetype', $virtualization_list, 'Select Resource-Type', $virtualization_list);
+	$disp = $disp.$resourcetype_select;
+	$disp = $disp."<br>";
+
+/*
 	if ($appliance->cluster == "0") {
 	    $disp = $disp."<input type='checkbox' name='appliance_cluster' value='1'> Cluster<br>";
 	} else {
@@ -365,6 +409,7 @@ function appliance_edit($appliance_id) {
 	} else {
 	    $disp = $disp."<input type='checkbox' checked name='appliance_virtual' value='1'> Virtual<br>";
 	}
+*/
 
 	$disp = $disp.htmlobject_textarea('appliance_comment', array("value" => $appliance->comment, "label" => 'Comment'));
 
@@ -401,6 +446,17 @@ function appliance_edit($appliance_id) {
 
 	$resource_count=0;
 	$arBody = array();
+
+	$auto_resource_icon="/openqrm/base/img/resource.png";
+	$auto_state_icon="/openqrm/base/img/active.png";
+	$arBody[] = array(
+		'resource_state' => "<img src=$auto_state_icon>",
+		'resource_icon' => "<img width=24 height=24 src=$auto_resource_icon>",
+		'resource_id' => '',
+		'resource_name' => "auto-select resource",
+		'resource_ip' => "0.0.0.0",
+	);
+
 	$resource_tmp = new resource();
 	$resource_array = $resource_tmp->display_overview(0, 100, 'resource_id', 'ASC');
 	foreach ($resource_array as $index => $resource_db) {
