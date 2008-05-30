@@ -162,7 +162,7 @@ function storage_edit($storage_id='') {
 		$store = "<h1>New Storage</h1>";
 		$store .= htmlobject_input('storage_name', array("value" => htmlobject_request('storage_name'), "label" => 'Storage name'), 'text', 20);
 		$store .= htmlobject_select('storage_type', $storagetype_list, 'Storage type', array(htmlobject_request('storage_type')));
-		#$store .= htmlobject_textarea('storage_capabilities', array("value" => htmlobject_request('storage_capabilities'), "label" => 'Storage Capabilities'));
+		$store .= htmlobject_textarea('storage_capabilities', array("value" => htmlobject_request('storage_capabilities'), "label" => 'Storage Capabilities'));
 		$store .= htmlobject_textarea('storage_comment', array("value" => htmlobject_request('storage_comment'), "label" => 'Comment'));
 	}
 
