@@ -64,7 +64,7 @@ function openqrm_highavailability_ha_hook($resource_id) {
 	// stop the appliance, update it and restart it again
 	$appliance->stop();
 	$appliance_fields = array();
-	$appliance_fields['resources'] = $new_resource_id;
+	$appliance_fields['appliance_resources'] = $new_resource_id;
 	$appliance->update($appliance->id, $appliance_fields);
 	$appliance->start();
 	// :)
