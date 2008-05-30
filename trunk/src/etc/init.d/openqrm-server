@@ -69,51 +69,17 @@ function openqrm_server_init() {
 	HTPASSWD="htpasswd"
 	if [ -f /etc/debian_version ]; then
 		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
-
-		# Debian/Ubuntu by default do not allow to override the authconfig (needed for basic auth)
+		# the default apache config normally does not allow to override the authconfig (needed for basic auth)
 		# so we allow it for the openqrm directory
-		if ! grep openqrm $OPENQRM_WEBSERVER_CONFIG 1>/dev/null; then
-			echo "Adjusting $OPENQRM_WEBSERVER_CONFIG for openQRM"
-			cat $OPENQRM_WEBSERVER_CONFIG | sed -e "s#</VirtualHost>##" > $OPENQRM_WEBSERVER_CONFIG.openqrm
-			cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> $OPENQRM_WEBSERVER_CONFIG.openqrm
-			echo "</VirtualHost>" >> $OPENQRM_WEBSERVER_CONFIG.openqrm
-			mv $OPENQRM_WEBSERVER_CONFIG.openqrm $OPENQRM_WEBSERVER_CONFIG
-			$OPENQRM_WEBSERVER_INIT restart
-		else
-			echo "Found $OPENQRM_WEBSERVER_CONFIG already adjusted for openQRM"
-		fi
-
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/apache2/conf.d/openqrm-httpd.conf
 	elif [ -f /etc/redhat-release ]; then
 		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
-
-		if ! grep openqrm $OPENQRM_WEBSERVER_CONFIG 1>/dev/null; then
-			echo "Adjusting $OPENQRM_WEBSERVER_CONFIG for openQRM"
-			cat $OPENQRM_WEBSERVER_CONFIG | sed -e "s#</VirtualHost>##" > $OPENQRM_WEBSERVER_CONFIG.openqrm
-			echo "<VirtualHost *:80>" >> $OPENQRM_WEBSERVER_CONFIG.openqrm
-			cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> $OPENQRM_WEBSERVER_CONFIG.openqrm
-			echo "</VirtualHost>" >> $OPENQRM_WEBSERVER_CONFIG.openqrm
-			mv $OPENQRM_WEBSERVER_CONFIG.openqrm $OPENQRM_WEBSERVER_CONFIG
-			$OPENQRM_WEBSERVER_INIT restart
-		else
-			echo "Found $OPENQRM_WEBSERVER_CONFIG already adjusted for openQRM"
-		fi
-
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/httpd/conf.d/openqrm-httpd.conf
 	elif [ -f /etc/SuSE-release ]; then
 		HTPASSWD="htpasswd2"
 		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
-		if ! grep openqrm $OPENQRM_WEBSERVER_CONFIG 1>/dev/null; then
-			echo "Adjusting $OPENQRM_WEBSERVER_CONFIG for openQRM"
-			echo "<VirtualHost *:80>" >> $OPENQRM_WEBSERVER_CONFIG
-			cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> $OPENQRM_WEBSERVER_CONFIG
-			echo "</VirtualHost>" >> $OPENQRM_WEBSERVER_CONFIG
-			# we need to adjust the default-server.conf for Suse to
-			# allow FollowSymlinks
-			cat /etc/apache2/default-server.conf | sed -e "s/Options.*/Options +Indexes +FollowSymLinks/" | sed -e "s/AllowOverride.*/AllowOverride All/" > /etc/apache2/default-server.conf.new
-			mv -f /etc/apache2/default-server.conf.new /etc/apache2/default-server.conf
-			$OPENQRM_WEBSERVER_INIT restart
-		else
-			echo "Found $OPENQRM_WEBSERVER_CONFIG already adjusted for openQRM"
-		fi
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/apache2/conf.d/openqrm-httpd.conf
+
 		# check for custom/manual installed adodb because there 
 		# is no pre-packaged adodb rpm for suse available
 		if [ -f /usr/share/adodb/adodb.inc.php ]; then
@@ -125,6 +91,7 @@ function openqrm_server_init() {
 			exit -1
 		fi
 	fi
+	$OPENQRM_WEBSERVER_INIT reload
 
 	# create the .htaccess file
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-htaccess.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htaccess
@@ -186,8 +153,18 @@ function openqrm_server_uninstall() {
 	openqrm_chkconfig del openqrm-server
 	rm -f /etc/init.d/openqrm-server
 
-	echo "Uninstallation of openQRM-server finished"
+	# removing the apache web + config
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
+	if [ -f /etc/debian_version ]; then
+		rm -f /etc/apache2/conf.d/openqrm-httpd.conf
+	elif [ -f /etc/redhat-release ]; then
+		rm -f /etc/httpd/conf.d/openqrm-httpd.conf
+	elif [ -f /etc/SuSE-release ]; then
+		rm -f /etc/apache2/conf.d/openqrm-httpd.conf
+	fi
+	$OPENQRM_WEBSERVER_INIT reload
 
+	echo "Uninstallation of openQRM-server finished"
 }
 
 
