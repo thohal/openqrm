@@ -415,3 +415,28 @@ function openqrm_pack_default_initrd_template() {
 }
 
 
+# function to provide adodb for Suse systems only
+# -> this is for "make" phase
+function openqrm_get_adodb() {
+	if [ -f /etc/SuSE-release ]; then
+		CURRENT_DIR=`pwd`
+		openqrm_cache_or_download adodb
+		cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/adodb/
+		tar -xzf adodb*.tgz
+		cd $CURRENT_DIR
+	fi
+}
+
+# function to install adodb for Suse systems only
+# -> this is for "make install" phase
+function openqrm_install_adodb() {
+	if [ -f /etc/SuSE-release ]; then
+		cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/adodb/adodb $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/
+	fi
+}
+
+
+
+
+
+

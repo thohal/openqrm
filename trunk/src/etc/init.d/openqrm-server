@@ -79,17 +79,6 @@ function openqrm_server_init() {
 		HTPASSWD="htpasswd2"
 		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
 		cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/apache2/conf.d/openqrm-httpd.conf
-
-		# check for custom/manual installed adodb because there 
-		# is no pre-packaged adodb rpm for suse available
-		if [ -f /usr/share/adodb/adodb.inc.php ]; then
-			echo "Found Adodb at /usr/share/adodb"		
-		else
-			echo "ERROR: Adodb was not found on this system !"
-			echo "Please download adodb > 5.04 from http://adodb.sourceforge.net/"
-			echo "and install it at /usr/share/adodb/ and try again."
-			exit -1
-		fi
 	fi
 	$OPENQRM_WEBSERVER_INIT reload
 

@@ -5,6 +5,7 @@ export OPENQRM_SERVER_CONF=$(shell pwd)/../etc/openqrm-server.conf
 configure:
 
 compile:
+	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_get_adodb
 
 install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web
@@ -18,6 +19,7 @@ install:
 	# base/include
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include
 	. $(OPENQRM_SERVER_CONF) && cp base/include/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/include/
+	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_install_adodb
 	# base/js
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/js
 	. $(OPENQRM_SERVER_CONF) && cp base/js/*.js $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/js/
