@@ -32,6 +32,11 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 				$appliance = new appliance();
 				$appliance->get_instance_by_id($id);
 				$resource = new resource();
+				if ($appliance->resources <0) {
+					// an appliance with resource auto-select enabled
+					$appliance_virtualization=$appliance->virtualization;
+					$appliance->find_resource($appliance_virtualization);
+				}
 				$resource->get_instance_by_id($appliance->resources);
 				$kernel = new kernel();
 				$kernel->get_instance_by_id($appliance->kernelid);
@@ -233,7 +238,7 @@ function appliance_form() {
 	// select resource type
 	$disp = $disp."<br>";
 	$disp = $disp."Resource-Type ";
-	$resourcetype_select = appliance_htmlobject_select('resourcetype', $virtualization_list, 'Select Resource-Type', $virtualization_list);
+	$resourcetype_select = appliance_htmlobject_select('appliance_virtualization', $virtualization_list, 'Select Resource-Type', $virtualization_list);
 	$disp = $disp.$resourcetype_select;
 	$disp = $disp."<br>";
 
@@ -281,13 +286,13 @@ function appliance_form() {
 	$arBody[] = array(
 		'resource_state' => "<img src=$auto_state_icon>",
 		'resource_icon' => "<img width=24 height=24 src=$auto_resource_icon>",
-		'resource_id' => '',
+		'resource_id' => '-1',
 		'resource_name' => "auto-select resource",
 		'resource_ip' => "0.0.0.0",
 	);
 
 	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(0, 100, 'resource_id', 'ASC');
+	$resource_array = $resource_tmp->display_overview(1, 100, 'resource_id', 'ASC');
 	foreach ($resource_array as $index => $resource_db) {
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);
@@ -384,7 +389,7 @@ function appliance_edit($appliance_id) {
 	// select resource type
 	$disp = $disp."<br>";
 	$disp = $disp."Resource-Type ";
-	$resourcetype_select = appliance_htmlobject_select('resourcetype', $virtualization_list, 'Select Resource-Type', $virtualization_list);
+	$resourcetype_select = appliance_htmlobject_select('appliance_virtualization', $virtualization_list, 'Select Resource-Type', $virtualization_list);
 	$disp = $disp.$resourcetype_select;
 	$disp = $disp."<br>";
 
@@ -452,13 +457,13 @@ function appliance_edit($appliance_id) {
 	$arBody[] = array(
 		'resource_state' => "<img src=$auto_state_icon>",
 		'resource_icon' => "<img width=24 height=24 src=$auto_resource_icon>",
-		'resource_id' => '',
+		'resource_id' => '-1',
 		'resource_name' => "auto-select resource",
 		'resource_ip' => "0.0.0.0",
 	);
 
 	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(0, 100, 'resource_id', 'ASC');
+	$resource_array = $resource_tmp->display_overview(1, 100, 'resource_id', 'ASC');
 	foreach ($resource_array as $index => $resource_db) {
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);

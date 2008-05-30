@@ -12,6 +12,7 @@
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/class/resource.class.php";
+require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/class/event.class.php";
@@ -290,6 +291,47 @@ function get_list() {
 	$appliance_name_array = openqrm_db_get_result_double ($query);
 	return $appliance_name_array;
 }
+
+
+
+// find a resource fitting to the appliance
+function find_resource($appliance_virtualization) {
+	global $event;
+	$virtualization = new virtualization();
+	$virtualization->get_instance_by_id($appliance_virtualization);
+	$event->log("find_resource", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Trying to find a new resource type $virtualization->name for appliance $this->name .", "", "", 0, 0, $resource_id);
+
+	// for rapid-re-deployment, for now we keep it simple and take the first free resource
+	$resource_tmp = new resource();
+	$resource_list = array();
+	$resource_list = $resource_tmp->get_list();
+	$resource = new resource();
+	foreach ($resource_list as $index => $resource_db) {
+		$resource->get_instance_by_id($resource_db["resource_id"]);
+		if (($resource->id > 0) && ("$resource->imageid" == "1") && ("$resource->state" == "active")) {
+			$new_resource_id = $resource->id;	
+			// TODO check capabilities
+
+
+			$found_new_resource=1;
+			$event->log("find_resource", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found new resource $resource->id for appliance $this->name .", "", "", 0, 0, $resource_id);
+			break;
+		}
+	}	
+	// in case no resources are available log another ha-error event !
+	if ($found_new_resource == 0) {
+		$event->log("find_resource", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", "Could not find a free resource for appliance $this->name !", "", "", 0, 0, 0);
+		exit(0);
+	}
+
+	// if we find an resource which fits to the appliance we update it 
+	$appliance_fields = array();
+	$appliance_fields['resources'] = $new_resource_id;
+	$this->update($appliance->id, $appliance_fields);
+
+	return $this;
+}
+
 
 
 

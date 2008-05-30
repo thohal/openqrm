@@ -101,43 +101,9 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$appliance->update($appliance_id, $appliance_fields);
 			break;
 
-		case 'remove':
-			$appliance = new appliance();
-			$appliance->remove($appliance_id);
-			break;
-
 		case 'remove_by_name':
 			$appliance = new appliance();
 			$appliance->remove_by_name($appliance_name);
-			break;
-
-		case 'start':
-			$appliance = new appliance();
-			$appliance->get_instance_by_id($appliance_id);
-			$resource = new resource();
-			$resource->get_instance_by_id($appliance->resources);
-			$kernel = new kernel();
-			$kernel->get_instance_by_id($appliance->kernelid);
-
-			// send command to the openQRM-server
-			$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac $kernel->name");
-			// start appliance
-			$appliance->start();
-			break;
-
-		case 'stop':
-			$appliance = new appliance();
-			$appliance->get_instance_by_id($appliance_id);
-
-			$resource = new resource();
-			$resource->get_instance_by_id($appliance->resources);
-			$kernel = new kernel();
-			$kernel->get_instance_by_id($appliance->kernelid);
-
-			// send command to the openQRM-server
-			$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
-			// stop appliance
-			$appliance->stop();
 			break;
 
 		default:
