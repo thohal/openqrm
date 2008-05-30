@@ -14,7 +14,7 @@ global $event;
 
 function openqrm_highavailability_ha_hook($resource_id) {
 	global $event;
-	$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 2, "openqrm-highavailability-ha-hook.php", "Handling error event of resource $resource_id", "", "", 0, 0, $resource_id);
+	$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 5, "openqrm-highavailability-ha-hook.php", "Handling error event of resource $resource_id", "", "", 0, 0, $resource_id);
 	$resource_serves_appliance=0;
 	$found_new_resource=0;
 	$new_resource_id = 0;
@@ -35,21 +35,22 @@ function openqrm_highavailability_ha_hook($resource_id) {
 	}
 	// log ha error, do not handle resources which are not in use for now
 	if ($resource_serves_appliance == 0) {
-		$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 2, "openqrm-highavailability-ha-hook.php", "Resource $resource_id does not serves an appliance. Not handling HA.", "", "", 0, 0, $resource_id);
+		$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 5, "openqrm-highavailability-ha-hook.php", "Resource $resource_id does not serves an appliance. Not handling HA.", "", "", 0, 0, $resource_id);
 		exit(0);
 	}
-	$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 2, "openqrm-highavailability-ha-hook.php", "Resource $resource_id serves appliance $appliance->id .", "", "", 0, 0, $resource_id);
+	$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 5, "openqrm-highavailability-ha-hook.php", "Resource $resource_id serves appliance $appliance->id .", "", "", 0, 0, $resource_id);
 	// if resource serves an appliance we need to find a new resource
 	// for rapid-re-deployment, for now we keep it simple and take the first free resource
-	$resource_list = new resource();
-	$resource_list->get_list();
+	$resource_tmp = new resource();
+	$resource_list = array();
+	$resource_list = $resource_tmp->get_list();
 	$resource = new resource();
 	foreach ($resource_list as $index => $resource_db) {
 		$resource->get_instance_by_id($resource_db["resource_id"]);
-		if (($resource->id != 0) && ("$resource->imageid" == "1") && ("$resource->state" == "active")) {
+		if (($resource->id > 0) && ("$resource->imageid" == "1") && ("$resource->state" == "active")) {
 			$new_resource_id = $resource->id;	
 			$found_new_resource=1;
-			$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 2, "openqrm-highavailability-ha-hook.php", "Found new resource $resource->id for appliance $appliance->id .", "", "", 0, 0, $resource_id);
+			$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 5, "openqrm-highavailability-ha-hook.php", "Found new resource $resource->id for appliance $appliance->id .", "", "", 0, 0, $resource_id);
 			break;
 		}
 	}	
@@ -63,7 +64,7 @@ function openqrm_highavailability_ha_hook($resource_id) {
 	// stop the appliance, update it and restart it again
 	$appliance->stop();
 	$appliance_fields = array();
-	$appliance_fields['resource'] = $new_resource_id;
+	$appliance_fields['resources'] = $new_resource_id;
 	$appliance->update($appliance->id, $appliance_fields);
 	$appliance->start();
 	// :)
