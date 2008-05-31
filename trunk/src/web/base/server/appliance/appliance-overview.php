@@ -293,7 +293,7 @@ function appliance_form() {
 	);
 
 	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(0, 100, 'resource_id', 'ASC');
+	$resource_array = $resource_tmp->display_overview(1, 100, 'resource_id', 'ASC');
 	foreach ($resource_array as $index => $resource_db) {
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);
@@ -347,18 +347,22 @@ function appliance_edit($appliance_id) {
 	$appliance = new appliance();
 	$appliance->get_instance_by_id($appliance_id);
 
-	$image = new image();
-	$image_list = array();
-	$image_list = $image->get_list();
-	// remove the idle image from the list
-	array_splice($image_list, 0, 1);
+	if ($appliance_id == 1) {
+		$kernel_list = array(array("value" => '0', "label" => 'openqrm'));
+		$image_list = array(array("value" => '0', "label" => 'openqrm'));
+	} else {
+		$kernel = new kernel();
+		$kernel_list = array();
+		$kernel_list = $kernel->get_list();
+		// remove the openqrm kernelfrom the list
+		array_splice($kernel_list, 0, 1);
 
-	$kernel = new kernel();
-	$kernel_list = array();
-	$kernel_list = $kernel->get_list();
-	// remove the openqrm kernelfrom the list
-	array_splice($kernel_list, 0, 1);
-
+		$image = new image();
+		$image_list = array();
+		$image_list = $image->get_list();
+		// remove the idle image from the list
+		array_splice($image_list, 0, 1);
+	}
 	$virtualization = new virtualization();
 	$virtualization_list = array();
 	$virtualization_list = $virtualization->get_list();
@@ -378,13 +382,16 @@ function appliance_edit($appliance_id) {
 	$disp = $disp.$image_select;
 	$disp = $disp."<br>";
 	$disp = $disp."<hr>";
+
 	$disp = $disp."Requirements";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp.htmlobject_input('appliance_cpuspeed', array("value" => $appliance->cpuspeed, "label" => 'CPU-Speed'), 'text', 20);
-	$disp = $disp.htmlobject_input('appliance_cpumodel', array("value" => $appliance->cpumodel, "label" => 'CPU-Model'), 'text', 20);
-	$disp = $disp.htmlobject_input('appliance_memtotal', array("value" => $appliance->memtotal, "label" => 'Memory'), 'text', 20);
-	$disp = $disp.htmlobject_input('appliance_swaptotal', array("value" => $appliance->swaptotal, "label" => 'Swap'), 'text', 20);
+	if ($appliance_id <> 1) {
+		$disp = $disp.htmlobject_input('appliance_cpuspeed', array("value" => $appliance->cpuspeed, "label" => 'CPU-Speed'), 'text', 20);
+		$disp = $disp.htmlobject_input('appliance_cpumodel', array("value" => $appliance->cpumodel, "label" => 'CPU-Model'), 'text', 20);
+		$disp = $disp.htmlobject_input('appliance_memtotal', array("value" => $appliance->memtotal, "label" => 'Memory'), 'text', 20);
+		$disp = $disp.htmlobject_input('appliance_swaptotal', array("value" => $appliance->swaptotal, "label" => 'Swap'), 'text', 20);
+	}
 	$disp = $disp.htmlobject_input('appliance_capabilities', array("value" => $appliance->capabilities, "label" => 'Capabilities'), 'text', 255);
 
 	// select resource type
@@ -452,19 +459,25 @@ function appliance_edit($appliance_id) {
 
 	$resource_count=0;
 	$arBody = array();
-
-	$auto_resource_icon="/openqrm/base/img/resource.png";
-	$auto_state_icon="/openqrm/base/img/active.png";
-	$arBody[] = array(
-		'resource_state' => "<img src=$auto_state_icon>",
-		'resource_icon' => "<img width=24 height=24 src=$auto_resource_icon>",
-		'resource_id' => '-1',
-		'resource_name' => "auto-select resource",
-		'resource_ip' => "0.0.0.0",
-	);
-
 	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(0, 100, 'resource_id', 'ASC');
+
+	if ($appliance_id == 1) {
+		$resource_array = $resource_tmp->display_overview(0, 1, 'resource_id', 'ASC');
+	} else {
+		// add the auto-select resource 
+		$auto_resource_icon="/openqrm/base/img/resource.png";
+		$auto_state_icon="/openqrm/base/img/active.png";
+		$arBody[] = array(
+			'resource_state' => "<img src=$auto_state_icon>",
+			'resource_icon' => "<img width=24 height=24 src=$auto_resource_icon>",
+			'resource_id' => '-1',
+			'resource_name' => "auto-select resource",
+			'resource_ip' => "0.0.0.0",
+		);
+		$resource_array = $resource_tmp->display_overview(1, 100, 'resource_id', 'ASC');
+	}
+
+
 	foreach ($resource_array as $index => $resource_db) {
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);
