@@ -121,11 +121,11 @@ function appliance_display() {
 	$arHead['appliance_resources'] = array();
 	$arHead['appliance_resources']['title'] ='Resource';
 
+	$arHead['appliance_type'] = array();
+	$arHead['appliance_type']['title'] ='Type';
+
 	$arHead['appliance_comment'] = array();
 	$arHead['appliance_comment']['title'] ='Comment';
-
-	$arHead['appliance_capabilities'] = array();
-	$arHead['appliance_capabilities']['title'] ='Capabilities';
 
 	$arBody = array();
 	$appliance_array = $appliance_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
@@ -158,6 +158,9 @@ function appliance_display() {
 		$kernel->get_instance_by_id($appliance_db["appliance_kernelid"]);
 		$image = new image();
 		$image->get_instance_by_id($appliance_db["appliance_imageid"]);
+		$virtualization = new virtualization();
+		$virtualization->get_instance_by_id($appliance_db["appliance_virtualization"]);
+		$appliance_virtualization_type=$virtualization->name;
 
 		$arBody[] = array(
 			'appliance_state' => "<img src=$state_icon>",
@@ -167,8 +170,8 @@ function appliance_display() {
 			'appliance_kernelid' => $kernel->name,
 			'appliance_imageid' => $image->name,
 			'appliance_resources' => "$appliance_resources",
+			'appliance_type' => $appliance_virtualization_type,
 			'appliance_comment' => $appliance_db["appliance_comment"],
-			'appliance_capabilities' => $appliance_db["appliance_capabilities"],
 		);
 
 	}
