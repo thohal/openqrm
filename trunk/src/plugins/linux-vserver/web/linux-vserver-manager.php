@@ -70,6 +70,9 @@ function linux_vserver_select() {
 	$arHead['linux_vserver_name'] = array();
 	$arHead['linux_vserver_name']['title'] ='Name';
 
+	$arHead['linux_vserver_resource_id'] = array();
+	$arHead['linux_vserver_resource_id']['title'] ='Res.ID';
+
 	$arHead['linux_vserver_resource_ip'] = array();
 	$arHead['linux_vserver_resource_ip']['title'] ='Ip';
 
@@ -102,6 +105,7 @@ function linux_vserver_select() {
 				'linux_vserver_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 				'linux_vserver_id' => $linux_vserver_db["appliance_id"],
 				'linux_vserver_name' => $linux_vserver_resource->hostname,
+				'linux_vserver_resource_id' => $linux_vserver_resource->id,
 				'linux_vserver_resource_ip' => $linux_vserver_resource->ip,
 				'linux_vserver_comment' => $linux_vserver_resource->comment,
 			);
@@ -149,6 +153,9 @@ function linux_vserver_display($appliance_id) {
 	$arHead['linux_vserver_name'] = array();
 	$arHead['linux_vserver_name']['title'] ='Name';
 
+	$arHead['linux_vserver_resource_id'] = array();
+	$arHead['linux_vserver_resource_id']['title'] ='Res.ID';
+
 	$arHead['linux_vserver_resource_ip'] = array();
 	$arHead['linux_vserver_resource_ip']['title'] ='Ip';
 
@@ -178,6 +185,7 @@ function linux_vserver_display($appliance_id) {
 		'linux_vserver_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 		'linux_vserver_id' => $linux_vserver_tmp->id,
 		'linux_vserver_name' => $linux_vserver_resource->hostname,
+		'linux_vserver_resource_id' => $linux_vserver_resource->id,
 		'linux_vserver_resource_ip' => $linux_vserver_resource->ip,
 		'linux_vserver_create' => $linux_vserver_create_button,
 	);

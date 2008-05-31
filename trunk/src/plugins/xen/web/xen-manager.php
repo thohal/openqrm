@@ -71,6 +71,9 @@ function xen_select() {
 	$arHead['xen_name'] = array();
 	$arHead['xen_name']['title'] ='Name';
 
+	$arHead['xen_resource_id'] = array();
+	$arHead['xen_resource_id']['title'] ='Res.ID';
+
 	$arHead['xen_resource_ip'] = array();
 	$arHead['xen_resource_ip']['title'] ='Ip';
 
@@ -103,6 +106,7 @@ function xen_select() {
 				'xen_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 				'xen_id' => $xen_db["appliance_id"],
 				'xen_name' => $xen_resource->hostname,
+				'xen_resource_id' => $xen_resource->id,
 				'xen_resource_ip' => $xen_resource->ip,
 				'xen_comment' => $xen_resource->comment,
 			);
@@ -149,6 +153,9 @@ function xen_display($appliance_id) {
 	$arHead['xen_name'] = array();
 	$arHead['xen_name']['title'] ='Name';
 
+	$arHead['xen_resource_id'] = array();
+	$arHead['xen_resource_id']['title'] ='Res.ID';
+
 	$arHead['xen_resource_ip'] = array();
 	$arHead['xen_resource_ip']['title'] ='Ip';
 
@@ -178,6 +185,7 @@ function xen_display($appliance_id) {
 		'xen_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 		'xen_id' => $xen_tmp->id,
 		'xen_name' => $xen_resource->hostname,
+		'xen_resource_id' => $xen_resource->id,
 		'xen_resource_ip' => $xen_resource->ip,
 		'xen_create' => $xen_create_button,
 	);
