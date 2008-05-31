@@ -198,7 +198,7 @@ insert into user_info (user_id, user_name, user_password, user_gender, user_firs
 insert into role_info (role_id, role_name) values (0, 'administrator')
 insert into role_info (role_id, role_name) values (1, 'readonly')
 
-insert into appliance_info (appliance_id, appliance_name, appliance_kernelid, appliance_imageid, appliance_starttime, appliance_stoptime, appliance_cluster, appliance_ssi, appliance_resources, appliance_highavailable, appliance_virtual, appliance_state, appliance_comment) values (1, 'openqrm', 0, 0, 10000, 0, 0, 0, 0, 0, 0, 'active', 'openQRM-Server');
+insert into appliance_info (appliance_id, appliance_name, appliance_kernelid, appliance_imageid, appliance_starttime, appliance_stoptime, appliance_cluster, appliance_ssi, appliance_resources, appliance_highavailable, appliance_virtual, appliance_virtualization, appliance_state, appliance_comment) values (1, 'openqrm', 0, 0, 10000, 0, 0, 0, 0, 0, 0, 1, 'active', 'openQRM-Server');
 
 
 
