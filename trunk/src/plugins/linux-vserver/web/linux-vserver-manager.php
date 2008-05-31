@@ -22,8 +22,10 @@ if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'refresh':
 			foreach($_REQUEST['identifier'] as $id) {
+				$linux_vserver_appliance = new appliance();
+				$linux_vserver_appliance->get_instance_by_id($id);
 				$linux_vserver = new resource();
-				$linux_vserver->get_instance_by_id($id);
+				$linux_vserver->get_instance_by_id($linux_vserver_appliance->resources);
 				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 				$linux_vserver->send_command($linux_vserver->ip, $resource_command);
 				sleep($refresh_delay);
@@ -80,7 +82,9 @@ function linux_vserver_select() {
 	$linux_vserver_array = $linux_vserver_tmp->display_overview(0, 10, 'appliance_id', 'ASC');
 
 	foreach ($linux_vserver_array as $index => $linux_vserver_db) {
-		if (strstr($linux_vserver_db["appliance_capabilities"], "linux-vserver")) {
+		$virtualization = new virtualization();
+		$virtualization->get_instance_by_id($linux_vserver_db["appliance_virtualization"]);
+		if ((strstr($virtualization->type, "linux-vserver")) && (!strstr($virtualization->type, "linux-vserver-vm"))) {
 			$linux_vserver_resource = new resource();
 			$linux_vserver_resource->get_instance_by_id($linux_vserver_db["appliance_resources"]);
 			$linux_vserver_count++;
@@ -148,8 +152,8 @@ function linux_vserver_display($appliance_id) {
 	$arHead['linux_vserver_resource_ip'] = array();
 	$arHead['linux_vserver_resource_ip']['title'] ='Ip';
 
-	$arHead['linux_vserver_comment'] = array();
-	$arHead['linux_vserver_comment']['title'] ='';
+	$arHead['linux_vserver_create'] = array();
+	$arHead['linux_vserver_create']['title'] ='';
 
 	$linux_vserver_count=1;
 	$arBody = array();

@@ -11,6 +11,7 @@ $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/resource.class.php";
+require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
@@ -22,8 +23,10 @@ if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'refresh':
 			foreach($_REQUEST['identifier'] as $id) {
+				$xen_appliance = new appliance();
+				$xen_appliance->get_instance_by_id($id);
 				$xen = new resource();
-				$xen->get_instance_by_id($id);
+				$xen->get_instance_by_id($xen_appliance->resources);
 				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 				$xen->send_command($xen->ip, $resource_command);
 				sleep($refresh_delay);
@@ -80,7 +83,9 @@ function xen_select() {
 	$xen_array = $xen_tmp->display_overview(0, 10, 'appliance_id', 'ASC');
 
 	foreach ($xen_array as $index => $xen_db) {
-		if (strstr($xen_db["appliance_capabilities"], "xen")) {
+		$virtualization = new virtualization();
+		$virtualization->get_instance_by_id($xen_db["appliance_virtualization"]);
+		if ((strstr($virtualization->type, "xen")) && (!strstr($virtualization->type, "xen-vm"))) {
 			$xen_resource = new resource();
 			$xen_resource->get_instance_by_id($xen_db["appliance_resources"]);
 			$xen_count++;
@@ -147,8 +152,8 @@ function xen_display($appliance_id) {
 	$arHead['xen_resource_ip'] = array();
 	$arHead['xen_resource_ip']['title'] ='Ip';
 
-	$arHead['xen_comment'] = array();
-	$arHead['xen_comment']['title'] ='';
+	$arHead['xen_create'] = array();
+	$arHead['xen_create']['title'] ='';
 
 	$xen_count=1;
 	$arBody = array();

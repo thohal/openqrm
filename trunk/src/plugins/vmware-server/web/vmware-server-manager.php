@@ -11,6 +11,7 @@ $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/resource.class.php";
+require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
@@ -46,9 +47,11 @@ function vmware_server_htmlobject_select($name, $value, $title = '', $selected =
 
 
 function vmware_server_select() {
+
 	global $OPENQRM_USER;
 	global $thisfile;
 	$table = new htmlobject_db_table('vmware_server_id');
+
 
 	$disp = "<h1>Select vmware-server-Host</h1>";
 	$disp = $disp."<br>";
@@ -82,10 +85,12 @@ function vmware_server_select() {
 	$vmware_server_count=0;
 	$arBody = array();
 	$vmware_server_tmp = new appliance();
-	$vmware_server_array = $vmware_server_tmp->display_overview(0, 10, 'appliance_id', 'ASC');
+	$vmware_server_array = $vmware_server_tmp->display_overview(0, 100, 'appliance_id', 'ASC');
 
 	foreach ($vmware_server_array as $index => $vmware_server_db) {
-		if (strstr($vmware_server_db["appliance_capabilities"], "vmware-server")) {
+		$virtualization = new virtualization();
+		$virtualization->get_instance_by_id($vmware_server_db["appliance_virtualization"]);
+		if ((strstr($virtualization->type, "vmware-server")) && (!strstr($virtualization->type, "vmware-server-vm"))) {
 			$vmware_server_resource = new resource();
 			$vmware_server_resource->get_instance_by_id($vmware_server_db["appliance_resources"]);
 			$vmware_server_count++;
