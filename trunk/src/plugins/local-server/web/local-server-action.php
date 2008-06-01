@@ -94,6 +94,8 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$appliance_fields["appliance_starttime"]=$now;
 			$appliance_fields["appliance_stoptime"]=0;
 			$appliance_fields['appliance_state']='active';
+			// set resource type to physical
+			$appliance_fields['appliance_virtualization']=1;
 			$appliance->update($next_appliance_id, $appliance_fields);
 
 			// set resource to localboot
