@@ -202,9 +202,6 @@ function manage_vblade() {
 			echo "disk $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME" >> $VBLADECONF
 			# start vbladed
 			vbladed $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
-			# this is a trick !
-			# vbladed used waitpid which blocks qrm-execd, using nohup, screen or & does not help so we restart the openqrm-client
-			/etc/init.d/openqrm-client restart &
 			;;
 		remove)
 			for VBLADE_PID in `ps ax | grep vblade | grep -w $LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME | awk {' print $1 '}`; do

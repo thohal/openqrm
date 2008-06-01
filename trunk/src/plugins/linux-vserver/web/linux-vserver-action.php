@@ -22,6 +22,10 @@ require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 global $OPENQRM_SERVER_BASE_DIR;
 global $RESOURCE_INFO_TABLE;
+global $OPENQRM_EXEC_PORT;
+$openqrm_server = new openqrm_server();
+$OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
+global $OPENQRM_SERVER_IP_ADDRESS;
 
 // place for the linux-vserver stat files
 $vserver_vm_dir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/linux-vserver/linux-vserver-stat';
@@ -46,7 +50,7 @@ foreach ($_REQUEST as $key => $value) {
 }
 unset($linux_vserver_fields["linux_vserver_command"]);
 
-	$event->log("$linux_vserver_command", $_SERVER['REQUEST_TIME'], 5, "xem-action", "Processing linux-vserver command $linux_vserver_command", "", "", 0, 0, 0);
+	$event->log("$linux_vserver_command", $_SERVER['REQUEST_TIME'], 5, "linux-vserver-action", "Processing linux-vserver command $linux_vserver_command", "", "", 0, 0, 0);
 	switch ($linux_vserver_command) {
 
 		case 'new':

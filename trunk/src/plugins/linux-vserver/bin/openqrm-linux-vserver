@@ -193,7 +193,10 @@ EOF
 		mkdir -p $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/tmp
 		mkdir -p $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/dev/pts
 		# creating the devices
-		$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/bin/busybox makedevs -d $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/etc/initrd-devices.conf $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/
+		if ! $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/bin/busybox makedevs -d $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/etc/initrd-devices.conf $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/; then
+			# copy from hosts /dev
+			cp -aR /dev/* $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/dev/
+		fi
 
 		# adapt rc
 		rm -f $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/etc/rc.d/rc

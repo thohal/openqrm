@@ -33,6 +33,21 @@ function lvm_storage_usage() {
 }
 
 
+function lvm_aoe_restart_exec() {
+	if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+		. $OPENQRM_RESOURCE_PARAMETER_FILE
+		OPENQRM_SYSTEM_IP=$resource_ip
+		OPENQRM_EXEC_PORT=$resource_execdport
+	elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+		. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+		openqrm_server_get_config
+		OPENQRM_SYSTEM_IP=$OPENQRM_SERVER_IP_ADDRESS
+	fi
+	killall openqrm-exec-port-monitor 1>/dev/null 2>&1
+	killall openqrm-execd 1>/dev/null 2>&1
+	$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec-port-monitor $OPENQRM_SYSTEM_IP $OPENQRM_EXEC_PORT | $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-execd &
+}
+
 LVM_COMMAND=$1
 shift
 
@@ -158,6 +173,8 @@ case "$LVM_COMMAND" in
 			check_vblade
 			lvm_storage_lock aquire
 			manage_vblade add
+			# vbladed used waitpid which blocks qrm-execd, using nohup, screen or & does not help so we restart the openqrm-client
+			lvm_aoe_restart_exec
 			lvm_storage_lock release
 		fi
 
