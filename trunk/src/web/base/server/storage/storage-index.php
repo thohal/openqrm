@@ -107,7 +107,7 @@ function storage_display() {
 			'storage_type' => $storage_type->name,
 			'storage_resource_id' => "$storage_resource->id/$storage_resource->ip",
 			'storage_comment' => $storage_db["storage_comment"],
-			'storage_edit' => '<a href="storage-edit.php?storage_id='.$storage_db["storage_id"].'">edit</a>',
+			'storage_edit' => '<a href="storage-edit.php?storage_id='.$storage_db["storage_id"].'&currenttab=tab2">edit</a>',
 		);
 
 	}
@@ -133,15 +133,20 @@ function storage_display() {
 
 
 $output = array();
-$output[] = array('label' => 'Storage-List', 'value' => storage_display());
-
+$output[] = array('label' => 'Storage List', 'value' => storage_display());
+$output[] = array('label' => 'New Storage', 'target' => 'storage-edit.php');
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
 <link rel="stylesheet" type="text/css" href="storage.css" />
-<a href="storage-edit.php">new</a>
 <?php
-echo htmlobject_tabmenu($output);
+
+$tabmenu = new htmlobject_tabmenu($output);
+$tabmenu->css = 'htmlobject_tabs';
+
+
+
+echo $tabmenu->get_string();
 ?>
 
 

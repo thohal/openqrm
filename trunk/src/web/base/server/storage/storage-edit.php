@@ -67,6 +67,7 @@ $error = 0;
 				
 				$args = '?strMsg='.$strMsg;
 				$args .= '&storage_id='.$storage_fields["storage_id"];
+				$args .= '&currentab=tab1';
 				$url = $thisfile.$args;
 
 			} 
@@ -120,6 +121,7 @@ $error = 0;
 				
 				$args = '?strMsg='.$strMsg;
 				$args .= '&storage_id='.$storage_fields["storage_id"];
+				$args .= '&currenttab=tab2';
 				$url = $thisfile.$args;
 
 			} 
@@ -164,6 +166,7 @@ function storage_edit($storage_id='') {
 		$store .= htmlobject_select('storage_type', $storagetype_list, 'Storage type', array(htmlobject_request('storage_type')));
 		$store .= htmlobject_textarea('storage_capabilities', array("value" => htmlobject_request('storage_capabilities'), "label" => 'Storage Capabilities'));
 		$store .= htmlobject_textarea('storage_comment', array("value" => htmlobject_request('storage_comment'), "label" => 'Comment'));
+		$store .= htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden');
 	}
 
 
@@ -195,7 +198,10 @@ function storage_edit($storage_id='') {
 		$store .= htmlobject_textarea('storage_capabilities', array("value" => $storage->capabilities, "label" => 'Storage Capabilities'));
 		$store .= htmlobject_textarea('storage_comment', array("value" => $storage->comment, "label" => 'Comment'));
 		$store .= htmlobject_input('storage_id', array("value" => $storage_id, "label" => ''), 'hidden');
+		$store .= htmlobject_input('currenttab', array("value" => 'tab2', "label" => ''), 'hidden');
 	}
+
+
 
 		$resource_tmp = new resource();
 
@@ -280,9 +286,9 @@ function storage_edit($storage_id='') {
 				$table->bottom = array('add');
 				if(isset($_REQUEST['identifier'])) {
 					$ar = $_REQUEST['identifier'];
-					foreach($_REQUEST['identifier'] as $id) {
-						$ar .= $id.',';
-					}
+					#foreach($_REQUEST['identifier'] as $id) {
+					#	$ar .= $id.',';
+					#}
 					$table->identifier_checked = array($_REQUEST['identifier']);
 				}
 			}
@@ -292,27 +298,39 @@ function storage_edit($storage_id='') {
 		$all = $resource_tmp->get_count('all');
 		#$table->limit = 3;
 		$table->max = $all + 1; // add openqrmserver
-		return $table->get_string();
+		
+		if (count($storagetype_list) > 0) {
+			return $table->get_string();
+		} else {
+			$str = '<center>';
+			$str .= '<h1>No storage plugins enabled</h1>';
+			$str .= '<br><br>';
+			$str .= '<a href="../../plugins/aa_plugins/plugin-manager.php">Pluginmanager</a>';
+			$str .= '</center>';
+			$str .= '<br><br>';
+			return $str;
+		}
 }
 
 
 $output = array();
-#$output[] = array('label' => 'Storage-List', 'value' => storage_display());
-#$output[] = array('label' => 'New', 'value' => storage_form());
-
-
+$output[] = array('label' => 'Storage List', 'value' => '', 'target' => 'storage-index.php');
+$output[] = array('label' => 'New Storage', 'value' => storage_edit());
 if($storage_id != '') {
-	$output[] = array('label' => 'Edit Storage', 'value' => storage_edit($storage_id));
-} 
-if($storage_id == '') {
-	$output[] = array('label' => 'New Storage', 'value' => storage_edit());
+	$output[] = array('label' => 'Edit Storage', 'value' => storage_edit($storage_id), 'request' => array('storage_id' => $storage_id));
 }
+
 		
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
 <link rel="stylesheet" type="text/css" href="storage.css" />
-<a href="storage-index.php">new</a>
 <?php
-echo htmlobject_tabmenu($output);
+
+$tabmenu = new htmlobject_tabmenu($output);
+$tabmenu->css = 'htmlobject_tabs';
+
+
+
+echo $tabmenu->get_string();
 ?>

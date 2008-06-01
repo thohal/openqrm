@@ -114,9 +114,10 @@ function htmlobject_textarea($name, $value) {
 */
 function htmlobject_tabmenu($value) {
 
-	$tabmenu = new htmlobject_tabmenu();
+	$tabmenu = new htmlobject_tabmenu($value);
 	$tabmenu->css = 'htmlobject_tabs';
 
+	/*
 	$i = 0;
 	foreach ($value as $val) {
 		$html = new htmlobject_div();
@@ -127,6 +128,7 @@ function htmlobject_tabmenu($value) {
 		$tabmenu->add($html);
 		$i++;
 	}
+*/
 
 	return $tabmenu->get_string();
 }
