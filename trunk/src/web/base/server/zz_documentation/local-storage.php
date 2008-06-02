@@ -28,9 +28,9 @@ function documentation_local_storage() {
 		$disp .= "<li>";
 		$disp .= "choose storage overview";
 		$disp .= "</li><li>";
-		$disp .= "-> select new storage";
+		$disp .= "select new storage";
 		$disp .= "</li><li>";
-		$disp .= "-> fill in : storage name, storage type ('local-storage' server), storage capabilities,";
+		$disp .= "fill in : storage name, storage type ('local-storage' server), storage capabilities,";
 		$disp .= "<br>";
 		$disp .= "comment and select the storage server in the resource list";
 		$disp .= "</li>";
@@ -40,15 +40,15 @@ function documentation_local_storage() {
 	$disp .= "<b>Create a new 'local-deployment' image</b>";
 		$disp .= "<ul>";
 		$disp .= "<li>";
-		$disp .= "-> choose images overview";
+		$disp .= "choose images overview";
 		$disp .= "</li><li>";
-		$disp .= "-> select new image";
+		$disp .= "select new image";
 		$disp .= "</li><li>";
-		$disp .= "-> select 'local-deployment'";
+		$disp .= "select 'local-deployment'";
 		$disp .= "</li><li>";
-		$disp .= "-> fill in : image name, image version, root device, root-fs type, deployment parameter, comment, capabalities and select the local storage server from the local storage server list";
+		$disp .= "fill in : image name, image version, root device, root-fs type, deployment parameter, comment, capabalities and select the local storage server from the local storage server list";
 		$disp .= "</li><li>";
-		$disp .= "-> deployment parameters :";
+		$disp .= "deployment parameters :";
 			$disp .= "<ul>";
 			$disp .= "<li>";
 
@@ -73,11 +73,11 @@ function documentation_local_storage() {
 	$disp .= "<b>Create a new appliance (link kernel, image and resource)</b>";
 		$disp .= "<ul>";
 		$disp .= "<li>";
-		$disp .= "-> choose appliances overview";
+		$disp .= "choose appliances overview";
 		$disp .= "</li><li>";
-		$disp .= "-> select new appliance";
+		$disp .= "select new appliance";
 		$disp .= "</li><li>";
-		$disp .= "-> fill in : appliance name, select kernel (mostly default), select server image (the one you just made), give optional parameters and select the resource (where you want to grab or install an image)";
+		$disp .= "fill in : appliance name, select kernel (mostly default), select server image (the one you just made), give optional parameters and select the resource (where you want to grab or install an image)";
 		$disp .= "</li>";
 		$disp .= "</ul>";
 
@@ -85,7 +85,7 @@ function documentation_local_storage() {
 		$disp .= "<b>If you want to grab or install the image</b>";
 		$disp .= "<ul>";
 		$disp .= "<li>";
-		$disp .= "-> start the appliance";
+		$disp .= "start the appliance";
 		$disp .= "</li>";
 		$disp .= "</ul>";
 
