@@ -14,21 +14,33 @@
 	width:110px;
 	vertical-align:top;
 }
-.htmlobject_td.appliance_version {
+.htmlobject_td.appliance_kernelid {
 	text-align:left;
 	width:110px;
+	vertical-align:top;
+}
+.htmlobject_td.appliance_imageid {
+	text-align:left;
+	width:110px;
+	vertical-align:top;
+}
+.htmlobject_td.appliance_resources {
+	text-align:left;
+	width:200px;
+	vertical-align:top;
+}
+.htmlobject_td.appliance_type {
+	text-align:left;
+	width:300px;
 	vertical-align:top;
 }
 .htmlobject_td.appliance_comment {
 	text-align:left;
-	width:110px;
+	width:300px;
 	vertical-align:top;
 }
-.htmlobject_td.appliance_capabilities {
-	text-align:left;
-	width:320px;
-	vertical-align:top;
-}
+
+
 .htmlobject_td.identifier {
 	text-align:center;
 	vertical-align:top;
