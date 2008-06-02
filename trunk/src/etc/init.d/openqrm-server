@@ -79,6 +79,26 @@ function openqrm_server_init() {
 		HTPASSWD="htpasswd2"
 		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
 		cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/apache2/conf.d/openqrm-httpd.conf
+		# we need a special treatment for suse to allow followsymlinks in the default-setup
+		DEFAULT_CONF=/etc/apache2/default-server.conf
+		NEW_CONF=/etc/apache2/default-server.conf.new
+		if [ -f $DEFAULT_CONF ]; then
+			if grep Options $DEFAULT_CONF | grep -v "#" | head -n1 | grep None 1>/dev/null; then
+				echo "Need to allow FollowSymLinks in default-server.conf"
+				OLD_IFS=$IFS
+				IFS=$NEWLINE
+				for LINE in `cat $DEFAULT_CONF`; do
+					if echo $LINE | grep -v '#' | grep Options | grep None 1>/dev/null; then
+						echo "  Options FollowSymLinks" >> $NEW_CONF
+					else
+						echo $LINE >> $NEW_CONF
+					fi
+				done
+		        IFS=$OLD_IFS
+		        cp -f $DEFAULT_CONF $DEFAULT_CONF.org
+		        mv -f $NEW_CONF $DEFAULT_CONF
+			fi
+		fi
 	fi
 	$OPENQRM_WEBSERVER_INIT reload
 
