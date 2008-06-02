@@ -290,7 +290,7 @@ function image_edit($image_id) {
 	$disp = $disp.$disabled_input_image_type->get_string();
 	$disp = $disp.htmlobject_input('image_rootdevice', array("value" => $image->rootdevice, "label" => 'Image root-device'), 'text', 20);
 	$disp = $disp.htmlobject_input('image_rootfstype', array("value" => $image->rootfstype, "label" => 'Image root-fs type'), 'text', 20);
-	if ($image->isshared == "0") {
+	if ($image->isshared != "1") {
 	    $disp = $disp."<input type='checkbox' name='image_isshared' value='1'> Shared Image<br>";
 	} else {
 	    $disp = $disp."<input type='checkbox' checked name='image_isshared' value='1'> Shared Image<br>";
@@ -328,14 +328,14 @@ function image_edit($image_id) {
 	$arHead['storage_name'] = array();
 	$arHead['storage_name']['title'] ='Name';
 
-	$arHead['storage_deployment_type'] = array();
-	$arHead['storage_deployment_type']['title'] ='Type';
+	$arHead['storage_type'] = array();
+	$arHead['storage_type']['title'] ='Type';
 
 	$arHead['storage_resource_id'] = array();
 	$arHead['storage_resource_id']['title'] ='Resource';
 
-	$arHead['storage_resource_id'] = array();
-	$arHead['storage_resource_id']['title'] ='Ip';
+	$arHead['storage_resource_ip'] = array();
+	$arHead['storage_resource_ip']['title'] ='Ip';
 
 	$arHead['storage_comment'] = array();
 	$arHead['storage_comment']['title'] ='Comment';
@@ -345,21 +345,16 @@ function image_edit($image_id) {
 
 	foreach ($storage_array as $index => $storage_db) {
 
-		if ($deployment_tmp->id == $storage_db["storage_deployment_type"]) {
+		if ($deployment_tmp->storagetype_id == $storage_db["storage_type"]) {
+
 		
 			$storage = new storage();
 			$storage->get_instance_by_id($storage_db["storage_id"]);
 			$storage_resource = new resource();
 			$storage_resource->get_instance_by_id($storage->resource_id);
 			$storage_deployment = new deployment();
-			$storage_deployment->get_instance_by_id($storage->deployment_type);
-			$cap_array = explode(" ", $storage->capabilities);
-			foreach ($cap_array as $index => $capabilities) {
-				if (strstr($capabilities, "STORAGE_TYPE")) {
-					$STORAGE_TYPE=str_replace("STORAGE_TYPE=\\\"", "", $capabilities);
-					$STORAGE_TYPE=str_replace("\\\"", "", $STORAGE_TYPE);
-				}
-			}
+			$storage_deployment->get_instance_by_id($storage->type);
+
 			$resource_icon_default="/openqrm/base/img/resource.png";
 			$storage_icon="/openqrm/base/plugins/$STORAGE_TYPE/img/storage.png";
 			$state_icon="/openqrm/base/img/$storage_resource->state.png";
@@ -374,7 +369,7 @@ function image_edit($image_id) {
 				'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 				'storage_id' => $storage_db["storage_id"],
 				'storage_name' => $storage_db["storage_name"],
-				'storage_deployment_type' => $storage_deployment->type,
+				'storage_type' => "$storage->type / $storage_deployment->type",
 				'storage_resource_id' => "$storage_resource->id",
 				'storage_resource_ip' => "$storage_resource->ip",
 				'storage_comment' => $storage_db["storage_comment"],
