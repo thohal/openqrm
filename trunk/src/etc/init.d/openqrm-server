@@ -153,6 +153,9 @@ function openqrm_server_uninstall() {
 	fi
 	$OPENQRM_WEBSERVER_INIT reload
 
+	// remove default file to re-init at next startup
+	rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default
+
 	echo "Uninstallation of openQRM-server finished"
 }
 
