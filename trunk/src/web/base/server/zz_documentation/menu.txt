@@ -7,5 +7,6 @@
 ..|Installation|server/zz_documentation/installation.php
 ..|HowTo|server/zz_documentation/howtos.php
 ...|Quick Start|server/zz_documentation/quickstart.php
+...|Local-Storage|server/zz_documentation/local-storage.php
 ..|Plugins|server/zz_documentation/plugins.php
 ..|Development|server/zz_documentation/development.php

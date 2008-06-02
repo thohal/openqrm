@@ -12,10 +12,11 @@ function documentation_howtos() {
 	$disp = $disp."This section provides HowTo's (and links to HowTo's) guiding how to manage different scenarios with openQRM.";
 	$disp = $disp."<ul>";
 	$disp = $disp."<li>";
-	$disp = $disp."<a href='quickstart.php'>Get started</a>.";
+	$disp = $disp."<a href='quickstart.php'>Get started</a>";
+	$disp = $disp."</li><li>";
+	$disp = $disp."<a href='local-storage.php'>Local-Storage deployment</a>";
 	$disp = $disp."</li><li>";
 	$disp = $disp."(soon come)";
-	$disp = $disp."</li><li>";
 	$disp = $disp."</li>";
 	$disp = $disp."</ul>";
 	$disp = $disp."<br>";
