@@ -28,10 +28,6 @@ function netapp_about() {
 	$disp = $disp." openQRM then manages the Volumes, Nfs-exports and Iscsi-Luns on the NetApp-Filer automatically.";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."Please notice that for now the resource of the NetApp-Filer will go into 'error' state because it does not run the openQRM-monitoring framework.";
-	$disp = $disp." We are working on fixing this ....";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 	$disp = $disp."<b>NetApp-deployment type :</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."The NetApp-deployment type supports to boot servers/resources directly from the NetApp-stoage server via the NFS- or the Iscsi-protokol.";
