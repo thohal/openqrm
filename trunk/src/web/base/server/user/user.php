@@ -23,7 +23,7 @@ global $user;
 
 $GLOBALS['html_id'] = htmlobject_input('id', $user->id, 'hidden', 5);
 $GLOBALS['html_name'] = htmlobject_input('name', $user->name, 'text', 20);
-$GLOBALS['html_password'] = htmlobject_input('password', $user->password, 'text', 20);
+$GLOBALS['html_password'] = htmlobject_input('password', $user->password, 'password', 20);
 $GLOBALS['html_gender'] = htmlobject_select('gender', $user->get_gender_list(), $user->gender['label'], array($user->gender['value']));
 $GLOBALS['html_first_name'] = htmlobject_input('first_name', $user->first_name, 'text', 50);
 $GLOBALS['html_last_name'] = htmlobject_input('last_name', $user->last_name, 'text', 50);
