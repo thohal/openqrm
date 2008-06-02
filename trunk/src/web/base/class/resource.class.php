@@ -495,7 +495,8 @@ function check_all_states() {
 		}
 
 		// check for statistics (errors) for all resources which are not offline
-		if ("$resource_state" != "off") {
+		// exclude manual added resources from the check !
+		if (("$resource_state" != "off") && ("$resource_lastgood" != "-1")) {
 			if (($check_time - $resource_lastgood) > $RESOURCE_TIME_OUT) {
 				$resource_fields=array();
 				$resource_fields["resource_state"]="error";

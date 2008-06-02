@@ -87,6 +87,9 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			$resource_fields["resource_id"]=$new_resource_id;
 			$resource_fields["resource_localboot"]=0;
 			$resource->add($resource_fields);
+			// set lastgood to -1 to prevent automatic checking the state
+			$resource_fields["resource_lastgood"]=-1;
+			$resource->update_info($new_resource_id, $resource_fields);
 			// $resource->get_parameter($new_resource_id);
 
 			break;
