@@ -14,17 +14,22 @@
 	width:110px;
 	vertical-align:top;
 }
-.htmlobject_td.storage_version {
+.htmlobject_td.storage_type {
+	text-align:left;
+	width:110px;
+	vertical-align:top;
+}
+.htmlobject_td.storage_resource_id {
 	text-align:left;
 	width:110px;
 	vertical-align:top;
 }
 .htmlobject_td.storage_comment {
 	text-align:left;
-	width:110px;
+	width:320px;
 	vertical-align:top;
 }
-.htmlobject_td.storage_capabilities {
+.htmlobject_td.storage_edit {
 	text-align:left;
 	width:320px;
 	vertical-align:top;
@@ -34,6 +39,7 @@
 	vertical-align:top;
 	width:20px;
 }
+
 
 .htmlobject_td.resource_state {
 	text-align:center;

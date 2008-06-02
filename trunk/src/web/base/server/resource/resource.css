@@ -9,22 +9,38 @@
 	width:25px;
 	vertical-align:top;
 }
-.htmlobject_td.resource_name {
+.htmlobject_td.resource_hostname {
 	text-align:left;
 	width:110px;
 	vertical-align:top;
 }
-.htmlobject_td.resource_version {
+.htmlobject_td.resource_kernel {
 	text-align:left;
 	width:110px;
 	vertical-align:top;
 }
-.htmlobject_td.resource_comment {
+.htmlobject_td.resource_image {
 	text-align:left;
 	width:110px;
 	vertical-align:top;
 }
-.htmlobject_td.resource_capabilities {
+.htmlobject_td.resource_ip {
+	text-align:left;
+	width:320px;
+	vertical-align:top;
+}
+
+.htmlobject_td.resource_memtotal {
+	text-align:left;
+	width:320px;
+	vertical-align:top;
+}
+.htmlobject_td.resource_swaptotal {
+	text-align:left;
+	width:320px;
+	vertical-align:top;
+}
+.htmlobject_td.resource_load {
 	text-align:left;
 	width:320px;
 	vertical-align:top;
