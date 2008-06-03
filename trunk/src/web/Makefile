@@ -6,6 +6,7 @@ configure:
 
 compile:
 	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_get_adodb
+	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_get_api_docu
 
 install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web
@@ -77,6 +78,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp base/server/zz_documentation/*.txt $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/zz_documentation/
 	. $(OPENQRM_SERVER_CONF) && cp base/server/zz_documentation/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/zz_documentation/
 	. $(OPENQRM_SERVER_CONF) && cp base/server/zz_documentation/*.css $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/zz_documentation/
+	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_install_api_docu
 	# base/plugins/aa_plugins
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/aa_plugins
 	. $(OPENQRM_SERVER_CONF) && cp base/plugins/aa_plugins/*.txt $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/aa_plugins/

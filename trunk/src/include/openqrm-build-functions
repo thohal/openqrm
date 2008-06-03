@@ -437,6 +437,24 @@ function openqrm_install_adodb() {
 
 
 
+# function to provide the api-documentation
+# -> this is for "make" phase
+function openqrm_get_api_docu() {
+	CURRENT_DIR=`pwd`
+	openqrm_cache_or_download openqrm-api-docu
+	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-api-docu/
+	tar -xzf openqrm-api-docu-$OPENQRM_SERVER_VERSION.tgz
+	cd $CURRENT_DIR
+}
+
+# function to install the api-documentation
+# -> this is for "make install" phase
+function openqrm_install_api_docu() {
+	mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/zz_documentation/api
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-api-docu/openqrm-api-docu-$OPENQRM_SERVER_VERSION/* $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/zz_documentation/api/
+}
+
+
 
 
 

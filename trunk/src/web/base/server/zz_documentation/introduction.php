@@ -33,6 +33,9 @@ function documentation_introduction() {
 	$disp = $disp."</li><li>";
 	$disp = $disp."<a href='development.php'>Development</a>.";
 	$disp = $disp."</li>";
+	$disp = $disp."</li><li>";
+	$disp = $disp."<a href='api/index.html'>API-Documentation</a>.";
+	$disp = $disp."</li>";
 	$disp = $disp."</ul>";
 	$disp = $disp."<br>";
 
