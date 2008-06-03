@@ -88,9 +88,9 @@ $identifier = htmlobject_request('identifier');
 				if (in_array($id, $plugins_enabled)) {
 					$return = $openqrm_server->send_command("openqrm_server_plugin_command $id stop");
 					if($return === true) {
-						$strMsg .= 'stoped '.$id.'<br>';
+						$strMsg .= 'stopped '.$id.'<br>';
 					} else {
-						$strMsg .= $id.' not stoped <br>';
+						$strMsg .= $id.' not stopped <br>';
 					}
 				} else {
 					$strMsg .= $id.' must be enabled first <br>';
