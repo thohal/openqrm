@@ -18,7 +18,7 @@ function documentation_nfs_storage() {
 	$disp .= "<br>";
 	$disp .= "<ul>";
 	$disp .= "<li>";
-	$disp .= "<b>enable and start the nfs-storage plugin via the plugin manager</b>";
+	$disp .= "<b>Enable and start the nfs-storage plugin via the plugin manager</b>";
 	$disp .= "</li><li>";
 	$disp .= "<b>Create a new 'nfs-storage' storage component</b>";
 		$disp .= "<ul>";
