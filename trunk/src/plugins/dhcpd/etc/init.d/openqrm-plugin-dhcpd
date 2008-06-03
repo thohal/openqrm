@@ -25,7 +25,7 @@ function openqrm_plugin_dhcpd_start() {
 
 
 function openqrm_plugin_dhcpd_stop() {
-	echo "Stopping the openQRM dhcpd plugin"
+	echo "Stopping the openQRM dhcpd-plugin"
 	killall dhcpd 1>/dev/null 2>&1
 	killall dhcpd3 1>/dev/null 2>&1
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dhcpd/.running
@@ -34,7 +34,7 @@ function openqrm_plugin_dhcpd_stop() {
 
 
 function openqrm_plugin_dhcpd_init() {
-	echo "Initializing the openQRM dhcpd plugin"
+	echo "Initializing the openQRM dhcpd-plugin"
 	openqrm_server_get_config
 	# create leases dir
 	mkdir -p $OPENQRM_PLUGIN_DHCPD_LEASE_DIR
@@ -83,7 +83,7 @@ function openqrm_plugin_dhcpd_init() {
 
 
 function openqrm_plugin_dhcpd_uninstall() {
-	echo "Uninstalling the openQRM dhcpd plugin"
+	echo "Uninstalling the openQRM dhcpd-plugin"
 	openqrm_plugin_dhcpd_stop
 	# unlinking the web dir
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dhcpd

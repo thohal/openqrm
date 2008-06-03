@@ -17,7 +17,7 @@ function openqrm_plugin_nagios2_start() {
 
 
 function openqrm_plugin_nagios2_stop() {
-	echo "Stopping the openQRM nagios2 plugin"
+	echo "Stopping the openQRM nagios2-plugin"
 	/etc/init.d/nagios2 stop 2>&1
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios2/.running
 	return 0
@@ -25,7 +25,7 @@ function openqrm_plugin_nagios2_stop() {
 
 
 function openqrm_plugin_nagios2_init() {
-	echo "Initializing the openQRM nagios2 plugin"
+	echo "Initializing the openQRM nagios2-plugin"
 	CURRENT_DIR=`pwd`
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios2
@@ -57,7 +57,7 @@ function openqrm_plugin_nagios2_init() {
 
 
 function openqrm_plugin_nagios2_uninstall() {
-	echo "Uninstalling the openQRM nagios2 plugin"
+	echo "Uninstalling the openQRM nagios2-plugin"
 	openqrm_plugin_nagios2_stop
 	# unlinking the web dir
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios2

@@ -15,14 +15,14 @@ function openqrm_plugin_highavailability_start() {
 
 
 function openqrm_plugin_highavailability_stop() {
-	echo "Stopping the openQRM highavailability plugin"
+	echo "Stopping the openQRM highavailability-plugin"
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/highavailability/.running
 	return 0
 }
 
 
 function openqrm_plugin_highavailability_init() {
-	echo "Initializing the openQRM highavailability plugin"
+	echo "Initializing the openQRM highavailability-plugin"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/highavailability/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/highavailability
 	return 0
@@ -30,7 +30,7 @@ function openqrm_plugin_highavailability_init() {
 
 
 function openqrm_plugin_highavailability_uninstall() {
-	echo "Uninstalling the openQRM highavailability plugin"
+	echo "Uninstalling the openQRM highavailability-plugin"
 	openqrm_plugin_highavailability_stop
 	# unlinking the web dir
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/highavailability

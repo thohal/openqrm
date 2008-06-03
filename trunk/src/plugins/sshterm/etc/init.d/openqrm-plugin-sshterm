@@ -16,7 +16,7 @@ function openqrm_plugin_sshterm_start() {
 }
 
 function openqrm_plugin_sshterm_stop() {
-	echo "Stopping the openQRM sshterm plugin"
+	echo "Stopping the openQRM sshterm-plugin"
 	killall  python /usr/share/ajaxterm/ajaxterm.py 1>/dev/null 2>&1
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sshterm/.running
 	return 0
@@ -24,7 +24,7 @@ function openqrm_plugin_sshterm_stop() {
 
 
 function openqrm_plugin_sshterm_init() {
-	echo "Initializing the openQRM sshterm plugin"
+	echo "Initializing the openQRM sshterm-plugin"
 	
 
 	# linking the web dir
@@ -35,7 +35,7 @@ function openqrm_plugin_sshterm_init() {
 
 
 function openqrm_plugin_sshterm_uninstall() {
-	echo "Uninstalling the openQRM sshterm plugin"
+	echo "Uninstalling the openQRM sshterm-plugin"
 	openqrm_plugin_sshterm_stop
 	# unlinking the web dir
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sshterm
