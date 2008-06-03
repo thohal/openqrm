@@ -38,6 +38,12 @@ function openqrm_plugin_tftpd_init() {
 	if [ -f /etc/debian_version ]; then
 		/etc/init.d/tftpd-hpa stop
 		update-rc.d -f tftpd-hpa remove
+		# inetd ?
+		if [ -f /etc/inetd.conf ]; then
+			sed -i -e "s/^tftp/#tftp/g" /etc/inetd.conf
+			INETDPID=`ps ax | grep inetd | grep -v grep | awk {' print $1 '}`
+			kill -HUP $INETDPID 1>/dev/null 2>&1
+		fi
 	else
 		sed -i -e "s/disable.*/disable = yes/" /etc/xinetd.d/tftp
 		/etc/init.d/xinetd restart
