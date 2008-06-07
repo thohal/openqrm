@@ -150,7 +150,15 @@ global $thisfile;
 	
 			$store .= $box->get_string();
 			$store .= htmlobject_input('storage_type', array("value" => $deployment->id, "label" => ''), 'hidden');
-			$store .= htmlobject_textarea('storage_capabilities', array("value" => htmlobject_request('storage_capabilities'), "label" => 'Storage Capabilities'));
+
+			// plugin the deployment-capabilities template values if existing
+			$deployment_default_paramters="";
+	    	$deployment_default_paramters_file = "$BaseDir/boot-service/storage.$deployment->type";
+			if (file_exists($deployment_default_paramters_file)) {
+	   	 		$deployment_default_paramters = file_get_contents("$deployment_default_paramters_file");
+			}
+			$store .= htmlobject_textarea('storage_capabilities', array("value" => $deployment_default_paramters, "label" => 'Storage Capabilities'));
+
 			$store .= htmlobject_textarea('storage_comment', array("value" => htmlobject_request('storage_comment'), "label" => 'Comment'));
 			
 			$store .= htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden');
