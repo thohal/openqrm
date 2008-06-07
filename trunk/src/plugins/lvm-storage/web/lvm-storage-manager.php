@@ -11,7 +11,7 @@ $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/storage.class.php";
-require_once "$RootDir/class/storagetype.class.php";
+require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
@@ -75,7 +75,7 @@ function lvm_select_storage() {
 	$arHead['storage_name']['title'] ='Name';
 
 	$arHead['storage_resource_id'] = array();
-	$arHead['storage_resource_id']['title'] ='Resource';
+	$arHead['storage_resource_id']['title'] ='Res.ID';
 
 	$arHead['storage_resource_ip'] = array();
 	$arHead['storage_resource_ip']['title'] ='Ip';
@@ -98,10 +98,10 @@ function lvm_select_storage() {
 		$storage->get_instance_by_id($storage_db["storage_id"]);
 		$storage_resource = new resource();
 		$storage_resource->get_instance_by_id($storage->resource_id);
-		$storage_type = new storagetype();
-		$storage_type->get_instance_by_id($storage->type);
+		$deployment = new deployment();
+		$deployment->get_instance_by_id($storage->type);
 		// is lvm-storage ?
-		if ("$storage_type->name" == "lvm-storage") {
+		if ("$deployment->storagetype" == "lvm-storage") {
 			$storage_count++;
 			$resource_icon_default="/openqrm/base/img/resource.png";
 			$storage_icon="/openqrm/base/plugins/lvm-storage/img/storage.png";
@@ -119,7 +119,7 @@ function lvm_select_storage() {
 				'storage_name' => $storage->name,
 				'storage_resource_id' => $storage->resource_id,
 				'storage_resource_ip' => $storage_resource->ip,
-				'storage_type' => "$storage->type/$storage_type->name",
+				'storage_type' => "$deployment->storagedescription",
 				'storage_comment' => $storage_resource->comment,
 				'storage_capabilities' => $storage_resource->capabilities,
 			);
@@ -153,8 +153,8 @@ function lvm_storage_display($lvm_storage_id) {
 	$storage->get_instance_by_id($lvm_storage_id);
 	$storage_resource = new resource();
 	$storage_resource->get_instance_by_id($storage->resource_id);
-	$storage_type = new storagetype();
-	$storage_type->get_instance_by_id($storage->type);
+	$deployment = new deployment();
+	$deployment->get_instance_by_id($storage->type);
 
 	$disp = "<h1>Lvm-storage $storage->name</h1>";
 	$disp = $disp."<br>";
@@ -175,7 +175,7 @@ function lvm_storage_display($lvm_storage_id) {
 	$arHead['storage_name']['title'] ='Name';
 
 	$arHead['storage_resource_id'] = array();
-	$arHead['storage_resource_id']['title'] ='Resource';
+	$arHead['storage_resource_id']['title'] ='Res.ID';
 
 	$arHead['storage_resource_ip'] = array();
 	$arHead['storage_resource_ip']['title'] ='Ip';
@@ -207,7 +207,7 @@ function lvm_storage_display($lvm_storage_id) {
 		'storage_name' => $storage->name,
 		'storage_resource_id' => $storage->resource_id,
 		'storage_resource_ip' => $storage_resource->ip,
-		'storage_type' => "$storage->type/$storage_type->name",
+		'storage_type' => "$deployment->storagedescription",
 		'storage_comment' => $storage_resource->comment,
 		'storage_capabilities' => $storage_resource->capabilities,
 	);
@@ -266,8 +266,8 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
 	$storage->get_instance_by_id($lvm_storage_id);
 	$storage_resource = new resource();
 	$storage_resource->get_instance_by_id($storage->resource_id);
-	$storage_type = new storagetype();
-	$storage_type->get_instance_by_id($storage->type);
+	$deployment = new deployment();
+	$deployment->get_instance_by_id($storage->type);
 
 	$disp = "<h1>Lvm-storage logical volumes in $lvm_volume_group on $storage->name</h1>";
 	$disp = $disp."<br>";
@@ -288,7 +288,7 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
 	$arHead['storage_name']['title'] ='Name';
 
 	$arHead['storage_resource_id'] = array();
-	$arHead['storage_resource_id']['title'] ='Resource';
+	$arHead['storage_resource_id']['title'] ='Res.ID';
 
 	$arHead['storage_resource_ip'] = array();
 	$arHead['storage_resource_ip']['title'] ='Ip';
@@ -320,7 +320,7 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
 		'storage_name' => $storage->name,
 		'storage_resource_id' => $storage->resource_id,
 		'storage_resource_ip' => $storage_resource->ip,
-		'storage_type' => "$storage->type/$storage_type->name",
+		'storage_type' => "$deployment->storagedescription",
 		'storage_comment' => $storage_resource->comment,
 		'storage_capabilities' => $storage_resource->capabilities,
 	);
