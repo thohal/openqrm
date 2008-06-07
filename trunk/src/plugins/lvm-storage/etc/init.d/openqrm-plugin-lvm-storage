@@ -74,9 +74,9 @@ function openqrm_plugin_lvm-storage_init() {
 		echo
 	fi
 	echo "Initializing the openQRM lvm-storage-plugin"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD lvm-aoe-deployment lvm-aoe-deployment "Lvm Aoe-root" lvm-storage "Lvm Storage Server (Aoe)"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD lvm-iscsi-deployment lvm-iscsi-deployment "Lvm Iscsi-root" lvm-storage "Lvm Storage Server (Iscsi)"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD lvm-nfs-deployment lvm-nfs-deployment "Lvm Nfs-root" lvm-storage "Lvm Storage Server (Nfs)"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD lvm-aoe-deployment lvm-aoe-deployment "Lvm Aoe-root deployment" lvm-storage "Lvm Storage Server (Aoe)"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD lvm-iscsi-deployment lvm-iscsi-deployment "Lvm Iscsi-root deployment" lvm-storage "Lvm Storage Server (Iscsi)"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD lvm-nfs-deployment lvm-nfs-deployment "Lvm Nfs-root deployment" lvm-storage "Lvm Storage Server (Nfs)"
 
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/lvm-storage
