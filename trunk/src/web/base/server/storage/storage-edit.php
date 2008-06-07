@@ -156,6 +156,8 @@ function storage_edit($storage_id='') {
 		$comment = $storage->comment;
 	}
 	$store .= htmlobject_textarea('storage_capabilities', array("value" => $capabilities, "label" => 'Storage Capabilities'));
+	$store .= "<a href=\"../../plugins/$deployment->storagetype/$deployment->storagetype-about.php\" target='_BLANK'>Help</a>";
+	$store .= "<br>";
 	$store .= htmlobject_textarea('storage_comment', array("value" => $comment, "label" => 'Comment'));
 	$store .= htmlobject_input('storage_id', array("value" => $storage_id, "label" => ''), 'hidden');
 	$store .= htmlobject_input('currenttab', array("value" => 'tab2', "label" => ''), 'hidden');

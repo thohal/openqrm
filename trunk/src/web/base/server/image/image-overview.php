@@ -152,7 +152,9 @@ function image_form() {
 		$disp = $disp.htmlobject_input('image_rootfstype', array("value" => '', "label" => 'Root-fs type'), 'text', 20);
 	    $disp = $disp."<input type='checkbox' name='image_isshared' value='0'> Shared<br>";
 		$disp = $disp."<br>";
-		$disp = $disp."Deployment Type : <b>$deployment_tmp->description </b><br>";
+		$disp = $disp."Deployment Type : <b>$deployment_tmp->description </b>";
+		$disp = $disp."<a href=\"../../plugins/$deployment_tmp->storagetype/$deployment_tmp->storagetype-about.php\" target='_BLANK'>Help</a>";
+		$disp = $disp."<br>";
 		$disp = $disp."<br>";
     	// making the deployment parameters plugg-able
     	$deployment_default_parameters="";
@@ -307,7 +309,8 @@ function image_edit($image_id) {
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp.htmlobject_textarea('image_deployment_parameter', array("value" => $image->deployment_parameter, "label" => 'Deployment parameter'));
-
+	$disp = $disp."<a href=\"../../plugins/$deployment_tmp->storagetype/$deployment_tmp->storagetype-about.php\" target='_BLANK'>Help</a>";
+	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp.htmlobject_textarea('image_comment', array("value" => $image->comment, "label" => 'Comment'));
 	$disp = $disp.htmlobject_textarea('image_capabilities', array("value" => $image->capabilities, "label" => 'Image Capabilities'));

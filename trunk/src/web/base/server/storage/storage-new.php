@@ -159,6 +159,9 @@ global $thisfile;
 			}
 			$store .= htmlobject_textarea('storage_capabilities', array("value" => $deployment_default_paramters, "label" => 'Storage Capabilities'));
 
+			$store .= "<a href=\"../../plugins/$deployment->storagetype/$deployment->storagetype-about.php\" target='_BLANK'>Help</a>";
+			$store .= "<br>";
+
 			$store .= htmlobject_textarea('storage_comment', array("value" => htmlobject_request('storage_comment'), "label" => 'Comment'));
 			
 			$store .= htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden');
