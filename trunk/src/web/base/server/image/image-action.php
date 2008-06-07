@@ -89,6 +89,9 @@ if(htmlobject_request('action') != '') {
 			$deployment_switch = new deployment();
 			$deployment_switch->get_instance_by_id($image_type);
 			$image_fields["image_type"] = $deployment_switch->type;
+			// unquote
+			$image_deployment_parameter = $image_fields["image_deployment_parameter"];
+			$image_fields["image_deployment_parameter"] = stripslashes($image_deployment_parameter);
 			$image->add($image_fields);
 			break;
 
@@ -97,6 +100,9 @@ if(htmlobject_request('action') != '') {
 			if(!strlen($image_fields["image_isshared"])) {
 				$image_fields["image_isshared"]="0";
 			}
+			// unquote
+			$image_deployment_parameter = $image_fields["image_deployment_parameter"];
+			$image_fields["image_deployment_parameter"] = stripslashes($image_deployment_parameter);
 			$image->update($image_id, $image_fields);
 			break;
 
