@@ -155,13 +155,13 @@ function image_form() {
 		$disp = $disp."Deployment Type : <b>$deployment_tmp->description </b><br>";
 		$disp = $disp."<br>";
     	// making the deployment parameters plugg-able
-    	$deployment_menu_file = "$BaseDir/boot-service/image.$deployment_tmp->type";
-    	if (file_exists($deployment_menu_file)) {
-    		$deployment_menu = file_get_contents("$deployment_menu_file");
-		    $disp = $disp.$deployment_menu;
-    	} else {
-			$disp = $disp.htmlobject_textarea('image_deployment_parameter', array("value" => '', "label" => 'Deployment parameter'));
-		}
+    	$deployment_default_parameters="";
+    	$deployment_default_parameters_file = "$BaseDir/boot-service/image.$deployment_tmp->type";
+    	if (file_exists($deployment_default_parameters_file)) {
+    		$deployment_default_parameters = file_get_contents("$deployment_default_parameters_file");
+    	}
+		$disp = $disp.htmlobject_textarea('image_deployment_parameter', array("value" => $deployment_default_parameters, "label" => 'Deployment parameter'));
+
 		$disp = $disp."<br>";
 		$disp = $disp.htmlobject_textarea('image_comment', array("value" => '', "label" => 'Comment'));
 		$disp = $disp.htmlobject_textarea('image_capabilities', array("value" => '', "label" => 'Capabilities'));
