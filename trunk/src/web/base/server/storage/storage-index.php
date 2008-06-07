@@ -134,7 +134,7 @@ function storage_display() {
 
 $output = array();
 $output[] = array('label' => 'Storage List', 'value' => storage_display());
-$output[] = array('label' => 'New Storage', 'target' => 'storage-edit.php');
+$output[] = array('label' => 'New Storage', 'target' => 'storage-new.php');
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />

@@ -8,8 +8,6 @@ require_once "$RootDir/class/storagetype.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
 
-$storage_id = htmlobject_request("storage_id");
-
 
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 global $thisfile;
@@ -56,14 +54,11 @@ $strMsg = '';
 $error = 0;
 
 	switch (htmlobject_request('action')) {
-
-		case 'update':
-
-			$storage_name = htmlobject_request('storage_name');
+		case 'add':
 
 			// check passed values
-			if($storage_name != '') {
-				if (ereg("^[A-Za-z0-9_-]*$", $storage_name) === false) {
+			if(htmlobject_request('storage_name') != '') {
+				if (ereg("^[A-Za-z0-9_-]*$", htmlobject_request('storage_name')) === false) {
 					$strMsg .= 'storage name must be [A-Za-z0-9_-]<br/>';
 					$error = 1;
 				} 
@@ -71,6 +66,11 @@ $error = 0;
 				$strMsg .= "storage name can not be empty<br/>";
 				$error = 1;
 			}
+			if (htmlobject_request('identifier') == '') {
+				$strMsg .= 'please select a rescoure<br/>';
+				$error = 1;
+			}
+
 			// if everything is fine
 			if($error == 0) {
 
@@ -81,20 +81,21 @@ $error = 0;
 					}
 				}
 
-				if(isset($_REQUEST['identifier'])) {
-					foreach($_REQUEST['identifier'] as $id) {
-						if(!strlen($image_fields["storage_resource_id"])) {
-							$storage_fields["storage_resource_id"]=$id;
-						}
+				foreach($_REQUEST['identifier'] as $id) {
+					if(!strlen($image_fields["storage_resource_id"])) {
+						$storage_fields["storage_resource_id"]=$id;
 					}
 				}
 				$storage = new storage();
-				$storage->update($storage_id, $storage_fields);
-				$strMsg .= 'updated storage <strong>'.$storage_fields["storage_name"].'</strong><br>';
+				$storage_fields["storage_id"]=openqrm_db_get_free_id('storage_id', $STORAGE_INFO_TABLE);
+				$storage_type=htmlobject_request('storage_type');
+				$storage_fields["storage_type"]="$storage_type";
+				$storage->add($storage_fields);
+				$strMsg .= 'added new storage <b>'.$storage_fields["storage_name"].'</b><br>';
 				
 				$args = '?strMsg='.$strMsg;
 				$args .= '&storage_id='.$storage_fields["storage_id"];
-				$args .= '&currenttab=tab0';
+				$args .= '&currentab=tab0';
 				$url = 'storage-index.php'.$args;
 
 			} 
@@ -116,8 +117,8 @@ $event = new event();
 require_once "$RootDir/class/resource.class.php";
 
 
-function storage_edit($storage_id='') {
-
+function storage_edit() {
+global $thisfile;
 
 	global $OPENQRM_USER, $BaseDir;
 
@@ -126,47 +127,46 @@ function storage_edit($storage_id='') {
 	$storagetype_list = array();
 	$storagetype_list = $storagetype->get_list();
 
+		if((htmlobject_request('action') == 'create' && isset($_REQUEST['identifier'])) || isset($_REQUEST['step'])) {
 
+			$new_storage_step_2 = true;
 
-		$storage = new storage();
-		$storage->get_instance_by_id($storage_id);
-		$storage_resource_id = $storage->resource_id;
-		$storage_type = new storagetype();
-		$storage_type->get_instance_by_id($storage->type);
+			$storagetype->get_instance_by_id(htmlobject_request('storage_type'));
 
-		$store = "<h1>Edit Storage</h1>";
-		$store .= htmlobject_input('storage_name', array("value" => $storage->name, "label" => 'Storage name'), 'text', 20);
-		
-		$int = $storage->type;
-		$html = new htmlobject_div();
-		$html->text = "<b>$storage_type->description</b>";
-		$html->id = 'htmlobject_storage_type';
+			$store = "<h1>New Storage</h1>";
+			$store .= htmlobject_input('storage_name', array("value" => htmlobject_request('storage_name'), "label" => 'Storage name'), 'text', 20);
+			
+			$html = new htmlobject_div();
+			$html->text = "<b>$storagetype->description</b>";
+			$html->id = 'htmlobject_storage_type';
+	
+			$box = new htmlobject_box();
+			$box->id = 'htmlobject_box_storage_type';
+			$box->css = 'htmlobject_box';
+			$box->label = 'Storage type';
+			$box->content = $html;
+	
+			$store .= $box->get_string();
+			$store .= htmlobject_input('storage_type', array("value" => $storagetype->id, "label" => ''), 'hidden');
+			$store .= htmlobject_textarea('storage_capabilities', array("value" => htmlobject_request('storage_capabilities'), "label" => 'Storage Capabilities'));
+			$store .= htmlobject_textarea('storage_comment', array("value" => htmlobject_request('storage_comment'), "label" => 'Comment'));
+			
+			$store .= htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden');
+			$store .= htmlobject_input('step', array("value" => '2', "label" => ''), 'hidden');
+			$store .= htmlobject_input('identifier[]', array("value" => $_REQUEST['identifier'][0], "label" => ''), 'hidden');
+				
+			$store_action = array('add');
 
-		$box = new htmlobject_box();
-		$box->id = 'htmlobject_box_storage_type';
-		$box->css = 'htmlobject_box';
-		$box->label = 'Storage type';
-		$box->content = $html;
-
-		$store .= $box->get_string();
-		$store .= htmlobject_input('storage_type', array("value" => $storage->type, "label" => ''), 'hidden');
-
-		$capabilities = htmlobject_request('storage_capabilities');
-		if($capabilities == '') {
-			$capabilities = $storage->capabilities;
-		}
-		$comment = htmlobject_request('storage_comment');
-		if($comment == '') {
-			$comment = $storage->comment;
 		}
 
-		$store .= htmlobject_textarea('storage_capabilities', array("value" => $capabilities, "label" => 'Storage Capabilities'));
-		$store .= htmlobject_textarea('storage_comment', array("value" => $comment, "label" => 'Comment'));
-		$store .= htmlobject_input('storage_id', array("value" => $storage_id, "label" => ''), 'hidden');
-		$store .= htmlobject_input('currenttab', array("value" => 'tab2', "label" => ''), 'hidden');
+		else {
 
-		$store_action = array('update');
+			$store = "<h1>New Storage</h1>";
+			$store .= htmlobject_select('storage_type', $storagetype_list, 'Storage type', array(htmlobject_request('storage_type')));
+			$store .= htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden');
+			$store_action = array('create');
 
+		}
 
 
 		$resource_tmp = new resource();
@@ -195,18 +195,9 @@ function storage_edit($storage_id='') {
 
 		$arBody = array();
 
-		$resource_array = $resource_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
-
-		foreach ($resource_array as $index => $resource_db) {
-			// prepare the values for the array
+		if(isset($new_storage_step_2)) {
 			$resource = new resource();
-			$resource->get_instance_by_id($resource_db["resource_id"]);
-			$mem_total = $resource_db['resource_memtotal'];
-			$mem_used = $resource_db['resource_memused'];
-			$mem = "$mem_used/$mem_total";
-			$swap_total = $resource_db['resource_swaptotal'];
-			$swap_used = $resource_db['resource_swapused'];
-			$swap = "$swap_used/$swap_total";
+			$resource->get_instance_by_id($_REQUEST['identifier'][0]);
 			if ($resource->id == 0) {
 				$resource_icon_default="/openqrm/base/img/logo.png";
 			} else {
@@ -224,10 +215,50 @@ function storage_edit($storage_id='') {
 			$arBody[] = array(
 				'resource_state' => "<img src=$state_icon>",
 				'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-				'resource_id' => $resource_db["resource_id"],
-				'resource_hostname' => $resource_db["resource_hostname"],
-				'resource_ip' => $resource_db["resource_ip"],
+				'resource_id' => $resource->id,
+				'resource_hostname' => $resource->hostname,
+				'resource_ip' => $resource->ip,
 			);
+
+		
+		} else {
+			$resource_array = $resource_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
+			foreach ($resource_array as $index => $resource_db) {
+				// prepare the values for the array
+				$resource = new resource();
+				$resource->get_instance_by_id($resource_db["resource_id"]);
+				$mem_total = $resource_db['resource_memtotal'];
+				$mem_used = $resource_db['resource_memused'];
+				$mem = "$mem_used/$mem_total";
+				$swap_total = $resource_db['resource_swaptotal'];
+				$swap_used = $resource_db['resource_swapused'];
+				$swap = "$swap_used/$swap_total";
+				if ($resource->id == 0) {
+					$resource_icon_default="/openqrm/base/img/logo.png";
+				} else {
+					$resource_icon_default="/openqrm/base/img/resource.png";
+				}
+				$state_icon="/openqrm/base/img/$resource->state.png";
+				// idle ?
+				if (("$resource->imageid" == "1") && ("$resource->state" == "active")) {
+					$state_icon="/openqrm/base/img/idle.png";
+				}
+				if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+					$state_icon="/openqrm/base/img/unknown.png";
+				}
+			
+				$ident_command = '';
+				
+	
+				$arBody[] = array(
+					'resource_state' => "<img src=$state_icon>",
+					'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+					'resource_id' => $resource_db["resource_id"],
+					'resource_hostname' => $resource_db["resource_hostname"],
+					'resource_ip' => $resource_db["resource_ip"],
+				);
+	
+			}
 
 		}
 
@@ -237,14 +268,19 @@ function storage_edit($storage_id='') {
 		$table->border = 1;
 		$table->cellspacing = 0;
 		$table->cellpadding = 3;
-		$table->form_action = "storage-edit.php";
+		$table->form_action = $thisfile;
 		$table->head = $arHead;
 		$table->body = $arBody;
 		if ($OPENQRM_USER->role == "administrator") {
-			$table->identifier_checked = array($storage_resource_id);
+
 			$table->bottom = $store_action;
 			$table->identifier = 'resource_id';
 			$table->identifier_type = 'radio';
+		}
+
+		if(isset($new_storage_step_2)) {
+			$table->sort = '';
+			$table->identifier = '';
 		}
 
 		$all = $resource_tmp->get_count('all');
@@ -266,17 +302,18 @@ function storage_edit($storage_id='') {
 
 $output = array();
 $output[] = array('label' => 'Storage List', 'value' => '', 'target' => 'storage-index.php');
-$output[] = array('label' => 'New Storage', 'value' => '', 'target' => 'storage-new.php');
-$output[] = array('label' => 'Edit Storage', 'value' => storage_edit($storage_id), 'request' => array('storage_id' => $storage_id));
+$output[] = array('label' => 'New Storage', 'value' => storage_edit());
 
-
-		
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
 <link rel="stylesheet" type="text/css" href="storage.css" />
 <?php
+
 $tabmenu = new htmlobject_tabmenu($output);
 $tabmenu->css = 'htmlobject_tabs';
+
+
+
 echo $tabmenu->get_string();
 ?>

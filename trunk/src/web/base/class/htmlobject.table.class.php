@@ -611,7 +611,11 @@ var $_bottomrow = array();
 	*/
 	//----------------------------------------------------------------------------------------	
 	function  get_js_tr($ident) {
-		return 'onmouseover="tr_hover(this);" onmouseout="tr_hover(this);" onclick="tr_click(this, \''.$ident.'\')"';
+		$script = 'onmouseover="tr_hover(this);" onmouseout="tr_hover(this);"';
+		if($this->identifier != '') {
+			$script .= ' onclick="tr_click(this, \''.$ident.'\')"';
+		}
+		return $script;
 	}
 	//----------------------------------------------------------------------------------------
 	/**
