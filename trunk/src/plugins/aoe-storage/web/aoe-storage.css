@@ -17,36 +17,45 @@
 .storage_state {
 vertical-align:top;
 text-align:center;
+width:25px;
 }
 .storage_icon {
 vertical-align:top;
 text-align:center;
+width:25px;
 }
 .storage_id {
 vertical-align:top;
 text-align:center;
+width:25px;
 }
 .storage_name {
 vertical-align:top;
 text-align:left;
+width:110px;
 }
 .storage_resource_id{
 vertical-align:top;
 text-align:left;
+width:25px;
 }
 .storage_resource_ip{
 vertical-align:top;
 text-align:left;
+width:110px;
 }
-.storage_deployment_type{
+.storage_type{
 vertical-align:top;
 text-align:left;
+width:310px;
 }
 .storage_comment{
 vertical-align:top;
 text-align:left;
+width:110px;
 }
 .storage_capabilities {
 vertical-align:top;
 text-align:left;
+width:110px;
 }

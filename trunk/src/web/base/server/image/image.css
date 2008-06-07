@@ -19,6 +19,11 @@
 	width:110px;
 	vertical-align:top;
 }
+.htmlobject_td.image_type {
+	text-align:left;
+	width:310px;
+	vertical-align:top;
+}
 .htmlobject_td.image_comment {
 	text-align:left;
 	width:110px;

@@ -4,7 +4,7 @@ $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/storage.class.php";
-require_once "$RootDir/class/storagetype.class.php";
+require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
 
@@ -123,21 +123,23 @@ global $thisfile;
 	global $OPENQRM_USER, $BaseDir;
 
 
-	$storagetype = new storagetype();
-	$storagetype_list = array();
-	$storagetype_list = $storagetype->get_list();
+	$deployment = new deployment();
+	$deployment_list = array();
+	$deployment_list = $deployment->get_storagedescription_list();
+	// remove the ramdisk-type from the list
+	array_splice($deployment_list, 0, 1);
 
 		if((htmlobject_request('action') == 'create' && isset($_REQUEST['identifier'])) || isset($_REQUEST['step'])) {
 
 			$new_storage_step_2 = true;
 
-			$storagetype->get_instance_by_id(htmlobject_request('storage_type'));
+			$deployment->get_instance_by_id(htmlobject_request('storage_type'));
 
 			$store = "<h1>New Storage</h1>";
 			$store .= htmlobject_input('storage_name', array("value" => htmlobject_request('storage_name'), "label" => 'Storage name'), 'text', 20);
 			
 			$html = new htmlobject_div();
-			$html->text = "<b>$storagetype->description</b>";
+			$html->text = "<b>$deployment->storagedescription</b>";
 			$html->id = 'htmlobject_storage_type';
 	
 			$box = new htmlobject_box();
@@ -147,7 +149,7 @@ global $thisfile;
 			$box->content = $html;
 	
 			$store .= $box->get_string();
-			$store .= htmlobject_input('storage_type', array("value" => $storagetype->id, "label" => ''), 'hidden');
+			$store .= htmlobject_input('storage_type', array("value" => $deployment->id, "label" => ''), 'hidden');
 			$store .= htmlobject_textarea('storage_capabilities', array("value" => htmlobject_request('storage_capabilities'), "label" => 'Storage Capabilities'));
 			$store .= htmlobject_textarea('storage_comment', array("value" => htmlobject_request('storage_comment'), "label" => 'Comment'));
 			
@@ -162,7 +164,7 @@ global $thisfile;
 		else {
 
 			$store = "<h1>New Storage</h1>";
-			$store .= htmlobject_select('storage_type', $storagetype_list, 'Storage type', array(htmlobject_request('storage_type')));
+			$store .= htmlobject_select('storage_type', $deployment_list, 'Storage type', array(htmlobject_request('storage_type')));
 			$store .= htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden');
 			$store_action = array('create');
 
@@ -286,7 +288,7 @@ global $thisfile;
 		$all = $resource_tmp->get_count('all');
 		$table->max = $all + 1; // add openqrmserver
 		
-		if (count($storagetype_list) > 0) {
+		if (count($deployment_list) > 0) {
 			return $table->get_string();
 		} else {
 			$str = '<center>';

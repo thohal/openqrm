@@ -13,11 +13,12 @@ global $event;
 class deployment {
 
 var $id = '';
-var $storagetype_id = '';
 var $name = '';
 var $type = '';
-
-
+var $description = '';
+var $storagetype = '';
+var $storagedescription = '';
+var $mapping = '';
 
 // ---------------------------------------------------------------------------------
 // methods to create an instance of an deployment object filled from the db
@@ -42,9 +43,12 @@ function get_instance($id, $name, $type) {
 		$this->id = $deployment["deployment_id"];
 
 		$this->id = $deployment["deployment_id"];
-		$this->storagetype_id = $deployment["deployment_storagetype_id"];
 		$this->name = $deployment["deployment_name"];
 		$this->type = $deployment["deployment_type"];
+		$this->description = $deployment["deployment_description"];
+		$this->storagetype = $deployment["deployment_storagetype"];
+		$this->storagedescription = $deployment["deployment_storagedescription"];
+		$this->mapping = $deployment["deployment_mapping"];
 	}
 	return $this;
 }
@@ -130,6 +134,24 @@ function get_list() {
 	return $deployment_name_array;
 }
 
+// returns a list of all deployment descriptions
+function get_description_list() {
+	global $DEPLOYMENT_INFO_TABLE;
+	$query = "select deployment_id, deployment_description from $DEPLOYMENT_INFO_TABLE";
+	$deployment_name_array = array();
+	$deployment_name_array = openqrm_db_get_result_double ($query);
+	return $deployment_name_array;
+}
+
+
+// returns a list of all deployment storage descriptions
+function get_storagedescription_list() {
+	global $DEPLOYMENT_INFO_TABLE;
+	$query = "select deployment_id, deployment_storagedescription from $DEPLOYMENT_INFO_TABLE";
+	$deployment_name_array = array();
+	$deployment_name_array = openqrm_db_get_result_double ($query);
+	return $deployment_name_array;
+}
 
 
 

@@ -186,17 +186,24 @@ function openqrm_server_manage_kernel() {
 # this function is used by the init+uninstall functions of the deployment plugins
 # param 1	: username
 # param 2	: password
-# param 3	: deployment type
-# param 4	: deployment name
+# param 3	: deployment name
+# param 4	: deployment type
+# param 5	: deployment description
+# param 6	: deployment storagetype
+# param 7	: deployment storagetype description
+# param 8	: deployment mapping
 function openqrm_server_add_deployment_type() {
 	OPENQRM_USER=$1
 	OPENQRM_USER_PASSWORD=$2
-	OPENQRM_SERVER_DEPLOYMENT_TYPE=$3
-	OPENQRM_SERVER_DEPLOYMENT_STORAGE_TYPE=$4
-	OPENQRM_SERVER_DEPLOYMENT_NAME=$5
-	echo "openQRM-server: Adding deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE  to the openQRM-server" | logger
-	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/image/image-action.php?image_command=add_deployment_type&deployment_type=$OPENQRM_SERVER_DEPLOYMENT_TYPE&deployment_storagetype=$OPENQRM_SERVER_DEPLOYMENT_STORAGE_TYPE&deployment_name=$OPENQRM_SERVER_DEPLOYMENT_NAME"; then
-		echo "ERROR: Could not add deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE to the openQRM-server!" | logger
+	OPENQRM_SERVER_DEPLOYMENT_NAME=$3
+	OPENQRM_SERVER_DEPLOYMENT_TYPE=$4
+	OPENQRM_SERVER_DEPLOYMENT_DESCRIPTION=$5
+	OPENQRM_SERVER_DEPLOYMENT_STORAGE_TYPE=$6
+	OPENQRM_SERVER_DEPLOYMENT_STORAGE_DESCRIPTION=$7
+	OPENQRM_SERVER_DEPLOYMENT_MAPPING=$8
+	echo "openQRM-server: Adding deployment type $OPENQRM_SERVER_DEPLOYMENT_NAME  to the openQRM-server" | logger
+	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/image/image-action.php?image_command=add_deployment_type&deployment_name=$OPENQRM_SERVER_DEPLOYMENT_NAME&deployment_type=$OPENQRM_SERVER_DEPLOYMENT_TYPE&deployment_description=$OPENQRM_SERVER_DEPLOYMENT_DESCRIPTION&deployment_storagetype=$OPENQRM_SERVER_DEPLOYMENT_STORAGE_TYPE&deployment_storagedescription=$OPENQRM_SERVER_DEPLOYMENT_STORAGE_DESCRIPTION&deployment_mapping=$OPENQRM_SERVER_DEPLOYMENT_MAPPING"; then
+		echo "ERROR: Could not add deployment type $OPENQRM_SERVER_DEPLOYMENT_NAME to the openQRM-server!" | logger
 		return 1
 	fi
 	return 0
@@ -206,14 +213,14 @@ function openqrm_server_add_deployment_type() {
 # this function is used by the init+uninstall functions of the deployment plugins
 # param 1	: username
 # param 2	: password
-# param 3	: deployment type
+# param 3	: deployment name
 function openqrm_server_remove_deployment_type() {
 	OPENQRM_USER=$1
 	OPENQRM_USER_PASSWORD=$2
-	OPENQRM_SERVER_DEPLOYMENT_TYPE=$3
-	echo "openQRM-server: Removing deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE  from the openQRM-server" | logger
-	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/image/image-action.php?image_command=remove_deployment_type&deployment_type=$OPENQRM_SERVER_DEPLOYMENT_TYPE"; then
-		echo "ERROR: Could not remove deployment type $OPENQRM_SERVER_DEPLOYMENT_TYPE from the openQRM-server!" | logger
+	OPENQRM_SERVER_DEPLOYMENT_NAME=$3
+	echo "openQRM-server: Removing deployment type $OPENQRM_SERVER_DEPLOYMENT_NAME  from the openQRM-server" | logger
+	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/image/image-action.php?image_command=remove_deployment_type&deployment_name=$OPENQRM_SERVER_DEPLOYMENT_NAME"; then
+		echo "ERROR: Could not remove deployment type $OPENQRM_SERVER_DEPLOYMENT_NAME from the openQRM-server!" | logger
 		return 1
 	fi
 	return 0
@@ -260,49 +267,6 @@ function openqrm_server_remove_virtualization_type() {
 	fi
 	return 0
 }
-
-
-
-# --------------------------------------------------------------------
-# ------------------------- storagetype functions -------------------------
-# --------------------------------------------------------------------
-
-# function to add a storagetype method to the openQRM-server db
-# this function is used by the init+uninstall functions of the storagetype plugins
-# param 1	: username
-# param 2	: password
-# param 3	: storagetype type
-# param 4	: storagetype name
-function openqrm_server_add_storagetype() {
-	OPENQRM_USER=$1
-	OPENQRM_USER_PASSWORD=$2
-	OPENQRM_SERVER_STORAGETYPE_NAME=$3
-	OPENQRM_SERVER_STORAGETYPE_DESCRIPTION=$4
-	echo "openQRM-server: Adding storagetype $OPENQRM_SERVER_STORAGETYPE_NAME  to the openQRM-server" | logger
-	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/storage/storage-action.php?storage_command=add_storagetype_type&storagetype_name=$OPENQRM_SERVER_STORAGETYPE_NAME&storagetype_description=$OPENQRM_SERVER_STORAGETYPE_DESCRIPTION"; then
-		echo "ERROR: Could not add storagetype $OPENQRM_SERVER_STORAGETYPE_NAME to the openQRM-server!" | logger
-		return 1
-	fi
-	return 0
-}
-
-# function to remove a storagetype method to the openQRM-server db
-# this function is used by the init+uninstall functions of the storagetype plugins
-# param 1	: username
-# param 2	: password
-# param 3	: storagetype type
-function openqrm_server_remove_storagetype() {
-	OPENQRM_USER=$1
-	OPENQRM_USER_PASSWORD=$2
-	OPENQRM_SERVER_STORAGETYPE_NAME=$3
-	echo "openQRM-server: Removing storagetype $OPENQRM_SERVER_STORAGETYPE_NAME  from the openQRM-server" | logger
-	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/storage/storage-action.php?storage_command=remove_storagetype_type&storagetype_name=$OPENQRM_SERVER_STORAGETYPE_NAME"; then
-		echo "ERROR: Could not remove storagetype $OPENQRM_SERVER_STORAGETYPE_NAME from the openQRM-server!" | logger
-		return 1
-	fi
-	return 0
-}
-
 
 
 

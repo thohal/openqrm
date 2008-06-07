@@ -16,7 +16,6 @@ require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/deployment.class.php";
-require_once "$RootDir/class/storagetype.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
@@ -44,8 +43,11 @@ unset($image_fields["image_command"]);
 
 $deployment_id = $_REQUEST["deployment_id"];
 $deployment_name = $_REQUEST["deployment_name"];
-$deployment_storagetype = $_REQUEST["deployment_storagetype"];
 $deployment_type = $_REQUEST["deployment_type"];
+$deployment_description = $_REQUEST["deployment_description"];
+$deployment_storagetype = $_REQUEST["deployment_storagetype"];
+$deployment_storagedescription = $_REQUEST["deployment_storagedescription"];
+$deployment_mapping = $_REQUEST["deployment_mapping"];
 $deployment_fields = array();
 foreach ($_REQUEST as $key => $value) {
 	if (strncmp($key, "deployment_", 11) == 0) {
@@ -111,17 +113,12 @@ if(htmlobject_request('action') != '') {
 		case 'add_deployment_type':
 			$deployment = new deployment();
 			$deployment_fields["deployment_id"]=openqrm_db_get_free_id('deployment_id', $DEPLOYMENT_INFO_TABLE);
-			// map to storagetype
-			$storage_type = new storagetype();
-			$storage_type->get_instance_by_name($deployment_storagetype);
-			unset($deployment_fields["deployment_storagetype"]);
-			$deployment_fields["deployment_storagetype_id"]=$storage_type->id;
 			$deployment->add($deployment_fields);
 			break;
 
 		case 'remove_deployment_type':
 			$deployment = new deployment();
-			$deployment->remove_by_type($deployment_type);
+			$deployment->remove_by_name($deployment_name);
 			break;
 
 		default:

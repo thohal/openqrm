@@ -11,7 +11,7 @@ $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/storage.class.php";
-require_once "$RootDir/class/storagetype.class.php";
+require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
@@ -44,7 +44,7 @@ function aoe_select_storage() {
 	$table = new htmlobject_db_table('storage_id');
 
 	$disp = "<h1>Select Aoe-storage</h1>";
-	$disp = $disp."<h3>Please select a Aoe-storage server from the list below</h3>";
+	$disp = $disp."<h3>Please select a Aoe/Coraid Storage Server from the list below</h3>";
 
 	$arHead = array();
 	$arHead['storage_state'] = array();
@@ -80,16 +80,16 @@ function aoe_select_storage() {
 	$storage_count=0;
 	$arBody = array();
 	$storage_tmp = new storage();
-	$storage_array = $storage_tmp->display_overview(0, 10, 'storage_id', 'ASC');
+	$storage_array = $storage_tmp->display_overview(0, 100, 'storage_id', 'ASC');
 	foreach ($storage_array as $index => $storage_db) {
 		$storage = new storage();
 		$storage->get_instance_by_id($storage_db["storage_id"]);
 		$storage_resource = new resource();
 		$storage_resource->get_instance_by_id($storage->resource_id);
-		$storage_type = new storagetype();
-		$storage_type->get_instance_by_id($storage->type);
+		$deployment = new deployment();
+		$deployment->get_instance_by_id($storage->type);
 		// is aoe storage ?
-		if ("$storage_type->name" == "aoe-storage") {
+		if ("$deployment->storagetype" == "aoe-storage") {
 			$storage_count++;
 			$resource_icon_default="/openqrm/base/img/resource.png";
 			$storage_icon="/openqrm/base/plugins/aoe-storage/img/storage.png";
@@ -107,7 +107,7 @@ function aoe_select_storage() {
 				'storage_name' => $storage->name,
 				'storage_resource_id' => $storage->resource_id,
 				'storage_resource_ip' => $storage_resource->ip,
-				'storage_type' => "$storage->deployment_type/$storage_type->description",
+				'storage_type' => "$deployment->storagedescription",
 				'storage_comment' => $storage_resource->comment,
 				'storage_capabilities' => $storage_resource->capabilities,
 			);
@@ -143,12 +143,12 @@ function aoe_storage_display($aoe_storage_id) {
 	$storage->get_instance_by_id($aoe_storage_id);
 	$storage_resource = new resource();
 	$storage_resource->get_instance_by_id($storage->resource_id);
-	$storage_type = new storagetype();
-	$storage_type->get_instance_by_id($storage->type);
+	$deployment = new deployment();
+	$deployment->get_instance_by_id($storage->type);
 
 	$table = new htmlobject_table_identifiers_checked();
 
-	$disp = "<h1>Aoe-storage $storage->name</h1>";
+	$disp = "<h1>Aoe/Coraid Storage Server $storage->name</h1>";
 
 	$arHead = array();
 	$arHead['storage_state'] = array();
@@ -196,7 +196,7 @@ function aoe_storage_display($aoe_storage_id) {
 		'storage_name' => $storage->name,
 		'storage_resource_id' => $storage->resource_id,
 		'storage_resource_ip' => $storage_resource->ip,
-		'storage_type' => "$storage->type/$storage_type->description",
+		'storage_type' => "$deployment->storagedescription",
 		'storage_comment' => $storage_resource->comment,
 		'storage_capabilities' => $storage_resource->capabilities,
 	);
@@ -217,7 +217,7 @@ function aoe_storage_display($aoe_storage_id) {
 	$table->max = $storage_count;
 	$disp = $disp.$table->get_string();
 
-	$disp = $disp."<h3>Add Aoe export :</h3>";
+	$disp = $disp."<h3>Add Aoe Shelf :</h3>";
 	$disp = $disp."<div id=\"storage\" nowrap=\"true\">";
 	$disp = $disp."<form action='aoe-storage-action.php' method=post>";
 	$disp = $disp.htmlobject_input('aoe_storage_image_name', array("value" => '', "label" => 'Name'), 'text', 20);

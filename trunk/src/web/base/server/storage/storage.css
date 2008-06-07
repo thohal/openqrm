@@ -16,7 +16,7 @@
 }
 .htmlobject_td.storage_type {
 	text-align:left;
-	width:110px;
+	width:310px;
 	vertical-align:top;
 }
 .htmlobject_td.storage_resource_id {
@@ -26,12 +26,12 @@
 }
 .htmlobject_td.storage_comment {
 	text-align:left;
-	width:320px;
+	width:110px;
 	vertical-align:top;
 }
 .htmlobject_td.storage_edit {
 	text-align:left;
-	width:320px;
+	width:120px;
 	vertical-align:top;
 }
 .htmlobject_td.identifier {

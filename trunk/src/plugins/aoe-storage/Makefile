@@ -15,8 +15,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp include/openqrm* $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/include/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web
 	. $(OPENQRM_SERVER_CONF) && cp web/*.txt $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/
-	. $(OPENQRM_SERVER_CONF) && cp web/*.aoe-storage-deployment $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/
-	. $(OPENQRM_SERVER_CONF) && cp web/*.html $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/
+	. $(OPENQRM_SERVER_CONF) && cp web/*.aoe-deployment $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/
 	. $(OPENQRM_SERVER_CONF) && cp web/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/
 	. $(OPENQRM_SERVER_CONF) && cp web/*.css $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/img

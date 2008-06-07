@@ -404,7 +404,9 @@ var $_init_tr;
 				$_strReturn .= $td;
 			}
 			else {
-				$_strReturn .= 'td type not defined';
+// TODO : find out why the td type is not defined
+//				$_strReturn .= 'td type not defined';
+				$_strReturn .= '';
 			}
 		}
 		$_strReturn .= "</tr>\n";

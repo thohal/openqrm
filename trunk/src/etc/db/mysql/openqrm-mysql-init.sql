@@ -162,9 +162,12 @@ create table image_service (
 # plugg-able deployment types
 create table deployment_info(
 	deployment_id INT(5) NOT NULL PRIMARY KEY,
-	deployment_storagetype_id INT(5),
 	deployment_name VARCHAR(50),
-	deployment_type VARCHAR(20)
+	deployment_type VARCHAR(20),
+	deployment_description VARCHAR(50),
+	deployment_storagetype VARCHAR(20),
+	deployment_storagedescription VARCHAR(50),
+	deployment_mapping VARCHAR(255)
 );
 
 # plugg-able virtualization types
@@ -175,14 +178,7 @@ create table virtualization_info(
 	virtualization_mapping VARCHAR(255)
 );
 
-# plugg-able storage-server types
-create table storagetype_info(
-	storagetype_id INT(5) NOT NULL PRIMARY KEY,
-	storagetype_description VARCHAR(50),
-	storagetype_name VARCHAR(20),
-	storagetype_mapping VARCHAR(255)
-	
-);
+
 
 # initial data
 insert into kernel_info (kernel_id, kernel_name, kernel_version) values ('0', 'openqrm', 'openqrm');
@@ -191,7 +187,7 @@ insert into image_info (image_id, image_name, image_version, image_type, image_r
 insert into image_info (image_id, image_name, image_version, image_type, image_rootdevice, image_rootfstype, image_isshared) values ('1', 'idle', 'openqrm', 'ram', 'ram', 'ext2', '1');
 insert into resource_info (resource_id, resource_localboot, resource_kernel, resource_image, resource_openqrmserver, resource_ip) values ('0', '1', 'local', 'local', 'OPENQRM_SERVER_IP_ADDRESS', 'OPENQRM_SERVER_IP_ADDRESS');
 # base deployment type ram
-insert into deployment_info (deployment_id, deployment_name, deployment_type ) values (1, 'Ramdisk Deployment', 'ram');
+insert into deployment_info (deployment_id, deployment_name, deployment_type, deployment_description, deployment_storagetype, deployment_storagedescription ) values (1, 'ramdisk', 'ram', 'Ramdisk Deployment', 'none', 'none');
 # base virtualization type physical
 insert into virtualization_info (virtualization_id, virtualization_name, virtualization_type ) values (1, 'Physical System', 'physical');
 # user openqrm

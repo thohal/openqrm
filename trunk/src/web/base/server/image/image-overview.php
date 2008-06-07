@@ -64,6 +64,9 @@ function image_display() {
 	$arHead['image_version'] = array();
 	$arHead['image_version']['title'] ='Version';
 
+	$arHead['image_type'] = array();
+	$arHead['image_type']['title'] ='Type';
+
 	$arHead['image_comment'] = array();
 	$arHead['image_comment']['title'] ='Comment';
 
@@ -77,11 +80,14 @@ function image_display() {
 	foreach ($image_array as $index => $image_db) {
 		$image = new image();
 		$image->get_instance_by_id($image_db["image_id"]);
+		$image_deployment = new deployment();
+		$image_deployment->get_instance_by_type($image_db["image_type"]);
 		$arBody[] = array(
 			'image_icon' => "<img width=20 height=20 src=$image_icon>",
 			'image_id' => $image_db["image_id"],
 			'image_name' => $image_db["image_name"],
 			'image_version' => $image_db["image_version"],
+			'image_type' => $image_deployment->description,
 			'image_comment' => $image_db["image_comment"],
 			'image_capabilities' => $image_db["image_capabilities"],
 		);
@@ -110,11 +116,11 @@ function image_display() {
 
 function image_form() {
 	global $OPENQRM_USER;
+	$dep_is_selected = $_REQUEST["dep_is_selected"];
 
 	$deployment = new deployment();
 	$deployment_list = array();
-	$deployment_list = $deployment->get_list();
-	$dep_is_selected = $_REQUEST["dep_is_selected"];
+	$deployment_list = $deployment->get_description_list();
 	// remove the ramdisk-type from the list
 	array_splice($deployment_list, 0, 1);
 	$image_type = array($_REQUEST["image_type"]);
@@ -146,10 +152,10 @@ function image_form() {
 		$disp = $disp.htmlobject_input('image_rootfstype', array("value" => '', "label" => 'Root-fs type'), 'text', 20);
 	    $disp = $disp."<input type='checkbox' name='image_isshared' value='0'> Shared<br>";
 		$disp = $disp."<br>";
-		$disp = $disp."Type : $deployment_tmp->type <br>";
+		$disp = $disp."Deployment Type : <b>$deployment_tmp->description </b><br>";
 		$disp = $disp."<br>";
     	// making the deployment parameters plugg-able
-    	$deployment_menu_file = "$BaseDir/boot-service/image-deployment-parameter.$deployment_tmp->type"."-menu.html";
+    	$deployment_menu_file = "$BaseDir/boot-service/image.$deployment_tmp->type";
     	if (file_exists($deployment_menu_file)) {
     		$deployment_menu = file_get_contents("$deployment_menu_file");
 		    $disp = $disp.$deployment_menu;
@@ -169,7 +175,7 @@ function image_form() {
 		$storage_tmp = new storage();
 		$table = new htmlobject_db_table('storage_resource_id');	
 
-		$disp .= "<h1>Select $deployment_tmp->type Storage server</h1>";
+		$disp .= "<h1>Select $deployment_tmp->storagedescription Server</h1>";
 		$disp .= '<br>';
 
 		$arHead = array();
@@ -190,7 +196,7 @@ function image_form() {
 		$arHead['storage_type']['title'] ='Type';
 
 		$arHead['storage_resource_id'] = array();
-		$arHead['storage_resource_id']['title'] ='Resource';
+		$arHead['storage_resource_id']['title'] ='Res.ID';
 
 		$arHead['storage_resource_ip'] = array();
 		$arHead['storage_resource_ip']['title'] ='Ip';
@@ -203,7 +209,7 @@ function image_form() {
 
 		foreach ($storage_array as $index => $storage_db) {
 
-			if ($deployment_tmp->storagetype_id == $storage_db["storage_type"]) {
+			if ($deployment_tmp->id == $storage_db["storage_type"]) {
 		
 				$storage = new storage();
 				$storage->get_instance_by_id($storage_db["storage_id"]);
@@ -227,7 +233,7 @@ function image_form() {
 					'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 					'storage_id' => $storage_db["storage_id"],
 					'storage_name' => $storage_db["storage_name"],
-					'storage_type' => "$storage->type / $storage_deployment->type",
+					'storage_type' => "$storage_deployment->storagedescription",
 					'storage_resource_id' => "$storage_resource->id",
 					'storage_resource_ip' => "$storage_resource->ip",
 					'storage_comment' => $storage_db["storage_comment"],
@@ -286,8 +292,11 @@ function image_edit($image_id) {
 	$disabled_input_image_type->name = "image_type";
 	$disabled_input_image_type->title = "Deployment type";
 	$disabled_input_image_type->value = $image->type;
-	$disp = $disp."Image type     ";
+	$disp = $disp."Image type &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 	$disp = $disp.$disabled_input_image_type->get_string();
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+
 	$disp = $disp.htmlobject_input('image_rootdevice', array("value" => $image->rootdevice, "label" => 'Image root-device'), 'text', 20);
 	$disp = $disp.htmlobject_input('image_rootfstype', array("value" => $image->rootfstype, "label" => 'Image root-fs type'), 'text', 20);
 	if ($image->isshared != "1") {
@@ -312,7 +321,7 @@ function image_edit($image_id) {
 	$storage_tmp = new storage();
 	$table = new htmlobject_db_table('storage_resource_id');	
 
-	$disp .= "<h1>Select $deployment_tmp->type Storage server</h1>";
+	$disp .= "<h1>Select $deployment_tmp->storagedescription Server</h1>";
 	$disp .= '<br>';
 
 	$arHead = array();
@@ -332,7 +341,7 @@ function image_edit($image_id) {
 	$arHead['storage_type']['title'] ='Type';
 
 	$arHead['storage_resource_id'] = array();
-	$arHead['storage_resource_id']['title'] ='Resource';
+	$arHead['storage_resource_id']['title'] ='Res.ID';
 
 	$arHead['storage_resource_ip'] = array();
 	$arHead['storage_resource_ip']['title'] ='Ip';
@@ -345,7 +354,7 @@ function image_edit($image_id) {
 
 	foreach ($storage_array as $index => $storage_db) {
 
-		if ($deployment_tmp->storagetype_id == $storage_db["storage_type"]) {
+		if ($deployment_tmp->id == $storage_db["storage_type"]) {
 
 		
 			$storage = new storage();
@@ -369,7 +378,7 @@ function image_edit($image_id) {
 				'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 				'storage_id' => $storage_db["storage_id"],
 				'storage_name' => $storage_db["storage_name"],
-				'storage_type' => "$storage->type / $storage_deployment->type",
+				'storage_type' => "$storage_deployment->storagedescription",
 				'storage_resource_id' => "$storage_resource->id",
 				'storage_resource_ip' => "$storage_resource->ip",
 				'storage_comment' => $storage_db["storage_comment"],
