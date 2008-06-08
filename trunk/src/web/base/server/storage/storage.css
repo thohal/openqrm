@@ -1,9 +1,3 @@
-.htmlobject_tab_box {
-	width:700px;
-}
-.htmlobject_td {
-	padding:5px !important;
-}
 .htmlobject_td.storage_id {
 	text-align:center;
 	width:25px;
@@ -30,8 +24,8 @@
 	vertical-align:top;
 }
 .htmlobject_td.storage_edit {
-	text-align:left;
-	width:120px;
+	text-align:center;
+	width:80px;
 	vertical-align:top;
 }
 .htmlobject_td.identifier {

@@ -48,7 +48,6 @@ function storage_display() {
 	$table = new htmlobject_db_table('storage_id');
 
 	$disp = '<h1>Storage List</h1>';
-	$disp .= '<br>';
 
 	$arHead = array();
 
@@ -90,7 +89,7 @@ function storage_display() {
 		$deployment = new deployment();
 		$deployment->get_instance_by_id($storage->type);
 		$resource_icon_default="/openqrm/base/img/resource.png";
-		$storage_icon="/openqrm/base/plugins/$storage_type->name/img/storage.png";
+		$storage_icon = "/openqrm/base/plugins/$deployment->storagetype/img/storage.png";
 		$state_icon="/openqrm/base/img/$storage_resource->state.png";
 		if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
 			$state_icon="/openqrm/base/img/unknown.png";

@@ -77,7 +77,7 @@ padding:0;
 	background-color:#ffffff;
 	margin:20px 0 20px 20px;
 	text-align: left;
-	width:700px;
+	width:680px;
 	border: solid 1px #aaaaaa;
 	padding:25px;	
 }
@@ -99,15 +99,18 @@ padding:0;
 
 
 .htmlobject_tab_box h1 {
-	font-weight: bold;
-	font-size: 16px;
-	margin:0 0 10px 0;
+	font-weight: normal;
+	font-size: 20px;
+	margin:0 0 30px 0;
+	padding: 0 0 5px 0;
+	border-bottom: 1px solid #91a7b4;
 }
 .htmlobject_tab_box h3 {
 	margin:0;
-	font-weight: bold;
-	font-size: 14px;
+	font-weight: normal;
+	font-size: 16px;
 	margin:15px 0 10px 0;
+	padding: 0 0 5px 0;
 	border-bottom: 1px solid #91a7b4;
 }
 
@@ -192,6 +195,7 @@ border-right: 1px solid #91a7b4;
 .htmlobject_table {
 	border:0px none;
 	border-spacing:5px;
+	width: 680px;
 }
 .htmlobject_td {
 	border-left :1px solid #cccccc;
@@ -202,7 +206,7 @@ border-right: 1px solid #91a7b4;
 	color:black  !important;
 	font-size: 12px  !important;
 }
-.htmlobject_tr th{
+.htmlobject_tr th {
 	background:#eee;
 	text-align:left;
 	border-left :1px solid #cccccc;
@@ -216,6 +220,7 @@ border-right: 1px solid #91a7b4;
 .htmlobject_td.identifier {
 	text-align:center;
 	vertical-align:top;
+	width:20px;
 }
 .htmlobject_td.sorttable {
 	border :0px none;
@@ -247,4 +252,15 @@ border-right: 1px solid #91a7b4;
 }
 .tr_click {
 	background-color:#ddd;
+}
+
+/* Links */
+
+.doculink {
+background: url(../img/help.png) no-repeat top right transparent;
+line-height: 18px;
+display: block;
+margin: 5px 0 5px 0; 
+padding: 0 25px 0 0; 
+text-decoration: none;
 }

@@ -135,9 +135,16 @@ function storage_edit($storage_id='') {
 	$store .= htmlobject_input('storage_name', array("value" => $storage->name, "label" => 'Storage name'), 'text', 20);
 		
 	$int = $storage->type;
+
+	
+	$helplink = '<a href="../../plugins/'.$deployment->storagetype.'/'.$deployment->storagetype.'-about.php" target="blank" class="doculink">
+	'.$deployment->storagedescription.'
+	</a>';
+
 	$html = new htmlobject_div();
-	$html->text = "<b>$deployment->storagedescription</b>";
+	$html->text = $helplink;
 	$html->id = 'htmlobject_storage_type';
+	
 	$box = new htmlobject_box();
 	$box->id = 'htmlobject_box_storage_type';
 	$box->css = 'htmlobject_box';
@@ -156,8 +163,6 @@ function storage_edit($storage_id='') {
 		$comment = $storage->comment;
 	}
 	$store .= htmlobject_textarea('storage_capabilities', array("value" => $capabilities, "label" => 'Storage Capabilities'));
-	$store .= "<a href=\"../../plugins/$deployment->storagetype/$deployment->storagetype-about.php\" target='_BLANK'>Help</a>";
-	$store .= "<br>";
 	$store .= htmlobject_textarea('storage_comment', array("value" => $comment, "label" => 'Comment'));
 	$store .= htmlobject_input('storage_id', array("value" => $storage_id, "label" => ''), 'hidden');
 	$store .= htmlobject_input('currenttab', array("value" => 'tab2', "label" => ''), 'hidden');
@@ -226,7 +231,6 @@ function storage_edit($storage_id='') {
 
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
-	$table->style = 'width:600px;';
 	$table->border = 1;
 	$table->cellspacing = 0;
 	$table->cellpadding = 3;
