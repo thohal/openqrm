@@ -25,50 +25,60 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 }
 
 
-if(htmlobject_request('action') != '') {
+if(htmlobject_request('action') != '' && $OPENQRM_USER->role == "administrator") {
 $strMsg = '';
 
-	switch (htmlobject_request('action')) {
-		case 'reboot':
-			foreach($_REQUEST['identifier'] as $id) {
-				$resource = new resource();
-				$resource->get_instance_by_id($id);
-				$ip = $resource->ip;
-				$strMsg .= $resource->send_command("$ip", "reboot");
-				// set state to transition
-				$resource_fields=array();
-				$resource_fields["resource_state"]="transition";
-				$resource->update_info($id, $resource_fields);
-			}
-			redirect($strMsg);
-			break;
+	if(isset($_REQUEST['identifier'])) { 
+	
+		switch (htmlobject_request('action')) {
+			case 'reboot':
+				foreach($_REQUEST['identifier'] as $id) {
+					if($id != 0) {
+						$resource = new resource();
+						$resource->get_instance_by_id($id);
+						$ip = $resource->ip;
+						$strMsg .= $resource->send_command("$ip", "reboot");
+						// set state to transition
+						$resource_fields=array();
+						$resource_fields["resource_state"]="transition";
+						$resource->update_info($id, $resource_fields);
+					}
+				}
+				redirect($strMsg);
+				break;
+	
+			case 'poweroff':
+				foreach($_REQUEST['identifier'] as $id) {
+					if($id != 0) {
+						$resource = new resource();
+						$resource->get_instance_by_id($id);
+						$ip = $resource->ip;
+						$strMsg .= $resource->send_command("$ip", "halt");
+						// set state to transition
+						$resource_fields=array();
+						$resource_fields["resource_state"]="off";
+						$resource->update_info($id, $resource_fields);
+					}
+				}
+				redirect($strMsg);
+				break;
+	
+			case 'remove':
+				foreach($_REQUEST['identifier'] as $id) {
+					if($id != 0) {
+						$resource = new resource();
+						$resource->get_instance_by_id($id);
+						$mac = $resource->mac;
+						$strMsg .= $resource->remove($id, $mac);
+					}
+				}
+				redirect($strMsg);
+				break;
+	
+		}
 
-		case 'poweroff':
-			foreach($_REQUEST['identifier'] as $id) {
-				$resource = new resource();
-				$resource->get_instance_by_id($id);
-				$ip = $resource->ip;
-				$strMsg .= $resource->send_command("$ip", "halt");
-				// set state to transition
-				$resource_fields=array();
-				$resource_fields["resource_state"]="off";
-				$resource->update_info($id, $resource_fields);
-			}
-			redirect($strMsg);
-			break;
-
-		case 'remove':
-			foreach($_REQUEST['identifier'] as $id) {
-				$resource = new resource();
-				$resource->get_instance_by_id($id);
-				$mac = $resource->mac;
-				$strMsg .= $resource->remove($id, $mac);
-			}
-			redirect($strMsg);
-			break;
-
-	}
-
+	} //identifier
+	else { redirect('Please select a resource'); }
 }
 
 
@@ -166,6 +176,7 @@ function resource_display() {
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('reboot', 'poweroff', 'remove');
 		$table->identifier = 'resource_id';
+		$table->identifier_disabled = array(0);
 	}
 	$table->max = $resource_tmp->get_count('all');
 	#$table->limit = 10;
@@ -178,20 +189,20 @@ function resource_display() {
 function resource_form() {
 
 	$disp = "<h1>New Resource</h1>";
-	$disp = $disp."<form action='resource-action.php' method=post>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp.htmlobject_input('resource_mac', array("value" => 'XX:XX:XX:XX:XX:XX', "label" => 'Mac-address'), 'text', 17);
-	$disp = $disp.htmlobject_input('resource_ip', array("value" => '0.0.0.0', "label" => 'Ip-address'), 'text', 20);
-	$disp = $disp."<input type=hidden name=resource_id value='-1'>";
-	$disp = $disp."<input type=hidden name=resource_command value='new_resource'>";
-	$disp = $disp."<input type=submit value='add'>";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."</form>";
+	$disp .= "<form action='resource-action.php' method=post>";
+	$disp .= "<br>";
+	$disp .= "<br>";
+	$disp .= htmlobject_input('resource_mac', array("value" => 'XX:XX:XX:XX:XX:XX', "label" => 'Mac-address'), 'text', 17);
+	$disp .= htmlobject_input('resource_ip', array("value" => '0.0.0.0', "label" => 'Ip-address'), 'text', 20);
+	$disp .= "<input type=hidden name=resource_id value='-1'>";
+	$disp .= "<input type=hidden name=resource_command value='new_resource'>";
+	$disp .= "<input type=submit value='add'>";
+	$disp .= "";
+	$disp .= "";
+	$disp .= "";
+	$disp .= "";
+	$disp .= "";
+	$disp .= "</form>";
 	return $disp;
 }
 
