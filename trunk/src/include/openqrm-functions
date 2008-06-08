@@ -141,6 +141,9 @@ function openqrm_get_distro()
 			*Taroon*)
 				echo "el3"
 				;;
+			*CentOS*5*)
+				echo "centos5"
+				;;
 			*)
 				echo "rh"
 				;;
@@ -158,10 +161,13 @@ function openqrm_get_distro()
 	elif [ -f $ROOT_DIR/etc/SuSE-release ]; then
 		RELEASE=$(cat $ROOT_DIR/etc/SuSE-release | head -1)
 		case $RELEASE in
-			*9*)
+			*openSUSE*10*)
+				echo "opensuse10"
+				;;
+			*SUSE*9*)
 				echo "suse9"
 				;;
-			*10*)
+			*SUSE*10*)
 				echo "suse10"
 				;;
 			*)
@@ -175,8 +181,14 @@ function openqrm_get_distro()
 			*3.1*)
 				echo "debian31"
 				;;
+			*4.0*)
+				echo "debian40"
+				;;
+			*lenny/sid*)
+				echo "ubuntu804"
+				;;
 			*)
-				echo "ubuntu"
+				echo "debian"
 				;;
 		esac
 	else
