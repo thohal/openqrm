@@ -163,9 +163,9 @@ create table image_service (
 create table deployment_info(
 	deployment_id INT(5) NOT NULL PRIMARY KEY,
 	deployment_name VARCHAR(50),
-	deployment_type VARCHAR(20),
+	deployment_type VARCHAR(50),
 	deployment_description VARCHAR(50),
-	deployment_storagetype VARCHAR(20),
+	deployment_storagetype VARCHAR(50),
 	deployment_storagedescription VARCHAR(50),
 	deployment_mapping VARCHAR(255)
 );

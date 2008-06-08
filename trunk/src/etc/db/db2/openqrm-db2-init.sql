@@ -166,9 +166,9 @@ create table deployment_info(				\
 	deployment_id bigint not null,			\
 	deployment_storagetype_id bigint		\
 	deployment_name varchar(50),			\
-	deployment_type varchar(20)			\
+	deployment_type varchar(50)			\
 	deployment_description varchar(50)			\
-	deployment_storagetype varchar(20)			\
+	deployment_storagetype varchar(50)			\
 	deployment_storagedescription varchar(50)			\
 	deployment_mapping varchar(255)			\
 )

@@ -62,8 +62,8 @@ function openqrm_plugin_netapp_storage_init() {
 		echo
 	fi
 	echo "Initializing the openQRM netapp-storage-plugin"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD netapp-iscsi netapp-iscsi "NetApp Iscsi-root deployment" netapp-storage "NetApp Filer (Iscsi)"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD netapp-nfs netapp-nfs "NetApp Nfs-root deployment" netapp-storage "NetApp Filer (NFS)"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD netapp-iscsi-deployment netapp-iscsi-deployment "NetApp Iscsi-root deployment" netapp-storage "NetApp Filer (Iscsi)"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD netapp-nfs-deployment netapp-nfs-deployment "NetApp Nfs-root deployment" netapp-storage "NetApp Filer (NFS)"
 
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp-storage

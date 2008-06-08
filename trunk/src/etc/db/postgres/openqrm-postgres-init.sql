@@ -155,9 +155,9 @@ create table deployment_info(
 	deployment_id int8 NOT NULL PRIMARY KEY,
 	deployment_storagetype_id int8,
 	deployment_name char(50),
-	deployment_type char(20),
+	deployment_type char(50),
 	deployment_description char(50),
-	deployment_storagetype char(20),
+	deployment_storagetype char(50),
 	deployment_storagedescription char(50),
 	deployment_mapping char(255)
 );

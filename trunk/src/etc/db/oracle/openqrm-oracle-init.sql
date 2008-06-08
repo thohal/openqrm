@@ -157,9 +157,9 @@ create table deployment_info(
 	deployment_id INTEGER NOT NULL PRIMARY KEY,
 	deployment_storagetype_id INTEGER,
 	deployment_name VARCHAR2(50),
-	deployment_type VARCHAR2(20),
+	deployment_type VARCHAR2(50),
 	deployment_description VARCHAR2(50),
-	deployment_storagetype VARCHAR2(20),
+	deployment_storagetype VARCHAR2(50),
 	deployment_storagedescription VARCHAR2(50),
 	deployment_mapping VARCHAR2(255)
 );
