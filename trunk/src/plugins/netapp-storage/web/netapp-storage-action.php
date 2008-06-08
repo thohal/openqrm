@@ -6,7 +6,7 @@ $source_tab=$_REQUEST["currenttab"];
 
 <html>
 <head>
-<title>openQRM Lvm-storage actions</title>
+<title>openQRM Netapp-storage actions</title>
 <meta http-equiv="refresh" content="0; URL=netapp-storage-manager.php?currenttab=<?php echo $source_tab; ?>&netapp_storage_id=<?php echo $netapp_storage_id; ?>&strMsg=Processing <?php echo $netapp_storage_command; ?> on storage <?php echo $netapp_storage_id; ?>">
 </head>
 <body>
@@ -71,8 +71,8 @@ $storage_resource->get_instance_by_id($storage->resource_id);
 $cap_array = explode(" ", $storage->capabilities);
 foreach ($cap_array as $index => $capabilities) {
 	if (strstr($capabilities, "STORAGE_PASSWORD")) {
-		$NETAPP_PASSWORD=str_replace("STORAGE_PASSWORD=\\\"", "", $capabilities);
-		$NETAPP_PASSWORD=str_replace("\\\"", "", $NETAPP_PASSWORD);
+		$NETAPP_PASSWORD=str_replace("STORAGE_PASSWORD=\"", "", $capabilities);
+		$NETAPP_PASSWORD=str_replace("\"", "", $NETAPP_PASSWORD);
 	}
 }
 
@@ -90,8 +90,8 @@ switch ($netapp_storage_command) {
 	
 		// directly care about nfs or iscsi
 		$deployment = new deployment();
-		$deployment->get_instance_by_id($storage->deployment_type);
-		if ("$deployment->type" == "netapp-nfs") {
+		$deployment->get_instance_by_id($storage->type);
+		if ("$deployment->type" == "netapp-nfs-deployment") {
 
 			// prepare resource list to allow mounting rw,root
 			$resource = new resource();
@@ -102,7 +102,7 @@ switch ($netapp_storage_command) {
 			$allowed_resources=substr($allowed_resources, 1, strlen($allowed_resources)-1);
 			$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"exportfs -p \"rw,root=$allowed_resources\" /vol/$netapp_storage_fields[netapp_storage_volume_name]\" \"$NETAPP_PASSWORD\"";
 			$output = shell_exec($openqrm_server_command);
-		} else if ("$deployment->type" == "netapp-iscsi") {
+		} else if ("$deployment->type" == "netapp-iscsi-deployment") {
 			$lun_size=($netapp_storage_fields[netapp_storage_volume_size]/100)*75;
 			$lun_size="$lun_size"."M";
 			$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"lun create -s $lun_size -t linux /vol/$netapp_storage_fields[netapp_storage_volume_name]/lun\" \"$NETAPP_PASSWORD\"";
@@ -127,11 +127,11 @@ switch ($netapp_storage_command) {
 
 		// remove export nfs or iscsi lun
 		$deployment = new deployment();
-		$deployment->get_instance_by_id($storage->deployment_type);
-		if ("$deployment->type" == "netapp-nfs") {
+		$deployment->get_instance_by_id($storage->type);
+		if ("$deployment->type" == "netapp-nfs-deployment") {
 			$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"exportfs -u /vol/$netapp_storage_fields[netapp_storage_volume_name]\" \"$NETAPP_PASSWORD\"";
 			$output = shell_exec($openqrm_server_command);
-		} else if ("$deployment->type" == "netapp-iscsi") {
+		} else if ("$deployment->type" == "netapp-iscsi-deployment") {
 			// remove igroup
 			$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"igroup destroy $netapp_storage_fields[netapp_storage_volume_name]\" \"$NETAPP_PASSWORD\"";
 			$output = shell_exec($openqrm_server_command);

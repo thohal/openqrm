@@ -18,7 +18,7 @@ require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/resource.class.php";
-require_once "$RootDir/class/storagetype.class.php";
+require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
 $netapp_storage_id = $_REQUEST["netapp_storage_id"];
@@ -46,9 +46,7 @@ if(htmlobject_request('action') != '') {
 				$cap_array = explode(" ", $storage->capabilities);
 				foreach ($cap_array as $index => $capabilities) {
 					if (strstr($capabilities, "STORAGE_PASSWORD")) {
-						$NETAPP_PASSWORD=str_replace("STORAGE_PASSWORD=\\\"", "", $capabilities);
-						$NETAPP_PASSWORD=str_replace("\\\"", "", $NETAPP_PASSWORD);
-						$NETAPP_PASSWORD=str_replace("STORAGE_PASSWORD=\"", "", $NETAPP_PASSWORD);
+						$NETAPP_PASSWORD=str_replace("STORAGE_PASSWORD=\"", "", $capabilities);
 						$NETAPP_PASSWORD=str_replace("\"", "", $NETAPP_PASSWORD);
 					}
 				}
@@ -113,7 +111,7 @@ function netapp_select_storage($component) {
 	$arHead['storage_name']['title'] ='Name';
 
 	$arHead['storage_resource_id'] = array();
-	$arHead['storage_resource_id']['title'] ='Resource';
+	$arHead['storage_resource_id']['title'] ='Res.ID';
 
 	$arHead['storage_resource_ip'] = array();
 	$arHead['storage_resource_ip']['title'] ='Ip';
@@ -130,16 +128,16 @@ function netapp_select_storage($component) {
 	$storage_count=0;
 	$arBody = array();
 	$storage_tmp = new storage();
-	$storage_array = $storage_tmp->display_overview(0, 10, 'storage_id', 'ASC');
+	$storage_array = $storage_tmp->display_overview(0, 100, 'storage_id', 'ASC');
 	foreach ($storage_array as $index => $storage_db) {
 		$storage = new storage();
 		$storage->get_instance_by_id($storage_db["storage_id"]);
 		$storage_resource = new resource();
 		$storage_resource->get_instance_by_id($storage->resource_id);
-		$storage_type = new storagetype();
-		$storage_type->get_instance_by_id($storage->type);
+		$deployment = new deployment();
+		$deployment->get_instance_by_id($storage->type);
 		// is netapp ?
-		if ("$storage_type->name" == "netapp-storage") {
+		if ("$deployment->storagetype" == "netapp-storage") {
 			$storage_count++;
 			$resource_icon_default="/openqrm/base/img/resource.png";
 			$storage_icon="/openqrm/base/plugins/netapp-storage/img/storage.png";
@@ -178,7 +176,7 @@ function netapp_select_storage($component) {
 				'storage_name' => $storage->name,
 				'storage_resource_id' => $storage->resource_id,
 				'storage_resource_ip' => $storage_resource->ip,
-				'storage_type' => "$storage->type/$storage_type->name",
+				'storage_type' => "$deployment->storagedescription",
 				'storage_comment' => $storage_resource->comment,
 				'storage_capabilities' => $storage_resource->capabilities,
 			);
@@ -210,8 +208,8 @@ function netapp_display($netapp_storage_id, $component) {
 	$storage->get_instance_by_id($netapp_storage_id);
 	$storage_resource = new resource();
 	$storage_resource->get_instance_by_id($storage->resource_id);
-	$storage_type = new storagetype();
-	$storage_type->get_instance_by_id($storage->type);
+	$deployment = new deployment();
+	$deployment->get_instance_by_id($storage->type);
 
 	$table = new htmlobject_table_identifiers_checked('storage_id');
 
@@ -233,7 +231,7 @@ function netapp_display($netapp_storage_id, $component) {
 	$arHead['storage_name']['title'] ='Name';
 
 	$arHead['storage_resource_id'] = array();
-	$arHead['storage_resource_id']['title'] ='Resource';
+	$arHead['storage_resource_id']['title'] ='Res.ID';
 
 	$arHead['storage_resource_ip'] = array();
 	$arHead['storage_resource_ip']['title'] ='Ip';
@@ -287,7 +285,7 @@ function netapp_display($netapp_storage_id, $component) {
 		'storage_name' => $storage->name,
 		'storage_resource_id' => $storage->resource_id,
 		'storage_resource_ip' => $storage_resource->ip,
-		'storage_type' => "$storage->type/$storage_type->name",
+		'storage_type' => "$deployment->storagedescription",
 		'storage_comment' => $storage_resource->comment,
 		'storage_capabilities' => $storage_resource->capabilities,
 	);
