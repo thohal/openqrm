@@ -81,6 +81,8 @@ EOF
 	cat >> /etc/iscsi/initiatorname.iscsi << EOF
 InitiatorName=iqn.1993-08.org.debian:01:31721e7e6b8f
 EOF
+	# also create /etc/initiatorname.iscsi, some open-iscsi version looking for that
+	cp /etc/iscsi/initiatorname.iscsi /etc/initiatorname.iscsi
 
 	# start syslog + klogd
 	syslogd &
@@ -116,7 +118,7 @@ EOF
 	else
 		echo "iscsi-storage: Skipping install from local phase"
 	fi
-	if  [ "$IMAGE_TRANSFORM_TO_LOCAL" != "" ]; then
+	if  [ "$IMAGE_TRANSFORM_TO_LOCAL_DEVICE" != "" ]; then
 		transform_rootfs_to_local
 	else
 		echo "iscsi-storage: Skipping transform to local phase"
