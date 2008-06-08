@@ -153,7 +153,7 @@ global $thisfile;
 
 			// plugin the deployment-capabilities template values if existing
 			$deployment_default_paramters="";
-	    	$deployment_default_paramters_file = "$BaseDir/boot-service/storage.$deployment->type";
+	    	$deployment_default_paramters_file = "$BaseDir/boot-service/storage.$deployment->storagetype";
 			if (file_exists($deployment_default_paramters_file)) {
 	   	 		$deployment_default_paramters = file_get_contents("$deployment_default_paramters_file");
 			}
