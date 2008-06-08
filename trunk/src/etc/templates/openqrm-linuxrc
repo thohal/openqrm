@@ -273,12 +273,12 @@ else
 
 	eval $image_deployment_parameter
 	cd /
-	wget -q "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/root-mount.$image_type-deployment"
-	chmod +x root-mount.$image_type-deployment
+	wget -q "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/root-mount.$image_type"
+	chmod +x root-mount.$image_type
 	# source the deployment plugin command, it will provide 
 	# the functions to mount/remount the rootfs at /mnt according 
 	# to the deployment-type and the image_deployment_parameters
-	. ./root-mount.$image_type-deployment
+	. ./root-mount.$image_type
 
 	# mount ro (provided by the deployment plugin)
 	###############################################################
