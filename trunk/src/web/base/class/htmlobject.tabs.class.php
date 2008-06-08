@@ -15,9 +15,7 @@ var $tabs = array();
 				$html = new htmlobject_div();
 				$html->id = $identifier;
 				$html->css = 'htmlobject_tab_box';
-				$html->title = $val['label'];
 				$html->text = $val['value'];
-				#$this->add($html);
 				$value = $html->get_string();
 				
 			} else {
