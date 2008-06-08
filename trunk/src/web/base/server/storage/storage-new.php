@@ -90,6 +90,11 @@ $error = 0;
 				$storage_fields["storage_id"]=openqrm_db_get_free_id('storage_id', $STORAGE_INFO_TABLE);
 				$storage_type=htmlobject_request('storage_type');
 				$storage_fields["storage_type"]="$storage_type";
+
+				// unqote capabilities
+				$storage_capabilities_parameter = $storage_fields["storage_capabilities"];
+				$storage_fields["storage_capabilities"] = stripslashes($storage_capabilities_parameter);
+
 				$storage->add($storage_fields);
 				$strMsg .= 'added new storage <b>'.$storage_fields["storage_name"].'</b><br>';
 				

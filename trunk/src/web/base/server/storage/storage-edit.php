@@ -88,6 +88,11 @@ $error = 0;
 						}
 					}
 				}
+
+				// unqote capabilities
+				$storage_capabilities_parameter = $storage_fields["storage_capabilities"];
+				$storage_fields["storage_capabilities"] = stripslashes($storage_capabilities_parameter);
+
 				$storage = new storage();
 				$storage->update($storage_id, $storage_fields);
 				$strMsg .= 'updated storage <strong>'.$storage_fields["storage_name"].'</strong><br>';
