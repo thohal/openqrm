@@ -137,9 +137,13 @@ global $thisfile;
 
 			$store = "<h1>New Storage</h1>";
 			$store .= htmlobject_input('storage_name', array("value" => htmlobject_request('storage_name'), "label" => 'Storage name'), 'text', 20);
-			
+					
+			$helplink = '<a href="../../plugins/'.$deployment->storagetype.'/'.$deployment->storagetype.'-about.php" target="blank" class="doculink">
+			'.$deployment->storagedescription.'
+			</a>';
+		
 			$html = new htmlobject_div();
-			$html->text = "<b>$deployment->storagedescription</b>";
+			$html->text = $helplink;
 			$html->id = 'htmlobject_storage_type';
 	
 			$box = new htmlobject_box();
@@ -153,15 +157,11 @@ global $thisfile;
 
 			// plugin the deployment-capabilities template values if existing
 			$deployment_default_paramters="";
-	    	$deployment_default_paramters_file = "$BaseDir/boot-service/storage.$deployment->storagetype";
+			$deployment_default_paramters_file = "$BaseDir/boot-service/storage.$deployment->storagetype";
 			if (file_exists($deployment_default_paramters_file)) {
-	   	 		$deployment_default_paramters = file_get_contents("$deployment_default_paramters_file");
+				$deployment_default_paramters = file_get_contents("$deployment_default_paramters_file");
 			}
 			$store .= htmlobject_textarea('storage_capabilities', array("value" => $deployment_default_paramters, "label" => 'Storage Capabilities'));
-
-			$store .= "<a href=\"../../plugins/$deployment->storagetype/$deployment->storagetype-about.php\" target='_BLANK'>Help</a>";
-			$store .= "<br>";
-
 			$store .= htmlobject_textarea('storage_comment', array("value" => htmlobject_request('storage_comment'), "label" => 'Comment'));
 			
 			$store .= htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden');
@@ -186,8 +186,7 @@ global $thisfile;
 
 		$table = new htmlobject_table_identifiers_radio('resource_id');
 		$table->add_headrow($store);
-		$table->add_headrow('<h3>Resource List</h3>');
-
+		
 		$arHead = array();
 		$arHead['resource_state'] = array();
 		$arHead['resource_state']['title'] ='';
@@ -232,7 +231,8 @@ global $thisfile;
 				'resource_hostname' => $resource->hostname,
 				'resource_ip' => $resource->ip,
 			);
-
+			
+			$table->add_headrow('<h3>Resource</h3>');
 		
 		} else {
 			$resource_array = $resource_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
@@ -273,11 +273,11 @@ global $thisfile;
 	
 			}
 
+			$table->add_headrow('<h3>Resource List</h3>');
 		}
 
 		$table->id = 'Tabelle';
 		$table->css = 'htmlobject_table';
-		$table->style = 'width:600px;';
 		$table->border = 1;
 		$table->cellspacing = 0;
 		$table->cellpadding = 3;
