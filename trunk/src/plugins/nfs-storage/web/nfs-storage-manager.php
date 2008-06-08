@@ -12,7 +12,7 @@ require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/resource.class.php";
-require_once "$RootDir/class/storagetype.class.php";
+require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
 
@@ -43,10 +43,10 @@ function nfs_select_storage() {
 	global $thisfile;
 	$table = new htmlobject_db_table('storage_id');
 
-	$disp = "<h1>Select Nfs-storage</h1>";
+	$disp = "<h1>Select Nfs Storage Server</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."Please select a Nfs-storage server from the list below";
+	$disp = $disp."Please select a Nfs Storage Server from the list below";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 
@@ -64,7 +64,7 @@ function nfs_select_storage() {
 	$arHead['storage_name']['title'] ='Name';
 
 	$arHead['storage_resource_id'] = array();
-	$arHead['storage_resource_id']['title'] ='Resource';
+	$arHead['storage_resource_id']['title'] ='Res.ID';
 
 	$arHead['storage_resource_ip'] = array();
 	$arHead['storage_resource_ip']['title'] ='Ip';
@@ -87,10 +87,10 @@ function nfs_select_storage() {
 		$storage->get_instance_by_id($storage_db["storage_id"]);
 		$storage_resource = new resource();
 		$storage_resource->get_instance_by_id($storage->resource_id);
-		$storage_type = new storagetype();
-		$storage_type->get_instance_by_id($storage->type);
+		$deployment = new deployment();
+		$deployment->get_instance_by_id($storage->type);
 		// is nfs-storage ?
-		if ("$storage_type->name" == "nfs-storage") {
+		if ("$deployment->storagetype" == "nfs-storage") {
 			$storage_count++;
 			$resource_icon_default="/openqrm/base/img/resource.png";
 			$storage_icon="/openqrm/base/plugins/nfs-storage/img/storage.png";
@@ -108,7 +108,7 @@ function nfs_select_storage() {
 				'storage_name' => $storage->name,
 				'storage_resource_id' => $storage->resource_id,
 				'storage_resource_ip' => $storage_resource->ip,
-				'storage_type' => "$storage->type/$storage_type->name",
+				'storage_type' => "$deployment->storagedescription",
 				'storage_comment' => $storage_resource->comment,
 				'storage_capabilities' => $storage_resource->capabilities,
 			);
@@ -141,12 +141,12 @@ function nfs_storage_display($nfs_storage_id) {
 	$storage->get_instance_by_id($nfs_storage_id);
 	$storage_resource = new resource();
 	$storage_resource->get_instance_by_id($storage->resource_id);
-	$storage_type = new storagetype();
-	$storage_type->get_instance_by_id($storage->type);
+	$deployment = new deployment();
+	$deployment->get_instance_by_id($storage->type);
 
 	$table = new htmlobject_table_identifiers_checked('storage_id');
 
-	$disp = "<h1>Nfs-storage $storage->name</h1>";
+	$disp = "<h1>Nfs Storage $storage->name</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 
@@ -164,7 +164,7 @@ function nfs_storage_display($nfs_storage_id) {
 	$arHead['storage_name']['title'] ='Name';
 
 	$arHead['storage_resource_id'] = array();
-	$arHead['storage_resource_id']['title'] ='Resource';
+	$arHead['storage_resource_id']['title'] ='Res.ID';
 
 	$arHead['storage_resource_ip'] = array();
 	$arHead['storage_resource_ip']['title'] ='Ip';
@@ -196,7 +196,7 @@ function nfs_storage_display($nfs_storage_id) {
 		'storage_name' => $storage->name,
 		'storage_resource_id' => $storage->resource_id,
 		'storage_resource_ip' => $storage_resource->ip,
-		'storage_type' => "$storage->type/$storage_type->name",
+		'storage_type' => "$deployment->storagedescription",
 		'storage_comment' => $storage_resource->comment,
 		'storage_capabilities' => $storage_resource->capabilities,
 	);
