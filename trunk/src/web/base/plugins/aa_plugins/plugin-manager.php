@@ -190,7 +190,6 @@ $table_1->cellspacing = 0;
 $table_1->cellpadding = 3;
 $table_1->form_action = $thisfile;
 $table_1->autosort = true;
-$table_1->limit = 20;
 $table_1->head = $arHead;
 $table_1->body = $arBody;
 if ($OPENQRM_USER->role == "administrator") {

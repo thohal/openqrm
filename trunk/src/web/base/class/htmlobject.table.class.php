@@ -87,7 +87,7 @@ var $form_action = '';
 * @access public
 * @var string
 */
-var $limit = 10;
+var $limit = 20;
 /**
 * select with limit values  
 * <code>
