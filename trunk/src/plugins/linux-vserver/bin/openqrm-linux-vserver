@@ -258,14 +258,14 @@ EOF
 		if [ "$image_type" != "ram" ]; then
 			eval $image_deployment_parameter
 			# get the root-mount functions according the deployment type
-			wget -q -O $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment "http://$OPENQRM_SERVER_IP/openqrm/boot-service/root-mount.$image_type-deployment"
+			wget -q -O $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type "http://$OPENQRM_SERVER_IP/openqrm/boot-service/root-mount.$image_type"
 			# adapt root-mount functions of the deployment method
-			sed -i -e "s#/mnt2#XXXXX#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
-			sed -i -e "s#/mnt#$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
-			sed -i -e "s#XXXXX#/mnt2#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
-			sed -i -e "s#/var/openqrm/openqrm-resource.conf#$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
+			sed -i -e "s#/mnt2#XXXXX#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type
+			sed -i -e "s#/mnt#$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type
+			sed -i -e "s#XXXXX#/mnt2#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type
+			sed -i -e "s#/var/openqrm/openqrm-resource.conf#$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type
 			# mount the fs-image
-			. $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type-deployment
+			. $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type
 			mount_rootfs
 
 			# copy the resource-config to the fs-image
