@@ -76,7 +76,7 @@ function iscsi_about() {
 	$disp = $disp."This parameter can be set to an (nfs) location from which the image will be installed at";
 	$disp = $disp." deployment time.";
 	$disp = $disp."<br>";
-	$disp = $disp."The syntax is : ip_of_iscsi-server:path_to_target_image";
+	$disp = $disp."The syntax is : ip_of_nfs-server:path_to_target_image";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."IMAGE_INSTALL_FROM_LOCAL_DEVICE=[/dev/hdX|/dev/sdX]";
