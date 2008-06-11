@@ -12,14 +12,17 @@ function openqrm_plugin_dhcpd_start() {
 	openqrm_plugin_dhcpd_stop 1>/dev/null 2>&1
 	# on debian/ubuntu dhcpd ver.3 is named dhcpd3
 	if [ -x /usr/sbin/dhcpd3 ]; then
-		/usr/sbin/dhcpd3 -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/dhcpd.leases 2>&1 | logger
+		/usr/sbin/dhcpd3 -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/dhcpd.leases 2>&1
+		RET=$?
 	elif [ -x /usr/sbin/dhcpd ]; then
-		/usr/sbin/dhcpd -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/dhcpd.leases 2>&1 | logger
+		/usr/sbin/dhcpd -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/dhcpd.leases 2>&1
+		RET=$?
 	else
 		echo "ERROR: Could not find the dhcpd (ver.3) binary"
 		exit 1
 	fi
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dhcpd/.running
+	return $RET
 	
 }
 
