@@ -69,6 +69,7 @@ $strMsg = '';
 						$resource = new resource();
 						$resource->get_instance_by_id($id);
 						$mac = $resource->mac;
+						$openqrm_server->send_command("openqrm_remove_resource $id, $mac");
 						$strMsg .= $resource->remove($id, $mac);
 					}
 				}
