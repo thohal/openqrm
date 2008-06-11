@@ -62,7 +62,7 @@ function openqrm_plugin_nfs_storage_init() {
 	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/web/root-mount.nfs-deployment
 	ln -s $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/web/root-mount.nfs-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.nfs-deployment
 	# linking the image-menu
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/web/image-deployment-parameter.nfs-storage-menu.html $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.nfs-deployment
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/web/image.nfs-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.nfs-deployment
 }
 
 USER=$2
