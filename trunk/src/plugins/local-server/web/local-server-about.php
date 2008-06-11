@@ -13,9 +13,18 @@
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/include/htmlobject.inc.php";
+require_once "$RootDir/include/openqrm-database-functions.php";
+require_once "$RootDir/class/openqrm_server.class.php";
+global $OPENQRM_SERVER_BASE_DIR;
+$openqrm_server = new openqrm_server();
+$OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
+global $OPENQRM_SERVER_IP_ADDRESS;
+
 
 function local_server_about() {
 
+	global $OPENQRM_SERVER_BASE_DIR;
+	global $OPENQRM_SERVER_IP_ADDRESS;
 	$disp = "<h1><img border=0 src=\"/openqrm/base/plugins/local-server/img/plugin.png\"> Local-server plugin</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."The local-server-plugin provides an integration for already existing, local-installed systems in openQRM.";
@@ -30,10 +39,19 @@ function local_server_about() {
 	$disp = $disp."<ul>";
 	$disp = $disp."<li>";
 	$disp = $disp."Copy (scp) the 'openqrm-local-server' util to an existing, local-installed server in your network";
-	$disp = $disp."</li><li>";
-	$disp = $disp."Execute the 'openqrm-local-server' util on the existing system. e.g. :";
+
 	$disp = $disp."<br>";
-	$disp = $disp."<i>openqrm-local-server integrate -u openqrm -p openqrm -q 10.10.1.1 -i eth0</i>";
+	$disp = $disp."<br>";
+	$disp = $disp."<i><b>scp $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-server/bin/openqrm-local-server [ip-address-of-existing-server]:/tmp/</b></i>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."</li><li>";
+	$disp = $disp."Execute the 'openqrm-local-server' util on the remote system via ssh e.g. :";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."<i><b>ssh [ip-address-of-existing-server] /tmp/openqrm-local-server integrate -u openqrm -p openqrm -q $OPENQRM_SERVER_IP_ADDRESS -i eth0</b></i>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
 	$disp = $disp."</li><li>";
 	$disp = $disp."The system now appears in the openQRM-server as new resource";
 	$disp = $disp."<br>";
@@ -49,7 +67,10 @@ function local_server_about() {
 	$disp = $disp."<li>";
 	$disp = $disp."To remove a system from openQRM integrated via the local-server plugin run the 'openqrm-local-server' util again. e.g. :";
 	$disp = $disp."<br>";
-	$disp = $disp."<i>openqrm-local-server remove -u openqrm -p openqrm -q 10.10.1.1</i>";
+	$disp = $disp."<br>";
+	$disp = $disp."<i><b>ssh [ip-address-of-existing-server] /tmp/openqrm-local-server remove -u openqrm -p openqrm -q $OPENQRM_SERVER_IP_ADDRESS</b></i>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
 	$disp = $disp."</li>";
 	$disp = $disp."</ul>";
 
