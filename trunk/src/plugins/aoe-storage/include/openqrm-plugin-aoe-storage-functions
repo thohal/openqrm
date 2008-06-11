@@ -89,7 +89,12 @@ function manage_aoe() {
 			# slots are dynamic
 			AOE_SLOT=`cat $VBLADECONF | grep disk | awk {' print $3 '} | sort -n -r | head -n 1`
 			AOE_SLOT=$(( AOE_SLOT + 1 ))
-			AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '}`
+			if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+				. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+				AOE_INTERFACE=$OPENQRM_SERVER_INTERFACE
+			else
+				AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '}`
+			fi
 			echo "disk $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME" >> $VBLADECONF
 			# start vbladed
 			vbladed $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME
