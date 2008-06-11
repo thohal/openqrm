@@ -17,7 +17,13 @@ export LANG=C
 case "$DHCPD_CMD" in
 	add)
 		dhcpd_lock aquire
+		if grep $RESOURCE_MAC $DHCPD_CONF 1>/dev/null; then
+			dhcpd_log openqrm-dhcpd-manager "Resource  $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP already existing in the dhcpd-server. Not adding it."
+			dhcpd_lock release
+			exit 0
+		fi
 		dhcpd_log openqrm-dhcpd-manager "adding $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP"
+		cp -f $DHCPD_CONF $DHCPD_CONF.openqrm-dhcpd-manager
 		grep -B 1000000 "^# end_static_ips" $DHCPD_CONF | sed -e "s/^# end_static_ips.*//g" > $DHCPD_CONF.first_part
 		grep -A 1000000 "^# end_static_ips" $DHCPD_CONF > $DHCPD_CONF.last_part
 		cat $DHCPD_HOST_TEMPLATE | \
@@ -26,19 +32,35 @@ case "$DHCPD_CMD" in
 			sed -e "s/DHCPD_RESOURCE_IP/$RESOURCE_IP/g" > $DHCPD_CONF.host_part
 		cat $DHCPD_CONF.first_part $DHCPD_CONF.host_part $DHCPD_CONF.last_part > $DHCPD_CONF
 		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd stop
-		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start
+		if ! $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start; then
+			dhcpd_log openqrm-dhcpd-manager "Adding Resource  $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP failed. Reverting dhcpd-configuration."
+			# restore previous version, better not to add it than to corrupt the config
+			cp -f $DHCPD_CONF.openqrm-dhcpd-manager $DHCPD_CONF
+			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start
+		fi
 		dhcpd_lock release
 		;;
 	remove)
 		dhcpd_lock aquire
+		if ! grep $HOSTNAME $DHCPD_CONF 1>/dev/null; then
+			dhcpd_log openqrm-dhcpd-manager "Resource  $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP not existing in the dhcpd-server."
+			dhcpd_lock release
+			exit 0
+		fi
 		dhcpd_log openqrm-dhcpd-manager "removing $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP"
+		cp -f $DHCPD_CONF $DHCPD_CONF.openqrm-dhcpd-manager
 		# first - resource
 		grep -B 10000 -A 4 "^host $HOSTNAME {" /usr/lib/openqrm/plugins/dhcpd/etc/dhcpd.conf | sed -e :a -e '$d;N;2,5ba' -e 'P;D' > $DHCPD_CONF.first_part
 		# after resource
 		grep -A 10000 "^host $HOSTNAME {" /usr/lib/openqrm/plugins/dhcpd/etc/dhcpd.conf | sed '1,5d' > $DHCPD_CONF.last_part
 		cat $DHCPD_CONF.first_part $DHCPD_CONF.last_part > $DHCPD_CONF
 		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd stop
-		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start
+		if ! $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start; then
+			dhcpd_log openqrm-dhcpd-manager "Removing Resource  $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP failed. Reverting dhcpd-configuration."
+			# restore previous version, better not to add it than to corrupt the config
+			cp -f $DHCPD_CONF.openqrm-dhcpd-manager $DHCPD_CONF
+			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start
+		fi
 		dhcpd_lock release
 		;;
 	*)
