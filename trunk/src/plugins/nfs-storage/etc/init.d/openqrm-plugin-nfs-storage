@@ -34,7 +34,7 @@ function openqrm_plugin_nfs_storage_uninstall() {
 	fi
 	echo "Uninstalling the openQRM nfs-storage-plugin"
 	openqrm_plugin_nfs_storage_stop
-	openqrm_server_remove_deployment_type $USERNAME $PASSWORD nfs-storage
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD nfs-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nfs-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.nfs-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.nfs-deployment

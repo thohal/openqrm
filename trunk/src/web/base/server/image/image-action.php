@@ -124,7 +124,7 @@ if(htmlobject_request('action') != '') {
 
 		case 'remove_deployment_type':
 			$deployment = new deployment();
-			$deployment->remove_by_name($deployment_name);
+			$deployment->remove_by_type($deployment_name);
 			break;
 
 		default:
