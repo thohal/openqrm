@@ -304,6 +304,10 @@ function appliance_form() {
 		$resource_count++;
 		$resource_icon_default="/openqrm/base/img/resource.png";
 		$state_icon="/openqrm/base/img/$resource->state.png";
+		// idle ?
+		if (("$resource->imageid" == "1") && ("$resource->state" == "active")) {
+			$state_icon="/openqrm/base/img/idle.png";
+		}
 		if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
 			$state_icon="/openqrm/base/img/unknown.png";
 		}
