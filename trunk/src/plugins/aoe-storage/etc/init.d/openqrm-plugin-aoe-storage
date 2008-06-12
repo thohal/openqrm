@@ -86,10 +86,14 @@ function openqrm_plugin_aoe_storage_init() {
 	# copying aoe-mkdevs to boot-service dir
 	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-mkdevs ]; then
 		cp -f `which aoe-mkdevs` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
+		# remove the axwwww from the ps cmd in aoe-mkdevs
+		sed -i -e "s/axwwww//g" $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-mkdevs
 	fi
 	# copying aoe-mkshelf to boot-service dir
 	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-mkshelf ]; then
 		cp -f `which aoe-mkshelf` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
+		# remove the axwwww from the ps cmd in aoe-mkshelf
+		sed -i -e "s/axwwww//g" $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/aoe-mkshelf
 	fi
 	
 }

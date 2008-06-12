@@ -25,13 +25,15 @@ function linux_vserver_start() {
 		return 1
 	fi
 	# start all vifs
-	for VIF in `cat $OPENQRM_VIF_CONFIG |  awk {' print $2 '}`; do
-		if ! linux_vserver_manage_vif start $LINUX_VSERVER_VM_NAME; then
-			echo "ERROR: Could not start vif for Linux-VServer vm $LINUX_VSERVER_VM_NAME"
-		else
-			echo "NOTICE: Starting vif for Linux-VServer vm $LINUX_VSERVER_VM_NAME"
-		fi
-	done
+	if [ -f $OPENQRM_VIF_CONFIG ]; then
+		for VIF in `cat $OPENQRM_VIF_CONFIG |  awk {' print $2 '}`; do
+			if ! linux_vserver_manage_vif start $LINUX_VSERVER_VM_NAME; then
+				echo "ERROR: Could not start vif for Linux-VServer vm $LINUX_VSERVER_VM_NAME"
+			else
+				echo "NOTICE: Starting vif for Linux-VServer vm $LINUX_VSERVER_VM_NAME"
+			fi
+		done
+	fi
 }
 
 
