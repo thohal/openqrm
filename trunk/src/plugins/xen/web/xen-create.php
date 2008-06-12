@@ -35,8 +35,8 @@ function xen_create() {
 	$disp = $disp.htmlobject_input('xen_mac', array("value" => $suggested_mac, "label" => 'Mac address'), 'text', 20);
 	$disp = $disp.htmlobject_input('xen_ip', array("value" => 'dhcp', "label" => 'Ip address'), 'text', 20);
 	$disp = $disp.htmlobject_input('xen_ram', array("value" => '256', "label" => 'Memory (MB)'), 'text', 10);
-	$disp = $disp.htmlobject_input('xen_disk', array("value" => '2000', "label" => 'Disk (MB)'), 'text', 10);
-	$disp = $disp.htmlobject_input('xen_swap', array("value" => '500', "label" => 'Swap (MB)'), 'text', 10);
+	$disp = $disp.htmlobject_input('xen_disk', array("value" => '', "label" => 'Disk (MB)'), 'text', 10);
+	$disp = $disp.htmlobject_input('xen_swap', array("value" => '', "label" => 'Swap (MB)'), 'text', 10);
 	$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
 	$disp = $disp."<input type=hidden name=xen_command value='new'>";
 	$disp = $disp."<br>";
