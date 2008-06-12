@@ -177,7 +177,7 @@ function xen_display($appliance_id) {
 	if (file_exists($_SERVER["DOCUMENT_ROOT"].$xen_icon)) {
 		$resource_icon_default=$xen_icon;
 	}
-	$xen_create_button="<a href=\"xen-create.php?xen_id=$xen_resource->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> VM</b></a>";
+	$xen_create_button="<a href=\"xen-create.php?xen_id=$xen_tmp->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> VM</b></a>";
 	// here we take the resource id as the identifier because
 	// we need to run commands on the resource ip
 	$arBody[] = array(
@@ -233,11 +233,11 @@ function xen_display($appliance_id) {
 						$disp = $disp."</div>";
 						$disp = $disp."<br>";
 
-						$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=stop&xen_id=$xen_resource->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Stop</a>";
+						$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=stop&xen_id=$xen_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Stop</a>";
 						$disp = $disp." / ";
-						$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=reboot&xen_id=$xen_resource->id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"> Reboot</a>";
+						$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=reboot&xen_id=$xen_tmp->id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"> Reboot</a>";
 						$disp = $disp." / ";
-						$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=kill&xen_id=$xen_resource->id\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"> Force-stop</a>";
+						$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=kill&xen_id=$xen_tmp->id\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"> Force-stop</a>";
 
 						$disp = $disp."<br>";
 						$disp = $disp."<br>";
@@ -268,7 +268,7 @@ function xen_display($appliance_id) {
 						$migrateion_select = xen_htmlobject_select('xen_migrate_to_id', $xen_host_resource_list, '', $xen_host_resource_list);
 						$disp = $disp.$migrateion_select;
 						$disp = $disp."</td><td>";
-						$disp = $disp."<input type=hidden name=xen_id value=$xen_resource->id>";
+						$disp = $disp."<input type=hidden name=xen_id value=$xen_tmp->id>";
 						$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
 						$disp = $disp."<input type=hidden name=xen_command value='migrate'>";
 						$disp = $disp."<b><input type=submit value='Now !'></b>";
@@ -286,9 +286,9 @@ function xen_display($appliance_id) {
 						$disp = $disp.$xen_data;
 						$disp = $disp."</div>";
 						$disp = $disp."<br>";
-						$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=start&xen_id=$xen_resource->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>";
+						$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=start&xen_id=$xen_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>";
 						$disp = $disp." / ";
-						$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=remove&xen_id=$xen_resource->id\"><img height=16 width=16 src=\"/openqrm/base/img/error.png\" border=\"0\"> Remove</a>";
+						$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=remove&xen_id=$xen_tmp->id\"><img height=16 width=16 src=\"/openqrm/base/img/error.png\" border=\"0\"> Remove</a>";
 				
 					}
 
@@ -318,9 +318,9 @@ function xen_display($appliance_id) {
 					$disp = $disp." $xen_name";
 					$disp = $disp."</div>";
 					$disp = $disp."<br>";
-					$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=add&xen_id=$xen_resource->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"> Add</a>";
+					$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=add&xen_id=$xen_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"> Add</a>";
 					$disp = $disp." / ";
-					$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=delete&xen_id=$xen_resource->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Delete</a>";
+					$disp = $disp."<a href=\"xen-action.php?xen_name=$xen_name&xen_command=delete&xen_id=$xen_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Delete</a>";
 					$disp = $disp."<br>";
 					$disp = $disp."<hr>";
 				}

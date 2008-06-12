@@ -10,6 +10,7 @@ $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/resource.class.php";
+require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
@@ -22,8 +23,11 @@ function xen_create() {
 	$disp = "<b>Create VM on Xen-Host $xen_id</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
+
+	$xen_appliance = new appliance();
+	$xen_appliance->get_instance_by_id($xen_id);
 	$xen = new resource();
-	$xen->get_instance_by_id($xen_id);
+	$xen->get_instance_by_id($xen_appliance->resources);
 	$resource_mac_gen = new resource();
 	$resource_mac_gen->generate_mac();
 	$suggested_mac = $resource_mac_gen->mac;

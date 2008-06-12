@@ -17,6 +17,7 @@ require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/include/openqrm-server-config.php";
 require_once "$RootDir/class/resource.class.php";
+require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
@@ -60,8 +61,10 @@ unset($xen_fields["xen_command"]);
 
 		case 'new':
 			// send command to xen-host to create the new vm
+			$xen_appliance = new appliance();
+			$xen_appliance->get_instance_by_id($xen_id);
 			$xen = new resource();
-			$xen->get_instance_by_id($xen_id);
+			$xen->get_instance_by_id($xen_appliance->resources);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen create -n $xen_name -m $xen_mac -i $xen_ip -r $xen_ram -d $xen_disk -s $xen_swap -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
 			// add vm to openQRM
@@ -81,64 +84,80 @@ unset($xen_fields["xen_command"]);
 			break;
 
 		case 'start':
+			$xen_appliance = new appliance();
+			$xen_appliance->get_instance_by_id($xen_id);
 			$xen = new resource();
-			$xen->get_instance_by_id($xen_id);
+			$xen->get_instance_by_id($xen_appliance->resources);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen start -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
 			sleep($refresh_delay);
 			break;
 
 		case 'stop':
+			$xen_appliance = new appliance();
+			$xen_appliance->get_instance_by_id($xen_id);
 			$xen = new resource();
-			$xen->get_instance_by_id($xen_id);
+			$xen->get_instance_by_id($xen_appliance->resources);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen stop -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
 			sleep($refresh_delay);
 			break;
 
 		case 'kill':
+			$xen_appliance = new appliance();
+			$xen_appliance->get_instance_by_id($xen_id);
 			$xen = new resource();
-			$xen->get_instance_by_id($xen_id);
+			$xen->get_instance_by_id($xen_appliance->resources);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen kill -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
 			sleep($refresh_delay);
 			break;
 
 		case 'reboot':
+			$xen_appliance = new appliance();
+			$xen_appliance->get_instance_by_id($xen_id);
 			$xen = new resource();
-			$xen->get_instance_by_id($xen_id);
+			$xen->get_instance_by_id($xen_appliance->resources);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen reboot -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
 			sleep($refresh_delay);
 			break;
 
 		case 'remove':
+			$xen_appliance = new appliance();
+			$xen_appliance->get_instance_by_id($xen_id);
 			$xen = new resource();
-			$xen->get_instance_by_id($xen_id);
+			$xen->get_instance_by_id($xen_appliance->resources);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen remove -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
 			sleep($refresh_delay);
 			break;
 
 		case 'add':
+			$xen_appliance = new appliance();
+			$xen_appliance->get_instance_by_id($xen_id);
 			$xen = new resource();
-			$xen->get_instance_by_id($xen_id);
+			$xen->get_instance_by_id($xen_appliance->resources);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen add -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
 			sleep($refresh_delay);
 			break;
 
 		case 'delete':
+			$xen_appliance = new appliance();
+			$xen_appliance->get_instance_by_id($xen_id);
 			$xen = new resource();
-			$xen->get_instance_by_id($xen_id);
+			$xen->get_instance_by_id($xen_appliance->resources);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen delete -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
 			sleep($refresh_delay);
 			break;
 
 		case 'migrate':
+			$xen_appliance = new appliance();
+			$xen_appliance->get_instance_by_id($xen_id);
 			$xen = new resource();
-			$xen->get_instance_by_id($xen_id);
+			$xen->get_instance_by_id($xen_appliance->resources);
 			$destination = new resource();
 			$destination->get_instance_by_id($xen_migrate_to_id);
 			if ("$xen_migrate_type" == "1") {
