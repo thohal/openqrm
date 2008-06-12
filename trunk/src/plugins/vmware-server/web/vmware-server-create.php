@@ -10,6 +10,7 @@ $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/resource.class.php";
+require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
@@ -22,8 +23,11 @@ function vmware_server_create() {
 	$disp = "<b>VMware-server Create VM</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
+
+	$vmware_server_appliance = new appliance();
+	$vmware_server_appliance->get_instance_by_id($vmware_server_id);
 	$vmware_server = new resource();
-	$vmware_server->get_instance_by_id($vmware_server_id);
+	$vmware_server->get_instance_by_id($vmware_server_appliance->resources);
 	$resource_mac_gen = new resource();
 	$resource_mac_gen->generate_mac();
 	$suggested_mac = $resource_mac_gen->mac;

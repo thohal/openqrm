@@ -10,6 +10,7 @@ $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/resource.class.php";
+require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
@@ -22,8 +23,10 @@ function linux_vserver_create() {
 	$disp = "<b>Linux-VServer Create VM</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
+	$linux_vserver_appliance = new appliance();
+	$linux_vserver_appliance->get_instance_by_id($linux_vserver_id);
 	$linux_vserver = new resource();
-	$linux_vserver->get_instance_by_id($linux_vserver_id);
+	$linux_vserver->get_instance_by_id($linux_vserver_appliance->resources);
 	$resource_mac_gen = new resource();
 	$resource_mac_gen->generate_mac();
 	$suggested_mac = $resource_mac_gen->mac;

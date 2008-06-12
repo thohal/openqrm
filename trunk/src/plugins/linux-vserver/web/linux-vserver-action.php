@@ -17,6 +17,7 @@ require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/include/openqrm-server-config.php";
 require_once "$RootDir/class/resource.class.php";
+require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
@@ -55,8 +56,10 @@ unset($linux_vserver_fields["linux_vserver_command"]);
 
 		case 'new':
 			// send command to linux-vserver-host to create the new vm
+			$linux_vserver_appliance = new appliance();
+			$linux_vserver_appliance->get_instance_by_id($linux_vserver_id);
 			$linux_vserver = new resource();
-			$linux_vserver->get_instance_by_id($linux_vserver_id);
+			$linux_vserver->get_instance_by_id($linux_vserver_appliance->resources);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver create -n $linux_vserver_name -m $linux_vserver_mac -i $linux_vserver_ip";
 			$linux_vserver->send_command($linux_vserver->ip, $resource_command);
 			// add vm to openQRM
@@ -75,29 +78,37 @@ unset($linux_vserver_fields["linux_vserver_command"]);
 			break;
 
 		case 'start':
+			$linux_vserver_appliance = new appliance();
+			$linux_vserver_appliance->get_instance_by_id($linux_vserver_id);
 			$linux_vserver = new resource();
-			$linux_vserver->get_instance_by_id($linux_vserver_id);
+			$linux_vserver->get_instance_by_id($linux_vserver_appliance->resources);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver start -n $linux_vserver_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$linux_vserver->send_command($linux_vserver->ip, $resource_command);
 			break;
 
 		case 'stop':
+			$linux_vserver_appliance = new appliance();
+			$linux_vserver_appliance->get_instance_by_id($linux_vserver_id);
 			$linux_vserver = new resource();
-			$linux_vserver->get_instance_by_id($linux_vserver_id);
+			$linux_vserver->get_instance_by_id($linux_vserver_appliance->resources);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver stop -n $linux_vserver_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$linux_vserver->send_command($linux_vserver->ip, $resource_command);
 			break;
 
 		case 'reboot':
+			$linux_vserver_appliance = new appliance();
+			$linux_vserver_appliance->get_instance_by_id($linux_vserver_id);
 			$linux_vserver = new resource();
-			$linux_vserver->get_instance_by_id($linux_vserver_id);
+			$linux_vserver->get_instance_by_id($linux_vserver_appliance->resources);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver reboot -n $linux_vserver_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$linux_vserver->send_command($linux_vserver->ip, $resource_command);
 			break;
 
 		case 'delete':
+			$linux_vserver_appliance = new appliance();
+			$linux_vserver_appliance->get_instance_by_id($linux_vserver_id);
 			$linux_vserver = new resource();
-			$linux_vserver->get_instance_by_id($linux_vserver_id);
+			$linux_vserver->get_instance_by_id($linux_vserver_appliance->resources);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/bin/openqrm-linux-vserver delete -n $linux_vserver_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$linux_vserver->send_command($linux_vserver->ip, $resource_command);
 			break;

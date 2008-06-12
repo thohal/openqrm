@@ -177,7 +177,7 @@ function linux_vserver_display($appliance_id) {
 	if (file_exists($_SERVER["DOCUMENT_ROOT"].$linux_vserver_icon)) {
 		$resource_icon_default=$linux_vserver_icon;
 	}
-	$linux_vserver_create_button="<a href=\"linux-vserver-create.php?linux_vserver_id=$linux_vserver_resource->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> VM</b></a>";
+	$linux_vserver_create_button="<a href=\"linux-vserver-create.php?linux_vserver_id=$linux_vserver_tmp->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> VM</b></a>";
 	// here we take the resource id as the identifier because
 	// we need to run commands on the resource ip
 	$arBody[] = array(
@@ -237,9 +237,9 @@ function linux_vserver_display($appliance_id) {
 					$disp = $disp."</div>";
 					$disp = $disp."<br>";
 
-					$disp = $disp."<a href=\"linux-vserver-action.php?linux_vserver_name=$linux_vserver_name&linux_vserver_command=stop&linux_vserver_id=$linux_vserver_resource->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Stop</a>";
+					$disp = $disp."<a href=\"linux-vserver-action.php?linux_vserver_name=$linux_vserver_name&linux_vserver_command=stop&linux_vserver_id=$linux_vserver_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Stop</a>";
 					$disp = $disp." / ";
-					$disp = $disp."<a href=\"linux-vserver-action.php?linux_vserver_name=$linux_vserver_name&linux_vserver_command=reboot&linux_vserver_id=$linux_vserver_resource->id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"> Reboot</a>";
+					$disp = $disp."<a href=\"linux-vserver-action.php?linux_vserver_name=$linux_vserver_name&linux_vserver_command=reboot&linux_vserver_id=$linux_vserver_tmp->id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"> Reboot</a>";
 							
 					$disp = $disp."<br>";
 					$disp = $disp."<hr>";
@@ -265,9 +265,9 @@ function linux_vserver_display($appliance_id) {
 					$disp = $disp." $linux_vserver_name";
 					$disp = $disp."</div>";
 					$disp = $disp."<br>";
-					$disp = $disp."<a href=\"linux-vserver-action.php?linux_vserver_name=$linux_vserver_name&linux_vserver_command=start&linux_vserver_id=$linux_vserver_resource->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>";
+					$disp = $disp."<a href=\"linux-vserver-action.php?linux_vserver_name=$linux_vserver_name&linux_vserver_command=start&linux_vserver_id=$linux_vserver_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>";
 					$disp = $disp." / ";
-					$disp = $disp."<a href=\"linux-vserver-action.php?linux_vserver_name=$linux_vserver_name&linux_vserver_command=delete&linux_vserver_id=$linux_vserver_resource->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Delete</a>";
+					$disp = $disp."<a href=\"linux-vserver-action.php?linux_vserver_name=$linux_vserver_name&linux_vserver_command=delete&linux_vserver_id=$linux_vserver_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Delete</a>";
 					$disp = $disp."<br>";
 					$disp = $disp."<hr>";
 				}
