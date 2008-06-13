@@ -93,7 +93,7 @@ function manage_aoe() {
 				. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 				AOE_INTERFACE=$OPENQRM_SERVER_INTERFACE
 			else
-				AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '}`
+				AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '} | tail -1`
 			fi
 			echo "disk $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME" >> $VBLADECONF
 			# start vbladed

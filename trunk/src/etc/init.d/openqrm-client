@@ -96,6 +96,16 @@ function openqrm_client_stop() {
 	killall openqrm-exec-port-monitor 1>/dev/null 2>&1
 	killall openqrm-execd 1>/dev/null 2>&1
 	killall openqrm-monitord 1>/dev/null 2>&1
+	# in case we do not have killall (e.g. on debian-minimal install) be sure to stop the openqrm-agents anyway
+	for OPENQRM_PID in `ps ax 2>/dev/null | grep openqrm-monitord | grep -v grep | awk {' print $1 '}`; do
+		kill $OPENQRM_PID
+	done
+	for OPENQRM_PID in `ps ax 2>/dev/null | grep openqrm-execd | grep -v grep | awk {' print $1 '}`; do
+		kill $OPENQRM_PID
+	done
+	for OPENQRM_PID in `ps ax 2>/dev/null | grep openqrm-exec-port-monitor | grep -v grep | awk {' print $1 '}`; do
+		kill $OPENQRM_PID
+	done
 	/bin/rm -f ${LOCKFILE}
 }
 
