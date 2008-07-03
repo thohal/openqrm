@@ -71,7 +71,7 @@ function aoe_about() {
 	$disp = $disp."IMAGE_INSTALL_FROM_LOCAL_DEVICE=[/dev/hdX|/dev/sdX]";
 	$disp = $disp."<br>";
 	$disp = $disp."Set to a local harddisk device (e.g. /dev/hda1) this option will install the aoe-storage image on";
-	$disp = $disp." boot-time from the local-device configured in the image-parameters";
+	$disp = $disp." boot-time from the local-device.";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."IMAGE_INSTALL_FROM_LOCAL_DEVICE_FS_TYPE=[ext3]";
@@ -82,10 +82,10 @@ function aoe_about() {
 	$disp = $disp."IMAGE_TRANSFORM_TO_LOCAL_DEVICE=[/dev/hdX|/dev/sdX]";
 	$disp = $disp."<br>";
 	$disp = $disp."If this parameter is set to a local harddisk device (e.g. /dev/hda1) this option will transfrom";
-	$disp = $disp." the aoe-storage image on boot-time to the local-device configured in the image-parameters";
+	$disp = $disp." the aoe-storage image on boot-time to the local-device.";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE";
+	$disp = $disp."IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE=[ext3]";
 	$disp = $disp."<br>";
 	$disp = $disp."Should be set to a local harddisk device fs-type (e.g. ext3) in combination with the IMAGE_TRANSFORM_TO_LOCAL_DEVICE parameter.";
 	$disp = $disp."<br>";

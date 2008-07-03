@@ -57,14 +57,23 @@ function documentation_nfs_storage() {
 			$disp .= "<br>";
 			$disp .= "This is a directory which contains a rootfs which will be copied to the IMAGE_ROOT_DIR";
 			$disp .= "</li><li>";
-			$disp .= "IMAGE_INSTALL_FROM_LOCAL_DEVICE=y";
+			$disp .= "IMAGE_INSTALL_FROM_LOCAL_DEVICE=[/dev/hdX|/dev/sdX]";
 			$disp .= "<br>";
 			$disp .= "This will copy the content of the 'root device' (rootfs) to the IMAGE_ROOT_DIR";
 			$disp .= "</li><li>";
-			$disp .= "IMAGE_TRANSFORM_TO_LOCAL=y";
+			$disp .= "IMAGE_INSTALL_FROM_LOCAL_DEVICE_FS_TYPE=[ext3]";
+			$disp .= "<br>";
+			$disp .= "This parameter should be set to the local harddisk device fs-type (e.g. ext3) in combination with the IMAGE_INSTALL_FROM_LOCAL_DEVICE parameter.";
+			$disp .= "<br>";
+			$disp .= "</li><li>";
+			$disp .= "IMAGE_TRANSFORM_TO_LOCAL_DEVICE=[/dev/hdX|/dev/sdX]";
 			$disp .= "<br>";
 			$disp .= "This will copy the content of the IMAGE_ROOT_DIR (the rootfs) to the 'root device'";
 			$disp .= "</li><li>";
+			$disp .= "IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE=[ext3]";
+			$disp .= "<br>";
+			$disp .= "This parameter should be set to the local harddisk device fs-type (e.g. ext3) in combination with the IMAGE_TRANSFORM_TO_LOCAL_DEVICE parameter.";
+			$disp .= "<br>";
 			$disp .= "</li>";
 			$disp .= "</ul>";
 

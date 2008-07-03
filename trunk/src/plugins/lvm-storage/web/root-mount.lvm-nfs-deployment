@@ -7,18 +7,24 @@
 # Required defines in the image_deploy_paramters
 # IMAGE_ROOT_DIR				- set to the path to the rootfs on the NFS-server
 # Optional parameters 
+#
 # IMAGE_NFS_MOUNT_OPTIONS			- can be e.g. set to proto=tcp
+#
 # IMAGE_INSTALL_FROM				- can be set to an (nfs) location from
 #									  which the image will be installed at
 #									  deployment time
 #									  syntax is : ip_of_nfs-server:path_to_target_image
-# IMAGE_INSTALL_FROM_LOCAL_DEVICE	- set to "y" or "Y" this option will install
-#									  the nfs-storage image on boot-time from the
-#									  local-device configured in the image-parameters
 #
-# IMAGE_TRANSFORM_TO_LOCAL			- set to "y" or "Y" this option will transfrom
-#									  the nfs-storage image on boot-time to the
-#									  local-device configured in the image-parameters
+# IMAGE_INSTALL_FROM_LOCAL_DEVICE	- set to a local harddisk device (e.g. /dev/sda1) this
+#									  option will install the nfs-storage image on 
+#									  boot-time from the local-device
+#
+# IMAGE_INSTALL_FROM_LOCAL_DEVICE_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
+#
+# IMAGE_TRANSFORM_TO_LOCAL_DEVICE	- set to a local harddisk device (e.g. /dev/sda1) this option will transfrom
+#									  the nfs-storage image on boot-time to the local-device
+#
+# IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
 #
 #
 #
@@ -61,7 +67,7 @@ function mount_rootfs() {
 	else
 		echo "nfs-storage: Skipping install from local phase"
 	fi
-	if  [ "$IMAGE_TRANSFORM_TO_LOCAL" != "" ]; then
+	if  [ "$IMAGE_TRANSFORM_TO_LOCAL_DEVICE" != "" ]; then
 		transform_rootfs_to_local
 	else
 		echo "nfs-storage: Skipping transform to local phase"
@@ -121,8 +127,8 @@ function install_rootfs() {
 function install_rootfs_from_local() {
 	modprobe ext3 1>/dev/null 2>&1
 	mkdir -p /mnt2
-	if ! mount -t $image_rootfstype -o ro $image_rootdevice /mnt2; then
-		echo "ERROR: Could not mount $image_rootdevice / $image_rootfstype"
+	if ! mount -t $IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE -o ro $IMAGE_INSTALL_FROM_LOCAL_DEVICE /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM_LOCAL_DEVICE / $IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE"
 		# give a shell for the admin
 		/bin/bash
 	fi
@@ -137,8 +143,8 @@ function install_rootfs_from_local() {
 function transform_rootfs_to_local() {
 	modprobe ext3 1>/dev/null 2>&1
 	mkdir -p /mnt2
-	if ! mount -t $image_rootfstype -o rw $image_rootdevice /mnt2; then
-		echo "ERROR: Could not mount $image_rootdevice / $image_rootfstype"
+	if ! mount -t $IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE -o rw $IMAGE_TRANSFORM_TO_LOCAL_DEVICE /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_TRANSFORM_TO_LOCAL_DEVICE / $IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE"
 		# give a shell for the admin
 		/bin/bash
 	fi
