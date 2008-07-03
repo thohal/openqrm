@@ -28,7 +28,7 @@ create table resource_info(
 	resource_memused BIGINT(10),
 	resource_swaptotal BIGINT(10),
 	resource_swapused BIGINT(10),
-	resource_hostname VARCHAR(40),
+	resource_hostname VARCHAR(60),
 	resource_load DOUBLE(3,2),
 	resource_execdport INT(5),
 	resource_senddelay INT(3),
