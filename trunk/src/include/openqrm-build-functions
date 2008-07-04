@@ -24,7 +24,7 @@ if [ -x "/sbin/rpcbind" ]; then
 else
 	OPENQRM_INITRD_COMPONENTS="/sbin/portmap"
 fi
-OPENQRM_INITRD_COMPONENTS="$OPENQRM_INITRD_COMPONENTS /bin/bash /usr/bin/rsync /sbin/modprobe /sbin/depmod /sbin/insmod /sbin/lsmod /sbin/mke2fs /sbin/sfdisk"
+OPENQRM_INITRD_COMPONENTS="$OPENQRM_INITRD_COMPONENTS /bin/bash /usr/bin/rsync /sbin/modprobe /sbin/depmod /sbin/insmod /sbin/lsmod /sbin/mke2fs /sbin/sfdisk /sbin/udevd /lib/udev/vol_id"
 OPENQRM_INITRD_DIRECTORIES="bin etc etc/rc.d/init.d etc/sysconfig etc/X11 lib lib/modules lib/i686 loopfs mnt old_root proc sys sysroot usr usr/lib usr/bin usr/sbin var var/lock var/lock/subsys var/log var/run /var/lib /var/lib/nfs /var/lib/nfs/statd"
 
 # colorize/emphasize terminal output
@@ -362,11 +362,7 @@ EOF
 	# creating the initrd devices
 	cp -a $OPENQRM_SOURCE_DIR_FULL_PATH/etc/build.conf/initrd-devices.conf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/
 	rm -rf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/dev
-#	$OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/busybox makedevs -d $OPENQRM_SOURCE_DIR_FULL_PATH/etc/build.conf/initrd-devices.conf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
 	mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/dev
-	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/dev/
-#	ln -sf tty0 systty
-#	ln -sf ram1 ram
 
 	# create rcS
 	rm -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/rc.d/init.d/rcS
@@ -399,7 +395,12 @@ EOF
 	# create symlink to /lib64 for 64bit systems
 	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
 	ln -sf lib lib64
-	
+
+	# take /etc/udev
+	cp -aR /etc/udev $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/ 
+	# and /lib/udev
+	cp -aR /lib/udev $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
+		
 	cd $CURRENT_DIR
 }
 
