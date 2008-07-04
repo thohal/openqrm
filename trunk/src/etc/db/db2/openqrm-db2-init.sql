@@ -53,7 +53,7 @@ create table image_info(			\
 	image_name varchar(50),			\
 	image_version varchar(30),		\
 	image_type varchar(20),			\
-	image_rootdevice varchar(20),		\
+	image_rootdevice varchar(255),		\
 	image_rootfstype varchar(10),		\
 	image_storageid bigint,			\
 	image_deployment_parameter varchar(10),	\

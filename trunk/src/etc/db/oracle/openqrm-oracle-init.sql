@@ -51,7 +51,7 @@ create table image_info(
 	image_name VARCHAR2(50),
 	image_version VARCHAR2(30),
 	image_type VARCHAR2(20),
-	image_rootdevice VARCHAR2(20),
+	image_rootdevice VARCHAR2(255),
 	image_rootfstype VARCHAR2(10),
 	image_storageid INTEGER,
 	image_deployment_parameter VARCHAR2(255),

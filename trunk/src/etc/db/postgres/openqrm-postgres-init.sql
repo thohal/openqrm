@@ -49,7 +49,7 @@ create table image_info(
 	image_name char(50),
 	image_version char(30),
 	image_type char(20),
-	image_rootdevice char(20),
+	image_rootdevice char(255),
 	image_rootfstype char(10),
 	image_storageid int8,
 	image_deployment_parameter char(255),

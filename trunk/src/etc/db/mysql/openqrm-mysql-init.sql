@@ -56,7 +56,7 @@ create table image_info(
 	# can be : ramdisk, nfs, local, iscsi
 	image_type VARCHAR(20),
 	# can be : ram, /dev/hdX, /dev/sdX, nfs, iscsi
-	image_rootdevice VARCHAR(20),
+	image_rootdevice VARCHAR(255),
 	# can be : ext2/3, nfs
 	image_rootfstype VARCHAR(10),
 	image_storageid INT(5),
