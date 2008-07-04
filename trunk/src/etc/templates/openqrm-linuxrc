@@ -83,7 +83,8 @@ function import_kernel() {
 	hwsetup -p
 	umount /tmp_download
 	rmdir /tmp_download
-
+	# start udev
+	udevd --daemon
 }
 
 
@@ -332,6 +333,7 @@ else
 
 	# chroot + init
 	killall syslogd klogd 1>/dev/null 2>&1
+	killall udevd 
 	sleep 2
 	if grep sysfs /proc/filesystems 1>/dev/null ; then
 		umount /sys
