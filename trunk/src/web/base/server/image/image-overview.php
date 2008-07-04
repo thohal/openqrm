@@ -148,7 +148,7 @@ function image_form() {
 		$disp = $disp."<input type=hidden name=image_type value=$image_type>";
 		$disp = $disp.htmlobject_input('image_name', array("value" => '', "label" => 'Name'), 'text', 20);
 		$disp = $disp.htmlobject_input('image_version', array("value" => '', "label" => 'Version'), 'text', 20);
-		$disp = $disp.htmlobject_input('image_rootdevice', array("value" => '', "label" => 'Root-device'), 'text', 20);
+		$disp = $disp.htmlobject_input('image_rootdevice', array("value" => '', "label" => 'Root-device'), 'text', 255);
 		$disp = $disp.htmlobject_input('image_rootfstype', array("value" => '', "label" => 'Root-fs type'), 'text', 20);
 	    $disp = $disp."<input type='checkbox' name='image_isshared' value='0'> Shared<br>";
 		$disp = $disp."<br>";
@@ -299,7 +299,7 @@ function image_edit($image_id) {
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 
-	$disp = $disp.htmlobject_input('image_rootdevice', array("value" => $image->rootdevice, "label" => 'Image root-device'), 'text', 20);
+	$disp = $disp.htmlobject_input('image_rootdevice', array("value" => $image->rootdevice, "label" => 'Image root-device'), 'text', 255);
 	$disp = $disp.htmlobject_input('image_rootfstype', array("value" => $image->rootfstype, "label" => 'Image root-fs type'), 'text', 20);
 	if ($image->isshared != "1") {
 	    $disp = $disp."<input type='checkbox' name='image_isshared' value='1'> Shared Image<br>";
