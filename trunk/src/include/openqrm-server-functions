@@ -18,6 +18,17 @@ OPENQRM_DEFAULT_INITRD_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/
 OPENQRM_SERVER_LINUXRC="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-linuxrc"
 OPENQRM_MAX_INITRD_SIZE=128000
 OPENQRM_DEFAULT_RAM_DISK_BLOCK_SIZE=1024
+# static directory define for the server state backups
+OPENQRM_SERVER_STATE_DIR="/var/spool/openqrm"
+# which files/dirs to backup/restore (base only, plugin need to care about their bacukp/restore themselves)
+OPENQRM_SERVER_STATE_FILES="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates//openqrm-initrd-default.tgz	\
+	$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates//openqrm-linuxrc"
+OPENQRM_SERVER_STATE_DIRS="$OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/ \
+	$OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/	\
+	$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/"
+
+
 
 # function to export all given configuration from the
 # main openQRM-server config file
@@ -409,6 +420,122 @@ function openqrm_server_plugin_command() {
 	fi
 }
 
+
+
+
+
+
+# --------------------------------------------------------------------
+# ------------------------- state backup/restore functions -------------------------
+# --------------------------------------------------------------------
+
+# function to backup/restore a server-state
+# param 1	: <backup/restore/remove/list>
+# param 1	: [name]
+function openqrm_server_state() {
+	local CMD=$1
+	local NAME=$2
+	local NOW=`date +"%D_%T" | sed -e "s#/#-#g" | sed -e "s#:#.#g"`
+	local USAGE="Usage : openqrm_server_state backup/restore/remove/list [name]"
+	if [ ! -d $OPENQRM_SERVER_STATE_DIR ]; then
+		mkdir -p $OPENQRM_SERVER_STATE_DIR
+	fi
+	if [ "$CMD" == "" ]; then
+		echo $USAGE
+		return 1
+	fi
+	if [ "$CMD" != "list" ] && [ "$NAME" == "" ]; then
+		echo $USAGE
+		return 1
+	fi	
+	
+
+
+	case $CMD in
+		backup)
+				echo "openQRM-server: Creating backup of the server state $NAME-$NOW"
+				rm -rf $OPENQRM_SERVER_STATE_DIR/$NAME
+				mkdir -p $OPENQRM_SERVER_STATE_DIR/$NAME
+				
+				# db
+
+				# dirs
+				for DIR in $OPENQRM_SERVER_STATE_DIRS; do
+					if [ -d "$DIR" ]; then
+						mkdir -p `dirname $OPENQRM_SERVER_STATE_DIR/$NAME/$DIR`
+						cp -aR $DIR `dirname $OPENQRM_SERVER_STATE_DIR/$NAME/$DIR`
+					fi
+				done
+				
+				# files
+				# first add the enabled plugins state file
+				for RUNNING in `ls $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/`; do
+					if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$RUNNING/web/.running ]; then
+						mkdir -p $OPENQRM_SERVER_STATE_DIR/$NAME/$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$RUNNING/web/
+						touch $OPENQRM_SERVER_STATE_DIR/$NAME/$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$RUNNING/web/.running
+					fi
+				done
+				# now the static files
+				for FILE in $OPENQRM_SERVER_STATE_FILES; do
+					if [ -f "$FILE" ]; then
+						mkdir -p `dirname $OPENQRM_SERVER_STATE_DIR/$NAME/$FILE`
+						cp -af $FILE $OPENQRM_SERVER_STATE_DIR/$NAME/$FILE
+					fi
+				done
+
+
+				# package
+				RELATIVE_OPENQRM_SERVER_BASE_DIR=`echo $OPENQRM_SERVER_BASE_DIR | sed -e s"#/##"`
+				tar -C $OPENQRM_SERVER_STATE_DIR/$NAME -czf $OPENQRM_SERVER_STATE_DIR/$NAME-$NOW.tgz $RELATIVE_OPENQRM_SERVER_BASE_DIR/openqrm
+				rm -rf $OPENQRM_SERVER_STATE_DIR/$NAME
+				;;
+				
+		restore)
+				if [ -f $OPENQRM_SERVER_STATE_DIR/$NAME.tgz ]; then
+					echo "openQRM-server: Restoring server state from $OPENQRM_SERVER_STATE_DIR/$NAME.tgz"
+					# files + dirs
+					tar -C / -xzf $OPENQRM_SERVER_STATE_DIR/$NAME.tgz
+					# db
+
+
+
+				else
+					echo "openQRM-server: No such sever state file $NAME"
+					return 1
+				fi
+				;;
+				
+		remove)
+				if [ -f $OPENQRM_SERVER_STATE_DIR/$NAME.tgz ]; then
+					echo "openQRM-server: Removing server state $NAME-$NOW"
+					rm -f $OPENQRM_SERVER_STATE_DIR/$NAME.tgz
+				else
+					echo "openQRM-server: No such sever state file $NAME"
+					return 1
+				fi
+				;;
+		list)
+				ls $OPENQRM_SERVER_STATE_DIR | sed -s "s/\.tgz//g"
+				;;
+	
+		*)
+				echo "openQRM-server: No such server-state command!"
+				return 1
+				;;
+	
+	
+	
+	esac
+
+
+
+
+
+
+
+
+
+}
 
 
 # --------------------------------------------------------------------

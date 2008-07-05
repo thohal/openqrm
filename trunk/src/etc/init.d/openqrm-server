@@ -160,6 +160,13 @@ function openqrm_server_init() {
 		exit 1		
 	fi
 	
+	# check if there is a server state to restore
+	LAST_SERVER_STATE_BACKUP=`ls -tr $OPENQRM_SERVER_STATE_DIR/uninstall-* 2>/dev/null | tail -n1 | sed -s "s/\.tgz//g"`
+	if [ "$LAST_SERVER_STATE_BACKUP" != "" ]; then
+		LAST_SERVER_STATE_BACKUP=`basename $LAST_SERVER_STATE_BACKUP`
+		echo "NOTICE: Found backup of last openQRM-server state $LAST_SERVER_STATE_BACKUP, restoring it"
+		openqrm_server_state restore $LAST_SERVER_STATE_BACKUP
+	fi
 
 }
 
@@ -167,6 +174,10 @@ function openqrm_server_init() {
 function openqrm_server_uninstall() {
 
 	echo "Uninstalling openQRM-server ver. $OPENQRM_SERVER_VERSION"
+
+	# backup state
+	openqrm_server_state backup uninstall
+
 	# stopping and uninstalling all enabled plugins
 	for OPENQRM_PLUGIN in `ls $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/`; do
 		if [ -x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN ]; then
@@ -175,8 +186,8 @@ function openqrm_server_uninstall() {
 		fi
 	done
 
-
 	# drop db
+
 
 	# remove automatic startup
 	openqrm_chkconfig del openqrm-server
