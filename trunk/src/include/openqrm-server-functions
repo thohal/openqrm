@@ -457,8 +457,6 @@ function openqrm_server_state() {
 				rm -rf $OPENQRM_SERVER_STATE_DIR/$NAME
 				mkdir -p $OPENQRM_SERVER_STATE_DIR/$NAME
 				
-				# db
-
 				# dirs
 				for DIR in $OPENQRM_SERVER_STATE_DIRS; do
 					if [ -d "$DIR" ]; then
@@ -483,9 +481,11 @@ function openqrm_server_state() {
 					fi
 				done
 
+				RELATIVE_OPENQRM_SERVER_BASE_DIR=`echo $OPENQRM_SERVER_BASE_DIR | sed -e s"#/##"`
+				# db
+				$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions backup $OPENQRM_SERVER_STATE_DIR/$NAME/$RELATIVE_OPENQRM_SERVER_BASE_DIR/openqrm/database.sql
 
 				# package
-				RELATIVE_OPENQRM_SERVER_BASE_DIR=`echo $OPENQRM_SERVER_BASE_DIR | sed -e s"#/##"`
 				tar -C $OPENQRM_SERVER_STATE_DIR/$NAME -czf $OPENQRM_SERVER_STATE_DIR/$NAME-$NOW.tgz $RELATIVE_OPENQRM_SERVER_BASE_DIR/openqrm
 				rm -rf $OPENQRM_SERVER_STATE_DIR/$NAME
 				;;
@@ -496,9 +496,8 @@ function openqrm_server_state() {
 					# files + dirs
 					tar -C / -xzf $OPENQRM_SERVER_STATE_DIR/$NAME.tgz
 					# db
-
-
-
+					$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions restore $OPENQRM_SERVER_BASE_DIR/openqrm/database.sql
+					rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/database.sql
 				else
 					echo "openQRM-server: No such sever state file $NAME"
 					return 1

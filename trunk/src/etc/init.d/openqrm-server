@@ -187,7 +187,7 @@ function openqrm_server_uninstall() {
 	done
 
 	# drop db
-
+	$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions drop
 
 	# remove automatic startup
 	openqrm_chkconfig del openqrm-server

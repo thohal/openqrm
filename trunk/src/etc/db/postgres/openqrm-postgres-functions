@@ -10,15 +10,21 @@ fi
 OPENQRM_DATABASE_INIT="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/postgres/openqrm-postgres-init.sql"
 	OPENQRM_DATABASE_INIT_TMP=/tmp/openqrm-postgres-init.sql
 
+if ! which psql 1>/dev/null 2>&1; then
+	echo "ERROR: Postgres client 'psql' not installed/found on this system"
+	exit 1
+else
+	POSTGRES_CLIENT=`which psql`
+fi
+if ! which pg_dump 1>/dev/null 2>&1; then
+	echo "ERROR: Postgres 'pg_dump' not installed/found on this system"
+	exit 1
+else
+	POSTGRES_DUMP=`which pg_dump`
+fi
+
+
 function initialize_database() {
-
-	if ! which psql 1>/dev/null 2>&1; then
-		echo "ERROR: Postgres client 'psql' not installed/found on this system"
-		return 1
-	else
-		POSTGRES_CLIENT=`which psql`
-	fi
-
 	echo "Initializing the openQRM-database"
 	cat $OPENQRM_DATABASE_INIT |	\
 		sed -e "s/OPENQRM_SERVER_IP_ADDRESS/$OPENQRM_SERVER_IP_ADDRESS/g"	\
@@ -34,9 +40,39 @@ function initialize_database() {
 
 
 
+function backup_database() {
+	local SQL=$1
+	echo "Creating backup of the openQRM-database at $SQL"
+	su - postgres -c "$POSTGRES_DUMP -U $OPENQRM_DATABASE_USER $OPENQRM_DATABASE_NAME > $SQL"
+	return $RET
+
+}
+
+function restore_database() {
+	local SQL=$1
+	echo "Restoring the openQRM-database from $SQL"
+	su - postgres -c "$POSTGRES_CLIENT -d $OPENQRM_DATABASE_NAME --set openqrmdbuser=$OPENQRM_DATABASE_USER -f $SQL"
+	return $RET
+}
+
+function drop_database() {
+	echo "Dropping the openQRM-database"
+	su - postgres -c "dropdb $OPENQRM_DATABASE_NAME" 1>/dev/null 2>&1
+	return $RET
+}
+
 
 case "$1" in
 	init)
 		initialize_database
+		;;
+	backup)
+		backup_database $2
+		;;
+	restore)
+		restore_database $2
+		;;
+	drop)
+		drop_database
 		;;
 esac

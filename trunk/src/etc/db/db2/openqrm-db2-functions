@@ -33,9 +33,39 @@ function initialize_database() {
 }
 
 
+function backup_database() {
+	local SQL=$1
+	echo "Creating backup of the openQRM-database at $SQL"
+	echo "NOTICE: Backup for DB2 databases not yet implemented"
+	return $RET
+
+}
+
+function restore_database() {
+	local SQL=$1
+	echo "Restoring the openQRM-database from $SQL"
+	echo "NOTICE: Restore for DB2 databases not yet implemented"
+	return $RET
+
+}
+
+function drop_database() {
+	echo "Dropping the openQRM-database"
+	echo "NOTICE: Drop for DB2 databases not yet implemented"
+	return $RET
+}
 
 case "$1" in
 	init)
 		initialize_database
+		;;
+	backup)
+		backup_database $2
+		;;
+	restore)
+		restore_database $2
+		;;
+	drop)
+		drop_database
 		;;
 esac

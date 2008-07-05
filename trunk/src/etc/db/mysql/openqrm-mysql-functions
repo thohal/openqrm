@@ -12,16 +12,22 @@ fi
 openqrm_server_get_config
 OPENQRM_DATABASE_INIT="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/mysql/openqrm-mysql-init.sql"
 
+if ! which mysql 1>/dev/null 2>&1; then
+	echo "ERROR: Mysql client 'mysql' not installed/found on this system"
+	exit 1
+else
+	export MYSQL_CLIENT=`which mysql`
+fi
+if ! which mysqldump 1>/dev/null 2>&1; then
+	echo "ERROR: Mysql 'mysqldump' not installed/found on this system"
+	exit 1
+else
+	export MYSQL_DUMP=`which mysqldump`
+fi
+
+
 
 function initialize_database() {
-
-	if ! which mysql 1>/dev/null 2>&1; then
-		echo "ERROR: Mysql client 'mysql' not installed/found on this system"
-		return 1
-	else
-		MYSQL_CLIENT=`which mysql`
-	fi
-
 	# set the dbname in the sql init-script
 	OPENQRM_DATABASE_INIT_TMP=/tmp/openqrm-mysql-init.sql
 	cat $OPENQRM_DATABASE_INIT |	\
@@ -43,10 +49,57 @@ function initialize_database() {
 	return $RET
 }
 
+function backup_database() {
+	local SQL=$1
+	echo "Creating backup of the openQRM-database at $SQL"
+	if [ -z "$OPENQRM_DATABASE_PASSWORD" ]; then
+		$MYSQL_DUMP -u $OPENQRM_DATABASE_USER --host $OPENQRM_DATABASE_SERVER $OPENQRM_DATABASE_NAME > $SQL
+		RET=$?
+	else
+		$MYSQL_DUMP -u $OPENQRM_DATABASE_USER -p$OPENQRM_DATABASE_PASSWORD --host $OPENQRM_DATABASE_SERVER  $OPENQRM_DATABASE_NAME > $SQL
+		RET=$?
+	fi
+	return $RET
 
+}
+
+function restore_database() {
+	local SQL=$1
+	echo "Restoring the openQRM-database from $SQL"
+	if [ -z "$OPENQRM_DATABASE_PASSWORD" ]; then
+		$MYSQL_CLIENT -u $OPENQRM_DATABASE_USER --host $OPENQRM_DATABASE_SERVER $OPENQRM_DATABASE_NAME < $SQL
+		RET=$?
+	else
+		$MYSQL_CLIENT -u $OPENQRM_DATABASE_USER -p$OPENQRM_DATABASE_PASSWORD --host $OPENQRM_DATABASE_SERVER $OPENQRM_DATABASE_NAME < $SQL
+		RET=$?
+	fi
+	return $RET
+
+}
+
+function drop_database() {
+	echo "Dropping the openQRM-database"
+	if [ -z "$OPENQRM_DATABASE_PASSWORD" ]; then
+		$MYSQL_CLIENT -u $OPENQRM_DATABASE_USER --host $OPENQRM_DATABASE_SERVER -e "drop database $OPENQRM_DATABASE_NAME" 1>/dev/null 2>&1
+		RET=$?
+	else
+		$MYSQL_CLIENT -u $OPENQRM_DATABASE_USER -p$OPENQRM_DATABASE_PASSWORD --host $OPENQRM_DATABASE_SERVER -e "drop database $OPENQRM_DATABASE_NAME" 1>/dev/null 2>&1
+		RET=$?
+	fi
+	return $RET
+}
 
 case "$1" in
 	init)
 		initialize_database
+		;;
+	backup)
+		backup_database $2
+		;;
+	restore)
+		restore_database $2
+		;;
+	drop)
+		drop_database
 		;;
 esac
