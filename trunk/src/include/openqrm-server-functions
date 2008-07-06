@@ -26,6 +26,7 @@ OPENQRM_SERVER_STATE_FILES="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.
 	$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates//openqrm-linuxrc"
 OPENQRM_SERVER_STATE_DIRS="$OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/ \
 	$OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/	\
+	$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/	\
 	$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/"
 
 
@@ -458,6 +459,15 @@ function openqrm_server_state() {
 				mkdir -p $OPENQRM_SERVER_STATE_DIR/$NAME
 				
 				# dirs
+				# adding the plugin-backup dirs to the dirlist
+				for OPENQRM_PLUGIN in `ls $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/`; do
+					if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/openqrm-plugin-$OPENQRM_PLUGIN.conf ]; then
+						. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/openqrm-plugin-$OPENQRM_PLUGIN.conf
+						OPENQRM_SERVER_STATE_DIRS="$OPENQRM_SERVER_STATE_DIRS $OPENQRM_PLUGIN_STATE_DIRS"
+						unset OPENQRM_PLUGIN_STATE_DIRS
+					fi
+				done
+				# now the static dirs
 				for DIR in $OPENQRM_SERVER_STATE_DIRS; do
 					if [ -d "$DIR" ]; then
 						mkdir -p `dirname $OPENQRM_SERVER_STATE_DIR/$NAME/$DIR`
@@ -471,6 +481,14 @@ function openqrm_server_state() {
 					if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$RUNNING/web/.running ]; then
 						mkdir -p $OPENQRM_SERVER_STATE_DIR/$NAME/$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$RUNNING/web/
 						touch $OPENQRM_SERVER_STATE_DIR/$NAME/$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$RUNNING/web/.running
+					fi
+				done
+				# now adding the plugin-backup files to the filelist
+				for OPENQRM_PLUGIN in `ls $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/`; do
+					if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/openqrm-plugin-$OPENQRM_PLUGIN.conf ]; then
+						. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/openqrm-plugin-$OPENQRM_PLUGIN.conf
+						OPENQRM_SERVER_STATE_FILES="$OPENQRM_SERVER_STATE_FILES $OPENQRM_PLUGIN_STATE_FILES"
+						unset OPENQRM_PLUGIN_STATE_FILES
 					fi
 				done
 				# now the static files
