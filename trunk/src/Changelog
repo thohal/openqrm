@@ -1,24 +1,37 @@
 # this is the changelog for the openQRM-server project
 
-12.1.2008	-	Matt	-	created initial framework
-							designed dependencies setup
-							implemented deb-packaging
-13.1.2008	-	Matt	-	added support for rpm-packaging
-14.1.2008	-	Matt	-	made tftpd plugin working
-							made dhcpd plugin working
-16.1.2008	-	Matt	-	added creating default initrd template
-							added creating default boot-image
-17.1.2008	-	Matt	-	added to init network on the intird
-							added build-requirements check
-19.1.2008	-	Matt	-	added root-execution environemnt for the server
-							added to add new detected resources automatically
-							added starting the openrm-client on the booted resources
-20.1.2008	-	Matt	-	cleaned-up init process on the initrd
-							made reboot/halt working
-21.1.2008	-	Matt	-	added basic monitoring framework
-16.3.2008	-	Matt&Sascha	major updates on the basic framework
-							introduced user management and plugg-ability
-							added local, nfs and iscsi deployment types (also plugg-able)
-							added appliance based deployment mechanism
-11.4.2008	-	Matt		moved cvs repository to svn
-							and added svn-commit mails					
+12.01.2008	-	created initial framework
+				designed dependencies setup
+				implemented deb-packaging
+13.01.2008	-	added support for rpm-packaging
+14.01.2008	-	made tftpd plugin working
+				made dhcpd plugin working
+16.01.2008	-	added creating default initrd template
+				added creating default boot-image
+17.01.2008	-	added to init network on the intird
+				added build-requirements check
+19.01.2008	-	added root-execution environemnt for the server
+				added to add new detected resources automatically
+				added starting the openrm-client on the booted resources
+20.01.2008	-	cleaned-up init process on the initrd
+				made reboot/halt working
+21.01.2008	-	added basic monitoring framework
+16.03.2008	-	major updates on the basic framework
+				introduced user management and plugg-ability
+				added local, nfs and iscsi deployment types (also plugg-able)
+				added appliance based deployment mechanism
+11.04.2008	-	moved cvs repository to svn	and added svn-commit mails					
+up to the
+18.06.2008	-	full steam ahead on preparing the initial release version
+18.06.2008	-	initial release version 4.0
+05.07.2008	-	fixed 
+				[ openqrm-Bugs-1999026 ] ng: increase field-length of hostname in resource_info
+				[ openqrm-Bugs-1992353 ] ng: iscsi-storage plugin needs unique disk-identifier
+				[ openqrm-Feature Requests-1992366 ] ng: udev on the initrd
+				[ openqrm-Feature Requests-1992371 ] ng: clean up install-from-local + install-from-local-device
+06.07.2008	-	fixed 
+				[ openqrm-Bugs-1999014 ] ng: recheck permissions of the boot-service files on Centos
+				[ openqrm-Feature Requests-1940898 ] ng: update path / backup/restore for plugins
+
+
+
