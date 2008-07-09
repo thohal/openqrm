@@ -26,6 +26,12 @@ unset($resource_fields["resource_command"]);
 // set lastgood
 $resource_fields["resource_lastgood"]=$resource_lastgood;
 
+// gather for event vars
+$event_name = $_REQUEST["event_name"];
+$event_priority = $_REQUEST["event_priority"];
+$event_source = $_REQUEST["event_source"];
+$event_description = $_REQUEST["event_description"];
+
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
@@ -96,6 +102,19 @@ $event = new event();
 			if (strlen($resource_id)) {
 				$resource = new resource();
 				$resource->update_status($resource_id, $resource_state, $resource_event);
+			}
+			exit();
+			break;
+
+		// post_event requires :
+		// resource_id
+		// event_name
+		// event_priority
+		// event_source
+		// event_description
+		case 'post_event':
+			if (strlen($resource_id)) {
+				$event->log($event_name, $_SERVER['REQUEST_TIME'], $event_priority, $event_source, $event_description, "", "", 0, 0, 0);
 			}
 			exit();
 			break;

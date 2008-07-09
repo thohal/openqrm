@@ -79,6 +79,7 @@ function openqrm_client_start() {
 			openqrm_boot_service $boot_service start
 		done
 	fi
+	openqrm_post_event $resource_id "openqrm-client" 5 openqrm_client_start "Resource $resource_id fully started"
 	touch ${LOCKFILE}
 }
 

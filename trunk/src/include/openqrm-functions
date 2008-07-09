@@ -298,3 +298,78 @@ function openqrm_get_distro_version()
     		;;
     esac
 }
+
+
+function urlencodechar() {
+	# notice : "%", "*" and "\" are not supported
+	UCHAR=$1
+	UCHAR=${UCHAR/\~/%7E}
+	UCHAR=${UCHAR/\!/%21}
+	UCHAR=${UCHAR/\@/%40}
+	UCHAR=${UCHAR/\\#/%23}
+	UCHAR=${UCHAR/\\$/%24}
+	#UCHAR=${UCHAR/\%/%25}
+	UCHAR=${UCHAR/\^/%5E}
+	UCHAR=${UCHAR/\&/%26}
+	#UCHAR=${UCHAR/\\*/%2A}
+	UCHAR=${UCHAR/\(/%28}
+	UCHAR=${UCHAR/\)/%29}
+	UCHAR=${UCHAR/\+/%2B}
+	UCHAR=${UCHAR/\|/%7C}
+	UCHAR=${UCHAR/\{/%7B}
+	UCHAR=${UCHAR/\}/%7D}
+	UCHAR=${UCHAR/\:/%3A}
+	UCHAR=${UCHAR/\"/%22}
+	UCHAR=${UCHAR/\</%3C}
+	UCHAR=${UCHAR/\>/%3E}
+	UCHAR=${UCHAR/\\?/%3F}
+	UCHAR=${UCHAR/\`/%60}
+	UCHAR=${UCHAR/\=/%3D}
+	#UCHAR=${UCHAR/\\/%5C}
+	UCHAR=${UCHAR/\[/%5B}
+	UCHAR=${UCHAR/\]/%5D}
+	UCHAR=${UCHAR/\;/%3B}
+	UCHAR=${UCHAR/\'/%27}
+	UCHAR=${UCHAR/\,/%2C}
+	UCHAR=${UCHAR/\//%2F}
+	# whitespace
+	if [ -z $UCHAR ]; then
+	        UCHAR=%20
+	fi
+	echo "$UCHAR"
+}
+
+
+function urlencodestring() {
+	USERINPUT=$@
+	LENGTH=${#USERINPUT}
+	for (( LOOP=0; LOOP<$LENGTH; LOOP++ )); do
+		TESTCHAR=`echo ${USERINPUT:$LOOP:1}`
+		TESTCHAR=`urlencodechar $TESTCHAR`
+		echo -n $TESTCHAR
+	done
+}
+
+
+# function to send events to the openQRM-server
+# param 1 = resource_id
+# param 2 = event_name
+# param 3 = event_priority
+# param 4 = event_source
+# param 5 = event_description
+function openqrm_post_event() {
+	resource_id=`urlencodestring $1`
+	event_name=`urlencodestring $2`
+	event_priority=`urlencodestring $3`
+	event_source=`urlencodestring $4`
+	event_description=`urlencodestring $5`
+	MESSAGEDATA="resource_id=$resource_id&event_name=$event_name&event_priority=$event_priority&event_source=$event_source&event_description=$event_description";
+	OPENQRM_RESOURCE_EVENT_URL="http://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=post_event&$MESSAGEDATA"
+	if ! wget -q -O /dev/null "$OPENQRM_RESOURCE_EVENT_URL"; then
+		echo "ERROR: Could not post event to the openQRM-server at $resource_openqrmserver !" | logger
+		return 1
+	fi
+}
+
+
+

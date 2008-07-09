@@ -23,57 +23,6 @@ fi
 
 # local used functions
 
-function urlencodechar() {
-	# notice : "%", "*" and "\" are not supported
-	UCHAR=$1
-	UCHAR=${UCHAR/\~/%7E}
-	UCHAR=${UCHAR/\!/%21}
-	UCHAR=${UCHAR/\@/%40}
-	UCHAR=${UCHAR/\\#/%23}
-	UCHAR=${UCHAR/\\$/%24}
-	#UCHAR=${UCHAR/\%/%25}
-	UCHAR=${UCHAR/\^/%5E}
-	UCHAR=${UCHAR/\&/%26}
-	#UCHAR=${UCHAR/\\*/%2A}
-	UCHAR=${UCHAR/\(/%28}
-	UCHAR=${UCHAR/\)/%29}
-	UCHAR=${UCHAR/\+/%2B}
-	UCHAR=${UCHAR/\|/%7C}
-	UCHAR=${UCHAR/\{/%7B}
-	UCHAR=${UCHAR/\}/%7D}
-	UCHAR=${UCHAR/\:/%3A}
-	UCHAR=${UCHAR/\"/%22}
-	UCHAR=${UCHAR/\</%3C}
-	UCHAR=${UCHAR/\>/%3E}
-	UCHAR=${UCHAR/\\?/%3F}
-	UCHAR=${UCHAR/\`/%60}
-	UCHAR=${UCHAR/\=/%3D}
-	#UCHAR=${UCHAR/\\/%5C}
-	UCHAR=${UCHAR/\[/%5B}
-	UCHAR=${UCHAR/\]/%5D}
-	UCHAR=${UCHAR/\;/%3B}
-	UCHAR=${UCHAR/\'/%27}
-	UCHAR=${UCHAR/\,/%2C}
-	UCHAR=${UCHAR/\//%2F}
-	# whitespace
-	if [ -z $UCHAR ]; then
-	        UCHAR=%20
-	fi
-	echo "$UCHAR"
-}
-
-
-function urlencodestring() {
-	USERINPUT=$@
-	LENGTH=${#USERINPUT}
-	for (( LOOP=0; LOOP<$LENGTH; LOOP++ )); do
-		TESTCHAR=`echo ${USERINPUT:$LOOP:1}`
-		TESTCHAR=`urlencodechar $TESTCHAR`
-		echo -n $TESTCHAR
-	done
-}
-
-
 function send_info() {
 	current_state=`urlencodestring $OPENQRM_STATE`
 	current_event=`urlencodestring $OPENQRM_EVENT`
