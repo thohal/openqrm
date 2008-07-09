@@ -21,15 +21,6 @@ group {
 		default-lease-time 21600;
 		max-lease-time 43200;
 		
-		class "NOTPXE" {
-			match if substring (option vendor-class-identifier, 0, 9) != "PXEClient";
-			ignore unknown-clients;
-		}
-		pool {
-			range OPENQRM_SERVER_BROADCAST_ADDRESS OPENQRM_SERVER_BROADCAST_ADDRESS;
-			allow members of "NOTPXE";
-		}
-
 		# the ip range to serve
 		range OPENQRM_PLUGIN_DHCPD_IP_RANGE_FIRST OPENQRM_PLUGIN_DHCPD_IP_RANGE_LAST;
 		filename "/pxelinux.0";
