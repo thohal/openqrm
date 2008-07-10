@@ -94,7 +94,7 @@ function openqrm_server_create_kernel() {
 
 	# check size
 	OPENQRM_INITRD_SIZE=`du -s $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/ | awk {' print $1 '}`
-	OPENQRM_INITRD_SIZE=$(( QRM_INITRD_SIZE + 16000 ))
+	OPENQRM_INITRD_SIZE=$(( OPENQRM_INITRD_SIZE + 16000 ))
 	if (( $OPENQRM_INITRD_SIZE > $OPENQRM_MAX_INITRD_SIZE )); then
 		echo "ERROR: Initrd got too big"
 		return 1
