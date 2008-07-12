@@ -141,12 +141,16 @@ padding:0;
 	margin:0;
 	padding:0;
 }
+.htmlobject_box .left label{
+	line-height:20px;
+}
 .htmlobject_box .right {
 	float:left;
 	margin:0;
 	padding:0;
 }
 .htmlobject_box.textarea .left {
+	width:300px;
 	float:none;
 	margin:15px 0 5px 0;
 }
@@ -217,6 +221,9 @@ border-right: 1px solid #91a7b4;
 	color:black  !important;
 	font-size: 13px  !important;
 }
+.htmlobject_td.head {
+	border:0px none;
+}
 .htmlobject_td.identifier {
 	text-align:center;
 	vertical-align:top;
@@ -260,7 +267,7 @@ border-right: 1px solid #91a7b4;
 background: url(../img/help.png) no-repeat top right transparent;
 line-height: 18px;
 display: block;
-margin: 5px 0 5px 0; 
+margin: 0; 
 padding: 0 25px 0 0; 
 text-decoration: none;
 }

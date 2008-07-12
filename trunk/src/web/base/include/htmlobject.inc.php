@@ -264,4 +264,34 @@ function htmlobject_request($arg)
 	else
 			return '';
 }
+
+function error_redirect($strMsg = '') {
+global $thisfile;
+	$args = '?strMsg=<strong>Error:</strong><br>'.$strMsg;
+	foreach($_POST as $key => $value) {
+	if($key != 'action') {
+		
+		if(is_array($value)) {
+			foreach($value as $key1 => $value1) {
+				$args .= '&'.$key.'[]='.$value1;
+			}
+		} else {
+			$args .= '&'.$key.'='.$value;
+		}
+	}
+	}
+	foreach($_GET as $key => $value) {
+	if($key != 'action') {
+		
+		if(is_array($value)) {
+			foreach($value as $key1 => $value1) {
+				$args .= '&'.$key.'[]='.$value1;
+			}
+		} else {
+			$args .= '&'.$key.'='.$value;
+		}
+	}
+	}
+	return $thisfile.$args;
+}
 ?>

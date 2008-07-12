@@ -39,9 +39,7 @@
 	vertical-align:top;
 }
 
-.tr_hover {
-background-color:#eee;
-}
-.tr_click {
-background-color:#ddd;
+.htmlobject_box textarea {
+	width: 600px;
+	height: 50px;
 }
