@@ -179,8 +179,7 @@ function resource_display() {
 		$table->identifier = 'resource_id';
 		$table->identifier_disabled = array(0);
 	}
-	$table->max = $resource_tmp->get_count('all');
-	#$table->limit = 10;
+	$table->max = $resource_tmp->get_count('all') + 1; // adding openqrmserver
 	
 	return $disp.$table->get_string();
 }
