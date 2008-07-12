@@ -54,7 +54,7 @@ $strMsg = '';
 $error = 0;
 
 	switch (htmlobject_request('action')) {
-		case 'add':
+		case 'save':
 
 			// check passed values
 			if(htmlobject_request('storage_name') != '') {
@@ -134,13 +134,14 @@ global $thisfile;
 	// remove the ramdisk-type from the list
 	array_splice($deployment_list, 0, 1);
 
-		if((htmlobject_request('action') == 'create' && isset($_REQUEST['identifier'])) || isset($_REQUEST['step'])) {
+		if((htmlobject_request('action') == 'select' && isset($_REQUEST['identifier'])) || isset($_REQUEST['step'])) {
 
 			$new_storage_step_2 = true;
 
 			$deployment->get_instance_by_id(htmlobject_request('storage_type'));
 
-			$store = "<h1>New Storage</h1>";
+
+			$store = '';
 			$store .= htmlobject_input('storage_name', array("value" => htmlobject_request('storage_name'), "label" => 'Storage name'), 'text', 20);
 					
 			$helplink = '<a href="../../plugins/'.$deployment->storagetype.'/'.$deployment->storagetype.'-about.php" target="blank" class="doculink">
@@ -173,23 +174,23 @@ global $thisfile;
 			$store .= htmlobject_input('step', array("value" => '2', "label" => ''), 'hidden');
 			$store .= htmlobject_input('identifier[]', array("value" => $_REQUEST['identifier'][0], "label" => ''), 'hidden');
 				
-			$store_action = array('add');
+			$store_action = array('save');
 
 		}
 
 		else {
 
-			$store = "<h1>New Storage</h1>";
+			$store = "";
 			$store .= htmlobject_select('storage_type', $deployment_list, 'Storage type', array(htmlobject_request('storage_type')));
 			$store .= htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden');
-			$store_action = array('create');
+			$store_action = array('select');
 
 		}
 
 
 		$resource_tmp = new resource();
 
-		$table = new htmlobject_table_identifiers_radio('resource_id');
+		$table = new htmlobject_table_identifiers_radio('resource_id', '', 10);
 		$table->add_headrow($store);
 		
 		$arHead = array();
@@ -305,10 +306,11 @@ global $thisfile;
 		$table->max = $all + 1; // add openqrmserver
 		
 		if (count($deployment_list) > 0) {
-			return $table->get_string();
+			return "<h1>New Storage</h1>".$table->get_string();
 		} else {
-			$str = '<center>';
-			$str .= '<h1>No storage plugins enabled</h1>';
+			$str = '<h1>New Storage</h1>';
+			$str .= '<center>';
+			$str .= '<b>No storage plugins enabled</b>';
 			$str .= '<br><br>';
 			$str .= '<a href="../../plugins/aa_plugins/plugin-manager.php">Pluginmanager</a>';
 			$str .= '</center>';
