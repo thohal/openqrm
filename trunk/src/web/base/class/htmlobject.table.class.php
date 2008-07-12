@@ -179,13 +179,17 @@ var $_bottomrow = array();
 	* init htmlobject_table_builder vars from Request
 	* @access public
 	* @param string $field key for initial sort - sort functionality is disabled if empty
-	* @param  enum $order  initial sort order [ASC, DESC]
+	* @param enum $order  initial sort order [ASC, DESC]
+	* @param int $limit  initial limit
 	*/
 	//----------------------------------------------------------------------------------------
-	function htmlobject_table_builder($field = '', $order = '') {
+	function htmlobject_table_builder($field = '', $order = '', $limit = '') {
 	
 		if(isset($_REQUEST['limit']) &&  $_REQUEST['limit'] != '') {
 			$this->limit = $_REQUEST['limit'];
+		}
+		else if($limit != '') {
+			$this->limit = $limit;
 		}
 		if(isset($_REQUEST['max']) &&  $_REQUEST['max'] != '') {
 			$this->max = $_REQUEST['max'];
@@ -564,7 +568,7 @@ var $_bottomrow = array();
 			if(in_array($this->body[$key][$this->identifier], $this->identifier_checked)) {
 				$html->checked = true;
 			}
-			if(in_array($key, $this->identifier_disabled)) {
+			if(in_array( $this->body[$key][$this->identifier], $this->identifier_disabled)) {
 				$html->disabled = true;
 			}
 					
@@ -662,8 +666,8 @@ var $_bottomrow = array();
 
 class htmlobject_db_table extends htmlobject_table_builder 
 {
-	function htmlobject_db_table($field = '', $order = '') {
-		parent::htmlobject_table_builder($field, $order);
+	function htmlobject_db_table($field = '', $order = '', $limit = '') {
+		parent::htmlobject_table_builder($field, $order, $limit);
 	}
 }
 
@@ -731,8 +735,8 @@ var $_identifiers = array();
 }
 class htmlobject_table_identifiers_radio extends htmlobject_table_builder 
 {
-	function htmlobject_table_identifiers_radio($field = '', $order = '') {
-		parent::htmlobject_table_builder($field, $order);
+	function htmlobject_table_identifiers_radio($field = '', $order = '', $limit = '') {
+		parent::htmlobject_table_builder($field, $order, $limit);
 	}
 	
 	//----------------------------------------------------------------------------------------

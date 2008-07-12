@@ -79,7 +79,7 @@ $strMsg = '';
 		}
 
 	} //identifier
-	else { redirect('Please select a resource'); }
+	#else { redirect('Please select a resource'); }
 }
 
 
