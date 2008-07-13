@@ -93,7 +93,7 @@ $error = 0;
 require_once "$RootDir/class/resource.class.php";
 
 
-function image_form() {
+function image_edit() {
 	global $OPENQRM_USER, $thisfile;
 
 	$deployment = new deployment();
@@ -130,11 +130,12 @@ function image_form() {
 		$arHead['storage_comment']['title'] ='Comment';
 		$arBody = array();
 
-	if (htmlobject_request('identifier') != '' && (htmlobject_request('action') == 'select' || isset($_REQUEST['new_image_step_2']))) {
+	#if (htmlobject_request('identifier') != '' && (htmlobject_request('action') == 'select' || isset($_REQUEST['new_image_step_2']))) {
 
-		foreach(htmlobject_request('identifier') as $id) {
-			$ident = $id;
-		}
+if(htmlobject_request('image_id') != '') {
+
+		$ident = htmlobject_request('image_id');
+
 
 		$storage = new storage();
 		$storage->get_instance_by_id($ident);
@@ -146,7 +147,6 @@ function image_form() {
 		$disp .= htmlobject_input('identifier[]', array("value" => $ident, "label" => ''), 'hidden');
 		$disp .= htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden');
 		$disp .= htmlobject_input('image_type', array("value" => $ident, "label" => ''), 'hidden');
-		#$disp .= "<input type=hidden name=image_type value=$ident>";
 		$disp .= htmlobject_input('image_name', array("value" => htmlobject_request('image_name'), "label" => 'Name'), 'text', 20);
 		$disp .= htmlobject_input('image_version', array("value" => htmlobject_request('image_version'), "label" => 'Version'), 'text', 20);
 		$disp .= htmlobject_input('image_rootdevice', array("value" => htmlobject_request('image_rootdevice'), "label" => 'Root-device'), 'text', 20);
@@ -216,31 +216,25 @@ function image_form() {
 		);
 
 
-		$table = new htmlobject_table_identifiers_radio('storage_id');
-		$table->add_headrow($disp);
+		$table1 = new htmlobject_table_identifiers_radio('storage_id');
+		$table1->id = 'Tabelle';
+		$table1->css = 'htmlobject_table';
+		$table1->border = 1;
+		$table1->cellspacing = 0;
+		$table1->cellpadding = 3;
+		$table1->form_action = $thisfile;
+		$table1->head = $arHead;
+		$table1->body = $arBody;
+		$table1->sort = '';
+		#$disp = $table->get_string();
 
-		$table->id = 'Tabelle';
-		$table->css = 'htmlobject_table';
-		$table->border = 1;
-		$table->cellspacing = 0;
-		$table->cellpadding = 3;
-		$table->form_action = $thisfile;
-		$table->head = $arHead;
-		$table->body = $arBody;
-		$table->sort = '';
-		if ($OPENQRM_USER->role == "administrator") {
-			$table->bottom = array('save');
-		}
-
-		$disp = $table->get_string();
-	}
-	else  {
+		// Main Table
 	
 		$storage_tmp = new storage();
-		$table = new htmlobject_table_identifiers_radio('storage_id');
-		$table->add_headrow('<input type="hidden" name="currenttab" value="tab1">');
-
-		#$disp = '';
+		$table = new htmlobject_table_identifiers_radio('storage_id', '', 10);
+		$table->add_headrow($disp);
+		$table->add_headrow($table1->get_string());
+		$table->add_headrow('<h3>Storage List</h3>');
 	
 		$storage_array = $storage_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 	
@@ -300,16 +294,17 @@ function image_form() {
 
 		}
 
-	}
+	return "<h1>Edit Image</h1>" . $disp;
 
-	return "<h1>New Image</h1>" . $disp;
+	}
 }
 
 
 
 $output = array();
 $output[] = array('label' => 'Images', 'target' => 'image-index.php');
-$output[] = array('label' => 'New Image', 'value' => image_form());
+$output[] = array('label' => 'New Image', 'target' => 'image-new.php');
+$output[] = array('label' => 'Edit Image', 'value' => image_edit());
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />

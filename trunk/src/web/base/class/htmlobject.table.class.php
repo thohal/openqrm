@@ -569,7 +569,8 @@ var $_bottomrow = array();
 				$html->checked = true;
 			}
 			if(in_array( $this->body[$key][$this->identifier], $this->identifier_disabled)) {
-				$html->disabled = true;
+				$html = new htmlobject_div();
+				$html->text = '&#160;';
 			}
 					
 			$td = new htmlobject_td();
@@ -589,8 +590,8 @@ var $_bottomrow = array();
 	function  get_js() {
 	$_strReturn = '';
 		if($this->identifier != '') {
-			$id_1 = 'document.getElementById(arg).checked = true;';
-			$id_2 = 'document.getElementById(arg).checked = false;';
+			$id_1 = 'try { document.getElementById(arg).checked = true; } catch(e) {}';
+			$id_2 = 'try { document.getElementById(arg).checked = false; } catch(e) {}';
 		}
 		$_strReturn .= "\n";
 		$_strReturn .= '<script>'."\n";

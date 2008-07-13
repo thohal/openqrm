@@ -73,6 +73,10 @@ function image_display() {
 	$arHead['image_capabilities']['title'] ='Capabilities';
 	$arHead['image_capabilities']['sortable'] = false;
 
+	$arHead['image_edit'] = array();
+	$arHead['image_edit']['title'] ='';
+	$arHead['image_edit']['sortable'] = false;
+
 	$arBody = array();
 	$image_array = $image_tmp->display_overview(1, $table->limit, $table->sort, $table->order);
 	$image_icon = "/openqrm/base/img/image.png";
@@ -90,6 +94,7 @@ function image_display() {
 			'image_type' => $image_deployment->description,
 			'image_comment' => $image_db["image_comment"],
 			'image_capabilities' => $image_db["image_capabilities"],
+			'image_edit' => '<a href="image-edit.php?image_id='.$image_db["image_id"].'&currenttab=tab2">edit</a>',
 		);
 
 	}

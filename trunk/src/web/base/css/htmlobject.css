@@ -223,6 +223,7 @@ border-right: 1px solid #91a7b4;
 }
 .htmlobject_td.head {
 	border:0px none;
+	padding: 0 !important;
 }
 .htmlobject_td.identifier {
 	text-align:center;
