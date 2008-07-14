@@ -67,6 +67,13 @@ $error = 0;
 				// unquote
 				$image_deployment_parameter = $image_fields["image_deployment_parameter"];
 				$image_fields["image_deployment_parameter"] = stripslashes($image_deployment_parameter);
+
+				/*
+				echo '<pre>';
+				print_r($image_fields);
+				echo '</pre>';
+				exit;*/
+				
 				$image->add($image_fields);
 
 				$strMsg .= 'added new image <b>'.$image_fields["image_name"].'</b><br>';
@@ -133,7 +140,7 @@ function image_form() {
 	if (htmlobject_request('identifier') != '' && (htmlobject_request('action') == 'select' || isset($_REQUEST['new_image_step_2']))) {
 
 		foreach(htmlobject_request('identifier') as $id) {
-			$ident = $id;
+			$ident = $id; // storageid
 		}
 
 		$storage = new storage();
@@ -145,7 +152,7 @@ function image_form() {
 
 		$disp .= htmlobject_input('identifier[]', array("value" => $ident, "label" => ''), 'hidden');
 		$disp .= htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden');
-		$disp .= htmlobject_input('image_type', array("value" => $ident, "label" => ''), 'hidden');
+		$disp .= htmlobject_input('image_type', array("value" => $deployment->id, "label" => ''), 'hidden');
 		#$disp .= "<input type=hidden name=image_type value=$ident>";
 		$disp .= htmlobject_input('image_name', array("value" => htmlobject_request('image_name'), "label" => 'Name'), 'text', 20);
 		$disp .= htmlobject_input('image_version', array("value" => htmlobject_request('image_version'), "label" => 'Version'), 'text', 20);
