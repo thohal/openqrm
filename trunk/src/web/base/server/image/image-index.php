@@ -86,6 +86,12 @@ function image_display() {
 		$image->get_instance_by_id($image_db["image_id"]);
 		$image_deployment = new deployment();
 		$image_deployment->get_instance_by_type($image_db["image_type"]);
+
+		$strEdit = '';
+		if($image_db["image_id"] != 1) {
+			$strEdit = '<a href="image-edit.php?image_id='.$image_db["image_id"].'&currenttab=tab2">edit</a>';
+		}
+
 		$arBody[] = array(
 			'image_icon' => "<img width=20 height=20 src=$image_icon>",
 			'image_id' => $image_db["image_id"],
@@ -94,7 +100,7 @@ function image_display() {
 			'image_type' => $image_deployment->description,
 			'image_comment' => $image_db["image_comment"],
 			'image_capabilities' => $image_db["image_capabilities"],
-			'image_edit' => '<a href="image-edit.php?image_id='.$image_db["image_id"].'&currenttab=tab2">edit</a>',
+			'image_edit' => $strEdit,
 		);
 
 	}

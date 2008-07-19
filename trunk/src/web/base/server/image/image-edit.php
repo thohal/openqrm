@@ -8,7 +8,6 @@ require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
-
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	global $thisfile;
 	if($url == '') {
@@ -36,42 +35,44 @@ $error = 0;
 				$strMsg .= "image name can not be empty<br/>";
 				$error = 1;
 			}
-			if (htmlobject_request('identifier') == '') {
-				$strMsg .= 'please select a rescoure<br/>';
+			if (htmlobject_request('image_id') == '') {
+				$strMsg .= 'imageid not set<br/>';
 				$error = 1;
 			}
 
 			// if everything is fine
 			if($error == 0) {
 
-				$image_fields = array();
+				$image_id = $_REQUEST['image_id'];
+				$fields = array();
+				#$fields["image_storageid"] = $_REQUEST['image_storageid'];
 				foreach ($_REQUEST as $key => $value) {
 					if (strncmp($key, "image_", 6) == 0) {
-						$image_fields[$key] = $value;
+						$fields[$key] = stripslashes($value);
 					}
 				}
-	
-				foreach($_REQUEST['identifier'] as $id) {
-					#if(!strlen($image_fields["image_storageid"])) {
-						$image_fields["image_storageid"]=$id;
-					#}
-					#continue;
+				if(isset($fields["image_isshared"])) {
+					$fields["image_isshared"] = 1;
 				}
-	
-				$image = new image();
-				$image_fields["image_id"]=openqrm_db_get_free_id('image_id', $IMAGE_INFO_TABLE);
+				else {
+					$fields["image_isshared"] = 0;
+				}
 				# switch deployment_id to deyployment_type
-				$deployment_switch = new deployment();
-				$deployment_switch->get_instance_by_id($image_fields["image_type"]);
-				$image_fields["image_type"] = $deployment_switch->type;
-				// unquote
-				$image_deployment_parameter = $image_fields["image_deployment_parameter"];
-				$image_fields["image_deployment_parameter"] = stripslashes($image_deployment_parameter);
-				$image->add($image_fields);
+				#$deployment = new deployment();
+				#$deployment->get_instance_by_id($fields["image_type"]);
+				#$fields["image_type"] = $deployment->type;
+				
+				/*echo '<pre>';
+				print_r($fields);
+				echo '</pre>';
+				exit;*/
+				
+				$image = new image();
+				$image->update($image_id, $fields);
 
-				$strMsg .= 'added new image <b>'.$image_fields["image_name"].'</b><br>';
+				$strMsg .= 'saved image <b>'.$fields["image_name"].'</b><br>';
 				$args = '?strMsg='.$strMsg;
-				$args .= '&image_id='.$image_fields["image_id"];
+				$args .= '&image_id='.$fields["image_id"];
 				$args .= '&currentab=tab0';
 				$url = 'image-index.php'.$args;
 			} 
@@ -80,121 +81,63 @@ $error = 0;
 				$url = error_redirect($strMsg);
 			}
 			redirect('', '', $url);
-			break;
-
+		break;
 	}
-
 }
-
-
-
 
 // we need to include the resource.class after the redirect to not send any header
 require_once "$RootDir/class/resource.class.php";
 
-
-function image_edit() {
-	global $OPENQRM_USER, $thisfile;
-
-	$deployment = new deployment();
-	$deployment_list = array();
-	$deployment_list = $deployment->get_description_list();
-	// remove the ramdisk-type from the list
-	array_splice($deployment_list, 0, 1);
-	#$image_type = array($_REQUEST["image_type"]);
-	global $BaseDir;
-
-		$arHead = array();
+function image_form() {
+	global $BaseDir, $OPENQRM_USER, $thisfile;
 	
-		$arHead['storage_state'] = array();
-		$arHead['storage_state']['title'] ='';
-		$arHead['storage_state']['sortable'] = false;
-	
-		$arHead['storage_icon'] = array();
-		$arHead['storage_icon']['title'] ='';
-		$arHead['storage_icon']['sortable'] = false;
-	
-		$arHead['storage_id'] = array();
-		$arHead['storage_id']['title'] ='ID';
-	
-		$arHead['storage_name'] = array();
-		$arHead['storage_name']['title'] ='Name';
-	
-		$arHead['storage_type'] = array();
-		$arHead['storage_type']['title'] ='Type';
-	
-		$arHead['storage_resource_id'] = array();
-		$arHead['storage_resource_id']['title'] ='Resource';
-	
-		$arHead['storage_comment'] = array();
-		$arHead['storage_comment']['title'] ='Comment';
-		$arBody = array();
-
-	#if (htmlobject_request('identifier') != '' && (htmlobject_request('action') == 'select' || isset($_REQUEST['new_image_step_2']))) {
-
-if(htmlobject_request('image_id') != '') {
-
-		$ident = htmlobject_request('image_id');
-
-
+		//------------------------------------------------------------ set env
+		$image = new image();
+		$image->get_instance_by_id($_REQUEST['image_id']);
 		$storage = new storage();
-		$storage->get_instance_by_id($ident);
+		$storage->get_instance_by_id($image->storageid);
 		$deployment = new deployment();
 		$deployment->get_instance_by_id($storage->type);
-		
-		$disp = htmlobject_input('new_image_step_2', array("value" => true, "label" => ''), 'hidden');
-
-		$disp .= htmlobject_input('identifier[]', array("value" => $ident, "label" => ''), 'hidden');
-		$disp .= htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden');
-		$disp .= htmlobject_input('image_type', array("value" => $ident, "label" => ''), 'hidden');
-		$disp .= htmlobject_input('image_name', array("value" => htmlobject_request('image_name'), "label" => 'Name'), 'text', 20);
-		$disp .= htmlobject_input('image_version', array("value" => htmlobject_request('image_version'), "label" => 'Version'), 'text', 20);
-		$disp .= htmlobject_input('image_rootdevice', array("value" => htmlobject_request('image_rootdevice'), "label" => 'Root-device'), 'text', 20);
-		$disp .= htmlobject_input('image_rootfstype', array("value" => htmlobject_request('image_rootfstype'), "label" => 'Root-fs type'), 'text', 20);
-
-		if(htmlobject_request('image_isshared') == true) {
-			$shared = true;
-		} else {
-			$shared = false;
-		}
-
-		$disp .= htmlobject_input('image_isshared', array("value" => '', "label" => 'Shared'), 'checkbox', $shared);
-
-		$helplink = '<a href="../../plugins/'.$deployment->storagetype.'/'.$deployment->storagetype.'-about.php" target="_blank" class="doculink">'.$deployment->description.'</a>';
-
-		$html = new htmlobject_div();
-		$html->text = $helplink;
-		$html->id = 'htmlobject_storage_type';
-	
-		$box = new htmlobject_box();
-		$box->id = 'htmlobject_box_storage_type';
-		$box->css = 'htmlobject_box';
-		$box->label = 'Storage type';
-		$box->content = $html;
-	
-		$disp .= $box->get_string();
-
-		// making the deployment parameters plugg-able
-		$deployment_default_parameters="";
-		$deployment_default_parameters_file = "$BaseDir/boot-service/image.$deployment->type";
-		if (file_exists($deployment_default_parameters_file) && htmlobject_request('image_deployment_parameter') == '') {
-			$deployment_default_parameters = file_get_contents("$deployment_default_parameters_file");
-		} else {
-			$deployment_default_parameters = htmlobject_request('image_deployment_parameter');
-		}
-
-		$disp .= htmlobject_textarea('image_deployment_parameter', array("value" => $deployment_default_parameters, "label" => 'Deployment parameter'));
-		$disp .= htmlobject_textarea('image_comment', array("value" => htmlobject_request('image_comment'), "label" => 'Comment'));
-		$disp .= htmlobject_textarea('image_capabilities', array("value" => htmlobject_request('image_capabilities'), "label" => 'Capabilities'));
-		$disp .= "</form>";
-		$disp .= '<h3>Storage</h3>';
-
-		$storage = new storage();
-		$storage->get_instance_by_id($ident);
 		$storage_resource = new resource();
 		$storage_resource->get_instance_by_id($storage->resource_id);
-		$deployment = new deployment();
-		$deployment->get_instance_by_id($storage->type);
+		//------------------------------------------------------------ set vars
+	
+		$image_name = htmlobject_request('image_name');
+		if($image_name == '')  $image_name = $image->name;
+		
+		$image_version = htmlobject_request('image_version');
+		if($image_version == '')  $image_version = $image->version;
+		
+		$image_type = htmlobject_request('image_type');
+		if($image_type == '')  $image_type = $image->type;
+		
+		$image_rootdevice = htmlobject_request('image_rootdevice');
+		if($image_rootdevice == '')  $image_rootdevice = $image->rootdevice;
+		
+		$image_rootfstype = htmlobject_request('image_rootfstype');
+		if($image_rootfstype == '')  $image_rootfstype = $image->rootfstype;
+		
+		$image_deployment_parameter = htmlobject_request('image_deployment_parameter');
+		if($image_deployment_parameter == '')  $image_deployment_parameter = $image->deployment_parameter;
+		
+		$image_isshared = htmlobject_request('image_isshared');
+		if($image_isshared == '')  $image_isshared = $image->isshared;
+		switch ($image_isshared) {
+			case 'on':
+			case '1': $image_isshared = true; break;
+			default: $image_isshared = false; break;
+		}
+		
+		$image_comment = htmlobject_request('image_comment');
+		if($image_comment == '')  $image_comment = $image->comment;
+		
+		$image_capabilities = htmlobject_request('image_capabilities');
+		if($image_capabilities == '')  $image_capabilities = $image->capabilities;
+		
+		$image_storageid = htmlobject_request('image_storageid');
+		if($image_storageid == '')  $image_storageid = $image->storageid;
+
+		/*
 		$resource_icon_default="/openqrm/base/img/resource.png";
 		$storage_icon = "/openqrm/base/plugins/$deployment->storagetype/img/storage.png";
 		$state_icon="/openqrm/base/img/$storage_resource->state.png";
@@ -204,107 +147,71 @@ if(htmlobject_request('image_id') != '') {
 		if (file_exists($_SERVER["DOCUMENT_ROOT"].$storage_icon)) {
 			$resource_icon_default=$storage_icon;
 		}
-		
-		$arBody[] = array(
-			'storage_state' => "<img src=$state_icon>",
-			'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-			'storage_id' => $storage->id,
-			'storage_name' => $storage->name,
-			'storage_type' => $deployment->storagedescription,
-			'storage_resource_id' => "$storage_resource->id/$storage_resource->ip",
-			'storage_comment' => $storage->comment,
-		);
+		*/
 
-
-		$table1 = new htmlobject_table_identifiers_radio('storage_id');
-		$table1->id = 'Tabelle';
-		$table1->css = 'htmlobject_table';
-		$table1->border = 1;
-		$table1->cellspacing = 0;
-		$table1->cellpadding = 3;
-		$table1->form_action = $thisfile;
-		$table1->head = $arHead;
-		$table1->body = $arBody;
-		$table1->sort = '';
-		#$disp = $table->get_string();
-
-		// Main Table
+		$html = new htmlobject_div();
+		$html->text = '<a href="../../plugins/'.$deployment->storagetype.'/'.$deployment->storagetype.'-about.php" target="_blank" class="doculink">'.$deployment->description.'</a>';
+		$html->id = 'htmlobject_image_type';
 	
-		$storage_tmp = new storage();
-		$table = new htmlobject_table_identifiers_radio('storage_id', '', 10);
-		$table->add_headrow($disp);
-		$table->add_headrow($table1->get_string());
-		$table->add_headrow('<h3>Storage List</h3>');
+		$storage_deploy_box = new htmlobject_box();
+		$storage_deploy_box->id = 'htmlobject_box_image_deploy';
+		$storage_deploy_box->css = 'htmlobject_box';
+		$storage_deploy_box->label = 'Deployment';
+		$storage_deploy_box->content = $html;
+
+		$html = new htmlobject_div();
+		$html->text = $deployment->storagedescription;
+		$html->id = 'htmlobject_storage_type';
 	
-		$storage_array = $storage_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
+		$storage_type_box = new htmlobject_box();
+		$storage_type_box->id = 'htmlobject_box_storage_type';
+		$storage_type_box->css = 'htmlobject_box';
+		$storage_type_box->label = 'Storage';
+		$storage_type_box->content = $html;
+
+		#$storage_resource->id / 
+		$html = new htmlobject_div();
+		$html->text = "$storage_resource->ip";
+		$html->id = 'htmlobject_storage_resource';
 	
-		foreach ($storage_array as $index => $storage_db) {
-			$storage = new storage();
-			$storage->get_instance_by_id($storage_db["storage_id"]);
-			$storage_resource = new resource();
-			$storage_resource->get_instance_by_id($storage->resource_id);
-			$deployment = new deployment();
-			$deployment->get_instance_by_id($storage->type);
-			$resource_icon_default="/openqrm/base/img/resource.png";
-			$storage_icon = "/openqrm/base/plugins/$deployment->storagetype/img/storage.png";
-			$state_icon="/openqrm/base/img/$storage_resource->state.png";
-			if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
-				$state_icon="/openqrm/base/img/unknown.png";
-			}
-			if (file_exists($_SERVER["DOCUMENT_ROOT"].$storage_icon)) {
-				$resource_icon_default=$storage_icon;
-			}
-	
-			$arBody[] = array(
-				'storage_state' => "<img src=$state_icon>",
-				'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-				'storage_id' => $storage_db["storage_id"],
-				'storage_name' => $storage_db["storage_name"],
-				'storage_type' => $deployment->storagedescription,
-				'storage_resource_id' => "$storage_resource->id/$storage_resource->ip",
-				'storage_comment' => $storage_db["storage_comment"],
-			);
-	
-		}
+		$storage_resource_box = new htmlobject_box();
+		$storage_resource_box->id = 'htmlobject_box_storage_resource';
+		$storage_resource_box->css = 'htmlobject_box';
+		$storage_resource_box->label = 'Resource';
+		$storage_resource_box->content = $html;
 
-		if(count($arBody) > 0) {
-			$table->id = 'Tabelle';
-			$table->css = 'htmlobject_table';
-			$table->border = 1;
-			$table->cellspacing = 0;
-			$table->cellpadding = 3;
-			$table->form_action = $thisfile;
-			$table->head = $arHead;
-			$table->body = $arBody;
-			if ($OPENQRM_USER->role == "administrator") {
-				$table->bottom = array('select');
-				$table->identifier = 'storage_id';
-				$table->identifier_type = 'radio';
-			}
-			$table->max = $storage_tmp->get_count();
-			$disp = $table->get_string();
-		} else {
+		//------------------------------------------------------------ set template
+		$t = new Template_PHPLIB();
+		$t->debug = false;
+		$t->setFile('tplfile', './' . 'image-tpl.php');
+		$t->setVar(array(
+		'thisfile' => $thisfile,
+		'new_image_step_2' => htmlobject_input('new_image_step_2', array("value" => true, "label" => ''), 'hidden'),
+		'identifier' => htmlobject_input('image_id', array("value" => $image->id, "label" => ''), 'hidden'),
+		'currentab' => htmlobject_input('currenttab', array("value" => 'tab2', "label" => ''), 'hidden'),
+		'image_type' => htmlobject_input('image_type', array("value" => $image_type, "label" => ''), 'hidden'),
+		'image_name' => htmlobject_input('image_name', array("value" => $image_name, "label" => 'Name'), 'text', 20),
+		'image_version' => htmlobject_input('image_version', array("value" => $image_version, "label" => 'Version'), 'text', 20),
+		'image_rootdevice' => htmlobject_input('image_rootdevice', array("value" => $image_rootdevice, "label" => 'Root-device'), 'text', 20),
+		'image_rootfstype' => htmlobject_input('image_rootfstype', array("value" => $image_rootfstype, "label" => 'Root-fs type'), 'text', 20),
+		'image_isshared' => htmlobject_input('image_isshared', array("value" => '1', "label" => 'Shared'), 'checkbox', $image_isshared),
+		'image_deployment_parameter' => htmlobject_textarea('image_deployment_parameter', array("value" => $image_deployment_parameter, "label" => 'Deployment parameter')),
+		'image_deployment_comment' => htmlobject_textarea('image_comment', array("value" => $image_comment, "label" => 'Comment')),
+		'image_capabilities' => htmlobject_textarea('image_capabilities', array("value" => $image_capabilities, "label" => 'Capabilities')),
+		'image_deployment' => $storage_deploy_box->get_string(),
+		'storage_type' => $storage_type_box->get_string(),
+		'storage_resource_id' => $storage_resource_box->get_string(),
+		'submit_save' => htmlobject_input('action', array("value" => 'save', "label" => 'save'), 'submit'),
+		));
 
-			$disp .= '<center>';
-			$disp .= '<b>No Storage available</b>';
-			$disp .= '<br><br>';
-			$disp .= '<a href="../storage/storage-index.php">Storage</a>';
-			$disp .= '</center>';
-			$disp .= '<br><br>';
-
-		}
-
-	return "<h1>Edit Image</h1>" . $disp;
-
-	}
+		$disp =  $t->parse('out', 'tplfile');
+		return "<h1>Edit Image</h1>" . $disp;
 }
-
-
 
 $output = array();
 $output[] = array('label' => 'Images', 'target' => 'image-index.php');
 $output[] = array('label' => 'New Image', 'target' => 'image-new.php');
-$output[] = array('label' => 'Edit Image', 'value' => image_edit());
+$output[] = array('label' => 'Edit Image', 'value' => image_form());
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
