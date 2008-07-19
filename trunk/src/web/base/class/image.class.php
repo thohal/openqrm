@@ -47,14 +47,12 @@ function get_instance($id, $name) {
 	}
 	foreach ($image_array as $index => $image) {
 		$this->id = $image["image_id"];
-
-		$this->id = $image["image_id"];
 		$this->name = $image["image_name"];
 		$this->version = $image["image_version"];
 		$this->type = $image["image_type"];
 		$this->rootdevice = $image["image_rootdevice"];
 		$this->rootfstype = $image["image_rootfstype"];
-		$this->storageid = $image["image_storage_ip"];
+		$this->storageid = $image["image_storageid"];
 		$this->deployment_parameter = $image["image_deployment_parameter"];
 		$this->isshared = $image["image_isshared"];
 		$this->comment = $image["image_comment"];
