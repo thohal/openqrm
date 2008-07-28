@@ -24,6 +24,7 @@ global $user;
 $GLOBALS['html_id'] = htmlobject_input('id', $user->id, 'hidden', 5);
 $GLOBALS['html_name'] = htmlobject_input('name', $user->name, 'text', 20);
 $GLOBALS['html_password'] = htmlobject_input('password', array("label" => 'Password', "value" => ''), 'password', 20);
+$GLOBALS['html_retype_password'] = htmlobject_input('retype_password', array("label" => 'Retype Password', "value" => ''), 'password', 20);
 $GLOBALS['html_gender'] = htmlobject_select('gender', $user->get_gender_list(), 'Gender', array($user->gender['value']));
 $GLOBALS['html_first_name'] = htmlobject_input('first_name', array("label" => 'First Name', "value" => $user->first_name['value']), 'text', 50);
 $GLOBALS['html_last_name'] = htmlobject_input('last_name',  array("label" => 'Last Name', "value" => $user->last_name['value']), 'text', 50);
@@ -82,6 +83,7 @@ $account_output = "
 $html_id
 $html_name
 $html_password
+$html_retype_password
 $html_role
 $html_first_name
 $html_last_name
@@ -178,6 +180,7 @@ if (strstr($OPENQRM_USER->role, "administrator")) {
 	$html_id
 	$html_name
 	$html_password
+	$html_retype_password
 	$html_role
 	$html_first_name
 	$html_last_name
