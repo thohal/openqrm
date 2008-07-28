@@ -44,6 +44,9 @@ function htmlobject_input($name, $value, $type = 'text', $arg = '') {
 			$html->id = '';
 			return $html->get_string();
 			break;
+		default:
+			return $html->get_string();
+			break;			
 	}
 }
 //---------------------------------------------------------------

@@ -258,10 +258,10 @@ function image_form() {
 			}
 			$disp = '<h3>Storage List</h3>'.$table->get_string();
 		} else {
-			$disp .= '<center>';
+			$disp = '<center>';
 			$disp .= '<b>No Storage available</b>';
 			$disp .= '<br><br>';
-			$disp .= '<a href="../storage/storage-index.php">Storage</a>';
+			$disp .= '<a href="../storage/storage-new.php?currenttab=tab1">Storage</a>';
 			$disp .= '</center>';
 			$disp .= '<br><br>';
 		}
