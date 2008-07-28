@@ -23,17 +23,17 @@ global $user;
 
 $GLOBALS['html_id'] = htmlobject_input('id', $user->id, 'hidden', 5);
 $GLOBALS['html_name'] = htmlobject_input('name', $user->name, 'text', 20);
-$GLOBALS['html_password'] = htmlobject_input('password', $user->password, 'password', 20);
-$GLOBALS['html_gender'] = htmlobject_select('gender', $user->get_gender_list(), $user->gender['label'], array($user->gender['value']));
-$GLOBALS['html_first_name'] = htmlobject_input('first_name', $user->first_name, 'text', 50);
-$GLOBALS['html_last_name'] = htmlobject_input('last_name', $user->last_name, 'text', 50);
-$GLOBALS['html_department'] = htmlobject_input('department', $user->department, 'text', 50);
-$GLOBALS['html_office'] = htmlobject_input('office', $user->office, 'text', 50);
-$GLOBALS['html_role'] = htmlobject_select('role', $user->get_role_list(), $user->role['label'], array($user->role['value']));
-$GLOBALS['html_last_update_time'] = htmlobject_input('last_update_time', $user->last_update_time, 'text', 50);
-$GLOBALS['html_description'] = htmlobject_textarea('description', $user->description);
-$GLOBALS['html_capabilities'] = htmlobject_textarea('capabilities', $user->capabilities);
-$GLOBALS['html_state'] = htmlobject_input('state', $user->state, 'text', 20);
+$GLOBALS['html_password'] = htmlobject_input('password', array("label" => 'Password', "value" => ''), 'password', 20);
+$GLOBALS['html_gender'] = htmlobject_select('gender', $user->get_gender_list(), 'Gender', array($user->gender['value']));
+$GLOBALS['html_first_name'] = htmlobject_input('first_name', array("label" => 'First Name', "value" => $user->first_name['value']), 'text', 50);
+$GLOBALS['html_last_name'] = htmlobject_input('last_name',  array("label" => 'Last Name', "value" => $user->last_name['value']), 'text', 50);
+$GLOBALS['html_department'] = htmlobject_input('department',  array("label" => 'Department', "value" => $user->department['value']), 'text', 50);
+$GLOBALS['html_office'] = htmlobject_input('office',   array("label" => 'Office', "value" => $user->office['value']), 'text', 50);
+$GLOBALS['html_role'] = htmlobject_select('role', $user->get_role_list(), 'Role', array($user->role['value']));
+$GLOBALS['html_last_update_time'] = htmlobject_input('last_update_time',   array("label" => 'Update', "value" => $user->last_update_time['value']), 'text', 50);
+$GLOBALS['html_description'] = htmlobject_textarea('description',   array("label" => 'Description', "value" => $user->description['value']));
+$GLOBALS['html_capabilities'] = htmlobject_textarea('capabilities',   array("label" => 'Last Name', "value" => $user->capabilities['value']));
+$GLOBALS['html_state'] = htmlobject_input('state',  array("label" => 'State', "value" => $user->state['value']), 'text', 20);
 
 }
 
