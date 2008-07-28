@@ -33,7 +33,7 @@ $GLOBALS['html_office'] = htmlobject_input('office',   array("label" => 'Office'
 $GLOBALS['html_role'] = htmlobject_select('role', $user->get_role_list(), 'Role', array($user->role['value']));
 $GLOBALS['html_last_update_time'] = htmlobject_input('last_update_time',   array("label" => 'Update', "value" => $user->last_update_time['value']), 'text', 50);
 $GLOBALS['html_description'] = htmlobject_textarea('description',   array("label" => 'Description', "value" => $user->description['value']));
-$GLOBALS['html_capabilities'] = htmlobject_textarea('capabilities',   array("label" => 'Last Name', "value" => $user->capabilities['value']));
+$GLOBALS['html_capabilities'] = htmlobject_textarea('capabilities',   array("label" => 'Capabilities', "value" => $user->capabilities['value']));
 $GLOBALS['html_state'] = htmlobject_input('state',  array("label" => 'State', "value" => $user->state['value']), 'text', 20);
 
 }
