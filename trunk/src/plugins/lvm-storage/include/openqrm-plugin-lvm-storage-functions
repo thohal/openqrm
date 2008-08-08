@@ -92,7 +92,7 @@ function manage_nfs() {
 		add)
 			if [ "$2" != "snap" ]; then
 				lvm_storage_log manage_nfs "NOTICE: creating ext3 filesytem on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
-				if ! mkfs.ext3 /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME; then
+				if ! mkfs.ext3 -F /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME; then
 					lvm_storage_log lvm-storage-functions "ERROR: Could not create ext3 filesytem on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
 					manage_fstab remove
 					lvm_storage_lock release
@@ -155,6 +155,8 @@ function manage_iscsi() {
 			IMAGE_LUN=`cat $IETDCONF | grep Lun | awk {' print $2 '} | sort -n -r | head -n 1`
 			IMAGE_LUN=$(( IMAGE_LUN + 1 ))
 			echo "	Lun $IMAGE_LUN Path=/dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME,Type=fileio" >> $IETDCONF
+			# create fs, currently static all ext3
+			mkfs.ext3 -F /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
 			nohup /etc/init.d/iscsi-target restart
 			;;
 		remove)
@@ -205,6 +207,8 @@ function manage_vblade() {
 				AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '} | tail -1`
 			fi
 			echo "disk $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME" >> $VBLADECONF
+			# create fs, currently static all ext3
+			mkfs.ext3 -F /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
 			# start vbladed
 			vbladed $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
 			;;
