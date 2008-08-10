@@ -9,9 +9,9 @@ if(htmlobject_request('action') != '') {
 }
 
 
-if(htmlobject_request('name') != '') {
+if(htmlobject_request('name') != '' && strstr($OPENQRM_USER->role, "administrator")) {
 	$user = new user(htmlobject_request('name'));
-} else if (strstr($OPENQRM_USER->role, "administrator")) {
+} else  {
 	$user = new user($_SERVER['PHP_AUTH_USER']);
 }
 

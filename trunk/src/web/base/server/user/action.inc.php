@@ -38,7 +38,11 @@ switch ($_REQUEST['action']) {
 				$strCheck = $user->check_string_password(htmlobject_request('password'));
 				if ($strCheck != '') {
 					$strMsg .= 'Password must be '.$strCheck.'<br>';
-					$error = true;			
+					$error = true;
+				}
+				if (htmlobject_request('password') != htmlobject_request('retype_password')) {
+					$strMsg .= 'Password must be the same as Retype Password<br>';
+					$error = true;
 				}
 			}
 		} else {
@@ -85,6 +89,10 @@ switch ($_REQUEST['action']) {
 				$strMsg .= 'Password must be '.$strCheck.'<br>';
 				$error = true;			
 			}
+			if (htmlobject_request('password') != htmlobject_request('retype_password')) {
+				$strMsg .= 'Password must be the same as Retype Password<br>';
+				$error = true;
+			}
 		}
 
 		if($error === false) {
@@ -110,11 +118,17 @@ switch ($_REQUEST['action']) {
 	case 'user_delete_2':
 		if(strstr($OPENQRM_USER->role, "administrator") || htmlobject_request('name') == $OPENQRM_USER->name) {	
 			$user = new user(htmlobject_request('name'));
-			$user->query_delete();
-			$strMsg .= 'User <b>'.htmlobject_request('name').'</b> deleted<br>';		
+			$user->set_user();
+			if($user->id != 0) {	
+				#$user->query_delete();
+				$strMsg .= 'User <b>'.htmlobject_request('name').'</b> deleted<br>';
+			} else {
+				$strMsg .= 'You are not allowed to delete User id 0<br>';
+				$error = true;	
+			}	
 		} else {
 			$strMsg .= 'You are not allowed to delete Users<br>';
-			$error = true;			
+			$error = true;	
 		}
 		break;
 }
