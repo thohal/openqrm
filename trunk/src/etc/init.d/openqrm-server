@@ -53,7 +53,6 @@ export OPENQRM_SERVER_BASE_DIR=`pushd \`dirname $SCRIPT\`/../../../ 1>/dev/null 
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions
 
 
-
 # functions
 
 
@@ -160,12 +159,21 @@ function openqrm_server_init() {
 		exit 1		
 	fi
 	
-	# check if there is a server state to restore
-	LAST_SERVER_STATE_BACKUP=`ls -tr $OPENQRM_SERVER_STATE_DIR/uninstall-* 2>/dev/null | tail -n1 | sed -s "s/\.tgz//g"`
-	if [ "$LAST_SERVER_STATE_BACKUP" != "" ]; then
-		LAST_SERVER_STATE_BACKUP=`basename $LAST_SERVER_STATE_BACKUP`
-		echo "NOTICE: Found backup of last openQRM-server state $LAST_SERVER_STATE_BACKUP, restoring it"
-		openqrm_server_state restore $LAST_SERVER_STATE_BACKUP
+	# check if backups are not locked
+	if [ ! -f $OPENQRM_SERVER_STATE_DIR/locked ]; then
+		if [ "$OPENQRM_RESTORE_STATE" != "false" ]; then
+			# check if there is a server state to restore
+			LAST_SERVER_STATE_BACKUP=`ls -tr $OPENQRM_SERVER_STATE_DIR/uninstall-* 2>/dev/null | tail -n1 | sed -s "s/\.tgz//g"`
+			if [ "$LAST_SERVER_STATE_BACKUP" != "" ]; then
+				LAST_SERVER_STATE_BACKUP=`basename $LAST_SERVER_STATE_BACKUP`
+				echo "NOTICE: Found backup of last openQRM-server state $LAST_SERVER_STATE_BACKUP, restoring it"
+				openqrm_server_state restore $LAST_SERVER_STATE_BACKUP
+			fi
+		fi
+	else
+		echo "NOTICE: Found openQRM-server state backups locked by $OPENQRM_SERVER_STATE_DIR/locked"
+		echo "        To enable automatic state restore please remove this lockfile."
+		echo "NOTICE: Skipping openQRM-server state restore"
 	fi
 
 }
