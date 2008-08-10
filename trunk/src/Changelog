@@ -34,4 +34,6 @@ up to the
 				[ openqrm-Feature Requests-1940898 ] ng: update path / backup/restore for plugins
 09.07.2008	-	fixed
 				[ 1992381 ] ng: add option for resources to add events
+08.08.2008	-	[ 1992378 ] ng: iscsi- + aoe-storage deployment should auto-partititon
+				fixed
 
