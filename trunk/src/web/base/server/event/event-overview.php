@@ -126,7 +126,7 @@ global $thisfile;
 
 
 $output = array();
-$output[] = array('label' => 'Event-List', 'value' => event_display(""));
+$output[] = array('label' => 'Event List', 'value' => event_display(""));
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
 <link rel="stylesheet" type="text/css" href="event.css" />
