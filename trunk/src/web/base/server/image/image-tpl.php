@@ -18,7 +18,7 @@
 	{image_rootfstype}
 	{image_isshared}
 	</div>
-	<div style="float:right; margin:0 0 0 30px;">
+	<div style="float:right;">
 		<div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
 		{storage_type}
 		{image_deployment}
