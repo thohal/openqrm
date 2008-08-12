@@ -209,7 +209,7 @@ function resource_form() {
 
 
 $output = array();
-$output[] = array('label' => 'Resource-List', 'value' => resource_display());
+$output[] = array('label' => 'Resource List', 'value' => resource_display());
 $output[] = array('label' => 'New', 'value' => resource_form());
 
 ?>
