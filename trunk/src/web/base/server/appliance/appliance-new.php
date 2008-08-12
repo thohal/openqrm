@@ -183,7 +183,7 @@ function appliance_form() {
 			);
 		
 			$resource_tmp = new resource();
-			$resource_array = $resource_tmp->display_overview(1, 100, 'resource_id', 'ASC');
+			$resource_array = $resource_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 			foreach ($resource_array as $index => $resource_db) {
 				$resource = new resource();
 				$resource->get_instance_by_id($resource_db["resource_id"]);
