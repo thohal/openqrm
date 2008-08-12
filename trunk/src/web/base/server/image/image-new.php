@@ -115,18 +115,6 @@ function image_form() {
 			$deployment_default_parameters = htmlobject_request('image_deployment_parameter');
 		}
 
-		/*
-		$resource_icon_default="/openqrm/base/img/resource.png";
-		$storage_icon = "/openqrm/base/plugins/$deployment->storagetype/img/storage.png";
-		$state_icon="/openqrm/base/img/$storage_resource->state.png";
-		if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
-			$state_icon="/openqrm/base/img/unknown.png";
-		}
-		if (file_exists($_SERVER["DOCUMENT_ROOT"].$storage_icon)) {
-			$resource_icon_default=$storage_icon;
-		}
-		*/
-
 		$html = new htmlobject_div();
 		$html->text = '<a href="../../plugins/'.$deployment->storagetype.'/'.$deployment->storagetype.'-about.php" target="_blank" class="doculink">'.$deployment->description.'</a>';
 		$html->id = 'htmlobject_image_type';
@@ -163,23 +151,23 @@ function image_form() {
 		$t->debug = false;
 		$t->setFile('tplfile', './' . 'image-tpl.php');
 		$t->setVar(array(
-		'thisfile' => $thisfile,
-		'new_image_step_2' => htmlobject_input('new_image_step_2', array("value" => true, "label" => ''), 'hidden'),
-		'identifier' => htmlobject_input('identifier[]', array("value" => $ident, "label" => ''), 'hidden'),
-		'currentab' => htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden'),
-		'image_type' => htmlobject_input('image_type', array("value" => $deployment->id, "label" => ''), 'hidden'),
-		'image_name' => htmlobject_input('image_name', array("value" => htmlobject_request('image_name'), "label" => 'Name'), 'text', 20),
-		'image_version' => htmlobject_input('image_version', array("value" => htmlobject_request('image_version'), "label" => 'Version'), 'text', 20),
-		'image_rootdevice' => htmlobject_input('image_rootdevice', array("value" => htmlobject_request('image_rootdevice'), "label" => 'Root-device'), 'text', 20),
-		'image_rootfstype' => htmlobject_input('image_rootfstype', array("value" => htmlobject_request('image_rootfstype'), "label" => 'Root-fs type'), 'text', 20),
-		'image_isshared' => htmlobject_input('image_isshared', array("value" => '1', "label" => 'Shared'), 'checkbox', $shared),
-		'image_deployment_parameter' => htmlobject_textarea('image_deployment_parameter', array("value" => $deployment_default_parameters, "label" => 'Deployment parameter')),
-		'image_deployment_comment' => htmlobject_textarea('image_comment', array("value" => htmlobject_request('image_comment'), "label" => 'Comment')),
-		'image_capabilities' => htmlobject_textarea('image_capabilities', array("value" => htmlobject_request('image_capabilities'), "label" => 'Capabilities')),
-		'image_deployment' => $storage_deploy_box->get_string(),
-		'storage_type' => $storage_type_box->get_string(),
-		'storage_resource_id' => $storage_resource_box->get_string(),
-		'submit_save' => htmlobject_input('action', array("value" => 'save', "label" => 'save'), 'submit'),
+			'thisfile' => $thisfile,
+			'new_image_step_2' => htmlobject_input('new_image_step_2', array("value" => true, "label" => ''), 'hidden'),
+			'identifier' => htmlobject_input('identifier[]', array("value" => $ident, "label" => ''), 'hidden'),
+			'currentab' => htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden'),
+			'image_type' => htmlobject_input('image_type', array("value" => $deployment->id, "label" => ''), 'hidden'),
+			'image_name' => htmlobject_input('image_name', array("value" => htmlobject_request('image_name'), "label" => 'Name'), 'text', 20),
+			'image_version' => htmlobject_input('image_version', array("value" => htmlobject_request('image_version'), "label" => 'Version'), 'text', 20),
+			'image_rootdevice' => htmlobject_input('image_rootdevice', array("value" => htmlobject_request('image_rootdevice'), "label" => 'Root-device'), 'text', 20),
+			'image_rootfstype' => htmlobject_input('image_rootfstype', array("value" => htmlobject_request('image_rootfstype'), "label" => 'Root-fs type'), 'text', 20),
+			'image_isshared' => htmlobject_input('image_isshared', array("value" => '1', "label" => 'Shared'), 'checkbox', $shared),
+			'image_deployment_parameter' => htmlobject_textarea('image_deployment_parameter', array("value" => $deployment_default_parameters, "label" => 'Deployment parameter')),
+			'image_deployment_comment' => htmlobject_textarea('image_comment', array("value" => htmlobject_request('image_comment'), "label" => 'Comment')),
+			'image_capabilities' => htmlobject_textarea('image_capabilities', array("value" => htmlobject_request('image_capabilities'), "label" => 'Capabilities')),
+			'image_deployment' => $storage_deploy_box->get_string(),
+			'storage_type' => $storage_type_box->get_string(),
+			'storage_resource_id' => $storage_resource_box->get_string(),
+			'submit_save' => htmlobject_input('action', array("value" => 'save', "label" => 'save'), 'submit'),
 		));
 
 		$disp =  $t->parse('out', 'tplfile');
