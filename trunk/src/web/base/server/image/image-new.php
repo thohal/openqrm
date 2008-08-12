@@ -270,7 +270,7 @@ function image_form() {
 }
 
 $output = array();
-$output[] = array('label' => 'Images', 'target' => 'image-index.php');
+$output[] = array('label' => 'Image List', 'target' => 'image-index.php');
 $output[] = array('label' => 'New Image', 'value' => image_form());
 
 ?>

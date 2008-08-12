@@ -126,7 +126,7 @@ function image_display() {
 
 
 $output = array();
-$output[] = array('label' => 'Images', 'value' => image_display());
+$output[] = array('label' => 'Image List', 'value' => image_display());
 $output[] = array('label' => 'New Image', 'target' => 'image-new.php');
 
 
