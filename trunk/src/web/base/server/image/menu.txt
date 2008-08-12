@@ -1,3 +1,2 @@
 .|Images
-..|Overview|server/image/image-overview.php
-..|Overview_beta|server/image/image-index.php
+..|Overview|server/image/image-index.php
