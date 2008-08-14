@@ -102,9 +102,11 @@ function appliance_display() {
 	$arHead = array();
 	$arHead['appliance_state'] = array();
 	$arHead['appliance_state']['title'] ='';
+	$arHead['appliance_state']['sortable'] = false;
 
 	$arHead['appliance_icon'] = array();
 	$arHead['appliance_icon']['title'] ='';
+	$arHead['appliance_icon']['sortable'] = false;
 
 	$arHead['appliance_id'] = array();
 	$arHead['appliance_id']['title'] ='ID';
@@ -126,6 +128,10 @@ function appliance_display() {
 
 	$arHead['appliance_comment'] = array();
 	$arHead['appliance_comment']['title'] ='Comment';
+
+	$arHead['appliance_edit'] = array();
+	$arHead['appliance_edit']['title'] ='';
+	$arHead['appliance_edit']['sortable'] = false;
 
 	$arBody = array();
 	$appliance_array = $appliance_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
@@ -162,6 +168,12 @@ function appliance_display() {
 		$virtualization->get_instance_by_id($appliance_db["appliance_virtualization"]);
 		$appliance_virtualization_type=$virtualization->name;
 
+		$strEdit = '';
+		#if($image_db["image_id"] != 1) {
+			$strEdit = '<a href="appliance-edit.php?appliance_id='.$appliance_db["appliance_id"].'&currenttab=tab2">edit</a>';
+		#}
+
+
 		$arBody[] = array(
 			'appliance_state' => "<img src=$state_icon>",
 			'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default>",
@@ -172,6 +184,7 @@ function appliance_display() {
 			'appliance_resources' => "$appliance_resources",
 			'appliance_type' => $appliance_virtualization_type,
 			'appliance_comment' => $appliance_db["appliance_comment"],
+			'appliance_edit' => $strEdit,
 		);
 
 	}
@@ -185,7 +198,7 @@ function appliance_display() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('start', 'stop', 'edit', 'remove');
+		$table->bottom = array('start', 'stop', 'remove');
 		$table->identifier = 'appliance_id';
 	}
 	$table->max = $appliance_tmp->get_count();
