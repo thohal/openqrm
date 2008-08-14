@@ -66,7 +66,7 @@ function storage_display() {
 	$arHead['storage_name']['title'] ='Name';
 
 	$arHead['storage_type'] = array();
-	$arHead['storage_type']['title'] ='Type';
+	$arHead['storage_type']['title'] ='Storage Type';
 
 	$arHead['storage_resource_id'] = array();
 	$arHead['storage_resource_id']['title'] ='Resource';

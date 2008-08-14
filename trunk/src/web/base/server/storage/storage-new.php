@@ -282,7 +282,7 @@ global $thisfile;
 			$str .= '<center>';
 			$str .= '<b>No storage plugins enabled</b>';
 			$str .= '<br><br>';
-			$str .= '<a href="../../plugins/aa_plugins/plugin-manager.php">Pluginmanager</a>';
+			$str .= '<a href="../../plugins/aa_plugins/plugin-manager.php?plugin_filter=storage">Pluginmanager</a>';
 			$str .= '</center>';
 			$str .= '<br><br>';
 			return $str;
