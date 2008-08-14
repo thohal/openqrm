@@ -94,22 +94,23 @@ function appliance_form() {
 	$image = new image();
 	$image_list = array();
 	$image_list = $image->get_list();
-	// remove the idle image from the list
-	#print_r($image_list);
+	// remove the openqrm + idle image from the list
+	//print_r($image_list);
+	array_shift($image_list);
 	array_shift($image_list);
 
 	$kernel = new kernel();
 	$kernel_list = array();
 	$kernel_list = $kernel->get_list();
 	// remove the openqrm kernelfrom the list
-	#print_r($kernel_list);
+	// print_r($kernel_list);
 	array_shift($kernel_list);
 
 	$virtualization = new virtualization();
 	$virtualization_list = array();
 	$virtualization_list = $virtualization->get_list();
 
-	if(count($image_list) > 1) {
+	if(count($image_list) > 0) {
 
 		//-------------------------------------- Form second step
 		if (htmlobject_request('identifier') != '' && (htmlobject_request('action') == 'select' || isset($_REQUEST['step_2']))) {

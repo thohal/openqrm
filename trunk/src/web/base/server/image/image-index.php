@@ -63,7 +63,7 @@ function image_display() {
 	$arHead['image_version']['title'] ='Version';
 
 	$arHead['image_type'] = array();
-	$arHead['image_type']['title'] ='Type';
+	$arHead['image_type']['title'] ='Deployment Type';
 
 	$arHead['image_comment'] = array();
 	$arHead['image_comment']['title'] ='Comment';
