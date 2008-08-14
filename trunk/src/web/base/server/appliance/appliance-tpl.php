@@ -12,13 +12,13 @@
 <div>
 
 
-
+{appliance_id}
 {appliance_name}
 {appliance_kernelid}
 {appliance_imageid}
 
 
-<h3>{lang_requirements}</h3>
+{lang_requirements}
 
 	<div style="float:left;">
 		{appliance_cpuspeed}
@@ -42,6 +42,10 @@
 
 {appliance_virtualization}
 {appliance_comment}
+
+{lang_table}
+
+{table}
 
 </div>
 
