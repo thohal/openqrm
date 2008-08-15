@@ -160,6 +160,31 @@ var $lang_label_offset = 'offset';
 var $lang_label_limit = 'limit';
 
 /**
+* Title for identifier Select function
+* @access public
+* @var string
+*/
+var $lang_select_title = 'Select:';
+/**
+* identifier Select function (all)
+* @access public
+* @var string
+*/
+var $lang_select_all = 'all';
+/**
+* identifier Select function (none)
+* @access public
+* @var string
+*/
+var $lang_select_none = 'none';
+/**
+* identifier Select function (none)
+* @access public
+* @var string
+*/
+var $lang_select_invert = 'inverted';
+
+/**
 * number of cols 
 * @access private
 * @var int
@@ -234,8 +259,18 @@ var $_bottomrow = array();
 	*/
 	//----------------------------------------------------------------------------------------	
 	function init_table_builder() {
-		$this->_num_cols = count($this->head);
+	
+		$minus = 0;
+		foreach($this->head as $key => $value) {
+			if(array_key_exists('hidden', $this->head[$key]) == true) {
+				if($this->head[$key]['hidden'] === true) {
+					$minus = $minus+1;
+				}
+			}
+		}
+		$this->_num_cols = count($this->head) - $minus;
 		if($this->identifier != '') { $this->_num_cols = $this->_num_cols +1; }
+
 		if($this->sort != '') {
 			// use autosort ?
 			if($this->autosort == true) { $this->arr_sort(); }
@@ -284,12 +319,22 @@ var $_bottomrow = array();
 			$tr->id = 'tr_'. uniqid();
 
 			foreach($this->head as $key_2 => $value) {
-				if($value['title'] == '') { $value['title'] = '&#160;'; }
-				$td = new htmlobject_td();
-				$td->type = 'th';
-				$td->css = 'htmlobject_td '.$key_2;
-				$td->text = $value['title'];
-				$tr->add($td);
+
+				$hidden = false;
+				if(array_key_exists('hidden', $this->head[$key_2]) == true) {
+					if($this->head[$key_2]['hidden'] === true) {
+						$hidden = true;
+					}
+				}
+				
+				if($hidden === false) {
+					if($value['title'] == '') { $value['title'] = '&#160;'; }
+					$td = new htmlobject_td();
+					$td->type = 'th';
+					$td->css = 'htmlobject_td '.$key_2;
+					$td->text = $value['title'];
+					$tr->add($td);
+				}
 
 			}
 			if($this->identifier != '') {
@@ -323,11 +368,20 @@ var $_bottomrow = array();
 				if(array_key_exists('exec', $this->head[$key_2]) == true) {
 					#echo $key_2;
 				}
-				$td = new htmlobject_td();
-				$td->type = 'td';
-				$td->css = 'htmlobject_td '.$key_2;
-				$td->text = $v;
-				$tr->add($td);
+				$hidden = false;
+				if(array_key_exists('hidden', $this->head[$key_2]) == true) {
+					if($this->head[$key_2]['hidden'] === true) {
+						$hidden = true;
+					}
+				}
+					
+				if($hidden === false) {
+					$td = new htmlobject_td();
+					$td->type = 'td';
+					$td->css = 'htmlobject_td '.$key_2;
+					$td->text = $v;
+					$tr->add($td);
+				}
 			}
 			//--------------------------------------------------------------- identifier
 			if($this->identifier != '') {
@@ -353,7 +407,7 @@ var $_bottomrow = array();
 			$td->colspan = $this->_num_cols;
 			$td->type = 'td';
 			$td->css = 'htmlobject_td bottom';
-			$str = '';
+			$str = '<div class="actiontable">';
 			foreach($this->bottom as $key_2 => $v) {
 				$html = new htmlobject_input();
 				$html->name = 'action';
@@ -361,7 +415,8 @@ var $_bottomrow = array();
 				$html->type = 'submit';
 				$str .= $html->get_string();
 			}
-			$td->text = $str;
+			$str .= '</div>';
+			$td->text = $this->get_select().''.$str.'<div style="line-height:0px;clear:both;">&#160;</div>';
 			$tr->add($td);	
 		}
 	return $tr;	
@@ -551,6 +606,60 @@ var $_bottomrow = array();
 	}
 	//----------------------------------------------------------------------------------------
 	/**
+	* adds identifier select functions to table
+	* @access public
+	* @return object|string
+	*/
+	//----------------------------------------------------------------------------------------
+	function get_select() {
+	$strR = '';
+		if($this->identifier_type == 'checkbox') {
+			$strR .= '<div class="selecttable" id="SelectTable" style="display:none;">';
+			$strR .= $this->lang_select_title;
+			$strR .= ' <a href="javascript:selectident(\'all\');">'.$this->lang_select_all.'</a>'."\n";
+			$strR .= ' <a href="javascript:selectident(\'none\');">'.$this->lang_select_none.'</a>'."\n";
+			$strR .= ' <a href="javascript:selectident(\'invert\');">'.$this->lang_select_invert.'</a>'."\n";
+			$strR .= '<script>'."\n";
+			$strR .= 'document.getElementById("SelectTable").style.display = "inline"'."\n";
+			$strR .= 'function selectident(arg) {'."\n";
+			$strR .= '  if(arg == "all") {'."\n";
+			$strR .= '    for(i = 0; i < document.getElementsByName("identifier[]").length; i++)  {'."\n";
+			$strR .= '      document.getElementsByName("identifier[]")[i].checked = true;'."\n";			
+			$strR .= '    }'."\n";			
+			$strR .= '  }'."\n";
+			$strR .= '  if(arg == "none") {'."\n";
+			$strR .= '    for(i = 0; i < document.getElementsByName("identifier[]").length; i++)  {'."\n";
+			$strR .= '      document.getElementsByName("identifier[]")[i].checked = false;'."\n";			
+			$strR .= '    }'."\n";			
+			$strR .= '  }'."\n";
+			$strR .= '  if(arg == "invert") {'."\n";
+			$strR .= '    for(i = 0; i < document.getElementsByName("identifier[]").length; i++)  {'."\n";
+			$strR .= '      if(document.getElementsByName("identifier[]")[i].checked == false) {'."\n";
+			$strR .= '        document.getElementsByName("identifier[]")[i].checked = true;'."\n";			
+			$strR .= '      } else {'."\n";
+			$strR .= '        document.getElementsByName("identifier[]")[i].checked = false;'."\n";
+			$strR .= '      }'."\n";
+			$strR .= '    }'."\n";
+			$strR .= '  }'."\n";
+			$strR .= '}'."\n";
+			$strR .= '</script>'."\n";
+			$strR .= '</div>'."\n";
+
+				
+			#$tr = new htmlobject_tr();
+			#$tr->css = 'htmlobject_tr';
+			
+			#$td = new htmlobject_td();
+			#$td->colspan = $this->_num_cols;
+			#$td->type = 'td';
+			#$td->css = 'htmlobject_td selecttable';
+			#$td->text = $strR;
+			#$tr->add($td);
+		}
+	return $strR;
+	}
+	//----------------------------------------------------------------------------------------
+	/**
 	* adds identifier td to body row
 	* @access public
 	* @param  $ident string
@@ -657,9 +766,9 @@ var $_bottomrow = array();
 		}
 		// build form
 		$_strReturn = $this->get_js();
-		$_strReturn .= '<form action="'.$this->form_action.'" method="GET">';
+		($this->form_action != '') ? $_strReturn .= '<form action="'.$this->form_action.'" method="GET">' : null;
 		$_strReturn .= htmlobject_table::get_string();
-		$_strReturn .= '</form>';
+		($this->form_action != '') ? $_strReturn .= '</form>' : null;
 	return $_strReturn;
 	}
 }//-- end class
