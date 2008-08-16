@@ -1,0 +1,54 @@
+#!/bin/bash
+# this is the functions file for the kvm-plugin
+KVM_SERVER_LOCK_FILE=/var/run/lvm-storage/lvm-storage-plugin.lock
+KVM_SERVER_LOCK_DELAY=5
+KVM_SERVER_LOCK_RETRY=100
+KVM_SERVER_LOCK_TIMEOUT=500
+################ common kvm functions
+
+# logs for kvm
+function kvm_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "kvm plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function kvm_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $KVM_SERVER_LOCK_FILE` ]; then
+		mkdir -p `dirname $KVM_SERVER_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $KVM_SERVER_LOCK_DELAY -r $KVM_SERVER_LOCK_RETRY -l $KVM_SERVER_LOCK_TIMEOUT $KVM_SERVER_LOCK_FILE
+				RET=$?
+				kvm_log kvm_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $KVM_SERVER_LOCK_FILE
+				RET=$?
+				kvm_log kvm_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			kvm_log kvm_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ kvm functions
+
+
+
+
+
+

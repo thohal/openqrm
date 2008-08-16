@@ -1,0 +1,62 @@
+#!/bin/bash
+# this is the boot-service init script for the Kvm-server hosts
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/openqrm-plugin-kvm-functions
+if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+fi
+
+
+function kvm_start() {
+	echo "Starting the openQRM kvm-plugin"
+	kvm_stop 1>/dev/null 2>&1
+}
+
+
+function kvm_stop() {
+	echo "Stopping the openQRM kvm-plugin"
+}
+
+
+
+
+
+case "$1" in
+	start)
+		kvm_start
+		;;
+	stop)
+		kvm_stop
+		;;
+	restart)
+		kvm_stop
+		sleep 1
+		kvm_start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+
+esac
+exit $?
+
+
+
+
+
+
+
+
+
+
+
+
+

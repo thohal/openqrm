@@ -1,0 +1,217 @@
+#!/bin/bash
+
+# this script automatically manages kvm
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/openqrm-plugin-kvm-functions
+if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+	resource_id=0
+fi
+OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
+OPENQRM_KVM_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-vm"
+OPENQRM_VM_DIR="/var/lib/kvm/openqrm/"
+export LANG=C
+
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+
+function kvm_usage() {
+	echo "Usage : $0 start/stop/reboot/delete/list <-n vm-name>"
+	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ]"
+	echo "        $0 post_vm_list <-u username> <-p password>"
+	exit 1
+}
+
+
+KVM_COMMAND=$1
+shift
+
+while [ $# -ne 0 ]; do
+	case "$1" in
+		-n)
+			KVM_VM_NAME=$2
+			shift
+			;;
+		-m)
+			KVM_VM_MAC=$2
+			shift
+			;;
+		-r)
+			KVM_VM_RAM=$2
+			shift
+			;;
+		-d)
+			KVM_VM_DISK=$2
+			shift
+			;;
+		-u)
+			KVM_OPENQRM_USERNAME=$2
+			shift
+			;;
+		-p)
+			KVM_OPENQRM_PASSWORD=$2
+			shift
+			;;
+		*)
+			echo "ERROR: Free commandline arguments are not allowed"
+			kvm_usage
+			exit 6
+			;;
+	esac
+	shift
+done
+
+
+
+
+# main
+if [ "$KVM_COMMAND" == "" ]; then
+	kvm_usage
+fi
+
+if [ "$KVM_COMMAND" == "post_vm_list" ]; then
+		if [ "$KVM_OPENQRM_USERNAME" == "" ]; then
+			kvm_usage
+		fi
+		if [ "$KVM_OPENQRM_PASSWORD" == "" ]; then
+			kvm_usage
+		fi
+else
+
+	if [ "$KVM_COMMAND" != "list" ]; then
+		if [ "$KVM_VM_NAME" == "" ]; then
+			kvm_usage
+		fi
+	fi
+fi
+
+
+case "$KVM_COMMAND" in 
+
+	create)
+		if [ "$KVM_VM_MAC" == "" ]; then
+			kvm_usage
+		fi
+		if [ "$KVM_VM_RAM" == "" ]; then
+			kvm_usage
+		fi
+		kvm_lock aquire
+		echo "Creating KVM vm $KVM_VM_NAME -> $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm"
+		# creating the kvm start script
+		mkdir -p $OPENQRM_VM_DIR/$KVM_VM_NAME/
+		# check on which vnc display which can run it
+
+		# TODO : dynamic ids for the vnc display !!
+		KVM_VM_VNC=2
+		
+		cat $OPENQRM_KVM_VM_TEMPLATE |	\
+			sed -e "s/@@KVM_VM_NAME@@/$KVM_VM_NAME/g" |	\
+			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$KVM_VM_RAM/g" |	\
+			sed -e "s/@@KVM_VM_MAC@@/$KVM_VM_MAC/g" |	\
+			sed -e "s/@@KVM_VM_VNC@@/$KVM_VM_VNC/g" \
+			> $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+
+		# disk + swap
+		if [ "$KVM_VM_DISK" != "" ]; then
+			echo "-> Creating disk"
+			KVM_DISK_1="$OPENQRM_VM_DIR/$KVM_VM_NAME/disk01.img"
+			if ! qemu-img create $KVM_DISK_1 $KVM_VM_DISK""M; then
+				echo "ERROR: Could not create $KVM_DISK_1 for KVM vm $KVM_VM_NAME" | logger
+				kvm_lock release
+				exit 1
+			fi
+			# add the disk to the config file
+			cat $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm |	\
+				sed -e "s#@@KVM_DISK_CONF@@#-drive file=$KVM_DISK_1,if=scsi#g" > $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm.withdisk
+			mv -f $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm.withdisk $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+		else
+			# remove disk from the config file
+			cat $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm |	\
+				sed -e "s#@@KVM_DISK_CONF@@##g" > $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm.withoutdisk
+			mv -f $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm.withoutdisk $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+		fi
+		# start
+		chmod +x $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+		kvm_lock release
+		;;
+	start)
+		kvm_lock aquire
+		echo "Starting Kvm vm $KVM_VM_NAME"
+		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+		kvm_lock release
+		;;
+	stop)
+		kvm_lock aquire
+		echo "Stopping Kvm vm $KVM_VM_NAME"
+		VM_PID=`ps ax | grep $KVM_VM_NAME | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
+		if [ "$VM_PID" == "" ]; then
+			echo "NOTICE: Attempting to stop KVM vm $KVM_VM_NAME which is not active" | logger
+		else
+			kill $VM_PID
+			kill -9 $VM_PID 1>/dev/null 2>&1
+		fi
+		kvm_lock release
+		;;
+	reboot)
+		kvm_lock aquire
+		echo "Rebooting Kvm vm $KVM_VM_NAME"
+		VM_PID=`ps ax | grep $KVM_VM_NAME | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
+		if [ "$VM_PID" == "" ]; then
+			echo "NOTICE: Attempting to stop KVM vm $KVM_VM_NAME which is not active" | logger
+		else
+			kill $VM_PID
+			kill -9 $VM_PID 1>/dev/null 2>&1
+		fi
+		sleep 2
+		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+		kvm_lock release
+		;;
+	delete)
+		kvm_lock aquire
+		echo "Deleting Kvm vm $KVM_VM_NAME"
+		# be sure it is stopped
+		VM_PID=`ps ax | grep $KVM_VM_NAME | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
+		if [ "$VM_PID" != "" ]; then
+			kill $VM_PID
+			kill -9 $VM_PID 1>/dev/null 2>&1
+		fi
+		rm -rf $OPENQRM_VM_DIR/$KVM_VM_NAME
+		kvm_lock release
+		;;
+	list)
+		echo "Listing Kvm vms"
+		ls $OPENQRM_VM_DIR/
+		;;
+	post_vm_list)
+		kvm_lock aquire
+		echo "Posting vm list to the openQRM-server"
+		VM_LIST_TMP=$resource_id.vm_list
+		ls $OPENQRM_VM_DIR/ > $VM_LIST_TMP
+		if ! wget -q -O /dev/null --http-user=$KVM_OPENQRM_USERNAME --http-password=$KVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/kvm/kvm-action.php?kvm_server_command=get_kvm_server; then
+			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!"
+			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
+		fi
+		rm -f $VM_LIST_TMP
+		rm -f $VM_LIST_TMP.post
+		kvm_lock release
+		;;
+	*)
+		kvm_usage
+		;;
+
+
+esac
+

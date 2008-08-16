@@ -1,0 +1,8 @@
+#	Title
+#	Href
+#	Alt
+#	IMG
+#	Target
+.|KVM
+..|About|plugins/kvm/kvm-about.php
+..|KVM Manager|plugins/kvm/kvm-manager.php
