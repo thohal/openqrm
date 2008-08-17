@@ -3,7 +3,7 @@
 
 <?php
 
-// error_reporting(E_ALL);
+error_reporting(E_ALL);
 $thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
@@ -38,26 +38,33 @@ function kvm_vm_config() {
 	$disp = "<b>Kvm Configure VM</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 
-	$vm_conf_ar=file("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/web/kvm-stat/$kvm_server->id.$kvm_server_name.vm_config");
-	foreach ($vm_conf_ar as $key => $value) {
-	    $disp = $disp."Key: $key; Value: $value<br/>\n";
-	}
+	$kvm_vm_conf_file="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/web/kvm-stat/$kvm_server->id.$kvm_server_name.vm_config";
+	$store = openqrm_parse_conf($kvm_vm_conf_file);
+	extract($store);
 
 	$disp = $disp."<br>";
 	$disp = $disp."<b>Ram</b>";
-
+	$disp = $disp."<br>";
+	$disp = $disp."Ram = $store[OPENQRM_KVM_VM_RAM]";
+	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<b>Network</b>";
-
+	$disp = $disp."<br>";
+	$disp = $disp."Nic = $store[OPENQRM_KVM_VM_NET]";
+	$disp = $disp."<br>";
+	$disp = $disp."Mac = $store[OPENQRM_KVM_VM_MAC]";
+	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<b>Disk</b>";
-
 	$disp = $disp."<br>";
-	$disp = $disp."<b>Vnc</b>";
-
+	$disp = $disp."Scsi-disk = $store[OPENQRM_KVM_VM_DISK]";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."<b>Display</b>";
+	$disp = $disp."<br>";
+	$disp = $disp."Vnc-port = $store[OPENQRM_KVM_VM_VNC]";
+	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 
