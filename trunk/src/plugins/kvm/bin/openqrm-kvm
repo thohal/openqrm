@@ -242,11 +242,11 @@ case "$KVM_COMMAND" in
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/disk
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/vnc
-		echo "KVM_VM_RAM=\"$KVM_VM_RAM\"" > $VM_CONFIG_TMP
-		echo "KVM_VM_NET=\"$KVM_VM_NET\"" >> $VM_CONFIG_TMP
-		echo "KVM_VM_MAC=\"$KVM_VM_MAC\"" >> $VM_CONFIG_TMP
-		echo "KVM_VM_DISK=\"$KVM_VM_DISK\"" >> $VM_CONFIG_TMP
-		echo "KVM_VM_VNC=\"$KVM_VM_VNC\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_RAM=\"$KVM_VM_RAM\"" > $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_NET=\"$KVM_VM_NET\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_MAC=\"$KVM_VM_MAC\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_DISK=\"$KVM_VM_DISK\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_VNC=\"$KVM_VM_VNC\"" >> $VM_CONFIG_TMP
 		if ! wget -q -O /dev/null --http-user=$KVM_OPENQRM_USERNAME --http-password=$KVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_CONFIG_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/kvm/kvm-action.php?kvm_server_command=get_kvm_config; then
 			echo "ERROR: Could not post vm config to the openQRM-server at $OPENQRM_SERVER_IP!"
 			echo "ERROR: Could not post vm config to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
