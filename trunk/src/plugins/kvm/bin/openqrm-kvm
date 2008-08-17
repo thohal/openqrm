@@ -111,17 +111,14 @@ case "$KVM_COMMAND" in
 		echo "Creating KVM vm $KVM_VM_NAME -> $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm"
 		# creating the kvm start script
 		mkdir -p $OPENQRM_VM_DIR/$KVM_VM_NAME/
-		# check on which vnc display which can run it
+		cp -f $OPENQRM_KVM_VM_TEMPLATE $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
 
-		# TODO : dynamic ids for the vnc display !!
-		KVM_VM_VNC=2
-		
-		cat $OPENQRM_KVM_VM_TEMPLATE |	\
-			sed -e "s/@@KVM_VM_NAME@@/$KVM_VM_NAME/g" |	\
-			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$KVM_VM_RAM/g" |	\
-			sed -e "s/@@KVM_VM_MAC@@/$KVM_VM_MAC/g" |	\
-			sed -e "s/@@KVM_VM_VNC@@/$KVM_VM_VNC/g" \
-			> $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+		# ram
+		echo "KVM_VM_RAM=\"$KVM_VM_RAM\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/ram
+
+		# network
+		echo "KVM_VM_NET=\"-net nic,macaddr=$KVM_VM_MAC,model=e1000 -net tap\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net
+		echo "KVM_VM_MAC=\"$KVM_VM_MAC\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net
 
 		# disk + swap
 		if [ "$KVM_VM_DISK" != "" ]; then
@@ -133,15 +130,37 @@ case "$KVM_COMMAND" in
 				exit 1
 			fi
 			# add the disk to the config file
-			cat $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm |	\
-				sed -e "s#@@KVM_DISK_CONF@@#-drive file=$KVM_DISK_1,if=scsi#g" > $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm.withdisk
-			mv -f $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm.withdisk $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+			echo "KVM_VM_DISK=\"-drive file=$KVM_DISK_1,if=scsi\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk
 		else
-			# remove disk from the config file
-			cat $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm |	\
-				sed -e "s#@@KVM_DISK_CONF@@##g" > $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm.withoutdisk
-			mv -f $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm.withoutdisk $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+			# add empty disk disk parameter
+			echo "KVM_VM_DISK=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk
 		fi
+
+		# vnc : check on which vnc display which can run it
+		ALREADY_USED_VNC_IDS=""
+		for VNC_CONF in `find $OPENQRM_VM_DIR/* -name vnc`; do
+			unset KVM_VM_VNC
+			. $VNC_CONF
+			USED_VNC_ID=`echo $KVM_VM_VNC | cut -d':' -f2`
+			ALREADY_USED_VNC_IDS="$USED_VNC_ID $ALREADY_USED_VNC_IDS"
+		done
+		NEW_VNC_ID=1
+		while (true); do
+			FOUND_VNC_ID="false"
+			for VNC_ID in $ALREADY_USED_VNC_IDS; do
+				if [ "$VNC_ID" == "$NEW_VNC_ID" ]; then
+					FOUND_VNC_ID="true"
+					continue
+				fi
+			done
+			if [ "$FOUND_VNC_ID" == "false" ]; then
+				break
+			else
+				NEW_VNC_ID=$(( NEW_VNC_ID + 1 ))
+			fi
+		done
+		echo "KVM_VM_VNC=\"127.0.0.1:$NEW_VNC_ID\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/vnc
+
 		# start
 		chmod +x $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
 		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
@@ -156,7 +175,8 @@ case "$KVM_COMMAND" in
 	stop)
 		kvm_lock aquire
 		echo "Stopping Kvm vm $KVM_VM_NAME"
-		VM_PID=`ps ax | grep $KVM_VM_NAME | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
+		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net
+		VM_PID=`ps ax | grep $KVM_VM_MAC | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
 		if [ "$VM_PID" == "" ]; then
 			echo "NOTICE: Attempting to stop KVM vm $KVM_VM_NAME which is not active" | logger
 		else
@@ -168,7 +188,8 @@ case "$KVM_COMMAND" in
 	reboot)
 		kvm_lock aquire
 		echo "Rebooting Kvm vm $KVM_VM_NAME"
-		VM_PID=`ps ax | grep $KVM_VM_NAME | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
+		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net
+		VM_PID=`ps ax | grep $KVM_VM_MAC | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
 		if [ "$VM_PID" == "" ]; then
 			echo "NOTICE: Attempting to stop KVM vm $KVM_VM_NAME which is not active" | logger
 		else
@@ -183,7 +204,8 @@ case "$KVM_COMMAND" in
 		kvm_lock aquire
 		echo "Deleting Kvm vm $KVM_VM_NAME"
 		# be sure it is stopped
-		VM_PID=`ps ax | grep $KVM_VM_NAME | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
+		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net
+		VM_PID=`ps ax | grep $KVM_VM_MAC | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
 		if [ "$VM_PID" != "" ]; then
 			kill $VM_PID
 			kill -9 $VM_PID 1>/dev/null 2>&1

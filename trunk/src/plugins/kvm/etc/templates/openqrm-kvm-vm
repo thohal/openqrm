@@ -5,5 +5,14 @@ if [ "$KVM" == "" ]; then
 	echo "ERROR: kvm ist not installed on this system !" | logger
 	exit 1
 fi
-echo "KVM vm @@KVM_VM_NAME@@ starting up ..." | logger
-screen -dmS @@KVM_VM_NAME@@ $KVM @@KVM_DISK_CONF@@ -m @@OPENQRM_RESOURCE_RAM@@ -boot n -net nic,macaddr=@@KVM_VM_MAC@@,model=e1000 -net tap -vnc 127.0.0.1:@@KVM_VM_VNC@@
+# source the component config files
+VM_CONF_DIR=`dirname $0`
+VM_CONF_DIR=`cd $VM_CONF_DIR && pwd && cd - 1>/dev/null`
+VM_NAME=`basename $VM_CONF_DIR`
+. $VM_CONF_DIR/ram
+. $VM_CONF_DIR/disk
+. $VM_CONF_DIR/net
+. $VM_CONF_DIR/vnc
+
+echo "KVM vm $VM_NAME starting up ..." | logger
+screen -dmS $KVM_VM_MAC $KVM $KVM_VM_DISK -m $KVM_VM_RAM -boot n $KVM_VM_NET -vnc $KVM_VM_VNC
