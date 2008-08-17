@@ -31,6 +31,7 @@ function kvm_usage() {
 	echo "Usage : $0 start/stop/reboot/delete/list <-n vm-name>"
 	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ]"
 	echo "        $0 post_vm_list <-u username> <-p password>"
+	echo "        $0 post_vm_config <-n vm-name> <-u username> <-p password>"
 	exit 1
 }
 
@@ -81,7 +82,7 @@ if [ "$KVM_COMMAND" == "" ]; then
 	kvm_usage
 fi
 
-if [ "$KVM_COMMAND" == "post_vm_list" ]; then
+if [ "$KVM_COMMAND" == "post_vm_list" ] || [ "$KVM_COMMAND" == "post_vm_config" ]; then
 		if [ "$KVM_OPENQRM_USERNAME" == "" ]; then
 			kvm_usage
 		fi
@@ -230,6 +231,31 @@ case "$KVM_COMMAND" in
 		rm -f $VM_LIST_TMP.post
 		kvm_lock release
 		;;
+	post_vm_config)
+		if [ "$KVM_VM_NAME" == "" ]; then
+			kvm_usage
+		fi
+		kvm_lock aquire
+		echo "Posting vm config for $KVM_VM_NAME to the openQRM-server"
+		VM_CONFIG_TMP=$resource_id.$KVM_VM_NAME.vm_config
+		. $OPENQRM_VM_DIR/$KVM_VM_NAME/ram
+		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net
+		. $OPENQRM_VM_DIR/$KVM_VM_NAME/disk
+		. $OPENQRM_VM_DIR/$KVM_VM_NAME/vnc
+		echo "KVM_VM_RAM=\"$KVM_VM_RAM\"" > $VM_CONFIG_TMP
+		echo "KVM_VM_NET=\"$KVM_VM_NET\"" >> $VM_CONFIG_TMP
+		echo "KVM_VM_MAC=\"$KVM_VM_MAC\"" >> $VM_CONFIG_TMP
+		echo "KVM_VM_DISK=\"$KVM_VM_DISK\"" >> $VM_CONFIG_TMP
+		echo "KVM_VM_VNC=\"$KVM_VM_VNC\"" >> $VM_CONFIG_TMP
+		if ! wget -q -O /dev/null --http-user=$KVM_OPENQRM_USERNAME --http-password=$KVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_CONFIG_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/kvm/kvm-action.php?kvm_server_command=get_kvm_config; then
+			echo "ERROR: Could not post vm config to the openQRM-server at $OPENQRM_SERVER_IP!"
+			echo "ERROR: Could not post vm config to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
+		fi
+		rm -f $VM_CONFIG_TMP
+		rm -f $VM_CONFIG_TMP.post
+		kvm_lock release
+		;;
+
 	*)
 		kvm_usage
 		;;
