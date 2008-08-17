@@ -220,9 +220,9 @@ function kvm_server_display($appliance_id) {
 	if (file_exists($kvm_server_vm_list_file)) {
 		$kvm_server_vm_list_content=file($kvm_server_vm_list_file);
 		foreach ($kvm_server_vm_list_content as $index => $kvm_server_name) {
-			// find the unregistered vms
+			// find the vms
 			if (!strstr($kvm_server_name, "#")) {
-				// registered vms
+				// vms
 				$kvm_short_name=basename($kvm_server_name);
 				$kvm_short_name=str_replace(".vmx", "", $kvm_short_name);
 				$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
@@ -233,6 +233,8 @@ function kvm_server_display($appliance_id) {
 				$disp = $disp."  <a href=\"kvm-action.php?kvm_server_name=$kvm_server_name&kvm_server_command=start&kvm_server_id=$kvm_server_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>";
 				$disp = $disp." / ";
 				$disp = $disp."<a href=\"kvm-action.php?kvm_server_name=$kvm_server_name&kvm_server_command=stop&kvm_server_id=$kvm_server_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Stop</a>";
+				$disp = $disp." / ";
+				$disp = $disp."<a href=\"kvm-vm-config.php?kvm_server_name=$kvm_server_name&kvm_server_id=$kvm_server_tmp->id\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/plugin.png\" border=\"0\"> Config</a>";
 				$disp = $disp." / ";
 				$disp = $disp."<a href=\"kvm-action.php?kvm_server_name=$kvm_server_name&kvm_server_command=reboot&kvm_server_id=$kvm_server_tmp->id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"> Reboot</a>";
 				$disp = $disp." / ";
