@@ -16,24 +16,8 @@ require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 global $OPENQRM_SERVER_BASE_DIR;
-$refresh_delay=5;
+$refresh_delay=2;
 
-// running the actions
-if(htmlobject_request('action') != '') {
-	switch (htmlobject_request('action')) {
-		case 'refresh':
-			foreach($_REQUEST['identifier'] as $id) {
-				$kvm_appliance = new appliance();
-				$kvm_appliance->get_instance_by_id($id);
-				$kvm_server = new resource();
-				$kvm_server->get_instance_by_id($kvm_appliance->resources);
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-				$kvm_server->send_command($kvm_server->ip, $resource_command);
-				sleep($refresh_delay);
-			}
-			break;
-	}
-}
 
 function kvm_server_htmlobject_select($name, $value, $title = '', $selected = '') {
 		$html = new htmlobject_select();
@@ -120,6 +104,7 @@ function kvm_server_select() {
 	$table->cellspacing = 0;
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
+	$table->identifier_type = "radio";
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -137,6 +122,18 @@ function kvm_server_select() {
 function kvm_server_display($appliance_id) {
 	global $OPENQRM_USER;
 	global $thisfile;
+	global $OPENQRM_SERVER_BASE_DIR;
+	global $refresh_delay;
+
+	// refresh
+	$kvm_appliance = new appliance();
+	$kvm_appliance->get_instance_by_id($appliance_id);
+	$kvm_server = new resource();
+	$kvm_server->get_instance_by_id($kvm_appliance->resources);
+	$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+	$kvm_server->send_command($kvm_server->ip, $resource_command);
+	sleep($refresh_delay);
+
 	$table = new htmlobject_table_identifiers_checked('kvm_server_id');
 
 	$disp = "<h1>Kvm-Server-Admin</h1>";
