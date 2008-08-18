@@ -33,6 +33,8 @@ function kvm_usage() {
 	echo "        $0 post_vm_list <-u username> <-p password>"
 	echo "        $0 post_vm_config <-n vm-name> <-u username> <-p password>"
 	echo "        $0 update_vm_ram <-r memory> <-n vm-name>"
+	echo "        $0 add_vm_disk <-s disk-number> <-d disk-size> <-n vm-name>"
+	echo "        $0 remove_vm_disk <-s disk-number> <-n vm-name>"
 	exit 1
 }
 
@@ -56,6 +58,10 @@ while [ $# -ne 0 ]; do
 			;;
 		-d)
 			KVM_VM_DISK=$2
+			shift
+			;;
+		-s)
+			KVM_VM_DISK_NUMBER=$2
 			shift
 			;;
 		-u)
@@ -139,13 +145,18 @@ case "$KVM_COMMAND" in
 			fi
 			# add the disk to the config file
 			echo "KVM_VM_DISK_1=\"-drive file=$KVM_DISK_1,if=scsi\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk1
+			echo "KVM_VM_DISK_SIZE_1=\"$KVM_VM_DISK\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/disk1
 		else
 			# add empty disk disk parameter
 			echo "KVM_VM_DISK_1=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk1
+			echo "KVM_VM_DISK_SIZE_1=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/disk1
 		fi
 		echo "KVM_VM_DISK_2=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk2
+		echo "KVM_VM_DISK_SIZE_2=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/disk2
 		echo "KVM_VM_DISK_3=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk3
+		echo "KVM_VM_DISK_SIZE_3=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/disk3
 		echo "KVM_VM_DISK_4=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk4
+		echo "KVM_VM_DISK_SIZE_4=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/disk4
 
 		# vnc : check on which vnc display which can run it
 		ALREADY_USED_VNC_IDS=""
@@ -268,9 +279,13 @@ case "$KVM_COMMAND" in
 		echo "OPENQRM_KVM_VM_NET_4=\"$KVM_VM_NET_4\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_MAC_4=\"$KVM_VM_MAC_4\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_DISK_1=\"$KVM_VM_DISK_1\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_DISK_SIZE_1=\"$KVM_VM_DISK_SIZE_1\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_DISK_2=\"$KVM_VM_DISK_2\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_DISK_SIZE_2=\"$KVM_VM_DISK_SIZE_2\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_DISK_3=\"$KVM_VM_DISK_3\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_DISK_SIZE_3=\"$KVM_VM_DISK_SIZE_3\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_DISK_4=\"$KVM_VM_DISK_4\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_DISK_SIZE_4=\"$KVM_VM_DISK_SIZE_4\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_VNC=\"$KVM_VM_VNC\"" >> $VM_CONFIG_TMP
 		if ! wget -q -O /dev/null --http-user=$KVM_OPENQRM_USERNAME --http-password=$KVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_CONFIG_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/kvm/kvm-action.php?kvm_server_command=get_kvm_config; then
 			echo "ERROR: Could not post vm config to the openQRM-server at $OPENQRM_SERVER_IP!"
@@ -293,7 +308,33 @@ case "$KVM_COMMAND" in
 		sed -i -e s"#KVM_VM_RAM=.*#KVM_VM_RAM=\"$KVM_VM_RAM\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/ram
 		kvm_lock release
 		;;
-
+	add_vm_disk)
+		if [ "$KVM_VM_NAME" == "" ]; then
+			kvm_usage
+		fi
+		if [ "$KVM_VM_DISK" == "" ]; then
+			kvm_usage
+		fi
+		if [ "$KVM_VM_DISK_NUMBER" == "" ]; then
+			kvm_usage
+		fi
+		kvm_lock aquire
+		echo "Addking disk $KVM_VM_DISK_NUMBER size $KVM_VM_DISK to KVM vm $KVM_VM_NAME"
+		sed -i -e s"#KVM_VM_DISK_\"\"$KVM_VM_DISK_NUMBER=.*#KVM_VM_DISK_\"\"$KVM_VM_DISK_NUMBER=\"-drive file=$OPENQRM_VM_DIR/$KVM_VM_NAME/disk0$KVM_VM_DISK_NUMBER.img,if=scsi\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/diskDISK_""$KVM_VM_DISK_NUMBER
+		kvm_lock release
+		;;
+	remove_vm_disk)
+		if [ "$KVM_VM_NAME" == "" ]; then
+			kvm_usage
+		fi
+		if [ "$KVM_VM_DISK_NUMBER" == "" ]; then
+			kvm_usage
+		fi
+		kvm_lock aquire
+		echo "Removing disk $KVM_VM_DISK_NUMBER from KVM vm $KVM_VM_NAME"
+		sed -i -e s"#KVM_VM_DISK_\"\"$KVM_VM_DISK_NUMBER=.*#KVM_VM_DISK_\"\"$KVM_VM_DISK_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/diskDISK_""$KVM_VM_DISK_NUMBER
+		kvm_lock release
+		;;
 	*)
 		kvm_usage
 		;;
