@@ -195,7 +195,7 @@ function image_form() {
 		
 		$arBody = array();
 		
-		$table = new htmlobject_table_identifiers_radio('storage_id');
+		$table = new htmlobject_db_table('storage_id');
 		$table->add_headrow('<input type="hidden" name="currenttab" value="tab1">');
 		
 		$storage_tmp = new storage();
