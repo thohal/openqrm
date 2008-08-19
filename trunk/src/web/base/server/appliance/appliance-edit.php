@@ -11,8 +11,13 @@ require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
 // set vars from request
+$appliance = new appliance();
+$appliance->get_instance_by_id(htmlobject_request('appliance_id'));
+
+#@$_REQUEST['identifier'][0];
+
 $ar_request = array(
-	'appliance_resources' => @$_REQUEST['identifier'][0],
+	'appliance_resources' => $appliance->resources,
 	'appliance_name' => htmlobject_request('appliance_name'),
 	'appliance_kernelid' => htmlobject_request('appliance_kernelid'),
 	'appliance_imageid' => htmlobject_request('appliance_imageid'),
@@ -111,13 +116,9 @@ function appliance_form() {
 	if(count($image_list) > 0) {
 
 		//-------------------------------------- Form second step
-		#if (htmlobject_request('identifier') != '' && (htmlobject_request('action') == 'select' || isset($_REQUEST['step_2']))) {
+		if (htmlobject_request('appliance_id') != '') {
 	
-			//------------------------------------------------------------ set vars
-			foreach(htmlobject_request('identifier') as $id) {
-				$ident = $id; // resourceid
-			}
-
+				$ident = htmlobject_request('appliance_id'); // applianceid
 
 			//------------------------------------------------------------ Table
 
@@ -186,7 +187,7 @@ function appliance_form() {
 			$table->head = $arHead;
 			$table->body = $arBody;
 			if ($OPENQRM_USER->role == "administrator") {
-				$table->bottom = array('select');
+				//$table->bottom = array('select');
 				$table->identifier = 'resource_id';
 				$table->identifier_type = 'radio';
 				$table->identifier_checked = array($ar_request['appliance_resources']);
@@ -195,6 +196,13 @@ function appliance_form() {
 			#$disp = ;
 
 
+			#if($ident == 0) {
+			#	$image = htmlobject_input('appliance_imageid', array("value" => '0', "label" => ''), 'hidden');
+			#	$kernelid = htmlobject_input('appliance_kernelid', array("value" => '0', "label" => ''), 'hidden');
+			#} else {
+				$kernelid = htmlobject_select('appliance_kernelid', $kernel_list, 'Kernel', array($ar_request['appliance_kernelid']));
+				$image = htmlobject_select('appliance_imageid', $image_list, 'Image', array($ar_request['appliance_imageid']));
+			#}
 	
 			//------------------------------------------------------------ set template
 			$t = new Template_PHPLIB();
@@ -206,8 +214,8 @@ function appliance_form() {
 				'identifier' => htmlobject_input('identifier[]', array("value" => $ident, "label" => ''), 'hidden'),
 				'currentab' => htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden'),
 				'lang_requirements' => '<h3>Requirements</h3>',
-				'appliance_kernelid' => htmlobject_select('appliance_kernelid', $kernel_list, 'Kernel', array($ar_request['appliance_kernelid'])),
-				'appliance_imageid' => htmlobject_select('appliance_imageid', $image_list, 'Image', array($ar_request['appliance_imageid'])),
+				'appliance_kernelid' => $kernelid,
+				'appliance_imageid' => $image,
 				'appliance_virtualization' => htmlobject_select('appliance_virtualization', $virtualization_list, 'Resource', array($ar_request['appliance_virtualization'])),
 				'appliance_name' => htmlobject_input('appliance_name', array("value" => $ar_request['appliance_name'], "label" => 'Name'), 'text', 20),
 				'appliance_cpuspeed' => htmlobject_input('appliance_cpuspeed', array("value" => $ar_request['appliance_cpuspeed'], "label" => 'CPU-Speed'), 'text', 20),
@@ -231,7 +239,7 @@ function appliance_form() {
 
 		
 
-		#}
+		}
 
 	} else {
 		$disp = '<center>';
