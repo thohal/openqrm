@@ -108,7 +108,7 @@ function appliance_form() {
 	$virtualization_list = array();
 	$virtualization_list = $virtualization->get_list();
 
-	if(count($image_list) > 0) {
+	#if(count($image_list) > 0) {
 
 		//-------------------------------------- Form second step
 		if (htmlobject_request('identifier') != '' && (htmlobject_request('action') == 'select' || isset($_REQUEST['step_2']))) {
@@ -116,40 +116,60 @@ function appliance_form() {
 			//------------------------------------------------------------ set vars
 			foreach(htmlobject_request('identifier') as $id) {
 				$ident = $id; // resourceid
-			}
-	
-			//------------------------------------------------------------ set template
-			$t = new Template_PHPLIB();
-			$t->debug = false;
-			$t->setFile('tplfile', './' . 'appliance-tpl.php');
-			$t->setVar(array(
-				'thisfile' => $thisfile,
-				'step_2' => htmlobject_input('step_2', array("value" => true, "label" => ''), 'hidden'),
-				'identifier' => htmlobject_input('identifier[]', array("value" => $ident, "label" => ''), 'hidden'),
-				'currentab' => htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden'),
-				'lang_requirements' => '<h3>Requirements</h3>',
-				'appliance_kernelid' => htmlobject_select('appliance_kernelid', $kernel_list, 'Kernel', array($ar_request['appliance_kernelid'])),
-				'appliance_imageid' => htmlobject_select('appliance_imageid', $image_list, 'Image', array($ar_request['appliance_imageid'])),
-				'appliance_virtualization' => htmlobject_select('appliance_virtualization', $virtualization_list, 'Resource', array($ar_request['appliance_virtualization'])),
-				'appliance_name' => htmlobject_input('appliance_name', array("value" => $ar_request['appliance_name'], "label" => 'Name'), 'text', 20),
-				'appliance_cpuspeed' => htmlobject_input('appliance_cpuspeed', array("value" => $ar_request['appliance_cpuspeed'], "label" => 'CPU-Speed'), 'text', 20),
-				'appliance_cpumodel' => htmlobject_input('appliance_cpumodel', array("value" => $ar_request['appliance_cpumodel'], "label" => 'CPU-Model'), 'text', 20),
-				'appliance_memtotal' => htmlobject_input('appliance_memtotal', array("value" => $ar_request['appliance_memtotal'], "label" => 'Memory'), 'text', 20),
-				'appliance_swaptotal' => htmlobject_input('appliance_swaptotal', array("value" => $ar_request['appliance_swaptotal'], "label" => 'Swap'), 'text', 20),
-				'appliance_capabilities' => htmlobject_input('appliance_capabilities', array("value" => $ar_request['appliance_capabilities'], "label" => 'Capabilities'), 'text', 255),
-				'appliance_comment' => htmlobject_textarea('appliance_comment', array("value" => $ar_request['appliance_comment'], "label" => 'Comment')),
-				'appliance_cluster' => htmlobject_input('appliance_cluster', array("value" => 1, "label" => 'Cluster'), 'checkbox', ($ar_request['appliance_cluster'] == 0) ? false : true),
-				'appliance_ssi' => htmlobject_input('appliance_ssi', array("value" => 1, "label" => 'SSI'), 'checkbox', ($ar_request['appliance_ssi'] == '') ? false : true),
-				'appliance_highavailable' => htmlobject_input('appliance_highavailable', array("value" => 1, "label" => 'Highavailable'), 'checkbox', ($ar_request['appliance_highavailable'] == 0) ? false : true),
-				'appliance_virtual' => htmlobject_input('appliance_virtual', array("value" => 1, "label" => 'Virtual'), 'checkbox', ($ar_request['appliance_virtual'] == 0) ? false : true),
-				'submit_save' => htmlobject_input('action', array("value" => 'save', "label" => 'save'), 'submit'),
 
-				'lang_table' => '',
-				'appliance_id' => '',
-				'table' => '',
-			));
+
+			}
+
+			if($ident == 0) {
+				$image = htmlobject_input('appliance_imageid', array("value" => '0', "label" => ''), 'hidden');
+				$kernelid = htmlobject_input('appliance_kernelid', array("value" => '0', "label" => ''), 'hidden');
+			} else {
+				$kernelid = htmlobject_select('appliance_kernelid', $kernel_list, 'Kernel', array($ar_request['appliance_kernelid']));
+				$image = htmlobject_select('appliance_imageid', $image_list, 'Image', array($ar_request['appliance_imageid']));
+			}
+
+
+			if(count($image_list) > 0 || $ident == 0) {
+				//------------------------------------------------------------ set template
+				$t = new Template_PHPLIB();
+				$t->debug = false;
+				$t->setFile('tplfile', './' . 'appliance-tpl.php');
+				$t->setVar(array(
+					'thisfile' => $thisfile,
+					'step_2' => htmlobject_input('step_2', array("value" => true, "label" => ''), 'hidden'),
+					'identifier' => htmlobject_input('identifier[]', array("value" => $ident, "label" => ''), 'hidden'),
+					'currentab' => htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden'),
+					'lang_requirements' => '<h3>Requirements</h3>',
+					'appliance_kernelid' => $kernelid,
+					'appliance_imageid' => $image,
+					'appliance_virtualization' => htmlobject_select('appliance_virtualization', $virtualization_list, 'Resource', array($ar_request['appliance_virtualization'])),
+					'appliance_name' => htmlobject_input('appliance_name', array("value" => $ar_request['appliance_name'], "label" => 'Name'), 'text', 20),
+					'appliance_cpuspeed' => htmlobject_input('appliance_cpuspeed', array("value" => $ar_request['appliance_cpuspeed'], "label" => 'CPU-Speed'), 'text', 20),
+					'appliance_cpumodel' => htmlobject_input('appliance_cpumodel', array("value" => $ar_request['appliance_cpumodel'], "label" => 'CPU-Model'), 'text', 20),
+					'appliance_memtotal' => htmlobject_input('appliance_memtotal', array("value" => $ar_request['appliance_memtotal'], "label" => 'Memory'), 'text', 20),
+					'appliance_swaptotal' => htmlobject_input('appliance_swaptotal', array("value" => $ar_request['appliance_swaptotal'], "label" => 'Swap'), 'text', 20),
+					'appliance_capabilities' => htmlobject_input('appliance_capabilities', array("value" => $ar_request['appliance_capabilities'], "label" => 'Capabilities'), 'text', 255),
+					'appliance_comment' => htmlobject_textarea('appliance_comment', array("value" => $ar_request['appliance_comment'], "label" => 'Comment')),
+					'appliance_cluster' => htmlobject_input('appliance_cluster', array("value" => 1, "label" => 'Cluster'), 'checkbox', ($ar_request['appliance_cluster'] == 0) ? false : true),
+					'appliance_ssi' => htmlobject_input('appliance_ssi', array("value" => 1, "label" => 'SSI'), 'checkbox', ($ar_request['appliance_ssi'] == '') ? false : true),
+					'appliance_highavailable' => htmlobject_input('appliance_highavailable', array("value" => 1, "label" => 'Highavailable'), 'checkbox', ($ar_request['appliance_highavailable'] == 0) ? false : true),
+					'appliance_virtual' => htmlobject_input('appliance_virtual', array("value" => 1, "label" => 'Virtual'), 'checkbox', ($ar_request['appliance_virtual'] == 0) ? false : true),
+					'submit_save' => htmlobject_input('action', array("value" => 'save', "label" => 'save'), 'submit'),
 	
-			$disp =  $t->parse('out', 'tplfile');
+					'lang_table' => '',
+					'appliance_id' => '',
+					'table' => '',
+				));	
+				$disp =  $t->parse('out', 'tplfile');
+
+			} else {
+				$disp = '<center>';
+				$disp .= '<b>No Image available</b>';
+				$disp .= '<br><br>';
+				$disp .= '<a href="../image/image-new.php?currenttab=tab1">Image</a>';
+				$disp .= '</center>';
+				$disp .= '<br><br>';
+			}
 		}	
 		//-------------------------------------- Form first step
 		else  {
@@ -227,14 +247,7 @@ function appliance_form() {
 			$disp = "<h3>Resource List</h3>". $table->get_string();
 		}
 
-	} else {
-		$disp = '<center>';
-		$disp .= '<b>No Image available</b>';
-		$disp .= '<br><br>';
-		$disp .= '<a href="../image/image-new.php?currenttab=tab1">Image</a>';
-		$disp .= '</center>';
-		$disp .= '<br><br>';
-	}
+
 		
 	return "<h1>New Appliance</h1>". $disp;
 }
