@@ -48,6 +48,9 @@ var $body = array();
 */
 var $bottom = array();
 /**
+*  ------------------------------------------------------------- Idntifiere Section
+*/
+/**
 * field to add value to checkbox
 * @access public
 * @var string
@@ -72,7 +75,11 @@ var $identifier_checked = array();
 */
 var $identifier_disabled = array();
 /**
+*  ------------------------------------------------------------- Form Section
+*/
+/**
 * url to process request
+*  Form disabled if empty
 * <code>
 * $thisfile = basename($_SERVER['PHP_SELF']);
 * $table = new htmlobject_table_builder();
@@ -84,7 +91,11 @@ var $identifier_disabled = array();
 var $form_action = '';
 /**
 * first limit
-* @access public
+* <code>
+* // to change initial value to 10
+* $table = new htmlobject_table_builder('somefield','', 10);
+* </code>
+* @access private
 * @var string
 */
 var $limit = 20;
@@ -123,6 +134,13 @@ var $max = 0;
 */
 var $sort = '';
 /**
+* extra params for table head sort function
+* disabled if not set
+* @access public
+* @var string
+*/
+var $sort_params;
+/**
 * sort order 
 * @access public
 * @var enum $order possible values [ASC, DESC]
@@ -134,6 +152,10 @@ var $order = 'ASC';
 * @var bol
 */
 var $autosort = false;
+
+/**
+*  ------------------------------------------------------------- Lang Section
+*/
 /**
 * capation of refresh button 
 * @access public
@@ -183,7 +205,9 @@ var $lang_select_none = 'none';
 * @var string
 */
 var $lang_select_invert = 'inverted';
-
+/**
+*  ------------------------------------------------------------- Private Section
+*/
 /**
 * number of cols 
 * @access private
@@ -203,12 +227,12 @@ var $_bottomrow = array();
 	/**
 	* init htmlobject_table_builder vars from Request
 	* @access public
-	* @param string $field key for initial sort - sort functionality is disabled if empty
+	* @param string $sort key for initial sort - sort functionality is disabled if empty
 	* @param enum $order  initial sort order [ASC, DESC]
 	* @param int $limit  initial limit
 	*/
 	//----------------------------------------------------------------------------------------
-	function htmlobject_table_builder($field = '', $order = '', $limit = '') {
+	function htmlobject_table_builder($sort = '', $order = '', $limit = '') {
 	
 		if(isset($_REQUEST['limit']) &&  $_REQUEST['limit'] != '') {
 			$this->limit = $_REQUEST['limit'];
@@ -228,8 +252,8 @@ var $_bottomrow = array();
 		if(isset($_REQUEST['sort']) &&  $_REQUEST['sort'] != '') {
 			$this->sort = $_REQUEST['sort'];
 		}
-		else if($field != '') {
-			$this->sort = $field;
+		else if($sort != '') {
+			$this->sort = $sort;
 		}
 		if(isset($_REQUEST['offset']) &&  $_REQUEST['offset'] != '') {
 			$this->offset = $_REQUEST['offset'];
@@ -254,15 +278,17 @@ var $_bottomrow = array();
 	}
 	//----------------------------------------------------------------------------------------
 	/**
-	* init basic values
+	* init basic values _body, _num_cols
 	* @access public
 	*/
 	//----------------------------------------------------------------------------------------	
 	function init_table_builder() {
 	
 		$minus = 0;
+		// Execute head array special key values
 		foreach($this->head as $key => $value) {
-			if(array_key_exists('hidden', $this->head[$key]) == true) {
+			//  special key hidden
+			if(@array_key_exists('hidden', $this->head[$key]) == true) {
 				if($this->head[$key]['hidden'] === true) {
 					$minus = $minus+1;
 				}
@@ -270,15 +296,20 @@ var $_bottomrow = array();
 		}
 		$this->_num_cols = count($this->head) - $minus;
 		if($this->identifier != '') { $this->_num_cols = $this->_num_cols +1; }
-
+		
+		// Sortfunction eabled?
 		if($this->sort != '') {
 			// use autosort ?
 			if($this->autosort == true) { $this->arr_sort(); }
+			// max still untouched?
 			if($this->max == 0) { $this->max = count($this->body); }
+			// Input bigger than Output?
 			if(count($this->body) > $this->limit) {
+				// max smaller than  limit + offset?
 				if(($this->offset + $this->limit) < $this->max ) {			
 					$max = $this->offset + $this->limit;
 				} else { $max = $this->max;	}
+				// Transfer Input to Output				
 				for($i = $this->offset; $i < $max; $i++) {
 					$this->_body[$i] = $this->body[$i];
 				}
@@ -321,21 +352,45 @@ var $_bottomrow = array();
 			foreach($this->head as $key_2 => $value) {
 
 				$hidden = false;
-				if(array_key_exists('hidden', $this->head[$key_2]) == true) {
+				if(@array_key_exists('hidden', $this->head[$key_2]) == true) {
 					if($this->head[$key_2]['hidden'] === true) {
 						$hidden = true;
 					}
 				}
 				
+				$sortable = true;
+				if(@array_key_exists('sortable', $this->head[$key_2]) == true) {
+					if($this->head[$key_2]['sortable'] === false) {
+						$sortable = false;
+					}
+				}
+				
 				if($hidden === false) {
-					if($value['title'] == '') { $value['title'] = '&#160;'; }
+					if($value['title'] == '') { 
+						$str = '&#160;'; 
+					} else {
+						if($this->sort != '' && $sortable ===  true && count($this->_body) > 1 && isset($this->sort_params)) {
+							$order_param = '';
+							$linkclass = '';
+							if($this->sort == $key_2) {
+								if($this->order == 'ASC') {
+									$order_param = '&order=DESC';
+									$linkclass = ' class="desc"';
+								} else {
+									$linkclass = ' class="asc"';
+								}
+							}
+							$str = '<a href="?sort='.$key_2.$this->sort_params.$order_param.'"'.$linkclass.'>'.$value['title'].'</a>';
+						} else {
+							$str = $value['title'];		
+						}
+					}
 					$td = new htmlobject_td();
 					$td->type = 'th';
 					$td->css = 'htmlobject_td '.$key_2;
-					$td->text = $value['title'];
+					$td->text = $str;
 					$tr->add($td);
 				}
-
 			}
 			if($this->identifier != '') {
 				$td = new htmlobject_td();
@@ -365,11 +420,11 @@ var $_bottomrow = array();
 
 		foreach($val as $key_2 => $v) {
 			if($v == '') { $v = '&#160;'; }
-				if(array_key_exists('exec', $this->head[$key_2]) == true) {
+				if(@array_key_exists('exec', $this->head[$key_2]) == true) {
 					#echo $key_2;
 				}
 				$hidden = false;
-				if(array_key_exists('hidden', $this->head[$key_2]) == true) {
+				if(@array_key_exists('hidden', $this->head[$key_2]) == true) {
 					if($this->head[$key_2]['hidden'] === true) {
 						$hidden = true;
 					}
@@ -471,7 +526,7 @@ var $_bottomrow = array();
 	*/
 	//----------------------------------------------------------------------------------------
 	function get_sort() {
-	$tr = '';
+	$strR = '';
 		if($this->sort != '') {
 			foreach($this->head as $key_2 => $v) {
 				if(isset($v['sortable']) == false) {
@@ -527,6 +582,35 @@ var $_bottomrow = array();
 			$max_input->value = $this->max;
 			$max_input->type = 'hidden';
 			
+			$action = new htmlobject_input();
+			$action->name = 'action';
+			$action->value = $this->lang_button_refresh;
+			$action->type = 'submit';
+			
+			$strR = '<div class="sort_box">';
+			$strR .= $max_input->get_string().
+						$str_sort.
+						$str_order.
+						$str_offset.
+						$str_limit.
+						$action->get_string();
+			$strR .= '<div style="line-height:0px;clear:both;">&#160;</div>';
+			$strR .= '</div>';
+		}
+	return $strR;
+	}
+	//----------------------------------------------------------------------------------------
+	/**
+	* returns page turn functions
+	* @access public
+	* @return string
+	*/
+	//----------------------------------------------------------------------------------------
+	function get_pageturn() {
+	$strR = '';
+		if($this->sort != '') {
+			#$this->init_table_builder();
+			
 			$first = new htmlobject_input();
 			$first->name = 'action';
 			$first->value = '<<';
@@ -547,11 +631,6 @@ var $_bottomrow = array();
 			$last->value = '>>';
 			$last->type = 'submit';
 			
-			$action = new htmlobject_input();
-			$action->name = 'action';
-			$action->value = $this->lang_button_refresh;
-			$action->type = 'submit';
-			
 			if(( $this->offset + $this->limit ) >= $this->max) {
 				$next->style = 'visibility:hidden;';
 				$last->style = 'visibility:hidden;';
@@ -567,48 +646,25 @@ var $_bottomrow = array();
 				$max = $this->max;
 			}
 
-			$strR = '<table cellpadding="0" cellspacing="0" id="SortTable"><tr>';
-			$strR .= '<td>';
-			$strR .= $max_input->get_string().
-						$str_sort.
-						$str_order.
-						$str_offset.
-						$str_limit.
-						$action->get_string();
-			$strR .= '</td>';
-			$strR .= '</tr><tr>';
-			$strR .= '<td align="right">';		
-
-			$strR .= '<table cellpadding="0" cellspacing="0"><tr>';
-			$strR .= '<td>'.$first->get_string().$prev->get_string().'</td>';
-			$strR .= '<td width="160" align="center">';
-			$strR .= '<span class="">'.( $this->offset + 1 ).'</span> - '; 
-			$strR .= '<span class="">'.$max.'</span> / ';
-			$strR .= '<span class="">'.$this->max.'</span>';
-			$strR .= '</td>';
-			$strR .= '<td>'.$next->get_string().$last->get_string().'</td>';
+			$strR .= '<div class="pageturn_box">';
+			$strR .= '<table class="pageturn_table" cellpadding="0" cellspacing="0"></tr>';
+			$strR .= '  <td class="pageturn_left">'.$first->get_string().$prev->get_string().'</td>';
+			$strR .= '  <td class="pageturn_middle">';
+			$strR .= '    <span>'.( $this->offset + 1 ).'</span> - '; 
+			$strR .= '    <span>'.$max.'</span> / ';
+			$strR .= '    <span>'.$this->max.'</span>';
+			$strR .= '  </td>';
+			$strR .= '  <td class="pageturn_right">'.$next->get_string().$last->get_string().'</td>';
 			$strR .= '</tr></table>';
-			
-			$strR .= '</td></tr></table>';		
-		
-			$tr = new htmlobject_tr();
-			$tr->css = 'htmlobject_tr';
-			$tr->id = 'tr_'. uniqid();
-		
-			$td = new htmlobject_td();
-			$td->colspan = $this->_num_cols;
-			$td->type = 'td';
-			$td->css = 'htmlobject_td sorttable';
-			$td->text = $strR;
-			$tr->add($td);
+			$strR .= '</div>';
 		}
-	return $tr;
-	}
+	return $strR;
+	}	
 	//----------------------------------------------------------------------------------------
 	/**
-	* adds identifier select functions to table
+	* returns identifier multi select functions 
 	* @access public
-	* @return object|string
+	* @return string
 	*/
 	//----------------------------------------------------------------------------------------
 	function get_select() {
@@ -644,17 +700,6 @@ var $_bottomrow = array();
 			$strR .= '}'."\n";
 			$strR .= '</script>'."\n";
 			$strR .= '</div>'."\n";
-
-				
-			#$tr = new htmlobject_tr();
-			#$tr->css = 'htmlobject_tr';
-			
-			#$td = new htmlobject_td();
-			#$td->colspan = $this->_num_cols;
-			#$td->type = 'td';
-			#$td->css = 'htmlobject_td selecttable';
-			#$td->text = $strR;
-			#$tr->add($td);
 		}
 	return $strR;
 	}
@@ -742,15 +787,33 @@ var $_bottomrow = array();
 	//----------------------------------------------------------------------------------------
 	function get_string() {
 	$_strReturn = '';
+
 		// build table
 		$this->init_table_builder();
-		// build table head
+		
+
+
+		// build additional table head
 		foreach ($this->_headrow as $row) {
 			$row->arr_tr[0]->colspan = $this->_num_cols;
 			htmlobject_table::add($row);
 		}
-		htmlobject_table::add($this->get_sort());
+		// build sort functions		
+		$td = new htmlobject_td();
+		$td->colspan = $this->_num_cols;
+		$td->type = 'td';
+		$td->css = 'htmlobject_td pageturn_head';
+
+		$tr = new htmlobject_tr();
+		$tr->css = 'htmlobject_tr pageturn_head';
+		$tr->id = 'tr_'. uniqid();		
+		$td->text = $this->get_sort().$this->get_pageturn();
+		$tr->add($td);
+		htmlobject_table::add($tr);	
+		
+		// build table head		
 		htmlobject_table::add($this->get_table_head());
+	
 		// build table body
 		$i = 'odd';
 		foreach ($this->_body as $key => $value) {
@@ -760,6 +823,22 @@ var $_bottomrow = array();
 		}
 		// build table bottom
 		htmlobject_table::add($this->get_table_bottom());
+
+		// insert bottom pageturn
+		if(count($this->_body) > 9 && $this->limit < $this->max) {
+			$td = new htmlobject_td();
+			$td->colspan = $this->_num_cols;
+			$td->type = 'td';
+			$td->css = 'htmlobject_td pageturn_bottom';
+		
+			$tr = new htmlobject_tr();
+			$tr->css = 'htmlobject_tr pageturn_bottom';
+			$tr->id = 'tr_'. uniqid();		
+			$td->text = $this->get_pageturn();
+			$tr->add($td);
+			htmlobject_table::add($tr);
+		}
+		
 		foreach ($this->_bottomrow as $row) {
 			$row->arr_tr[0]->colspan = $this->_num_cols;
 			htmlobject_table::add($row);
@@ -778,98 +857,6 @@ class htmlobject_db_table extends htmlobject_table_builder
 {
 	function htmlobject_db_table($field = '', $order = '', $limit = '') {
 		parent::htmlobject_table_builder($field, $order, $limit);
-	}
-}
-
-class htmlobject_table_identifiers_checked extends htmlobject_table_builder 
-{
-
-var $_identifiers = array();
-	
-	function get_indentifier($key, $ident) {
-		if($this->identifier != '') {
-			$html = new htmlobject_input();
-			$html->id = $ident;
-			$html->name = 'identifier[]';
-			$html->value = $this->body[$key][$this->identifier];
-			$html->type = 'hidden';
-			
-			$this->_identifiers[] = $html->get_string();
-		}
-	}
-
-	function get_table_head() {
-	$tr = '';
-		if(count($this->head) > 0) {
-			$tr = new htmlobject_tr();
-			$tr->css = 'htmlobject_tr';
-			$tr->id = 'tr_'. uniqid();
-		
-			foreach($this->head as $key_2 => $value) {
-				if($value['title'] == '') { $value['title'] = '&#160;'; }
-				$td = new htmlobject_td();
-				$td->type = 'th';
-				$td->css = 'htmlobject_td '.$key_2;
-				$td->text = $value['title'];
-				$tr->add($td);
-			}
-		}
-	return $tr;
-	}
-
-	function get_table_bottom () {
-	$tr = '';
-		if(isset($this->bottom[0])) {
-			$tr = new htmlobject_tr();
-			$tr->css = 'htmlobject_tr';
-			$tr->id = 'tr_'. uniqid();
-		
-			$td = new htmlobject_td();
-			$td->colspan = $this->_num_cols;
-			$td->type = 'td';
-			$td->css = 'htmlobject_td bottom';
-			$str = '';
-			foreach($this->bottom as $key_2 => $v) {
-				$html = new htmlobject_input();
-				$html->name = 'action';
-				$html->value = $v;
-				$html->type = 'submit';
-				$str .= $html->get_string();
-			}
-			$str .= join("", $this->_identifiers);
-			$td->text = $str;
-			$tr->add($td);	
-		}
-	return $tr;	
-	}
-}
-class htmlobject_table_identifiers_radio extends htmlobject_table_builder 
-{
-	function htmlobject_table_identifiers_radio($field = '', $order = '', $limit = '') {
-		parent::htmlobject_table_builder($field, $order, $limit);
-	}
-	
-	//----------------------------------------------------------------------------------------
-	/**
-	* returns JS for tr hover and click function
-	* @access public
-	* @return string
-	*/
-	//----------------------------------------------------------------------------------------	
-	function  get_js() {
-	$_strReturn = '';
-		$_strReturn .= "\n";
-		$_strReturn .= '<script>'."\n";
-		$_strReturn .= 'function tr_hover(element) {'."\n";
-		$_strReturn .= '	x = element.className.match(/tr_hover/g);'."\n";
-		$_strReturn .= '	if(x == null) {	element.className = element.className + " tr_hover"; }'."\n";
-		$_strReturn .= '	else { element.className = element.className.replace(/ tr_hover/g, "");	}'."\n";
-		$_strReturn .= '}'."\n";
-		$_strReturn .= 'function tr_click(element, arg) {'."\n";
-		$_strReturn .= '	document.getElementById(arg).checked = true;'."\n";
-		$_strReturn .= '}'."\n";
-		$_strReturn .= '</script>'."\n";
-	return $_strReturn;
 	}
 }
 ?>
