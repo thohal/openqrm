@@ -123,8 +123,6 @@ function appliance_form() {
 			//------------------------------------------------------------ Table
 
 			$table = new htmlobject_db_table('resource_id');
-			$table->add_headrow(htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden'));
-		
 			$arHead = array();
 			$arHead['resource_state'] = array();
 			$arHead['resource_state']['title'] ='';
@@ -183,7 +181,7 @@ function appliance_form() {
 			$table->border = 1;
 			$table->cellspacing = 0;
 			$table->cellpadding = 3;
-			$table->form_action = "appliance-new.php";
+			#$table->form_action = "appliance-new.php";
 			$table->head = $arHead;
 			$table->body = $arBody;
 			if ($OPENQRM_USER->role == "administrator") {
@@ -192,7 +190,7 @@ function appliance_form() {
 				$table->identifier_type = 'radio';
 				$table->identifier_checked = array($ar_request['appliance_resources']);
 			}
-			$table->max = count($resource_tmp);
+			$table->max = count($resource_array) +1;
 			#$disp = ;
 
 
@@ -212,7 +210,7 @@ function appliance_form() {
 				'thisfile' => $thisfile,
 				'step_2' => htmlobject_input('step_2', array("value" => true, "label" => ''), 'hidden'),
 				'identifier' => htmlobject_input('identifier[]', array("value" => $ident, "label" => ''), 'hidden'),
-				'currentab' => htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden'),
+				'currentab' => htmlobject_input('currenttab', array("value" => 'tab2', "label" => ''), 'hidden'),
 				'lang_requirements' => '<h3>Requirements</h3>',
 				'appliance_kernelid' => $kernelid,
 				'appliance_imageid' => $image,
