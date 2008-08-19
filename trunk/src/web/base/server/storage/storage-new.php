@@ -160,7 +160,7 @@ global $thisfile;
 
 		$resource_tmp = new resource();
 
-		$table = new htmlobject_table_identifiers_radio('resource_id', '', 10);
+		$table = new htmlobject_db_table('resource_id', '', 10);
 		$table->add_headrow($store);
 		
 		$arHead = array();
