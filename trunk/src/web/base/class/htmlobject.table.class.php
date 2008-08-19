@@ -743,6 +743,8 @@ var $_bottomrow = array();
 	//----------------------------------------------------------------------------------------	
 	function  get_js() {
 	$_strReturn = '';
+		$id_1 = '';
+		$id_2 = '';
 		if($this->identifier != '') {
 			$id_1 = 'try { document.getElementById(arg).checked = true; } catch(e) {}';
 			$id_2 = 'try { document.getElementById(arg).checked = false; } catch(e) {}';
