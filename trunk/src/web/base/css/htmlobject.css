@@ -77,7 +77,7 @@ padding:0;
 	background-color:#ffffff;
 	margin:20px 0 20px 20px;
 	text-align: left;
-	width:680px;
+	width:700px;
 	border: solid 1px #aaaaaa;
 	padding:25px;	
 }
@@ -178,7 +178,7 @@ color:red;
 
 .htmlobject_table {
 	border-spacing:0px;
-	width: 680px;
+	width: 700px;
 	border: 0px none;
 	border-spacing: 0px;
 	border-collapse: collapse;
@@ -228,11 +228,26 @@ color:red;
 .actiontable {
 	display:inline;
 }
-#SortTable {
-	float:right !important;
+.pageturn_table {
+	display:inline;
 }
-#SortTable td{
-	padding: 5px 0 0 0;
+
+
+.htmlobject_td.pageturn_head {
+	text-align:right;
+	border: 0 none;
+}
+.htmlobject_td.pageturn_bottom {
+	text-align:center;
+	border: 1px solid white;
+	padding: 25px 5px 5px 5px !important;
+}
+.pageturn_middle {
+	width:170px;
+	text-align: center;
+}
+.pageturn_box {
+	margin: 5px 0 !important;
 }
 
 .tr_hover {
