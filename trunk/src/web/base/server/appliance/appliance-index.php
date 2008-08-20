@@ -39,12 +39,16 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 					$appliance->get_instance_by_id($id);
 				}
 				$resource->get_instance_by_id($appliance->resources);
-				$kernel = new kernel();
-				$kernel->get_instance_by_id($appliance->kernelid);
-				// send command to the openQRM-server
-				$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac $kernel->name");
-				// start appliance
-				$strMsg .= $appliance->start();
+				if ($resource->id == 0) {
+					$strMsg .= "The openQRM-server appliance is always active!";
+				} else {
+					$kernel = new kernel();
+					$kernel->get_instance_by_id($appliance->kernelid);
+					// send command to the openQRM-server
+					$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac $kernel->name");
+					// start appliance
+					$strMsg .= $appliance->start();
+				}
 			}
 			redirect($strMsg);
 			break;
@@ -55,12 +59,16 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 				$appliance->get_instance_by_id($id);
 				$resource = new resource();
 				$resource->get_instance_by_id($appliance->resources);
-				$kernel = new kernel();
-				$kernel->get_instance_by_id($appliance->kernelid);
-				// send command to the openQRM-server
-				$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
-				// start appliance
-				$strMsg .= $appliance->stop();
+				if ($resource->id == 0) {
+					$strMsg .= "The openQRM-server appliance is always active!";
+				} else {
+					$kernel = new kernel();
+					$kernel->get_instance_by_id($appliance->kernelid);
+					// send command to the openQRM-server
+					$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
+					// start appliance
+					$strMsg .= $appliance->stop();
+				}
 			}
 			redirect($strMsg);
 			break;
@@ -154,7 +162,7 @@ function appliance_display() {
 		$resource_icon_default="/openqrm/base/img/resource.png";
 		$active_state_icon="/openqrm/base/img/active.png";
 		$inactive_state_icon="/openqrm/base/img/idle.png";
-		if ("$appliance->stoptime" == "0") {
+		if ($appliance->stoptime == 0 || $appliance_resources == 0)  {
 			$state_icon=$active_state_icon;
 		} else {
 			$state_icon=$inactive_state_icon;
