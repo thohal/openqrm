@@ -10,11 +10,12 @@ require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
-// set vars from request
-$appliance = new appliance();
-$appliance->get_instance_by_id(htmlobject_request('appliance_id'));
+// set vars
+(htmlobject_request('appliance_id') == '') ? $appliance_id = @$_REQUEST['identifier'][0] : $appliance_id = htmlobject_request('appliance_id');
 
-#@$_REQUEST['identifier'][0];
+if($appliance_id != '') {
+$appliance = new appliance();
+$appliance->get_instance_by_id($appliance_id);
 
 $ar_request = array(
 	'appliance_resources' => isset($_REQUEST['identifier'][0]) ? $_REQUEST['identifier'][0] : $appliance->resources,
@@ -28,12 +29,13 @@ $ar_request = array(
 	'appliance_swaptotal' => (htmlobject_request('appliance_swaptotal') != '') ? htmlobject_request('appliance_swaptotal') : $appliance->swaptotal,
 	'appliance_capabilities' => (htmlobject_request('appliance_capabilities') != '') ? htmlobject_request('appliance_capabilities') : $appliance->capabilities,
 	'appliance_comment' => (htmlobject_request('appliance_comment') != '') ? htmlobject_request('appliance_comment') : $appliance->comment,
-	'appliance_id' => htmlobject_request('appliance_id'),
-	'appliance_cluster' => (htmlobject_request('appliance_cluster') == '') ? 0 : 1,
-	'appliance_ssi' => (htmlobject_request('appliance_ssi') == '') ? 0 : 1,
-	'appliance_highavailable' => (htmlobject_request('appliance_highavailable') == '') ? 0 : 1,
-	'appliance_virtual' => (htmlobject_request('appliance_virtual') == '') ? 0 : 1,
+	'appliance_cluster' => (htmlobject_request('appliance_cluster') == '') ? $appliance->cluster : 1,
+	'appliance_ssi' => (htmlobject_request('appliance_ssi') == '') ? $appliance->ssi : 1,
+	'appliance_highavailable' => (htmlobject_request('appliance_highavailable') == '') ? $appliance->highavailable : 1,
+	'appliance_virtual' => (htmlobject_request('appliance_virtual') == '') ? $appliance->virtual : 1,
 );
+
+}
 
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	global $thisfile;
@@ -45,7 +47,7 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 }
 
 
-if(htmlobject_request('action') != '') {
+if(htmlobject_request('action') != '' && $appliance_id != '') {
 $strMsg = '';
 $openqrm_server = new openqrm_server();
 
@@ -77,10 +79,10 @@ $openqrm_server = new openqrm_server();
 
 
 			if($error == 0) {
-				$ar_request['appliance_id'] = openqrm_db_get_free_id('appliance_id', $APPLIANCE_INFO_TABLE);
+				#$ar_request['appliance_id'] = openqrm_db_get_free_id('appliance_id', $APPLIANCE_INFO_TABLE);
 				$appliance = new appliance();
-				echo $appliance->add($ar_request);
-				$strMsg .= 'added new appliance';
+				echo $appliance->update($appliance_id, $ar_request);
+				$strMsg .= 'updated appliance';
 				redirect($strMsg);
 			} 
 			else { $_REQUEST['strMsg'] = $strMsg; }
@@ -91,7 +93,7 @@ $openqrm_server = new openqrm_server();
 
 
 function appliance_form() {
-	global $OPENQRM_USER, $ar_request;
+	global $OPENQRM_USER, $ar_request, $appliance_id;
 	global $thisfile;
 
 	$image = new image();
@@ -113,12 +115,10 @@ function appliance_form() {
 	$virtualization_list = array();
 	$virtualization_list = $virtualization->get_list();
 
-	if(count($image_list) > 0) {
+	#if(count($image_list) > 0) {
 
-		//-------------------------------------- Form second step
-		if (htmlobject_request('appliance_id') != '') {
-	
-				$ident = htmlobject_request('appliance_id'); // applianceid
+		//-------------------------------------- Form
+		if ($appliance_id != '') {
 
 			//------------------------------------------------------------ Table
 
@@ -201,6 +201,11 @@ function appliance_form() {
 				$kernelid = htmlobject_select('appliance_kernelid', $kernel_list, 'Kernel', array($ar_request['appliance_kernelid']));
 				$image = htmlobject_select('appliance_imageid', $image_list, 'Image', array($ar_request['appliance_imageid']));
 			#}
+
+			#$ar_request['appliance_cluster'] = ($ar_request['appliance_cluster'] == 0) ? false : true;
+			#$ar_request['appliance_ssi'] = ($ar_request['appliance_ssi'] == 0) ? false : true;
+			#$ar_request['appliance_highavailable'] = ($ar_request['appliance_highavailable'] == 0) ? false : true;
+			#$ar_request['appliance_virtual'] = ($ar_request['appliance_virtual'] == 0) ? false : true;
 	
 			//------------------------------------------------------------ set template
 			$t = new Template_PHPLIB();
@@ -223,30 +228,25 @@ function appliance_form() {
 				'appliance_capabilities' => htmlobject_input('appliance_capabilities', array("value" => $ar_request['appliance_capabilities'], "label" => 'Capabilities'), 'text', 255),
 				'appliance_comment' => htmlobject_textarea('appliance_comment', array("value" => $ar_request['appliance_comment'], "label" => 'Comment')),
 				'appliance_cluster' => htmlobject_input('appliance_cluster', array("value" => 1, "label" => 'Cluster'), 'checkbox', ($ar_request['appliance_cluster'] == 0) ? false : true),
-				'appliance_ssi' => htmlobject_input('appliance_ssi', array("value" => 1, "label" => 'SSI'), 'checkbox', ($ar_request['appliance_ssi'] == '') ? false : true),
+				'appliance_ssi' => htmlobject_input('appliance_ssi', array("value" => 1, "label" => 'SSI'), 'checkbox', ($ar_request['appliance_ssi'] == 0) ? false : true),
 				'appliance_highavailable' => htmlobject_input('appliance_highavailable', array("value" => 1, "label" => 'Highavailable'), 'checkbox', ($ar_request['appliance_highavailable'] == 0) ? false : true),
 				'appliance_virtual' => htmlobject_input('appliance_virtual', array("value" => 1, "label" => 'Virtual'), 'checkbox', ($ar_request['appliance_virtual'] == 0) ? false : true),
 				'submit_save' => htmlobject_input('action', array("value" => 'save', "label" => 'save'), 'submit'),
 
 				'lang_table' => '<h3>Resource List</h3>',
-				'appliance_id' => htmlobject_input('appliance_id', array("value" => $ar_request['appliance_id'], "label" => ''), 'hidden'),
+				'appliance_id' => htmlobject_input('appliance_id', array("value" => $appliance_id, "label" => ''), 'hidden'),
 				'table' =>  $table->get_string(),
 			));
 	
 			$disp = $t->parse('out', 'tplfile');
-
-		
-
 		}
 
-	} else {
-		$disp = '<center>';
-		$disp .= '<b>No Image available</b>';
-		$disp .= '<br><br>';
-		$disp .= '<a href="../image/image-new.php?currenttab=tab1">Image</a>';
-		$disp .= '</center>';
-		$disp .= '<br><br>';
-	}
+	#} else {
+	#	$disp = '<center>';
+	#	$disp .= '<b>Appliance ID not set</b>';
+	#	$disp .= '</center>';
+	#	$disp .= '<br><br>';
+	#}
 		
 	return "<h1>Edit Appliance</h1>". $disp;
 }
@@ -254,7 +254,14 @@ function appliance_form() {
 $output = array();
 $output[] = array('label' => 'Appliance List', 'target' => 'appliance-index.php');
 $output[] = array('label' => 'New Appliance', 'target' => 'appliance-new.php');
-$output[] = array('label' => 'Edit Appliance', 'value' => appliance_form());
+
+if($appliance_id != '') {
+	$output[] = array('label' => 'Edit Appliance', 'value' => appliance_form());
+} else {
+	$_REQUEST['strMsg'] = 'Appliance ID not set';
+	$_REQUEST['currenttab'] = 'tab2';
+	$output[] = array('label' => 'Edit Appliance', 'value' => '');
+}
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
