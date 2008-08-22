@@ -1,0 +1,23 @@
+This package was debianized by Thomas Halinka <mail@thohal.de> on
+Thu, 01 May 2008 00:53:04 +0200.
+
+It was downloaded from <url://hier.und.da.example.com>
+
+Upstream Author(s): 
+
+    <likewise for another author>
+	Das geht dich nen Scheiss an
+Copyright: 
+
+    <Copyright (C) YYYY Name OfAuthor>
+    <likewise for another author>
+
+License:
+
+    <Put the license of the package here indented by 4 spaces>
+
+The Debian packaging is (C) 2008, Thomas Halinka <mail@thohal.de> and
+is licensed under the GPL, see `/usr/share/common-licenses/GPL'.
+
+# Please also look if there are files or directories which have a
+# different copyright/license attached and list them here.
