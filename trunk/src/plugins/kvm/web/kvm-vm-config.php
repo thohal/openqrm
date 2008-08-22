@@ -35,6 +35,30 @@ if(htmlobject_request('kvm_config_action') != '' && $OPENQRM_USER->role == "admi
 				$kvm_server->send_command($kvm_server->ip, $resource_command);
 			break;
 
+		case 'add_vm_net':
+				$kvm_new_nic = $_REQUEST["kvm_new_nic"];
+				$kvm_new_nic_nr = $_REQUEST["kvm_new_nic_nr"];
+				$kvm_server_appliance = new appliance();
+				$kvm_server_appliance->get_instance_by_id($kvm_server_id);
+				$kvm_server = new resource();
+				$kvm_server->get_instance_by_id($kvm_server_appliance->resources);
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm add_vm_nic -n $kvm_server_name -s $kvm_new_nic_nr -m $kvm_new_nic";
+				$kvm_server->send_command($kvm_server->ip, $resource_command);
+			break;
+
+		case 'remove_vm_net':
+				$kvm_new_nic_nr = $_REQUEST["kvm_new_nic_nr"];
+				$kvm_server_appliance = new appliance();
+				$kvm_server_appliance->get_instance_by_id($kvm_server_id);
+				$kvm_server = new resource();
+				$kvm_server->get_instance_by_id($kvm_server_appliance->resources);
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm remove_vm_nic -n $kvm_server_name -s $kvm_new_nic_nr";
+				$kvm_server->send_command($kvm_server->ip, $resource_command);
+			break;
+
+
+
+
 	}
 
 }
@@ -86,6 +110,10 @@ function kvm_vm_config() {
 	$disp = $disp.htmlobject_box_from_object($html, ' input');
 	$disp = $disp."<input type=submit value='Edit'>";
 	$disp = $disp."</form>";
+
+	$disp = $disp."<br>";
+	$disp = $disp."<hr>";
+	$disp = $disp."<br>";
 	
 	$disp = $disp."<form action=\"$thisfile\" method=post>";
 	$disp = $disp."<input type=hidden name=kvm_component value='net'>";
@@ -93,16 +121,15 @@ function kvm_vm_config() {
 	$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
 	$disp = $disp."<br>";
 
-	if (strlen($store[OPENQRM_KVM_VM_MAC_1])) {
-		$html = new htmlobject_input();	
-		$html->name = "Ram";
-		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_KVM_VM_MAC_1]";
-		$html->title = "Network-1";
-		$html->disabled = true;
-		$html->maxlength="10";
-		$disp = $disp.htmlobject_box_from_object($html, ' input');
-	}
+	// we always have a first nic
+	$html = new htmlobject_input();	
+	$html->name = "Ram";
+	$html->id = 'p'.uniqid();
+	$html->value = "$store[OPENQRM_KVM_VM_MAC_1]";
+	$html->title = "Network-1";
+	$html->disabled = true;
+	$html->maxlength="10";
+	$disp = $disp.htmlobject_box_from_object($html, ' input');
 
 	if (strlen($store[OPENQRM_KVM_VM_MAC_2])) {
 		$html = new htmlobject_input();
@@ -141,21 +168,26 @@ function kvm_vm_config() {
 	$disp = $disp."</form>";
 
 
+	$disp = $disp."<br>";
+	$disp = $disp."<hr>";
+	$disp = $disp."<br>";
+
 	$disp = $disp."<form action=\"$thisfile\" method=post>";
 	$disp = $disp."<input type=hidden name=kvm_component value='disk'>";
 	$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
 	$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
 	$disp = $disp."<br>";
 
-	// we always have a first nic
-	$html = new htmlobject_input();
-	$html->name = "disk1";
-	$html->id = 'p'.uniqid();
-	$html->value = "$store[OPENQRM_KVM_VM_DISK_SIZE_1]";
-	$html->title = "Harddisk-1 (MB)";
-	$html->disabled = true;
-	$html->maxlength="10";
-	$disp = $disp.htmlobject_box_from_object($html, ' input');
+	if (strlen($store[OPENQRM_KVM_VM_DISK_SIZE_1])) {
+		$html = new htmlobject_input();
+		$html->name = "disk1";
+		$html->id = 'p'.uniqid();
+		$html->value = "$store[OPENQRM_KVM_VM_DISK_SIZE_1]";
+		$html->title = "Harddisk-1 (MB)";
+		$html->disabled = true;
+		$html->maxlength="10";
+		$disp = $disp.htmlobject_box_from_object($html, ' input');
+	}
 
 	if (strlen($store[OPENQRM_KVM_VM_DISK_SIZE_2])) {
 		$html = new htmlobject_input();
@@ -177,7 +209,7 @@ function kvm_vm_config() {
 		$html->disabled = true;
 		$html->maxlength="10";
 		$disp = $disp.htmlobject_box_from_object($html, ' input');
-}
+	}
 
 	if (strlen($store[OPENQRM_KVM_VM_DISK_SIZE_4])) {
 		$html = new htmlobject_input();
@@ -193,6 +225,10 @@ function kvm_vm_config() {
 	$disp = $disp."<input type=submit value='Edit'>";
 
 	$disp = $disp."</form>";
+
+	$disp = $disp."<br>";
+	$disp = $disp."<hr>";
+	$disp = $disp."<br>";
 	
 	$disp = $disp."<br>";
 	$disp = $disp."<b>Display</b>";
@@ -236,6 +272,9 @@ function kvm_vm_config_ram() {
 	$disp = $disp."<br>";
 	$disp = $disp."</form>";
 
+	$disp = $disp."<br>";
+	$disp = $disp."<hr>";
+	$disp = $disp."<br>";
 
 	return $disp;
 }
@@ -261,10 +300,8 @@ function kvm_vm_config_net() {
 	$store = openqrm_parse_conf($kvm_vm_conf_file);
 	extract($store);
 
+	// the first nic must not be changed, this is the identifier for openQRM
 	$disp = $disp."<form action=\"$thisfile\" method=post>";
-	$disp = $disp."<input type=hidden name=kvm_config_action value='update_ram'>";
-	$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
-	$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
 	$disp = $disp."<br>";
 	// disable the first nic, this is from what we manage the vm
 	$html = new htmlobject_input();
@@ -276,45 +313,100 @@ function kvm_vm_config_net() {
 	$html->maxlength="10";
 	$disp = $disp.htmlobject_box_from_object($html, ' input');
 	$disp = $disp."</form>";
+	$disp = $disp."<br>";
+	$disp = $disp."<hr>";
+	$disp = $disp."<br>";
 
-	$nic_number=1;
+	$nic_number=2;
+	// remove nic 2
 	if (strlen($store[OPENQRM_KVM_VM_MAC_2])) {
 		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=kvm_config_action value='update_ram'>";
+		$disp = $disp."<input type=hidden name=kvm_config_action value='remove_vm_net'>";
 		$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
 		$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp = $disp.htmlobject_input('kvm_update_net2', array("value" => $store[OPENQRM_KVM_VM_MAC_2], "label" => 'Network-2'), 'text', 10);
-		$nic_number++;
+		$disp = $disp."<input type=hidden name=kvm_new_nic_nr value=2>";
+
+		$html = new htmlobject_input();
+		$html->name = "remove_vm_net";
+		$html->id = 'p'.uniqid();
+		$html->value = "$store[OPENQRM_KVM_VM_MAC_2]";
+		$html->title = "Network-2";
+		$html->disabled = true;
+		$html->maxlength="10";
+
+		$disp = $disp.htmlobject_box_from_object($html, ' input');
+		$disp = $disp."<input type=submit value='Remove'>";
 		$disp = $disp."</form>";
+		$nic_number++;
+
+		$disp = $disp."<br>";
+		$disp = $disp."<hr>";
+		$disp = $disp."<br>";
 	}
+	// remove nic 3
 	if (strlen($store[OPENQRM_KVM_VM_MAC_3])) {
 		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=kvm_config_action value='update_ram'>";
+		$disp = $disp."<input type=hidden name=kvm_config_action value='remove_vm_net'>";
 		$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
 		$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp = $disp.htmlobject_input('kvm_update_net3', array("value" => $store[OPENQRM_KVM_VM_MAC_3], "label" => 'Network-3'), 'text', 10);
-		$nic_number++;
+		$disp = $disp."<input type=hidden name=kvm_new_nic_nr value=3>";
+
+		$html = new htmlobject_input();
+		$html->name = "remove_vm_net";
+		$html->id = 'p'.uniqid();
+		$html->value = "$store[OPENQRM_KVM_VM_MAC_3]";
+		$html->title = "Network-3";
+		$html->disabled = true;
+		$html->maxlength="10";
+
+		$disp = $disp.htmlobject_box_from_object($html, ' input');
+		$disp = $disp."<input type=submit value='Remove'>";
 		$disp = $disp."</form>";
-	}
-	if (strlen($store[OPENQRM_KVM_VM_MAC_4])) {
-		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=kvm_config_action value='update_ram'>";
-		$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
-		$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp = $disp.htmlobject_input('kvm_update_net4', array("value" => $store[OPENQRM_KVM_VM_MAC_4], "label" => 'Network-4'), 'text', 10);
 		$nic_number++;
-		$disp = $disp."</form>";
+
+		$disp = $disp."<br>";
+		$disp = $disp."<hr>";
+		$disp = $disp."<br>";
 	}
 
-	if ($disk_count < 3) {
+	// remove nic 4
+	if (strlen($store[OPENQRM_KVM_VM_MAC_4])) {
+		$disp = $disp."<form action=\"$thisfile\" method=post>";
+		$disp = $disp."<input type=hidden name=kvm_config_action value='remove_vm_net'>";
+		$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
+		$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$disp = $disp."<input type=hidden name=kvm_new_nic_nr value=4>";
+
+		$html = new htmlobject_input();
+		$html->name = "remove_vm_net";
+		$html->id = 'p'.uniqid();
+		$html->value = "$store[OPENQRM_KVM_VM_MAC_4]";
+		$html->title = "Network-4";
+		$html->disabled = true;
+		$html->maxlength="10";
+
+		$disp = $disp.htmlobject_box_from_object($html, ' input');
+		$disp = $disp."<input type=submit value='Remove'>";
+		$disp = $disp."</form>";
+		$nic_number++;
+
+		$disp = $disp."<br>";
+		$disp = $disp."<hr>";
+		$disp = $disp."<br>";
+	}
+
+	// add nic
+	if ($nic_number < 5) {
 		$resource_mac_gen = new resource();
 		$resource_mac_gen->generate_mac();
 		$suggested_mac = $resource_mac_gen->mac;
 
+		$disp = $disp."<br>";
 		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=kvm_config_action value='update_ram'>";
+		$disp = $disp."<input type=hidden name=kvm_config_action value='add_vm_net'>";
 		$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
 		$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$disp = $disp."<input type=hidden name=kvm_new_nic_nr value=$nic_number>";
 		$disp = $disp.htmlobject_input('kvm_new_nic', array("value" => $suggested_mac, "label" => 'Add Network'), 'text', 10);
 		$disp = $disp."<input type=submit value='Submit'>";
 		$disp = $disp."</form>";
