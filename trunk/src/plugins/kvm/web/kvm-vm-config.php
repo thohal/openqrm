@@ -37,22 +37,46 @@ if(htmlobject_request('kvm_config_action') != '' && $OPENQRM_USER->role == "admi
 
 		case 'add_vm_net':
 				$kvm_new_nic = $_REQUEST["kvm_new_nic"];
-				$kvm_new_nic_nr = $_REQUEST["kvm_new_nic_nr"];
+				$kvm_new_nr = $_REQUEST["kvm_new_nr"];
 				$kvm_server_appliance = new appliance();
 				$kvm_server_appliance->get_instance_by_id($kvm_server_id);
 				$kvm_server = new resource();
 				$kvm_server->get_instance_by_id($kvm_server_appliance->resources);
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm add_vm_nic -n $kvm_server_name -s $kvm_new_nic_nr -m $kvm_new_nic";
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm add_vm_nic -n $kvm_server_name -s $kvm_nic_nr -m $kvm_new_nic";
 				$kvm_server->send_command($kvm_server->ip, $resource_command);
 			break;
 
 		case 'remove_vm_net':
-				$kvm_new_nic_nr = $_REQUEST["kvm_new_nic_nr"];
+				$kvm_nic_nr = $_REQUEST["kvm_nic_nr"];
 				$kvm_server_appliance = new appliance();
 				$kvm_server_appliance->get_instance_by_id($kvm_server_id);
 				$kvm_server = new resource();
 				$kvm_server->get_instance_by_id($kvm_server_appliance->resources);
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm remove_vm_nic -n $kvm_server_name -s $kvm_new_nic_nr";
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm remove_vm_nic -n $kvm_server_name -s $kvm_nic_nr";
+				$kvm_server->send_command($kvm_server->ip, $resource_command);
+			break;
+
+
+
+
+		case 'add_vm_disk':
+				$kvm_new_disk = $_REQUEST["kvm_new_disk"];
+				$kvm_disk_nr = $_REQUEST["kvm_disk_nr"];
+				$kvm_server_appliance = new appliance();
+				$kvm_server_appliance->get_instance_by_id($kvm_server_id);
+				$kvm_server = new resource();
+				$kvm_server->get_instance_by_id($kvm_server_appliance->resources);
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm add_vm_disk -n $kvm_server_name -s $kvm_disk_nr -d $kvm_new_disk";
+				$kvm_server->send_command($kvm_server->ip, $resource_command);
+			break;
+
+		case 'remove_vm_disk':
+				$kvm_disk_nr = $_REQUEST["kvm_disk_nr"];
+				$kvm_server_appliance = new appliance();
+				$kvm_server_appliance->get_instance_by_id($kvm_server_id);
+				$kvm_server = new resource();
+				$kvm_server->get_instance_by_id($kvm_server_appliance->resources);
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm remove_vm_disk -n $kvm_server_name -s $kvm_disk_nr";
 				$kvm_server->send_command($kvm_server->ip, $resource_command);
 			break;
 
@@ -324,7 +348,7 @@ function kvm_vm_config_net() {
 		$disp = $disp."<input type=hidden name=kvm_config_action value='remove_vm_net'>";
 		$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
 		$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp = $disp."<input type=hidden name=kvm_new_nic_nr value=2>";
+		$disp = $disp."<input type=hidden name=kvm_nic_nr value=2>";
 
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_net";
@@ -349,7 +373,7 @@ function kvm_vm_config_net() {
 		$disp = $disp."<input type=hidden name=kvm_config_action value='remove_vm_net'>";
 		$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
 		$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp = $disp."<input type=hidden name=kvm_new_nic_nr value=3>";
+		$disp = $disp."<input type=hidden name=kvm_nic_nr value=3>";
 
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_net";
@@ -375,7 +399,7 @@ function kvm_vm_config_net() {
 		$disp = $disp."<input type=hidden name=kvm_config_action value='remove_vm_net'>";
 		$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
 		$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp = $disp."<input type=hidden name=kvm_new_nic_nr value=4>";
+		$disp = $disp."<input type=hidden name=kvm_nic_nr value=4>";
 
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_net";
@@ -406,7 +430,7 @@ function kvm_vm_config_net() {
 		$disp = $disp."<input type=hidden name=kvm_config_action value='add_vm_net'>";
 		$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
 		$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp = $disp."<input type=hidden name=kvm_new_nic_nr value=$nic_number>";
+		$disp = $disp."<input type=hidden name=kvm_nic_nr value=$nic_number>";
 		$disp = $disp.htmlobject_input('kvm_new_nic', array("value" => $suggested_mac, "label" => 'Add Network'), 'text', 10);
 		$disp = $disp."<input type=submit value='Submit'>";
 		$disp = $disp."</form>";
@@ -436,14 +460,15 @@ function kvm_vm_config_disk() {
 	$store = openqrm_parse_conf($kvm_vm_conf_file);
 	extract($store);
 
-	$disk_count=0;
+	$disk_count=1;
 	if (strlen($store[OPENQRM_KVM_VM_DISK_SIZE_1])) {
 		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=kvm_config_action value='remove_disk'>";
+		$disp = $disp."<input type=hidden name=kvm_config_action value='remove_vm_disk'>";
 		$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
 		$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$disp = $disp."<input type=hidden name=kvm_disk_nr value=1>";
 		$html = new htmlobject_input();
-		$html->name = "disk1";
+		$html->name = "remove_vm_disk";
 		$html->id = 'p'.uniqid();
 		$html->value = "$store[OPENQRM_KVM_VM_DISK_SIZE_1]";
 		$html->title = "Harddisk-1 (MB)";
@@ -453,15 +478,20 @@ function kvm_vm_config_disk() {
 		$disp = $disp."<input type=submit value='Remove'>";
 		$disk_count++;
 		$disp = $disp."</form>";
+
+		$disp = $disp."<br>";
+		$disp = $disp."<hr>";
+		$disp = $disp."<br>";
 	}
 
 	if (strlen($store[OPENQRM_KVM_VM_DISK_SIZE_2])) {
 		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=kvm_config_action value='remove_disk'>";
+		$disp = $disp."<input type=hidden name=kvm_config_action value='remove_vm_disk'>";
 		$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
 		$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$disp = $disp."<input type=hidden name=kvm_disk_nr value=2>";
 		$html = new htmlobject_input();
-		$html->name = "disk2";
+		$html->name = "remove_vm_disk";
 		$html->id = 'p'.uniqid();
 		$html->value = "$store[OPENQRM_KVM_VM_DISK_SIZE_2]";
 		$html->title = "Harddisk-2 (MB)";
@@ -471,14 +501,19 @@ function kvm_vm_config_disk() {
 		$disp = $disp."<input type=submit value='Remove'>";
 		$disk_count++;
 		$disp = $disp."</form>";
+
+		$disp = $disp."<br>";
+		$disp = $disp."<hr>";
+		$disp = $disp."<br>";
 	}
 	if (strlen($store[OPENQRM_KVM_VM_DISK_SIZE_3])) {
 		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=kvm_config_action value='remove_disk'>";
+		$disp = $disp."<input type=hidden name=kvm_config_action value='remove_vm_disk'>";
 		$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
 		$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$disp = $disp."<input type=hidden name=kvm_disk_nr value=3>";
 		$html = new htmlobject_input();
-		$html->name = "disk3";
+		$html->name = "remove_vm_disk";
 		$html->id = 'p'.uniqid();
 		$html->value = "$store[OPENQRM_KVM_VM_DISK_SIZE_3]";
 		$html->title = "Harddisk-3 (MB)";
@@ -488,14 +523,19 @@ function kvm_vm_config_disk() {
 		$disp = $disp."<input type=submit value='Remove'>";
 		$disk_count++;
 		$disp = $disp."</form>";
+
+		$disp = $disp."<br>";
+		$disp = $disp."<hr>";
+		$disp = $disp."<br>";
 	}
 	if (strlen($store[OPENQRM_KVM_VM_DISK_SIZE_4])) {
 		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=kvm_config_action value='remove_disk'>";
+		$disp = $disp."<input type=hidden name=kvm_config_action value='remove_vm_disk'>";
 		$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
 		$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$disp = $disp."<input type=hidden name=kvm_disk_nr value=4>";
 		$html = new htmlobject_input();
-		$html->name = "disk4";
+		$html->name = "remove_vm_disk";
 		$html->id = 'p'.uniqid();
 		$html->value = "$store[OPENQRM_KVM_VM_DISK_SIZE_4]";
 		$html->title = "Harddisk-4 (MB)";
@@ -505,15 +545,21 @@ function kvm_vm_config_disk() {
 		$disp = $disp."<input type=submit value='Remove'>";
 		$disk_count++;
 		$disp = $disp."</form>";
+
+		$disp = $disp."<br>";
+		$disp = $disp."<hr>";
+		$disp = $disp."<br>";
 	}
 
 
 
-	if ($disk_count < 4) {
+	if ($disk_count < 5) {
+		$disp = $disp."<br>";
 		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=kvm_config_action value='add_disk'>";
+		$disp = $disp."<input type=hidden name=kvm_config_action value='add_vm_disk'>";
 		$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
 		$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$disp = $disp."<input type=hidden name=kvm_disk_nr value=$disk_count>";
 		$disp = $disp.htmlobject_input('kvm_new_disk', array("value" => '2000', "label" => 'Add harddisk'), 'text', 10);
 		$disp = $disp."<br>";
 		$disp = $disp."<input type=submit value='Submit'>";

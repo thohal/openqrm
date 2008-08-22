@@ -136,7 +136,7 @@ case "$KVM_COMMAND" in
 		echo "KVM_VM_NET_4=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net4
 		echo "KVM_VM_MAC_4=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net4
 
-		# disk + swap
+		# disk
 		if [ "$KVM_VM_DISK" != "" ]; then
 			echo "-> Creating disk"
 			KVM_DISK_1="$OPENQRM_VM_DIR/$KVM_VM_NAME/disk01.img"
@@ -356,7 +356,14 @@ case "$KVM_COMMAND" in
 		fi
 		kvm_lock aquire
 		echo "Addking disk $KVM_VM_COMPONENT_NUMBER size $KVM_VM_DISK to KVM vm $KVM_VM_NAME"
-		sed -i -e s"#KVM_VM_DISK_\"\"$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_DISK_\"\"$KVM_VM_COMPONENT_NUMBER=\"-drive file=$OPENQRM_VM_DIR/$KVM_VM_NAME/disk0$KVM_VM_COMPONENT_NUMBER.img,if=scsi\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/disk""$KVM_VM_COMPONENT_NUMBER
+		sed -i -e s"#KVM_VM_DISK_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_DISK_$KVM_VM_COMPONENT_NUMBER=\"-drive file=$OPENQRM_VM_DIR/$KVM_VM_NAME/disk0$KVM_VM_COMPONENT_NUMBER.img,if=scsi\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/disk""$KVM_VM_COMPONENT_NUMBER
+		sed -i -e s"#KVM_VM_DISK_SIZE_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_DISK_SIZE_$KVM_VM_COMPONENT_NUMBER=\"$KVM_VM_DISK\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/disk""$KVM_VM_COMPONENT_NUMBER
+		KVM_DISK_FILE="$OPENQRM_VM_DIR/$KVM_VM_NAME/disk0$KVM_VM_COMPONENT_NUMBER.img"
+		if ! qemu-img create $KVM_DISK_FILE $KVM_VM_DISK""M; then
+			echo "ERROR: Could not create $KVM_DISK_FILE for KVM vm $KVM_VM_NAME" | logger
+			kvm_lock release
+			exit 1
+		fi
 		kvm_lock release
 		;;
 	remove_vm_disk)
@@ -368,7 +375,9 @@ case "$KVM_COMMAND" in
 		fi
 		kvm_lock aquire
 		echo "Removing disk $KVM_VM_COMPONENT_NUMBER from KVM vm $KVM_VM_NAME"
-		sed -i -e s"#KVM_VM_DISK_\"\"$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_DISK_\"\"$KVM_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/disk""$KVM_VM_COMPONENT_NUMBER
+		sed -i -e s"#KVM_VM_DISK_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_DISK_$KVM_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/disk""$KVM_VM_COMPONENT_NUMBER
+		sed -i -e s"#KVM_VM_DISK_SIZE_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_DISK_SIZE_$KVM_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/disk""$KVM_VM_COMPONENT_NUMBER
+		rm -f $OPENQRM_VM_DIR/$KVM_VM_NAME/disk0$KVM_VM_COMPONENT_NUMBER.img
 		kvm_lock release
 		;;
 	*)
