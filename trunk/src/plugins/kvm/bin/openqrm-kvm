@@ -33,6 +33,8 @@ function kvm_usage() {
 	echo "        $0 post_vm_list <-u username> <-p password>"
 	echo "        $0 post_vm_config <-n vm-name> <-u username> <-p password>"
 	echo "        $0 update_vm_ram <-r memory> <-n vm-name>"
+	echo "        $0 add_vm_nic <-s nic-number> <-m mac-address> <-n vm-name>"
+	echo "        $0 remove_vm_nic <-s nic-number> <-n vm-name>"
 	echo "        $0 add_vm_disk <-s disk-number> <-d disk-size> <-n vm-name>"
 	echo "        $0 remove_vm_disk <-s disk-number> <-n vm-name>"
 	exit 1
@@ -61,7 +63,7 @@ while [ $# -ne 0 ]; do
 			shift
 			;;
 		-s)
-			KVM_VM_DISK_NUMBER=$2
+			KVM_VM_COMPONENT_NUMBER=$2
 			shift
 			;;
 		-u)
@@ -308,6 +310,40 @@ case "$KVM_COMMAND" in
 		sed -i -e s"#KVM_VM_RAM=.*#KVM_VM_RAM=\"$KVM_VM_RAM\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/ram
 		kvm_lock release
 		;;
+
+
+	add_vm_nic)
+		if [ "$KVM_VM_NAME" == "" ]; then
+			kvm_usage
+		fi
+		if [ "$KVM_VM_MAC" == "" ]; then
+			kvm_usage
+		fi
+		if [ "$KVM_VM_COMPONENT_NUMBER" == "" ]; then
+			kvm_usage
+		fi
+		kvm_lock aquire
+		echo "Addking nic $KVM_VM_COMPONENT_NUMBER size $KVM_VM_DISK to KVM vm $KVM_VM_NAME"
+		sed -i -e s"#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=\"-net nic,macaddr=$KVM_VM_MAC,model=rtl8139\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/net""$KVM_VM_COMPONENT_NUMBER
+		sed -i -e s"#KVM_VM_MAC_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_MAC_$KVM_VM_COMPONENT_NUMBER=\"$KVM_VM_MAC\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/net""$KVM_VM_COMPONENT_NUMBER
+		kvm_lock release
+		;;
+	remove_vm_nic)
+		if [ "$KVM_VM_NAME" == "" ]; then
+			kvm_usage
+		fi
+		if [ "$KVM_VM_COMPONENT_NUMBER" == "" ]; then
+			kvm_usage
+		fi
+		kvm_lock aquire
+		echo "Removing nic $KVM_VM_COMPONENT_NUMBER from KVM vm $KVM_VM_NAME"
+		sed -i -e s"#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/net""$KVM_VM_COMPONENT_NUMBER
+		sed -i -e s"#KVM_VM_MAC_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_MAC_$KVM_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/net""$KVM_VM_COMPONENT_NUMBER
+		kvm_lock release
+		;;
+
+
+
 	add_vm_disk)
 		if [ "$KVM_VM_NAME" == "" ]; then
 			kvm_usage
@@ -315,24 +351,24 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_VM_DISK" == "" ]; then
 			kvm_usage
 		fi
-		if [ "$KVM_VM_DISK_NUMBER" == "" ]; then
+		if [ "$KVM_VM_COMPONENT_NUMBER" == "" ]; then
 			kvm_usage
 		fi
 		kvm_lock aquire
-		echo "Addking disk $KVM_VM_DISK_NUMBER size $KVM_VM_DISK to KVM vm $KVM_VM_NAME"
-		sed -i -e s"#KVM_VM_DISK_\"\"$KVM_VM_DISK_NUMBER=.*#KVM_VM_DISK_\"\"$KVM_VM_DISK_NUMBER=\"-drive file=$OPENQRM_VM_DIR/$KVM_VM_NAME/disk0$KVM_VM_DISK_NUMBER.img,if=scsi\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/diskDISK_""$KVM_VM_DISK_NUMBER
+		echo "Addking disk $KVM_VM_COMPONENT_NUMBER size $KVM_VM_DISK to KVM vm $KVM_VM_NAME"
+		sed -i -e s"#KVM_VM_DISK_\"\"$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_DISK_\"\"$KVM_VM_COMPONENT_NUMBER=\"-drive file=$OPENQRM_VM_DIR/$KVM_VM_NAME/disk0$KVM_VM_COMPONENT_NUMBER.img,if=scsi\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/disk""$KVM_VM_COMPONENT_NUMBER
 		kvm_lock release
 		;;
 	remove_vm_disk)
 		if [ "$KVM_VM_NAME" == "" ]; then
 			kvm_usage
 		fi
-		if [ "$KVM_VM_DISK_NUMBER" == "" ]; then
+		if [ "$KVM_VM_COMPONENT_NUMBER" == "" ]; then
 			kvm_usage
 		fi
 		kvm_lock aquire
-		echo "Removing disk $KVM_VM_DISK_NUMBER from KVM vm $KVM_VM_NAME"
-		sed -i -e s"#KVM_VM_DISK_\"\"$KVM_VM_DISK_NUMBER=.*#KVM_VM_DISK_\"\"$KVM_VM_DISK_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/diskDISK_""$KVM_VM_DISK_NUMBER
+		echo "Removing disk $KVM_VM_COMPONENT_NUMBER from KVM vm $KVM_VM_NAME"
+		sed -i -e s"#KVM_VM_DISK_\"\"$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_DISK_\"\"$KVM_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/disk""$KVM_VM_COMPONENT_NUMBER
 		kvm_lock release
 		;;
 	*)
