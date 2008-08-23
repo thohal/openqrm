@@ -31,7 +31,7 @@ build-stamp: configure-stamp
 clean:
 	dh_testdir
 	dh_testroot
-	rm sbin/openqrm-exec-port-monitor
+	rm -f sbin/openqrm-exec-port-monitor
 	rm -f build-stamp configure-stamp
 
 	# Add here commands to clean up after the build process.
@@ -40,7 +40,7 @@ clean:
 install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k 
+	dh_clean
 	dh_installdirs
 
 	# Add here commands to install the package into debian/openqrm-ng.
@@ -80,6 +80,7 @@ binary-arch: build install
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
+	dh_clean
 
 binary: binary-indep binary-arch
 .PHONY: build clean binary-indep binary-arch binary install configure
