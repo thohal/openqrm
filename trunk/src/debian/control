@@ -5,9 +5,15 @@ Maintainer: Thomas Halinka <mail@thohal.de>
 Build-Depends: debhelper (>= 5), make, gcc, pciutils-dev, portmap, rsync, zlib1g-dev, wget, tar, bzip2
 Standards-Version: 3.7.2
 
-Package: openqrm-core
+Package: openqrm
 Architecture: i386
 Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client-5.0, syslinux 
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>
+
+Package: openqrm-entire
+Architecture: i386
+Depends: openqrm, openqrm-plugin-lvm-storage, openqrm-plugin-nagios2, openqrm-plugin-local-server, openqrm-plugin-highavailability, openqrm-plugin-local-storage, openqrm-plugin-tftpd, openqrm-plugin-vmware-server, openqrm-plugin-netapp-storage, openqrm-plugin-dhcpd, openqrm-plugin-nfs-storage, openqrm-plugin-iscsi-storage, openqrm-plugin-sshterm, openqrm-plugin-xen, openqrm-plugin-linux-vserver, openqrm-plugin-aoe-storage
 Description: <insert up to 60 chars description>
  <insert long description, indented with spaces>
 
