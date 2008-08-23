@@ -37,7 +37,7 @@ if(htmlobject_request('kvm_config_action') != '' && $OPENQRM_USER->role == "admi
 
 		case 'add_vm_net':
 				$kvm_new_nic = $_REQUEST["kvm_new_nic"];
-				$kvm_new_nr = $_REQUEST["kvm_new_nr"];
+				$kvm_nic_nr = $_REQUEST["kvm_nic_nr"];
 				$kvm_server_appliance = new appliance();
 				$kvm_server_appliance->get_instance_by_id($kvm_server_id);
 				$kvm_server = new resource();
