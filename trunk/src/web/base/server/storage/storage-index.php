@@ -23,11 +23,13 @@ $strMsg = '';
 
 	switch (htmlobject_request('action')) {
 		case 'remove':
-			$storage = new storage();
-			foreach($_REQUEST['identifier'] as $id) {
-				$strMsg .= $storage->remove($id);
+			if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
+				$storage = new storage();
+				foreach($_REQUEST['identifier'] as $id) {
+					$strMsg .= $storage->remove($id);
+				}
+				redirect($strMsg);
 			}
-			redirect($strMsg);
 			break;
 	}
 
@@ -77,6 +79,9 @@ function storage_display() {
 	$arHead['storage_edit'] = array();
 	$arHead['storage_edit']['title'] ='';
 	$arHead['storage_edit']['sortable'] = false;
+	if(strtolower(OPENQRM_USER_ROLE_NAME) != 'administrator') {
+		$arHead['storage_edit']['hidden'] = true;
+	}
 
 	$arBody = array();
 	$storage_array = $storage_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
@@ -133,7 +138,9 @@ function storage_display() {
 
 $output = array();
 $output[] = array('label' => 'Storage List', 'value' => storage_display());
-$output[] = array('label' => 'New Storage', 'target' => 'storage-new.php');
+if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
+	$output[] = array('label' => 'New Storage', 'target' => 'storage-new.php');
+}
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />

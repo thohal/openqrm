@@ -7,6 +7,10 @@ require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
+if(strtolower(OPENQRM_USER_ROLE_NAME) != 'administrator') {
+	echo 'Access denied';
+	exit;
+}
 
 $storage_id = htmlobject_request("storage_id");
 
