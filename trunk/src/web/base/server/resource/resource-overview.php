@@ -210,7 +210,9 @@ function resource_form() {
 
 $output = array();
 $output[] = array('label' => 'Resource List', 'value' => resource_display());
-$output[] = array('label' => 'New', 'value' => resource_form());
+if($OPENQRM_USER->role == "administrator") {
+	$output[] = array('label' => 'New', 'value' => resource_form());
+}
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
