@@ -10,6 +10,11 @@ require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
+if(strtolower(OPENQRM_USER_ROLE_NAME) != 'administrator') {
+	echo 'Access denied';
+	exit;
+}
+
 // set vars from request
 $ar_request = array(
 	'appliance_resources' => @$_REQUEST['identifier'][0],

@@ -26,62 +26,63 @@ $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
 
-	switch (htmlobject_request('action')) {
-		case 'start':
-			foreach($_REQUEST['identifier'] as $id) {
-				$appliance = new appliance();
-				$appliance->get_instance_by_id($id);
-				$resource = new resource();
-				if ($appliance->resources <0) {
-					// an appliance with resource auto-select enabled
-					$appliance_virtualization=$appliance->virtualization;
-					$appliance->find_resource($appliance_virtualization);
+	if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
+		switch (htmlobject_request('action')) {
+			case 'start':
+				foreach($_REQUEST['identifier'] as $id) {
+					$appliance = new appliance();
 					$appliance->get_instance_by_id($id);
+					$resource = new resource();
+					if ($appliance->resources <0) {
+						// an appliance with resource auto-select enabled
+						$appliance_virtualization=$appliance->virtualization;
+						$appliance->find_resource($appliance_virtualization);
+						$appliance->get_instance_by_id($id);
+					}
+					$resource->get_instance_by_id($appliance->resources);
+					if ($resource->id == 0) {
+						$strMsg .= "The openQRM-server appliance is always active!<br>";
+					} else {
+						$kernel = new kernel();
+						$kernel->get_instance_by_id($appliance->kernelid);
+						// send command to the openQRM-server
+						$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac $kernel->name");
+						// start appliance
+						$strMsg .= $appliance->start();
+					}
 				}
-				$resource->get_instance_by_id($appliance->resources);
-				if ($resource->id == 0) {
-					$strMsg .= "The openQRM-server appliance is always active!<br>";
-				} else {
-					$kernel = new kernel();
-					$kernel->get_instance_by_id($appliance->kernelid);
-					// send command to the openQRM-server
-					$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac $kernel->name");
-					// start appliance
-					$strMsg .= $appliance->start();
+				redirect($strMsg);
+				break;
+	
+			case 'stop':
+				foreach($_REQUEST['identifier'] as $id) {
+					$appliance = new appliance();
+					$appliance->get_instance_by_id($id);
+					$resource = new resource();
+					$resource->get_instance_by_id($appliance->resources);
+					if ($resource->id == 0) {
+						$strMsg .= "The openQRM-server appliance is always active!<br>";
+					} else {
+						$kernel = new kernel();
+						$kernel->get_instance_by_id($appliance->kernelid);
+						// send command to the openQRM-server
+						$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
+						// start appliance
+						$strMsg .= $appliance->stop();
+					}
 				}
-			}
-			redirect($strMsg);
-			break;
-
-		case 'stop':
-			foreach($_REQUEST['identifier'] as $id) {
+				redirect($strMsg);
+				break;
+	
+			case 'remove':
 				$appliance = new appliance();
-				$appliance->get_instance_by_id($id);
-				$resource = new resource();
-				$resource->get_instance_by_id($appliance->resources);
-				if ($resource->id == 0) {
-					$strMsg .= "The openQRM-server appliance is always active!<br>";
-				} else {
-					$kernel = new kernel();
-					$kernel->get_instance_by_id($appliance->kernelid);
-					// send command to the openQRM-server
-					$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
-					// start appliance
-					$strMsg .= $appliance->stop();
+				foreach($_REQUEST['identifier'] as $id) {
+					$strMsg .= $appliance->remove($id);
 				}
-			}
-			redirect($strMsg);
-			break;
-
-		case 'remove':
-			$appliance = new appliance();
-			foreach($_REQUEST['identifier'] as $id) {
-				$strMsg .= $appliance->remove($id);
-			}
-			redirect($strMsg);
-			break;
+				redirect($strMsg);
+				break;
+		}
 	}
-
 }
 
 
@@ -140,6 +141,10 @@ function appliance_display() {
 	$arHead['appliance_edit'] = array();
 	$arHead['appliance_edit']['title'] ='';
 	$arHead['appliance_edit']['sortable'] = false;
+	if(strtolower(OPENQRM_USER_ROLE_NAME) != 'administrator') {
+		$arHead['appliance_edit']['hidden'] = true;
+	}
+
 
 	$arBody = array();
 	$appliance_array = $appliance_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
@@ -220,7 +225,9 @@ function appliance_display() {
 
 $output = array();
 $output[] = array('label' => 'Appliance List', 'value' => appliance_display());
-$output[] = array('label' => 'New Appliance', 'target' => 'appliance-new.php');
+if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
+	$output[] = array('label' => 'New Appliance', 'target' => 'appliance-new.php');
+}
 
 
 ?>
