@@ -15,7 +15,7 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 }
 
 
-if(htmlobject_request('action') != '') {
+if(htmlobject_request('action') != '' && $OPENQRM_USER->role == "administrator") {
 $strMsg = '';
 
 	switch (htmlobject_request('action')) {
@@ -149,15 +149,17 @@ function kernel_edit($kernel_id) {
 
 $output = array();
 $output[] = array('label' => 'Kernel-Admin', 'value' => kernel_display());
-$output[] = array('label' => 'New', 'value' => kernel_form());
-
-if(htmlobject_request('action') != '') {
-	switch (htmlobject_request('action')) {
-		case 'edit':
-			foreach($_REQUEST['identifier'] as $id) {
-				$output[] = array('label' => 'Edit Kernel', 'value' => kernel_edit($id));
-			}
-			break;
+if($OPENQRM_USER->role == "administrator") {
+	$output[] = array('label' => 'New', 'value' => kernel_form());
+	
+	if(htmlobject_request('action') != '') {
+		switch (htmlobject_request('action')) {
+			case 'edit':
+				foreach($_REQUEST['identifier'] as $id) {
+					$output[] = array('label' => 'Edit Kernel', 'value' => kernel_edit($id));
+				}
+				break;
+		}
 	}
 }
 
