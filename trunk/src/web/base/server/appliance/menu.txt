@@ -1,3 +1,2 @@
 .|Appliances
-..|Overview|server/appliance/appliance-overview.php
-..|Overview_beta|server/appliance/appliance-index.php
+..|Overview|server/appliance/appliance-index.php
