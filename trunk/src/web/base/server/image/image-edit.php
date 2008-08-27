@@ -8,6 +8,12 @@ require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
+if(strtolower(OPENQRM_USER_ROLE_NAME) != 'administrator') {
+	echo 'Access denied';
+	exit;
+}
+
+
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	global $thisfile;
 	if($url == '') {

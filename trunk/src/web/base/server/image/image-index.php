@@ -24,12 +24,14 @@ $strMsg = '';
 
 	switch (htmlobject_request('action')) {
 		case 'remove':
-			$image = new image();
-			foreach($_REQUEST['identifier'] as $id) {
-				$strMsg .= $image->remove($id);
+			if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
+				$image = new image();
+				foreach($_REQUEST['identifier'] as $id) {
+					$strMsg .= $image->remove($id);
+				}
+				redirect($strMsg);
 			}
-			redirect($strMsg);
-			break;
+		break;
 	}
 
 }
@@ -76,6 +78,9 @@ function image_display() {
 	$arHead['image_edit'] = array();
 	$arHead['image_edit']['title'] ='';
 	$arHead['image_edit']['sortable'] = false;
+	if(strtolower(OPENQRM_USER_ROLE_NAME) != 'administrator') {
+		$arHead['image_edit']['hidden'] = true;
+	}
 
 	$arBody = array();
 	$image_array = $image_tmp->display_overview(1, $table->limit, $table->sort, $table->order);
@@ -127,7 +132,9 @@ function image_display() {
 
 $output = array();
 $output[] = array('label' => 'Image List', 'value' => image_display());
-$output[] = array('label' => 'New Image', 'target' => 'image-new.php');
+if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
+	$output[] = array('label' => 'New Image', 'target' => 'image-new.php');
+}
 
 
 ?>
