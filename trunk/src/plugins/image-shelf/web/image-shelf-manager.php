@@ -30,8 +30,8 @@ if(htmlobject_request('action') != '') {
 		case 'select':
 			foreach($_REQUEST['identifier'] as $url) {
 				$image_shelf_url = $url;
-//				$openqrm_server->send_command(" /usr/lib/openqrm/plugins/image-shelf/bin/openqrm-image-shelf list -u $image_shelf_url");
-//				sleep($refresh_delay);
+				$openqrm_server->send_command(" /usr/lib/openqrm/plugins/image-shelf/bin/openqrm-image-shelf list -u $image_shelf_url");
+				sleep($refresh_delay);
 			}
 			break;
 
