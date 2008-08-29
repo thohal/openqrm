@@ -147,7 +147,7 @@ case "$IMAGE_SHELF_COMMAND" in
 
 		# check for kernel-version
 		KERNEL_VERSION=`ls $MOUNTPOINT/lib/modules/ | sort | tail -n1`
-		if ! $OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm kernel add -n ubuntu -v $KERNEL_VERSION -u $OPENQRM_USERNAME -p $OPENQRM_PASSWORD -l $MOUNTPOINT/ -i $INITRD_TYPE $INITRD_TEMPLATE; then
+		if ! $OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm kernel add -n $IMAGE_SHELF_DISTRIBUTION -v $KERNEL_VERSION -u $OPENQRM_USERNAME -p $OPENQRM_PASSWORD -l $MOUNTPOINT/ -i $INITRD_TYPE $INITRD_TEMPLATE; then
 			image_shelf_log "ERROR: Could not create kernel from Image-template $IMAGE_SHELF_FILE!"
 			umount $MOUNTPOINT
 			rmdir $MOUNTPOINT
