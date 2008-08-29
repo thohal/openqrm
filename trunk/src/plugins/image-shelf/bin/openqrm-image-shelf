@@ -19,7 +19,7 @@ fi
 
 function image-shelf_usage() {
 	echo "Usage : $0 list <-i image-shelf-url>"
-	echo "Usage : $0 get <-i image-shelf-url> <-f filename> <-n storage-server-ip:/path-to-image-dir/> <-u username> <-p password>"
+	echo "Usage : $0 get <-i image-shelf-url> <-f filename> <-n storage-server-ip:/path-to-image-dir/> <-d distribution> <-u username> <-p password>"
 	exit 1
 }
 
@@ -35,6 +35,10 @@ while [ $# -ne 0 ]; do
 			;;
 		-f)
 			IMAGE_SHELF_FILE=$2
+			shift
+			;;
+		-d)
+			IMAGE_SHELF_DISTRIBUTION=$2
 			shift
 			;;
 		-n)
@@ -117,8 +121,6 @@ case "$IMAGE_SHELF_COMMAND" in
 			image_shelf_log "NOTICE: Downloaded $IMAGE_SHELF_URL/$IMAGE_SHELF_FILE to $MOUNTPOINT/$IMAGE_SHELF_FILE."
 		fi
 
-		cp -aRv /root/$IMAGE_SHELF_FILE $MOUNTPOINT/$IMAGE_SHELF_FILE
-
 		# unpack
 		if ! tar -C $MOUNTPOINT/ -xzf $MOUNTPOINT/$IMAGE_SHELF_FILE; then
 			image_shelf_log "ERROR: Could not unpack Image-template from $IMAGE_SHELF_FILE!"
@@ -133,13 +135,22 @@ case "$IMAGE_SHELF_COMMAND" in
 		
 		# create kernel
 		# check for initrd-template
+		if [ -f $MOUNTPOINT/etc/openqrm/openqrm-initrd-default.tgz ]; then
+			INITRD_TEMPLATE="-t $MOUNTPOINT/etc/openqrm/openqrm-initrd-default.tgz"
+		fi
 		# check for initrd type
+		if [ "$IMAGE_SHELF_DISTRIBUTION" == "Redhat" ]; then
+			INITRD_TYPE="ext2"
+		else
+			INITRD_TYPE="initramfs"
+		fi
 
 		# check for kernel-version
 		KERNEL_VERSION=`ls $MOUNTPOINT/lib/modules/ | sort | tail -n1`
-		if ! $OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm kernel add -n ubuntu -v $KERNEL_VERSION -u $OPENQRM_USERNAME -p $OPENQRM_PASSWORD -l $MOUNTPOINT/ -i initramfs; then
+		if ! $OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm kernel add -n ubuntu -v $KERNEL_VERSION -u $OPENQRM_USERNAME -p $OPENQRM_PASSWORD -l $MOUNTPOINT/ -i $INITRD_TYPE $INITRD_TEMPLATE; then
 			image_shelf_log "ERROR: Could not create kernel from Image-template $IMAGE_SHELF_FILE!"
 			umount $MOUNTPOINT
+			rmdir $MOUNTPOINT
 			exit 1
 		else
 			image_shelf_log "NOTICE: Created kernel from Image-template $IMAGE_SHELF_FILE"

@@ -173,7 +173,7 @@ function image_shelf_display($image_shelf_url) {
 			$image_distribution = $image_parameter[1];
 			$image_version = $image_parameter[2];
 			$image_application = $image_parameter[3];
-			$image_size = $image_parameter[2];
+			$image_size = $image_parameter[4];
 
 			$arBody[] = array(
 				'image_id' => "$image_count",
@@ -182,7 +182,7 @@ function image_shelf_display($image_shelf_url) {
 				'image_application' => "$image_application",
 				// using the filename to transport the image_shelf_url
 				'image_filename' => "$image_filename <input type=\"hidden\" name=\"image_shelf_url\" value=\"$image_shelf_url\">",
-				'image_size' => "(big)",
+				'image_size' => "$image_size",
 			);
 			$image_count++;
 		}
@@ -345,7 +345,7 @@ function image_shelf_final($final_image_id, $image_id, $image_shelf_url) {
 	$final_image_export = str_replace('"', '', $final_image_export);
 	$final_image_export = trim($final_image_export);
 
-	$openqrm_server->send_command(" /usr/lib/openqrm/plugins/image-shelf/bin/openqrm-image-shelf get -i $image_shelf_url -f $image_filename -n $final_storage_resource_ip:$final_image_export -u $OPENQRM_USER->name -p $OPENQRM_USER->password");
+	$openqrm_server->send_command(" /usr/lib/openqrm/plugins/image-shelf/bin/openqrm-image-shelf get -i $image_shelf_url -f $image_filename -n $final_storage_resource_ip:$final_image_export -d $image_distribution -u $OPENQRM_USER->name -p $OPENQRM_USER->password");
 
 	$disp = '<h1>Executing request</h1>';
 	$disp .= '<br>';
