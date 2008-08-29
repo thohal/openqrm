@@ -1,0 +1,101 @@
+#!/bin/bash
+
+# this script automatically manages image-shelf
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/include/openqrm-plugin-image-shelf-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+openqrm_server_get_config
+export LANG=C
+
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+
+function image-shelf_usage() {
+	echo "Usage : $0 list <-u image-shelf-url>"
+	echo "Usage : $0 get <-u image-shelf-url> <-f filename> <-n storage-server-ip:/path-to-image-dir/>"
+	exit 1
+}
+
+
+IMAGE_SHELF_COMMAND=$1
+shift
+
+while [ $# -ne 0 ]; do
+	case "$1" in
+		-u)
+			IMAGE_SHELF_URL=$2
+			shift
+			;;
+		-f)
+			IMAGE_SHELF_FILE=$2
+			shift
+			;;
+		-n)
+			NFS_STORAGE_SERVER_EXPORT=$2
+			shift
+			;;
+		*)
+			echo "ERROR: Free commandline arguments are not allowed"
+			image-shelf_usage
+			exit 6
+			;;
+	esac
+	shift
+done
+
+
+
+
+# main
+if [ "$IMAGE_SHELF_COMMAND" == "" ]; then
+	image-shelf_usage
+fi
+
+
+
+case "$IMAGE_SHELF_COMMAND" in 
+
+	list)
+		if [ "$IMAGE_SHELF_URL" == "" ]; then
+			image-shelf_usage
+		fi
+		IMAGE_SHELF_NAME=`echo $IMAGE_SHELF_URL | sed -e "s#http://##g" | cut -d'/' -f1`
+
+		mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/web/image-lists/$IMAGE_SHELF_NAME
+		chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/web/image-lists/$IMAGE_SHELF_NAME
+		if ! wget -q -O $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/web/image-lists/$IMAGE_SHELF_NAME/image-shelf.conf "$IMAGE_SHELF_URL/image-shelf.conf"; then
+			image_shelf_log "image-shelf: Could not download image-shelf.conf from $IMAGE_SHELF_URL/image-shelf.conf !"
+			exit 1
+		fi
+		chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/web/image-lists/$IMAGE_SHELF_NAME/image-shelf.conf
+		;;
+
+	get)
+		if [ "$IMAGE_SHELF_URL" == "" ]; then
+			image-shelf_usage
+		fi
+		if [ "$IMAGE_SHELF_FILE" == "" ]; then
+			image-shelf_usage
+		fi
+		if [ "$NFS_STORAGE_SERVER_EXPORT" == "" ]; then
+			image-shelf_usage
+		fi
+
+		IMAGE_SHELF_NAME=`echo $IMAGE_SHELF_URL | sed -e "s#http://##g" | cut -d'/' -f1`
+		;;
+
+
+	*)
+		image-shelf_usage
+		;;
+
+
+esac
+

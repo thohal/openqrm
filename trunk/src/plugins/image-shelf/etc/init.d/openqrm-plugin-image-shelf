@@ -1,0 +1,93 @@
+#!/bin/bash
+# init script for the openQRM image-shelf-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/include/openqrm-plugin-image-shelf-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/etc/openqrm-plugin-image-shelf.conf
+
+function openqrm_plugin_vmware_server_start() {
+	echo "Starting the openQRM image-shelf-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/image-shelf/.running
+}
+
+
+function openqrm_plugin_vmware_server_stop() {
+	echo "Stopping the openQRM image-shelf-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/image-shelf/.running
+}
+
+function openqrm_plugin_vmware_server_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "image-shelf: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "image-shelf: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM image-shelf-plugin"
+	openqrm_plugin_vmware_server_stop
+	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD image-shelf
+	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD image-shelf-vm
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/image-shelf
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-image-shelf.tgz
+}
+
+function openqrm_plugin_vmware_server_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "image-shelf: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "image-shelf: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Initializing the openQRM image-shelf-plugin"
+	# adding virtualization type	
+	openqrm_server_add_virtualization_type $USERNAME $PASSWORD image-shelf "VMware-Server Host"
+	openqrm_server_add_virtualization_type $USERNAME $PASSWORD image-shelf-vm "VMware-Server VM"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/image-shelf
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/web/boot-service-image-shelf.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-image-shelf.tgz
+	
+}
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_vmware_server_start
+		;;
+	stop)
+		openqrm_plugin_vmware_server_stop
+		;;
+	restart)
+		openqrm_plugin_vmware_server_stop
+		sleep 1
+		openqrm_plugin_vmware_server_start
+		;;
+	init)
+		openqrm_plugin_vmware_server_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_vmware_server_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+

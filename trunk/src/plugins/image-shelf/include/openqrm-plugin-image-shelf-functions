@@ -1,0 +1,54 @@
+#!/bin/bash
+# this is the functions file for the image-shelf-plugin
+IMAGE_SHELF_LOCK_FILE=/var/run/lvm-storage/lvm-storage-plugin.lock
+IMAGE_SHELF_LOCK_DELAY=5
+IMAGE_SHELF_LOCK_RETRY=100
+IMAGE_SHELF_LOCK_TIMEOUT=500
+################ common image-shelf functions
+
+# logs for image-shelf
+function image_shelf_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "image-shelf plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function image_shelf_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $IMAGE_SHELF_LOCK_FILE` ]; then
+		mkdir -p `dirname $IMAGE_SHELF_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $IMAGE_SHELF_LOCK_DELAY -r $IMAGE_SHELF_LOCK_RETRY -l $IMAGE_SHELF_LOCK_TIMEOUT $IMAGE_SHELF_LOCK_FILE
+				RET=$?
+				image_shelf_log image_shelf_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $IMAGE_SHELF_LOCK_FILE
+				RET=$?
+				image_shelf_log image_shelf_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			image_shelf_log image_shelf_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ image-shelf functions
+
+
+
+
+
+
