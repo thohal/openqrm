@@ -146,7 +146,7 @@ case "$IMAGE_SHELF_COMMAND" in
 			INITRD_TEMPLATE="-t $MOUNTPOINT/etc/openqrm/openqrm-initrd-default.tgz"
 		fi
 		# check for initrd type
-		if [ "$IMAGE_SHELF_DISTRIBUTION" == "Redhat" ]; then
+		if [ "$IMAGE_SHELF_DISTRIBUTION" == "Redhat" ] || [ "$IMAGE_SHELF_DISTRIBUTION" == "CentOS" ]; then
 			INITRD_TYPE="ext2"
 		else
 			INITRD_TYPE="initramfs"
