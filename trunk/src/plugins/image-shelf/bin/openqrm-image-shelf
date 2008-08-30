@@ -9,6 +9,7 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PW
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 openqrm_server_get_config
 export LANG=C
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 
 # let only root run this script
 WHOAMI=`whoami`
@@ -106,29 +107,35 @@ case "$IMAGE_SHELF_COMMAND" in
 		MOUNTPOINT=`mktemp -d /tmp/$IMAGE_SHELF_NAME.XXXXXXXXXX` || exit 1
 		if ! mount -t nfs $NFS_STORAGE_SERVER_EXPORT $MOUNTPOINT; then
 			image_shelf_log "ERROR: Could not mount $NFS_STORAGE_SERVER_EXPORT!"
+			openqrm_post_event 0 "get" 3 "openqrm-image-shelf" "Could not mount $NFS_STORAGE_SERVER_EXPORT!"
 			exit 1
 		else
 			image_shelf_log "NOTICE: Mounted $NFS_STORAGE_SERVER_EXPORT. Starting the download."
+			openqrm_post_event 0 "get" 5 "openqrm-image-shelf" "Mounted $NFS_STORAGE_SERVER_EXPORT. Starting the download."
 		fi
 		
 		# wget the image from the shelf
 		if ! wget -O $MOUNTPOINT/$IMAGE_SHELF_FILE $IMAGE_SHELF_URL/$IMAGE_SHELF_FILE; then
 			image_shelf_log "ERROR: Could not download Image-template from $IMAGE_SHELF_URL/$IMAGE_SHELF_FILE."
+			openqrm_post_event 0 "get" 3 "openqrm-image-shelf" "Could not download Image-template from $IMAGE_SHELF_URL/$IMAGE_SHELF_FILE."
 			umount $MOUNTPOINT
 			rmdir $MOUNTPOINT
 			exit 1
 		else
 			image_shelf_log "NOTICE: Downloaded $IMAGE_SHELF_URL/$IMAGE_SHELF_FILE to $MOUNTPOINT/$IMAGE_SHELF_FILE."
+			openqrm_post_event 0 "get" 5 "openqrm-image-shelf" "Downloaded $IMAGE_SHELF_URL/$IMAGE_SHELF_FILE to $MOUNTPOINT/$IMAGE_SHELF_FILE."
 		fi
 
 		# unpack
 		if ! tar -C $MOUNTPOINT/ -xzf $MOUNTPOINT/$IMAGE_SHELF_FILE; then
 			image_shelf_log "ERROR: Could not unpack Image-template from $IMAGE_SHELF_FILE!"
+			openqrm_post_event 0 "get" 3 "openqrm-image-shelf" "Could not unpack Image-template from $IMAGE_SHELF_FILE!"
 			umount $MOUNTPOINT
 			rmdir $MOUNTPOINT
 			exit 1
 		else
 			image_shelf_log "NOTICE: Unpacked $IMAGE_SHELF_FILE"
+			openqrm_post_event 0 "get" 5 "openqrm-image-shelf" "Unpacked $IMAGE_SHELF_FILE"
 		fi
 		# clean up
 		rm -f $MOUNTPOINT/$IMAGE_SHELF_FILE
@@ -149,16 +156,19 @@ case "$IMAGE_SHELF_COMMAND" in
 		KERNEL_VERSION=`ls $MOUNTPOINT/lib/modules/ | sort | tail -n1`
 		if ! $OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm kernel add -n $IMAGE_SHELF_DISTRIBUTION -v $KERNEL_VERSION -u $OPENQRM_USERNAME -p $OPENQRM_PASSWORD -l $MOUNTPOINT/ -i $INITRD_TYPE $INITRD_TEMPLATE; then
 			image_shelf_log "ERROR: Could not create kernel from Image-template $IMAGE_SHELF_FILE!"
+			openqrm_post_event 0 "get" 3 "openqrm-image-shelf" "Could not create kernel from Image-template $IMAGE_SHELF_FILE!"
 			umount $MOUNTPOINT
 			rmdir $MOUNTPOINT
 			exit 1
 		else
 			image_shelf_log "NOTICE: Created kernel from Image-template $IMAGE_SHELF_FILE"
+			openqrm_post_event 0 "get" 5 "openqrm-image-shelf" "Created kernel from Image-template $IMAGE_SHELF_FILE"
 		fi
 		
 		umount $MOUNTPOINT
 		rmdir $MOUNTPOINT
 		image_shelf_log "NOTICE: Successfully created Server-image from $IMAGE_SHELF_FILE"
+		openqrm_post_event 0 "get" 5 "openqrm-image-shelf" "Successfully created Server-image from $IMAGE_SHELF_FILE"
 	
 		;;
 
