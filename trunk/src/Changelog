@@ -36,4 +36,8 @@ up to the
 				[ 1992381 ] ng: add option for resources to add events
 08.08.2008	-	[ 1992378 ] ng: iscsi- + aoe-storage deployment should auto-partititon
 				fixed
+24.08.2008	-	security fixes, GUI- and Usablility improvements
+29.08.2008	-	fixed [ 1934416 ] ng: template-based Image-Installer
+
+
 
