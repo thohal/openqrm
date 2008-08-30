@@ -37,7 +37,7 @@ function image_shelf_about() {
 	$disp = $disp."</li><li>";
 	$disp = $disp."Create a Storage-server from the type 'NFS-Storage' <br>(You can use the openQRM-server itself as resource)";
 	$disp = $disp."</li><li>";
-	$disp = $disp."Create an new export on the NFS-Storage server";
+	$disp = $disp."Create an new export on the NFS-Storage server via the 'nfs-storage' plugin";
 	$disp = $disp."<br>";
 	$disp = $disp."Copy the path of the new export from the GUI.";
 	$disp = $disp."</li><li>";
