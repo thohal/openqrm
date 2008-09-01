@@ -4,6 +4,7 @@ KVM_SERVER_LOCK_FILE=/var/run/lvm-storage/lvm-storage-plugin.lock
 KVM_SERVER_LOCK_DELAY=5
 KVM_SERVER_LOCK_RETRY=100
 KVM_SERVER_LOCK_TIMEOUT=500
+OPENQRM_KVM_BRIDGE=br0
 ################ common kvm functions
 
 # logs for kvm

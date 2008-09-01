@@ -17,7 +17,6 @@ fi
 
 function kvm_start() {
 	echo "Starting the openQRM kvm-plugin"
-	kvm_stop 1>/dev/null 2>&1
 
 	# preparing the nic-bios in case the openQRM server itself is the kvm-host
 	if [ ! -d /usr/share/kvm/ ]; then
@@ -32,8 +31,41 @@ function kvm_start() {
 	tar -C /usr/share/kvm/ -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.0.tgz
 	chown root:root /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-rtl8139.bin
 
+	# be sure to have the tun device
+	if [ ! -f /dev/tun ]; then
+		mknod /dev/tun c 10 200
+	fi
+	depmod -a
+	modprobe tun
 
-
+	# check that bridging is enabled
+	if ! which brctl 1>/dev/null; then
+		kvm_log kvm_start "ERROR: brctl is not installed! Please install bridge-utils."
+		exit 1
+	fi
+	if ! which kvm 1>/dev/null; then
+		kvm_log kvm_start "ERROR: kvm is not installed! Please install kvm."
+		exit 1
+	fi
+	# does bridge already exist ?
+	if ! brctl show | grep $OPENQRM_KVM_BRIDGE 1>/dev/null; then
+		kvm_log kvm_start "NOTICE: Kvm network-bridge $OPENQRM_KVM_BRIDGE not active yet. Activating now ..."
+		BRIDGE_INTERFACE=`ifconfig -a | grep -A1 $resource_mac | grep -B1 $resource_ip | head -n1 | awk {' print $1 '}`
+		if [ "$BRIDGE_INTERFACE" == "" ]; then
+			kvm_log kvm_start "ERROR: Could not find openQRM-interface to create the kvm network-bridge on!"
+			exit 1
+		fi
+		# create the bridge
+		brctl addbr $OPENQRM_KVM_BRIDGE
+		brctl setfd $OPENQRM_KVM_BRIDGE 0
+		brctl sethello $OPENQRM_KVM_BRIDGE 2
+		brctl setmaxage $OPENQRM_KVM_BRIDGE 12
+		brctl stp $OPENQRM_KVM_BRIDGE off
+		brctl addif $OPENQRM_KVM_BRIDGE $BRIDGE_INTERFACE
+		ifconfig $OPENQRM_KVM_BRIDGE $resource_ip up
+		ifconfig $BRIDGE_INTERFACE 0.0.0.0 up
+		kvm_log kvm_start "NOTICE: Kvm network-bridge $OPENQRM_KVM_BRIDGE now active."
+	fi
 
 
 }
@@ -41,6 +73,7 @@ function kvm_start() {
 
 function kvm_stop() {
 	echo "Stopping the openQRM kvm-plugin"
+
 }
 
 
