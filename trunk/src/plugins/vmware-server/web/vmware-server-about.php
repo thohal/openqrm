@@ -30,21 +30,11 @@ function vmware_server_about() {
 
 	$disp = $disp."<ul>";
 	$disp = $disp."<li>";
-	$disp = $disp."Create a Server-Image from an VMware-server host and add 'vmware-server' to the image-capabilities field.";
+	$disp = $disp."Create an appliance and set its resource-type to 'VMware-Server Host'";
 	$disp = $disp."</li><li>";
-	$disp = $disp."Create a VMware-server kernel from a VMware-server host via the openqrm client";
-	$disp = $disp."<br>";
-	$disp = $disp." $OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm bootimage [kernel-name] [kernel-version] [path-to-a-rootfs] [ext2/initramfs]";
-	$disp = $disp."<br>";
-	$disp = $disp." (Currently you additional need to add the kernel-name + version to the openQRM-server via the GUI)";
+	$disp = $disp."Use the 'VM Manager' in the VMware-server menu to create a new VMware virtual-machine on the Host";
 	$disp = $disp."</li><li>";
-	$disp = $disp."Create an Appliance from the Server-Image and VMware-server kernel and the VMware-server virtual-machine created in the previous step";
-	$disp = $disp."</li><li>";
-	$disp = $disp."Start the Appliance";
-	$disp = $disp."</li><li>";
-	$disp = $disp."Use the 'VM Manager' in the VMware-server menu to create a new VMware-server virtual-machines on the Host";
-	$disp = $disp."</li><li>";
-	$disp = $disp." The created VMware-server vm is then booting into openQRM as regular resources";
+	$disp = $disp." The created VMware vm is then booting into openQRM as regular resources";
 	$disp = $disp."</li>";
 	$disp = $disp."</ul>";
 	$disp = $disp."<br>";

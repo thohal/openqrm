@@ -30,17 +30,7 @@ function xen_about() {
 
 	$disp = $disp."<ul>";
 	$disp = $disp."<li>";
-	$disp = $disp."Create a Server-Image from an Xen host and add 'xen' to the image-capabilities field.";
-	$disp = $disp."</li><li>";
-	$disp = $disp."Create a Xen kernel from a Xen host via the openqrm client";
-	$disp = $disp."<br>";
-	$disp = $disp." $OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm bootimage [kernel-name] [kernel-version] [path-to-a-rootfs] [ext2/initramfs]";
-	$disp = $disp."<br>";
-	$disp = $disp." (Currently you additional need to add the kernel-name + version to the openQRM-server via the GUI)";
-	$disp = $disp."</li><li>";
-	$disp = $disp."Create an Appliance from the Server-Image and Xen kernel and the Xen virtual-machine created in the previous step";
-	$disp = $disp."</li><li>";
-	$disp = $disp."Start the Appliance";
+	$disp = $disp."Create an appliance and set its resource-type to 'Xen Host'";
 	$disp = $disp."</li><li>";
 	$disp = $disp."Use the 'Xen Manager' in the Xen menu to create a new Xen virtual-machines on the Host";
 	$disp = $disp."</li><li>";

@@ -30,17 +30,7 @@ function linux_vserver_about() {
 
 	$disp = $disp."<ul>";
 	$disp = $disp."<li>";
-	$disp = $disp."Create a Server-Image from an Linux-VServer host and add 'linux-vserver' to the image-capabilities field.";
-	$disp = $disp."</li><li>";
-	$disp = $disp."Create a Linux-VServer kernel from a Linux-VServer host via the openqrm client";
-	$disp = $disp."<br>";
-	$disp = $disp." $OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm bootimage [kernel-name] [kernel-version] [path-to-a-rootfs] [ext2/initramfs]";
-	$disp = $disp."<br>";
-	$disp = $disp." (Currently you additional need to add the kernel-name + version to the openQRM-server via the GUI)";
-	$disp = $disp."</li><li>";
-	$disp = $disp."Create an Appliance from the Server-Image and Linux-VServer kernel and the Linux-VServer virtual-machine created in the previous step";
-	$disp = $disp."</li><li>";
-	$disp = $disp."Start the Appliance";
+	$disp = $disp."Create an appliance and set its resource-type to 'Linux-VSever Host'";
 	$disp = $disp."</li><li>";
 	$disp = $disp."Use the 'VM Manager' in the Linux-VServer menu to create a new Linux-Vserver virtual-machines on the Host";
 	$disp = $disp."</li><li>";
