@@ -272,7 +272,7 @@ function image_storage_select($image_id, $image_shelf_url) {
 		$image_deployment->get_instance_by_type($image_db["image_type"]);
 
 		// for now we only support nfs-images
-		if (!strcmp($image_deployment->type, "nfs-deployment")) {
+		if ((!strcmp($image_deployment->type, "nfs-deployment")) || (!strcmp($image_deployment->type, "lvm-nfs-deployment")) || (!strcmp($image_deployment->type, "netapp-nfs-deployment"))) {
 
 			$arBody[] = array(
 				'image_icon' => "<img width=20 height=20 src=$image_icon>",

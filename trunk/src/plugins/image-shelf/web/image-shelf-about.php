@@ -36,6 +36,8 @@ function image_shelf_about() {
 	$disp = $disp."Enable the 'nfs-storage' plugin";
 	$disp = $disp."</li><li>";
 	$disp = $disp."Create a Storage-server from the type 'NFS-Storage' <br>(You can use the openQRM-server itself as resource)";
+	$disp = $disp."<br>";
+	$disp = $disp."(all Storage-server providing NFS-deployment types are supported e.g. also lvm- and netapp-storage)";
 	$disp = $disp."</li><li>";
 	$disp = $disp."Create an new export on the NFS-Storage server via the 'nfs-storage' plugin";
 	$disp = $disp."<br>";
