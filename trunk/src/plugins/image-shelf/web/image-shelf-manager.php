@@ -146,11 +146,8 @@ function image_shelf_display($image_shelf_url) {
 	$arHead['image_id'] = array();
 	$arHead['image_id']['title'] ='Id';
 
-	$arHead['image_distribution'] = array();
-	$arHead['image_distribution']['title'] ='Distribution';
-
 	$arHead['image_version'] = array();
-	$arHead['image_version']['title'] ='Version';
+	$arHead['image_version']['title'] ='Distribution';
 
 	$arHead['image_application'] = array();
 	$arHead['image_application']['title'] ='Application';
@@ -160,6 +157,12 @@ function image_shelf_display($image_shelf_url) {
 
 	$arHead['image_size'] = array();
 	$arHead['image_size']['title'] ='Size';
+
+	$arHead['image_root_password'] = array();
+	$arHead['image_root_password']['title'] ='Password';
+
+	$arHead['image_maintainer'] = array();
+	$arHead['image_maintainer']['title'] ='Maintainer';
 
 	$image_count=1;
 	$arBody = array();
@@ -174,15 +177,18 @@ function image_shelf_display($image_shelf_url) {
 			$image_version = $image_parameter[2];
 			$image_application = $image_parameter[3];
 			$image_size = $image_parameter[4];
+			$image_root_password = $image_parameter[5];
+			$image_maintainer = $image_parameter[6];
 
 			$arBody[] = array(
 				'image_id' => "$image_count",
-				'image_distribution' => "$image_distribution",
-				'image_version' => "$image_version",
+				'image_distribution' => "$image_distribution-$image_version",
 				'image_application' => "$image_application",
 				// using the filename to transport the image_shelf_url
 				'image_filename' => "$image_filename <input type=\"hidden\" name=\"image_shelf_url\" value=\"$image_shelf_url\">",
 				'image_size' => "$image_size",
+				'image_root_password' => "$image_root_password",
+				'image_maintainer' => "$image_maintainer",
 			);
 			$image_count++;
 		}
