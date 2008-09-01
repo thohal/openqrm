@@ -36,6 +36,8 @@ function openqrm_plugin_kvm_server_uninstall() {
 	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD kvm-vm
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/kvm
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-kvm.tgz
+	cp -f /usr/share/kvm/pxe-e1000.bin.openqrm-backup /usr/share/kvm/pxe-e1000.bin
+	cp -f /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup /usr/share/kvm/pxe-rtl8139.bin
 }
 
 function openqrm_plugin_kvm_server_init() {
@@ -57,6 +59,19 @@ function openqrm_plugin_kvm_server_init() {
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/kvm
 	# link the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/web/boot-service-kvm.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-kvm.tgz
+
+	# preparing the nic-bios in case the openQRM server itself is the kvm-host
+	if [ ! -d /usr/share/kvm/ ]; then
+		mkdir -p /usr/share/kvm
+	fi
+	if [ -f /usr/share/kvm/pxe-e1000.bin ] && [ ! -f /usr/share/kvm/pxe-e1000.bin.openqrm-backup ]; then
+		cp -f /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-e1000.bin.openqrm-backup
+	fi
+	if [ -f /usr/share/kvm/pxe-rtl8139.bin ] && [ ! -f /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup ]; then
+		cp -f /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup
+	fi
+	tar -C /usr/share/kvm/ -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.0.tgz
+	chown root:root /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-rtl8139.bin
 	
 }
 

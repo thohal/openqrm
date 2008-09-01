@@ -127,7 +127,7 @@ case "$KVM_COMMAND" in
 		echo "KVM_VM_RAM=\"$KVM_VM_RAM\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/ram
 
 		# network
-		echo "KVM_VM_NET_1=\"-net nic,macaddr=$KVM_VM_MAC,model=e1000 -net tap\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
+		echo "KVM_VM_NET_1=\"-net nic,macaddr=$KVM_VM_MAC,model=e1000 -net tap,script=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup,downscript=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
 		echo "KVM_VM_MAC_1=\"$KVM_VM_MAC\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
 		echo "KVM_VM_NET_2=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net2
 		echo "KVM_VM_MAC_2=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net2

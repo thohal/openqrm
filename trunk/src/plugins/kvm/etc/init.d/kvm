@@ -18,6 +18,24 @@ fi
 function kvm_start() {
 	echo "Starting the openQRM kvm-plugin"
 	kvm_stop 1>/dev/null 2>&1
+
+	# preparing the nic-bios in case the openQRM server itself is the kvm-host
+	if [ ! -d /usr/share/kvm/ ]; then
+		mkdir -p /usr/share/kvm
+	fi
+	if [ -f /usr/share/kvm/pxe-e1000.bin ] && [ ! -f /usr/share/kvm/pxe-e1000.bin.openqrm-backup ]; then
+		cp -f /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-e1000.bin.openqrm-backup
+	fi
+	if [ -f /usr/share/kvm/pxe-rtl8139.bin ] && [ ! -f /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup ]; then
+		cp -f /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup
+	fi
+	tar -C /usr/share/kvm/ -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.0.tgz
+	chown root:root /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-rtl8139.bin
+
+
+
+
+
 }
 
 
