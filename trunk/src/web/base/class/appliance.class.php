@@ -215,7 +215,6 @@ function stop() {
 	$resource = new resource();
 	$resource->get_instance_by_id($this->resources);
 	$resource->assign($resource->id, "1", "default", "1", "idle");
-	$resource->send_command("$resource->ip", "reboot");
 	
 	// update stoptime + state
 	$now=$_SERVER['REQUEST_TIME'];
@@ -228,7 +227,8 @@ function stop() {
 	$resource_fields=array();
 	$resource_fields["resource_state"]="transition";
 	$resource->update_info($resource->id, $resource_fields);
-	
+
+	$resource->send_command("$resource->ip", "reboot");
 }
 
 

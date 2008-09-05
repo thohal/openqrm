@@ -40,7 +40,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 						$appliance->get_instance_by_id($id);
 					}
 					$resource->get_instance_by_id($appliance->resources);
-					if ($resource->id == 0) {
+					if ($appliance->resources == 0) {
 						$strMsg .= "The openQRM-server appliance is always active!<br>";
 					} else {
 						$kernel = new kernel();
@@ -60,14 +60,14 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 					$appliance->get_instance_by_id($id);
 					$resource = new resource();
 					$resource->get_instance_by_id($appliance->resources);
-					if ($resource->id == 0) {
+					if ($appliance->resources == 0) {
 						$strMsg .= "The openQRM-server appliance is always active!<br>";
 					} else {
 						$kernel = new kernel();
 						$kernel->get_instance_by_id($appliance->kernelid);
 						// send command to the openQRM-server
 						$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
-						// start appliance
+						// stop appliance
 						$strMsg .= $appliance->stop();
 					}
 				}
@@ -157,10 +157,10 @@ function appliance_display() {
 		if ($appliance_resources >=0) {
 			// an appliance with a pre-selected resource
 			$resource->get_instance_by_id($appliance_resources);
-			$appliance_resources = "$resource->id / $resource->ip";
+			$appliance_resources_str = "$resource->id / $resource->ip";
 		} else {
 			// an appliance with resource auto-select enabled
-			$appliance_resources = "auto-select";
+			$appliance_resources_str = "auto-select";
 		}
 
 		// active or inactive
@@ -194,7 +194,7 @@ function appliance_display() {
 			'appliance_name' => $appliance_db["appliance_name"],
 			'appliance_kernelid' => $kernel->name,
 			'appliance_imageid' => $image->name,
-			'appliance_resources' => "$appliance_resources",
+			'appliance_resources' => "$appliance_resources_str",
 			'appliance_type' => $appliance_virtualization_type,
 			'appliance_comment' => $appliance_db["appliance_comment"],
 			'appliance_edit' => $strEdit,
