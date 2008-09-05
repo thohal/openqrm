@@ -18,6 +18,22 @@ if [ "$WHOAMI" != "root" ]; then
 	exit 6
 fi
 
+if ! which screen 1>/dev/null; then
+	echo "ERROR: The 'screen' utility is not installed! Please install and try again."
+	image_shelf_log "ERROR: The 'screen' utility is not installed! Please install and try again."
+	exit 6
+fi
+
+# re-run in background via screen
+if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+	export RUN_IN_BACKGROUND=true
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	screen -dmS $SCREEN_NAME $0 $@
+	exit	
+fi
+
+
+
 function image-shelf_usage() {
 	echo "Usage : $0 list <-i image-shelf-url>"
 	echo "Usage : $0 get <-i image-shelf-url> <-f filename> <-n storage-server-ip:/path-to-image-dir/> <-d distribution> <-u username> <-p password>"
