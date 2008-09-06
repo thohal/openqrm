@@ -18,6 +18,11 @@ fi
 function kvm_start() {
 	echo "Starting the openQRM kvm-plugin"
 
+	# do not start on the intitrd
+	if [ -f /etc/initrd-devices.conf ]; then
+		exit 0
+	fi
+
 	# preparing the nic-bios in case the openQRM server itself is the kvm-host
 	if [ ! -d /usr/share/kvm/ ]; then
 		mkdir -p /usr/share/kvm
