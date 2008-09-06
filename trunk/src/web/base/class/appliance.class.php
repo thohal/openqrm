@@ -293,6 +293,27 @@ function get_list() {
 }
 
 
+// returns a list of all appliance ids
+function get_all_ids() {
+	global $APPLIANCE_INFO_TABLE;
+	global $event;
+	$appliance_list = array();
+	$query = "select appliance_id from $APPLIANCE_INFO_TABLE";
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute($query);
+	if (!$rs)
+		$event->log("get_list", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	else
+	while (!$rs->EOF) {
+		$appliance_list[] = $rs->fields;
+		$rs->MoveNext();
+	}
+	return $appliance_list;
+
+
+
+}
+
 
 // find a resource fitting to the appliance
 function find_resource($appliance_virtualization) {

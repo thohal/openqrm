@@ -421,10 +421,10 @@ function send_command($resource_ip, $resource_command) {
 	if(!$fp) {
 		$event->log("send_command", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "Could not send the command to resource $resource_ip", "", "", 0, 0, 0);
 		$event->log("send_command", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "$errstr ($errno)", "", "", 0, 0, 0);
-		exit();
+	} else {
+		fputs($fp,"$resource_command");
+		fclose($fp);
 	}
-	fputs($fp,"$resource_command");
-	fclose($fp);
 }
 
 
