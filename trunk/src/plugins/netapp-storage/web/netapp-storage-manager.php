@@ -23,7 +23,7 @@ require_once "$RootDir/include/htmlobject.inc.php";
 
 $netapp_storage_id = $_REQUEST["netapp_storage_id"];
 global $netapp_storage_id;
-$StorageDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/netapp-storage/storage';
+$StorageDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/netapp-storage/storage';
 $refresh_delay=2;
 
 // running the actions
@@ -142,10 +142,10 @@ function netapp_select_storage($component) {
 			$resource_icon_default="/openqrm/base/img/resource.png";
 			$storage_icon="/openqrm/base/plugins/netapp-storage/img/storage.png";
 			$state_icon="/openqrm/base/img/$storage_resource->state.png";
-			if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+			if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 				$state_icon="/openqrm/base/img/unknown.png";
 			}
-			if (file_exists($_SERVER["DOCUMENT_ROOT"].$storage_icon)) {
+			if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
 				$resource_icon_default=$storage_icon;
 			}
 			// transfer which tab should be active
@@ -250,10 +250,10 @@ function netapp_display($netapp_storage_id, $component) {
 	$resource_icon_default="/openqrm/base/img/resource.png";
 	$storage_icon="/openqrm/base/plugins/netapp-storage/img/storage.png";
 	$state_icon="/openqrm/base/img/$storage_resource->state.png";
-	if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+	if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 		$state_icon="/openqrm/base/img/unknown.png";
 	}
-	if (file_exists($_SERVER["DOCUMENT_ROOT"].$storage_icon)) {
+	if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
 		$resource_icon_default=$storage_icon;
 	}
 	// transfer which tab should be active

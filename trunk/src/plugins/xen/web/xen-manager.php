@@ -95,10 +95,10 @@ function xen_select() {
 			$resource_icon_default="/openqrm/base/img/resource.png";
 			$xen_icon="/openqrm/base/plugins/xen/img/plugin.png";
 			$state_icon="/openqrm/base/img/$xen_resource->state.png";
-			if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+			if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 				$state_icon="/openqrm/base/img/unknown.png";
 			}
-			if (file_exists($_SERVER["DOCUMENT_ROOT"].$xen_icon)) {
+			if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$xen_icon)) {
 				$resource_icon_default=$xen_icon;
 			}
 			$arBody[] = array(
@@ -171,10 +171,10 @@ function xen_display($appliance_id) {
 	$resource_icon_default="/openqrm/base/img/resource.png";
 	$xen_icon="/openqrm/base/plugins/xen/img/plugin.png";
 	$state_icon="/openqrm/base/img/$xen_resource->state.png";
-	if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+	if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 		$state_icon="/openqrm/base/img/unknown.png";
 	}
-	if (file_exists($_SERVER["DOCUMENT_ROOT"].$xen_icon)) {
+	if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$xen_icon)) {
 		$resource_icon_default=$xen_icon;
 	}
 	$xen_create_button="<a href=\"xen-create.php?xen_id=$xen_tmp->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> VM</b></a>";

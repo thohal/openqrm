@@ -96,10 +96,10 @@ function iscsi_select_storage() {
 			$resource_icon_default="/openqrm/base/img/resource.png";
 			$storage_icon="/openqrm/base/plugins/iscsi-storage/img/storage.png";
 			$state_icon="/openqrm/base/img/$storage_resource->state.png";
-			if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+			if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 				$state_icon="/openqrm/base/img/unknown.png";
 			}
-			if (file_exists($_SERVER["DOCUMENT_ROOT"].$storage_icon)) {
+			if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
 				$resource_icon_default=$storage_icon;
 			}
 			$arBody[] = array(
@@ -186,10 +186,10 @@ function iscsi_storage_display($iscsi_storage_id) {
 	$resource_icon_default="/openqrm/base/img/resource.png";
 	$storage_icon="/openqrm/base/plugins/iscsi-storage/img/storage.png";
 	$state_icon="/openqrm/base/img/$storage_resource->state.png";
-	if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+	if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 		$state_icon="/openqrm/base/img/unknown.png";
 	}
-	if (file_exists($_SERVER["DOCUMENT_ROOT"].$storage_icon)) {
+	if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
 		$resource_icon_default=$storage_icon;
 	}
 	$arBody[] = array(

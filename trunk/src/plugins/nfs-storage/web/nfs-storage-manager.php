@@ -95,10 +95,10 @@ function nfs_select_storage() {
 			$resource_icon_default="/openqrm/base/img/resource.png";
 			$storage_icon="/openqrm/base/plugins/nfs-storage/img/storage.png";
 			$state_icon="/openqrm/base/img/$storage_resource->state.png";
-			if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+			if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 				$state_icon="/openqrm/base/img/unknown.png";
 			}
-			if (file_exists($_SERVER["DOCUMENT_ROOT"].$storage_icon)) {
+			if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
 				$resource_icon_default=$storage_icon;
 			}
 			$arBody[] = array(
@@ -183,10 +183,10 @@ function nfs_storage_display($nfs_storage_id) {
 	$resource_icon_default="/openqrm/base/img/resource.png";
 	$storage_icon="/openqrm/base/plugins/nfs-storage/img/storage.png";
 	$state_icon="/openqrm/base/img/$storage_resource->state.png";
-	if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+	if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 		$state_icon="/openqrm/base/img/unknown.png";
 	}
-	if (file_exists($_SERVER["DOCUMENT_ROOT"].$storage_icon)) {
+	if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
 		$resource_icon_default=$storage_icon;
 	}
 	$arBody[] = array(

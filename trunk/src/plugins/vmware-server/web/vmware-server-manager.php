@@ -97,10 +97,10 @@ function vmware_server_select() {
 			$resource_icon_default="/openqrm/base/img/resource.png";
 			$vmware_server_icon="/openqrm/base/plugins/vmware-server/img/plugin.png";
 			$state_icon="/openqrm/base/img/$vmware_server_resource->state.png";
-			if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+			if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 				$state_icon="/openqrm/base/img/unknown.png";
 			}
-			if (file_exists($_SERVER["DOCUMENT_ROOT"].$vmware_server_icon)) {
+			if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$vmware_server_icon)) {
 				$resource_icon_default=$vmware_server_icon;
 			}
 			$arBody[] = array(
@@ -177,10 +177,10 @@ function vmware_server_display($appliance_id) {
 	$resource_icon_default="/openqrm/base/img/resource.png";
 	$vmware_server_icon="/openqrm/base/plugins/vmware-server/img/plugin.png";
 	$state_icon="/openqrm/base/img/$vmware_server_resource->state.png";
-	if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+	if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 		$state_icon="/openqrm/base/img/unknown.png";
 	}
-	if (file_exists($_SERVER["DOCUMENT_ROOT"].$vmware_server_icon)) {
+	if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$vmware_server_icon)) {
 		$resource_icon_default=$vmware_server_icon;
 	}
 	$vmware_server_create_button="<a href=\"vmware-server-create.php?vmware_server_id=$vmware_server_tmp->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> VM</b></a>";
