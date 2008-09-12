@@ -131,7 +131,12 @@ function update($image_id, $image_fields) {
 
 // removes image from the database
 function remove($image_id) {
+	global $OPENQRM_SERVER_BASE_DIR;
 	global $IMAGE_INFO_TABLE;
+	// remove auth file
+	$CMD="rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth/iauth.$image_id";
+	exec($CMD);
+	// remove from db
 	$db=openqrm_get_db_connection();
 	$rs = $db->Execute("delete from $IMAGE_INFO_TABLE where image_id=$image_id");
 }
@@ -139,8 +144,16 @@ function remove($image_id) {
 // removes image from the database by image_name
 function remove_by_name($image_name) {
 	global $IMAGE_INFO_TABLE;
+	// remove auth file
+	$rem_image = new image();
+	$rem_image->get_instance_by_name($image_name);
+	$rem_image_id = $rem_image->id;
+	$CMD="rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth/iauth.$rem_image_id";
+	exec($CMD);
+	// remove from db
 	$db=openqrm_get_db_connection();
 	$rs = $db->Execute("delete from $IMAGE_INFO_TABLE where image_name='$image_name'");
+	
 }
 
 // returns image name by image_id
@@ -227,6 +240,14 @@ function display_overview($offset, $limit, $sort, $order) {
 
 
 
+
+
+// sets a root-password for the image
+function set_root_password($id, $passwd) {
+	global $OPENQRM_SERVER_BASE_DIR;
+	$CMD="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-crypt.pl $passwd > $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth/iauth.$id";
+	exec($CMD);
+}
 
 
 // ---------------------------------------------------------------------------------

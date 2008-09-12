@@ -72,6 +72,16 @@ $error = 0;
 				$image = new image();
 				$image->update($image_id, $fields);
 
+				# set password if given
+				$image_auth_id = $fields["image_id"];
+				if(strlen($fields["image_passwd"])) {
+					$image_passwd = $fields["image_passwd"];
+					$image->set_root_password($image_auth_id, $image_passwd);
+				} else {
+					$CMD="rm -f $BaseDir/action/image-auth/iauth.$image_auth_id";
+					exec($CMD);
+				}
+
 				$strMsg .= 'saved image <b>'.$fields["image_name"].'</b><br>';
 				$args = '?strMsg='.$strMsg;
 				$args .= '&image_id='.$fields["image_id"];
@@ -183,6 +193,7 @@ function image_form() {
 			'image_type' => htmlobject_input('image_type', array("value" => $image_type, "label" => ''), 'hidden'),
 			'image_name' => htmlobject_input('image_name', array("value" => $image_name, "label" => 'Name'), 'text', 20),
 			'image_version' => htmlobject_input('image_version', array("value" => $image_version, "label" => 'Version'), 'text', 20),
+			'image_passwd' => htmlobject_input('image_passwd', array("value" => htmlobject_request('image_passwd'), "label" => 'Root-Password'), 'password', 20),
 			'image_rootdevice' => htmlobject_input('image_rootdevice', array("value" => $image_rootdevice, "label" => 'Root-device'), 'text', 20),
 			'image_rootfstype' => htmlobject_input('image_rootfstype', array("value" => $image_rootfstype, "label" => 'Root-fs type'), 'text', 20),
 			'image_isshared' => htmlobject_input('image_isshared', array("value" => '1', "label" => 'Shared'), 'checkbox', $image_isshared),

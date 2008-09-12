@@ -14,6 +14,7 @@
 	{image_type}
 	{image_name}
 	{image_version}
+	{image_passwd}
 	{image_rootdevice}
 	{image_rootfstype}
 	{image_isshared}

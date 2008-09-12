@@ -131,6 +131,15 @@ function create_fstab_commons() {
 }
 
 
+function set_root_password() {
+	local id=$1
+	if wget -q -O /iauth.$id http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/image-auth/iauth.$id 2>/iauth.log; then
+		cryptedpassword=`cat /iauth.$id`
+		rm -f /iauth.$id iauth.log
+		sed -i "s#^root:[^:]*#root:$cryptedpassword#" /mnt/etc/shadow
+	fi
+}
+
 function prepare_services() {
 	chroot /mnt ln -sf /$resource_basedir/openqrm/etc/init.d/openqrm-client /etc/init.d/openqrm-client
 	echo "#!/bin/bash -x" > /mnt/tmp/openqrm-client.enable
@@ -161,6 +170,9 @@ function prepare_net_init() {
 		fi
 	done
 }
+
+
+
 
 
 
@@ -324,6 +336,8 @@ else
 	if [ "$image_isshared" != "" ]; then
 		echo "Prepare image as shared"
 	fi
+	# set root password
+	set_root_password $image_id
 
 	# remount rw (provided by the deployment plugin)
 	###############################################################

@@ -121,6 +121,10 @@ function openqrm_server_init() {
 	$HTPASSWD -b $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd anonymous openqrm
 	chmod 666 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd
 
+	# create the image-auth dir
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth
+	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth
+
 	# here we create + add the default kernel+kernel-version to the openQRM-server
 	# via the kernel-action.form. If this returns bad something is wrong
 	DEFAULT_KERNEL_VERSION=`uname -r`
