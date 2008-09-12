@@ -194,7 +194,7 @@ function storage_edit($storage_id='') {
 		if (("$resource->imageid" == "1") && ("$resource->state" == "active")) {
 			$state_icon="/openqrm/base/img/idle.png";
 		}
-		if (!file_exists($_SERVER["DOCUMENT_ROOT"].$state_icon)) {
+		if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 			$state_icon="/openqrm/base/img/unknown.png";
 		}
 
