@@ -30,7 +30,7 @@ $NETAPP_CMD_DELAY=1;
 $refresh_delay=3;
 
 // place for the storage stat files
-$StorageDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/netapp-storage/storage';
+$StorageDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/netapp-storage/storage';
 
 $event = new event();
 $openqrm_server = new openqrm_server();

@@ -30,7 +30,7 @@ global $OPENQRM_SERVER_BASE_DIR;
 $refresh_delay=5;
 
 // place for the storage stat files
-$StorageDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/lvm-storage/storage';
+$StorageDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/lvm-storage/storage';
 // global event for logging
 $event = new event();
 

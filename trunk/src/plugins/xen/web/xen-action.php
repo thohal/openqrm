@@ -26,7 +26,7 @@ global $RESOURCE_INFO_TABLE;
 $refresh_delay=10;
 
 // place for the xen stat files
-$XenDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/xen/xen-stat';
+$XenDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/xen/xen-stat';
 
 // currently static name for the Xen-kernel
 $XEN_KERNEL_NAME="xen";

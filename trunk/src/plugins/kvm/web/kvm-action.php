@@ -25,7 +25,7 @@ global $OPENQRM_SERVER_BASE_DIR;
 global $RESOURCE_INFO_TABLE;
 
 // place for the kvm_server stat files
-$KvmDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/kvm/kvm-stat';
+$KvmDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/kvm/kvm-stat';
 
 $event = new event();
 

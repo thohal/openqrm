@@ -29,7 +29,7 @@ $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
 
 // place for the linux-vserver stat files
-$vserver_vm_dir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/linux-vserver/linux-vserver-stat';
+$vserver_vm_dir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/linux-vserver/linux-vserver-stat';
 
 $event = new event();
 
