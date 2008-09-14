@@ -8,18 +8,18 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/include/openqrm-plugin-image-shelf-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/etc/openqrm-plugin-image-shelf.conf
 
-function openqrm_plugin_vmware_server_start() {
+function openqrm_plugin_image_shelf_start() {
 	echo "Starting the openQRM image-shelf-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/image-shelf/.running
 }
 
 
-function openqrm_plugin_vmware_server_stop() {
+function openqrm_plugin_image_shelf_stop() {
 	echo "Stopping the openQRM image-shelf-plugin"
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/image-shelf/.running
 }
 
-function openqrm_plugin_vmware_server_uninstall() {
+function openqrm_plugin_image_shelf_uninstall() {
 	local USERNAME=$1
 	local PASSWORD=$2
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
@@ -31,14 +31,12 @@ function openqrm_plugin_vmware_server_uninstall() {
 		echo
 	fi
 	echo "Uninstalling the openQRM image-shelf-plugin"
-	openqrm_plugin_vmware_server_stop
-	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD image-shelf
-	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD image-shelf-vm
+	openqrm_plugin_image_shelf_stop
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/image-shelf
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-image-shelf.tgz
 }
 
-function openqrm_plugin_vmware_server_init() {
+function openqrm_plugin_image_shelf_init() {
 	local USERNAME=$1
 	local PASSWORD=$2
 	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
@@ -50,9 +48,6 @@ function openqrm_plugin_vmware_server_init() {
 		echo
 	fi
 	echo "Initializing the openQRM image-shelf-plugin"
-	# adding virtualization type	
-	openqrm_server_add_virtualization_type $USERNAME $PASSWORD image-shelf "VMware-Server Host"
-	openqrm_server_add_virtualization_type $USERNAME $PASSWORD image-shelf-vm "VMware-Server VM"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/image-shelf
 	# link the boot-service
@@ -65,21 +60,21 @@ PASS=$3
 
 case "$1" in
 	start)
-		openqrm_plugin_vmware_server_start
+		openqrm_plugin_image_shelf_start
 		;;
 	stop)
-		openqrm_plugin_vmware_server_stop
+		openqrm_plugin_image_shelf_stop
 		;;
 	restart)
-		openqrm_plugin_vmware_server_stop
+		openqrm_plugin_image_shelf_stop
 		sleep 1
-		openqrm_plugin_vmware_server_start
+		openqrm_plugin_image_shelf_start
 		;;
 	init)
-		openqrm_plugin_vmware_server_init $USER $PASS
+		openqrm_plugin_image_shelf_init $USER $PASS
 		;;
 	uninstall)
-		openqrm_plugin_vmware_server_uninstall $USER $PASS
+		openqrm_plugin_image_shelf_uninstall $USER $PASS
 		;;
 	*)
 		echo "Usage: $0 {start|stop|restart|init|uninstall}"
