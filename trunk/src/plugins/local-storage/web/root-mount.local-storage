@@ -15,14 +15,20 @@
 #
 # local-storage GRAB
 # Required defines in the image_deploy_paramters
-# IMAGE_GRAB_TO				- set to the server-location (path) the local-storage image should
-#						  	  be transfered to. syntax is : /path_to_target_image
+# IMAGE_GRAB_TO				- set to the (nfs) server-location (ip:path) the local-storage image should
+#						  	  be transfered to. syntax is : ip-address:/path_to_target_image
 #
-# IMAGE_INSTALL_FROM_NFS	- set to the server-location (path) of the nfs-deployment image
-#							  which should be installed (restored) on the local device.
-#							  syntax is : /path_to_target_image
 #
 # Optional parameters 
+#
+# IMAGE_INSTALL_FROM_NFS	- set to the server-location (ip:path) of the nfs-deployment image
+#							  which should be installed (restored) on the local device.
+#							  syntax is : ip-address:/path_to_target_image
+#
+# IMAGE_TRANSFORM_TO_NFS	- set to the server-location (ip:path) to which the content of the 
+#							  local device should be tranferred to. (local to nfs)
+#							  syntax is : ip-address:/path_to_target_image
+#
 # IMAGE_NFS_MOUNT_OPTIONS	- can be e.g. set to tcp
 #
 
@@ -187,7 +193,7 @@ function install_rootfs() {
 
 
 function transform_rootfs_to_nfs() {
-	echo "local-storage: Transforming $resource_image from $image_rootdevice to $image_storage_server_ip:$IMAGE_TRANSFORM_TO_NFS"
+	echo "local-storage: Transforming $resource_image from $image_rootdevice to $IMAGE_TRANSFORM_TO_NFS"
 	# mounting target location
 	modprobe sunrpc 1>/dev/null 2>&1
 	modprobe lockd 1>/dev/null 2>&1
@@ -197,8 +203,8 @@ function transform_rootfs_to_nfs() {
 	portmap
 	mkdir -p /mnt2
 
-	if ! mount -t nfs -o rw,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_TRANSFORM_TO_NFS /mnt2; then
-		echo "ERROR: Could not mount $image_storage_server_ip:$IMAGE_TRANSFORM_TO_NFS by nfs"
+	if ! mount -t nfs -o rw,nolock$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_TRANSFORM_TO_NFS /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_TRANSFORM_TO_NFS by nfs"
 		# give a shell for the admin
 		/bin/bash
 	fi
@@ -216,7 +222,7 @@ function transform_rootfs_to_nfs() {
 
 
 function install_rootfs_from_nfs() {
-	echo "local-storage: Installing $resource_image from nfs $image_storage_server_ip:$IMAGE_INSTALL_FROM_NFS"
+	echo "local-storage: Installing $resource_image from nfs $IMAGE_INSTALL_FROM_NFS"
 	# mounting source location
 	modprobe sunrpc 1>/dev/null 2>&1
 	modprobe lockd 1>/dev/null 2>&1
@@ -226,8 +232,8 @@ function install_rootfs_from_nfs() {
 	portmap
 	mkdir -p /mnt2
 
-	if ! mount -t nfs -o rw,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_INSTALL_FROM_NFS /mnt2; then
-		echo "ERROR: Could not mount $image_storage_server_ip:$IMAGE_INSTALL_FROM_NFS by nfs"
+	if ! mount -t nfs -o rw,nolock$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_INSTALL_FROM_NFS /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM_NFS by nfs"
 		# give a shell for the admin
 		/bin/bash
 	fi
