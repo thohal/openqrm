@@ -77,7 +77,7 @@ function local_storage_about() {
 	$disp = $disp."<b>Required Local-storage image-parameters for 'grabbing':</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."IMAGE_GRAB_TO=[path-name-to-loca-storage-image]";
+	$disp = $disp."IMAGE_GRAB_TO=[path-name-to-local-storage-image]";
 	$disp = $disp."<br>";
 	$disp = $disp."Should be set to an image-location (path) on a storage-server type 'local-storage' to";
 	$disp = $disp." which the harddisk-content should be transfered to. The syntax is : ";
