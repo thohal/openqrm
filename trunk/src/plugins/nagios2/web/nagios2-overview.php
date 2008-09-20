@@ -27,22 +27,12 @@ global $OPENQRM_SERVER_BASE_DIR;
 $strMsg = '';
 
 	switch (htmlobject_request('action')) {
-		case 'add':
+		case 'map':
 			foreach($_REQUEST['identifier'] as $id) {
 				$resource = new resource();
 				$resource->get_instance_by_id($id);
 				$ip = $resource->ip;
-				$strMsg .= $openqrm->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/bin/openqrm-nagios-manager add $id $ip");
-			}
-			redirect($strMsg);
-			break;
-
-		case 'remove':
-			foreach($_REQUEST['identifier'] as $id) {
-				$resource = new resource();
-				$resource->get_instance_by_id($id);
-				$ip = $resource->ip;
-				$strMsg .= $openqrm->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/bin/openqrm-nagios-manager remove $id $ip");
+				$strMsg .= $openqrm->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/bin/openqrm-nagios-manager map");
 			}
 			redirect($strMsg);
 			break;
@@ -81,7 +71,6 @@ function nagios_display() {
 		// prepare the values for the array
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);
-		if ($resource->id != 0) {
 			$resource_icon_default="/openqrm/base/img/resource.png";
 			$state_icon="/openqrm/base/img/$resource->state.png";
 			// idle ?
@@ -96,8 +85,7 @@ function nagios_display() {
 				'resource_icon' => "<img width=32 height=32 src=$resource_icon_default>",
 				'resource_id' => $resource_db["resource_id"],
 				'resource_hostname' => $resource_db["resource_hostname"],
-		);
-		}
+			);
 
 	}
 
@@ -110,7 +98,7 @@ function nagios_display() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('add', 'remove');
+		$table->bottom = array('map');
 		$table->identifier = 'resource_id';
 	}
 	$table->max = $resource_tmp->get_count('all');

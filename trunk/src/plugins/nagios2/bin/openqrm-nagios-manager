@@ -1,34 +1,51 @@
 #!/bin/bash
 
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/include/openqrm-plugin-nagios2-functions
+
 NAGIOS_CONF_DIR=/etc/nagios2/conf.d
+NAGIOS_GENERATED_CONF="$NAGIOS_CONF_DIR/openqrm-network.cfg"
 NAGIOS_CHECK_CMD=$1
 RESOURCE_ID=$2
 RESOURCE_IP=$3
 HOSTNAME="resource$RESOURCE_ID"
+SUBNETFILE="/tmp/subnet.xml"
+CURRENTDIR=`pwd`
 export LANG=C
 
 
+
+# get the ip config
+openqrm_server_get_config
+
+
 case "$NAGIOS_CHECK_CMD" in
-	add)
-		echo "adding $HOSTNAME"
-		echo "
-		define host{
-        use                     generic-host            ; Name of host template to use
-        host_name               $HOSTNAME
-        alias                   $HOSTNAME
-        address                 $RESOURCE_IP
-        parents					localhost
-		}
-		" > $NAGIOS_CONF_DIR/$HOSTNAME.cfg
-		/etc/init.d/nagios2 restart
-		;;
-	remove)
-		echo "removing $HOSTNAME"
-		rm $NAGIOS_CONF_DIR/$HOSTNAME.cfg
-		/etc/init.d/nagios2 restart
+	map)
+		echo "Mapping the openQRM network"
+		# for now quite simple gathering of which network to map
+		OPENQRM_NETWORK=`echo $OPENQRM_SERVER_IP_ADDRESS | cut -d'.' -f1-3`".*"
+		if ! nmap -sS -O -oX $SUBNETFILE $OPENQRM_NETWORK; then
+			nagios2_log openqrm-nagios-manager "ERROR while running nmap !"
+			exit 1
+		fi
+		cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/bin
+		./nmap2nagios-ng.pl -i -z -r $SUBNETFILE -o $NAGIOS_GENERATED_CONF
+		cd $CURRENTDIR
+
+		if nagios2 -v /etc/nagios2/nagios.cfg; then
+			/etc/init.d/nagios2 restart
+		else
+			rm -f $NAGIOS_GENERATED_CONF
+			nagios2_log openqrm-nagios-manager "ERROR: Generated nagios-configuration contains errors!"
+			exit 1
+		fi
+
 		;;
 	*)
-		echo "Usage: $0 {add|remove}"
+		echo "Usage: $0 [map]"
 		exit 1
 		;;
 esac
