@@ -28,12 +28,8 @@ $strMsg = '';
 
 	switch (htmlobject_request('action')) {
 		case 'map':
-			foreach($_REQUEST['identifier'] as $id) {
-				$resource = new resource();
-				$resource->get_instance_by_id($id);
-				$ip = $resource->ip;
-				$strMsg .= $openqrm->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/bin/openqrm-nagios-manager map");
-			}
+			$openqrm->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/bin/openqrm-nagios-manager map");
+			$strMsg .= "Now scanning the openQRM network to automatically (re-) create the Nagios configuration. This will take some time ....";
 			redirect($strMsg);
 			break;
 	}
@@ -45,66 +41,24 @@ function nagios_display() {
 	global $OPENQRM_USER;
 	global $thisfile;
 
-	$resource_tmp = new resource();
-	$table = new htmlobject_db_table('resource_id');
 
-	$disp = '<h1>Resource List</h1>';
+	$disp = '<h1>Automatic Nagios configuration</h1>';
 	$disp .= '<br>';
 
-	$arHead = array();
-	$arHead['resource_state'] = array();
-	$arHead['resource_state']['title'] ='';
+	$disp .= "<form action=\"$thisfile\" method=\"POST\">";
+	$disp .= '<br>';
+	$disp .= '<br>';
+	$disp .= '<br>';
+	$disp .= '<br>';
+	$disp .= '<br>';
+	$disp .= "<input type='hidden' name='action' value='map'>";
+	$disp .= "<input type='submit' value='Map openQRM Network'>";
+	$disp .= '<br>';
+	$disp .= '</form>';
 
-	$arHead['resource_icon'] = array();
-	$arHead['resource_icon']['title'] ='';
 
-	$arHead['resource_id'] = array();
-	$arHead['resource_id']['title'] ='ID';
-
-	$arHead['resource_hostname'] = array();
-	$arHead['resource_hostname']['title'] ='Name';
-
-	$arBody = array();
-	$resource_array = $resource_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
-
-	foreach ($resource_array as $index => $resource_db) {
-		// prepare the values for the array
-		$resource = new resource();
-		$resource->get_instance_by_id($resource_db["resource_id"]);
-			$resource_icon_default="/openqrm/base/img/resource.png";
-			$state_icon="/openqrm/base/img/$resource->state.png";
-			// idle ?
-			if (("$resource->imageid" == "1") && ("$resource->state" == "active")) {
-				$state_icon="/openqrm/base/img/idle.png";
-			}
-			if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
-				$state_icon="/openqrm/base/img/unknown.png";
-			}
-			$arBody[] = array(
-				'resource_state' => "<img width=24 height=24 src=$state_icon>",
-				'resource_icon' => "<img width=32 height=32 src=$resource_icon_default>",
-				'resource_id' => $resource_db["resource_id"],
-				'resource_hostname' => $resource_db["resource_hostname"],
-			);
-
-	}
-
-	$table->id = 'Tabelle';
-	$table->css = 'htmlobject_table';
-	$table->border = 1;
-	$table->cellspacing = 0;
-	$table->cellpadding = 3;
-	$table->form_action = $thisfile;
-	$table->head = $arHead;
-	$table->body = $arBody;
-	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('map');
-		$table->identifier = 'resource_id';
-	}
-	$table->max = $resource_tmp->get_count('all');
-	#$table->limit = 10;
 	
-	return $disp.$table->get_string();
+	return $disp;
 }
 
 

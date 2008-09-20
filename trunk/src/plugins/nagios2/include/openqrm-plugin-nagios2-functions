@@ -1,11 +1,49 @@
 #!/bin/bash
 # this is the functions file for the nagios2-plugin
 
+
+# some definitions
+DEFAULT_IMAGE_SIZE=5000
+NAGIOS_MANAGER_LOCK_FILE=/var/run/lvm-storage/openqrm-nagios-manager.lock
+NAGIOS_MANAGER_LOCK_DELAY=5
+NAGIOS_MANAGER_LOCK_RETRY=100
+NAGIOS_MANAGER_LOCK_TIMEOUT=500
+
+
 # logs for nagios2
 function nagios2_log() {
 	local COMPONENT=$1
 	shift
 	local MESSAGE=$@
 	logger -i -t "nagios2 plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function nagios_manager_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $NAGIOS_MANAGER_LOCK_FILE` ]; then
+		mkdir -p `dirname $NAGIOS_MANAGER_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $NAGIOS_MANAGER_LOCK_DELAY -r $NAGIOS_MANAGER_LOCK_RETRY -l $NAGIOS_MANAGER_LOCK_TIMEOUT $NAGIOS_MANAGER_LOCK_FILE
+				RET=$?
+				nagios2_log nagios_manager_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $NAGIOS_MANAGER_LOCK_FILE
+				RET=$?
+				nagios2_log nagios_manager_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			nagios2_log nagios_manager_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
 }
 

@@ -25,7 +25,10 @@ function nagios2_about() {
 	$disp = $disp."<b>How to use :</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."Currently this plugin needs to be configured manually. Soon come ...";
+	$disp = $disp."To generate and/or update the Nagios configuration for the openQRM-network and managed servers use";
+	$disp = $disp." the 'Config' link in the Nagios-plugin menu. The nagios-configuration is then created fully automatically";
+	$disp = $disp." by scanning the network via the 'nmap' utility. The output of the nmap run then is used by 'nmap2nagios-ng'";
+	$disp = $disp." to generate the Nagios-configuration.";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
