@@ -4,7 +4,7 @@
 
 # some definitions
 DEFAULT_IMAGE_SIZE=5000
-NAGIOS_MANAGER_LOCK_FILE=/var/run/lvm-storage/openqrm-nagios-manager.lock
+NAGIOS_MANAGER_LOCK_FILE=/var/run/nagios2/openqrm-nagios-manager.lock
 NAGIOS_MANAGER_LOCK_DELAY=5
 NAGIOS_MANAGER_LOCK_RETRY=100
 NAGIOS_MANAGER_LOCK_TIMEOUT=500
