@@ -47,8 +47,16 @@ function nagios_display() {
 
 	$disp .= "<form action=\"$thisfile\" method=\"POST\">";
 	$disp .= '<br>';
+	$disp .= 'Click on the button below to automatic map the';
+	$disp .= '<br>';
+	$disp .= 'openQRM network into Nagios.';
 	$disp .= '<br>';
 	$disp .= '<br>';
+	$disp .= 'Please notice that generating the Nagios configuration';
+	$disp .= '<br>';
+	$disp .= ' will take some time.	You can check the status of this';
+	$disp .= '<br>';
+	$disp .= 'action in the <a href="../../server/event/event-overview.php">event-list</a>';
 	$disp .= '<br>';
 	$disp .= '<br>';
 	$disp .= "<input type='hidden' name='action' value='map'>";
@@ -56,8 +64,6 @@ function nagios_display() {
 	$disp .= '<br>';
 	$disp .= '</form>';
 
-
-	
 	return $disp;
 }
 

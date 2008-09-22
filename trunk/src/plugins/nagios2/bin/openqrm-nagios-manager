@@ -3,6 +3,7 @@
 OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/include/openqrm-plugin-nagios2-functions
 
@@ -40,6 +41,7 @@ fi
 
 # get the ip config
 openqrm_server_get_config
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 
 
 case "$NAGIOS_CHECK_CMD" in
@@ -48,11 +50,14 @@ case "$NAGIOS_CHECK_CMD" in
 		# for now quite simple gathering of which network to map
 		OPENQRM_NETWORK=`echo $OPENQRM_SERVER_IP_ADDRESS | cut -d'.' -f1-3`".*"
 		nagios_manager_lock aquire
+		openqrm_post_event 0 "get" 5 "openqrm-nagios-manager" "Starting to map the openQRM network!"
 		if ! nmap -sS -O -oX $SUBNETFILE $OPENQRM_NETWORK; then
 			nagios2_log openqrm-nagios-manager "ERROR while running nmap !"
 			nagios_manager_lock release
+			openqrm_post_event 0 "get" 3 "openqrm-nagios-manager" "Mapping the openQRM network failed!"
 			exit 1
 		fi
+		openqrm_post_event 0 "get" 5 "openqrm-nagios-manager" "Mapping finished, generating the Nagios configuration!"
 		cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/bin
 		./nmap2nagios-ng.pl -i -z -r $SUBNETFILE -o $NAGIOS_GENERATED_CONF
 		cd $CURRENTDIR
@@ -60,10 +65,12 @@ case "$NAGIOS_CHECK_CMD" in
 		if nagios2 -v /etc/nagios2/nagios.cfg; then
 			/etc/init.d/nagios2 restart
 			nagios_manager_lock release
+			openqrm_post_event 0 "get" 5 "openqrm-nagios-manager" "Automatic Nagios configuration finished successfully"
 		else
 			rm -f $NAGIOS_GENERATED_CONF
 			nagios2_log openqrm-nagios-manager "ERROR: Generated nagios-configuration contains errors!"
 			nagios_manager_lock release
+			openqrm_post_event 0 "get" 3 "openqrm-nagios-manager" "The generated nagios-configuration contains errors! Please check manually."
 			exit 1
 		fi
 		;;
