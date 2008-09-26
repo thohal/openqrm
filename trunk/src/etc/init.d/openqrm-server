@@ -133,6 +133,8 @@ function openqrm_server_init() {
 		INITRD_TYPE="initramfs"
 	elif [ -f /etc/SuSE-release ]; then
 		INITRD_TYPE="initramfs"
+	elif [ -f /etc/fedora-release ]; then
+		INITRD_TYPE="initramfs"
 	else
 		INITRD_TYPE="ext2"
 	fi
