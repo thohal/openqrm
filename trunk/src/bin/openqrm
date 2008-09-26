@@ -76,7 +76,7 @@ case "$1" in
 					BOOT_IMAGE_LOCATION=/
 				fi
 				if [ "$BOOT_IMAGE_INITRD_TYPE" == "" ]; then
-					BOOT_IMAGE_INITRD_TYPE="ext2"
+					BOOT_IMAGE_INITRD_TYPE="initramfs"
 				fi
 				if [ "$BOOT_IMAGE_INITRD_TEMPLATE" == "" ]; then
 					BOOT_IMAGE_INITRD_TEMPLATE=$OPENQRM_DEFAULT_INITRD_TEMPLATE
