@@ -1,0 +1,90 @@
+#!/bin/bash
+# this is the functions file for the citrix-plugin
+
+if [ -f /var/openqrm/openqrm-resource.conf ]; then
+	. /var/openqrm/openqrm-resource.conf
+fi
+VETH="$resource_basedir/openqrm/plugins/citrix/bin/vethd"
+CITRIX_VDEVICE_NAME="citrixdhcp"
+
+################ common citrix functions
+
+# logs for citrix
+function citrix_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "citrix plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function citrix_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $LVM_MGMT_LOCK_FILE` ]; then
+		mkdir -p `dirname $LVM_MGMT_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $LVM_MGMT_LOCK_DELAY -r $LVM_MGMT_LOCK_RETRY -l $LVM_MGMT_LOCK_TIMEOUT $LVM_MGMT_LOCK_FILE
+				RET=$?
+				citrix_log citrix_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $LVM_MGMT_LOCK_FILE
+				RET=$?
+				citrix_log citrix_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			citrix_log citrix_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ citrix functions
+
+
+# trick the dhcpd server
+function citrix_get_next_ip() {
+	local PARTITION_MAC=$1
+	local RET=0
+	# create the virtual interface to trick the dhcpd
+	OPENQRM_INTERFACE=`ifconfig | grep eth | grep ":oq" | cut -d':' -f 1`
+	if ! $VETH -v $CITRIX_VDEVICE_NAME -e $OPENQRM_INTERFACE -m $PARTITION_MAC; then
+		citrix_log get_next_ip "ERROR Could not start virtual interface $CITRIX_VDEVICE_NAME !"
+		return 1
+	fi
+	# now we request a new ip from the dhcpd on the bridge
+	if dhclient $CITRIX_VDEVICE_NAME; then
+		PARTITION_IP=`ifconfig $CITRIX_VDEVICE_NAME | grep "inet " | awk {' print $2 '} | cut -d':' -f 2`
+		PARTITION_BROADCAST=`ifconfig $CITRIX_VDEVICE_NAME | grep "inet " | awk {' print $3 '} | cut -d':' -f 2`
+		PARTITION_SUBNET=`ifconfig $CITRIX_VDEVICE_NAME | grep "inet " | awk {' print $4 '} | cut -d':' -f 2`
+		RET=0
+	else
+		citrix_log get_next_ip "ERROR Failed to get a new ip-address on $CITRIX_VDEVICE_NAME !"
+		RET=1
+	fi
+	# clean up
+	ifconfig $CITRIX_VDEVICE_NAME down
+	DHCLIENT_PID=`ps ax | grep "dhclient $CITRIX_VDEVICE_NAME" | grep -v grep | awk {' print $1 '}`
+	kill $DHCLIENT_PID
+	kill -9 $DHCLIENT_PID 1>/dev/null 2>&1
+	sleep 1
+	# stop the virtual interface
+	kill `ps ax | grep $CITRIX_VDEVICE_NAME | grep vethd | grep -v grep | awk {' print $1 '}`
+	export PARTITION_IP PARTITION_BROADCAST PARTITION_SUBNET
+	return $RET
+}
+
+
+
+
+
+
