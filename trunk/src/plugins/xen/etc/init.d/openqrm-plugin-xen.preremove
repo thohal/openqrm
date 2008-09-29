@@ -1,3 +1,0 @@
-#!/bin/bash
-# this is the openqrm-plugin-xen preremove script
-`dirname $0`/openqrm-plugin-xen stop
