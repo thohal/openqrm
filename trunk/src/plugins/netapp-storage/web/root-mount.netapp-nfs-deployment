@@ -30,6 +30,8 @@
 OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
 . $OPENQRM_RESOURCE_PARAMETER_FILE
 eval $image_deployment_parameter
+export OPENQRM_SERVER_BASE_DIR=$resource_basedir
+$OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 
 if [ "$IMAGE_NFS_MOUNT_OPTIONS" != "" ]; then
 	IMAGE_NFS_MOUNT_OPTIONS=",$IMAGE_NFS_MOUNT_OPTIONS"
@@ -45,7 +47,7 @@ function mount_rootfs() {
 	modprobe nfs 1>/dev/null 2>&1
 	rm -rf /dev/null
 	mknod -m 666 /dev/null c 1 3
-	portmap
+	openqrm_portmap_start
 
 	if ! mount -t nfs -o rw,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_ROOT_DIR /mnt; then
 		echo "ERROR: Could not mount $image_storage_server_ip:$IMAGE_ROOT_DIR by nfs"
@@ -90,7 +92,7 @@ function remount_rootfs() {
 		fi
 	done
 	echo "nfs-storage: Re-mounted $image_storage_server_ip:$IMAGE_ROOT_DIR ro"
-	killall portmap
+	openqrm_portmap_stop
 	
 }
 

@@ -34,6 +34,8 @@
 OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
 . $OPENQRM_RESOURCE_PARAMETER_FILE
 eval $image_deployment_parameter
+export OPENQRM_SERVER_BASE_DIR=$resource_basedir
+$OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 
 # nfs-options for the install+transform phase
 if [ "$IMAGE_NFS_MOUNT_OPTIONS" != "" ]; then
@@ -161,7 +163,7 @@ function install_rootfs() {
 	modprobe nfs 1>/dev/null 2>&1
 	rm -rf /dev/null
 	mknod -m 666 /dev/null c 1 3
-	portmap
+	openqrm_portmap_start
 	echo "iscsi-storage: Installing $resource_image from $IMAGE_INSTALL_FROM"
 	mkdir -p /mnt2
 	if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_INSTALL_FROM /mnt2; then
@@ -175,7 +177,7 @@ function install_rootfs() {
 	echo "iscsi-storage: Copying finished. Continuing boot-up"
 	umount /mnt2
 	rmdir /mnt2
-	killall portmap
+	openqrm_portmap_stop
 }
 
 
