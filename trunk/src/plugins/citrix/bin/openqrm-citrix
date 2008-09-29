@@ -3,9 +3,13 @@
 # this script automatically manages citrix
 OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
-. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/include/openqrm-plugin-citrix-functions
-CITRIX_VM_LIST_TMP=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/web/citrix-stat/citrix-vm.lst
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+openqrm_server_get_config
+export LANG=C
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 
 # let only root run this script
 WHOAMI=`whoami`
@@ -15,8 +19,8 @@ if [ "$WHOAMI" != "root" ]; then
 fi
 
 function citrix_usage() {
-	echo "Usage : $0 start/stop/list <-n vm-uuid>"
-	echo "        $0 post_vm_list"
+	echo "Usage : $0 start/stop/list <-s citrix-server-ip> <-n vm-uuid>"
+	echo "        $0 post_vm_list <-s citrix-server-ip>"
 	exit 1
 }
 
@@ -30,6 +34,10 @@ while [ $# -ne 0 ]; do
 			CITRIX_VM_UUID=$2
 			shift
 			;;
+		-s)
+			CITRIX_SERVER_IP=$2
+			shift
+			;;
 		*)
 			echo "ERROR: Free commandline arguments are not allowed"
 			citrix_usage
@@ -38,8 +46,6 @@ while [ $# -ne 0 ]; do
 	esac
 	shift
 done
-
-
 
 
 # main
@@ -52,27 +58,38 @@ if [ "$CITRIX_COMMAND" != "list" ] && [ "$CITRIX_COMMAND" != "post_vm_list" ]; t
 		citrix_usage
 	fi
 fi
+if [ "$CITRIX_SERVER_IP" == "" ]; then
+	citrix_usage
+fi
 
+CITRIX_SERVER_PASSWD_FILE=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/web/citrix-stat/citrix-host.pwd.$CITRIX_SERVER_IP
+CITRIX_VM_LIST_TMP=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/web/citrix-stat/citrix-vm.lst.$CITRIX_SERVER_IP
+mkdir -p `dirname $CITRIX_VM_LIST_TMP`
+chmod 777 `dirname $CITRIX_VM_LIST_TMP`
+
+if [ ! -f $CITRIX_SERVER_PASSWD_FILE ]; then
+	citrix_log openqrm-citrix "No password file ($CITRIX_SERVER_PASSWD_FILE) existing for Citrix host $CITRIX_SERVER_IP"
+	openqrm_post_event 0 "$CITRIX_COMMAND" 3 "openqrm-citrix" "No password file ($CITRIX_SERVER_PASSWD_FILE) existing for Citrix host $CITRIX_SERVER_IP"
+	exit 1
+fi
 
 case "$CITRIX_COMMAND" in 
 
 	start)
 		echo "Starting Citrix vm $CITRIX_VM_UUID"
-		$CITRIX_XE_BINARY start uuid=$CITRIX_VM_UUID
+		$CITRIX_XE_BINARY start -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID
 		;;
 	stop)
 		echo "Stopping Citrix vm $CITRIX_VM_UUID"
-		$CITRIX_XE_BINARY vm-shutdown uuid=$CITRIX_VM_UUID
+		$CITRIX_XE_BINARY stop -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID
 		;;
 	list)
 		echo "Listing Citrix vms"
-		$CITRIX_XE_BINARY vm-list
+		$CITRIX_XE_BINARY vm-list -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE
 		;;
 	post_vm_list)
 		echo "Posting vm list to the openQRM-server"
-		mkdir -p `dirname $CITRIX_VM_LIST_TMP`
-		chmod 777 `dirname $CITRIX_VM_LIST_TMP`
-		$CITRIX_XE_BINARY list > $CITRIX_VM_LIST_TMP
+		$CITRIX_XE_BINARY vm-list -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE > $CITRIX_VM_LIST_TMP
 		;;
 	*)
 		citrix_usage
