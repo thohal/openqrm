@@ -4,4 +4,5 @@
 #	IMG
 #	Target
 .|Citrix
-..|Xen Manager|plugins/citrix/citrix-manager.php
+..|About|plugins/citrix/citrix-about.php
+..|Citrix Manager|plugins/citrix/citrix-manager.php

@@ -19,7 +19,7 @@ $citrix_id = $_REQUEST["citrix_id"];
 function citrix_create() {
 	global $citrix_id;
 
-	$disp = "<b>Xen Create VM</b>";
+	$disp = "<b>Citrix Create VM</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$citrix = new resource();
@@ -53,7 +53,7 @@ function citrix_create() {
 $output = array();
 // if admin
 if ($OPENQRM_USER->role == "administrator") {
-	$output[] = array('label' => 'Xen Create VM', 'value' => citrix_create());
+	$output[] = array('label' => 'Citrix Create VM', 'value' => citrix_create());
 }
 
 echo htmlobject_tabmenu($output);
