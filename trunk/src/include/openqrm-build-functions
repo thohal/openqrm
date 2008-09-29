@@ -24,6 +24,11 @@ if [ -x "/sbin/rpcbind" ]; then
 else
 	OPENQRM_INITRD_COMPONENTS="/sbin/portmap"
 fi
+if [ -x "/sbin/rpc.statd" ]; then
+	OPENQRM_INITRD_COMPONENTS="$OPENQRM_INITRD_COMPONENTS /sbin/rpc.statd"
+fi
+
+
 OPENQRM_INITRD_COMPONENTS="$OPENQRM_INITRD_COMPONENTS /bin/bash /usr/bin/rsync /sbin/modprobe /sbin/depmod /sbin/insmod /sbin/lsmod /sbin/mke2fs /sbin/sfdisk /sbin/udevd /lib/udev/vol_id"
 OPENQRM_INITRD_DIRECTORIES="bin etc etc/rc.d/init.d etc/sysconfig etc/X11 lib lib/modules lib/i686 loopfs mnt old_root proc sys sysroot usr usr/lib usr/bin usr/sbin var var/lock var/lock/subsys var/log var/run /var/lib /var/lib/nfs /var/lib/nfs/statd"
 
@@ -340,8 +345,20 @@ EOF
 	ln -sf /proc/mounts mtab
 	ln -sf rc.d/init.d init.d
 	touch fstab
+	# passwd + group
 	echo "root:x:0:0:root:/root:/bin/bash" > passwd
+	echo "rpc:x:100:100:rpc:/tmp:/bin/bash" >> passwd
 	echo "root:x:0:root" > group
+	echo "rpc:x:100:root" >> group
+	# hosts
+	echo "127.0.0.1" > hosts
+	# netconfig ? fedora has + needs it
+	if [ -f "/etc/netconfig" ]; then
+		cp -a /etc/netconfig .
+	fi
+	# services
+	cp -a /etc/services .
+	# nsswitch
 	echo "passwd:     files" > nsswitch.conf
 	echo "shadow:     files" >> nsswitch.conf
 	echo "group:      files" >> nsswitch.conf

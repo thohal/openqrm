@@ -373,3 +373,30 @@ function openqrm_post_event() {
 
 
 
+# a generic function to start portmap
+# -> on some systems (e.g. fedora) we need to start rpcbind
+function openqrm_portmap_start() {
+	if which rpcbind 1>/dev/null; then
+		rpcbind
+		rpc.statd
+	else
+		portmap
+	fi
+}
+
+
+
+# a generic function to stop portmap
+# -> on some systems (e.g. fedora) we need to stop rpcbind
+function openqrm_portmap_stop() {
+	if which rpcbind 1>/dev/null; then
+		killall rpc.statd
+		killall rpcbind
+	else
+		killall portmap
+	fi
+}
+
+
+
+

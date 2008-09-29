@@ -36,6 +36,8 @@
 OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
 . $OPENQRM_RESOURCE_PARAMETER_FILE
 eval $image_deployment_parameter
+export OPENQRM_SERVER_BASE_DIR=$resource_basedir
+$OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 
 #######################################################################
 # required functions ##################################################
@@ -123,7 +125,7 @@ function grab_rootfs() {
 	modprobe nfs 1>/dev/null 2>&1
 	rm -rf /dev/null
 	mknod -m 666 /dev/null c 1 3
-	portmap
+	openqrm_portmap_start
 	mkdir -p /mnt2
 	if ! mount -t nfs -o rw,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_GRAB_TO /mnt2; then
 		echo "ERROR: Could not mount $image_storage_server_ip:$IMAGE_GRAB_TO by nfs"
@@ -143,7 +145,7 @@ function grab_rootfs() {
 
 	umount /mnt2
 	rmdir /mnt2
-	killall portmap
+	openqrm_portmap_stop
 }
 
 
@@ -167,7 +169,7 @@ function install_rootfs() {
 	modprobe nfs 1>/dev/null 2>&1
 	rm -rf /dev/null
 	mknod -m 666 /dev/null c 1 3
-	portmap
+	openqrm_portmap_start
 	mkdir -p /mnt2
 	if ! mount -t nfs -o ro,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_INSTALL_FROM /mnt2; then
 		echo "ERROR: Could not mount $image_storage_server_ip:$IMAGE_INSTALL_FROM by nfs"
@@ -186,7 +188,7 @@ function install_rootfs() {
 
 	umount /mnt2
 	rmdir /mnt2
-	killall portmap
+	openqrm_portmap_stop
 		
 }
 
@@ -200,7 +202,7 @@ function transform_rootfs_to_nfs() {
 	modprobe nfs 1>/dev/null 2>&1
 	rm -rf /dev/null
 	mknod -m 666 /dev/null c 1 3
-	portmap
+	openqrm_portmap_start
 	mkdir -p /mnt2
 
 	if ! mount -t nfs -o rw,nolock$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_TRANSFORM_TO_NFS /mnt2; then
@@ -215,7 +217,7 @@ function transform_rootfs_to_nfs() {
 
 	umount /mnt2
 	rmdir /mnt2
-	killall portmap
+	openqrm_portmap_stop
 		
 }
 
@@ -229,7 +231,7 @@ function install_rootfs_from_nfs() {
 	modprobe nfs 1>/dev/null 2>&1
 	rm -rf /dev/null
 	mknod -m 666 /dev/null c 1 3
-	portmap
+	openqrm_portmap_start
 	mkdir -p /mnt2
 
 	if ! mount -t nfs -o rw,nolock$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_INSTALL_FROM_NFS /mnt2; then
@@ -244,7 +246,7 @@ function install_rootfs_from_nfs() {
 
 	umount /mnt2
 	rmdir /mnt2
-	killall portmap
+	openqrm_portmap_stop
 }
 
 
