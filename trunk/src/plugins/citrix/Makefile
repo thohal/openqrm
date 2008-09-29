@@ -1,5 +1,6 @@
 # this is the openQRM citrix-plugin Makefile
 
+
 export OPENQRM_SERVER_CONF=$(shell pwd)/../../etc/openqrm-server.conf
 
 configure:

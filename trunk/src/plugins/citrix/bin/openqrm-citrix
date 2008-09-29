@@ -11,6 +11,7 @@ openqrm_server_get_config
 export LANG=C
 export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 
+
 # let only root run this script
 WHOAMI=`whoami`
 if [ "$WHOAMI" != "root" ]; then

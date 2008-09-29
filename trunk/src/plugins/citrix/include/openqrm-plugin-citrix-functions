@@ -8,6 +8,7 @@ VETH="$resource_basedir/openqrm/plugins/citrix/bin/vethd"
 CITRIX_VDEVICE_NAME="citrixdhcp"
 CITRIX_XE_BINARY=/usr/sbin/xe
 
+
 ################ common citrix functions
 
 # logs for citrix

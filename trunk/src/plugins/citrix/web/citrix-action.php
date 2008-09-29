@@ -3,6 +3,7 @@ $citrix_command = $_REQUEST["citrix_command"];
 $citrix_id = $_REQUEST["citrix_id"];
 ?>
 
+
 <html>
 <head>
 <title>openQRM Citrix actions</title>
