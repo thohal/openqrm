@@ -3,8 +3,8 @@
 # this script automatically manages citrix
 OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/include/openqrm-plugin-citrix-functions
-
 CITRIX_VM_LIST_TMP=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/web/citrix-stat/citrix-vm.lst
 
 # let only root run this script
@@ -58,21 +58,21 @@ case "$CITRIX_COMMAND" in
 
 	start)
 		echo "Starting Citrix vm $CITRIX_VM_UUID"
-		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/xe start uuid=$CITRIX_VM_UUID
+		$CITRIX_XE_BINARY start uuid=$CITRIX_VM_UUID
 		;;
 	stop)
 		echo "Stopping Citrix vm $CITRIX_VM_UUID"
-		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/xe vm-shutdown uuid=$CITRIX_VM_UUID
+		$CITRIX_XE_BINARY vm-shutdown uuid=$CITRIX_VM_UUID
 		;;
 	list)
 		echo "Listing Citrix vms"
-		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/xe vm-list
+		$CITRIX_XE_BINARY vm-list
 		;;
 	post_vm_list)
 		echo "Posting vm list to the openQRM-server"
 		mkdir -p `dirname $CITRIX_VM_LIST_TMP`
 		chmod 777 `dirname $CITRIX_VM_LIST_TMP`
-		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/xe list > $CITRIX_VM_LIST_TMP
+		$CITRIX_XE_BINARY list > $CITRIX_VM_LIST_TMP
 		;;
 	*)
 		citrix_usage

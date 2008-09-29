@@ -4,12 +4,29 @@
 OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
-. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/include/openqrm-plugin-citrix-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/etc/openqrm-plugin-citrix.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+openqrm_server_get_config
+export LANG=C
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+
+
+function openqrm_plugin_citrix_check_for_xe() {
+	if [ ! -x $CITRIX_XE_BINARY ]; then
+		echo "openqrm-plugin-citrix" "Xe binary ($CITRIX_XE_BINARY) missing! Could not enable the Citrix plugin"
+		echo "Please install the Xe binary (xen-server-tools package) !"
+		openqrm_post_event 0 "get" 3 "openqrm-plugin-citrix" "Xe binary ($CITRIX_XE_BINARY) missing! Could not enable the Citrix plugin"
+		openqrm_post_event 0 "get" 3 "openqrm-plugin-citrix" "Please install the Xe binary (xen-server-tools package) !"
+		exit 1
+	fi
+
+}
+
 
 function openqrm_plugin_citrix_start() {
 	echo "Starting the openQRM citrix-plugin"
+	openqrm_plugin_citrix_check_for_xe
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/citrix/.running
 }
 
@@ -49,6 +66,7 @@ function openqrm_plugin_citrix_init() {
 		echo
 	fi
 	echo "Initializing the openQRM citrix-plugin"
+	openqrm_plugin_citrix_check_for_xe
 	# adding virtualization type	
 	openqrm_server_add_virtualization_type $USERNAME $PASSWORD citrix "Citrix Host"
 	openqrm_server_add_virtualization_type $USERNAME $PASSWORD citrix-vm "Citrix VM"
