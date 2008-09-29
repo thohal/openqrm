@@ -4,12 +4,8 @@
 OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/include/openqrm-plugin-citrix-functions
-. /var/openqrm/openqrm-resource.conf
-OPENQRM_POSTENCODE="$resource_basedir/openqrm/sbin/openqrm-postencode.py"
-OPENQRM_CITRIX_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/etc/templates/openqrm-citrix-vm"
-# using the citrix-tools domain location
-OPENQRM_VM_DIR=`grep ^dir /etc/citrix-tools/citrix-tools.conf | cut -d'=' -f2 | awk {' print $1 '}`"/domains/"
 
+CITRIX_VM_LIST_TMP=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/web/citrix-stat/citrix-vm.lst
 
 # let only root run this script
 WHOAMI=`whoami`
@@ -19,10 +15,8 @@ if [ "$WHOAMI" != "root" ]; then
 fi
 
 function citrix_usage() {
-	echo "Usage : $0 start/stop/reboot/kill/add/delete/remove/list <-n vm-name>"
-	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-i ip-address> <-r memory> [-d disk-size -s swap-size]"
-	echo "Usage : $0 migrate <-n vm-name> <-i ip-address> <-t live/regular>"
-	echo "        $0 post_vm_list <-u username> <-p password>"
+	echo "Usage : $0 start/stop/list <-n vm-uuid>"
+	echo "        $0 post_vm_list"
 	exit 1
 }
 
@@ -33,39 +27,7 @@ shift
 while [ $# -ne 0 ]; do
 	case "$1" in
 		-n)
-			CITRIX_VM_NAME=$2
-			shift
-			;;
-		-m)
-			CITRIX_VM_MAC=$2
-			shift
-			;;
-		-i)
-			CITRIX_VM_IP=$2
-			shift
-			;;
-		-r)
-			CITRIX_VM_RAM=$2
-			shift
-			;;
-		-d)
-			CITRIX_VM_DISK=$2
-			shift
-			;;
-		-s)
-			CITRIX_VM_SWAP=$2
-			shift
-			;;
-		-t)
-			CITRIX_MIGRATION_TYPE=$2
-			shift
-			;;
-		-u)
-			CITRIX_OPENQRM_USERNAME=$2
-			shift
-			;;
-		-p)
-			CITRIX_OPENQRM_PASSWORD=$2
+			CITRIX_VM_UUID=$2
 			shift
 			;;
 		*)
@@ -85,132 +47,32 @@ if [ "$CITRIX_COMMAND" == "" ]; then
 	citrix_usage
 fi
 
-if [ "$CITRIX_COMMAND" == "post_vm_list" ]; then
-		if [ "$CITRIX_OPENQRM_USERNAME" == "" ]; then
-			citrix_usage
-		fi
-		if [ "$CITRIX_OPENQRM_PASSWORD" == "" ]; then
-			citrix_usage
-		fi
-else
-
-	if [ "$CITRIX_COMMAND" != "list" ]; then
-		if [ "$CITRIX_VM_NAME" == "" ]; then
-			citrix_usage
-		fi
+if [ "$CITRIX_COMMAND" != "list" ] && [ "$CITRIX_COMMAND" != "post_vm_list" ]; then
+	if [ "$CITRIX_VM_UUID" == "" ]; then
+		citrix_usage
 	fi
 fi
 
 
 case "$CITRIX_COMMAND" in 
 
-	create)
-		if [ "$CITRIX_VM_MAC" == "" ]; then
-			citrix_usage
-		fi
-		if [ "$CITRIX_VM_IP" == "" ]; then
-			citrix_usage
-		fi
-		if [ "$CITRIX_VM_RAM" == "" ]; then
-			citrix_usage
-		fi
-		echo "Creating Xen vm $CITRIX_VM_NAME -> /etc/citrix/$CITRIX_VM_NAME.cfg"
-		# gathering some infos
-		if [ "$CITRIX_VM_IP" == "dhcp" ]; then
-			echo "-> gathering an ip-address for $CITRIX_VM_MAC ..."
-			if ! citrix_get_next_ip $CITRIX_VM_MAC; then
-				return 1			
-			fi
-			export CITRIX_VM_IP=$PARTITION_IP
-			export OPENQRM_CITRIX_SUBNET_MASK=$PARTITION_SUBNET
-		else
-			export OPENQRM_CITRIX_SUBNET_MASK=`ifconfig | grep $resource_ip | cut -d':' -f3 | awk {' print $1 '}`
-		fi
-		export OPENQRM_CITRIX_DEFAULT_GATEWAY=`route -n | grep ^0.0.0.0 | head -n1 | awk {' print $2 '}`
-		export OPENQRM_RESOURCE_ID=-1
-		export OPENQRM_KERNEL_VERSION=`uname -r`
-		# creating the cfg
-		cat $OPENQRM_CITRIX_VM_TEMPLATE |	\
-			sed -e "s/@@CITRIX_VM_NAME@@/$CITRIX_VM_NAME/g" |	\
-			sed -e "s/@@KERNEL_NAME@@/$resource_kernel/g" |	\
-			sed -e "s/@@KERNEL_VERSION@@/$OPENQRM_KERNEL_VERSION/g" |	\
-			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$CITRIX_VM_RAM/g" |	\
-			sed -e "s/@@OPENQRM_RESOURCE_ID@@/$OPENQRM_RESOURCE_ID/g" |	\
-			sed -e "s/@@OPENQRM_RESOURCE_IP@@/$CITRIX_VM_IP/g" |	\
-			sed -e "s/@@OPENQRM_RESOURCE_MAC@@/$CITRIX_VM_MAC/g" |	\
-			sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$resource_openqrmserver/g" | \
-			sed -e "s/@@OPENQRM_CITRIX_SUBNET_MASK@@/$OPENQRM_CITRIX_SUBNET_MASK/g" | \
-			sed -e "s/@@OPENQRM_CITRIX_DEFAULT_GATEWAY@@/$OPENQRM_CITRIX_DEFAULT_GATEWAY/g" \
-			> /etc/citrix/$CITRIX_VM_NAME.cfg
-
-		# disk + swap
-		if [ "$CITRIX_VM_DISK" != "" ] && [ "$CITRIX_VM_SWAP" != "" ]; then
-			echo "-> Creating disk + swap"
-			mkdir -p $OPENQRM_VM_DIR/$CITRIX_VM_NAME
-			dd if=/dev/zero of=$OPENQRM_VM_DIR/$CITRIX_VM_NAME/disk.img bs=1M count=$CITRIX_VM_DISK
-			mkfs.ext3 -F $OPENQRM_VM_DIR/$CITRIX_VM_NAME/disk.img
-			dd if=/dev/zero of=$OPENQRM_VM_DIR/$CITRIX_VM_NAME/swap.img bs=1M count=$CITRIX_VM_SWAP
-			mkswap -f $OPENQRM_VM_DIR/$CITRIX_VM_NAME/swap.img
-			cat >> /etc/citrix/$CITRIX_VM_NAME.cfg << EOF
-root        = '/dev/hda1 ro'
-disk        = [ 'file:$OPENQRM_VM_DIR/$CITRIX_VM_NAME/disk.img,hda1,w', 'file:$OPENQRM_VM_DIR/$CITRIX_VM_NAME/swap.img,hda2,w' ]
-EOF
-		fi
-		xe new /etc/citrix/$CITRIX_VM_NAME.cfg
-		xe start $CITRIX_VM_NAME
-		;;
-	add)
-		echo "Adding Xen vm $CITRIX_VM_NAME"
-		xe new /etc/citrix/$CITRIX_VM_NAME.cfg
-		;;
 	start)
-		echo "Starting Xen vm $CITRIX_VM_NAME"
-		xe start uuid=
+		echo "Starting Citrix vm $CITRIX_VM_UUID"
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/xe start uuid=$CITRIX_VM_UUID
 		;;
 	stop)
-		echo "Stopping Xen vm $CITRIX_VM_NAME"
-		xe vm-shutdown uuid=
-		;;
-	kill)
-		echo "Force-stop Xen vm $CITRIX_VM_NAME"
-		xe vm-destroy uuid=
-		;;
-	reboot)
-		echo "Rebooting Xen vm $CITRIX_VM_NAME"
-		xe vm-reboot uuid=
-		;;
-	remove)
-		echo "Removing Xen vm $CITRIX_VM_NAME"
-		xe vm-destroy uuid=
-		;;
-	delete)
-		echo "Deleting Xen vm $CITRIX_VM_NAME"
-		xe destroy uuid=
-		;;
-	migrate)
-		echo "Migrating Xen vm $CITRIX_VM_NAME to $CITRIX_VM_IP ($CITRIX_MIGRATION_TYPE)"
+		echo "Stopping Citrix vm $CITRIX_VM_UUID"
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/xe vm-shutdown uuid=$CITRIX_VM_UUID
 		;;
 	list)
-		echo "Listing Xen vms"
-		xe vm-list
+		echo "Listing Citrix vms"
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/xe vm-list
 		;;
 	post_vm_list)
 		echo "Posting vm list to the openQRM-server"
-		VM_LIST_TMP=$resource_id.vm_list
-		xe list > $VM_LIST_TMP
-		# add #'s at the beginning to make later parsing easier
-		cat $VM_LIST_TMP | sed -e "s/^/#/g" > $VM_LIST_TMP.up
-		mv -f $VM_LIST_TMP.up $VM_LIST_TMP
-		echo "<br>Available inactive Xen vms :<br>" >> $VM_LIST_TMP
-		for cfg in `ls /etc/citrix/*.cfg`; do
-			basename $cfg >> $VM_LIST_TMP
-		done
-		if ! wget -q -O /dev/null --http-user=$CITRIX_OPENQRM_USERNAME --http-password=$CITRIX_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$resource_openqrmserver/openqrm/base/plugins/citrix/citrix-action.php?citrix_command=get_citrix; then
-			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!"
-			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!" | logger
-		fi
-		rm -f $VM_LIST_TMP
-		rm -f $VM_LIST_TMP.post
+		mkdir -p `dirname $CITRIX_VM_LIST_TMP`
+		chmod 777 `dirname $CITRIX_VM_LIST_TMP`
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/xe list > $CITRIX_VM_LIST_TMP
 		;;
 	*)
 		citrix_usage
