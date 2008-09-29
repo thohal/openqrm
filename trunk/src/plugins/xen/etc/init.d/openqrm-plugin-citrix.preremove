@@ -1,3 +1,0 @@
-#!/bin/bash
-# this is the openqrm-plugin-citrix preremove script
-`dirname $0`/openqrm-plugin-citrix stop

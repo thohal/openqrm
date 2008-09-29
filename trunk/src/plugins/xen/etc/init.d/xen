@@ -1,0 +1,94 @@
+#!/bin/bash
+# this is the boot-service init script for the Xen-hosts
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/include/openqrm-plugin-xen-functions
+if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+	OPENQRM_INTERFACE=`ifconfig | grep $resource_mac | grep :oq | cut -d':' -f1`
+elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+	OPENQRM_INTERFACE=$OPENQRM_SERVER_INTERFACE
+	resource_kernel=xen
+fi
+# only run on xen hosts
+grep -q "control_d" /proc/xen/capabilities 2>/dev/null || exit 0
+
+function xen_start() {
+	echo "Starting the openQRM xen-plugin"
+	xen_stop 1>/dev/null 2>&1
+
+	# xen interface -> the one not bounded to the rootfs
+	XEN_INTERFACE=`ifconfig | grep ^eth | grep -v $OPENQRM_INTERFACE | head -n1 | awk {' print $1 '}`
+	if [ -x /etc/xen/scripts/network-bridge ]; then
+		/etc/xen/scripts/network-bridge start vifnum=0 bridge=xenbr0 netdev=$XEN_INTERFACE 
+	fi
+
+	# download the initrd
+	if ! wget -q -O /boot/initrd-$resource_kernel.img http://$OPENQRM_SERVER_IP/openqrm/boot-service/initrd-$resource_kernel.img; then
+		echo "ERROR: Could not download http://$OPENQRM_SERVER_IP/openqrm/boot-service/initrd-$resource_kernel.img"
+		return 1
+	fi
+	# adjust Xen-config	and enable migration
+	if [ -f /etc/xen/xend-config.sxp ]; then
+		cat /etc/xen/xend-config.sxp |	\
+			sed -e "s/^(xend-relocation-hosts-allow/#(xend-relocation-hosts-allow/g" |	\
+			sed -e "s/^#(xend-relocation-hosts-allow '')/(xend-relocation-hosts-allow '')/g" |	\
+			sed -e "s/^#(xend-relocation-port 8002)/(xend-relocation-port 8002)/g" |	\
+			sed -e "s/^#(xend-relocation-address '')/(xend-relocation-address '')/g" > /tmp/xend-config.sxp.openqrm
+		mv -f /tmp/xend-config.sxp.openqrm /etc/xen/xend-config.sxp
+	fi
+	# restart xen
+	if [ -x /etc/init.d/xend ]; then
+		/etc/init.d/xend stop
+		/etc/init.d/xend start
+	fi
+
+}
+
+
+function xen_stop() {
+	echo "Stopping the openQRM xen-plugin"
+	/etc/init.d/xend stop
+}
+
+
+
+
+
+case "$1" in
+	start)
+		xen_start
+		;;
+	stop)
+		xen_stop
+		;;
+	restart)
+		xen_stop
+		sleep 1
+		xen_start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+
+esac
+exit $?
+
+
+
+
+
+
+
+
+
+
+
+
+
