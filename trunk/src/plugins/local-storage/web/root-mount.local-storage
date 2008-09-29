@@ -37,7 +37,7 @@ OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
 . $OPENQRM_RESOURCE_PARAMETER_FILE
 eval $image_deployment_parameter
 export OPENQRM_SERVER_BASE_DIR=$resource_basedir
-$OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 
 #######################################################################
 # required functions ##################################################

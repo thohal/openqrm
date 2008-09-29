@@ -6,4 +6,3 @@
 .|Citrix
 ..|About|plugins/citrix/citrix-about.php
 ..|Citrix Manager|plugins/citrix/citrix-manager.php
-
