@@ -1,0 +1,7 @@
+#	Title
+#	Href
+#	Alt
+#	IMG
+#	Target
+.|DNS
+..|About|plugins/dns/dns-about.php

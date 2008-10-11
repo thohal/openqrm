@@ -1,0 +1,44 @@
+#!/bin/bash
+
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/include/openqrm-plugin-dns-functions
+
+DNS_CMD=$1
+APPLIANCE_ID=$2
+APPLIANCE_NAME=$3
+APPLIANCE_IP=$4
+# get the last byte from the ip for the reverse entry
+APPLIANCE_LAST_IP_BYTE=`echo $APPLIANCE_IP | cut -d'.' -f 4`
+export LANG=C
+
+
+case "$DNS_CMD" in
+	start)
+		dns_lock aquire
+		dns_log openqrm-dns-manager "Appliance $APPLIANCE_NAME id $APPLIANCE_ID starting with ip-address $APPLIANCE_IP"
+		echo "$APPLIANCE_NAME	IN	A	$APPLIANCE_IP" >> $DNS_INDB
+		echo "$APPLIANCE_LAST_IP_BYTE	IN	PTR	$APPLIANCE_NAME" >> $DNS_REVDB
+		$DNS_INIT reload
+		dns_lock release
+		;;
+	stop)
+		dns_lock aquire
+		dns_log openqrm-dns-manager "Appliance $APPLIANCE_NAME id $APPLIANCE_ID stopping with ip-address $APPLIANCE_IP"
+		sed -i -e "s/$APPLIANCE_NAME.*.$APPLIANCE_IP//g" $DNS_INDB
+		sed -i -e "s/^$APPLIANCE_LAST_IP_BYTE *.*$APPLIANCE_NAME//g" $DNS_REVDB
+		$DNS_INIT reload
+		dns_lock release
+		;;
+	init)
+		dns_lock aquire
+		dns_log openqrm-dns-manager "Initialysing bind (dns) configuration."
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/init.d/openqrm-plugin-dns init
+		dns_lock release
+		;;
+	*)
+		dns_log openqrm-dns-manager "Usage: $0 {start|stop|init} "
+		exit 1
+		;;
+esac

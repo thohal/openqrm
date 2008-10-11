@@ -1,0 +1,69 @@
+#!/bin/bash
+# this is the functions file for the dns-plugin
+
+# where is the init script ?
+if [ -f /etc/debian_version ]; then
+	DNS_INIT="/etc/init.d/bind9"
+elif [ -f /etc/redhat-release ]; then
+	DNS_INIT="/etc/init.d/bind9"
+elif [ -f /etc/SuSE-release ]; then
+	DNS_INIT="/etc/init.d/bind9"
+fi
+# source the config to get the domain name for the openQRM-network
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/openqrm-plugin-dns.conf
+export OPENQRM_SERVER_DOMAIN
+# the location of the tempaltes and db files
+DNS_NAMED_LOCAL_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/templates/openqrm-plugin-dns-named-local.template"
+DNS_INDB_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/templates/openqrm-plugin-dns-indb.template"
+DNS_REVDB_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/templates/openqrm-plugin-dns-revdb.template"
+DNS_INDB="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/bind/zones/$OPENQRM_SERVER_DOMAIN.in.db"
+DNS_REVDB="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/bind/zones/$OPENQRM_SERVER_DOMAIN.rev.db"
+
+# for the locking function
+DNS_LOCK_FILE=/var/run/dns/dns-plugin.lock
+DNS_LOCK_DELAY=5
+DNS_LOCK_RETRY=100
+DNS_LOCK_TIMEOUT=500
+
+
+
+# logs for dns
+function dns_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "dns plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function dns_lock() {
+	local COMMAND=$1
+	local RET=1
+	if [ ! -d `dirname $DNS_LOCK_FILE` ]; then
+		mkdir -p `dirname $DNS_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $DNS_LOCK_DELAY -r $DNS_LOCK_RETRY -l $DNS_LOCK_TIMEOUT $DNS_LOCK_FILE
+				RET=$?
+				dns_log dns_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $DNS_LOCK_FILE
+				RET=$?
+				dns_log dns_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			dns_log dns_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+
+
