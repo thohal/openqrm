@@ -44,8 +44,10 @@ function openqrm_plugin_tftpd_init() {
 			INETDPID=`ps ax | grep inetd | grep -v grep | awk {' print $1 '}`
 			kill -HUP $INETDPID 1>/dev/null 2>&1
 		fi
-	else
+	fi
+	if [ -f /etc/xinetd.d/tftp ]; then
 		sed -i -e "s/disable.*/disable = yes/" /etc/xinetd.d/tftp
+		sed -i -e "s/Disable.*/Disable = yes/" /etc/xinetd.d/tftp
 		/etc/init.d/xinetd restart
 	fi
 	# linking the web dir
