@@ -9,8 +9,25 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 
 function openqrm_plugin_dns_start() {
 	echo "Starting the openQRM dns-plugin"
+	openqrm_server_get_config
 	openqrm_plugin_dns_stop 1>/dev/null 2>&1
-	$DNS_INIT start
+	if $DNS_INIT start; then
+		# do we want to adjust the resolv.conf ?
+		if [ "$OPENQRM_SERVER_ADJUST_RESOLV_CONF" == "yes" ]; then
+			# backup
+			if [ ! -f /etc/resolv.conf.openqrm-dns-plugin.backup ]; then
+				cp -f /etc/resolv.conf /etc/resolv.conf.openqrm-dns-plugin.backup
+			fi		
+			# create new resolv.conf
+			echo "domain $OPENQRM_SERVER_DOMAIN" > /etc/resolv.conf
+			echo "search $OPENQRM_SERVER_DOMAIN" >> /etc/resolv.conf
+			echo "nameserver $OPENQRM_SERVER_IP_ADDRESS" >> /etc/resolv.conf
+		fi
+	else
+		dns_log dns-plugin "Failed to start the bind service ! Please check the configuration."
+		return 1
+	fi
+	
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dns/.running
 	return $RET
 	
@@ -20,6 +37,13 @@ function openqrm_plugin_dns_start() {
 function openqrm_plugin_dns_stop() {
 	echo "Stopping the openQRM dns-plugin"
 	$DNS_INIT stop
+	# do we want to adjust the resolv.conf ?
+	if [ "$OPENQRM_SERVER_ADJUST_RESOLV_CONF" == "yes" ]; then
+			# restore
+			if [ -f /etc/resolv.conf.openqrm-dns-plugin.backup ]; then
+				cp -f /etc/resolv.conf.openqrm-dns-plugin.backup /etc/resolv.conf
+			fi		
+	fi
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dns/.running
 	return 0
 }
@@ -65,6 +89,34 @@ function openqrm_plugin_dns_init() {
 	DNS_REVDB_FSNAME=`basename $DNS_REVDB`
 	ln -sf $DNS_REVDB /etc/bind/zones/$DNS_REVDB_FSNAME
 
+	# check if we have forwarders already
+	CONFIGURED_DNS_FORWARDERS=`cat /etc/bind/named.conf.options | grep -v "//" | grep -A2 forwarders | grep -v forwarders | grep -v "}" | head -n1 | awk {' print $1 '} | sed -e "s/;//g"`
+	if [ "$CONFIGURED_DNS_FORWARDERS" != "" ] && openqrm_validate_ip $CONFIGURED_DNS_FORWARDERS; then
+		echo "NOTICE: Found already configured dns-forwarders $CONFIGURED_DNS_FORWARDERS"
+	else
+		if [ /etc/resolv.conf.openqrm-dns-plugin.backup ]; then
+			CHECK_FOR_FORWARDERS="/etc/resolv.conf.openqrm-dns-plugin.backup"
+		else
+			CHECK_FOR_FORWARDERS="/etc/resolv.conf"
+		fi
+		DNS_FORWARDER=`cat $CHECK_FOR_FORWARDERS | grep nameserver | head -n1 | awk {' print $2 '}`
+		if [ "$DNS_FORWARDER" != "" ]; then
+			echo "NOTICE: Configuring dns-forwarder to $DNS_FORWARDER"
+			if [ ! -f /etc/bind/named.conf.options.openqrm-dns-plugin.backup ]; then
+				cp -f /etc/bind/named.conf.options /etc/bind/named.conf.options.openqrm-dns-plugin.backup
+			fi
+			cat /etc/bind/named.conf.options | grep -v "^};" > /etc/bind/named.conf.options.new
+			echo "		forwarders {" >> /etc/bind/named.conf.options.new
+			echo "			$DNS_FORWARDER;" >> /etc/bind/named.conf.options.new
+			echo "		};" >> /etc/bind/named.conf.options.new
+			echo "};" >> /etc/bind/named.conf.options.new
+			mv -f /etc/bind/named.conf.options.new /etc/bind/named.conf.options
+		else
+			echo "WARNING: Could not find out any dns-forwarders ! Please configure manually in /etc/bind/named.conf.options"
+		fi
+	fi
+
+
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dns
 
@@ -84,6 +136,9 @@ function openqrm_plugin_dns_uninstall() {
 	if [ -f /etc/bind/named.conf.local.openqrm-dns-plugin.backup ]; then
 		rm -f /etc/bind/named.conf.local
 		cp -f /etc/bind/named.conf.local.openqrm-dns-plugin.backup /etc/bind/named.conf.local
+	fi
+	if [ -f /etc/bind/named.conf.options.openqrm-dns-plugin.backup ]; then
+		cp -f /etc/bind/named.conf.options.openqrm-dns-plugin.backup /etc/bind/named.conf.options
 	fi
 
 	# unlinking the web dir
