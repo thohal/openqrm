@@ -15,6 +15,7 @@ require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/kernel.class.php";
+require_once "$RootDir/class/plugin.class.php";
 require_once "$RootDir/class/event.class.php";
 
 global $APPLIANCE_INFO_TABLE;
@@ -184,6 +185,8 @@ function remove_by_name($appliance_name) {
 
 // starts an appliance -> assigns it to a resource
 function start() {
+	global $event;
+	global $RootDir;
 	$resource = new resource();
 	$resource->get_instance_by_id($this->resources);
 	$kernel = new kernel();
@@ -207,11 +210,49 @@ function start() {
 	$resource_fields["resource_state"]="transition";
 	$resource->update_info($resource->id, $resource_fields);
 
+
+	// start appliance hook
+	// fill in the rest of the appliance info in the array for the plugin hook
+	$appliance_fields["appliance_id"]=$this->id;
+	$appliance_fields["appliance_name"]=$this->name;
+	$appliance_fields["appliance_kernelid"]=$this->kernelid;
+	$appliance_fields["appliance_imageid"]=$this->imageid;
+	$appliance_fields["appliance_cpunumber"]=$this->cpunumber;
+	$appliance_fields["appliance_cpuspeed"]=$this->cpuspeed;
+	$appliance_fields["appliance_cpumodel"]=$this->cpumodel;
+	$appliance_fields["appliance_memtotal"]=$this->memtotal;
+	$appliance_fields["appliance_swaptotal"]=$this->swaptotal;
+	$appliance_fields["appliance_capabilities"]=$this->capabilities;
+	$appliance_fields["appliance_cluster"]=$this->cluster;
+	$appliance_fields["appliance_ssi"]=$this->ssi;
+	$appliance_fields["appliance_resources"]=$this->resources;
+	$appliance_fields["appliance_highavailable"]=$this->highavailable;
+	$appliance_fields["appliance_virtual"]=$this->virtual;
+	$appliance_fields["appliance_virtualization"]=$this->virtualization;
+	$appliance_fields["appliance_virtualization_host"]=$this->virtualization_host;
+	$appliance_fields["appliance_comment"]=$this->comment;
+	$appliance_fields["appliance_event"]=$this->event;
+	// start the hook
+	$plugin = new plugin();
+	$enabled_plugins = $plugin->enabled();
+	foreach ($enabled_plugins as $index => $plugin_name) {
+		$plugin_start_appliance_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-appliance-hook.php";
+		if (file_exists($plugin_start_appliance_hook)) {
+			$event->log("start", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found plugin $plugin_name handling start-appliance event.", "", "", 0, 0, $resource->id);
+			require_once "$plugin_start_appliance_hook";
+			$appliance_function="openqrm_"."$plugin_name"."_appliance";
+			$appliance_function("start", $appliance_fields);
+		}
+	}
+
+
 }
 
 
 // stops an appliance -> de-assigns it to idle
 function stop() {
+	global $event;
+	global $RootDir;
 	$resource = new resource();
 	$resource->get_instance_by_id($this->resources);
 	$resource->assign($resource->id, "1", "default", "1", "idle");
@@ -227,6 +268,40 @@ function stop() {
 	$resource_fields=array();
 	$resource_fields["resource_state"]="transition";
 	$resource->update_info($resource->id, $resource_fields);
+
+	// stop appliance hook
+	// fill in the rest of the appliance info in the array for the plugin hook
+	$appliance_fields["appliance_id"]=$this->id;
+	$appliance_fields["appliance_name"]=$this->name;
+	$appliance_fields["appliance_kernelid"]=$this->kernelid;
+	$appliance_fields["appliance_imageid"]=$this->imageid;
+	$appliance_fields["appliance_cpunumber"]=$this->cpunumber;
+	$appliance_fields["appliance_cpuspeed"]=$this->cpuspeed;
+	$appliance_fields["appliance_cpumodel"]=$this->cpumodel;
+	$appliance_fields["appliance_memtotal"]=$this->memtotal;
+	$appliance_fields["appliance_swaptotal"]=$this->swaptotal;
+	$appliance_fields["appliance_capabilities"]=$this->capabilities;
+	$appliance_fields["appliance_cluster"]=$this->cluster;
+	$appliance_fields["appliance_ssi"]=$this->ssi;
+	$appliance_fields["appliance_resources"]=$this->resources;
+	$appliance_fields["appliance_highavailable"]=$this->highavailable;
+	$appliance_fields["appliance_virtual"]=$this->virtual;
+	$appliance_fields["appliance_virtualization"]=$this->virtualization;
+	$appliance_fields["appliance_virtualization_host"]=$this->virtualization_host;
+	$appliance_fields["appliance_comment"]=$this->comment;
+	$appliance_fields["appliance_event"]=$this->event;
+	// start the hook
+	$plugin = new plugin();
+	$enabled_plugins = $plugin->enabled();
+	foreach ($enabled_plugins as $index => $plugin_name) {
+		$plugin_stop_appliance_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-appliance-hook.php";
+		if (file_exists($plugin_stop_appliance_hook)) {
+			$event->log("stop", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found plugin $plugin_name handling stop-appliance event.", "", "", 0, 0, $resource->id);
+			require_once "$plugin_stop_appliance_hook";
+			$appliance_function="openqrm_"."$plugin_name"."_appliance";
+			$appliance_function("stop", $appliance_fields);
+		}
+	}
 
 	$resource->send_command("$resource->ip", "reboot");
 }
