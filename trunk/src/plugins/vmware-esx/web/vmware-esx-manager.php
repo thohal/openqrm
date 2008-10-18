@@ -237,7 +237,7 @@ function vmware_esx_display($appliance_id) {
 
 			$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
 			$disp = $disp."<img src=\"/openqrm/base/img/active.png\" border=\"0\">";
-			$disp = $disp. $vmware_short_name;
+			$disp = $disp. $vmware_esx_name;
 			$disp = $disp."</div>";
 			$disp = $disp."<br>";
 			$disp = $disp."  <a href=\"vmware-esx-action.php?vmware_esx_name=$vmware_short_name&vmware_esx_command=start&vmware_esx_id=$vmware_esx_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>";
