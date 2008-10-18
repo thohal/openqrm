@@ -1,0 +1,65 @@
+#!/bin/bash
+# this is the boot-service init script for the VMware-server hosts
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/include/openqrm-plugin-vmware-esx-functions
+if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+fi
+
+# only run on vmware-esx hosts
+which vmware-cmd 1>/dev/null 2>&1 || exit 0
+
+
+function vmware-esx_start() {
+	echo "Starting the openQRM vmware-esx-plugin"
+	vmware-esx_stop 1>/dev/null 2>&1
+}
+
+
+function vmware-esx_stop() {
+	echo "Stopping the openQRM vmware-esx-plugin"
+}
+
+
+
+
+
+case "$1" in
+	start)
+		vmware-esx_start
+		;;
+	stop)
+		vmware-esx_stop
+		;;
+	restart)
+		vmware-esx_stop
+		sleep 1
+		vmware-esx_start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+
+esac
+exit $?
+
+
+
+
+
+
+
+
+
+
+
+
+

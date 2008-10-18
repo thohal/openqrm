@@ -1,0 +1,54 @@
+#!/bin/bash
+# this is the functions file for the vmware-esx-plugin
+VMWARE_SERVER_LOCK_FILE=/var/run/lvm-storage/lvm-storage-plugin.lock
+VMWARE_SERVER_LOCK_DELAY=5
+VMWARE_SERVER_LOCK_RETRY=100
+VMWARE_SERVER_LOCK_TIMEOUT=500
+################ common vmware-esx functions
+
+# logs for vmware-esx
+function vmware_esx_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "vmware-esx plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function vmware_esx_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $VMWARE_SERVER_LOCK_FILE` ]; then
+		mkdir -p `dirname $VMWARE_SERVER_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $VMWARE_SERVER_LOCK_DELAY -r $VMWARE_SERVER_LOCK_RETRY -l $VMWARE_SERVER_LOCK_TIMEOUT $VMWARE_SERVER_LOCK_FILE
+				RET=$?
+				vmware_esx_log vmware_esx_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $VMWARE_SERVER_LOCK_FILE
+				RET=$?
+				vmware_esx_log vmware_esx_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			vmware_esx_log vmware_esx_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ vmware-esx functions
+
+
+
+
+
+

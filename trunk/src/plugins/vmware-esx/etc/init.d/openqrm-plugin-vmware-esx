@@ -1,0 +1,93 @@
+#!/bin/bash
+# init script for the openQRM vmware-esx-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/include/openqrm-plugin-vmware-esx-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/etc/openqrm-plugin-vmware-esx.conf
+
+function openqrm_plugin_vmware_esx_start() {
+	echo "Starting the openQRM vmware-esx-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-esx/.running
+}
+
+
+function openqrm_plugin_vmware_esx_stop() {
+	echo "Stopping the openQRM vmware-esx-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-esx/.running
+}
+
+function openqrm_plugin_vmware_esx_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "vmware-esx: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "vmware-esx: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM vmware-esx-plugin"
+	openqrm_plugin_vmware_esx_stop
+	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD vmware-esx
+	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD vmware-esx-vm
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-esx
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-vmware-esx.tgz
+}
+
+function openqrm_plugin_vmware_esx_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "vmware-esx: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "vmware-esx: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Initializing the openQRM vmware-esx-plugin"
+	# adding virtualization type	
+	openqrm_server_add_virtualization_type $USERNAME $PASSWORD vmware-esx "VMware-ESX Host"
+	openqrm_server_add_virtualization_type $USERNAME $PASSWORD vmware-esx-vm "VMware-ESX VM"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-esx
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/boot-service-vmware-esx.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-vmware-esx.tgz
+	
+}
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_vmware_esx_start
+		;;
+	stop)
+		openqrm_plugin_vmware_esx_stop
+		;;
+	restart)
+		openqrm_plugin_vmware_esx_stop
+		sleep 1
+		openqrm_plugin_vmware_esx_start
+		;;
+	init)
+		openqrm_plugin_vmware_esx_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_vmware_esx_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+
