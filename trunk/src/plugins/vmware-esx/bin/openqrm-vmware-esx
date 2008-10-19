@@ -42,6 +42,7 @@ fi
 function vmware_esx_usage() {
 	echo "Usage : $0 start/stop/reboot/add/delete/remove/list <-i esx-server-ip> <-n vm-name>"
 	echo "Usage : $0 create <-i esx-server-ip> <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ]"
+	echo "Usage : $0 init <-i esx-server-ip> <-o esx-server-openqrm-id>"
 	exit 1
 }
 
@@ -100,6 +101,10 @@ while [ $# -ne 0 ]; do
 			VMWARE_ESX_HOST_IP=$2
 			shift
 			;;
+		-o)
+			VMWARE_ESX_HOST_ID=$2
+			shift
+			;;
 		*)
 			echo "ERROR: Free commandline arguments are not allowed"
 			vmware_esx_usage
@@ -125,7 +130,7 @@ if [ "$VMWARE_ESX_COMMAND" == "" ]; then
 	openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "Wrong usage, no command given!"
 fi
 
-if [ "$VMWARE_ESX_COMMAND" != "list" ]; then
+if [ "$VMWARE_ESX_COMMAND" != "list" ] && [ "$VMWARE_ESX_COMMAND" != "init" ]; then
 	if [ "$VMWARE_ESX_VM_NAME" == "" ]; then
 		vmware_esx_usage
 		openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "Wrong usage, vm name missing!"
@@ -319,8 +324,16 @@ EOF
 				echo "# $UNREGISTERED" | tee -a $ESX_STATS
 			fi
 		done
+		;;
 
-		
+	init)
+		if [ "$VMWARE_ESX_HOST_ID" == "" ]; then
+			vmware_esx_usage
+			openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "Wrong usage, esx host openqrm-id missing!"
+		fi
+		echo "Initialyzing VMware ESX host id $VMWARE_ESX_HOST_ID"
+		scp $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx-monitord $VMWARE_ESX_HOST_IP:/bin/ | logger
+		$OPENQRM_ESX_CMD "busybox nohup /bin/openqrm-vmware-esx-monitord start $OPENQRM_SERVER_IP_ADDRESS $VMWARE_ESX_HOST_IP $VMWARE_ESX_HOST_ID &"
 		;;
 	*)
 		vmware_esx_usage

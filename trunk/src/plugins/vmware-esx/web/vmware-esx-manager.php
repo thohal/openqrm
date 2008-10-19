@@ -38,6 +38,19 @@ if(htmlobject_request('action') != '') {
 				sleep($refresh_delay);
 			}
 			break;
+
+		case 'initialyze':
+			foreach($_REQUEST['identifier'] as $id) {
+				$vmware_appliance = new appliance();
+				$vmware_appliance->get_instance_by_id($id);
+				$vmware_esx = new resource();
+				$vmware_esx->get_instance_by_id($vmware_appliance->resources);
+				$esx_ip = $vmware_esx->ip;
+				$esx_id = $vmware_esx->id;
+				$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx init -i $esx_ip -o $esx_id";
+				$openqrm_server->send_command($esx_command);
+			}
+			break;
 	}
 }
 
@@ -212,7 +225,7 @@ function vmware_esx_display($appliance_id) {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('refresh');
+		$table->bottom = array('initialyze', 'refresh');
 		$table->identifier = 'vmware_esx_id';
 	}
 	$table->max = $vmware_esx_count;
@@ -304,6 +317,11 @@ if(htmlobject_request('action') != '') {
 			}
 			break;
 		case 'refresh':
+			foreach($_REQUEST['identifier'] as $id) {
+				$output[] = array('label' => 'VMware-ESX Admin', 'value' => vmware_esx_display($id));
+			}
+			break;
+		case 'initialyze':
 			foreach($_REQUEST['identifier'] as $id) {
 				$output[] = array('label' => 'VMware-ESX Admin', 'value' => vmware_esx_display($id));
 			}

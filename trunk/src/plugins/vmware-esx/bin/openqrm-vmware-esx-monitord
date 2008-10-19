@@ -1,0 +1,59 @@
+#!/bin/bash
+# this is a very much stripped down openQRM monitor daemon
+
+MONITOR_CMD=$1
+OPENQRM_SERVER_IP=$2
+ESX_SERVER_IP=$3
+ESX_OPENQRM_ID=$4
+MONITORD_LOCKFILE="/var/run/openqrm-vmware-esx-monitord"
+
+# stop and exit
+if [ "$MONITOR_CMD" == "stop" ]; then
+	if [ -f "$MONITORD_LOCKFILE" ]; then
+		kill `cat $MONITORD_LOCKFILE`
+		rm -f $MONITORD_LOCKFILE
+	else
+		echo "Not started !"
+		rm -f $MONITORD_LOCKFILE
+		exit 1
+	fi
+fi
+# not start ?
+if [ "$MONITOR_CMD" != "start" ]; then
+	echo "Usage : $0 start [openqrm-server-ip-address] [esx-server-ip-address] [esx-server-openqrm-id] &"
+	echo "Usage : $0 stop"
+	exit 1
+fi
+# parameter check for start
+if [ "$OPENQRM_SERVER_IP" == "" ]; then
+	echo "Usage : $0 start [openqrm-server-ip-address] [esx-server-ip-address] [esx-server-openqrm-id] &"
+	echo "Usage : $0 stop"
+	exit 1
+fi
+if [ "$ESX_SERVER_IP" == "" ]; then
+	echo "Usage : $0 start [openqrm-server-ip-address] [esx-server-ip-address] [esx-server-openqrm-id] &"
+	echo "Usage : $0 stop"
+	exit 1
+fi
+if [ "$ESX_OPENQRM_ID" == "" ]; then
+	echo "Usage : $0 start [openqrm-server-ip-address] [esx-server-ip-address] [esx-server-openqrm-id] &"
+	echo "Usage : $0 stop"
+	exit 1
+fi
+
+
+# create lockfile
+if [ -f "$MONITORD_LOCKFILE" ]; then
+	echo "$0 is running already"
+	exit 0
+else
+	echo "starting $0"
+	echo $$ > $MONITORD_LOCKFILE
+fi
+
+HNAME=`hostname`
+# MADDRESS=`vim-cmd hostsvc/net/config | grep -A5 "ipAddress" | grep -A5 $ESX_SERVER_IP | grep "mac " | cut -d'"' -f2`
+while(true); do
+	wget -q -O /dev/null "http://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=update_info&resource_id=$ESX_OPENQRM_ID&resource_hostname=$HNAME&resource_state=active&resource_event=statistics"
+	sleep 20
+done
