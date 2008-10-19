@@ -24,10 +24,11 @@ require_once "$RootDir/class/openqrm_server.class.php";
 global $OPENQRM_SERVER_BASE_DIR;
 global $RESOURCE_INFO_TABLE;
 
-// place for the vmware_esx stat files
-$VMwareDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/vmware-esx/vmware-esx-stat';
-
 $event = new event();
+$openqrm_server = new openqrm_server();
+$OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
+global $OPENQRM_SERVER_IP_ADDRESS;
+
 
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {
@@ -71,8 +72,9 @@ unset($vmware_esx_fields["vmware_esx_command"]);
 			$vmware_appliance->get_instance_by_id($vmware_esx_id);
 			$vmware_esx = new resource();
 			$vmware_esx->get_instance_by_id($vmware_appliance->resources);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx start -n $vmware_esx_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$vmware_esx->send_command($vmware_esx->ip, $resource_command);
+			$esx_ip = $vmware_esx->ip;
+			$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx start -i $esx_ip -n $vmware_esx_name";
+			$openqrm_server->send_command($esx_command);
 			break;
 
 		case 'stop':
@@ -80,8 +82,9 @@ unset($vmware_esx_fields["vmware_esx_command"]);
 			$vmware_appliance->get_instance_by_id($vmware_esx_id);
 			$vmware_esx = new resource();
 			$vmware_esx->get_instance_by_id($vmware_appliance->resources);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx stop -n $vmware_esx_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$vmware_esx->send_command($vmware_esx->ip, $resource_command);
+			$esx_ip = $vmware_esx->ip;
+			$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx stop -i $esx_ip -n $vmware_esx_name";
+			$openqrm_server->send_command($esx_command);
 			break;
 
 		case 'reboot':
@@ -89,8 +92,9 @@ unset($vmware_esx_fields["vmware_esx_command"]);
 			$vmware_appliance->get_instance_by_id($vmware_esx_id);
 			$vmware_esx = new resource();
 			$vmware_esx->get_instance_by_id($vmware_appliance->resources);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx reboot -n $vmware_esx_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$vmware_esx->send_command($vmware_esx->ip, $resource_command);
+			$esx_ip = $vmware_esx->ip;
+			$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx reboot -i $esx_ip -n $vmware_esx_name";
+			$openqrm_server->send_command($esx_command);
 			break;
 
 		case 'remove':
@@ -98,8 +102,9 @@ unset($vmware_esx_fields["vmware_esx_command"]);
 			$vmware_appliance->get_instance_by_id($vmware_esx_id);
 			$vmware_esx = new resource();
 			$vmware_esx->get_instance_by_id($vmware_appliance->resources);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx remove -n $vmware_esx_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$vmware_esx->send_command($vmware_esx->ip, $resource_command);
+			$esx_ip = $vmware_esx->ip;
+			$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx remove -i $esx_ip -n $vmware_esx_name";
+			$openqrm_server->send_command($esx_command);
 			break;
 
 		case 'add':
@@ -107,8 +112,9 @@ unset($vmware_esx_fields["vmware_esx_command"]);
 			$vmware_appliance->get_instance_by_id($vmware_esx_id);
 			$vmware_esx = new resource();
 			$vmware_esx->get_instance_by_id($vmware_appliance->resources);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx add -n $vmware_esx_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$vmware_esx->send_command($vmware_esx->ip, $resource_command);
+			$esx_ip = $vmware_esx->ip;
+			$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx add -i $esx_ip -n $vmware_esx_name";
+			$openqrm_server->send_command($esx_command);
 			break;
 
 		case 'delete':
@@ -116,8 +122,9 @@ unset($vmware_esx_fields["vmware_esx_command"]);
 			$vmware_appliance->get_instance_by_id($vmware_esx_id);
 			$vmware_esx = new resource();
 			$vmware_esx->get_instance_by_id($vmware_appliance->resources);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx delete -n $vmware_esx_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$vmware_esx->send_command($vmware_esx->ip, $resource_command);
+			$esx_ip = $vmware_esx->ip;
+			$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx delete -i $esx_ip -n $vmware_esx_name";
+			$openqrm_server->send_command($esx_command);
 			break;
 
 		default:

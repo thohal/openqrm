@@ -227,33 +227,66 @@ function vmware_esx_display($appliance_id) {
 		$vmware_esx_vm_list_content=file($vmware_esx_vm_list_file);
 		foreach ($vmware_esx_vm_list_content as $index => $vmware_esx_name) {
 			// registered vms
-			$vmware_esx_name=trim($vmware_esx_name);
-			$start_vm_name=strpos($vmware_esx_name, " ");
-			$vmware_short_name=substr($vmware_esx_name, $start_vm_name);
-			$vmware_short_name=trim($vmware_short_name);
-			$end_vm_name=strpos($vmware_short_name, " ");
-			$vmware_short_name=substr($vmware_short_name, 0, $end_vm_name);
-			$vmware_short_name=trim($vmware_short_name);
+			if (!strstr($vmware_esx_name, "#")) {
+				$vmware_esx_name=trim($vmware_esx_name);
+				$start_vm_name=strpos($vmware_esx_name, " ");
+				$vmware_short_name=substr($vmware_esx_name, $start_vm_name);
+				$vmware_short_name=trim($vmware_short_name);
+				$end_vm_name=strpos($vmware_short_name, " ");
+				$vmware_short_name=substr($vmware_short_name, 0, $end_vm_name);
+				$vmware_short_name=trim($vmware_short_name);
 
-			$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
-			$disp = $disp."<img src=\"/openqrm/base/img/active.png\" border=\"0\">";
-			$disp = $disp. $vmware_esx_name;
-			$disp = $disp."</div>";
-			$disp = $disp."<br>";
-			$disp = $disp."  <a href=\"vmware-esx-action.php?vmware_esx_name=$vmware_short_name&vmware_esx_command=start&vmware_esx_id=$vmware_esx_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>";
-			$disp = $disp." / ";
-			$disp = $disp."<a href=\"vmware-esx-action.php?vmware_esx_name=$vmware_short_name&vmware_esx_command=stop&vmware_esx_id=$vmware_esx_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Stop</a>";
-			$disp = $disp." / ";
-			$disp = $disp."<a href=\"vmware-esx-action.php?vmware_esx_name=$vmware_short_name&vmware_esx_command=reboot&vmware_esx_id=$vmware_esx_tmp->id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"> Reboot</a>";
-			$disp = $disp." / ";
-			$disp = $disp."<a href=\"vmware-esx-action.php?vmware_esx_name=$vmware_short_name&vmware_esx_command=remove&vmware_esx_id=$vmware_esx_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Remove</a>";
-			$disp = $disp."<br>";
-			$disp = $disp."<br>";
-			$vmware_vm_registered[] = $vmware_short_name;
+				$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
+				$disp = $disp."<img src=\"/openqrm/base/img/active.png\" border=\"0\">";
+				$disp = $disp. $vmware_esx_name;
+				$disp = $disp."</div>";
+				$disp = $disp."<br>";
+				$disp = $disp."  <a href=\"vmware-esx-action.php?vmware_esx_name=$vmware_short_name&vmware_esx_command=start&vmware_esx_id=$vmware_esx_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>";
+				$disp = $disp." / ";
+				$disp = $disp."<a href=\"vmware-esx-action.php?vmware_esx_name=$vmware_short_name&vmware_esx_command=stop&vmware_esx_id=$vmware_esx_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Stop</a>";
+				$disp = $disp." / ";
+				$disp = $disp."<a href=\"vmware-esx-action.php?vmware_esx_name=$vmware_short_name&vmware_esx_command=reboot&vmware_esx_id=$vmware_esx_tmp->id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"> Reboot</a>";
+				$disp = $disp." / ";
+				$disp = $disp."<a href=\"vmware-esx-action.php?vmware_esx_name=$vmware_short_name&vmware_esx_command=remove&vmware_esx_id=$vmware_esx_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Remove</a>";
+				$disp = $disp."<br>";
+				$disp = $disp."<br>";
+				$vmware_vm_registered[] = $vmware_short_name;
+			}
 		}
 	}
 
 	$disp = $disp."<hr>";
+	$disp = $disp."<h1>Unregistered VMs on resource $vmware_esx_resource->id/$vmware_esx_resource->hostname</h1>";
+	$disp = $disp."<br>";
+
+
+	if (file_exists($vmware_esx_vm_list_file)) {
+		$vmware_esx_vm_list_content=file($vmware_esx_vm_list_file);
+		foreach ($vmware_esx_vm_list_content as $index => $vmware_esx_name) {
+			// unregistered vms
+			if (strstr($vmware_esx_name, "#")) {
+				$vmware_esx_name=trim($vmware_esx_name);
+				$start_vm_name=strpos($vmware_esx_name, " ");
+				$vmware_short_name=substr($vmware_esx_name, $start_vm_name);
+				$vmware_short_name=trim($vmware_short_name);
+
+				$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
+				$disp = $disp."<img src=\"/openqrm/base/img/active.png\" border=\"0\">";
+				$disp = $disp. $vmware_short_name;
+				$disp = $disp."</div>";
+				$disp = $disp."<br>";
+				$disp = $disp."  <a href=\"vmware-esx-action.php?vmware_esx_name=$vmware_short_name&vmware_esx_command=add&vmware_esx_id=$vmware_esx_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Add</a>";
+				$disp = $disp." / ";
+				$disp = $disp."<a href=\"vmware-esx-action.php?vmware_esx_name=$vmware_short_name&vmware_esx_command=delete&vmware_esx_id=$vmware_esx_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Delete</a>";
+				$disp = $disp."<br>";
+				$disp = $disp."<br>";
+				$vmware_vm_registered[] = $vmware_short_name;
+			}
+		}
+	}
+
+	$disp = $disp."<hr>";
+
 
 	return $disp;
 }
