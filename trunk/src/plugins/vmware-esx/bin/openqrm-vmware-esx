@@ -113,6 +113,7 @@ done
 # using password-less ssh to configure and manage the vms via vim-cmd
 # NOTICE: password-less ssh access as root from the openQRM server to the ESX host needs to be setup before as a requirement !
 export OPENQRM_ESX_CMD="ssh $VMWARE_ESX_HOST_IP"
+export VMWARE_ESX_HOST_IP
 
 # main
 if [ "$VMWARE_ESX_HOST_IP" == "" ]; then
@@ -146,35 +147,60 @@ case "$VMWARE_ESX_COMMAND" in
 			openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "Wrong usage, vm ram missing!"
 		fi
 		vmware_esx_lock aquire
-		echo "Creating VMware vm $VMWARE_ESX_VM_NAME -> $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx"
+		echo "Creating VMware vm $VMWARE_ESX_VM_NAME"
 		# creating the vmx
-		mkdir -p $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/
+
+		mkdir -p /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/
 		cat $OPENQRM_VMWARE_ESX_VM_TEMPLATE |	\
 			sed -e "s/@@VMWARE_ESX_VM_NAME@@/$VMWARE_ESX_VM_NAME/g" |	\
 			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$VMWARE_ESX_VM_RAM/g"	\
-			> $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx
+			> /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx
+		# creating the dir first for the eventual disk
+		$OPENQRM_ESX_CMD "mkdir -p $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/" | logger
 
 		# disk + swap
-#		if [ "$VMWARE_ESX_VM_DISK" != "" ]; then
-#			echo "-> Creating disk"
-#			mkdir -p $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME
-#			vmware-vdiskmanager -c -s $VMWARE_ESX_VM_DISK""Mb -a ide -t 0 $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmdk
-#			# add the disk to the config file
-#			cat $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx |	\
-#				sed -e "s/^ide/#ide0/g" > $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx.withdisk
-#			mv -f $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx.withdisk $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx
-#			cat >> $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx << EOF
-#ide0:0.present = "TRUE"
-#ide0:0.fileName = "$VMWARE_ESX_VM_NAME.vmdk"
-#ide0:0.writeThrough = "TRUE"
-#EOF
-#		fi
-#		
-#		# register
-		chmod +x $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx
-		vmware-cmd -s register $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx
+		if [ "$VMWARE_ESX_VM_DISK" != "" ]; then
+			echo "-> Creating disk" | logger
+			$OPENQRM_ESX_CMD "vmkfstools -c $VMWARE_ESX_VM_DISK""M -a lsilogic $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmdk"  | logger
+			# add the disk to the config file
+			cat >> /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx << EOF
+scsi0:0.present = "true"
+scsi0:0.fileName = "$VMWARE_ESX_VM_NAME.vmdk"
+scsi0:0.deviceType = "scsi-hardDisk"
+scsi0:0.redo = ""
+EOF
+		fi
+
+		scp /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx $VMWARE_ESX_HOST_IP:$OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/ | logger
+		rm -rf /tmp/vmware-esx-plugin
+
+		# register
+		echo "Adding VMware vm $VMWARE_ESX_VM_NAME"
+		VMX_CONFIG=`vmware_esx_get_vmx $VMWARE_ESX_VM_NAME`
+		$OPENQRM_ESX_CMD vim-cmd solo/registervm $VMX_CONFIG | logger
+		$OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
+		VMID=`vmware_esx_get_vmid $VMWARE_ESX_VM_NAME`
+		REGISTERED=`$OPENQRM_ESX_CMD vim-cmd vmsvc/getallvms | grep "^$VMID "`
+		if [ "$REGISTERED" == "" ]; then
+			vmware_esx_log openqrm-vmware-esx "ERROR: ESX vm $VMID failed to register!"
+			openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "ESX vm $VMID failed to register!"
+		else
+			vmware_esx_log openqrm-vmware-esx "NOTICE: ESX vm $VMID registerd,"
+			openqrm_post_event 0 "parameter_check" 5 "openqrm-vmware-esx" "ESX vm $VMID registered."
+		fi
 		# start
-		vmware-cmd $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx start
+		echo "Starting VMware vm $VMWARE_ESX_VM_NAME"
+		VMID=`vmware_esx_get_vmid $VMWARE_ESX_VM_NAME`
+		$OPENQRM_ESX_CMD vim-cmd vmsvc/power.on $VMID | logger
+		$OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
+		VM_STATE=`$OPENQRM_ESX_CMD vim-cmd vmsvc/get.summary $VMID | grep powerState`
+		if echo $VM_STATE | grep poweredOn 1>/dev/null; then
+			vmware_esx_log openqrm-vmware-esx "NOTICE: ESX vm $VMID starting."
+			openqrm_post_event 0 "parameter_check" 5 "openqrm-vmware-esx" "ESX vm $VMID starting."
+		else
+			vmware_esx_log openqrm-vmware-esx "ERROR: ESX vm $VMID failed to start."
+			openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "ESX vm $VMID failed to start!"
+		fi		
 		vmware_esx_lock release
 		;;
 	add)

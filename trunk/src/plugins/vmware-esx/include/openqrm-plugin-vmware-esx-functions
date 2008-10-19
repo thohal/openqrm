@@ -1,6 +1,6 @@
 #!/bin/bash
 # this is the functions file for the vmware-esx-plugin
-VMWARE_SERVER_LOCK_FILE=/var/run/lvm-storage/lvm-storage-plugin.lock
+VMWARE_SERVER_LOCK_FILE=/var/run/openqrm/vmware-esx-plugin.lock
 VMWARE_SERVER_LOCK_DELAY=5
 VMWARE_SERVER_LOCK_RETRY=100
 VMWARE_SERVER_LOCK_TIMEOUT=500

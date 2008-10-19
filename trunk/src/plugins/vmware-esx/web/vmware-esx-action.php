@@ -59,12 +59,13 @@ unset($vmware_esx_fields["vmware_esx_command"]);
 			$vmware_appliance->get_instance_by_id($vmware_esx_id);
 			$vmware_esx = new resource();
 			$vmware_esx->get_instance_by_id($vmware_appliance->resources);
+			$esx_ip = $vmware_esx->ip;
 			if (strlen($vmware_esx_disk)) {
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx create -n $vmware_esx_name -m $vmware_esx_mac -r $vmware_esx_ram -d $vmware_esx_disk -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+				$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx create -i $esx_ip -n $vmware_esx_name -m $vmware_esx_mac -r $vmware_esx_ram -d $vmware_esx_disk";
 			} else {
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx create -n $vmware_esx_name -m $vmware_esx_mac -r $vmware_esx_ram -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+				$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx create -i $esx_ip -n $vmware_esx_name -m $vmware_esx_mac -r $vmware_esx_ram";
 			}
-			$vmware_esx->send_command($vmware_esx->ip, $resource_command);
+			$openqrm_server->send_command($esx_command);
 			break;
 
 		case 'start':
