@@ -5,12 +5,16 @@ OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/include/openqrm-plugin-vmware-esx-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/etc/openqrm-plugin-vmware-esx.conf
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 openqrm_server_get_config
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+
 OPENQRM_VMWARE_ESX_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/etc/templates/openqrm-vmware-esx-vm"
 # using the vmware-esx default datastare from the plugins config
 OPENQRM_VM_DIR="/vmfs/volumes/$OPENQRM_VMWARE_ESX_DEFAULT_DATASTORE/"
+OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY="sleep 5"
 export LANG=C
 
 # let only root run this script
@@ -19,6 +23,21 @@ if [ "$WHOAMI" != "root" ]; then
 	echo "ERROR: Please run this script as root!"
 	exit 6
 fi
+
+if ! which screen 1>/dev/null; then
+	echo "ERROR: The 'screen' utility is not installed! Please install and try again."
+	image_shelf_log "ERROR: The 'screen' utility is not installed! Please install and try again."
+	exit 6
+fi
+
+# re-run in background via screen
+if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+	export RUN_IN_BACKGROUND=true
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	screen -dmS $SCREEN_NAME $0 $@
+	exit	
+fi
+
 
 function vmware_esx_usage() {
 	echo "Usage : $0 start/stop/reboot/add/delete/remove/list <-i esx-server-ip> <-n vm-name>"
@@ -32,7 +51,8 @@ function vmware_esx_get_vmx() {
 	local VMX=`$OPENQRM_ESX_CMD find /vmfs/volumes/* -name $VM_NAME.vmx`
 	if [ "$VMX" == "" ]; then
 		echo "ERROR: Could not find the vmx config file for the ESX vm $VM_NAME"
-		exit 1
+		openqrm_post_event 0 "vmware_esx_get_vmx" 3 "openqrm-vmware-esx" "Could not find the vmx config file for the ESX vm $VM_NAME!"
+		return 1
 	else
 		echo $VMX
 	fi	
@@ -45,7 +65,8 @@ function vmware_esx_get_vmid() {
 	local VMID=`$OPENQRM_ESX_CMD vim-cmd vmsvc/getallvms | grep $VM_NAME.vmx | awk {' print $1 '}`
 	if [ "$VMID" == "" ]; then
 		echo "ERROR: Could not find the vm id for the ESX vm $VM_NAME"
-		exit 1
+		openqrm_post_event 0 "vmware_esx_get_vmid" 3 "openqrm-vmware-esx" "Could not find the vm id for the ESX vm $VM_NAME!"
+		return 1
 	else
 		echo $VMID
 	fi	
@@ -96,14 +117,17 @@ export OPENQRM_ESX_CMD="ssh $VMWARE_ESX_HOST_IP"
 # main
 if [ "$VMWARE_ESX_HOST_IP" == "" ]; then
 	vmware_esx_usage
+	openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "Wrong usage, ESX-host ip missing!"
 fi
 if [ "$VMWARE_ESX_COMMAND" == "" ]; then
 	vmware_esx_usage
+	openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "Wrong usage, no command given!"
 fi
 
 if [ "$VMWARE_ESX_COMMAND" != "list" ]; then
 	if [ "$VMWARE_ESX_VM_NAME" == "" ]; then
 		vmware_esx_usage
+		openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "Wrong usage, vm name missing!"
 	fi
 fi
 
@@ -115,9 +139,11 @@ case "$VMWARE_ESX_COMMAND" in
 	create)
 		if [ "$VMWARE_ESX_VM_MAC" == "" ]; then
 			vmware_esx_usage
+			openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "Wrong usage, vm mac address missing!"
 		fi
 		if [ "$VMWARE_ESX_VM_RAM" == "" ]; then
 			vmware_esx_usage
+			openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "Wrong usage, vm ram missing!"
 		fi
 		vmware_esx_lock aquire
 		echo "Creating VMware vm $VMWARE_ESX_VM_NAME -> $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx"
@@ -155,52 +181,120 @@ case "$VMWARE_ESX_COMMAND" in
 		vmware_esx_lock aquire
 		echo "Adding VMware vm $VMWARE_ESX_VM_NAME"
 		VMX_CONFIG=`vmware_esx_get_vmx $VMWARE_ESX_VM_NAME`
-		$OPENQRM_ESX_CMD vim-cmd solo/registervm $VMX_CONFIG
+		$OPENQRM_ESX_CMD vim-cmd solo/registervm $VMX_CONFIG | logger
+		$OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
+		VMID=`vmware_esx_get_vmid $VMWARE_ESX_VM_NAME`
+		REGISTERED=`$OPENQRM_ESX_CMD vim-cmd vmsvc/getallvms | grep "^$VMID "`
+		if [ "$REGISTERED" == "" ]; then
+			vmware_esx_log openqrm-vmware-esx "ERROR: ESX vm $VMID failed to register!"
+			openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "ESX vm $VMID failed to register!"
+		else
+			vmware_esx_log openqrm-vmware-esx "NOTICE: ESX vm $VMID registerd,"
+			openqrm_post_event 0 "parameter_check" 5 "openqrm-vmware-esx" "ESX vm $VMID registered."
+		fi
 		vmware_esx_lock release
 		;;
 	start)
 		vmware_esx_lock aquire
 		echo "Starting VMware vm $VMWARE_ESX_VM_NAME"
 		VMID=`vmware_esx_get_vmid $VMWARE_ESX_VM_NAME`
-		$OPENQRM_ESX_CMD vim-cmd vmsvc/power.on $VMID
+		$OPENQRM_ESX_CMD vim-cmd vmsvc/power.on $VMID | logger
+		$OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
+		VM_STATE=`$OPENQRM_ESX_CMD vim-cmd vmsvc/get.summary $VMID | grep powerState`
+		if echo $VM_STATE | grep poweredOn 1>/dev/null; then
+			vmware_esx_log openqrm-vmware-esx "NOTICE: ESX vm $VMID starting."
+			openqrm_post_event 0 "parameter_check" 5 "openqrm-vmware-esx" "ESX vm $VMID starting."
+		else
+			vmware_esx_log openqrm-vmware-esx "ERROR: ESX vm $VMID failed to start."
+			openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "ESX vm $VMID failed to start!"
+		fi		
 		vmware_esx_lock release
 		;;
 	stop)
 		vmware_esx_lock aquire
 		echo "Stopping VMware vm $VMWARE_ESX_VM_NAME"
 		VMID=`vmware_esx_get_vmid $VMWARE_ESX_VM_NAME`
-		$OPENQRM_ESX_CMD vim-cmd vmsvc/power.off $VMID
+		$OPENQRM_ESX_CMD vim-cmd vmsvc/power.off $VMID | logger
+		$OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
+		VM_STATE=`$OPENQRM_ESX_CMD vim-cmd vmsvc/get.summary $VMID | grep powerState`
+		if echo $VM_STATE | grep poweredOff 1>/dev/null; then
+			vmware_esx_log openqrm-vmware-esx "NOTICE: ESX vm $VMID stopped"
+			openqrm_post_event 0 "parameter_check" 5 "openqrm-vmware-esx" "ESX vm $VMID stopped."
+		else
+			vmware_esx_log openqrm-vmware-esx "ERROR: ESX vm $VMID failed to stop"
+			openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "ESX vm $VMID failed to stop!"
+		fi		
 		vmware_esx_lock release
 		;;
 	reboot)
 		vmware_esx_lock aquire
 		echo "Rebooting VMware vm $VMWARE_ESX_VM_NAME"
 		VMID=`vmware_esx_get_vmid $VMWARE_ESX_VM_NAME`
-		$OPENQRM_ESX_CMD vim-cmd vmsvc/power.reboot $VMID
+		$OPENQRM_ESX_CMD vim-cmd vmsvc/power.reboot $VMID | logger
 		vmware_esx_lock release
 		;;
 	remove)
 		vmware_esx_lock aquire
 		echo "Removing VMware vm $VMWARE_ESX_VM_NAME"
 		VMID=`vmware_esx_get_vmid $VMWARE_ESX_VM_NAME`
-		$OPENQRM_ESX_CMD vim-cmd vmsvc/unregister $VMID
+		$OPENQRM_ESX_CMD vim-cmd vmsvc/unregister $VMID | logger
+		$OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
+		REGISTERED=`$OPENQRM_ESX_CMD vim-cmd vmsvc/getallvms | grep "^$VMID "`
+		if [ "$REGISTERED" == "" ]; then
+			vmware_esx_log openqrm-vmware-esx "NOTICE: ESX vm $VMID unregisterd"
+			openqrm_post_event 0 "parameter_check" 5 "openqrm-vmware-esx" "ESX vm $VMID unregistered."
+		else
+			vmware_esx_log openqrm-vmware-esx "ERROR: ESX vm $VMID failed to unregister"
+			openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "ESX vm $VMID failed to unregister!"
+		fi
 		vmware_esx_lock release
 		;;
 	delete)
 		vmware_esx_lock aquire
 		echo "Deleting VMware vm $VMWARE_ESX_VM_NAME"
-		# make sure it is registered so we can destroy it via its id
 		VMX_CONFIG=`vmware_esx_get_vmx $VMWARE_ESX_VM_NAME`
-		$OPENQRM_ESX_CMD vim-cmd solo/registervm $VMX_CONFIG
-		VMID=`vmware_esx_get_vmid $VMWARE_ESX_VM_NAME`
-		$OPENQRM_ESX_CMD vim-cmd vmsvc/destroy $VMID
+		# make sure it is registered so we can destroy it via its id
+		FOUND_VMID=true
+		while ! vmware_esx_get_vmid $VMWARE_ESX_VM_NAME; do
+			$OPENQRM_ESX_CMD vim-cmd solo/registervm $VMX_CONFIG | logger
+			$OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
+			VMID=`vmware_esx_get_vmid $VMWARE_ESX_VM_NAME`
+			DEL_LOOP=$(( DEL_LOOP + 1 ))
+			if [ "$DEL_LOOP" == "3" ]; then
+				FOUND_VMID=false
+				break
+			fi
+		done
+		if [ "$FOUND_VMID" == "true" ]; then
+			VMID=`vmware_esx_get_vmid $VMWARE_ESX_VM_NAME`
+			$OPENQRM_ESX_CMD vim-cmd vmsvc/destroy $VMID | logger
+			vmware_esx_log openqrm-vmware-esx "NOTICE: Removed $VMWARE_ESX_VM_NAME/$VMID from ESX-host."
+			openqrm_post_event 0 "parameter_check" 5 "openqrm-vmware-esx" "Removed $VMWARE_ESX_VM_NAME/$VMID from ESX-host."
+		else
+			# remove hard
+			$OPENQRM_ESX_CMD "rm -rf /vmfs/volumes/$OPENQRM_VMWARE_ESX_DEFAULT_DATASTORE/$VMWARE_ESX_VM_NAME"
+			vmware_esx_log openqrm-vmware-esx "WARNING: Force remove of unregistered vm $VMWARE_ESX_VM_NAME!"
+			openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "Force remove of unregistered vm $VMWARE_ESX_VM_NAME!"
+		fi
 		vmware_esx_lock release
 		;;
 	list)
 		echo "Listing VMware vms"
 		mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/
 		chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/
-		$OPENQRM_ESX_CMD vim-cmd vmsvc/getallvms | grep -v Vmid | tee $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/$VMWARE_ESX_HOST_IP.vm_list
+		ESX_STATS="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/$VMWARE_ESX_HOST_IP.vm_list"
+		# registered vms
+		$OPENQRM_ESX_CMD vim-cmd vmsvc/getallvms | grep -v Vmid | tee $ESX_STATS
+		# unregistered vms
+		echo "Listing unregisterd VMware vms"
+		for unregisterd_vm in `$OPENQRM_ESX_CMD "find /vmfs/volumes/* -name *.vmx"`; do
+			UNREGISTERED=`basename $unregisterd_vm | cut -d'.' -f1`
+			if ! grep $UNREGISTERED $ESX_STATS 1>/dev/null; then
+				echo "# $UNREGISTERED" | tee -a $ESX_STATS
+			fi
+		done
+
+		
 		;;
 	*)
 		vmware_esx_usage
