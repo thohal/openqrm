@@ -30,7 +30,7 @@ if(htmlobject_request('action') != '') {
 		case 'select':
 			foreach($_REQUEST['identifier'] as $url) {
 				$image_shelf_url = $url;
-				$openqrm_server->send_command(" /usr/lib/openqrm/plugins/image-shelf/bin/openqrm-image-shelf list -i $image_shelf_url");
+				$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/bin/openqrm-image-shelf list -i $image_shelf_url");
 				sleep($refresh_delay);
 			}
 			break;
@@ -351,7 +351,7 @@ function image_shelf_final($final_image_id, $image_id, $image_shelf_url) {
 	$final_image_export = str_replace('"', '', $final_image_export);
 	$final_image_export = trim($final_image_export);
 
-	$openqrm_server->send_command(" /usr/lib/openqrm/plugins/image-shelf/bin/openqrm-image-shelf get -i $image_shelf_url -f $image_filename -n $final_storage_resource_ip:$final_image_export -d $image_distribution -u $OPENQRM_USER->name -p $OPENQRM_USER->password");
+	$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/bin/openqrm-image-shelf get -i $image_shelf_url -f $image_filename -n $final_storage_resource_ip:$final_image_export -d $image_distribution -u $OPENQRM_USER->name -p $OPENQRM_USER->password");
 
 	$disp = '<h1>Executing request</h1>';
 	$disp .= '<br>';
