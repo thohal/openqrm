@@ -333,6 +333,7 @@ EOF
 		echo "-n -> Please give the openQRM password for user $OPENQRM_USER : "
 		read OPENQRM_PASSWORD
 		scp $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx-monitord $VMWARE_ESX_HOST_IP:/bin/ | logger
+		$OPENQRM_ESX_CMD "chmod +x /bin/openqrm-vmware-esx-monitord"
 		$OPENQRM_ESX_CMD "busybox nohup /bin/openqrm-vmware-esx-monitord start $OPENQRM_SERVER_IP_ADDRESS $VMWARE_ESX_HOST_IP $OPENQRM_USER $OPENQRM_PASSWORD &"
 		;;
 	*)
