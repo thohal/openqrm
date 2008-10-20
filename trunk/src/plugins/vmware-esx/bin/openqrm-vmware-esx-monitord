@@ -4,8 +4,12 @@
 MONITOR_CMD=$1
 OPENQRM_SERVER_IP=$2
 ESX_SERVER_IP=$3
-ESX_OPENQRM_ID=$4
+USER=$4
+PASSWORD=$5
 MONITORD_LOCKFILE="/var/run/openqrm-vmware-esx-monitord"
+OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
+export LANG=C
+
 
 # stop and exit
 if [ "$MONITOR_CMD" == "stop" ]; then
@@ -20,23 +24,18 @@ if [ "$MONITOR_CMD" == "stop" ]; then
 fi
 # not start ?
 if [ "$MONITOR_CMD" != "start" ]; then
-	echo "Usage : $0 start [openqrm-server-ip-address] [esx-server-ip-address] [esx-server-openqrm-id] &"
+	echo "Usage : $0 start [openqrm-server-ip-address] [esx-server-ip-address] &"
 	echo "Usage : $0 stop"
 	exit 1
 fi
 # parameter check for start
 if [ "$OPENQRM_SERVER_IP" == "" ]; then
-	echo "Usage : $0 start [openqrm-server-ip-address] [esx-server-ip-address] [esx-server-openqrm-id] &"
+	echo "Usage : $0 start [openqrm-server-ip-address] [esx-server-ip-address] &"
 	echo "Usage : $0 stop"
 	exit 1
 fi
 if [ "$ESX_SERVER_IP" == "" ]; then
-	echo "Usage : $0 start [openqrm-server-ip-address] [esx-server-ip-address] [esx-server-openqrm-id] &"
-	echo "Usage : $0 stop"
-	exit 1
-fi
-if [ "$ESX_OPENQRM_ID" == "" ]; then
-	echo "Usage : $0 start [openqrm-server-ip-address] [esx-server-ip-address] [esx-server-openqrm-id] &"
+	echo "Usage : $0 start [openqrm-server-ip-address] [esx-server-ip-address] &"
 	echo "Usage : $0 stop"
 	exit 1
 fi
@@ -51,9 +50,51 @@ else
 	echo $$ > $MONITORD_LOCKFILE
 fi
 
+
+# main
+
+# if we do not have a resource-parameter file yet we run integrate
+if [ ! -f "$OPENQRM_RESOURCE_PARAMETER_FILE" ]; then
+	mkdir -p `dirname $OPENQRM_RESOURCE_PARAMETER_FILE`
+	resource_id=-1
+	resource_ip="$ESX_SERVER_IP"
+	resource_mac=`vim-cmd hostsvc/net/config | grep -A5 "ipAddress" | grep -A5 $ESX_SERVER_IP | grep "mac " | cut -d'"' -f2`
+	# remove whitespaces
+	resource_mac=`echo $resource_mac`
+	echo "Using $resource_ip/$resource_mac"
+	wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
+	sleep 3
+	if [ ! -f "$OPENQRM_RESOURCE_PARAMETER_FILE" ]; then
+		echo "ERROR: Could not integrate the VMware ESX server into the openQRM-server at $OPENQRM_SERVER_IP!"
+		rm -f $MONITORD_LOCKFILE
+		exit 1
+	fi
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+
+	# gather some more details to create the appliance on the openQRM-server
+	local_server_root_device=`mount | grep ' / ' | awk {' print $1 '}`
+	local_server_root_device_type=`mount | grep ' / ' | awk {' print $5 '}`
+	local_server_kernel_version=`uname -r`
+
+	# now we integrate it via the local-sever plugin
+	if ! wget -O /dev/null -q "http://$OPENQRM_SERVER_IP/openqrm/action/vmware-esx-integrate.php?USER=$USER&PASSWORD=$PASSWORD&local_server_command=integrate&local_server_id=$resource_id&local_server_root_device=$local_server_root_device&local_server_root_device_type=$local_server_root_device_type&local_server_kernel_version=$local_server_kernel_version"; then
+		echo "ERROR: Could not create the appliance resource$resouce_id on the openQRM-server!"
+		sleep 2
+		echo "NOTCIE: Removing the system from openQRM because of errors !"
+		# try to remove components from the local-server appliance
+		if ! wget -O /dev/null -q  "http://$OPENQRM_SERVER/openqrm/action/vmware-esx-integrate.php?USER=$USER&PASSWORD=$PASSWORD&local_server_command=remove&local_server_id=$resource_id"; then
+			echo "WARNING: Could not remove the appliance resource$resouce_id from the openQRM-server!"
+		fi
+		rm -f $MONITORD_LOCKFILE
+		exit 1
+	fi
+else
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+fi
+
+# loop
 HNAME=`hostname`
-# MADDRESS=`vim-cmd hostsvc/net/config | grep -A5 "ipAddress" | grep -A5 $ESX_SERVER_IP | grep "mac " | cut -d'"' -f2`
 while(true); do
-	wget -q -O /dev/null "http://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=update_info&resource_id=$ESX_OPENQRM_ID&resource_hostname=$HNAME&resource_state=active&resource_event=statistics"
+	wget -q -O /dev/null "http://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=update_info&resource_id=$resource_id&resource_hostname=$HNAME&resource_state=active&resource_event=statistics"
 	sleep 20
 done

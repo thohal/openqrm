@@ -30,19 +30,10 @@ if ! which screen 1>/dev/null; then
 	exit 6
 fi
 
-# re-run in background via screen
-if [ "$RUN_IN_BACKGROUND" != "true" ]; then
-	export RUN_IN_BACKGROUND=true
-	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-	screen -dmS $SCREEN_NAME $0 $@
-	exit	
-fi
-
-
 function vmware_esx_usage() {
 	echo "Usage : $0 start/stop/reboot/add/delete/remove/list <-i esx-server-ip> <-n vm-name>"
 	echo "Usage : $0 create <-i esx-server-ip> <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ]"
-	echo "Usage : $0 init <-i esx-server-ip> <-o esx-server-openqrm-id>"
+	echo "Usage : $0 init <-i esx-server-ip>"
 	exit 1
 }
 
@@ -75,10 +66,18 @@ function vmware_esx_get_vmid() {
 
 
 
-
 VMWARE_ESX_COMMAND=$1
-shift
+# re-run in background via screen
+if [ "$VMWARE_ESX_COMMAND" != "init" ]; then
+	if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+		export RUN_IN_BACKGROUND=true
+		SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+		screen -dmS $SCREEN_NAME $0 $@
+		exit	
+	fi
+fi
 
+shift
 while [ $# -ne 0 ]; do
 	case "$1" in
 		-n)
@@ -99,10 +98,6 @@ while [ $# -ne 0 ]; do
 			;;
 		-i)
 			VMWARE_ESX_HOST_IP=$2
-			shift
-			;;
-		-o)
-			VMWARE_ESX_HOST_ID=$2
 			shift
 			;;
 		*)
@@ -331,13 +326,14 @@ EOF
 		;;
 
 	init)
-		if [ "$VMWARE_ESX_HOST_ID" == "" ]; then
-			vmware_esx_usage
-			openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "Wrong usage, esx host openqrm-id missing!"
-		fi
-		echo "Initialyzing VMware ESX host id $VMWARE_ESX_HOST_ID"
+		echo "Initialyzing VMware ESX host $VMWARE_ESX_HOST_IP"
+		echo -n "-> Please give an openQRM user-name : "
+		read OPENQRM_USER
+		echo
+		echo "-n -> Please give the openQRM password for user $OPENQRM_USER : "
+		read OPENQRM_PASSWORD
 		scp $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx-monitord $VMWARE_ESX_HOST_IP:/bin/ | logger
-		$OPENQRM_ESX_CMD "busybox nohup /bin/openqrm-vmware-esx-monitord start $OPENQRM_SERVER_IP_ADDRESS $VMWARE_ESX_HOST_IP $VMWARE_ESX_HOST_ID &"
+		$OPENQRM_ESX_CMD "busybox nohup /bin/openqrm-vmware-esx-monitord start $OPENQRM_SERVER_IP_ADDRESS $VMWARE_ESX_HOST_IP $OPENQRM_USER $OPENQRM_PASSWORD &"
 		;;
 	*)
 		vmware_esx_usage
