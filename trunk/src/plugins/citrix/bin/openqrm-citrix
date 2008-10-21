@@ -78,11 +78,11 @@ case "$CITRIX_COMMAND" in
 
 	start)
 		echo "Starting Citrix vm $CITRIX_VM_UUID"
-		$CITRIX_XE_BINARY start -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID
+		$CITRIX_XE_BINARY vm-start -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID
 		;;
 	stop)
 		echo "Stopping Citrix vm $CITRIX_VM_UUID"
-		$CITRIX_XE_BINARY stop -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID
+		$CITRIX_XE_BINARY vm-stop -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID
 		;;
 	list)
 		echo "Listing Citrix vms"
@@ -92,6 +92,22 @@ case "$CITRIX_COMMAND" in
 		echo "Posting vm list to the openQRM-server"
 		$CITRIX_XE_BINARY vm-list -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE > $CITRIX_VM_LIST_TMP
 		;;
+	# Some Additions
+	vm-reboot)
+		echo "reboot Citrix vms"
+		$CITRIX_XE_BINARY vm-reboot $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID
+		;;
+	vm-install)
+		echo "Creating Citrix vms"
+	   	# No MANAGEMENT_INTERFACE environment varible set: assuming xenbr0
+       	MANAGEMENT_INTERFACE=xenbr0
+       	$CITRIX_XE_BINARY vm-install new-name-label=QRM-Node template=Windows\ Server\  2003
+       	# Find the network associated with the management interface. We'll assume that{_}{color}
+		# this is the network on which we want a network interface._{color}
+		NETWORK=`$CITRIX_XE_BINARY network-list bridge=${MANAGEMENT_INTERFACE} --minimal` 
+        # Add a VIF linking the VM to the network
+        $CITRIX_XE_BINARY vif-create vm-uuid=$CITRIX_VM_UUID network-uuid=${NETWORK} device=0
+        $CITRIX_XE_BINARY vm-param-set uuid=$CITRIX_VM_UUID HVM-boot-params:order=ncd
 	*)
 		citrix_usage
 		;;
