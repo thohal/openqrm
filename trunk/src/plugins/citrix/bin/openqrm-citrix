@@ -107,7 +107,21 @@ case "$CITRIX_COMMAND" in
 		NETWORK=`$CITRIX_XE_BINARY network-list bridge=${MANAGEMENT_INTERFACE} --minimal` 
         # Add a VIF linking the VM to the network
         $CITRIX_XE_BINARY vif-create vm-uuid=$CITRIX_VM_UUID network-uuid=${NETWORK} device=0
+        #change boot order to netbooting
         $CITRIX_XE_BINARY vm-param-set uuid=$CITRIX_VM_UUID HVM-boot-params:order=ncd
+        ;;
+    vm-mem-set)
+		echo "Editing RAM of Citrix vms"  
+		# Please check in future for ram - open bug
+		# $CITRIX_XE_BINARY host-param-get UUUID=$HOST-UUID param-name=memory-free
+		# Please add RAM-SIZE-Variable - get from gui
+		# $CITRIX_XE_BINARY vm-param-set UUUID=$HOSR-UUID param-name=memory-static-max:$SIZE_IN_BYTES
+		;;
+	host-reboot)
+		echo "Rebooting Citrix Host"  
+		# $CITRIX_XE_BINARY host-reboot UUID=$HOST-UUID
+		# we need the host-uuid!
+		;;
 	*)
 		citrix_usage
 		;;
