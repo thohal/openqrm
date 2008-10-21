@@ -101,8 +101,8 @@ function kernel_form() {
 	$disp = $disp."<form action='kernel-action.php' method=post>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp.htmlobject_input('kernel_name', array("value" => '', "label" => 'Insert Kernel name'), 'text', 20);
-	$disp = $disp.htmlobject_input('kernel_version', array("value" => '', "label" => 'Insert Kernel version'), 'text', 20);
+	$disp = $disp.htmlobject_input('kernel_name', array("value" => '', "label" => 'Insert Kernel name'), 'text', 30);
+	$disp = $disp.htmlobject_input('kernel_version', array("value" => '', "label" => 'Insert Kernel version'), 'text', 30);
 	$disp = $disp."<input type=hidden name=kernel_command value='new_kernel'>";
 	$disp = $disp."<input type=submit value='Add'>";
 	$disp = $disp."";
