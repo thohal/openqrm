@@ -44,18 +44,27 @@ function openqrm_plugin_nagios2_init() {
 	cp -f /root/.ssh/id_dsa.pub $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrmserver_public_key
 	chmod 644 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrmserver_public_key
 	# nagios auth
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/.htpasswd /etc/nagios2/htpasswd.users
-	HTPASSWD="htpasswd"
-	if [ -f /etc/SuSE-release ]; then
-		HTPASSWD="htpasswd2"
-	fi
+	#ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/.htpasswd /etc/nagios2/htpasswd.users
+	#HTPASSWD="htpasswd"
+	#if [ -f /etc/SuSE-release ]; then
+	#	HTPASSWD="htpasswd2"
+	#fi
 	# create the default nagiosadmin user
-	$HTPASSWD -b $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/.htpasswd nagiosadmin nagios
-	echo "NOTICE: set the Nagios password to 'nagios' !"
-	echo "        Please adjust this default password in $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/.htpasswd via htpasswd"
-	sleep 4
+	#$HTPASSWD -b $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/.htpasswd nagiosadmin nagios
+	#echo "NOTICE: set the Nagios password to 'nagios' !"
+	#echo "        Please adjust this default password in $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/.htpasswd via htpasswd"
+	#
+	# Nagios Single-Sign-On
+	#
+	# First backup original nagios.password
+    mv /etc/nagios2/htpasswd.users /etc/nagios2/htpasswd.users.bkp
+    # link openqrm .htaccess to nagios
+    ln -s $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd /etc/nagios2/htpasswd.users
+    # change nagiosadmin 2 openqrm for accessing nagios-gui
+    sed -i -e 's/nagiosadmin/openqrm/' /etc/nagios2/cgi.cfg 
+    # 	
 	# Add openqrm to nagios-contacts - not perfect, but working first :)
-	sed -i "s/root/openqrm/g" /etc/nagios2/conf.d/contacts_nagios2.cfg
+	# sed -i "s/root/openqrm/g" /etc/nagios2/conf.d/contacts_nagios2.cfg
 	# theme nagios
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/etc/build.conf/nuvola.conf
 	mkdir -p $OPENQRM_TEMP_DIR/nuvola_inst/
