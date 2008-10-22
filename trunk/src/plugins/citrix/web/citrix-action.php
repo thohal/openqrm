@@ -84,6 +84,11 @@ unset($citrix_fields["citrix_command"]);
 			$openqrm_server->send_command($citrix_command);
 			break;
 
+		case 'reboot':
+			$citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix reboot -s $citrix_server_ip -n $citrix_uuid";
+			$openqrm_server->send_command($citrix_command);
+			break;
+
 		case 'refresh_vm_list':
 			$citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix post_vm_list -s $citrix_server_ip";
 			$openqrm_server->send_command($citrix_command);

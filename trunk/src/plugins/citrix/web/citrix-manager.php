@@ -259,6 +259,8 @@ function citrix_server_display($appliance_id) {
 				$disp = $disp."  <a href=\"citrix-action.php?citrix_uuid=$citrix_vm_uuid&citrix_command=start&citrix_id=$citrix_server_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>";
 				$disp = $disp." / ";
 				$disp = $disp."<a href=\"citrix-action.php?citrix_uuid=$citrix_vm_uuid&citrix_command=stop&citrix_id=$citrix_server_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Stop</a>";
+				$disp = $disp." / ";
+				$disp = $disp."<a href=\"citrix-action.php?citrix_uuid=$citrix_vm_uuid&citrix_command=reboot&citrix_id=$citrix_server_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Reboot</a>";
 
 				$disp = $disp."<br>";
 				$disp = $disp."<hr>";
