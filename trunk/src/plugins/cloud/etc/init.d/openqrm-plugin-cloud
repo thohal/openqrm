@@ -65,8 +65,41 @@ function openqrm_plugin_cloud_init() {
 		cloud_manager_log init "ERROR: Could not create the cloud-plugin tables in the database!"
 		exit 1
 	fi
+
+	# link the web portal to the documentroot
+	
+	# create the virtualhost + auth for the cloud web portal
+	HTPASSWD="htpasswd"
+	if [ -f /etc/debian_version ]; then
+		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal
+		# the default apache config normally does not allow to override the authconfig (needed for basic auth)
+		# so we allow it for the openqrm directory
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/apache2/conf.d/openqrm-cloud.conf
+	elif [ -f /etc/redhat-release ]; then
+		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/httpd/conf.d/openqrm-cloud.conf
+	elif [ -f /etc/SuSE-release ]; then
+		HTPASSWD="htpasswd2"
+		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/apache2/conf.d/openqrm-cloud.conf
+		# we need a special treatment for suse to allow followsymlinks in the default-setup
+		# !! NOT FULLY SUPPORTED YET ON openSuse  !!
+	fi
+	$OPENQRM_WEBSERVER_INIT reload
+	# create the .htaccess file
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/httpd/openqrm-htaccess.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htaccess
+	# create the default admin user
+	$HTPASSWD -bc $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htpasswd cloud cloud
+	chmod 666 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud/.htpasswd
+
 	
 }
+
+
+
+
+
+
 
 USER=$2
 PASS=$3
