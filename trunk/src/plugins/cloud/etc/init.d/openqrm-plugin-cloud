@@ -38,9 +38,20 @@ function openqrm_plugin_cloud_uninstall() {
 		cloud_manager_log uninstall "ERROR: Could not drop the cloud-plugin tables in the database!"
 		exit 1
 	fi
-
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/cloud
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-cloud.tgz
+	# remove the portal
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal
+	if [ -f /etc/debian_version ]; then
+		rm -f /etc/apache2/conf.d/openqrm-cloud.conf
+	elif [ -f /etc/redhat-release ]; then
+		rm -f /etc/httpd/conf.d/openqrm-cloud.conf
+	elif [ -f /etc/SuSE-release ]; then
+		rm -f /etc/apache2/conf.d/openqrm-cloud.conf
+	fi
+	$OPENQRM_WEBSERVER_INIT reload
+	
+	
 }
 
 function openqrm_plugin_cloud_init() {
@@ -90,7 +101,7 @@ function openqrm_plugin_cloud_init() {
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/httpd/openqrm-htaccess.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htaccess
 	# create the default admin user
 	$HTPASSWD -bc $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htpasswd cloud cloud
-	chmod 666 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud/.htpasswd
+	chmod 666 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htpasswd
 
 	
 }
