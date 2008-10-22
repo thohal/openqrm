@@ -41,6 +41,8 @@ if ($OPENQRM_USER->role != "administrator") {
 }
 
 $citrix_uuid = $_REQUEST["citrix_uuid"];
+$citrix_name = $_REQUEST["citrix_name"];
+$citrix_ram = $_REQUEST["citrix_ram"];
 $citrix_id = $_REQUEST["citrix_id"];
 $citrix_server_passwd = $_REQUEST["citrix_server_passwd"];
 $citrix_server_user = $_REQUEST["citrix_server_user"];
@@ -72,6 +74,11 @@ unset($citrix_fields["citrix_command"]);
 			fwrite($fp, $citrix_server_passwd);
 			fwrite($fp, "\n");
 			fclose($fp);
+			break;
+
+		case 'new':
+			$citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix create -s $citrix_server_ip -l $citrix_name -m $citrix_ram";
+			$openqrm_server->send_command($citrix_command);
 			break;
 
 		case 'start':
