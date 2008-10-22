@@ -37,13 +37,14 @@ function get_instance($id, $name) {
 	global $event;
 	$db=openqrm_get_db_connection();
 	if ("$id" != "") {
-		$appliance_array = &$db->Execute("select * from $CLOUD_USER_TABLE where cu_id=$id");
+		$clouduser_array = &$db->Execute("select * from $CLOUD_USER_TABLE where cu_id=$id");
 	} else if ("$name" != "") {
-		$appliance_array = &$db->Execute("select * from $CLOUD_USER_TABLE where cu_name='$name'");
+		$clouduser_array = &$db->Execute("select * from $CLOUD_USER_TABLE where cu_name='$name'");
 	} else {
 		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "coulduser.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
 		exit(-1);
 	}
+
 	foreach ($clouduser_array as $index => $clouduser) {
 		$this->id = $clouduser["cu_id"];
 		$this->name = $clouduser["cu_name"];

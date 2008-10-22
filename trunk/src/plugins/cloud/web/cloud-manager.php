@@ -10,6 +10,7 @@ $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
+require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/appliance.class.php";
@@ -37,6 +38,35 @@ if(htmlobject_request('action') != '') {
 				$cr_request->remove($id);
 			}
 			break;
+
+		case 'approve':
+			foreach($_REQUEST['identifier'] as $id) {
+				$cr_request = new cloudrequest();
+				$cr_request->setstatus($id, 'approve');
+			}
+			break;
+
+		case 'cancel':
+			foreach($_REQUEST['identifier'] as $id) {
+				$cr_request = new cloudrequest();
+				$cr_request->setstatus($id, 'new');
+			}
+			break;
+
+		case 'deny':
+			foreach($_REQUEST['identifier'] as $id) {
+				$cr_request = new cloudrequest();
+				$cr_request->setstatus($id, 'deny');
+			}
+			break;
+
+		case 'deprovision':
+			foreach($_REQUEST['identifier'] as $id) {
+				$cr_request = new cloudrequest();
+				$cr_request->setstatus($id, 'deprovsion');
+			}
+			break;
+
 	}
 }
 
@@ -76,11 +106,40 @@ function cloud_manager() {
 	$cl_request = new cloudrequest();
 	$request_array = $cl_request->display_overview(0, 100, 'cr_id', 'ASC');
 	foreach ($request_array as $index => $cr) {
+		// user name
+		$cu_tmp = new clouduser();
+		$cu_tmp_id = $cr["cr_cu_id"];
+		$cu_tmp->get_instance_by_id($cu_tmp_id);
+		
+		// status
+		$cr_status = $cr["cr_status"];
+		switch ($cr_status) {
+			case '1':
+				$cr_status_disp="New";
+				break;
+			case '2':
+				$cr_status_disp="Approved";
+				break;
+			case '3':
+				$cr_status_disp="Active";
+				break;
+			case '4':
+				$cr_status_disp="Denied";
+				break;
+			case '5':
+				$cr_status_disp="Deprovisioned";
+				break;
+		}	
+		// format time
+		$timestamp=$cr["cr_request_time"];
+		$cr_request_time = date(DATE_RFC822, $timestamp);
+
+		// fill the array for the table
 		$arBody[] = array(
 			'cr_id' => $cr["cr_id"],
-			'cr_cu_name' => $cr["cr_cu_name"],
-			'cr_status' => $cr["cr_status"],
-			'cr_request_time' => $cr["cr_request_time"],
+			'cr_cu_name' => $cu_tmp->name,
+			'cr_status' => $cr_status_disp,
+			'cr_request_time' => $cr_request_time,
 			'cr_appliance_id' => $cr["cr_appliance_id"],
 		);
 	}
@@ -91,11 +150,11 @@ function cloud_manager() {
 	$table->cellspacing = 0;
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
-	$table->identifier_type = "radio";
+	$table->identifier_type = "checkbox";
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('approve', 'deny', 'delete', 'deprovision');
+		$table->bottom = array('approve', 'cancel', 'deny', 'delete', 'deprovision');
 		$table->identifier = 'cr_id';
 	}
 	$table->max = 100;
@@ -110,13 +169,56 @@ function cloud_create_request() {
 	global $OPENQRM_USER;
 	global $thisfile;
 
+	$cl_user = new clouduser();
+	$cl_user_list = array();
+	$cl_user_list = $cl_user->get_list();
+	$cl_user_count = count($cl_user_list);
+	
+	$kernel = new kernel();
+	$kernel_list = array();
+	$kernel_list = $kernel->get_list();
+	// remove the openqrm kernelfrom the list
+	// print_r($kernel_list);
+	array_shift($kernel_list);
+
+	$image = new image();
+	$image_list = array();
+	$image_list = $image->get_list();
+	// remove the openqrm + idle image from the list
+	//print_r($image_list);
+	array_shift($image_list);
+	array_shift($image_list);
+	$image_count = count($image_list);
+
+	$virtualization = new virtualization();
+	$virtualization_list = array();
+	$virtualization_list = $virtualization->get_list();
+
 
 	$disp = "<h1>Create new Cloud Request</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
+	
+	if ($cl_user_count < 1) {
+		$disp = $disp."<b>Please create a Cloud User first!";
+		return $disp;
+	}
+	if ($image_count < 1) {
+		$disp = $disp."<b>Please create Sever-Images first!";
+//		return $disp;
+	}
+	
 	$disp = $disp."<form action='cloud-action.php' method=post>";
+	
+	$disp = $disp.htmlobject_select('cr_cu_id', $cl_user_list, 'User');
+
 	$disp = $disp.htmlobject_input('cr_start', array("value" => '', "label" => 'Start-time'), 'text', 20);
 	$disp = $disp.htmlobject_input('cr_stop', array("value" => '', "label" => 'End-time'), 'text', 20);
+	
+	$disp = $disp.htmlobject_select('cr_kernelid', $kernel_list, 'Kernel');
+	$disp = $disp.htmlobject_select('cr_imageid', $image_list, 'Image');
+	$disp = $disp.htmlobject_select('cr_resource_type_req', $virtualization_list, 'Resource type');
+	
 	$disp = $disp.htmlobject_input('cr_ram_req', array("value" => '', "label" => 'Ram'), 'text', 20);
 	$disp = $disp.htmlobject_input('cr_cpu_req', array("value" => '', "label" => 'Cpu'), 'text', 20);
 	$disp = $disp.htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk'), 'text', 20);
@@ -132,8 +234,6 @@ function cloud_create_request() {
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."</form>";
-
-
 
 	return $disp;
 }

@@ -16,6 +16,14 @@ global $CLOUD_REQUEST_TABLE;
 $event = new event();
 global $event;
 
+
+// request status
+// 1 = new
+// 2 = approved
+// 3 = active (provisioned)
+// 4 = denied
+// 5 = done (deprovisioned)
+
 class cloudrequest {
 
 var $id = '';
@@ -106,8 +114,11 @@ function add($cloudrequest_fields) {
 		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "cloudrequest.class.php", "coulduser_field not well defined", "", "", 0, 0, 0);
 		return 1;
 	}
-	// set stop time and status to now
+	// set request time to now
 	$now=$_SERVER['REQUEST_TIME'];
+	$cloudrequest_fields['cr_request_time'] = $now;
+	// set status to 1 = new
+	$cloudrequest_fields['cr_status'] = 1;
 	$db=openqrm_get_db_connection();
 	$result = $db->AutoExecute($CLOUD_REQUEST_TABLE, $cloudrequest_fields, 'INSERT');
 	if (! $result) {
@@ -170,6 +181,37 @@ function get_all_ids() {
 	return $cloudrequest_list;
 
 }
+
+
+// function to set the status of a request
+function setstatus($cloudrequest_id, $cloud_status) {
+	global $CLOUD_REQUEST_TABLE;
+
+	switch ($cloud_status) {
+		case 'new':
+			$cr_status=1;
+			break;
+		case 'approve':
+			$cr_status=2;
+			break;
+		case 'active':
+			$cr_status=3;
+			break;
+		case 'deny':
+			$cr_status=4;
+			break;
+		case 'deprovsion':
+			$cr_status=5;
+			break;
+		default:
+			exit(1);
+			break;
+	}
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute("update $CLOUD_REQUEST_TABLE set cr_status=$cr_status where cr_id=$cloudrequest_id");
+
+}
+
 
 
 

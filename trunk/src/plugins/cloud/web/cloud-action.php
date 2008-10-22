@@ -71,6 +71,8 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			// cr_request_time VARCHAR(20)
 			// cr_start VARCHAR(20)
 			// cr_stop VARCHAR(20)
+			// cr_kernel_id INT(5)
+			// cr_image_id INT(5)
 			// cr_ram_req VARCHAR(20)
 			// cr_cpu_req VARCHAR(20)
 			// cr_disk_req VARCHAR(20)
@@ -89,7 +91,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			// cu_lastname VARCHAR(50)
 			// cu_email VARCHAR(50)
 			
-			$create_cloud_requests = "create table cloud_requests(cr_id INT(5), cr_cu_id INT(5), cr_status INT(5), cr_request_time VARCHAR(20), cr_start VARCHAR(20), cr_stop VARCHAR(20), cr_ram_req VARCHAR(20), cr_cpu_req VARCHAR(20), cr_disk_req VARCHAR(20), cr_network_req VARCHAR(255), cr_resource_type_req VARCHAR(20), cr_deployment_type_req VARCHAR(50), cr_ha_req VARCHAR(5), cr_shared_req VARCHAR(5), cr_appliance_id INT(5))";
+			$create_cloud_requests = "create table cloud_requests(cr_id INT(5), cr_cu_id INT(5), cr_status INT(5), cr_request_time VARCHAR(20), cr_start VARCHAR(20), cr_stop VARCHAR(20), cr_kernel_id INT(5), cr_image_id INT(5), cr_ram_req VARCHAR(20), cr_cpu_req VARCHAR(20), cr_disk_req VARCHAR(20), cr_network_req VARCHAR(255), cr_resource_type_req VARCHAR(20), cr_deployment_type_req VARCHAR(50), cr_ha_req VARCHAR(5), cr_shared_req VARCHAR(5), cr_appliance_id INT(5))";
 			$create_cloud_users = "create table cloud_users(cu_id INT(5), cu_name VARCHAR(20), cu_password VARCHAR(20), cu_forename VARCHAR(50), cu_lastname VARCHAR(50), cu_email VARCHAR(50))";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($create_cloud_requests);
