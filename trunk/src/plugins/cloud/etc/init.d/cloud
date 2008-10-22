@@ -1,0 +1,62 @@
+#!/bin/bash
+# this is the boot-service init script for the cloud resources
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/include/openqrm-plugin-cloud-functions
+if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+fi
+
+
+function cloud_start() {
+	echo "Starting the openQRM cloud-plugin"
+	cloud_stop 1>/dev/null 2>&1
+}
+
+
+function cloud_stop() {
+	echo "Stopping the openQRM cloud-plugin"
+}
+
+
+
+
+
+case "$1" in
+	start)
+		cloud_start
+		;;
+	stop)
+		cloud_stop
+		;;
+	restart)
+		cloud_stop
+		sleep 1
+		cloud_start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+
+esac
+exit $?
+
+
+
+
+
+
+
+
+
+
+
+
+

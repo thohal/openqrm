@@ -1,0 +1,101 @@
+#!/bin/bash
+# init script for the openQRM cloud-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/include/openqrm-plugin-cloud-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/openqrm-plugin-cloud.conf
+
+function openqrm_plugin_cloud_start() {
+	echo "Starting the openQRM cloud-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/cloud/.running
+}
+
+
+function openqrm_plugin_cloud_stop() {
+	echo "Stopping the openQRM cloud-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/cloud/.running
+}
+
+function openqrm_plugin_cloud_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "cloud: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "cloud: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM cloud-plugin"
+	openqrm_plugin_cloud_stop
+
+	# removing the cloud tables
+	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/cloud/cloud-action.php?cloud_command=uninstall"; then
+		cloud_manager_log uninstall "ERROR: Could not drop the cloud-plugin tables in the database!"
+		exit 1
+	fi
+
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/cloud
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-cloud.tgz
+}
+
+function openqrm_plugin_cloud_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "cloud: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "cloud: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Initializing the openQRM cloud-plugin"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/cloud
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/boot-service-cloud.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-cloud.tgz
+	
+	# creating the tables
+	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/cloud/cloud-action.php?cloud_command=init"; then
+		cloud_manager_log init "ERROR: Could not create the cloud-plugin tables in the database!"
+		exit 1
+	fi
+	
+}
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_cloud_start
+		;;
+	stop)
+		openqrm_plugin_cloud_stop
+		;;
+	restart)
+		openqrm_plugin_cloud_stop
+		sleep 1
+		openqrm_plugin_cloud_start
+		;;
+	init)
+		openqrm_plugin_cloud_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_cloud_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+

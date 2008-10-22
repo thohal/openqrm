@@ -1,0 +1,9 @@
+#	Title
+#	Href
+#	Alt
+#	IMG
+#	Target
+.|Cloud
+..|About|plugins/cloud/cloud-about.php
+..|Cloud User|plugins/cloud/cloud-user.php
+..|Cloud Requests|plugins/cloud/cloud-manager.php
