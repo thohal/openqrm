@@ -3,7 +3,7 @@
 # this script automatically manages citrix
 OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
-. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/etc/openqrm-plugins-citrix.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/etc/openqrm-plugin-citrix.conf
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/include/openqrm-plugin-citrix-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
@@ -22,7 +22,7 @@ fi
 
 function citrix_usage() {
 	echo "Usage : $0 start/stop/reboot/list <-s citrix-server-ip> <-n vm-uuid>"
-	echo "        $0 vm-mem-set <-s citrix-server-ip> <-n vm-uuid>"
+	echo "        $0 vm-mem-set <-s citrix-server-ip> <-n vm-uuid> <-m ram>"
 	echo "        $0 create <-s citrix-server-ip> <-l vm-name> <-m ram>"
 	echo "        $0 post_vm_list <-s citrix-server-ip>"
 	exit 1
@@ -65,7 +65,7 @@ if [ "$CITRIX_COMMAND" == "" ]; then
 	citrix_usage
 fi
 
-if [ "$CITRIX_COMMAND" != "list" ] && [ "$CITRIX_COMMAND" != "post_vm_list" ]; then
+if [ "$CITRIX_COMMAND" != "list" ] && [ "$CITRIX_COMMAND" != "post_vm_list" ] && [ "$CITRIX_COMMAND" != "create" ]; then
 	if [ "$CITRIX_VM_UUID" == "" ]; then
 		citrix_usage
 	fi

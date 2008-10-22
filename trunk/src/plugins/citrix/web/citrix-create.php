@@ -12,17 +12,17 @@ require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
-$citrix_id = $_REQUEST["citrix_id"];
+$citrix_server_id = $_REQUEST["citrix_server_id"];
 
 
 function citrix_create() {
-	global $citrix_id;
+	global $citrix_server_id;
 
 	$disp = "<b>Citrix Create VM</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$citrix = new resource();
-	$citrix->get_instance_by_id($citrix_id);
+	$citrix->get_instance_by_id($citrix_server_id);
 	$resource_mac_gen = new resource();
 	$resource_mac_gen->generate_mac();
 	$suggested_mac = $resource_mac_gen->mac;
@@ -36,7 +36,7 @@ function citrix_create() {
 	$disp = $disp.htmlobject_input('citrix_ram', array("value" => '256', "label" => 'Memory (MB)'), 'text', 10);
 	$disp = $disp.htmlobject_input('citrix_disk', array("value" => '2000', "label" => 'Disk (MB)'), 'text', 10);
 	$disp = $disp.htmlobject_input('citrix_swap', array("value" => '500', "label" => 'Swap (MB)'), 'text', 10);
-	$disp = $disp."<input type=hidden name=citrix_id value=$citrix_id>";
+	$disp = $disp."<input type=hidden name=citrix_id value=$citrix_server_id>";
 	$disp = $disp."<input type=hidden name=citrix_command value='new'>";
 	$disp = $disp."<br>";
 	$disp = $disp."<input type=submit value='Create'>";
