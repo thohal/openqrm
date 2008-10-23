@@ -45,13 +45,11 @@ if(htmlobject_request('action') != '') {
 
 
 
-
 function cloud_config_manager() {
 
 	global $OPENQRM_USER;
 	global $thisfile;
 	$table = new htmlobject_db_table('cc_id');
-
 
 	$disp = "<h1>Cloud Configuration</h1>";
 	$disp = $disp."<br>";
