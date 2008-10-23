@@ -137,7 +137,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			break;
 
 		case 'create_request':
-			echo "creating user $user_name <br>";
+			echo "creating new cloud request<br>";
 			$request_fields['cr_id'] = openqrm_db_get_free_id('cr_id', $CLOUD_REQUEST_TABLE);
 			$cr_request = new cloudrequest();
 			$cr_request->add($request_fields);
