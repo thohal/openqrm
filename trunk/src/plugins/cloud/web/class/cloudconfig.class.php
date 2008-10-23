@@ -132,7 +132,7 @@ function get_value($cloudconfig_id) {
 		if (!$cloudconfig_set->EOF) {
 			return $cloudconfig_set->fields["cc_value"];
 		} else {
-			return "idle";
+			return "";
 		}
 	}
 }

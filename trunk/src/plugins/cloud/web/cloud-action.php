@@ -42,6 +42,7 @@ require_once "$RootDir/include/htmlobject.inc.php";
 // special cloud classes
 require_once "$RootDir/plugins/cloud/class/clouduser.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudrequest.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
 global $CLOUD_USER_TABLE;
 global $CLOUD_REQUEST_TABLE;
@@ -189,11 +190,14 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$cl_user->get_instance_by_id($cr_cu_id);
 			$cu_name = $cl_user->name;
 			$cu_email = $cl_user->email;
-
+			// get admin email
+			$cc_conf = new cloudconfig();
+			$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
+			
 			$rmail = new cloudmailer();
 			$rmail->to = "$cu_email";
-			$rmail->from = "root@localhost";
-			$rmail->subject = "testy";
+			$rmail->from = "$cc_admin_email";
+			$rmail->subject = "openQRM Cloud: New request from user $cu_name";
 			$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/new_cloud_request.mail.tmpl";
 			$arr = array('@@USER@@'=>"$cu_name", '@@ID@@'=>"$cr_id", '@@OPENQRM_SERVER_IP_ADDRESS@@'=>"$OPENQRM_SERVER_IP_ADDRESS");
 			$rmail->var_array = $arr;
