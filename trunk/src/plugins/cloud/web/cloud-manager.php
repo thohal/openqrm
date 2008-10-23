@@ -17,7 +17,6 @@
 </script>
 <link type="text/css" rel="stylesheet" href="css/calendar.css">
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-<link rel="stylesheet" type="text/css" href="cloud.css" />
 
 </head>
 

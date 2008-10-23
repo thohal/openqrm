@@ -1,6 +1,5 @@
 
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-<link rel="stylesheet" type="text/css" href="cloud.css" />
 
 <?php
 
