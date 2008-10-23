@@ -118,6 +118,12 @@ function cloud_manager() {
 	$arHead['cr_request_time'] = array();
 	$arHead['cr_request_time']['title'] ='Request-time';
 
+	$arHead['cr_start'] = array();
+	$arHead['cr_start']['title'] ='Start-time';
+
+	$arHead['cr_stop'] = array();
+	$arHead['cr_stop']['title'] ='Stop-time';
+
 	$arHead['cr_appliance_id'] = array();
 	$arHead['cr_appliance_id']['title'] ='Appliance ID';
 
@@ -153,7 +159,12 @@ function cloud_manager() {
 		}	
 		// format time
 		$timestamp=$cr["cr_request_time"];
-		$cr_request_time = date(DATE_RFC822, $timestamp);
+		$cr_request_time = date("d-m-Y H-i", $timestamp);
+		$timestamp=$cr["cr_start"];
+		$cr_start = date("d-m-Y H-i", $timestamp);
+		$timestamp=$cr["cr_stop"];
+		$cr_stop = date("d-m-Y H-i", $timestamp);
+
 
 		// fill the array for the table
 		$arBody[] = array(
@@ -161,6 +172,8 @@ function cloud_manager() {
 			'cr_cu_name' => $cu_tmp->name,
 			'cr_status' => $cr_status_disp,
 			'cr_request_time' => $cr_request_time,
+			'cr_start' => $cr_start,
+			'cr_stop' => $cr_stop,
 			'cr_appliance_id' => $cr["cr_appliance_id"],
 		);
 	}
