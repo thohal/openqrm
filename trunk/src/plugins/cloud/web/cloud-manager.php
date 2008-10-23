@@ -200,11 +200,11 @@ function cloud_create_request() {
 	$disp = $disp."<br>";
 	
 	if ($cl_user_count < 1) {
-		$disp = $disp."<b>Please create a Cloud User first!";
+		$disp = $disp."<b>Please create a <a href='/openqrm/base/plugins/cloud/cloud-user.php?action=create'>Cloud User</a> first!";
 		return $disp;
 	}
 	if ($image_count < 1) {
-		$disp = $disp."<b>Please create Sever-Images first!";
+		$disp = $disp."<b>Please create <a href='/openqrm/base/server/image/image-new.php?currenttab=tab1'>Sever-Images</a> first!";
 //		return $disp;
 	}
 	

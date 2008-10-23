@@ -38,16 +38,23 @@ function openqrm_plugin_cloud_uninstall() {
 		cloud_manager_log uninstall "ERROR: Could not drop the cloud-plugin tables in the database!"
 		exit 1
 	fi
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/cloud
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-cloud.tgz
+	# remove auth files
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htaccess
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htpasswd
 	# remove the portal
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/cloud
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-cloud.tgz
 	if [ -f /etc/debian_version ]; then
 		rm -f /etc/apache2/conf.d/openqrm-cloud.conf
 	elif [ -f /etc/redhat-release ]; then
 		rm -f /etc/httpd/conf.d/openqrm-cloud.conf
 	elif [ -f /etc/SuSE-release ]; then
 		rm -f /etc/apache2/conf.d/openqrm-cloud.conf
+		# remove the symlink we created at init
+		if [ -h /usr/bin/htpasswd ]; then
+			rm -f /usr/bin/htpasswd
+		fi
 	fi
 	$OPENQRM_WEBSERVER_INIT reload
 	
@@ -78,9 +85,7 @@ function openqrm_plugin_cloud_init() {
 	fi
 
 	# link the web portal to the documentroot
-	
 	# create the virtualhost + auth for the cloud web portal
-	HTPASSWD="htpasswd"
 	if [ -f /etc/debian_version ]; then
 		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal
 		# the default apache config normally does not allow to override the authconfig (needed for basic auth)
@@ -90,17 +95,18 @@ function openqrm_plugin_cloud_init() {
 		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal
 		cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/httpd/conf.d/openqrm-cloud.conf
 	elif [ -f /etc/SuSE-release ]; then
-		HTPASSWD="htpasswd2"
+		# for suse we link the htpasswd2 to htpasswd
+		HTPASSWD=`htpasswd2`
+		ln -s $HTPASSWD /usr/bin/htpasswd
 		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal
 		cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/apache2/conf.d/openqrm-cloud.conf
-		# we need a special treatment for suse to allow followsymlinks in the default-setup
-		# !! NOT FULLY SUPPORTED YET ON openSuse  !!
+		# we should already have a special treatment for suse to allow followsymlinks in the default-setup
 	fi
 	$OPENQRM_WEBSERVER_INIT reload
 	# create the .htaccess file
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/httpd/openqrm-htaccess.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htaccess
 	# create the default admin user
-	$HTPASSWD -bc $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htpasswd cloud cloud
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htpasswd
 	chmod 666 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htpasswd
 
 	

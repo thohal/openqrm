@@ -8,6 +8,7 @@
 $thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
+$CloudDir = $_SERVER["DOCUMENT_ROOT"].'/cloud-portal/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/resource.class.php";
@@ -32,7 +33,15 @@ if(htmlobject_request('action') != '') {
 		case 'delete':
 			foreach($_REQUEST['identifier'] as $id) {
 				$cl_user = new clouduser();
+				$cl_user->get_instance_by_id($id);
+				// remove user from htpasswd
+				$username = $cl_user->name;
+				$openqrm_server_command="htpasswd -D $CloudDir/.htpasswd $username";
+				$output = shell_exec($openqrm_server_command);
+				// remove from db
 				$cl_user->remove($id);
+
+
 			}
 			break;
 	}

@@ -1,20 +1,36 @@
 <?php
 $cloud_command = $_REQUEST["cloud_command"];
-?>
 
+switch ($cloud_command) {
+	case 'create_user':
+?>
+<html>
+<head>
+<title>openQRM Cloud actions</title>
+<meta http-equiv="refresh" content="0; URL=cloud-user.php?currenttab=tab0&strMsg=Processing <?php echo $cloud_command; ?>">
+</head>
+<body>
+<?php
+			break;
+	default:
+	// we forward to the cloud-manager
+?>
 <html>
 <head>
 <title>openQRM Cloud actions</title>
 <meta http-equiv="refresh" content="0; URL=cloud-manager.php?currenttab=tab0&strMsg=Processing <?php echo $cloud_command; ?>">
 </head>
 <body>
-
 <?php
+			break;
+}
+// end of fowarding switch
 
 // error_reporting(E_ALL);
 $thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
+$CloudDir = $_SERVER["DOCUMENT_ROOT"].'/cloud-portal/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/resource.class.php";
@@ -97,7 +113,6 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($create_cloud_requests);
 			$recordSet = &$db->Execute($create_cloud_users);
 		    $db->Close();
-
 			break;
 
 		case 'uninstall':
@@ -107,7 +122,6 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($drop_cloud_requests);
 			$recordSet = &$db->Execute($drop_cloud_users);
 		    $db->Close();
-
 			break;
 
 		case 'create_user':
@@ -115,7 +129,11 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$user_fields['cu_id'] = openqrm_db_get_free_id('cu_id', $CLOUD_USER_TABLE);
 			$cl_user = new clouduser();
 			$cl_user->add($user_fields);
-			
+			// add user to htpasswd
+			$username = $user_fields['cu_name'];
+			$password = $user_fields['cu_password'];
+			$openqrm_server_command="htpasswd -b $CloudDir/.htpasswd $username $password";
+			$output = shell_exec($openqrm_server_command);
 			break;
 
 		case 'create_request':
@@ -123,7 +141,6 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$request_fields['cr_id'] = openqrm_db_get_free_id('cr_id', $CLOUD_REQUEST_TABLE);
 			$cr_request = new cloudrequest();
 			$cr_request->add($request_fields);
-			
 			break;
 
 		default:
