@@ -38,6 +38,8 @@ require_once "$RootDir/include/htmlobject.inc.php";
 // special cloud classes
 require_once "$RootDir/plugins/cloud/class/clouduser.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudrequest.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
 
 global $OPENQRM_SERVER_BASE_DIR;
 $refresh_delay=5;
@@ -109,6 +111,25 @@ if(htmlobject_request('action') != '') {
 			$request_fields['cr_id'] = openqrm_db_get_free_id('cr_id', $CLOUD_REQUEST_TABLE);
 			$cr_request = new cloudrequest();
 			$cr_request->add($request_fields);
+
+			// send mail to admin
+			$cr_id = $request_fields['cr_id'];
+			$cu_name = $request_user->name;
+			$cu_email = $request_user->email;
+			// get admin email
+			$cc_conf = new cloudconfig();
+			$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
+			
+			$rmail = new cloudmailer();
+			$rmail->to = "$cu_email";
+			$rmail->from = "$cc_admin_email";
+			$rmail->subject = "openQRM Cloud: New request from user $cu_name";
+			$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/new_cloud_request.mail.tmpl";
+			$arr = array('@@USER@@'=>"$cu_name", '@@ID@@'=>"$cr_id", '@@OPENQRM_SERVER_IP_ADDRESS@@'=>"$OPENQRM_SERVER_IP_ADDRESS");
+			$rmail->var_array = $arr;
+			$rmail->send();
+
+
 			break;
 
 
