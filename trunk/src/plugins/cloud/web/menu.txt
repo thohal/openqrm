@@ -7,3 +7,4 @@
 ..|About|plugins/cloud/cloud-about.php
 ..|Cloud User|plugins/cloud/cloud-user.php
 ..|Cloud Requests|plugins/cloud/cloud-manager.php
+..|Cloud Config|plugins/cloud/cloud-config.php

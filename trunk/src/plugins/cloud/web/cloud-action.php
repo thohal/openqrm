@@ -120,21 +120,36 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			// cu_forename VARCHAR(50)
 			// cu_lastname VARCHAR(50)
 			// cu_email VARCHAR(50)
+			// 
+			// -> cloudconfig
+			// cc_id INT(5)
+			// cc_key VARCHAR(50)
+			// cc_value VARCHAR(50)
 			
 			$create_cloud_requests = "create table cloud_requests(cr_id INT(5), cr_cu_id INT(5), cr_status INT(5), cr_request_time VARCHAR(20), cr_start VARCHAR(20), cr_stop VARCHAR(20), cr_kernel_id INT(5), cr_image_id INT(5), cr_ram_req VARCHAR(20), cr_cpu_req VARCHAR(20), cr_disk_req VARCHAR(20), cr_network_req VARCHAR(255), cr_resource_type_req VARCHAR(20), cr_deployment_type_req VARCHAR(50), cr_ha_req VARCHAR(5), cr_shared_req VARCHAR(5), cr_appliance_id INT(5))";
 			$create_cloud_users = "create table cloud_users(cu_id INT(5), cu_name VARCHAR(20), cu_password VARCHAR(20), cu_forename VARCHAR(50), cu_lastname VARCHAR(50), cu_email VARCHAR(50))";
+			$create_cloud_config = "create table cloud_config(cc_id INT(5), cc_key VARCHAR(50), cc_value VARCHAR(50))";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($create_cloud_requests);
 			$recordSet = &$db->Execute($create_cloud_users);
+			$recordSet = &$db->Execute($create_cloud_config);
+			// create the default configuration
+			$create_default_cloud_config1 = "insert into cloud_config(cc_id, cc_key, cc_value) values (1, 'cloud_admin_email', 'root@localhost')";
+			$recordSet = &$db->Execute($create_default_cloud_config1);
+			$create_default_cloud_config2 = "insert into cloud_config(cc_id, cc_key, cc_value) values (2, 'auto_provision', 'false')";
+			$recordSet = &$db->Execute($create_default_cloud_config2);
+
 		    $db->Close();
 			break;
 
 		case 'uninstall':
 			$drop_cloud_requests = "drop table cloud_requests";
 			$drop_cloud_users = "drop table cloud_users";
+			$drop_cloud_users = "drop table cloud_config";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($drop_cloud_requests);
 			$recordSet = &$db->Execute($drop_cloud_users);
+			$recordSet = &$db->Execute($drop_cloud_config);
 		    $db->Close();
 			break;
 
