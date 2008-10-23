@@ -156,7 +156,7 @@ function my_cloud_manager() {
 	$table->identifier_type = "checkbox";
 	$table->head = $arHead;
 	$table->body = $arBody;
-	$table->bottom = array('deprovision', 'delete');
+	$table->bottom = array('reload', 'deprovision', 'delete');
 	$table->identifier = 'cr_id';
 	$table->max = 100;
 	return $disp.$table->get_string();
@@ -235,6 +235,7 @@ function my_cloud_create_request() {
 	$disp = $disp."<input type=submit value='Create'>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
+	$disp = $disp."<a href='/cloud-portal'>Back to Cloud Request Overview</a>";
 	$disp = $disp."</form>";
 
 	return $disp;

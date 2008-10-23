@@ -154,7 +154,7 @@ function cloud_manager() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('approve', 'cancel', 'deny', 'delete', 'deprovision');
+		$table->bottom = array('reload', 'approve', 'cancel', 'deny', 'delete', 'deprovision');
 		$table->identifier = 'cr_id';
 	}
 	$table->max = 100;
