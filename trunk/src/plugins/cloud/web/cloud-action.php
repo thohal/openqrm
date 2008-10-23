@@ -145,7 +145,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 		case 'uninstall':
 			$drop_cloud_requests = "drop table cloud_requests";
 			$drop_cloud_users = "drop table cloud_users";
-			$drop_cloud_users = "drop table cloud_config";
+			$drop_cloud_config = "drop table cloud_config";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($drop_cloud_requests);
 			$recordSet = &$db->Execute($drop_cloud_users);
