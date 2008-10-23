@@ -1,5 +1,24 @@
+<html>
+<head>
 
+<style type="text/css">
+  <!--
+   -->
+  </style>
+  <script type="text/javascript" language="javascript" src="js/datetimepicker.js"></script>
+  <script language="JavaScript">
+	<!--
+		if (document.images)
+		{
+		calimg= new Image(16,16); 
+		calimg.src="img/cal.gif"; 
+		}
+	//-->
+</script>
+<link type="text/css" rel="stylesheet" href="css/calendar.css">
 <link rel="stylesheet" type="text/css" href="css/mycloud.css" />
+
+</head>
 
 <?php
 
@@ -38,6 +57,22 @@ foreach ($_REQUEST as $key => $value) {
 	}
 }
 
+
+function date_to_timestamp($date) {
+	$day = substr($date, 0, 2);
+	$month = substr($date, 3, 2);
+	$year = substr($date, 6, 4);
+	$hour = substr($date, 11, 2);
+	$minute = substr($date, 14, 2);
+	$sec = 0;
+	$timestamp = mktime($hour, $minute, $sec, $month, $day, $year);
+	return $timestamp;
+}
+
+
+
+
+
 // check if we got some actions to do
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
@@ -58,8 +93,19 @@ if(htmlobject_request('action') != '') {
 		case 'create_request':
 			$request_user = new clouduser();
 			$request_user->get_instance_by_name("$auth_user");
+			// set user id
 			$request_user_id = $request_user->id;
 			$request_fields['cr_cu_id'] = $request_user_id;
+			// parse start date
+			$startt = $request_fields['cr_start'];
+			$tstart = date_to_timestamp($startt);
+			$request_fields['cr_start'] = $tstart;
+
+			// parse stop date
+			$stopp = $request_fields['cr_stop'];
+			$tstop = date_to_timestamp($stopp);
+			$request_fields['cr_stop'] = $tstop;
+			// id
 			$request_fields['cr_id'] = openqrm_db_get_free_id('cr_id', $CLOUD_REQUEST_TABLE);
 			$cr_request = new cloudrequest();
 			$cr_request->add($request_fields);
@@ -214,8 +260,20 @@ function my_cloud_create_request() {
 	
 	$disp = $disp."User&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input name=\"cr_cu_id\" type=\"text\" size=\"10\" maxlength=\"20\" value=\"$auth_user\" disabled>";
 	$disp = $disp."<br>";
-	$disp = $disp.htmlobject_input('cr_start', array("value" => '', "label" => 'Start-time'), 'text', 20);
-	$disp = $disp.htmlobject_input('cr_stop', array("value" => '', "label" => 'End-time'), 'text', 20);
+
+
+	$disp = $disp."Start time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\">";
+	$disp = $disp."<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)\">";
+	$disp = $disp."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+	$disp = $disp."</a>";
+	$disp = $disp."<br>";
+	
+	$disp = $disp."Stop time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\">";
+	$disp = $disp."<a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
+	$disp = $disp."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+	$disp = $disp."</a>";
+	$disp = $disp."<br>";
+
 	
 	$disp = $disp.htmlobject_select('cr_kernelid', $kernel_list, 'Kernel');
 	$disp = $disp.htmlobject_select('cr_imageid', $image_list, 'Image');
@@ -226,9 +284,8 @@ function my_cloud_create_request() {
 	$disp = $disp.htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk'), 'text', 20);
 	$disp = $disp.htmlobject_input('cr_network_req', array("value" => '', "label" => 'Network'), 'text', 255);
 	$disp = $disp.htmlobject_input('cr_resource_type_req', array("value" => '', "label" => 'Resource-type'), 'text', 20);
-	$disp = $disp.htmlobject_input('cr_deployment_type_req', array("value" => '', "label" => 'Deployment-type'), 'text', 20);
 	$disp = $disp.htmlobject_input('cr_ha_req', array("value" => '', "label" => 'HA'), 'text', 5);
-	$disp = $disp.htmlobject_input('cr_shared_req', array("value" => '', "label" => 'Shared'), 'text', 5);
+	$disp = $disp.htmlobject_input('cr_shared_req', array("value" => '', "label" => 'Clone-on-deploy'), 'text', 5);
 
 	$disp = $disp."<input type=hidden name='action' value='create_request'>";
 	$disp = $disp."<br>";
@@ -260,3 +317,6 @@ if(htmlobject_request('action') != '') {
 echo htmlobject_tabmenu($output);
 
 ?>
+
+</html>
+

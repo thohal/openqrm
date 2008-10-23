@@ -74,6 +74,20 @@ foreach ($_REQUEST as $key => $value) {
 }
 
 
+
+function date_to_timestamp($date) {
+	$day = substr($date, 0, 2);
+	$month = substr($date, 3, 2);
+	$year = substr($date, 6, 4);
+	$hour = substr($date, 11, 2);
+	$minute = substr($date, 14, 2);
+	$sec = 0;
+	$timestamp = mktime($hour, $minute, $sec, $month, $day, $year);
+	return $timestamp;
+}
+
+
+// main
 $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Processing cloud command $citrix_command", "", "", 0, 0, 0);
 
 	switch ($cloud_command) {
@@ -138,6 +152,15 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 
 		case 'create_request':
 			echo "creating new cloud request<br>";
+			// parse start date
+			$startt = $request_fields['cr_start'];
+			$tstart = date_to_timestamp($startt);
+			$request_fields['cr_start'] = $tstart;
+			// parse stop date
+			$stopp = $request_fields['cr_stop'];
+			$tstop = date_to_timestamp($stopp);
+			$request_fields['cr_stop'] = $tstop;
+
 			$request_fields['cr_id'] = openqrm_db_get_free_id('cr_id', $CLOUD_REQUEST_TABLE);
 			$cr_request = new cloudrequest();
 			$cr_request->add($request_fields);

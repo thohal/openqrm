@@ -1,6 +1,27 @@
+<html>
+<head>
 
+<style type="text/css">
+  <!--
+   -->
+  </style>
+  <script type="text/javascript" language="javascript" src="js/datetimepicker.js"></script>
+  <script language="JavaScript">
+	<!--
+		if (document.images)
+		{
+		calimg= new Image(16,16); 
+		calimg.src="img/cal.gif"; 
+		}
+	//-->
+</script>
+<link type="text/css" rel="stylesheet" href="css/calendar.css">
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
 <link rel="stylesheet" type="text/css" href="cloud.css" />
+
+</head>
+
+
 
 <?php
 
@@ -212,9 +233,18 @@ function cloud_create_request() {
 	
 	$disp = $disp.htmlobject_select('cr_cu_id', $cl_user_list, 'User');
 
-	$disp = $disp.htmlobject_input('cr_start', array("value" => '', "label" => 'Start-time'), 'text', 20);
-	$disp = $disp.htmlobject_input('cr_stop', array("value" => '', "label" => 'End-time'), 'text', 20);
+	$disp = $disp."Start time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\">";
+	$disp = $disp."<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)\">";
+	$disp = $disp."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+	$disp = $disp."</a>";
+	$disp = $disp."<br>";
 	
+	$disp = $disp."Stop time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\">";
+	$disp = $disp."<a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
+	$disp = $disp."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+	$disp = $disp."</a>";
+	$disp = $disp."<br>";
+
 	$disp = $disp.htmlobject_select('cr_kernelid', $kernel_list, 'Kernel');
 	$disp = $disp.htmlobject_select('cr_imageid', $image_list, 'Image');
 	$disp = $disp.htmlobject_select('cr_resource_type_req', $virtualization_list, 'Resource type');
@@ -224,9 +254,8 @@ function cloud_create_request() {
 	$disp = $disp.htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk'), 'text', 20);
 	$disp = $disp.htmlobject_input('cr_network_req', array("value" => '', "label" => 'Network'), 'text', 255);
 	$disp = $disp.htmlobject_input('cr_resource_type_req', array("value" => '', "label" => 'Resource-type'), 'text', 20);
-	$disp = $disp.htmlobject_input('cr_deployment_type_req', array("value" => '', "label" => 'Deployment-type'), 'text', 20);
 	$disp = $disp.htmlobject_input('cr_ha_req', array("value" => '', "label" => 'HA'), 'text', 5);
-	$disp = $disp.htmlobject_input('cr_shared_req', array("value" => '', "label" => 'Shared'), 'text', 5);
+	$disp = $disp.htmlobject_input('cr_shared_req', array("value" => '', "label" => 'Clone-on-deploy'), 'text', 5);
 
 	$disp = $disp."<input type=hidden name='cloud_command' value='create_request'>";
 	$disp = $disp."<br>";
