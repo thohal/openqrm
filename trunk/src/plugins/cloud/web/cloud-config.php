@@ -48,10 +48,11 @@ if(htmlobject_request('action') != '') {
 function cloud_config_manager() {
 
 	global $OPENQRM_USER;
+	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $thisfile;
 	$table = new htmlobject_db_table('cc_id');
 
-	$disp = "<h1>Cloud Configuration</h1>";
+	$disp = "<h1>Cloud Configuration for portal at <a href=\"http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal\">http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal</a></h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";

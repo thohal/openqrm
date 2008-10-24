@@ -52,11 +52,12 @@ if(htmlobject_request('action') != '') {
 function cloud_user_manager() {
 
 	global $OPENQRM_USER;
+	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $thisfile;
 	$table = new htmlobject_db_table('cu_id');
 
 
-	$disp = "<h1>Cloud User Manager</h1>";
+	$disp = "<h1>Cloud User Manager for portal at <a href=\"http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal\">http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal</a></h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<b><a href=\"$thisfile?action=create\">Create new Cloud User</a></b>";
