@@ -78,7 +78,7 @@ function openqrm_cloud_monitor() {
 				continue;
 			}
 			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Provisioning request ID $cr_id", "", "", 0, 0, 0);
-			$appliance_name = "Cloud_".$cr_id;
+			$appliance_name = "cloud".$cr_id;
 			$appliance_id = openqrm_db_get_free_id('appliance_id', $APPLIANCE_INFO_TABLE);
 			
 			// prepare array to add appliance
