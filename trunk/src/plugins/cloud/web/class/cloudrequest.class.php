@@ -22,7 +22,8 @@ global $event;
 // 2 = approved
 // 3 = active (provisioned)
 // 4 = denied
-// 5 = done (deprovisioned)
+// 5 = deprovisioned
+// 6 = done
 
 class cloudrequest {
 
@@ -123,6 +124,8 @@ function add($cloudrequest_fields) {
 	$cloudrequest_fields['cr_request_time'] = $now;
 	// set status to 1 = new
 	$cloudrequest_fields['cr_status'] = 1;
+	// set the appliance_id to 0
+	$cloudrequest_fields['cr_appliance_id'] = 0;
 	$db=openqrm_get_db_connection();
 	$result = $db->AutoExecute($CLOUD_REQUEST_TABLE, $cloudrequest_fields, 'INSERT');
 	if (! $result) {
@@ -207,6 +210,9 @@ function setstatus($cloudrequest_id, $cloud_status) {
 		case 'deprovsion':
 			$cr_status=5;
 			break;
+		case 'done':
+			$cr_status=6;
+			break;
 		default:
 			exit(1);
 			break;
@@ -218,6 +224,13 @@ function setstatus($cloudrequest_id, $cloud_status) {
 
 
 
+// function to set the appliance_id of a request
+function setappliance($cloudrequest_id, $appliance_id) {
+	global $CLOUD_REQUEST_TABLE;
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute("update $CLOUD_REQUEST_TABLE set cr_appliance_id=$appliance_id where cr_id=$cloudrequest_id");
+
+}
 
 
 // displays the cloudrequest-overview
