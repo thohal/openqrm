@@ -184,21 +184,28 @@ function openqrm_cloud_monitor() {
 				continue;
 			}
 		}
-		$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Deprovisioning request ID $cr_id", "", "", 0, 0, 0);
 
 		// get the requests appliance
 		$cr_appliance_id = $cr->appliance_id;
 		if (!strlen($cr_appliance_id)) {
-			$event->log("cloud", $_SERVER['REQUEST_TIME'], 1, "cloud-monitor", "Request $cr_id does not have an active appliance!", "", "", 0, 0, 0);
+			// $event->log("cloud", $_SERVER['REQUEST_TIME'], 1, "cloud-monitor", "Request $cr_id does not have an active appliance!", "", "", 0, 0, 0);
 			continue;
 		}
 		if ($cr_appliance_id == 0) {
-			$event->log("cloud", $_SERVER['REQUEST_TIME'], 1, "cloud-monitor", "Request $cr_id does not have an active appliance!", "", "", 0, 0, 0);
+			// $event->log("cloud", $_SERVER['REQUEST_TIME'], 1, "cloud-monitor", "Request $cr_id does not have an active appliance!", "", "", 0, 0, 0);
 			continue;
 		}
-		// stop the appliance
+
+		$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Deprovisioning request ID $cr_id", "", "", 0, 0, 0);
+
+
+		// stop the appliance, first de-assign its resource
 		$appliance = new appliance();
 		$appliance->get_instance_by_id($cr_appliance_id);
+		$resource = new resource();
+		$resource->get_instance_by_id($appliance->resources);
+		$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
+		// now stop
 		$appliance->stop();
 
 		// update appliance_id to 0 in request
@@ -224,8 +231,6 @@ function openqrm_cloud_monitor() {
 		$cr_stop = $cr->stop;
 		$stop = date("d-m-Y H-i", $cr_stop);
 		// appliance infos
-		$resource = new resource();
-		$resource = get_instance_by_id($appliance->resources);
 		$resource_ip = $resource->ip;
 		
 		$rmail = new cloudmailer();
