@@ -6,6 +6,7 @@ require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/kernel.class.php";
+require_once "$RootDir/class/plugin.class.php";
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 global $RESOURCE_INFO_TABLE;
@@ -90,6 +91,20 @@ $event = new event();
 			if ("$resource_id" == "0") {
 				$event->log("update_info", $_SERVER['REQUEST_TIME'], 5, "resource-monitor", "Checking states of all resources", "", "", 0, 0, 0);
 				$resource->check_all_states();			
+				
+				// here a plugin hook for things which needs to be done periodically
+				$plugin = new plugin();
+				$enabled_plugins = $plugin->enabled();
+				foreach ($enabled_plugins as $index => $plugin_name) {
+					$plugin_monitor_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-monitor-hook.php";
+					if (file_exists($plugin_monitor_hook)) {
+						$event->log("plugin_monitor_hook", $_SERVER['REQUEST_TIME'], 5, "resource-monitor.php", "Found plugin $plugin_name handling monitor event.", "", "", 0, 0, $resource_id);
+						require_once "$plugin_monitor_hook";
+						$monitor_function="openqrm_"."$plugin_name"."_monitor";
+						$monitor_function();
+					}
+				}
+				
 			}
 			exit();
 			break;
