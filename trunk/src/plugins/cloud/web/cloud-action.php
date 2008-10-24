@@ -90,10 +90,6 @@ function date_to_timestamp($date) {
 
 
 // main
-// get admin email
-$cc_conf = new cloudconfig();
-$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
-
 $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Processing cloud command $citrix_command", "", "", 0, 0, 0);
 
 	switch ($cloud_command) {
@@ -171,6 +167,9 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$output = shell_exec($openqrm_server_command);
 
 			// send mail to user
+			// get admin email
+			$cc_conf = new cloudconfig();
+			$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
 			$email = $user_fields['cu_email'];
 			$forename = $user_fields['cu_forename'];
 			$lastname = $user_fields['cu_lastname'];
@@ -204,6 +203,9 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$cr_request->add($request_fields);
 
 			// send mail to admin
+			// get admin email
+			$cc_conf = new cloudconfig();
+			$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
 			$cr_id = $request_fields['cr_id'];
 			$cr_cu_id = $request_fields['cr_cu_id'];
 			$cl_user = new clouduser();
