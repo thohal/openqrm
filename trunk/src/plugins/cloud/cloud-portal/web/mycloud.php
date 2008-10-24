@@ -246,6 +246,9 @@ function my_cloud_manager() {
 			case '5':
 				$cr_status_disp="Deprovisioned";
 				break;
+			case '6':
+				$cr_status_disp="Done";
+				break;
 		}	
 		// format time
 		$timestamp=$cr["cr_request_time"];
