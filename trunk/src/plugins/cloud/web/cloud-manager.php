@@ -365,8 +365,8 @@ function cloud_create_request() {
 	$disp = $disp."</a>";
 	$disp = $disp."<br>";
 
-	$disp = $disp.htmlobject_select('cr_kernelid', $kernel_list, 'Kernel');
-	$disp = $disp.htmlobject_select('cr_imageid', $image_list, 'Image');
+	$disp = $disp.htmlobject_select('cr_kernel_id', $kernel_list, 'Kernel');
+	$disp = $disp.htmlobject_select('cr_image_id', $image_list, 'Image');
 	$disp = $disp.htmlobject_select('cr_resource_type_req', $virtualization_list, 'Resource type');
 	
 	$disp = $disp.htmlobject_input('cr_ram_req', array("value" => '', "label" => 'Ram'), 'text', 20);
@@ -411,6 +411,19 @@ function cloud_request_details($cloud_request_id) {
 	$start = date("d-m-Y H-i", $cr_start);
 	$cr_stop = $cr_request->stop;
 	$stop = date("d-m-Y H-i", $cr_stop);
+
+	// kernel with real name
+	$kernel_id = $cr_request->kernel_id;
+	$cr_kernel = new kernel();
+	$cr_kernel->get_instance_by_id($kernel_id);
+	$kernel = $cr_kernel->name;
+	
+	// image with real name
+	$image_id = $cr_request->image_id;
+	$cr_image = new image();
+	$cr_image->get_instance_by_id($image_id);
+	$image = $cr_image->name;
+
 
 	$ram_req = $cr_request->ram_req;
 	$cpu_req = $cr_request->cpu_req;
@@ -469,6 +482,15 @@ function cloud_request_details($cloud_request_id) {
 		'cr_value' => "$cu_email",
 	);
 	// requirements  -----------------------------
+	$arBody[] = array(
+		'cr_key' => "Kernel",
+		'cr_value' => "$kernel",
+	);
+	$arBody[] = array(
+		'cr_key' => "Server-image",
+		'cr_value' => "$image",
+	);
+
 	$arBody[] = array(
 		'cr_key' => "RAM",
 		'cr_value' => "$ram_req",

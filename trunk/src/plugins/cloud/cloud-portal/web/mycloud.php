@@ -349,8 +349,8 @@ function my_cloud_create_request() {
 	$disp = $disp."<br>";
 
 	
-	$disp = $disp.htmlobject_select('cr_kernelid', $kernel_list, 'Kernel');
-	$disp = $disp.htmlobject_select('cr_imageid', $image_list, 'Image');
+	$disp = $disp.htmlobject_select('cr_kernel_id', $kernel_list, 'Kernel');
+	$disp = $disp.htmlobject_select('cr_image_id', $image_list, 'Image');
 	$disp = $disp.htmlobject_select('cr_resource_type_req', $virtualization_list, 'Resource type');
 	
 	$disp = $disp.htmlobject_input('cr_ram_req', array("value" => '', "label" => 'Ram'), 'text', 20);

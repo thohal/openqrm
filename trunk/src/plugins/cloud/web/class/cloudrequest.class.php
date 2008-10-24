@@ -32,6 +32,8 @@ var $status = '';
 var $request_time = '';
 var $start = '';
 var $stop = '';
+var $kernel_id = '';
+var $image_id = '';
 var $ram_req = '';
 var $cpu_req = '';
 var $disk_req = '';
@@ -61,6 +63,8 @@ function get_instance($id) {
 		$this->request_time = $cloudrequest["cr_request_time"];
 		$this->start = $cloudrequest["cr_start"];
 		$this->stop = $cloudrequest["cr_stop"];
+		$this->kernel_id = $cloudrequest["cr_kernel_id"];
+		$this->image_id = $cloudrequest["cr_image_id"];
 		$this->ram_req = $cloudrequest["cr_ram_req"];
 		$this->cpu_req = $cloudrequest["cr_cpu_req"];
 		$this->disk_req = $cloudrequest["cr_disk_req"];
