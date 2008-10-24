@@ -295,7 +295,7 @@ function cloud_manager() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('reload', 'approve', 'cancel', 'deny', 'delete', 'deprovision');
+		$table->bottom = array('reload', 'details', 'approve', 'cancel', 'deny', 'delete', 'deprovision');
 		$table->identifier = 'cr_id';
 	}
 	$table->max = 100;
@@ -388,17 +388,154 @@ function cloud_create_request() {
 
 
 
+// post the details of a request to a new tab
+function cloud_request_details($cloud_request_id) {
+
+
+	global $OPENQRM_USER;
+	global $thisfile;
+
+	$cr_request = new cloudrequest();
+	$cr_request->get_instance_by_id($cloud_request_id);
+	$cr_cu_id = $cr_request->cu_id;
+	$cl_user = new clouduser();
+	$cl_user->get_instance_by_id($cr_cu_id);
+	$cu_name = $cl_user->name;
+	$cu_email = $cl_user->email;
+	$cu_forename = $cl_user->forename;
+	$cu_lastname = $cl_user->lastname;
+
+	$cr_request_time = $cr_request->request_time;
+	$request_time = date("d-m-Y H-i", $cr_request_time);
+	$cr_start = $cr_request->start;
+	$start = date("d-m-Y H-i", $cr_start);
+	$cr_stop = $cr_request->stop;
+	$stop = date("d-m-Y H-i", $cr_stop);
+
+	$ram_req = $cr_request->ram_req;
+	$cpu_req = $cr_request->cpu_req;
+	$disk_req = $cr_request->disk_req;
+	$network_req = $cr_request->network_req;
+	$ha_req = $cr_request->ha_req;
+	$shared_req = $cr_request->shared_req;
+	// get resource type as name
+	$resource_type_req = $cr_request->resource_type_req;
+	$virtualization = new virtualization();
+	$virtualization->get_instance_by_id($resource_type_req);
+	$resource_type_name = $virtualization->name;
+
+	$table = new htmlobject_db_table('cr_details');
+
+	$disp = "<h1>Cloud Request ID $cloud_request_id</h1>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$arHead = array();
+
+	$arHead['cr_key'] = array();
+	$arHead['cr_key']['title'] ='';
+
+	$arHead['cr_value'] = array();
+	$arHead['cr_value']['title'] ='';
+
+	$arBody = array();
+
+	// fill the array for the table
+	$arBody[] = array(
+		'cr_key' => "Username",
+		'cr_value' => "$cu_name",
+	);
+	$arBody[] = array(
+		'cr_key' => "Request time",
+		'cr_value' => "$request_time",
+	);
+	$arBody[] = array(
+		'cr_key' => "Start time",
+		'cr_value' => "$start",
+	);
+	$arBody[] = array(
+		'cr_key' => "Stop time",
+		'cr_value' => "$stop",
+	);
+	$arBody[] = array(
+		'cr_key' => "Forename",
+		'cr_value' => "$cu_forename",
+	);
+	$arBody[] = array(
+		'cr_key' => "Lastname",
+		'cr_value' => "$cu_lastname",
+	);
+	$arBody[] = array(
+		'cr_key' => "Email",
+		'cr_value' => "$cu_email",
+	);
+	// requirements  -----------------------------
+	$arBody[] = array(
+		'cr_key' => "RAM",
+		'cr_value' => "$ram_req",
+	);
+	$arBody[] = array(
+		'cr_key' => "CPUs",
+		'cr_value' => "$cpu_req",
+	);
+	$arBody[] = array(
+		'cr_key' => "Disk size",
+		'cr_value' => "$disk_req",
+	);
+	$arBody[] = array(
+		'cr_key' => "Network",
+		'cr_value' => "$network_req",
+	);
+	$arBody[] = array(
+		'cr_key' => "Resource type",
+		'cr_value' => "$resource_type_name",
+	);
+	$arBody[] = array(
+		'cr_key' => "Highavailable",
+		'cr_value' => "$ha_req",
+	);
+	$arBody[] = array(
+		'cr_key' => "Clone on deploy",
+		'cr_value' => "$shared_req",
+	);
+	
+	$table->id = 'Tabelle';
+	$table->css = 'htmlobject_table';
+	$table->border = 1;
+	$table->cellspacing = 0;
+	$table->cellpadding = 3;
+	$table->form_action = $thisfile;
+	$table->head = $arHead;
+	$table->body = $arBody;
+	$table->max = 100;
+	return $disp.$table->get_string();
+
+}
+
+
+
 $output = array();
 
 if(htmlobject_request('action') != '') {
+	// display by default
+	$output[] = array('label' => 'Cloud Manager', 'value' => cloud_manager());
 	switch (htmlobject_request('action')) {
 		case 'create':
 			$output[] = array('label' => 'Create Cloud Request', 'value' => cloud_create_request());
 			break;
-		default:
-			$output[] = array('label' => 'Cloud Manager', 'value' => cloud_manager());
+
+		case 'details':
+			foreach($_REQUEST['identifier'] as $id) {
+				$cr_request = new cloudrequest();
+				$cr_request->get_instance_by_id($id);
+
+				$output[] = array('label' => 'Request details', 'value' => cloud_request_details($id));
+
+
+			}
 			break;
+
 	}
+
 } else {
 	$output[] = array('label' => 'Cloud Manager', 'value' => cloud_manager());
 }
