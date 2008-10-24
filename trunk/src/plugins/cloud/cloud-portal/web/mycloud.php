@@ -81,6 +81,25 @@ if(htmlobject_request('action') != '') {
 		case 'delete':
 			foreach($_REQUEST['identifier'] as $id) {
 				$cr_request = new cloudrequest();
+				$cr_request->get_instance_by_id($id);
+
+				// mail user before removing
+				$cr_cu_id = $cr_request->cu_id;
+				$cl_user = new clouduser();
+				$cl_user->get_instance_by_id($cr_cu_id);
+				$cu_name = $cl_user->name;
+				$cu_email = $cl_user->email;
+				$cu_forename = $cl_user->forename;
+				$cu_lastname = $cl_user->lastname;
+				$rmail = new cloudmailer();
+				$rmail->to = "$cu_email";
+				$rmail->from = "$cc_admin_email";
+				$rmail->subject = "openQRM Cloud: Your request $id has been removed";
+				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/delete_cloud_request.mail.tmpl";
+				$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname");
+				$rmail->var_array = $arr;
+				$rmail->send();
+
 				$cr_request->remove($id);
 			}
 			break;
@@ -88,6 +107,28 @@ if(htmlobject_request('action') != '') {
 		case 'deprovision':
 			foreach($_REQUEST['identifier'] as $id) {
 				$cr_request = new cloudrequest();
+				// mail user before deprovisioning
+				$cr_request->get_instance_by_id($id);
+				$cr_cu_id = $cr_request->cu_id;
+				$cl_user = new clouduser();
+				$cl_user->get_instance_by_id($cr_cu_id);
+				$cu_name = $cl_user->name;
+				$cu_email = $cl_user->email;
+				$cu_forename = $cl_user->forename;
+				$cu_lastname = $cl_user->lastname;
+				$cr_start = $cr_request->start;
+				$start = date("d-m-Y H-i", $cr_start);
+				$cr_stop = $cr_request->stop;
+				$stop = date("d-m-Y H-i", $cr_stop);
+				$rmail = new cloudmailer();
+				$rmail->to = "$cu_email";
+				$rmail->from = "$cc_admin_email";
+				$rmail->subject = "openQRM Cloud: Your request $id is going to be deprovisioned now !";
+				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/deprovision_cloud_request.mail.tmpl";
+				$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop");
+				$rmail->var_array = $arr;
+				$rmail->send();
+
 				$cr_request->setstatus($id, 'deprovsion');
 			}
 			break;

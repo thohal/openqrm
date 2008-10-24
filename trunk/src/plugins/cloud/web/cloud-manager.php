@@ -40,6 +40,8 @@ require_once "$RootDir/include/htmlobject.inc.php";
 // special cloud classes
 require_once "$RootDir/plugins/cloud/class/clouduser.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudrequest.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 
 global $OPENQRM_SERVER_BASE_DIR;
 $refresh_delay=5;
@@ -48,6 +50,10 @@ $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
 
+// get admin email
+$cc_conf = new cloudconfig();
+$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
+
 
 // check if we got some actions to do
 if(htmlobject_request('action') != '') {
@@ -55,6 +61,24 @@ if(htmlobject_request('action') != '') {
 		case 'delete':
 			foreach($_REQUEST['identifier'] as $id) {
 				$cr_request = new cloudrequest();
+				$cr_request->get_instance_by_id($id);
+				// mail user before removing
+				$cr_cu_id = $cr_request->cu_id;
+				$cl_user = new clouduser();
+				$cl_user->get_instance_by_id($cr_cu_id);
+				$cu_name = $cl_user->name;
+				$cu_email = $cl_user->email;
+				$cu_forename = $cl_user->forename;
+				$cu_lastname = $cl_user->lastname;
+				$rmail = new cloudmailer();
+				$rmail->to = "$cu_email";
+				$rmail->from = "$cc_admin_email";
+				$rmail->subject = "openQRM Cloud: Your request $id has been removed";
+				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/delete_cloud_request.mail.tmpl";
+				$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname");
+				$rmail->var_array = $arr;
+				$rmail->send();
+				// remove
 				$cr_request->remove($id);
 			}
 			break;
@@ -63,6 +87,28 @@ if(htmlobject_request('action') != '') {
 			foreach($_REQUEST['identifier'] as $id) {
 				$cr_request = new cloudrequest();
 				$cr_request->setstatus($id, 'approve');
+				// mail user after aprove
+				$cr_request->get_instance_by_id($id);
+				$cr_cu_id = $cr_request->cu_id;
+				$cl_user = new clouduser();
+				$cl_user->get_instance_by_id($cr_cu_id);
+				$cu_name = $cl_user->name;
+				$cu_email = $cl_user->email;
+				$cu_forename = $cl_user->forename;
+				$cu_lastname = $cl_user->lastname;
+				$cr_start = $cr_request->start;
+				$start = date("d-m-Y H-i", $cr_start);
+				$cr_stop = $cr_request->stop;
+				$stop = date("d-m-Y H-i", $cr_stop);
+				$rmail = new cloudmailer();
+				$rmail->to = "$cu_email";
+				$rmail->from = "$cc_admin_email";
+				$rmail->subject = "openQRM Cloud: Your request $id has been approved";
+				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/approve_cloud_request.mail.tmpl";
+				$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop");
+				$rmail->var_array = $arr;
+				$rmail->send();
+
 			}
 			break;
 
@@ -70,6 +116,25 @@ if(htmlobject_request('action') != '') {
 			foreach($_REQUEST['identifier'] as $id) {
 				$cr_request = new cloudrequest();
 				$cr_request->setstatus($id, 'new');
+
+				// mail user after cancel
+				$cr_request->get_instance_by_id($id);
+				$cr_cu_id = $cr_request->cu_id;
+				$cl_user = new clouduser();
+				$cl_user->get_instance_by_id($cr_cu_id);
+				$cu_name = $cl_user->name;
+				$cu_email = $cl_user->email;
+				$cu_forename = $cl_user->forename;
+				$cu_lastname = $cl_user->lastname;
+				$rmail = new cloudmailer();
+				$rmail->to = "$cu_email";
+				$rmail->from = "$cc_admin_email";
+				$rmail->subject = "openQRM Cloud: Your request $id has been canceled";
+				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/cancel_cloud_request.mail.tmpl";
+				$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname");
+				$rmail->var_array = $arr;
+				$rmail->send();
+
 			}
 			break;
 
@@ -77,12 +142,54 @@ if(htmlobject_request('action') != '') {
 			foreach($_REQUEST['identifier'] as $id) {
 				$cr_request = new cloudrequest();
 				$cr_request->setstatus($id, 'deny');
+
+				// mail user after deny
+				$cr_request->get_instance_by_id($id);
+				$cr_cu_id = $cr_request->cu_id;
+				$cl_user = new clouduser();
+				$cl_user->get_instance_by_id($cr_cu_id);
+				$cu_name = $cl_user->name;
+				$cu_email = $cl_user->email;
+				$cu_forename = $cl_user->forename;
+				$cu_lastname = $cl_user->lastname;
+				$rmail = new cloudmailer();
+				$rmail->to = "$cu_email";
+				$rmail->from = "$cc_admin_email";
+				$rmail->subject = "openQRM Cloud: Your request $id has been denied";
+				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/deny_cloud_request.mail.tmpl";
+				$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname");
+				$rmail->var_array = $arr;
+				$rmail->send();
+
 			}
 			break;
 
 		case 'deprovision':
 			foreach($_REQUEST['identifier'] as $id) {
 				$cr_request = new cloudrequest();
+
+				// mail user before deprovisioning
+				$cr_request->get_instance_by_id($id);
+				$cr_cu_id = $cr_request->cu_id;
+				$cl_user = new clouduser();
+				$cl_user->get_instance_by_id($cr_cu_id);
+				$cu_name = $cl_user->name;
+				$cu_email = $cl_user->email;
+				$cu_forename = $cl_user->forename;
+				$cu_lastname = $cl_user->lastname;
+				$cr_start = $cr_request->start;
+				$start = date("d-m-Y H-i", $cr_start);
+				$cr_stop = $cr_request->stop;
+				$stop = date("d-m-Y H-i", $cr_stop);
+				$rmail = new cloudmailer();
+				$rmail->to = "$cu_email";
+				$rmail->from = "$cc_admin_email";
+				$rmail->subject = "openQRM Cloud: Your request $id is going to be deprovisioned now !";
+				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/deprovision_cloud_request.mail.tmpl";
+				$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop");
+				$rmail->var_array = $arr;
+				$rmail->send();
+
 				$cr_request->setstatus($id, 'deprovsion');
 			}
 			break;

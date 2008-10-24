@@ -90,6 +90,10 @@ function date_to_timestamp($date) {
 
 
 // main
+// get admin email
+$cc_conf = new cloudconfig();
+$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
+
 $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Processing cloud command $citrix_command", "", "", 0, 0, 0);
 
 	switch ($cloud_command) {
@@ -165,6 +169,22 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$password = $user_fields['cu_password'];
 			$openqrm_server_command="htpasswd -b $CloudDir/.htpasswd $username $password";
 			$output = shell_exec($openqrm_server_command);
+
+			// send mail to user
+			$email = $user_fields['cu_email'];
+			$forename = $user_fields['cu_forename'];
+			$lastname = $user_fields['cu_lastname'];
+			$rmail = new cloudmailer();
+			$rmail->to = "$email";
+			$rmail->from = "$cc_admin_email";
+			$rmail->subject = "openQRM Cloud: Your account has been created";
+			$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/welcome_new_cloud_user.mail.tmpl";
+			$arr = array('@@USER@@'=>"$username", '@@PASSWORD@@'=>"$password", '@@OPENQRM_SERVER_IP_ADDRESS@@'=>"$OPENQRM_SERVER_IP_ADDRESS", '@@FORENAME@@'=>"$forename", '@@LASTNAME@@'=>"$lastname");
+			$rmail->var_array = $arr;
+			$rmail->send();
+
+
+
 			break;
 
 		case 'create_request':
@@ -190,10 +210,6 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$cl_user->get_instance_by_id($cr_cu_id);
 			$cu_name = $cl_user->name;
 			$cu_email = $cl_user->email;
-			// get admin email
-			$cc_conf = new cloudconfig();
-			$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
-			
 			$rmail = new cloudmailer();
 			$rmail->to = "$cu_email";
 			$rmail->from = "$cc_admin_email";

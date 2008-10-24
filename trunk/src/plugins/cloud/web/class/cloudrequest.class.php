@@ -52,7 +52,7 @@ function get_instance($id) {
 	global $CLOUD_REQUEST_TABLE;
 	global $event;
 	$db=openqrm_get_db_connection();
-	$appliance_array = &$db->Execute("select * from $CLOUD_REQUEST_TABLE where cr_id=$id");
+	$cloudrequest_array = &$db->Execute("select * from $CLOUD_REQUEST_TABLE where cr_id=$id");
 
 	foreach ($cloudrequest_array as $index => $cloudrequest) {
 		$this->id = $cloudrequest["cr_id"];
