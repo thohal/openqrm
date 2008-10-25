@@ -45,7 +45,7 @@ var $_thisfile = '';
 		$i = 0;
 		foreach ($arr as $val) {
 			
-			$identifier = $this->serialize.'_'.$i;
+			$identifier = $this->serialize.''.$i;
 
 			if(array_key_exists('value', $val)) {
 				$html = new htmlobject_div();
@@ -90,7 +90,7 @@ var $_thisfile = '';
 			if($tab['id'] == $this->serialize.$currenttab) { $css = ' class="'.$this->tabcss.'"'; }
 
 			$target = $tab['target'];
-			$request = '?'.$this->serialize.'=tab_'.$i;
+			$request = '?'.$this->serialize.'=tab'.$i;
 			foreach ($tab['request'] as $key => $arg) {
 				$request = $request.'&'.$key.'='.$arg;
 			}
@@ -207,7 +207,7 @@ var $_thisfile = '';
 			if(isset($_REQUEST[$this->serialize]) && $_REQUEST[$this->serialize] != '') {
 				$currenttab = str_replace('tab', '', $_REQUEST[$this->serialize]);
 			} else {
-				$currenttab = '_0';
+				$currenttab = '0';
 			}
 	
 			$_strReturn .= $this->_get_js();
