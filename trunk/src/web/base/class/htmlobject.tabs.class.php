@@ -1,46 +1,65 @@
 <?php
 class htmlobject_tabmenu extends htmlobject
 {
-var $identifier = 'tab';
-var $tabs = array();
+/**
+* field to add value to checkbox
+* @access public
+* @var string
+*/
+var $serialize;
+/**
+* css class to highlight active tab
+* @access public
+* @var string
+*/
+var $tabcss = 'current';
+/**
+* tab values
+* @access private
+* @var array
+*/
+var $_tabs = array();
+/**
+* tab values
+* @access private
+* @var array
+*/
+var $_thisfile = '';
 
 
-	function htmlobject_tabmenu($arr) {
-		$thisfile = basename($_SERVER['PHP_SELF']);
+	function htmlobject_tabmenu($arr, $serialize = 'currenttab') {
+		$this->_thisfile = basename($_SERVER['PHP_SELF']);
+		$this->serialize = $serialize;
+		$this->_set($arr);	
+	}
+
+	//----------------------------------------------------------------------------------------
+	/**
+	* set tabs data
+	* @access private
+	* @param array $arr
+	*/
+	//----------------------------------------------------------------------------------------	
+	function _set($arr) {
+
 		$i = 0;
 		foreach ($arr as $val) {
-			$identifier = $this->identifier.$i;
+			
+			$identifier = $this->serialize.'_'.$i;
 
-			if(array_key_exists('value', $val) && $val['value'] != '') {
+			if(array_key_exists('value', $val)) {
 				$html = new htmlobject_div();
 				$html->id = $identifier;
 				$html->css = 'htmlobject_tab_box';
-				$html->text = $val['value'];
+				$html->text = $val['value'].'<div style="clear:both;line-height:0;">&#160;</div>';
 				$value = $html->get_string();
-				
-			} else {
-				$value = '';
-			}
+			} else { $value = ''; }
 
-			if(array_key_exists('label', $val) && $val['label'] != '') {
-				$label = $val['label'];
-			} else {
-				$label = '';
-			}
+			array_key_exists('label', $val) ? $label = $val['label'] : $label = '';
+			array_key_exists('target', $val) ? 	$target = $val['target'] : $target = $this->_thisfile;
+			array_key_exists('request', $val) ? $request = $val['request'] : $request = array();
 
-			if(array_key_exists('target', $val) && $val['target'] != '') {
-				$target = $val['target'];
-			} else {
-				$target = $thisfile;
-			}
-
-			if(array_key_exists('request', $val) && $val['request'] != '') {
-				$request = $val['request'];
-			} else {
-				$request = array();
-			}
-
-			$this->tabs[] = array(
+			$this->_tabs[] = array(
 				'target' => $target,
 				'value' => $value,
 				'label' => $label,
@@ -49,36 +68,47 @@ var $tabs = array();
 				);
 		$i++;
 		}
+
 	}
 
-
-
-	function get_tabs($currenttab) {
-
-		$thisfile = basename($_SERVER['PHP_SELF']);
+	//----------------------------------------------------------------------------------------
+	/**
+	* create tabs
+	* @access private
+	* @param string $currenttab
+	* @return string
+	*/
+	//----------------------------------------------------------------------------------------	
+	function _get_tabs($currenttab) {
+		
 		$_strReturn = "\n<div $this->_init_htmlobject>\n";
 		$_strReturn .= "<ul>\n";	
 
-		foreach($this->tabs as $content) {
+		$i = 0;
+		foreach($this->_tabs as $tab) {
 			$css = '';
-			if($content['id'] == $currenttab) { $css = ' class="current"'; }
+			if($tab['id'] == $this->serialize.$currenttab) { $css = ' class="'.$this->tabcss.'"'; }
 
-			$target = $content['target'].'?currenttab='.$content['id'];
-			foreach ($content['request'] as $key => $arg) {
-				$target = $target.'&'.$key.'='.$arg;
+			$target = $tab['target'];
+			$request = '?'.$this->serialize.'=tab_'.$i;
+			foreach ($tab['request'] as $key => $arg) {
+				$request = $request.'&'.$key.'='.$arg;
 			}
 			
-			$_strReturn .= '<li id="tab_'.$content['id'].'"'.$css.'>';
+			$_strReturn .= '<li id="tab_'.$tab['id'].'"'.$css.'>';
 			$_strReturn .= "<span>";
-			if($content['target'] == $thisfile) {
-				$_strReturn .= '<a href="'.$target.'" onclick="ToggleTabs(\''.$content['id'].'\'); this.blur(); return false;">';
+
+			if($tab['target'] == $this->_thisfile && $tab['id'] != $this->serialize.$currenttab) {
+				$_strReturn .= '<a href="'.$target.$request.'" onclick="ToggleTabs(\''.$tab['id'].'\'); this.blur(); return false;">';
 			} else {
-				$_strReturn .= '<a href="'.$target.'"; onclick="this.blur();">';
+				$_strReturn .= '<a href="'.$target.$request.'" onclick="this.blur();">';
 			}
-			$_strReturn .= $content['label'];
+			$_strReturn .= $tab['label'];
 			$_strReturn .= "</a>";
 			$_strReturn .= "</span>";
 			$_strReturn .= "</li>\n";
+
+		$i++;
 		}
 		
 		$_strReturn .= "</ul>\n";
@@ -88,43 +118,61 @@ var $tabs = array();
 	return $_strReturn;
 	}
 
-
-	function get_js() {
+	//----------------------------------------------------------------------------------------
+	/**
+	* create JS toggle function
+	* @access private
+	* @return string
+	*/
+	//----------------------------------------------------------------------------------------	
+	function _get_js() {
 	$_strReturn = '';
-	$thisfile = basename($_SERVER['PHP_SELF']);
-
+  
 		$_strReturn .= "\n<script>\n";
 		$_strReturn .= "function ToggleTabs(id) {\n";
-		foreach($this->tabs  as $content) {
-			if($content['target'] == $thisfile) {
-				$_strReturn .= "document.getElementById('".$content['id']."').style.display = 'none';\n";
-				$_strReturn .= "document.getElementById('tab_".$content['id']."').className = '';\n";
+		foreach($this->_tabs  as $tab) {
+			if(basename($tab['target']) == $this->_thisfile) {
+				$_strReturn .= "document.getElementById('".$tab['id']."').style.display = 'none';\n";
+				$_strReturn .= "document.getElementById('tab_".$tab['id']."').className = '';\n";
 			}
 		}
 		$_strReturn .= "document.getElementById(id).style.display = 'block';\n";
-		$_strReturn .= "document.getElementById('tab_'+id).className = 'current';\n";
+		$_strReturn .= "document.getElementById('tab_'+id).className = '".$this->tabcss."';\n";
 		$_strReturn .= "}\n";	
 		$_strReturn .= "</script>\n";
 		
 	return $_strReturn;
 	}
 
-
-	function get_css($currenttab) {
+	//----------------------------------------------------------------------------------------
+	/**
+	* create css
+	* @access private
+	* @param string $currenttab
+	* @return string
+	*/
+	//----------------------------------------------------------------------------------------	
+	function _get_css($currenttab) {
 	$_strReturn = '';
 
 		$_strReturn .= "\n<style>\n";
-		foreach($this->tabs as $content) {
-			if($content['id'] == $currenttab) { $_strReturn .= "#".$content['id']." { display: block; }\n"; }
-			else { $_strReturn .= "#".$content['id']." { display: none; }\n"; }
+		foreach($this->_tabs as $tab) {
+			if($tab['id'] == $this->serialize.$currenttab) { $_strReturn .= "#".$tab['id']." { display: block; }\n"; }
+			else { $_strReturn .= "#".$tab['id']." { display: none; }\n"; }
 		}
 		$_strReturn .= "</style>\n";
 		
 	return $_strReturn;
 	}
 
-
-	function get_messagebox() {
+	//----------------------------------------------------------------------------------------
+	/**
+	* create messagebox
+	* @access private
+	* @return string
+	*/
+	//----------------------------------------------------------------------------------------	
+	function _get_messagebox() {
 	$_strReturn = '';
 	    if(isset($_REQUEST['strMsg']) && $_REQUEST['strMsg'] != "") {
 	    $_strReturn .= '
@@ -141,27 +189,33 @@ var $tabs = array();
 	return $_strReturn;
 	}
 
-	
-
+	//----------------------------------------------------------------------------------------
+	/**
+	* build tabs output
+	* @access public
+	* @param array $arr
+	* @return string
+	*/
+	//----------------------------------------------------------------------------------------	
 	function get_string() {
 	$_strReturn = '';
 
-		if(count($this->tabs) > 0) {
+		if(count($this->_tabs) > 0) {
 	
 			$this->init_htmlobject();	
 	
-			if(isset($_REQUEST['currenttab']) && $_REQUEST['currenttab'] != '') {
-				$currenttab = $_REQUEST['currenttab'];
+			if(isset($_REQUEST[$this->serialize]) && $_REQUEST[$this->serialize] != '') {
+				$currenttab = str_replace('tab', '', $_REQUEST[$this->serialize]);
 			} else {
-				$currenttab = $this->tabs[0]['id'];
+				$currenttab = '_0';
 			}
 	
-			$_strReturn .= $this->get_js();
-			$_strReturn .= $this->get_css($currenttab);
-			$_strReturn .= $this->get_tabs($currenttab);
-			$_strReturn .= $this->get_messagebox();
+			$_strReturn .= $this->_get_js();
+			$_strReturn .= $this->_get_css($currenttab);
+			$_strReturn .= $this->_get_tabs($currenttab);
+			$_strReturn .= $this->_get_messagebox();
 	
-			foreach ($this->tabs as $tab) {
+			foreach ($this->_tabs as $tab) {
 				if($tab['value'] != '') {
 					$_strReturn .= $tab['value'];
 				}
