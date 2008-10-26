@@ -2,6 +2,7 @@
 $ClassDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/class/';
 
 require_once($ClassDir.'PHPLIB.php');
+require_once($ClassDir.'http.class.php');
 require_once($ClassDir.'htmlobject.class.php');
 require_once($ClassDir.'htmlobject.box.class.php');
 require_once($ClassDir.'htmlobject.table.class.php');
@@ -297,4 +298,110 @@ global $thisfile;
 	}
 	return $thisfile.$args;
 }
+
+
+
+
+
+class htmlobject_db_table extends htmlobject_table_builder 
+{
+	function htmlobject_db_table($field = '', $order = '', $limit = '') {
+		parent::htmlobject_table_builder($field, $order, $limit);
+	}
+}
+
+class htmlobject_table_identifiers_checked extends htmlobject_table_builder 
+{
+
+var $_identifiers = array();
+	
+	function get_indentifier($key, $ident) {
+		if($this->identifier != '') {
+			$html = new htmlobject_input();
+			$html->id = $ident;
+			$html->name = 'identifier[]';
+			$html->value = $this->body[$key][$this->identifier];
+			$html->type = 'hidden';
+			
+			$this->_identifiers[] = $html->get_string();
+		}
+	}
+
+	function get_table_head() {
+	$tr = '';
+		if(count($this->head) > 0) {
+			$tr = new htmlobject_tr();
+			$tr->css = 'htmlobject_tr';
+			$tr->id = 'tr_'. uniqid();
+		
+			foreach($this->head as $key_2 => $value) {
+				if($value['title'] == '') { $value['title'] = '&#160;'; }
+				$td = new htmlobject_td();
+				$td->type = 'th';
+				$td->css = 'htmlobject_td '.$key_2;
+				$td->text = $value['title'];
+				$tr->add($td);
+			}
+		}
+	return $tr;
+	}
+
+	function get_table_bottom () {
+	$tr = '';
+		if(isset($this->bottom[0])) {
+			$tr = new htmlobject_tr();
+			$tr->css = 'htmlobject_tr';
+			$tr->id = 'tr_'. uniqid();
+		
+			$td = new htmlobject_td();
+			$td->colspan = $this->_num_cols;
+			$td->type = 'td';
+			$td->css = 'htmlobject_td bottom';
+			$str = '';
+			foreach($this->bottom as $key_2 => $v) {
+				$html = new htmlobject_input();
+				$html->name = 'action';
+				$html->value = $v;
+				$html->type = 'submit';
+				$str .= $html->get_string();
+			}
+			$str .= join("", $this->_identifiers);
+			$td->text = $str;
+			$tr->add($td);	
+		}
+	return $tr;	
+	}
+}
+class htmlobject_table_identifiers_radio extends htmlobject_table_builder 
+{
+	function htmlobject_table_identifiers_radio($field = '', $order = '', $limit = '') {
+		parent::htmlobject_table_builder($field, $order, $limit);
+	}
+	
+	//----------------------------------------------------------------------------------------
+	/**
+	* returns JS for tr hover and click function
+	* @access public
+	* @return string
+	*/
+	//----------------------------------------------------------------------------------------	
+	function  get_js() {
+	$_strReturn = '';
+		$_strReturn .= "\n";
+		$_strReturn .= '<script>'."\n";
+		$_strReturn .= 'function tr_hover(element) {'."\n";
+		$_strReturn .= '	x = element.className.match(/tr_hover/g);'."\n";
+		$_strReturn .= '	if(x == null) {	element.className = element.className + " tr_hover"; }'."\n";
+		$_strReturn .= '	else { element.className = element.className.replace(/ tr_hover/g, "");	}'."\n";
+		$_strReturn .= '}'."\n";
+		$_strReturn .= 'function tr_click(element, arg) {'."\n";
+		$_strReturn .= '	document.getElementById(arg).checked = true;'."\n";
+		$_strReturn .= '}'."\n";
+		$_strReturn .= '</script>'."\n";
+	return $_strReturn;
+	}
+}
+
+
+
 ?>
