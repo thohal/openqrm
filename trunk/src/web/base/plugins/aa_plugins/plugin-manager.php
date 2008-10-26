@@ -21,7 +21,7 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 global $thisfile;
 
 	if($url == '') {
-		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
+		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&plugin_filter='.htmlobject_request('plugin_filter');
 	}
 	sleep(1);
 	//header("Location: $url");
@@ -129,10 +129,14 @@ $arHead['plugin_started']['title'] ='Started';
 
 $arBody = array();
 $i = 0;
-$plugin_started='<img src="/openqrm/base/plugins/aa_plugins/img/start.png" border="0">';
-$plugin_stopped='<img src="/openqrm/base/plugins/aa_plugins/img/stop.png" border="0">';
-$plugin_enabled='<img src="/openqrm/base/plugins/aa_plugins/img/disable.png" border="0">';
-$plugin_disabled='<img src="/openqrm/base/plugins/aa_plugins/img/enable.png" border="0">';
+$plugin_started='<img src="/openqrm/base/plugins/aa_plugins/img/start.png" border="0" alt="click to stop" title="click to stop">';
+$plugin_stopped='<img src="/openqrm/base/plugins/aa_plugins/img/stop.png" border="0" alt="click to start" title="click to start">';
+$plugin_enabled='<img src="/openqrm/base/plugins/aa_plugins/img/disable.png" border="0" alt="click to disable" title="click to disable">';
+$plugin_disabled='<img src="/openqrm/base/plugins/aa_plugins/img/enable.png" border="0" alt="click to enable" title="click to enable">';
+
+
+
+$plugtype = array();
 
 foreach ($plugins_available as $index => $plugin_name) {
 	$plugin_config="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$plugin_name/etc/openqrm-plugin-$plugin_name.conf";
@@ -151,6 +155,7 @@ foreach ($plugins_available as $index => $plugin_name) {
 			$plugin_type=trim($plugin_type);
 	    }
 	}
+	$plugtype[] = $plugin_type;
 	if (!strlen(htmlobject_request('plugin_filter')) || strstr(htmlobject_request('plugin_filter'), $plugin_type )) {
 		$arBody[$i] = array();
 
@@ -160,7 +165,7 @@ foreach ($plugins_available as $index => $plugin_name) {
 			$arBody[$i]['plugin_name'] = $plugin_name;
 			$arBody[$i]['plugin_type'] = $plugin_type;
 			$arBody[$i]['plugin_description'] = $plugin_description;
-			$arBody[$i]['plugin_enabled'] = '<a href="'.$thisfile.'?action=enable&identifier[]='.$plugin_name.'">'.$plugin_disabled.'</a>';
+			$arBody[$i]['plugin_enabled'] = '<a href="'.$thisfile.'?action=enable&identifier[]='.$plugin_name.'&plugin_filter='.htmlobject_request('plugin_filter').'">'.$plugin_disabled.'</a>';
 			$arBody[$i]['plugin_started'] = '&#160;';
 
 		} else {
@@ -176,12 +181,12 @@ foreach ($plugins_available as $index => $plugin_name) {
 			$arBody[$i]['plugin_name'] = $plugin_name;
 			$arBody[$i]['plugin_type'] = $plugin_type;
 			$arBody[$i]['plugin_description'] = $plugin_description;
-			$arBody[$i]['plugin_enabled'] = '<a href="'.$thisfile.'?action=disable&identifier[]='.$plugin_name.'">'.$plugin_enabled.'</a>';
+			$arBody[$i]['plugin_enabled'] = '<a href="'.$thisfile.'?action=disable&identifier[]='.$plugin_name.'&plugin_filter='.htmlobject_request('plugin_filter').'">'.$plugin_enabled.'</a>';
 			// started ?
 			if (!in_array($plugin_name, $plugins_started)) {
-				$arBody[$i]['plugin_started'] = '<a href="'.$thisfile.'?action=start&identifier[]='.$plugin_name.'">'.$plugin_stopped.'</a>';
+				$arBody[$i]['plugin_started'] = '<a href="'.$thisfile.'?action=start&identifier[]='.$plugin_name.'&plugin_filter='.htmlobject_request('plugin_filter').'">'.$plugin_stopped.'</a>';
 			} else {
-				$arBody[$i]['plugin_started'] = '<a href="'.$thisfile.'?action=stop&identifier[]='.$plugin_name.'">'.$plugin_started.'</a>';
+				$arBody[$i]['plugin_started'] = '<a href="'.$thisfile.'?action=stop&identifier[]='.$plugin_name.'&plugin_filter='.htmlobject_request('plugin_filter').'">'.$plugin_started.'</a>';
 			}
 		}
 
@@ -190,7 +195,18 @@ foreach ($plugins_available as $index => $plugin_name) {
 
 }
 
+
+$plugs = array();
+$plugs[] = array('value' => '', 'label' => '');
+$plugtype = array_unique($plugtype);
+foreach($plugtype as $p) {
+	$plugs[] = array('value' => $p, 'label' => $p);
+}
+
+
+
 $table_1 = new htmlobject_db_table('plugin_enabled', 'ASC');
+$table_1->add_headrow(htmlobject_select('plugin_filter', $plugs, 'Filter by Type', array(htmlobject_request('plugin_filter'))));
 $table_1->id = 'Tabelle';
 $table_1->css = 'htmlobject_table';
 $table_1->border = 1;
@@ -200,6 +216,7 @@ $table_1->form_action = $thisfile;
 $table_1->autosort = true;
 $table_1->head = $arHead;
 $table_1->body = $arBody;
+$table_1->max = count($arBody);
 if ($OPENQRM_USER->role == "administrator") {
 	$table_1->bottom = array('enable', 'disable', 'start', 'stop');
 	$table_1->identifier = 'plugin_name';
