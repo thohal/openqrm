@@ -90,6 +90,11 @@ for OLD_FILE in `find $DESTINATION_PLUGIN/ -type f`; do
 
 done
 
+# remove .svn dir
+for svn in `find $WORKSPACE/$DESTINATION_PLUGIN/* -name .svn`; do
+	rm -rf $svn
+done
+
 echo ":) finished creating new plugin $DESTINATION_PLUGIN"
 
 
