@@ -2,22 +2,27 @@
 # this is the boot-service init script for the puppet resources
 
 OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+# for including the package functions
+export OPENQRM_SOURCE_DIR="$OPENQRM_SERVER_BASE_DIR/openqrm/"
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-package-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/include/openqrm-plugin-puppet-functions
-if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
-	. $OPENQRM_RESOURCE_PARAMETER_FILE
-	OPENQRM_SERVER_IP=$resource_openqrmserver
-elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
-	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
-	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
-	openqrm_server_get_config
-	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+. $OPENQRM_RESOURCE_PARAMETER_FILE
+OPENQRM_SERVER_IP=$resource_openqrmserver
+
+# do not run on idle resources
+if [ "$resource_image" == "idle" ]; then
+	exit 0
 fi
+# set the hostname :)
+hostname $appliance_name
 
 
 function puppet_start() {
 	echo "Starting the openQRM puppet-plugin"
 	puppet_stop 1>/dev/null 2>&1
+	export FORCE_INSTALL=true
+	openqrm_install_os_dependency puppet
 }
 
 
