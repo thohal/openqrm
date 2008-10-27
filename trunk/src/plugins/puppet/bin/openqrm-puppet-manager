@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# this script automatically manages puppet
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/include/openqrm-plugin-puppet-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/openqrm-plugin-puppet.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+openqrm_server_get_config
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+export LANG=C
+
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+
+if ! which screen 1>/dev/null; then
+	echo "ERROR: The 'screen' utility is not installed! Please install and try again."
+	image_shelf_log "ERROR: The 'screen' utility is not installed! Please install and try again."
+	exit 6
+fi
+
+function puppet_manager_usage() {
+	echo "Usage : $0"
+	exit 1
+}
+
+
+# re-run in background via screen
+if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+	export RUN_IN_BACKGROUND=true
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	screen -dmS $SCREEN_NAME $0 $@
+	exit	
+fi
+
+PUPPET_MANAGER_COMMAND=$1
+shift
+while [ $# -ne 0 ]; do
+	case "$1" in
+		*)
+			echo "ERROR: Free commandline arguments are not allowed"
+			puppet_manager_usage
+			exit 6
+			;;
+	esac
+	shift
+done
+
+
+# main
+
+
+
+case "$PUPPET_MANAGER_COMMAND" in 
+
+
+
+	*)
+		puppet_manager_usage
+		;;
+
+
+esac
+

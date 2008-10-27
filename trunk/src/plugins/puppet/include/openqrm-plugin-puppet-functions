@@ -1,0 +1,54 @@
+#!/bin/bash
+# this is the functions file for the puppet-plugin
+PUPPET_MANAGER_LOCK_FILE=/var/run/openqrm/puppet-plugin.lock
+PUPPET_MANAGER_LOCK_DELAY=5
+PUPPET_MANAGER_LOCK_RETRY=100
+PUPPET_MANAGER_LOCK_TIMEOUT=500
+################ common puppet functions
+
+# logs for puppet
+function puppet_manager_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "puppet plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function puppet_manager_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $PUPPET_MANAGER_LOCK_FILE` ]; then
+		mkdir -p `dirname $PUPPET_MANAGER_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $PUPPET_MANAGER_LOCK_DELAY -r $PUPPET_MANAGER_LOCK_RETRY -l $PUPPET_MANAGER_LOCK_TIMEOUT $PUPPET_MANAGER_LOCK_FILE
+				RET=$?
+				puppet_manager_log puppet_manager_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $PUPPET_MANAGER_LOCK_FILE
+				RET=$?
+				puppet_manager_log puppet_manager_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			puppet_manager_log puppet_manager_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ puppet functions
+
+
+
+
+
+

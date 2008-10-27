@@ -1,0 +1,9 @@
+#	Title
+#	Href
+#	Alt
+#	IMG
+#	Target
+.|Puppet
+..|About|plugins/puppet/puppet-about.php
+..|Puppet Config|plugins/puppet/puppet-config.php
+..|Puppet Editor|plugins/puppet/fm/

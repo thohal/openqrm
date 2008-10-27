@@ -1,0 +1,153 @@
+#!/bin/bash
+# init script for the openQRM puppet-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/include/openqrm-plugin-puppet-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/openqrm-plugin-puppet.conf
+
+function openqrm_plugin_puppet_start() {
+	echo "Starting the openQRM puppet-plugin"
+	/etc/init.d/puppetmaster start
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/puppet/.running
+}
+
+
+function openqrm_plugin_puppet_stop() {
+	echo "Stopping the openQRM puppet-plugin"
+	/etc/init.d/puppetmaster stop
+	# be sure it is stopped
+	kill `ps ax | grep puppetmaster | grep -v grep | awk {' print $1 '}` 2>/dev/null
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/puppet/.running
+}
+
+function openqrm_plugin_puppet_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "puppet: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "puppet: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM puppet-plugin"
+	openqrm_plugin_puppet_stop
+
+	# remove from cron
+	rm -f /etc/cron.d/openqrm-puppetm-config.cron
+	/etc/init.d/cron reload
+
+	# removing the puppet tables
+	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/puppet/puppet-action.php?puppet_command=uninstall"; then
+		puppet_manager_log uninstall "ERROR: Could not drop the puppet-plugin tables in the database!"
+		exit 1
+	fi
+	# restore orgigin puppet dir
+	if [ -d /etc/puppet.openqrm-puppet-plugin.bak ]; then
+		rm -rf /etc/puppet
+		cp -aR /etc/puppet.openqrm-puppet-plugin.bak /etc/puppet
+	fi
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/puppet
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-puppet.tgz
+	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet
+}
+
+function openqrm_plugin_puppet_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "puppet: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "puppet: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	CURRENTD=`pwd`
+	echo "Initializing the openQRM puppet-plugin"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/puppet
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/boot-service-puppet.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-puppet.tgz
+	
+	# creating the tables
+	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/puppet/puppet-action.php?puppet_command=init"; then
+		puppet_manager_log init "ERROR: Could not create the puppet-plugin tables in the database!"
+		exit 1
+	fi
+	
+	# creating the svn dir at /etc/puppet to store the puppet configuration
+	# backup orgigin puppet dir first
+	if [ ! -d /etc/puppet.openqrm-puppet-plugin.bak ]; then
+		mv /etc/puppet /etc/puppet.openqrm-puppet-plugin.bak
+	fi
+	# create the svn dir
+	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet
+	svnadmin create $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet
+	svn import $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/default/ file://$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/ -m "initial import"
+	# and import to /etc/puppet
+	rm -rf /etc/puppet/*
+	mkdir -p /etc/puppet
+	cd /etc/puppet
+	svn co file://$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/ .
+	# also co the files for the web-dir
+	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/puppet/
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/puppet/
+	cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/puppet/
+	svn co file://$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/ .
+	chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/puppet/
+	cd $CURRENTD
+	# add update config to cron
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/cron.d/openqrm-puppetm-config.cron |	\
+		sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" >> /etc/cron.d/openqrm-puppetm-config.cron
+	/etc/init.d/cron reload
+	# create the filemanager for the puppet manifest from the template
+	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/fm
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/fm
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/fm/index.php |	\
+		sed -e "s#@@OPENQRM_WEBSERVER_DOCUMENT_ROOT@@#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/fm/index.php
+	
+	
+}
+
+
+
+
+
+
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_puppet_start
+		;;
+	stop)
+		openqrm_plugin_puppet_stop
+		;;
+	restart)
+		openqrm_plugin_puppet_stop
+		sleep 1
+		openqrm_plugin_puppet_start
+		;;
+	init)
+		openqrm_plugin_puppet_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_puppet_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+

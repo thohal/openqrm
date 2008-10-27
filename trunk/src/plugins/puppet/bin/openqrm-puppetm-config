@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# this script gets activated via cron to sequentially check 
+# if there are new config updates in the svn repo
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+SVN_COMMIT_MESSAGE="Updated through openQRM puppet plugin editor"
+
+CUR=`pwd`
+# here it commits any changes made through the web-interface
+cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/puppet/
+svn commit -m "$SVN_COMMIT_MESSAGE" .
+
+# here it updates the puppet configuration from the svn repo
+cd /etc/puppet
+echo "openqrm-puppet-plugin: updating puppet manifest" | logger
+svn update .
+cd $CUR
