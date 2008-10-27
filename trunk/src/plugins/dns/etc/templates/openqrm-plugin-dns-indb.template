@@ -15,3 +15,4 @@ $TTL	604800
 
 ns				IN	A	@@OPENQRM_SERVER_IP_ADDRESS@@
 openqrm			IN	A	@@OPENQRM_SERVER_IP_ADDRESS@@
+puppet			CNAME	openqrm
