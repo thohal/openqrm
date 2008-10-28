@@ -31,7 +31,7 @@ function openqrm_plugin_puppet_stop() {
 	echo "Stopping the openQRM puppet-plugin"
 	/etc/init.d/puppetmaster stop
 	# be sure it is stopped
-	kill `ps ax | grep puppetmaster | grep -v grep | awk {' print $1 '}` 2>/dev/null
+	kill -9 `ps ax | grep puppetmaster | grep -v grep | awk {' print $1 '}` 2>/dev/null
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/puppet/.running
 }
 
