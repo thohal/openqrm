@@ -22,7 +22,7 @@ fi
 
 function openqrm_plugin_puppet_start() {
 	echo "Starting the openQRM puppet-plugin"
-	/etc/init.d/puppetmaster start
+	puppetmasterd -v -d -l syslog
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/puppet/.running
 }
 

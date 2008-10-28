@@ -37,9 +37,9 @@ function puppet_start() {
 	puppet_stop 1>/dev/null 2>&1
 	export FORCE_INSTALL=true
 	openqrm_install_os_dependency puppet
-	# clean up eventual left-overs
-	rm -rf /etc/puppet/ssl/*
-	/etc/init.d/puppet start
+	# clean up eventual left-overs, be sure we get signed
+	rm -rf /etc/puppet/ssl/* /var/lib/puppet/ssl/*
+	puppetd -v -d -D -l syslog
 }
 
 
