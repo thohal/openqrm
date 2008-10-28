@@ -153,6 +153,10 @@ case "$IMAGE_SHELF_COMMAND" in
 			image_shelf_log "NOTICE: Unpacked $IMAGE_SHELF_FILE"
 			openqrm_post_event 0 "get" 5 "openqrm-image-shelf" "Unpacked $IMAGE_SHELF_FILE"
 		fi
+		# preperation
+		# set /etc/resolv.conf
+		image_shelf_set_resolv_conf $MOUNTPOINT/
+		
 		# clean up
 		rm -f $MOUNTPOINT/$IMAGE_SHELF_FILE
 		
