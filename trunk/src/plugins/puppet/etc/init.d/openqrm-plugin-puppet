@@ -7,6 +7,18 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/include/openqrm-plugin-puppet-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/openqrm-plugin-puppet.conf
+openqrm_server_get_config
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+
+# the puppet plugin depends on dns working so it needs the dns plugin available+enabled
+# puppet autosigning needs a domain name. This we get from the dns-plugin config
+if [ ! -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/openqrm-plugin-dns.conf ]; then
+	echo "ERROR: The openQRM puppet-plugin depends on the dns-plugin. Please enable the dns-plugin first!"
+	openqrm_post_event 0 "puppet-plugin" 3 "puppet-plugin" "The openQRM puppet-plugin depends on the dns-plugin. Please enable the dns-plugin first!"
+	exit 1
+fi
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/openqrm-plugin-dns.conf
+
 
 function openqrm_plugin_puppet_start() {
 	echo "Starting the openQRM puppet-plugin"
@@ -101,16 +113,13 @@ function openqrm_plugin_puppet_init() {
 	svn co file://$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/ .
 	chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/puppet/
 	cd $CURRENTD
+	# configure autosigning
+	echo "*.$OPENQRM_SERVER_DOMAIN" > /etc/puppet/autosign.conf
 	# add update config to cron
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/cron.d/openqrm-puppetm-config.cron |	\
 		sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" >> /etc/cron.d/openqrm-puppetm-config.cron
 	/etc/init.d/cron reload
-	# create the filemanager for the puppet manifest from the template
-	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/fm
-	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/fm
-	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/fm/index.php |	\
-		sed -e "s#@@OPENQRM_WEBSERVER_DOCUMENT_ROOT@@#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/fm/index.php
-	
+
 	
 }
 

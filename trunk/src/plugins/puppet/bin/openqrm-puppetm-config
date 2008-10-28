@@ -9,6 +9,7 @@ SVN_COMMIT_MESSAGE="Updated through openQRM puppet plugin editor"
 CUR=`pwd`
 # here it commits any changes made through the web-interface
 cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/puppet/
+svn add `find | grep -v svn`
 svn commit -m "$SVN_COMMIT_MESSAGE" .
 
 # here it updates the puppet configuration from the svn repo
