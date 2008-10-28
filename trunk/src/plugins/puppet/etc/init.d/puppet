@@ -10,18 +10,26 @@ export OPENQRM_SOURCE_DIR="$OPENQRM_SERVER_BASE_DIR/openqrm/"
 . $OPENQRM_RESOURCE_PARAMETER_FILE
 OPENQRM_SERVER_IP=$resource_openqrmserver
 
-# set the hostname early :)
-hostname $appliance_name
-# but do not run on idle resources
+# do not run on idle resources
 if [ "$resource_image" == "idle" ]; then
 	exit 0
 fi
+
+# set the hostname early :)
+hostname $appliance_name
+
 # also do not run before the real init of the rootfs
 # if we have this file /etc/initrd-devices.conf we are still in the initrd
 if [ -f /etc/initrd-devices.conf ]; then
 	exit 0
 fi
-
+if [ -f /etc/debian_version ]; then
+	echo "$appliance_name" > /etc/hostname
+elif [ -f /etc/redhat-release ]; then
+	sed -i -e "s#HOSTNAME=.*#HOSTNAME=$appliance_name#g" /etc/sysconfig/network
+elif [ -f /etc/SuSE-release ]; then
+	echo "$appliance_name" > /etc/HOSTNAME
+fi
 
 
 function puppet_start() {
@@ -29,16 +37,18 @@ function puppet_start() {
 	puppet_stop 1>/dev/null 2>&1
 	export FORCE_INSTALL=true
 	openqrm_install_os_dependency puppet
-	/etc/init.d/puppet stop
+	# clean up eventual left-overs
+	rm -rf /etc/puppet/ssl/*
 	/etc/init.d/puppet start
 }
 
 
 function puppet_stop() {
 	echo "Stopping the openQRM puppet-plugin"
-	if [ -f /etc/init.d/puppet ]; then
+	if [ -x /etc/init.d/puppet ]; then
 		/etc/init.d/puppet stop
 	fi
+	kill `ps ax | grep puppetd | grep -v grep | awk {' print $1 '}` 2>/dev/null
 }
 
 

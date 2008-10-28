@@ -121,7 +121,11 @@ function openqrm_plugin_puppet_init() {
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/cron.d/openqrm-puppetm-config.cron |	\
 		sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" >> /etc/cron.d/openqrm-puppetm-config.cron
 	/etc/init.d/cron reload
-
+	
+	# eventually clean up old ssl dir before starting
+	rm -rf /var/lib/puppet/ssl/*
+	rm -rf /var/lib/puppet/yalm/node/*
+	rm -rf /var/lib/puppet/yalm/facts/*
 	
 }
 
