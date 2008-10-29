@@ -25,6 +25,15 @@ if ! which screen 1>/dev/null; then
 	exit 6
 fi
 
+# the puppet plugin depends on dns working so it needs the dns plugin available+enabled
+# puppet autosigning needs a domain name. This we get from the dns-plugin config
+if [ ! -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/openqrm-plugin-dns.conf ]; then
+	echo "ERROR: The openQRM puppet-plugin depends on the dns-plugin. Please enable the dns-plugin first!"
+	openqrm_post_event 0 "puppet-plugin" 3 "puppet-plugin" "The openQRM puppet-plugin depends on the dns-plugin. Please enable the dns-plugin first!"
+	exit 1
+fi
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/openqrm-plugin-dns.conf
+
 function puppet_manager_usage() {
 	echo "Usage : $0"
 	exit 1
@@ -40,31 +49,28 @@ if [ "$RUN_IN_BACKGROUND" != "true" ]; then
 fi
 
 PUPPET_MANAGER_COMMAND=$1
-shift
-while [ $# -ne 0 ]; do
-	case "$1" in
-		*)
-			echo "ERROR: Free commandline arguments are not allowed"
-			puppet_manager_usage
-			exit 6
-			;;
-	esac
-	shift
-done
-
+APPLIANCE_ID=$2
+APPLIANCE_NAME=$3
+APPLIANCE_IP=$4
 
 # main
-
-
-
 case "$PUPPET_MANAGER_COMMAND" in 
-
-
-
-	*)
-		puppet_manager_usage
+	start)
+		puppet_lock aquire
+		puppet_log openqrm-puppet-manager "Appliance $APPLIANCE_NAME id $APPLIANCE_ID starting with ip-address $APPLIANCE_IP"
+		puppetca --clean $APPLIANCE_NAME.$OPENQRM_SERVER_DOMAIN 2>&1 | logger
+		puppet_lock release
 		;;
-
-
+	stop)
+		puppet_lock aquire
+		puppet_log openqrm-puppet-manager "Appliance $APPLIANCE_NAME id $APPLIANCE_ID stopping with ip-address $APPLIANCE_IP"
+		puppetca --clean $APPLIANCE_NAME.$OPENQRM_SERVER_DOMAIN 2>&1 | logger
+		puppet_lock release
+		;;
+	*)
+		echo "ERROR: Free commandline arguments are not allowed"
+		puppet_manager_usage
+		exit 6
+		;;
 esac
 
