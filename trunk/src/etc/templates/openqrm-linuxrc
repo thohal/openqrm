@@ -80,6 +80,7 @@ function import_kernel() {
 	modprobe ide-core
 	modprobe ide-generic
 	modprobe ide-disk
+	modprobe ata_piix
 	hwsetup -p
 	umount /tmp_download
 	rmdir /tmp_download
