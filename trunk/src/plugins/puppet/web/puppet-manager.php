@@ -1,26 +1,5 @@
-<html>
-<head>
 
-<style type="text/css">
-  <!--
-   -->
-  </style>
-  <script type="text/javascript" language="javascript" src="js/datetimepicker.js"></script>
-  <script language="JavaScript">
-	<!--
-		if (document.images)
-		{
-		calimg= new Image(16,16); 
-		calimg.src="img/cal.gif"; 
-		}
-	//-->
-</script>
-<link type="text/css" rel="stylesheet" href="css/calendar.css">
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-
-</head>
-
-
 
 <?php
 
@@ -38,256 +17,160 @@ require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 // special puppet classes
-require_once "$RootDir/plugins/puppet/class/puppetuser.class.php";
-require_once "$RootDir/plugins/puppet/class/puppetrequest.class.php";
-require_once "$RootDir/plugins/puppet/class/puppetmailer.class.php";
 require_once "$RootDir/plugins/puppet/class/puppetconfig.class.php";
+require_once "$RootDir/plugins/puppet/class/puppet.class.php";
 
 global $OPENQRM_SERVER_BASE_DIR;
-$refresh_delay=5;
-
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
 
-// get admin email
-$cc_conf = new puppetconfig();
-$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
-
-
-// check if we got some actions to do
+// action !
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
-		case 'delete':
-			foreach($_REQUEST['identifier'] as $id) {
-				$cr_request = new puppetrequest();
-				$cr_request->get_instance_by_id($id);
-				// mail user before removing
-				$cr_cu_id = $cr_request->cu_id;
-				$cl_user = new puppetuser();
-				$cl_user->get_instance_by_id($cr_cu_id);
-				$cu_name = $cl_user->name;
-				$cu_email = $cl_user->email;
-				$cu_forename = $cl_user->forename;
-				$cu_lastname = $cl_user->lastname;
-				$rmail = new puppetmailer();
-				$rmail->to = "$cu_email";
-				$rmail->from = "$cc_admin_email";
-				$rmail->subject = "openQRM Puppet: Your request $id has been removed";
-				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/mail/delete_puppet_request.mail.tmpl";
-				$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname");
-				$rmail->var_array = $arr;
-				$rmail->send();
-				// remove
-				$cr_request->remove($id);
+		case 'update':
+			$puppet_id = $_REQUEST["puppet_id"];
+			$puppet_groups_to_activate_array = array();
+			foreach($_REQUEST['identifier'] as $puppet_group) {
+				$puppet_groups_to_activate_array[] .= $puppet_group;
 			}
+			// get the appliance name
+			$appliance = new appliance();
+			$appliance->get_instance_by_id($puppet_id);
+			$appliance_name = $appliance->name;
+			$puppet = new puppet();
+			$puppet->set_groups($appliance_name, $puppet_groups_to_activate_array);
 			break;
-
-		case 'approve':
-			foreach($_REQUEST['identifier'] as $id) {
-				$cr_request = new puppetrequest();
-				$cr_request->setstatus($id, 'approve');
-				// mail user after aprove
-				$cr_request->get_instance_by_id($id);
-				$cr_cu_id = $cr_request->cu_id;
-				$cl_user = new puppetuser();
-				$cl_user->get_instance_by_id($cr_cu_id);
-				$cu_name = $cl_user->name;
-				$cu_email = $cl_user->email;
-				$cu_forename = $cl_user->forename;
-				$cu_lastname = $cl_user->lastname;
-				$cr_start = $cr_request->start;
-				$start = date("d-m-Y H-i", $cr_start);
-				$cr_stop = $cr_request->stop;
-				$stop = date("d-m-Y H-i", $cr_stop);
-				$rmail = new puppetmailer();
-				$rmail->to = "$cu_email";
-				$rmail->from = "$cc_admin_email";
-				$rmail->subject = "openQRM Puppet: Your request $id has been approved";
-				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/mail/approve_puppet_request.mail.tmpl";
-				$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop");
-				$rmail->var_array = $arr;
-				$rmail->send();
-
-			}
-			break;
-
-		case 'cancel':
-			foreach($_REQUEST['identifier'] as $id) {
-				$cr_request = new puppetrequest();
-				$cr_request->setstatus($id, 'new');
-
-				// mail user after cancel
-				$cr_request->get_instance_by_id($id);
-				$cr_cu_id = $cr_request->cu_id;
-				$cl_user = new puppetuser();
-				$cl_user->get_instance_by_id($cr_cu_id);
-				$cu_name = $cl_user->name;
-				$cu_email = $cl_user->email;
-				$cu_forename = $cl_user->forename;
-				$cu_lastname = $cl_user->lastname;
-				$rmail = new puppetmailer();
-				$rmail->to = "$cu_email";
-				$rmail->from = "$cc_admin_email";
-				$rmail->subject = "openQRM Puppet: Your request $id has been canceled";
-				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/mail/cancel_puppet_request.mail.tmpl";
-				$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname");
-				$rmail->var_array = $arr;
-				$rmail->send();
-
-			}
-			break;
-
-		case 'deny':
-			foreach($_REQUEST['identifier'] as $id) {
-				$cr_request = new puppetrequest();
-				$cr_request->setstatus($id, 'deny');
-
-				// mail user after deny
-				$cr_request->get_instance_by_id($id);
-				$cr_cu_id = $cr_request->cu_id;
-				$cl_user = new puppetuser();
-				$cl_user->get_instance_by_id($cr_cu_id);
-				$cu_name = $cl_user->name;
-				$cu_email = $cl_user->email;
-				$cu_forename = $cl_user->forename;
-				$cu_lastname = $cl_user->lastname;
-				$rmail = new puppetmailer();
-				$rmail->to = "$cu_email";
-				$rmail->from = "$cc_admin_email";
-				$rmail->subject = "openQRM Puppet: Your request $id has been denied";
-				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/mail/deny_puppet_request.mail.tmpl";
-				$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname");
-				$rmail->var_array = $arr;
-				$rmail->send();
-
-			}
-			break;
-
-		case 'deprovision':
-			foreach($_REQUEST['identifier'] as $id) {
-				$cr_request = new puppetrequest();
-
-				// mail user before deprovisioning
-				$cr_request->get_instance_by_id($id);
-				$cr_cu_id = $cr_request->cu_id;
-				$cl_user = new puppetuser();
-				$cl_user->get_instance_by_id($cr_cu_id);
-				$cu_name = $cl_user->name;
-				$cu_email = $cl_user->email;
-				$cu_forename = $cl_user->forename;
-				$cu_lastname = $cl_user->lastname;
-				$cr_start = $cr_request->start;
-				$start = date("d-m-Y H-i", $cr_start);
-				$cr_stop = $cr_request->stop;
-				$stop = date("d-m-Y H-i", $cr_stop);
-				$rmail = new puppetmailer();
-				$rmail->to = "$cu_email";
-				$rmail->from = "$cc_admin_email";
-				$rmail->subject = "openQRM Puppet: Your request $id is going to be deprovisioned now !";
-				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/mail/deprovision_puppet_request.mail.tmpl";
-				$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop");
-				$rmail->var_array = $arr;
-				$rmail->send();
-
-				$cr_request->setstatus($id, 'deprovsion');
-			}
-			break;
-
 	}
 }
 
 
 
-function puppet_manager() {
+function puppet_select() {
 
 	global $OPENQRM_USER;
-	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $thisfile;
-	$table = new htmlobject_db_table('cr_id');
+	$table = new htmlobject_db_table('puppet_id');
 
-	$disp = "<h1>Puppet Requests from portal at <a href=\"http://$OPENQRM_SERVER_IP_ADDRESS/puppet-portal\">http://$OPENQRM_SERVER_IP_ADDRESS/puppet-portal</a></h1>";
+
+	$disp = "<h1>Select Appliance for Puppet configuration</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<b><a href=\"$thisfile?action=create\">Create new Puppet Request</a></b>";
+	$disp = $disp."Please select an Appliance to configure via Puppet from the list";
 	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+
 	$arHead = array();
+	$arHead['puppet_state'] = array();
+	$arHead['puppet_state']['title'] ='';
 
-	$arHead['cr_id'] = array();
-	$arHead['cr_id']['title'] ='ID';
+	$arHead['puppet_icon'] = array();
+	$arHead['puppet_icon']['title'] ='';
 
-	$arHead['cr_cu_name'] = array();
-	$arHead['cr_cu_name']['title'] ='User';
+	$arHead['puppet_id'] = array();
+	$arHead['puppet_id']['title'] ='ID';
 
-	$arHead['cr_status'] = array();
-	$arHead['cr_status']['title'] ='Status';
+	$arHead['puppet_name'] = array();
+	$arHead['puppet_name']['title'] ='Name';
 
-	$arHead['cr_request_time'] = array();
-	$arHead['cr_request_time']['title'] ='Request-time';
+	$arHead['puppet_resource_id'] = array();
+	$arHead['puppet_resource_id']['title'] ='Res.ID';
 
-	$arHead['cr_start'] = array();
-	$arHead['cr_start']['title'] ='Start-time';
+	$arHead['puppet_resource_ip'] = array();
+	$arHead['puppet_resource_ip']['title'] ='Ip';
 
-	$arHead['cr_stop'] = array();
-	$arHead['cr_stop']['title'] ='Stop-time';
+	$arHead['puppet_comment'] = array();
+	$arHead['puppet_comment']['title'] ='Comment';
 
-	$arHead['cr_appliance_id'] = array();
-	$arHead['cr_appliance_id']['title'] ='Appliance ID';
-
+	$puppet_count=0;
 	$arBody = array();
+	$puppet_tmp = new appliance();
+	$puppet_array = $puppet_tmp->display_overview(0, 100, 'appliance_id', 'ASC');
 
-	// db select
-	$cl_request = new puppetrequest();
-	$request_array = $cl_request->display_overview(0, 100, 'cr_id', 'ASC');
-	foreach ($request_array as $index => $cr) {
-		// user name
-		$cu_tmp = new puppetuser();
-		$cu_tmp_id = $cr["cr_cu_id"];
-		$cu_tmp->get_instance_by_id($cu_tmp_id);
-		
-		// status
-		$cr_status = $cr["cr_status"];
-		switch ($cr_status) {
-			case '1':
-				$cr_status_disp="New";
-				break;
-			case '2':
-				$cr_status_disp="Approved";
-				break;
-			case '3':
-				$cr_status_disp="Active";
-				break;
-			case '4':
-				$cr_status_disp="Denied";
-				break;
-			case '5':
-				$cr_status_disp="Deprovisioned";
-				break;
-			case '6':
-				$cr_status_disp="Done";
-				break;
-		}	
-		// format time
-		$timestamp=$cr["cr_request_time"];
-		$cr_request_time = date("d-m-Y H-i", $timestamp);
-		$timestamp=$cr["cr_start"];
-		$cr_start = date("d-m-Y H-i", $timestamp);
-		$timestamp=$cr["cr_stop"];
-		$cr_stop = date("d-m-Y H-i", $timestamp);
+	foreach ($puppet_array as $index => $puppet_db) {
+		$puppet_app = new appliance();
+		$puppet_app->get_instance_by_id($puppet_db["appliance_id"]);
+		$puppet_app_resources=$puppet_db["appliance_resources"];		
+		$puppet_count++;
+		// active or inactive
+		$active_state_icon="/openqrm/base/img/active.png";
+		$inactive_state_icon="/openqrm/base/img/idle.png";
+		$resource_icon_default="/openqrm/base/img/resource.png";
+		if ($puppet_app->stoptime == 0 || $puppet_app_resources == 0)  {
+			$state_icon=$active_state_icon;
+		} else {
+			$state_icon=$inactive_state_icon;
+		}
 
-
-		// fill the array for the table
 		$arBody[] = array(
-			'cr_id' => $cr["cr_id"],
-			'cr_cu_name' => $cu_tmp->name,
-			'cr_status' => $cr_status_disp,
-			'cr_request_time' => $cr_request_time,
-			'cr_start' => $cr_start,
-			'cr_stop' => $cr_stop,
-			'cr_appliance_id' => $cr["cr_appliance_id"],
+			'puppet_state' => "<img src=$state_icon>",
+			'puppet_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+			'puppet_id' => $puppet_db["appliance_id"],
+			'puppet_name' => $puppet_db["appliance_name"],
+			'puppet_resource_id' => $puppet_resource->id,
+			'puppet_resource_ip' => $puppet_resource->ip,
+			'puppet_comment' => $puppet_db["appliance_comment"],
 		);
 	}
 
+	$table->id = 'Tabelle';
+	$table->css = 'htmlobject_table';
+	$table->border = 1;
+	$table->cellspacing = 0;
+	$table->cellpadding = 3;
+	$table->form_action = $thisfile;
+	$table->identifier_type = "radio";
+	$table->head = $arHead;
+	$table->body = $arBody;
+	if ($OPENQRM_USER->role == "administrator") {
+		$table->bottom = array('select');
+		$table->identifier = 'puppet_id';
+	}
+	$table->max = $puppet_count;
+	return $disp.$table->get_string();
+}
+
+
+
+function puppet_display($puppet_id) {
+
+	global $OPENQRM_USER;
+	global $RootDir;
+	global $thisfile;
+
+	$table = new htmlobject_db_table('puppet_name');
+	$puppet_group_array = array();
+	$puppet = new puppet();
+	$puppet_group_array = $puppet->get_groups();
+
+	// get the appliance name
+	$appliance = new appliance();
+	$appliance->get_instance_by_id($puppet_id);
+	$appliance_name = $appliance->name;
+	$appliance_domain = $puppet->get_domain();
+			
+	$disp = "<h1>Select the Puppet-groups</h1>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."Select the Puppet-groups for the appliance $appliance_name.$appliance_domain";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+
+	$arHead = array();
+
+	$arHead['puppet_id'] = array();
+	$arHead['puppet_id']['title'] ='ID';
+
+	$arHead['puppet_name'] = array();
+	$arHead['puppet_name']['title'] ='Name';
+
+	foreach ($puppet_group_array as $index => $puppet_g) {
+		$puid=$index+1;
+		$arBody[] = array(
+			'puppet_id' => "$puid <input type=\"hidden\" name=\"puppet_id\" value=\"$puppet_id\"",
+			'puppet_name' => $puppet_g,
+		);
+	}
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -298,272 +181,35 @@ function puppet_manager() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('reload', 'details', 'approve', 'cancel', 'deny', 'delete', 'deprovision');
-		$table->identifier = 'cr_id';
+		$table->bottom = array('update');
+		$table->identifier = 'puppet_name';
 	}
-	$table->max = 100;
-	return $disp.$table->get_string();
-}
-
-
-
-
-function puppet_create_request() {
-
-	global $OPENQRM_USER;
-	global $thisfile;
-
-	$cl_user = new puppetuser();
-	$cl_user_list = array();
-	$cl_user_list = $cl_user->get_list();
-	$cl_user_count = count($cl_user_list);
-	
-	$kernel = new kernel();
-	$kernel_list = array();
-	$kernel_list = $kernel->get_list();
-	// remove the openqrm kernelfrom the list
-	// print_r($kernel_list);
-	array_shift($kernel_list);
-
-	$image = new image();
-	$image_list = array();
-	$image_list = $image->get_list();
-	// remove the openqrm + idle image from the list
-	//print_r($image_list);
-	array_shift($image_list);
-	array_shift($image_list);
-	$image_count = count($image_list);
-
-	$virtualization = new virtualization();
-	$virtualization_list = array();
-	$virtualization_list = $virtualization->get_list();
-
-
-	$disp = "<h1>Create new Puppet Request</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	
-	if ($cl_user_count < 1) {
-		$disp = $disp."<b>Please create a <a href='/openqrm/base/plugins/puppet/puppet-user.php?action=create'>Puppet User</a> first!";
-		return $disp;
-	}
-	if ($image_count < 1) {
-		$disp = $disp."<b>Please create <a href='/openqrm/base/server/image/image-new.php?currenttab=tab1'>Sever-Images</a> first!";
-		return $disp;
-	}
-	
-	$disp = $disp."<form action='puppet-action.php' method=post>";
-	
-	$disp = $disp.htmlobject_select('cr_cu_id', $cl_user_list, 'User');
-
-	$disp = $disp."Start time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\">";
-	$disp = $disp."<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)\">";
-	$disp = $disp."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
-	$disp = $disp."</a>";
-	$disp = $disp."<br>";
-	
-	$disp = $disp."Stop time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\">";
-	$disp = $disp."<a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
-	$disp = $disp."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
-	$disp = $disp."</a>";
-	$disp = $disp."<br>";
-
-	$disp = $disp.htmlobject_select('cr_kernel_id', $kernel_list, 'Kernel');
-	$disp = $disp.htmlobject_select('cr_image_id', $image_list, 'Image');
-	$disp = $disp.htmlobject_select('cr_resource_type_req', $virtualization_list, 'Resource type');
-	
-	$disp = $disp.htmlobject_input('cr_ram_req', array("value" => '', "label" => 'Ram'), 'text', 20);
-	$disp = $disp.htmlobject_input('cr_cpu_req', array("value" => '', "label" => 'Cpu'), 'text', 20);
-	$disp = $disp.htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk'), 'text', 20);
-	$disp = $disp.htmlobject_input('cr_network_req', array("value" => '', "label" => 'Network'), 'text', 255);
-	$disp = $disp.htmlobject_input('cr_ha_req', array("value" => '', "label" => 'HA'), 'text', 5);
-	$disp = $disp.htmlobject_input('cr_shared_req', array("value" => '', "label" => 'Clone-on-deploy'), 'text', 5);
-
-	$disp = $disp."<input type=hidden name='puppet_command' value='create_request'>";
-	$disp = $disp."<br>";
-	$disp = $disp."<input type=submit value='Create'>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."</form>";
-
-	return $disp;
-}
-
-
-
-// post the details of a request to a new tab
-function puppet_request_details($puppet_request_id) {
-
-
-	global $OPENQRM_USER;
-	global $thisfile;
-
-	$cr_request = new puppetrequest();
-	$cr_request->get_instance_by_id($puppet_request_id);
-	$cr_cu_id = $cr_request->cu_id;
-	$cl_user = new puppetuser();
-	$cl_user->get_instance_by_id($cr_cu_id);
-	$cu_name = $cl_user->name;
-	$cu_email = $cl_user->email;
-	$cu_forename = $cl_user->forename;
-	$cu_lastname = $cl_user->lastname;
-
-	$cr_request_time = $cr_request->request_time;
-	$request_time = date("d-m-Y H-i", $cr_request_time);
-	$cr_start = $cr_request->start;
-	$start = date("d-m-Y H-i", $cr_start);
-	$cr_stop = $cr_request->stop;
-	$stop = date("d-m-Y H-i", $cr_stop);
-
-	// kernel with real name
-	$kernel_id = $cr_request->kernel_id;
-	$cr_kernel = new kernel();
-	$cr_kernel->get_instance_by_id($kernel_id);
-	$kernel = $cr_kernel->name;
-	
-	// image with real name
-	$image_id = $cr_request->image_id;
-	$cr_image = new image();
-	$cr_image->get_instance_by_id($image_id);
-	$image = $cr_image->name;
-
-
-	$ram_req = $cr_request->ram_req;
-	$cpu_req = $cr_request->cpu_req;
-	$disk_req = $cr_request->disk_req;
-	$network_req = $cr_request->network_req;
-	$ha_req = $cr_request->ha_req;
-	$shared_req = $cr_request->shared_req;
-	// get resource type as name
-	$resource_type_req = $cr_request->resource_type_req;
-	$virtualization = new virtualization();
-	$virtualization->get_instance_by_id($resource_type_req);
-	$resource_type_name = $virtualization->name;
-
-	$table = new htmlobject_db_table('cr_details');
-
-	$disp = "<h1>Puppet Request ID $puppet_request_id</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$arHead = array();
-
-	$arHead['cr_key'] = array();
-	$arHead['cr_key']['title'] ='';
-
-	$arHead['cr_value'] = array();
-	$arHead['cr_value']['title'] ='';
-
-	$arBody = array();
-
-	// fill the array for the table
-	$arBody[] = array(
-		'cr_key' => "Username",
-		'cr_value' => "$cu_name",
-	);
-	$arBody[] = array(
-		'cr_key' => "Request time",
-		'cr_value' => "$request_time",
-	);
-	$arBody[] = array(
-		'cr_key' => "Start time",
-		'cr_value' => "$start",
-	);
-	$arBody[] = array(
-		'cr_key' => "Stop time",
-		'cr_value' => "$stop",
-	);
-	$arBody[] = array(
-		'cr_key' => "Forename",
-		'cr_value' => "$cu_forename",
-	);
-	$arBody[] = array(
-		'cr_key' => "Lastname",
-		'cr_value' => "$cu_lastname",
-	);
-	$arBody[] = array(
-		'cr_key' => "Email",
-		'cr_value' => "$cu_email",
-	);
-	// requirements  -----------------------------
-	$arBody[] = array(
-		'cr_key' => "Kernel",
-		'cr_value' => "$kernel",
-	);
-	$arBody[] = array(
-		'cr_key' => "Server-image",
-		'cr_value' => "$image",
-	);
-
-	$arBody[] = array(
-		'cr_key' => "RAM",
-		'cr_value' => "$ram_req",
-	);
-	$arBody[] = array(
-		'cr_key' => "CPUs",
-		'cr_value' => "$cpu_req",
-	);
-	$arBody[] = array(
-		'cr_key' => "Disk size",
-		'cr_value' => "$disk_req",
-	);
-	$arBody[] = array(
-		'cr_key' => "Network",
-		'cr_value' => "$network_req",
-	);
-	$arBody[] = array(
-		'cr_key' => "Resource type",
-		'cr_value' => "$resource_type_name",
-	);
-	$arBody[] = array(
-		'cr_key' => "Highavailable",
-		'cr_value' => "$ha_req",
-	);
-	$arBody[] = array(
-		'cr_key' => "Clone on deploy",
-		'cr_value' => "$shared_req",
-	);
-	
-	$table->id = 'Tabelle';
-	$table->css = 'htmlobject_table';
-	$table->border = 1;
-	$table->cellspacing = 0;
-	$table->cellpadding = 3;
-	$table->form_action = $thisfile;
-	$table->head = $arHead;
-	$table->body = $arBody;
-	$table->max = 100;
+	$table->max = $puppet_count;
 	return $disp.$table->get_string();
 
-}
 
+}
 
 
 $output = array();
-
+$puppet_id = $_REQUEST["puppet_id"];
 if(htmlobject_request('action') != '') {
-	// display by default
-	$output[] = array('label' => 'Puppet Manager', 'value' => puppet_manager());
 	switch (htmlobject_request('action')) {
-		case 'create':
-			$output[] = array('label' => 'Create Puppet Request', 'value' => puppet_create_request());
-			break;
-
-		case 'details':
+		case 'select':
 			foreach($_REQUEST['identifier'] as $id) {
-				$cr_request = new puppetrequest();
-				$cr_request->get_instance_by_id($id);
-
-				$output[] = array('label' => 'Request details', 'value' => puppet_request_details($id));
-
-
+				$output[] = array('label' => 'Puppet Manager', 'value' => puppet_display($id));
 			}
 			break;
-
+		case 'update':
+			$output[] = array('label' => 'Puppet Manager', 'value' => puppet_display($puppet_id));
+			break;
 	}
-
-} else {
-	$output[] = array('label' => 'Puppet Manager', 'value' => puppet_manager());
+} else if (strlen($puppet_id)) {
+	$output[] = array('label' => 'Puppet Manager', 'value' => puppet_display($puppet_id));
+} else  {
+	$output[] = array('label' => 'Puppet Manager', 'value' => puppet_select());
 }
+
 echo htmlobject_tabmenu($output);
 
 ?>

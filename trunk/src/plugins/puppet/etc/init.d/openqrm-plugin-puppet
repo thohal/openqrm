@@ -10,15 +10,6 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 openqrm_server_get_config
 export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 
-# the puppet plugin depends on dns working so it needs the dns plugin available+enabled
-# puppet autosigning needs a domain name. This we get from the dns-plugin config
-if [ ! -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/openqrm-plugin-dns.conf ]; then
-	echo "ERROR: The openQRM puppet-plugin depends on the dns-plugin. Please enable the dns-plugin first!"
-	openqrm_post_event 0 "puppet-plugin" 3 "puppet-plugin" "The openQRM puppet-plugin depends on the dns-plugin. Please enable the dns-plugin first!"
-	exit 1
-fi
-. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/openqrm-plugin-dns.conf
-
 
 function openqrm_plugin_puppet_start() {
 	echo "Starting the openQRM puppet-plugin"
@@ -79,6 +70,16 @@ function openqrm_plugin_puppet_init() {
 		read PASSWORD
 		echo
 	fi
+
+	# the puppet plugin depends on dns working so it needs the dns plugin available+enabled
+	# puppet autosigning needs a domain name. This we get from the dns-plugin config
+	if [ ! -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/openqrm-plugin-dns.conf ]; then
+		echo "ERROR: The openQRM puppet-plugin depends on the dns-plugin. Please enable the dns-plugin first!"
+		openqrm_post_event 0 "puppet-plugin" 3 "puppet-plugin" "The openQRM puppet-plugin depends on the dns-plugin. Please enable the dns-plugin first!"
+		exit 1
+	fi
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/openqrm-plugin-dns.conf
+
 	CURRENTD=`pwd`
 	echo "Initializing the openQRM puppet-plugin"
 	# linking the web dir
@@ -87,7 +88,7 @@ function openqrm_plugin_puppet_init() {
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/boot-service-puppet.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-puppet.tgz
 	
 	# creating the tables
-	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/puppet/puppet-action.php?puppet_command=init"; then
+	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/puppet/puppet-action.php?puppet_command=init&puppet_domain=$OPENQRM_SERVER_DOMAIN"; then
 		puppet_manager_log init "ERROR: Could not create the puppet-plugin tables in the database!"
 		exit 1
 	fi
@@ -106,6 +107,12 @@ function openqrm_plugin_puppet_init() {
 	mkdir -p /etc/puppet
 	cd /etc/puppet
 	svn co file://$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/ .
+	# also co the files for the web-dir
+	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/puppet/
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/puppet/
+	cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/puppet/
+	svn co file://$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/ .
+	chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/puppet/
 	# setup access through ssh+svn
 	rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/conf/svnserve.conf
 	echo "[general]" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/conf/svnserve.conf
