@@ -9,8 +9,19 @@ SVN_COMMIT_MESSAGE="Automatically updated through openQRM puppet plugin"
 CUR=`pwd`
 # here it commits any changes made through the web-interface
 cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/puppet/
-svn add `find | grep -v svn`
-svn commit -m "$SVN_COMMIT_MESSAGE" .
+# remove deleted files
+for pfile in `find /etc/puppet/ | grep -v svn | grep -v autosign.conf | sed -e "s#/etc/puppet/##g"`; do 
+	if [ ! -f $pfile ] && [ ! -d $pfile ]; then
+		svn del $pfile
+	fi
+
+done
+# add new files
+svn add `find | grep -v svn` | logger
+# commit
+svn commit -m "$SVN_COMMIT_MESSAGE" . | logger
+# update eventual changes from external
+svn update . | logger
 
 # here it updates the puppet configuration from the svn repo
 cd /etc/puppet

@@ -30,16 +30,22 @@ if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'update':
 			$puppet_id = $_REQUEST["puppet_id"];
-			$puppet_groups_to_activate_array = array();
-			foreach($_REQUEST['identifier'] as $puppet_group) {
-				$puppet_groups_to_activate_array[] .= $puppet_group;
-			}
 			// get the appliance name
 			$appliance = new appliance();
 			$appliance->get_instance_by_id($puppet_id);
 			$appliance_name = $appliance->name;
+
+			$puppet_groups_to_activate_array = array();
+			$identifier_array = $_REQUEST['identifier'];
 			$puppet = new puppet();
-			$puppet->set_groups($appliance_name, $puppet_groups_to_activate_array);
+			if (!is_array($identifier_array)) {
+				$puppet->remove_appliance($appliance_name);
+			} else {
+				foreach($identifier_array as $puppet_group) {
+					$puppet_groups_to_activate_array[] .= $puppet_group;
+				}
+				$puppet->set_groups($appliance_name, $puppet_groups_to_activate_array);
+			}
 			break;
 	}
 }

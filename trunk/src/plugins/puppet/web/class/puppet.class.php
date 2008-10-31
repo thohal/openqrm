@@ -69,6 +69,15 @@ function set_groups($appliance_name, $puppet_group_array) {
 }
 
 
+function remove_appliance($appliance_name) {
+	global $puppet_appliance_dir;
+	$puppet_domain = $this->get_domain();
+	$filename = "$puppet_appliance_dir/$appliance_name.$puppet_domain.pp";
+	if (file_exists($filename)) {
+		unlink($filename);
+	}
+}
+
 
 // ---------------------------------------------------------------------------------
 
