@@ -4,6 +4,7 @@ OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/include/openqrm-plugin-dns-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/openqrm-plugin-dns.conf
 
 DNS_CMD=$1
 APPLIANCE_ID=$2
@@ -19,7 +20,7 @@ case "$DNS_CMD" in
 		dns_lock aquire
 		dns_log openqrm-dns-manager "Appliance $APPLIANCE_NAME id $APPLIANCE_ID starting with ip-address $APPLIANCE_IP"
 		echo "$APPLIANCE_NAME	IN	A	$APPLIANCE_IP" >> $DNS_INDB
-		echo "$APPLIANCE_LAST_IP_BYTE	IN	PTR	$APPLIANCE_NAME" >> $DNS_REVDB
+		echo "$APPLIANCE_LAST_IP_BYTE	IN	PTR	$APPLIANCE_NAME.$OPENQRM_SERVER_DOMAIN." >> $DNS_REVDB
 		$DNS_INIT reload
 		dns_lock release
 		;;
