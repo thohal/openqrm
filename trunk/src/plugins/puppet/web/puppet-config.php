@@ -52,7 +52,7 @@ function puppet_config_manager() {
 	global $thisfile;
 	$table = new htmlobject_db_table('cc_id');
 
-	$disp = "<h1>Puppet Configuration for portal at <a href=\"http://$OPENQRM_SERVER_IP_ADDRESS/puppet-portal\">http://$OPENQRM_SERVER_IP_ADDRESS/puppet-portal</a></h1>";
+	$disp = "<h1>Puppet Configuration</a></h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";

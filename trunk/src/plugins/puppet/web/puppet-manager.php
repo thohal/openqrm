@@ -97,6 +97,9 @@ function puppet_select() {
 		$puppet_app = new appliance();
 		$puppet_app->get_instance_by_id($puppet_db["appliance_id"]);
 		$puppet_app_resources=$puppet_db["appliance_resources"];		
+		$puppet_resource = new resource();
+		$puppet_resource->get_instance_by_id($puppet_app_resources);
+
 		$puppet_count++;
 		// active or inactive
 		$active_state_icon="/openqrm/base/img/active.png";
@@ -177,11 +180,16 @@ function puppet_display($puppet_id) {
 	$arHead['puppet_name'] = array();
 	$arHead['puppet_name']['title'] ='Name';
 
+	$arHead['puppet_info'] = array();
+	$arHead['puppet_info']['title'] ='Info';
+
 	foreach ($puppet_group_array as $index => $puppet_g) {
 		$puid=$index+1;
+		$puppet_info = $puppet->get_group_info($puppet_g);
 		$arBody[] = array(
 			'puppet_id' => "$puid <input type=\"hidden\" name=\"puppet_id\" value=\"$puppet_id\">",
 			'puppet_name' => $puppet_g,
+			'puppet_info' => $puppet_info,
 		);
 	}
 	$table->id = 'Tabelle';

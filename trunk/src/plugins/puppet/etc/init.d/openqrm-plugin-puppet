@@ -13,7 +13,11 @@ export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 
 function openqrm_plugin_puppet_start() {
 	echo "Starting the openQRM puppet-plugin"
+	kill -9 `ps ax | grep puppetd | grep -v grep | awk {' print $1 '}` 2>/dev/null
+	openqrm_chkconfig del puppet
+	openqrm_chkconfig del puppetmaster
 	puppetmasterd -v -d -l syslog
+	puppetd -v -d -D -l syslog
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/puppet/.running
 }
 
@@ -23,6 +27,7 @@ function openqrm_plugin_puppet_stop() {
 	/etc/init.d/puppetmaster stop
 	# be sure it is stopped
 	kill -9 `ps ax | grep puppetmaster | grep -v grep | awk {' print $1 '}` 2>/dev/null
+	kill -9 `ps ax | grep puppetd | grep -v grep | awk {' print $1 '}` 2>/dev/null
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/puppet/.running
 }
 
@@ -131,8 +136,8 @@ function openqrm_plugin_puppet_init() {
 	
 	# eventually clean up old ssl dir before starting
 	rm -rf /var/lib/puppet/ssl/*
-	rm -rf /var/lib/puppet/yalm/node/*
-	rm -rf /var/lib/puppet/yalm/facts/*
+	rm -rf /var/lib/puppet/yaml/node/*
+	rm -rf /var/lib/puppet/yaml/facts/*
 	
 }
 

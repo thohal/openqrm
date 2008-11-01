@@ -39,6 +39,31 @@ function get_available_groups() {
 
 
 
+function get_group_info($group_name) {
+
+	global $puppet_group_dir;
+	global $event;
+	$filename = "$puppet_group_dir/$group_name.pp";
+	if (file_exists($filename)) {
+	    if (!$handle = fopen($filename, 'r')) {
+			$event->log("get_group_info", $_SERVER['REQUEST_TIME'], 2, "puppet.class.php", "Cannot open file ($filename)", "", "", 0, 0, 0);
+			exit;
+   		}
+		while (!feof($handle)) {
+			$info = fgets($handle, 4096);
+			if (strstr($info, "#")) {
+				$info = str_replace("#", "", $info);
+		   		fclose($handle);
+				return $info;
+			}
+		}
+   	}
+
+
+}
+
+
+
 function get_domain() {
 	$puppetconfig = new puppetconfig();
 	$puppet_domain = $puppetconfig->get_value(2);  // 2 is the domain-name
@@ -58,7 +83,7 @@ function set_groups($appliance_name, $puppet_group_array) {
 		exit;
     }
     // header 
-    fwrite($handle, "\nnode $appliance_name.$puppet_domain {\n");
+    fwrite($handle, "\nnode '$appliance_name.$puppet_domain' {\n");
 	// body with groups 
 	foreach($puppet_group_array as $puppet_group) {
 		$puppet_include = "     include $puppet_group\n";
