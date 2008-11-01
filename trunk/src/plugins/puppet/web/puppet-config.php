@@ -38,6 +38,17 @@ if(htmlobject_request('action') != '') {
 				$key = $puppet_conf->key;
 				$value = $_REQUEST[$key];
 				$puppet_conf->set_value($id, $value);
+				
+				// in case autosigining changed
+				if ($id == 1) {
+					if (!strcmp($value, "true")) {
+						$puppet_cli_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/bin/openqrm-puppet-manager auto_sign_true";
+					} else {
+						$puppet_cli_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/bin/openqrm-puppet-manager auto_sign_false";
+					}	
+					$openqrm_server->send_command($puppet_cli_command);
+				}				
+				
 			}
 			break;
 	}
@@ -72,14 +83,21 @@ function puppet_config_manager() {
 	// db select
 	$cc_config = new puppetconfig();
 	$cc_array = $cc_config->display_overview(0, 100, 'cc_id', 'ASC');
+	$ident_array = array();
 	foreach ($cc_array as $index => $cc) {
 		$key = $cc["cc_key"];
 		$value = $cc["cc_value"];
-		$input_value="<input type=text name=$key value=$value size=20>";
+		// for now only allow some parameters to be edited
+		if (!strcmp($key, "ca_auto_sign")) {
+			$input_value="<input type=text name=$key value=$value size=20>";
+		} else {
+			$input_value="$value <input type=hidden name=$key value=$value size=20>";
+		}
+		$ident_array[] .= $cc["cc_id"];
 		$arBody[] = array(
 			'cc_id' => $cc["cc_id"],
 			'cc_key' => $cc["cc_key"],
-			'cc_value' => $input_value
+			'cc_value' => $input_value,
 		);
 	}
 
@@ -89,7 +107,8 @@ function puppet_config_manager() {
 	$table->cellspacing = 0;
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
-	$table->identifier_type = "radio";
+	$table->identifier_type = "checkbox";
+	$table->identifier_checked = $ident_array;
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {

@@ -143,7 +143,6 @@ function set_value($puppetconfig_id, $puppetconfig_value) {
 	global $PUPPET_CONFIG_TABLE;
 	global $event;
 	
-	echo "update $PUPPET_CONFIG_TABLE set cc_value=\"$puppetconfig_value\" where cc_id=$puppetconfig_id <br>";
 	$db=openqrm_get_db_connection();
 	$puppetconfig_set = &$db->Execute("update $PUPPET_CONFIG_TABLE set cc_value=\"$puppetconfig_value\" where cc_id=$puppetconfig_id");
 	if (!$puppetconfig_set) {

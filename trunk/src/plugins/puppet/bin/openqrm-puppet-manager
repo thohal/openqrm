@@ -49,22 +49,37 @@ if [ "$RUN_IN_BACKGROUND" != "true" ]; then
 fi
 
 PUPPET_MANAGER_COMMAND=$1
-APPLIANCE_ID=$2
-APPLIANCE_NAME=$3
-APPLIANCE_IP=$4
 
 # main
 case "$PUPPET_MANAGER_COMMAND" in 
 	start)
+		APPLIANCE_ID=$2
+		APPLIANCE_NAME=$3
+		APPLIANCE_IP=$4
 		puppet_lock aquire
 		puppet_log openqrm-puppet-manager "Appliance $APPLIANCE_NAME id $APPLIANCE_ID starting with ip-address $APPLIANCE_IP"
 		puppetca --clean $APPLIANCE_NAME.$OPENQRM_SERVER_DOMAIN 2>&1 | logger
 		puppet_lock release
 		;;
 	stop)
+		APPLIANCE_ID=$2
+		APPLIANCE_NAME=$3
+		APPLIANCE_IP=$4
 		puppet_lock aquire
 		puppet_log openqrm-puppet-manager "Appliance $APPLIANCE_NAME id $APPLIANCE_ID stopping with ip-address $APPLIANCE_IP"
 		puppetca --clean $APPLIANCE_NAME.$OPENQRM_SERVER_DOMAIN 2>&1 | logger
+		puppet_lock release
+		;;
+	auto_sign_false)
+		puppet_lock aquire
+		puppet_log openqrm-puppet-manager "Stopping automatic signing of puppet-ca's"
+		rm -f /etc/puppet/autosign.conf
+		puppet_lock release
+		;;
+	auto_sign_true)
+		puppet_lock aquire
+		puppet_log openqrm-puppet-manager "Started automatic signing of puppet-ca's"
+		echo "*.$OPENQRM_SERVER_DOMAIN" > /etc/puppet/autosign.conf
 		puppet_lock release
 		;;
 	*)

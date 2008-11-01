@@ -71,7 +71,7 @@ $event->log("$puppet_command", $_SERVER['REQUEST_TIME'], 5, "puppet-action", "Pr
 			$recordSet = &$db->Execute($create_puppet_config);
 			// create the default configuration
 			$create_default_puppet_config1 = "insert into puppet_config(cc_id, cc_key, cc_value) values (1, 'ca_auto_sign', 'true')";
-			$create_default_puppet_config2 = "insert into puppet_config(cc_id, cc_key, cc_value) values (2, 'domain-name', \"$puppet_domain\")";
+			$create_default_puppet_config2 = "insert into puppet_config(cc_id, cc_key, cc_value) values (2, 'domain_name', \"$puppet_domain\")";
 			$recordSet = &$db->Execute($create_default_puppet_config1);
 			$recordSet = &$db->Execute($create_default_puppet_config2);
 		    $db->Close();
