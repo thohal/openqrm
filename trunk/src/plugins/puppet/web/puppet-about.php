@@ -67,9 +67,9 @@ function puppet_about() {
 	$disp = $disp."<li>";
 	$disp = $disp."Go to the 'puppet-manager' in the puppet-plugin menu";
 	$disp = $disp."</li><li>";
-	$disp = $disp."Select an appliances to automatic configure via puppet";
+	$disp = $disp."Select an appliance to automatic configure via puppet";
 	$disp = $disp."</li><li>";
-	$disp = $disp."Select the puppet-groups the appliances should belong to";
+	$disp = $disp."Select the puppet-groups the appliance should belong to";
 	$disp = $disp."</li>";
 	$disp = $disp."</ul>";
 	$disp = $disp."<br>";
