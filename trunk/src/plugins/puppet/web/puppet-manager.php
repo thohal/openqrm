@@ -147,13 +147,20 @@ function puppet_display($puppet_id) {
 	$table = new htmlobject_db_table('puppet_name');
 	$puppet_group_array = array();
 	$puppet = new puppet();
-	$puppet_group_array = $puppet->get_groups();
+	$puppet_group_array = $puppet->get_available_groups();
+
+
 
 	// get the appliance name
 	$appliance = new appliance();
 	$appliance->get_instance_by_id($puppet_id);
 	$appliance_name = $appliance->name;
 	$appliance_domain = $puppet->get_domain();
+
+	// get the enabled groups
+	$appliance_puppet_groups = array();
+	$appliance_puppet_groups = $puppet->get_groups($appliance_name);
+
 			
 	$disp = "<h1>Select the Puppet-groups</h1>";
 	$disp = $disp."<br>";
@@ -173,7 +180,7 @@ function puppet_display($puppet_id) {
 	foreach ($puppet_group_array as $index => $puppet_g) {
 		$puid=$index+1;
 		$arBody[] = array(
-			'puppet_id' => "$puid <input type=\"hidden\" name=\"puppet_id\" value=\"$puppet_id\"",
+			'puppet_id' => "$puid <input type=\"hidden\" name=\"puppet_id\" value=\"$puppet_id\">",
 			'puppet_name' => $puppet_g,
 		);
 	}
@@ -184,6 +191,7 @@ function puppet_display($puppet_id) {
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
 	$table->identifier_type = "checkbox";
+	$table->identifier_checked = $appliance_puppet_groups;
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {

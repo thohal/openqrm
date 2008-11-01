@@ -23,7 +23,7 @@ class puppet {
 // ---------------------------------------------------------------------------------
 
 
-function get_groups() {
+function get_available_groups() {
 	global $puppet_group_dir;
 	$app_dir = new folder();
 	$app_dir->getFolderContent($puppet_group_dir);
@@ -49,12 +49,13 @@ function get_domain() {
 
 function set_groups($appliance_name, $puppet_group_array) {
 	global $puppet_appliance_dir;
+	global $event;
 	$puppet_domain = $this->get_domain();
 	$filename = "$puppet_appliance_dir/$appliance_name.$puppet_domain.pp";
 
     if (!$handle = fopen($filename, 'w+')) {
-         echo "Cannot open file ($filename)";
-         exit;
+    	$event->log("set_groups", $_SERVER['REQUEST_TIME'], 2, "puppet.class.php", "Cannot open file ($filename)", "", "", 0, 0, 0);
+		exit;
     }
     // header 
     fwrite($handle, "\nnode $appliance_name.$puppet_domain {\n");
@@ -68,6 +69,33 @@ function set_groups($appliance_name, $puppet_group_array) {
     fclose($handle);
 }
 
+
+function get_groups($appliance_name) {
+	global $puppet_appliance_dir;
+	global $event;
+	$puppet_group_array = array();
+	$puppet_domain = $this->get_domain();
+	$filename = "$puppet_appliance_dir/$appliance_name.$puppet_domain.pp";
+
+	if (file_exists($filename)) {
+	    if (!$handle = fopen($filename, 'r')) {
+			$event->log("get_groups", $_SERVER['REQUEST_TIME'], 2, "puppet.class.php", "Cannot open file ($filename)", "", "", 0, 0, 0);
+			exit;
+   		}
+		while (!feof($handle)) {
+			$buffer = fgets($handle, 4096);
+			if (strstr($buffer, "include")) {
+				$buffer = str_replace("include", "", $buffer);
+				$buffer = trim($buffer);
+				$puppet_group_array[] .= $buffer;
+			}
+		}
+   		fclose($handle);
+   	}
+
+
+	return $puppet_group_array;
+}
 
 function remove_appliance($appliance_name) {
 	global $puppet_appliance_dir;

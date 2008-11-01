@@ -1,1 +1,1 @@
-*/2 * * * * root @@OPENQRM_SERVER_BASE_DIR@@/openqrm/plugins/puppet/bin/openqrm-puppetm-config
+* * * * * root @@OPENQRM_SERVER_BASE_DIR@@/openqrm/plugins/puppet/bin/openqrm-puppetm-config
