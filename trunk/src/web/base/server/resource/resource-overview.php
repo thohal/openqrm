@@ -92,20 +92,20 @@ $strMsg = '';
 						if (strlen($resource->capabilities)) {
 							if (strstr($resource->capabilities, "VIRTUAL")) {
 								// edit
-								$olds = str_replace('VIRTUAL="', '', $resource->capabilities);
-								$nspos = strpos($olds, '"');
+								$olds = str_replace("VIRTUAL='", '', $resource->capabilities);
+								$nspos = strpos($olds, "'");
 								$oldt = substr($olds, 0, $nspos);
-								$oldstr = "VIRTUAL=\"$oldt\"";
-								$newstr = "VIRTUAL=\"$virtualization->name\"";
+								$oldstr = "VIRTUAL='$oldt'";
+								$newstr = "VIRTUAL='$virtualization->name'";
 								$new_resource_caps = str_replace($oldstr, $newstr, $resource->capabilities);
 								$resource_fields["resource_capabilities"] = "$new_resource_caps";
 							} else {
 								// add
-								$resource_fields["resource_capabilities"] = "$resource->capabilities VIRTUAL=\"$virtualization->name\"";
+								$resource_fields["resource_capabilities"] = "$resource->capabilities VIRTUAL='$virtualization->name'";
 							}
 						} else {
 							// new
-							$resource_fields["resource_capabilities"] = "VIRTUAL=\"$virtualization->name\"";
+							$resource_fields["resource_capabilities"] = "VIRTUAL='$virtualization->name'";
 						}
 						$resource->update_info($id, $resource_fields);
 						$strMsg .= "Updated resource $id with resource-type $virtualization->name";
@@ -195,8 +195,8 @@ function resource_display() {
 			// select box for the resource_type
 			if (strstr($resource->capabilities, "VIRTUAL")) {
 				// find out what should be preselected
-				$olds = str_replace('VIRTUAL="', '', $resource->capabilities);
-				$nspos = strpos($olds, '"');
+				$olds = str_replace("VIRTUAL='", '', $resource->capabilities);
+				$nspos = strpos($olds, "'");
 				$resource_type_name = substr($olds, 0, $nspos);
 				// translate name to id
 				$virtualization->get_instance_by_name($resource_type_name);
