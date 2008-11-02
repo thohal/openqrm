@@ -6,6 +6,7 @@ require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
+require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/openqrm-server-config.php";
 global $OPENQRM_SERVER_BASE_DIR;
@@ -75,6 +76,43 @@ $strMsg = '';
 				}
 				redirect($strMsg);
 				break;
+
+
+			case 'update':
+				foreach($_REQUEST['identifier'] as $id) {
+					if($id != 0) {
+						$resource = new resource();
+						$resource->get_instance_by_id($id);
+						$resource_type = $_REQUEST['resource_type'];
+
+						$virtualization = new virtualization();
+						$virtualization->get_instance_by_id($resource_type);
+						$resource_fields = array();
+
+						if (strlen($resource->capabilities)) {
+							if (strstr($resource->capabilities, "VIRTUAL")) {
+								// edit
+								$olds = str_replace('VIRTUAL="', '', $resource->capabilities);
+								$nspos = strpos($olds, '"');
+								$oldt = substr($olds, 0, $nspos);
+								$oldstr = "VIRTUAL=\"$oldt\"";
+								$newstr = "VIRTUAL=\"$virtualization->name\"";
+								$new_resource_caps = str_replace($oldstr, $newstr, $resource->capabilities);
+								$resource_fields["resource_capabilities"] = "$new_resource_caps";
+							} else {
+								// add
+								$resource_fields["resource_capabilities"] = "$resource->capabilities VIRTUAL=\"$virtualization->name\"";
+							}
+						} else {
+							// new
+							$resource_fields["resource_capabilities"] = "VIRTUAL=\"$virtualization->name\"";
+						}
+						$resource->update_info($id, $resource_fields);
+						$strMsg .= "Updated resource $id with resource-type $virtualization->name";
+					}
+				}
+				redirect($strMsg);
+				break;
 	
 		}
 
@@ -86,6 +124,20 @@ $strMsg = '';
 function resource_display() {
 	global $OPENQRM_USER;
 	global $thisfile;
+
+	$virtualization = new virtualization();
+	$virtualization_list = array();
+	$v_list_select = array();
+	$virtualization_list_select = array();
+	$virtualization_list = $virtualization->get_list();
+
+	// filter out the virtualization hosts
+	foreach ($virtualization_list as $id => $virt) {
+		if (!strstr($virt[label], "Host")) {
+			$virtualization_list_select[] = array("value" => $virt[value], "label" => $virt[label]);
+			
+		}
+	}
 
 	$resource_tmp = new resource();
 	$table = new htmlobject_db_table('resource_id');
@@ -106,20 +158,18 @@ function resource_display() {
 	$arHead['resource_hostname'] = array();
 	$arHead['resource_hostname']['title'] ='Name';
 
-	$arHead['resource_kernel'] = array();
-	$arHead['resource_kernel']['title'] ='Kernel';
-
-	$arHead['resource_image'] = array();
-	$arHead['resource_image']['title'] ='Image';
+	$arHead['resource_mac'] = array();
+	$arHead['resource_mac']['title'] ='Mac';
 
 	$arHead['resource_ip'] = array();
 	$arHead['resource_ip']['title'] ='Ip';
 
+	$arHead['resource_type'] = array();
+	$arHead['resource_type']['title'] ='Type';
+
+
 	$arHead['resource_memtotal'] = array();
 	$arHead['resource_memtotal']['title'] ='Memory';
-
-	$arHead['resource_swaptotal'] = array();
-	$arHead['resource_swaptotal']['title'] ='Swap';
 
 	$arHead['resource_load'] = array();
 	$arHead['resource_load']['title'] ='Load';
@@ -139,8 +189,22 @@ function resource_display() {
 		$swap = "$swap_used/$swap_total";
 		if ($resource->id == 0) {
 			$resource_icon_default="/openqrm/base/img/logo.png";
+			$resource_type_select = "openQRM-server";
 		} else {
 			$resource_icon_default="/openqrm/base/img/resource.png";
+			// select box for the resource_type
+			if (strstr($resource->capabilities, "VIRTUAL")) {
+				// find out what should be preselected
+				$olds = str_replace('VIRTUAL="', '', $resource->capabilities);
+				$nspos = strpos($olds, '"');
+				$resource_type_name = substr($olds, 0, $nspos);
+				// translate name to id
+				$virtualization->get_instance_by_name($resource_type_name);
+				$resource_type_select = htmlobject_select('resource_type', $virtualization_list_select, '', array($virtualization->id));
+			} else {
+				$resource_type_select = htmlobject_select('resource_type', $virtualization_list_select, '', array(0));
+			}
+		
 		}
 		$state_icon="/openqrm/base/img/$resource->state.png";
 		// idle ?
@@ -156,11 +220,10 @@ function resource_display() {
 			'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 			'resource_id' => $resource_db["resource_id"],
 			'resource_hostname' => $resource_db["resource_hostname"],
-			'resource_kernel' => $resource_db["resource_kernel"],
-			'resource_image' => $resource_db["resource_image"],
+			'resource_mac' => $resource_db["resource_mac"],
 			'resource_ip' => $resource_db["resource_ip"],
+			'resource_type' => $resource_type_select,
 			'resource_memtotal' => $mem,
-			'resource_swaptotal' => $swap,
 			'resource_load' => $resource_db["resource_load"],
 		);
 
@@ -175,7 +238,7 @@ function resource_display() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('reboot', 'poweroff', 'remove');
+		$table->bottom = array('update', 'reboot', 'poweroff', 'remove');
 		$table->identifier = 'resource_id';
 		$table->identifier_disabled = array(0);
 	}
@@ -217,11 +280,6 @@ if($OPENQRM_USER->role == "administrator") {
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
 <link rel="stylesheet" type="text/css" href="resource.css" />
-<style>
-.htmlobject_tab_box {
-	width:700px;
-}
-</style>
 <?php
 echo htmlobject_tabmenu($output);
 ?>

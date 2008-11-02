@@ -1,5 +1,5 @@
 .htmlobject_tab_box {
-	width:700px;
+	width:750px;
 }
 .htmlobject_td {
 	padding:5px !important;
@@ -7,47 +7,42 @@
 .htmlobject_td.resource_id {
 	text-align:center;
 	width:25px;
-	vertical-align:top;
+	vertical-align:bottom;
 }
 .htmlobject_td.resource_hostname {
 	text-align:left;
 	width:110px;
-	vertical-align:top;
+	vertical-align:bottom;
 }
-.htmlobject_td.resource_kernel {
+.htmlobject_td.resource_mac {
 	text-align:left;
 	width:110px;
-	vertical-align:top;
+	vertical-align:bottom;
 }
-.htmlobject_td.resource_image {
+.htmlobject_td.resource_type {
 	text-align:left;
 	width:110px;
-	vertical-align:top;
+	vertical-align:bottom;
 }
 .htmlobject_td.resource_ip {
 	text-align:left;
-	width:320px;
-	vertical-align:top;
+	width:110px;
+	vertical-align:bottom;
 }
 
 .htmlobject_td.resource_memtotal {
 	text-align:left;
-	width:320px;
-	vertical-align:top;
-}
-.htmlobject_td.resource_swaptotal {
-	text-align:left;
-	width:320px;
-	vertical-align:top;
+	width:110px;
+	vertical-align:bottom;
 }
 .htmlobject_td.resource_load {
 	text-align:left;
-	width:320px;
-	vertical-align:top;
+	width:50px;
+	vertical-align:bottom;
 }
 .htmlobject_td.identifier {
 	text-align:center;
-	vertical-align:top;
+	vertical-align:bottom;
 }
 
 .tr_hover {
