@@ -108,15 +108,15 @@ function appliance_form() {
 	array_shift($resource_p_array);
 	// gather all available values in arrays
 	$available_cpuspeed = array();
-	$available_cpuspeed[] = array("value" => "any", "label" => "any");
+	$available_cpuspeed[] = array("value" => "0", "label" => "any");
 	$available_cpunumber = array();
-	$available_cpunumber[] = array("value" => "any", "label" => "any");
+	$available_cpunumber[] = array("value" => "0", "label" => "any");
 	$available_cpumodel = array();
-	$available_cpumodel[] = array("value" => "any", "label" => "any");
+	$available_cpumodel[] = array("value" => "0", "label" => "any");
 	$available_memtotal = array();
-	$available_memtotal[] = array("value" => "any", "label" => "any");
+	$available_memtotal[] = array("value" => "0", "label" => "any");
 	$available_swaptotal = array();
-	$available_swaptotal[] = array("value" => "any", "label" => "any");
+	$available_swaptotal[] = array("value" => "0", "label" => "any");
 	foreach($resource_p_array as $res) {
 		$res_id = $res['resource_id'];
 		$tres = new resource();

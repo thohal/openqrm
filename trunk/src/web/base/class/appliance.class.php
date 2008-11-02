@@ -419,6 +419,44 @@ function find_resource($appliance_virtualization) {
 			$virt->get_instance_by_name($restype);
 			$restype_id = $virt->id;
 			if ($restype_id == $appliance_virtualization) {
+				// check the rest of the required parameters for the appliance
+
+				// cpu-number
+				if ((strlen($this->cpunumber)) && (strcmp($this->cpunumber, "0"))) {
+					if (strcmp($this->cpunumber, $resource->cpunumber)) {
+						$event->log("find_resource", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found new resource $resource->id type $virtualization->name for appliance $this->name but it has the wrong CPU-number, skipping.", "", "", 0, 0, $resource_id);
+						continue;
+					}
+				}
+				// cpu-speed
+				if ((strlen($this->cpuspeed)) && (strcmp($this->cpuspeed, "0"))) {
+					if (strcmp($this->cpuspeed, $resource->cpuspeed)) {
+						$event->log("find_resource", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found new resource $resource->id type $virtualization->name for appliance $this->name but it has the wrong CPU-speed, skipping.", "", "", 0, 0, $resource_id);
+						continue;
+					}
+				}
+				// cpu-model
+				if ((strlen($this->cpumodel)) && (strcmp($this->cpumodel, "0"))) {
+					if (strcmp($this->cpumodel, $resource->cpumodel)) {
+						$event->log("find_resource", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found new resource $resource->id type $virtualization->name for appliance $this->name but it has the wrong CPU-model, skipping.", "", "", 0, 0, $resource_id);
+						continue;
+					}
+				}
+				// memtotal
+				if ((strlen($this->memtotal)) && (strcmp($this->memtotal, "0"))) {
+					if (strcmp($this->memtotal, $resource->memtotal)) {
+						$event->log("find_resource", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found new resource $resource->id type $virtualization->name for appliance $this->name but it has the wrong amount of Memory, skipping.", "", "", 0, 0, $resource_id);
+						continue;
+					}
+				}
+				// swaptotal
+				if ((strlen($this->swaptotal)) && (strcmp($this->swaptotal, "0"))) {
+					if (strcmp($this->swaptotal, $resource->swaptotal)) {
+						$event->log("find_resource", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found new resource $resource->id type $virtualization->name for appliance $this->name but it has the wrong amount of Swap, skipping.", "", "", 0, 0, $resource_id);
+						continue;
+					}
+				}
+
 				$found_new_resource=1;
 				$event->log("find_resource", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found new resource $resource->id type $virtualization->name for appliance $this->name .", "", "", 0, 0, $resource_id);
 				break;
