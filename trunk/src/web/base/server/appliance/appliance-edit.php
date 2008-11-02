@@ -29,6 +29,7 @@ if($appliance_id != '') {
 		'appliance_kernelid' => (htmlobject_request('appliance_kernelid') != '') ? htmlobject_request('appliance_kernelid') : $appliance->kernelid,
 		'appliance_imageid' => (htmlobject_request('appliance_imageid') != '') ? htmlobject_request('appliance_imageid') : $appliance->imageid,
 		'appliance_virtualization' => (htmlobject_request('appliance_virtualization') != '') ? htmlobject_request('appliance_virtualization') : $appliance->virtualization,
+		'appliance_cpunumber' => (htmlobject_request('appliance_cpunumber') != '') ? htmlobject_request('appliance_cpunumber') : $appliance->cpunumber,
 		'appliance_cpuspeed' => (htmlobject_request('appliance_cpuspeed') != '') ? htmlobject_request('appliance_cpuspeed') : $appliance->cpuspeed,
 		'appliance_cpumodel' => (htmlobject_request('appliance_cpumodel') != '') ? htmlobject_request('appliance_cpumodel') : $appliance->cpumodel,
 		'appliance_memtotal' => (htmlobject_request('appliance_memtotal') != '') ? htmlobject_request('appliance_memtotal') : $appliance->memtotal,
@@ -125,6 +126,36 @@ function appliance_form() {
 	$virtualization = new virtualization();
 	$virtualization_list = array();
 	$virtualization_list = $virtualization->get_list();
+
+	// get list of available resource parameters
+	$resource_p = new resource();
+	$resource_p_array = $resource_p->get_list();
+	// remove openQRM resource
+	array_shift($resource_p_array);
+	// gather all available values in arrays
+	$available_cpuspeed = array();
+	$available_cpuspeed[] = array("value" => "any", "label" => "any");
+	$available_cpunumber = array();
+	$available_cpunumber[] = array("value" => "any", "label" => "any");
+	$available_cpumodel = array();
+	$available_cpumodel[] = array("value" => "any", "label" => "any");
+	$available_memtotal = array();
+	$available_memtotal[] = array("value" => "any", "label" => "any");
+	$available_swaptotal = array();
+	$available_swaptotal[] = array("value" => "any", "label" => "any");
+	foreach($resource_p_array as $res) {
+		$res_id = $res['resource_id'];
+		$tres = new resource();
+		$tres->get_instance_by_id($res_id);
+		$available_cpuspeed[] = array("value" => $tres->cpuspeed, "label" => $tres->cpuspeed);
+		$available_cpunumber[] = array("value" => $tres->cpunumber, "label" => $tres->cpunumber);
+		$available_cpumodel[] = array("value" => $tres->cpumodel, "label" => $tres->cpumodel);
+		$available_memtotal[] = array("value" => $tres->memtotal, "label" => $tres->memtotal);
+		$available_swaptotal[] = array("value" => $tres->swaptotal, "label" => $tres->swaptotal);
+	}
+	$p_appliance = new appliance();
+	$p_appliance->get_instance_by_id($appliance_id);
+	
 
 	// handle no image available or openqrm server as resource
 	if(count($image_list) > 0 || $ar_request['appliance_resources'] == 0) {
@@ -226,10 +257,11 @@ function appliance_form() {
 				'appliance_imageid' => $image,
 				'appliance_virtualization' => htmlobject_select('appliance_virtualization', $virtualization_list, 'Resource', array($ar_request['appliance_virtualization'])),
 				'appliance_name' => htmlobject_input('appliance_name', array("value" => $ar_request['appliance_name'], "label" => 'Name'), 'text', 20),
-				'appliance_cpuspeed' => htmlobject_input('appliance_cpuspeed', array("value" => $ar_request['appliance_cpuspeed'], "label" => 'CPU-Speed'), 'text', 20),
-				'appliance_cpumodel' => htmlobject_input('appliance_cpumodel', array("value" => $ar_request['appliance_cpumodel'], "label" => 'CPU-Model'), 'text', 20),
-				'appliance_memtotal' => htmlobject_input('appliance_memtotal', array("value" => $ar_request['appliance_memtotal'], "label" => 'Memory'), 'text', 20),
-				'appliance_swaptotal' => htmlobject_input('appliance_swaptotal', array("value" => $ar_request['appliance_swaptotal'], "label" => 'Swap'), 'text', 20),
+				'appliance_cpunumber' => htmlobject_select('appliance_cpunumber', $available_cpunumber, 'CPUs', array($p_appliance->cpunumber)),
+				'appliance_cpuspeed' => htmlobject_select('appliance_cpuspeed', $available_cpuspeed, 'CPU-speed', array($p_appliance->cpuspeed)),
+				'appliance_cpumodel' => htmlobject_select('appliance_cpumodel', $available_cpumodel, 'CPU-model', array($p_appliance->cpumodel)),
+				'appliance_memtotal' => htmlobject_select('appliance_memtotal', $available_memtotal, 'Memory', array($p_appliance->memtotal)),
+				'appliance_swaptotal' => htmlobject_select('appliance_swaptotal', $available_swaptotal, 'Swap', array($p_appliance->swaptotal)),
 				'appliance_capabilities' => htmlobject_input('appliance_capabilities', array("value" => $ar_request['appliance_capabilities'], "label" => 'Capabilities'), 'text', 255),
 				'appliance_comment' => htmlobject_textarea('appliance_comment', array("value" => $ar_request['appliance_comment'], "label" => 'Comment')),
 				'appliance_cluster' => htmlobject_input('appliance_cluster', array("value" => 1, "label" => 'Cluster'), 'checkbox', ($ar_request['appliance_cluster'] == 0) ? false : true),

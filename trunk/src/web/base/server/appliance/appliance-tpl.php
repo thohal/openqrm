@@ -19,6 +19,7 @@
 {lang_requirements}
 
 	<div style="float:left;">
+		{appliance_cpunumber}
 		{appliance_cpuspeed}
 		{appliance_cpumodel}
 		{appliance_memtotal}
