@@ -17,6 +17,10 @@ fi
 # only run on vmware-server hosts
 which vmware-cmd 1>/dev/null 2>&1 || exit 0
 
+# do not start on the intitrd
+if [ -f /etc/initrd-devices.conf ]; then
+	exit 0
+fi
 
 function vmware-server_start() {
 	echo "Starting the openQRM vmware-server-plugin"
