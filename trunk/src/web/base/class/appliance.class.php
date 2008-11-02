@@ -187,6 +187,11 @@ function remove_by_name($appliance_name) {
 function start() {
 	global $event;
 	global $RootDir;
+	
+	if ($this->resources < 1) {
+		$event->log("start", $_SERVER['REQUEST_TIME'], 1, "appliance.class.php", "No resource available for appliance $this->id", "", "", 0, 0, 0);
+		return;
+	}
 	$resource = new resource();
 	$resource->get_instance_by_id($this->resources);
 	$kernel = new kernel();
@@ -423,7 +428,7 @@ function find_resource($appliance_virtualization) {
 	// in case no resources are available log another ha-error event !
 	if ($found_new_resource == 0) {
 		$event->log("find_resource", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", "Could not find a free resource type $virtualization->name for appliance $this->name !", "", "", 0, 0, 0);
-		exit(0);
+		return $this;
 	}
 
 	// if we find an resource which fits to the appliance we update it 
