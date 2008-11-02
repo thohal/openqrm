@@ -18,7 +18,7 @@ if(strtolower(OPENQRM_USER_ROLE_NAME) != 'administrator') {
 // set vars from request
 $ar_request = array(
 	'appliance_resources' => @$_REQUEST['identifier'][0],
-	'appliance_name' => htmlobject_request('appliance_name'),
+	'appliance_name' => strtolower(htmlobject_request('appliance_name')),
 	'appliance_kernelid' => htmlobject_request('appliance_kernelid'),
 	'appliance_imageid' => htmlobject_request('appliance_imageid'),
 	'appliance_virtualization' => htmlobject_request('appliance_virtualization'),

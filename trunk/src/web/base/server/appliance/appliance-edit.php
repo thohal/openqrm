@@ -67,7 +67,7 @@ $openqrm_server = new openqrm_server();
 	switch (htmlobject_request('action')) {
 		case 'save':
 			$error = 0;
-
+			$ar_request['appliance_name'] = strtolower($ar_request['appliance_name']);
 			if($ar_request['appliance_name'] != '') {
 				if (ereg("^[A-Za-z0-9_-]*$", $ar_request['appliance_name']) === false) {
 					$strMsg .= 'appliance name must be [A-Za-z0-9_-]<br/>';
