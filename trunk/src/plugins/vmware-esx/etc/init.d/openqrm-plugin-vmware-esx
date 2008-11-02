@@ -37,7 +37,6 @@ function openqrm_plugin_vmware_esx_uninstall() {
 	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD vmware-esx
 	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD vmware-esx-vm
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-esx
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-vmware-esx.tgz
 }
 
 function openqrm_plugin_vmware_esx_init() {
@@ -57,8 +56,6 @@ function openqrm_plugin_vmware_esx_init() {
 	openqrm_server_add_virtualization_type $USERNAME $PASSWORD vmware-esx-vm "VMware-ESX VM"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-esx
-	# link the boot-service
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/boot-service-vmware-esx.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-vmware-esx.tgz
 	
 }
 
