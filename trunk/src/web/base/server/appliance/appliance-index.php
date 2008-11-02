@@ -157,7 +157,7 @@ function appliance_display() {
 		if ($appliance_resources >=0) {
 			// an appliance with a pre-selected resource
 			$resource->get_instance_by_id($appliance_resources);
-			$appliance_resources_str = "$resource->id / $resource->ip";
+			$appliance_resources_str = "$resource->id/$resource->ip";
 		} else {
 			// an appliance with resource auto-select enabled
 			$appliance_resources_str = "auto-select";
