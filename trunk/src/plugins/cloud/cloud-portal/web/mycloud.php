@@ -317,8 +317,16 @@ function my_cloud_create_request() {
 
 	$virtualization = new virtualization();
 	$virtualization_list = array();
+	$virtualization_list_select = array();
 	$virtualization_list = $virtualization->get_list();
 
+	// filter out the virtualization hosts
+	foreach ($virtualization_list as $id => $virt) {
+		if (!strstr($virt[label], "Host")) {
+			$virtualization_list_select[] = array("value" => $virt[value], "label" => $virt[label]);
+			
+		}
+	}
 
 	$disp = "<h1>Create new Cloud Request</h1>";
 	$disp = $disp."<br>";
@@ -354,7 +362,7 @@ function my_cloud_create_request() {
 	
 	$disp = $disp.htmlobject_select('cr_kernel_id', $kernel_list, 'Kernel');
 	$disp = $disp.htmlobject_select('cr_image_id', $image_list, 'Image');
-	$disp = $disp.htmlobject_select('cr_resource_type_req', $virtualization_list, 'Resource type');
+	$disp = $disp.htmlobject_select('cr_resource_type_req', $virtualization_list_select, 'Resource type');
 	
 	$disp = $disp.htmlobject_input('cr_ram_req', array("value" => '', "label" => 'Ram'), 'text', 20);
 	$disp = $disp.htmlobject_input('cr_cpu_req', array("value" => '', "label" => 'Cpu'), 'text', 20);
