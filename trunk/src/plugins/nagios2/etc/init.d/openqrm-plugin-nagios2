@@ -56,7 +56,7 @@ function openqrm_plugin_nagios2_init() {
 	# theme nagios
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/etc/build.conf/nuvola.conf
 	mkdir -p $OPENQRM_TEMP_DIR/nuvola_inst/
-	tar -C $OPENQRM_TEMP_DIR/nuvola_inst/ -zxvf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/theme/nagios-nuvola-$OPENQRM_SOURCE_VERSION.tar.gz
+	tar -C $OPENQRM_TEMP_DIR/nuvola_inst/ -zxf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/theme/nagios-nuvola-$OPENQRM_SOURCE_VERSION.tar.gz
 	cp -r $OPENQRM_TEMP_DIR/nuvola_inst/html/* /usr/share/nagios2/htdocs/
 	rm -rf $OPENQRM_TEMP_DIR/nuvola_inst/
  	# Fix WebGUI for Debian

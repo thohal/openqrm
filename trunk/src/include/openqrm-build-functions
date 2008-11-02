@@ -414,8 +414,10 @@ EOF
 	ln -sf lib lib64
 
 	# take /etc/udev
+	rm -rf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/udev
 	cp -aR /etc/udev $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/ 
 	# and /lib/udev
+	rm -rf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/udev
 	cp -aR /lib/udev $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
 	# take the initial console device
 	cp -aR /dev/console $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/dev/
