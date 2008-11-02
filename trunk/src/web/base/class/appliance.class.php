@@ -406,17 +406,23 @@ function find_resource($appliance_virtualization) {
 		$resource->get_instance_by_id($resource_db["resource_id"]);
 		if (($resource->id > 0) && ("$resource->imageid" == "1") && ("$resource->state" == "active")) {
 			$new_resource_id = $resource->id;	
-			// TODO check capabilities
-
-
-			$found_new_resource=1;
-			$event->log("find_resource", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found new resource $resource->id for appliance $this->name .", "", "", 0, 0, $resource_id);
-			break;
+			// check resource-type
+			$restype = str_replace("VIRTUAL='", '', $resource->capabilities);
+			$nspos = strpos($restype, "'");
+			$restype = substr($restype, 0, $nspos);
+			$virt = new $virtualization();
+			$virt->get_instance_by_name($restype);
+			$restype_id = $virt->id;
+			if ($restype_id == $appliance_virtualization) {
+				$found_new_resource=1;
+				$event->log("find_resource", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found new resource $resource->id type $virtualization->name for appliance $this->name .", "", "", 0, 0, $resource_id);
+				break;
+			}
 		}
 	}	
 	// in case no resources are available log another ha-error event !
 	if ($found_new_resource == 0) {
-		$event->log("find_resource", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", "Could not find a free resource for appliance $this->name !", "", "", 0, 0, 0);
+		$event->log("find_resource", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", "Could not find a free resource type $virtualization->name for appliance $this->name !", "", "", 0, 0, 0);
 		exit(0);
 	}
 
