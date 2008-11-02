@@ -19,6 +19,11 @@ fi
 # only run on xen hosts
 grep -q "control_d" /proc/xen/capabilities 2>/dev/null || exit 0
 
+# do not start on the intitrd
+if [ -f /etc/initrd-devices.conf ]; then
+	exit 0
+fi
+
 function xen_start() {
 	echo "Starting the openQRM xen-plugin"
 	xen_stop 1>/dev/null 2>&1
