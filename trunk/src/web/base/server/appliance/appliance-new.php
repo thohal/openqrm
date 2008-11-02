@@ -113,6 +113,10 @@ function appliance_form() {
 	$virtualization_list = array();
 	$virtualization_list = $virtualization->get_list();
 
+
+
+
+
 	#if(count($image_list) > 0) {
 
 		//-------------------------------------- Form second step
