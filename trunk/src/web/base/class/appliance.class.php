@@ -401,8 +401,10 @@ function find_resource($appliance_virtualization) {
 	$virtualization = new virtualization();
 	$virtualization->get_instance_by_id($appliance_virtualization);
 	$event->log("find_resource", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Trying to find a new resource type $virtualization->name for appliance $this->name .", "", "", 0, 0, $resource_id);
-
-	// for rapid-re-deployment, for now we keep it simple and take the first free resource
+	// we are searching for physical systems when we want to deploy a virtualization host
+	if (strstr($virtualization->name, "Host")) {
+		$appliance_virtualization=1;
+	}
 	$resource_tmp = new resource();
 	$resource_list = array();
 	$resource_list = $resource_tmp->get_list();
