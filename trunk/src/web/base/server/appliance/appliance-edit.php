@@ -78,19 +78,6 @@ $openqrm_server = new openqrm_server();
 				$strMsg .= "appliance name can not be empty<br/>";
 				$error = 1;
 			}
-			if (ereg("^[0-9]*$", $ar_request['appliance_cpuspeed']) === false) {
-				$strMsg .= 'CPU-Speed must be [0-9]<br/>';
-				$error = 1;
-			}			
-			if (ereg("^[0-9]*$", $ar_request['appliance_memtotal']) === false) {
-				$strMsg .= 'Memory must be [0-9]<br/>';
-				$error = 1;
-			}
-			if (ereg("^[0-9]*$", $ar_request['appliance_swaptotal']) === false) {
-				$strMsg .= 'Swap must be [0-9]<br/>';
-				$error = 1;
-			}
-
 
 			if($error == 0) {
 				#$ar_request['appliance_id'] = openqrm_db_get_free_id('appliance_id', $APPLIANCE_INFO_TABLE);
