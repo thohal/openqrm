@@ -18,19 +18,76 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 }
 
 
-if(htmlobject_request('action') != '') {
+if(htmlobject_request('action') != '' && strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
 $strMsg = '';
 
 	switch (htmlobject_request('action')) {
 		case 'remove':
-			if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
-				$storage = new storage();
-				foreach($_REQUEST['identifier'] as $id) {
-					$strMsg .= $storage->remove($id);
-				}
-				redirect($strMsg);
+			switch (htmlobject_request('subaction')) {
+				case '' :
+					if(isset($_REQUEST['id'])) {
+						$i = 0;
+						$str_ident = '';
+						$args = array('action' => 'remove');
+						$checked = array();
+						$arBody = array();
+						$storage = new storage();
+						$deployment = new deployment();
+	
+
+						foreach($_REQUEST['id'] as $id) {
+							$storage->get_instance_by_id($id);
+							$deployment->get_instance_by_id($storage->type);
+							$arBody[$i] = array(
+								'storage_id' => $storage->id,
+								'storage_name' => $storage->name,
+								'storage_type' => $deployment->storagedescription,
+							);
+							$str_ident .= htmlobject_input('identifier[]', array('value' => $id), 'hidden');
+							$args =  array_merge($args, array('id[]' => $value));
+							$checked[] = $id;
+							$i++;
+						}
+						$arHead = array();
+						$arHead['storage_id'] = array();
+						$arHead['storage_id']['title'] ='ID';
+						$arHead['storage_name'] = array();
+						$arHead['storage_name']['title'] ='Name';
+						$arHead['storage_type'] = array();
+						$arHead['storage_type']['title'] ='Storage Type';
+					
+						$table = new htmlobject_table_builder('','','','','','del_');
+						$table->add_headrow('<a href="'.$thisfile.'"><< cancel</a>'.htmlobject_input('action', array('value' => 'remove'), 'hidden').$str_ident);
+						$table->id = 'Tabelle';
+						$table->css = 'htmlobject_table';
+						$table->border = 1;
+						$table->cellspacing = 0;
+						$table->cellpadding = 3;
+						$table->form_action = $thisfile;
+						$table->head = $arHead;
+						$table->body = $arBody;
+						$table->bottom_buttons_name = 'subaction';
+						$table->bottom = array('remove');
+						$table->identifier_checked = $checked;
+						$table->identifier_name = 'delident';
+						$table->identifier = 'storage_id';
+						$table->max = count($arBody);
+
+						$arAction = array("label" => 'Remove Storage', "value" => $table->get_string(), "request" => $args); // change tabs
+					}
+				break;
+				//-----------------------------------------------------------
+				case 'remove' :
+					$storage = new storage();
+					if(isset($_REQUEST['delident'])) {
+						foreach($_REQUEST['delident'] as $id) {
+							$strMsg .= $storage->remove($id);
+						}
+						redirect($strMsg);
+					}
+				break;
 			}
-			break;
+		break;
 	}
 
 }
@@ -126,6 +183,7 @@ function storage_display() {
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('remove');
+		$table->identifier_name = 'id';
 		$table->identifier = 'storage_id';
 	}
 	$table->max = $storage_tmp->get_count();
@@ -136,10 +194,14 @@ function storage_display() {
 
 
 
-$output = array();
-$output[] = array('label' => 'Storage List', 'value' => storage_display());
-if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
-	$output[] = array('label' => 'New Storage', 'target' => 'storage-new.php');
+$ar_tabs = array();
+if(isset($arAction)) {
+	$ar_tabs[] = $arAction;
+} else {
+	$ar_tabs[] = array('label' => 'Storage List', 'value' => storage_display());
+	if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
+		$ar_tabs[] = array('label' => 'New Storage', 'target' => 'storage-new.php');
+	}
 }
 
 ?>
@@ -147,7 +209,7 @@ if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
 <link rel="stylesheet" type="text/css" href="storage.css" />
 <?php
 
-$tabmenu = new htmlobject_tabmenu($output);
+$tabmenu = new htmlobject_tabmenu($ar_tabs);
 $tabmenu->css = 'htmlobject_tabs';
 
 
