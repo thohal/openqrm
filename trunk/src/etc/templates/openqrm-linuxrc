@@ -165,8 +165,6 @@ function prepare_net_init() {
 				sed -e "s/^[ \t]*stop)\(.*\)/stop) exit # added by openqrm \n\1/" /mnt/$INIT_SCRIPT > /mnt/${INIT_SCRIPT}.openqrm
 				mv -f /mnt/${INIT_SCRIPT}.openqrm /mnt/$INIT_SCRIPT
 				chmod +x /mnt/$INIT_SCRIPT
-			else
-				echo "Init script $INIT_SCRIPT already prepared"
 			fi
 		fi
 	done
