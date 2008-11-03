@@ -107,26 +107,47 @@ function appliance_form() {
 	// remove openQRM resource
 	array_shift($resource_p_array);
 	// gather all available values in arrays
+	$available_cpuspeed_uniq = array();
 	$available_cpuspeed = array();
 	$available_cpuspeed[] = array("value" => "0", "label" => "any");
+	$available_cpunumber_uniq = array();
 	$available_cpunumber = array();
 	$available_cpunumber[] = array("value" => "0", "label" => "any");
+	$available_cpumodel_uniq = array();
 	$available_cpumodel = array();
 	$available_cpumodel[] = array("value" => "0", "label" => "any");
+	$available_memtotal_uniq = array();
 	$available_memtotal = array();
 	$available_memtotal[] = array("value" => "0", "label" => "any");
+	$available_swaptotal_uniq = array();
 	$available_swaptotal = array();
 	$available_swaptotal[] = array("value" => "0", "label" => "any");
 	foreach($resource_p_array as $res) {
 		$res_id = $res['resource_id'];
 		$tres = new resource();
 		$tres->get_instance_by_id($res_id);
-		$available_cpuspeed[] = array("value" => $tres->cpuspeed, "label" => $tres->cpuspeed);
-		$available_cpunumber[] = array("value" => $tres->cpunumber, "label" => $tres->cpunumber);
-		$available_cpumodel[] = array("value" => $tres->cpumodel, "label" => $tres->cpumodel);
-		$available_memtotal[] = array("value" => $tres->memtotal, "label" => $tres->memtotal);
-		$available_swaptotal[] = array("value" => $tres->swaptotal, "label" => $tres->swaptotal);
+		if (!in_array($tres->cpuspeed, $available_cpuspeed_uniq)) {
+			$available_cpuspeed[] = array("value" => $tres->cpuspeed, "label" => $tres->cpuspeed);
+			$available_cpuspeed_uniq[] .= $tres->cpuspeed;
+		}
+		if (!in_array($tres->cpunumber, $available_cpunumber_uniq)) {
+			$available_cpunumber[] = array("value" => $tres->cpunumber, "label" => $tres->cpunumber);
+			$available_cpunumber_uniq[] .= $tres->cpunumber;
+		}
+		if (!in_array($tres->cpumodel, $available_cpumodel_uniq)) {
+			$available_cpumodel[] = array("value" => $tres->cpumodel, "label" => $tres->cpumodel);
+			$available_cpumodel_uniq[] .= $tres->cpumodel;
+		}
+		if (!in_array($tres->memtotal, $available_memtotal_uniq)) {
+			$available_memtotal[] = array("value" => $tres->memtotal, "label" => $tres->memtotal);
+			$available_memtotal_uniq[] .= $tres->memtotal;
+		}
+		if (!in_array($tres->swaptotal, $available_swaptotal_uniq)) {
+			$available_swaptotal[] = array("value" => $tres->swaptotal, "label" => $tres->swaptotal);
+			$available_swaptotal_uniq[] .= $tres->swaptotal;
+		}
 	}
+
 
 	#if(count($image_list) > 0) {
 

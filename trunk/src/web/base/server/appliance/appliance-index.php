@@ -87,16 +87,6 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 
 
 
-function appliance_htmlobject_select($name, $value, $title = '', $selected = '') {
-		$html = new htmlobject_select();
-		$html->name = $name;
-		$html->title = $title;
-		$html->selected = $selected;
-		$html->text_index = array("value" => "value", "text" => "label");
-		$html->text = $value;
-		return $html->get_string();
-}
-
 
 function appliance_display() {
 	global $OPENQRM_USER;
