@@ -27,10 +27,7 @@
 		{appliance_capabilities}
 	</div>
 	<div style="float:left; margin:0 0 0 50px;">
-		{appliance_cluster}
-		{appliance_ssi}
-		{appliance_highavailable}
-		{appliance_virtual}
+
 	</div>
 	<div style="clear:both;line-height:0px;">&#160;</div>
 
