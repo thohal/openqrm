@@ -347,6 +347,33 @@ function cloud_create_request() {
 		}
 	}
 
+	// get list of available resource parameters
+	$resource_p = new resource();
+	$resource_p_array = $resource_p->get_list();
+	// remove openQRM resource
+	array_shift($resource_p_array);
+	// gather all available values in arrays
+	$available_cpunumber_uniq = array();
+	$available_cpunumber = array();
+	$available_cpunumber[] = array("value" => "0", "label" => "any");
+	$available_memtotal_uniq = array();
+	$available_memtotal = array();
+	$available_memtotal[] = array("value" => "0", "label" => "any");
+	foreach($resource_p_array as $res) {
+		$res_id = $res['resource_id'];
+		$tres = new resource();
+		$tres->get_instance_by_id($res_id);
+		if (!in_array($tres->cpunumber, $available_cpunumber_uniq)) {
+			$available_cpunumber[] = array("value" => $tres->cpunumber, "label" => $tres->cpunumber);
+			$available_cpunumber_uniq[] .= $tres->cpunumber;
+		}
+		if (!in_array($tres->memtotal, $available_memtotal_uniq)) {
+			$available_memtotal[] = array("value" => $tres->memtotal, "label" => $tres->memtotal);
+			$available_memtotal_uniq[] .= $tres->memtotal;
+		}
+	}
+
+
 	$disp = "<h1>Create new Cloud Request</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
@@ -380,12 +407,12 @@ function cloud_create_request() {
 	$disp = $disp.htmlobject_select('cr_image_id', $image_list, 'Image');
 	$disp = $disp.htmlobject_select('cr_resource_type_req', $virtualization_list_select, 'Resource type');
 	
-	$disp = $disp.htmlobject_input('cr_ram_req', array("value" => '', "label" => 'Ram'), 'text', 20);
-	$disp = $disp.htmlobject_input('cr_cpu_req', array("value" => '', "label" => 'Cpu'), 'text', 20);
-	$disp = $disp.htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk'), 'text', 20);
-	$disp = $disp.htmlobject_input('cr_network_req', array("value" => '', "label" => 'Network'), 'text', 255);
-	$disp = $disp.htmlobject_input('cr_ha_req', array("value" => '', "label" => 'HA'), 'text', 5);
-	$disp = $disp.htmlobject_input('cr_shared_req', array("value" => '', "label" => 'Clone-on-deploy'), 'text', 5);
+	$disp = $disp.htmlobject_select('cr_ram_req', $available_memtotal, 'Memory');
+	$disp = $disp.htmlobject_select('cr_cpu_req', $available_cpunumber, 'CPUs');
+//	$disp = $disp.htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk'), 'text', 20);
+//	$disp = $disp.htmlobject_input('cr_network_req', array("value" => '', "label" => 'Network'), 'text', 255);
+	$disp = $disp.htmlobject_input('cr_ha_req', array("value" => 1, "label" => 'Highavailable'), 'checkbox', false);
+	$disp = $disp.htmlobject_input('cr_shared_req', array("value" => 1, "label" => 'Clone-on-deploy'), 'checkbox', false);
 
 	$disp = $disp."<input type=hidden name='cloud_command' value='create_request'>";
 	$disp = $disp."<br>";

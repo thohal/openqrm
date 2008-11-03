@@ -5,18 +5,18 @@
   <!--
    -->
   </style>
-  <script type="text/javascript" language="javascript" src="js/datetimepicker.js"></script>
+  <script type="text/javascript" language="javascript" src="../js/datetimepicker.js"></script>
   <script language="JavaScript">
 	<!--
 		if (document.images)
 		{
 		calimg= new Image(16,16); 
-		calimg.src="img/cal.gif"; 
+		calimg.src="../img/cal.gif"; 
 		}
 	//-->
 </script>
-<link type="text/css" rel="stylesheet" href="css/calendar.css">
-<link rel="stylesheet" type="text/css" href="css/mycloud.css" />
+<link type="text/css" rel="stylesheet" href="../css/calendar.css">
+<link rel="stylesheet" type="text/css" href="../css/mycloud.css" />
 
 </head>
 
@@ -26,6 +26,7 @@
 $thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
+$DocRoot = $_SERVER["DOCUMENT_ROOT"];
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/kernel.class.php";
@@ -57,6 +58,17 @@ foreach ($_REQUEST as $key => $value) {
 	if (strncmp($key, "cr_", 3) == 0) {
 		$request_fields[$key] = $value;
 	}
+}
+// set ha clone-on deploy
+if (!strcmp($request_fields['cr_ha_req'], "on")) {
+	$request_fields['cr_ha_req']=1;
+} else {
+	$request_fields['cr_ha_req']=0;
+}
+if (!strcmp($request_fields['cr_shared_req'], "on")) {
+	$request_fields['cr_shared_req']=1;
+} else {
+	$request_fields['cr_shared_req']=0;
 }
 
 
@@ -148,6 +160,7 @@ if(htmlobject_request('action') != '') {
 			$stopp = $request_fields['cr_stop'];
 			$tstop = date_to_timestamp($stopp);
 			$request_fields['cr_stop'] = $tstop;
+
 			// id
 			$request_fields['cr_id'] = openqrm_db_get_free_id('cr_id', $CLOUD_REQUEST_TABLE);
 			$cr_request = new cloudrequest();
@@ -190,10 +203,6 @@ function my_cloud_manager() {
 	$table = new htmlobject_db_table('cr_id');
 
 	$disp = "<h1>My Cloud Requests</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<b><a href=\"$thisfile?action=create\">Create new Cloud Request</a></b>";
-	$disp = $disp."<br>";
 	$arHead = array();
 
 	$arHead['cr_id'] = array();
@@ -328,6 +337,34 @@ function my_cloud_create_request() {
 		}
 	}
 
+	// get list of available resource parameters
+	$resource_p = new resource();
+	$resource_p_array = $resource_p->get_list();
+	// remove openQRM resource
+	array_shift($resource_p_array);
+	// gather all available values in arrays
+	$available_cpunumber_uniq = array();
+	$available_cpunumber = array();
+	$available_cpunumber[] = array("value" => "0", "label" => "any");
+	$available_memtotal_uniq = array();
+	$available_memtotal = array();
+	$available_memtotal[] = array("value" => "0", "label" => "any");
+	foreach($resource_p_array as $res) {
+		$res_id = $res['resource_id'];
+		$tres = new resource();
+		$tres->get_instance_by_id($res_id);
+		if (!in_array($tres->cpunumber, $available_cpunumber_uniq)) {
+			$available_cpunumber[] = array("value" => $tres->cpunumber, "label" => $tres->cpunumber);
+			$available_cpunumber_uniq[] .= $tres->cpunumber;
+		}
+		if (!in_array($tres->memtotal, $available_memtotal_uniq)) {
+			$available_memtotal[] = array("value" => $tres->memtotal, "label" => $tres->memtotal);
+			$available_memtotal_uniq[] .= $tres->memtotal;
+		}
+	}
+
+
+
 	$disp = "<h1>Create new Cloud Request</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
@@ -349,13 +386,13 @@ function my_cloud_create_request() {
 
 	$disp = $disp."Start time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\">";
 	$disp = $disp."<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)\">";
-	$disp = $disp."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+	$disp = $disp."<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
 	$disp = $disp."</a>";
 	$disp = $disp."<br>";
 	
 	$disp = $disp."Stop time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\">";
 	$disp = $disp."<a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
-	$disp = $disp."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+	$disp = $disp."<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
 	$disp = $disp."</a>";
 	$disp = $disp."<br>";
 
@@ -363,13 +400,12 @@ function my_cloud_create_request() {
 	$disp = $disp.htmlobject_select('cr_kernel_id', $kernel_list, 'Kernel');
 	$disp = $disp.htmlobject_select('cr_image_id', $image_list, 'Image');
 	$disp = $disp.htmlobject_select('cr_resource_type_req', $virtualization_list_select, 'Resource type');
-	
-	$disp = $disp.htmlobject_input('cr_ram_req', array("value" => '', "label" => 'Ram'), 'text', 20);
-	$disp = $disp.htmlobject_input('cr_cpu_req', array("value" => '', "label" => 'Cpu'), 'text', 20);
-	$disp = $disp.htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk'), 'text', 20);
-	$disp = $disp.htmlobject_input('cr_network_req', array("value" => '', "label" => 'Network'), 'text', 255);
-	$disp = $disp.htmlobject_input('cr_ha_req', array("value" => '', "label" => 'HA'), 'text', 5);
-	$disp = $disp.htmlobject_input('cr_shared_req', array("value" => '', "label" => 'Clone-on-deploy'), 'text', 5);
+	$disp = $disp.htmlobject_select('cr_ram_req', $available_memtotal, 'Memory');
+	$disp = $disp.htmlobject_select('cr_cpu_req', $available_cpunumber, 'CPUs');
+//	$disp = $disp.htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk'), 'text', 20);
+//	$disp = $disp.htmlobject_input('cr_network_req', array("value" => '', "label" => 'Network'), 'text', 255);
+	$disp = $disp.htmlobject_input('cr_ha_req', array("value" => 1, "label" => 'Highavailable'), 'checkbox', false);
+	$disp = $disp.htmlobject_input('cr_shared_req', array("value" => 1, "label" => 'Clone-on-deploy'), 'checkbox', false);
 
 	$disp = $disp."<input type=hidden name='action' value='create_request'>";
 	$disp = $disp."<br>";
@@ -384,21 +420,20 @@ function my_cloud_create_request() {
 
 
 
+
+
 $output = array();
 
-if(htmlobject_request('action') != '') {
-	switch (htmlobject_request('action')) {
-		case 'create':
-			$output[] = array('label' => 'Create Cloud Request', 'value' => my_cloud_create_request());
-			break;
-		default:
-			$output[] = array('label' => 'My Cloud Manager', 'value' => my_cloud_manager());
-			break;
-	}
-} else {
-	$output[] = array('label' => 'My Cloud Manager', 'value' => my_cloud_manager());
-}
+// include header
+include "$DocRoot/cloud-portal/mycloud-head.php";
+
+$output[] = array('label' => 'My Cloud Manager', 'value' => my_cloud_manager());
+$output[] = array('label' => 'Create Cloud Request', 'value' => my_cloud_create_request());
+
 echo htmlobject_tabmenu($output);
+
+// include footer
+include "$DocRoot/cloud-portal/mycloud-bottom.php";
 
 ?>
 

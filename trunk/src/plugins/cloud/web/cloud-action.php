@@ -74,7 +74,17 @@ foreach ($_REQUEST as $key => $value) {
 		$request_fields[$key] = $value;
 	}
 }
-
+// set ha clone-on deploy
+if (!strcmp($request_fields['cr_ha_req'], "on")) {
+	$request_fields['cr_ha_req']=1;
+} else {
+	$request_fields['cr_ha_req']=0;
+}
+if (!strcmp($request_fields['cr_shared_req'], "on")) {
+	$request_fields['cr_shared_req']=1;
+} else {
+	$request_fields['cr_shared_req']=0;
+}
 
 
 function date_to_timestamp($date) {
@@ -122,6 +132,13 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			// cu_forename VARCHAR(50)
 			// cu_lastname VARCHAR(50)
 			// cu_email VARCHAR(50)
+			// cu_street VARCHAR(100)
+			// cu_city VARCHAR(100)
+			// cu_country VARCHAR(100)
+			// cu_phone VARCHAR(100)
+			// cu_status INT(5)
+			// cu_token VARCHAR(100)
+			// cu_bill VARCHAR(100)
 			// 
 			// -> cloudconfig
 			// cc_id INT(5)
@@ -129,7 +146,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			// cc_value VARCHAR(50)
 			
 			$create_cloud_requests = "create table cloud_requests(cr_id INT(5), cr_cu_id INT(5), cr_status INT(5), cr_request_time VARCHAR(20), cr_start VARCHAR(20), cr_stop VARCHAR(20), cr_kernel_id INT(5), cr_image_id INT(5), cr_ram_req VARCHAR(20), cr_cpu_req VARCHAR(20), cr_disk_req VARCHAR(20), cr_network_req VARCHAR(255), cr_resource_type_req VARCHAR(20), cr_deployment_type_req VARCHAR(50), cr_ha_req VARCHAR(5), cr_shared_req VARCHAR(5), cr_appliance_id INT(5))";
-			$create_cloud_users = "create table cloud_users(cu_id INT(5), cu_name VARCHAR(20), cu_password VARCHAR(20), cu_forename VARCHAR(50), cu_lastname VARCHAR(50), cu_email VARCHAR(50))";
+			$create_cloud_users = "create table cloud_users(cu_id INT(5), cu_name VARCHAR(20), cu_password VARCHAR(20), cu_forename VARCHAR(50), cu_lastname VARCHAR(50), cu_email VARCHAR(50), cu_street VARCHAR(100), cu_city VARCHAR(100), cu_country VARCHAR(100), cu_phone VARCHAR(100), cu_status INT(5), cu_token VARCHAR(100), cu_bill VARCHAR(100))";
 			$create_cloud_config = "create table cloud_config(cc_id INT(5), cc_key VARCHAR(50), cc_value VARCHAR(50))";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($create_cloud_requests);
@@ -158,12 +175,14 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 		case 'create_user':
 			echo "creating user $user_name <br>";
 			$user_fields['cu_id'] = openqrm_db_get_free_id('cu_id', $CLOUD_USER_TABLE);
+			// enabled by default
+			$user_fields['cu_status'] = 1;
 			$cl_user = new clouduser();
 			$cl_user->add($user_fields);
 			// add user to htpasswd
 			$username = $user_fields['cu_name'];
 			$password = $user_fields['cu_password'];
-			$openqrm_server_command="htpasswd -b $CloudDir/.htpasswd $username $password";
+			$openqrm_server_command="htpasswd -b $CloudDir/user/.htpasswd $username $password";
 			$output = shell_exec($openqrm_server_command);
 
 			// send mail to user

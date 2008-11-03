@@ -24,6 +24,13 @@ var $password = '';
 var $lastname = '';
 var $forename = '';
 var $email = '';
+var $street = '';
+var $city = '';
+var $country = '';
+var $phone = '';
+var $status = '';
+var $bill = '';
+var $token = '';
 
 
 
@@ -52,6 +59,12 @@ function get_instance($id, $name) {
 		$this->forename = $clouduser["cu_forename"];
 		$this->lastname = $clouduser["cu_lastname"];
 		$this->email = $clouduser["cu_email"];
+		$this->street = $clouduser["cu_street"];
+		$this->city = $clouduser["cu_city"];
+		$this->country = $clouduser["cu_country"];
+		$this->phone = $clouduser["cu_phone"];
+		$this->status = $clouduser["cu_status"];
+		$this->token = $clouduser["cu_token"];
 	}
 	return $this;
 }
@@ -81,9 +94,27 @@ function is_id_free($clouduser_id) {
 	global $CLOUD_USER_TABLE;
 	global $event;
 	$db=openqrm_get_db_connection();
-	$rs = &$db->Execute("select clouduser_id from $CLOUD_USER_TABLE where cu_id=$clouduser_id");
+	$rs = &$db->Execute("select cu_id from $CLOUD_USER_TABLE where cu_id=$clouduser_id");
 	if (!$rs)
 		$event->log("is_id_free", $_SERVER['REQUEST_TIME'], 2, "clouduser.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	else
+	if ($rs->EOF) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+// checks if given clouduser name is free in the db
+function is_name_free($clouduser_name) {
+	global $CLOUD_USER_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	
+	$rs = &$db->Execute("select cu_id from $CLOUD_USER_TABLE where cu_name='$clouduser_name'");
+	if (!$rs)
+		$event->log("is_name_free", $_SERVER['REQUEST_TIME'], 2, "clouduser.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
 	if ($rs->EOF) {
 		return true;
@@ -98,7 +129,7 @@ function add($clouduser_fields) {
 	global $CLOUD_USER_TABLE;
 	global $event;
 	if (!is_array($clouduser_fields)) {
-		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "clouduser.class.php", "coulduser_field not well defined", "", "", 0, 0, 0);
+		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "clouduser.class.php", "clouduser_fields not well defined", "", "", 0, 0, 0);
 		return 1;
 	}
 	// set stop time and status to now
@@ -127,6 +158,13 @@ function remove_by_name($clouduser_name) {
 }
 
 
+// enables user
+function activate_user_status($cu_id, $stat) {
+	global $CLOUD_USER_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute("update $CLOUD_USER_TABLE set cu_status=$stat where cu_id=$cu_id");
+}
 
 
 // returns clouduser name by clouduser_id

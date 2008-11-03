@@ -35,7 +35,7 @@ if(htmlobject_request('action') != '') {
 				$cl_user->get_instance_by_id($id);
 				// remove user from htpasswd
 				$username = $cl_user->name;
-				$openqrm_server_command="htpasswd -D $CloudDir/.htpasswd $username";
+				$openqrm_server_command="htpasswd -D $CloudDir/user/.htpasswd $username";
 				$output = shell_exec($openqrm_server_command);
 				// remove from db
 				$cl_user->remove($id);
@@ -133,6 +133,10 @@ function cloud_create_user() {
 	$disp = $disp.htmlobject_input('cu_forename', array("value" => '', "label" => 'Fore name'), 'text', 50);
 	$disp = $disp.htmlobject_input('cu_lastname', array("value" => '', "label" => 'Last name'), 'text', 50);
 	$disp = $disp.htmlobject_input('cu_email', array("value" => '', "label" => 'Email'), 'text', 50);
+	$disp = $disp.htmlobject_input('cu_street', array("value" => '', "label" => 'Street+number'), 'text', 100);
+	$disp = $disp.htmlobject_input('cu_city', array("value" => '', "label" => 'City'), 'text', 100);
+	$disp = $disp.htmlobject_input('cu_country', array("value" => '', "label" => 'Country'), 'text', 100);
+	$disp = $disp.htmlobject_input('cu_phone', array("value" => '', "label" => 'Phone'), 'text', 100);
 
 	$disp = $disp."<input type=hidden name='cloud_command' value='create_user'>";
 	$disp = $disp."<br>";

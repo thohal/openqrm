@@ -39,8 +39,8 @@ function openqrm_plugin_cloud_uninstall() {
 		exit 1
 	fi
 	# remove auth files
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htaccess
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htpasswd
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/user/.htaccess
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/user/.htpasswd
 	# remove the portal
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/cloud
@@ -104,10 +104,10 @@ function openqrm_plugin_cloud_init() {
 	fi
 	$OPENQRM_WEBSERVER_INIT reload
 	# create the .htaccess file
-	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/httpd/openqrm-htaccess.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htaccess
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/httpd/openqrm-htaccess.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/user/.htaccess
 	# create the default admin user
-	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htpasswd
-	chmod 666 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/.htpasswd
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/user/.htpasswd
+	chmod 666 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/user/.htpasswd
 
 	
 }
