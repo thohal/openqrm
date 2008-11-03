@@ -25,7 +25,9 @@ function highavailability_about() {
 	$disp = $disp."<b>How to use :</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."No manual configuration is needed for the highavailability-plugin.";
+	$disp = $disp."Simply use the HA-Manager to select the appliances which should be high-available.";
+	$disp = $disp." In case of an error openQRM will try to find a new resource fitting to the appliance profile and re-start/re-deploy the appliance.";
+	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	return $disp;
