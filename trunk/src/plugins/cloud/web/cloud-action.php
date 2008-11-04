@@ -157,6 +157,8 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($create_default_cloud_config1);
 			$create_default_cloud_config2 = "insert into cloud_config(cc_id, cc_key, cc_value) values (2, 'auto_provision', 'false')";
 			$recordSet = &$db->Execute($create_default_cloud_config2);
+			$create_default_cloud_config3 = "insert into cloud_config(cc_id, cc_key) values (3, 'external_portal_url')";
+			$recordSet = &$db->Execute($create_default_cloud_config3);
 
 		    $db->Close();
 			break;

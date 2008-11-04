@@ -206,7 +206,14 @@ function cloud_manager() {
 	global $thisfile;
 	$table = new htmlobject_db_table('cr_id');
 
-	$disp = "<h1>Cloud Requests from portal at <a href=\"http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal\">http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal</a></h1>";
+	$cc_conf = new cloudconfig();
+	// get external name
+	$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
+	if (!strlen($external_portal_name)) {
+		$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS";
+	}
+
+	$disp = "<h1>Cloud Requests from portal at <a href=\"$external_portal_name/cloud-portal\">$external_portal_name/cloud-portal</a></h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<b><a href=\"$thisfile?action=create&currenttab=1\">Create new Cloud Request</a></b>";

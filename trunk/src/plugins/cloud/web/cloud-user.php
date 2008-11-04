@@ -18,6 +18,7 @@ require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 // special clouduser class
 require_once "$RootDir/plugins/cloud/class/clouduser.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 
 global $OPENQRM_SERVER_BASE_DIR;
 $refresh_delay=5;
@@ -70,8 +71,15 @@ function cloud_user_manager() {
 	global $thisfile;
 	$table = new htmlobject_db_table('cu_id');
 
+	$cc_conf = new cloudconfig();
+	// get external name
+	$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
+	if (!strlen($external_portal_name)) {
+		$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS";
+	}
 
-	$disp = "<h1>Cloud User Manager for portal at <a href=\"http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal\">http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal</a></h1>";
+
+	$disp = "<h1>Cloud User Manager for portal at <a href=\"$external_portal_name/cloud-portal\">$external_portal_name/cloud-portal</a></h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<b><a href=\"$thisfile?action=create\">Create new Cloud User</a></b>";

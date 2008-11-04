@@ -134,6 +134,11 @@ if(htmlobject_request('action') != '') {
 				// get admin email
 				$cc_conf = new cloudconfig();
 				$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
+				// get external name
+				$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
+				if (!strlen($external_portal_name)) {
+					$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS";
+				}
 				$email = $user_fields['cu_email'];
 				$forename = $user_fields['cu_forename'];
 				$lastname = $user_fields['cu_lastname'];
@@ -143,7 +148,7 @@ if(htmlobject_request('action') != '') {
 				$rmail->from = "$cc_admin_email";
 				$rmail->subject = "openQRM Cloud: Activate your account";
 				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/activate_new_cloud_user.mail.tmpl";
-				$arr = array('@@USER@@'=>"$username", '@@ID@@'=>"$cuid", '@@TOKEN@@'=>"$user_token", '@@OPENQRM_SERVER_IP_ADDRESS@@'=>"$OPENQRM_SERVER_IP_ADDRESS", '@@FORENAME@@'=>"$forename", '@@LASTNAME@@'=>"$lastname");
+				$arr = array('@@USER@@'=>"$username", '@@ID@@'=>"$cuid", '@@TOKEN@@'=>"$user_token", '@@EXTERNALPORTALNAME@@'=>"$external_portal_name", '@@FORENAME@@'=>"$forename", '@@LASTNAME@@'=>"$lastname");
 				$rmail->var_array = $arr;
 				$rmail->send();
 
@@ -189,6 +194,11 @@ if(htmlobject_request('action') != '') {
 				// mail again that account is active now
 				$cc_conf = new cloudconfig();
 				$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
+				// get external name
+				$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
+				if (!strlen($external_portal_name)) {
+					$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS";
+				}
 
 				$email = $cloud_user->email;
 				$forename = $cloud_user->forename;
@@ -198,7 +208,7 @@ if(htmlobject_request('action') != '') {
 				$rmail->from = "$cc_admin_email";
 				$rmail->subject = "openQRM Cloud: Your account has been activated";
 				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/welcome_new_cloud_user.mail.tmpl";
-				$arr = array('@@USER@@'=>"$username", '@@PASSWORD@@'=>"$password", '@@OPENQRM_SERVER_IP_ADDRESS@@'=>"$OPENQRM_SERVER_IP_ADDRESS", '@@FORENAME@@'=>"$forename", '@@LASTNAME@@'=>"$lastname");
+				$arr = array('@@USER@@'=>"$username", '@@PASSWORD@@'=>"$password", '@@EXTERNALPORTALNAME@@'=>"$external_portal_name", '@@FORENAME@@'=>"$forename", '@@LASTNAME@@'=>"$lastname");
 				$rmail->var_array = $arr;
 				$rmail->send();
 

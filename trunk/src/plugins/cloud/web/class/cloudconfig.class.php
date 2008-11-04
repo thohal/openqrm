@@ -142,8 +142,6 @@ function get_value($cloudconfig_id) {
 function set_value($cloudconfig_id, $cloudconfig_value) {
 	global $CLOUD_CONFIG_TABLE;
 	global $event;
-	
-	echo "update $CLOUD_CONFIG_TABLE set cc_value=\"$cloudconfig_value\" where cc_id=$cloudconfig_id <br>";
 	$db=openqrm_get_db_connection();
 	$cloudconfig_set = &$db->Execute("update $CLOUD_CONFIG_TABLE set cc_value=\"$cloudconfig_value\" where cc_id=$cloudconfig_id");
 	if (!$cloudconfig_set) {

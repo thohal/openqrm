@@ -52,7 +52,14 @@ function cloud_config_manager() {
 	global $thisfile;
 	$table = new htmlobject_db_table('cc_id');
 
-	$disp = "<h1>Cloud Configuration for portal at <a href=\"http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal\">http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal</a></h1>";
+	$cc_conf = new cloudconfig();
+	// get external name
+	$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
+	if (!strlen($external_portal_name)) {
+		$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS";
+	}
+
+	$disp = "<h1>Cloud Configuration for portal at <a href=\"$external_portal_name/cloud-portal\">$external_portal_name/cloud-portal</a></h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
@@ -75,7 +82,7 @@ function cloud_config_manager() {
 	foreach ($cc_array as $index => $cc) {
 		$key = $cc["cc_key"];
 		$value = $cc["cc_value"];
-		$input_value="<input type=text name=$key value=$value size=20>";
+		$input_value="<input type=\"text\" name=\"$key\" value=\"$value\" size=20>";
 		$arBody[] = array(
 			'cc_id' => $cc["cc_id"],
 			'cc_key' => $cc["cc_key"],
