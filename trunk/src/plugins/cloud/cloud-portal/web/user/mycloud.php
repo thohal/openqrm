@@ -420,6 +420,22 @@ function my_cloud_create_request() {
 
 
 
+function my_cloud_account_disabled() {
+
+	$cc_conf = new cloudconfig();
+	$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
+
+	$disp = "<h1>Your account has been disabled by the administrator.</h1>";
+	$disp = $disp."<br>";
+	$disp = $disp."<b>For any further informations please contact <a href=\"mailto:$cc_admin_email\">$cc_admin_email</b></a>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	return $disp;
+
+
+}
+
 
 
 $output = array();
@@ -427,8 +443,14 @@ $output = array();
 // include header
 include "$DocRoot/cloud-portal/mycloud-head.php";
 
-$output[] = array('label' => 'My Cloud Manager', 'value' => my_cloud_manager());
-$output[] = array('label' => 'Create Cloud Request', 'value' => my_cloud_create_request());
+$cloudu = new clouduser();
+$cloudu->get_instance_by_name($auth_user);
+if ($cloudu->status == 1) {
+	$output[] = array('label' => 'My Cloud Manager', 'value' => my_cloud_manager());
+	$output[] = array('label' => 'Create Cloud Request', 'value' => my_cloud_create_request());
+} else {
+	$output[] = array('label' => 'Your account has been disabled', 'value' => my_cloud_account_disabled());
+}
 
 echo htmlobject_tabmenu($output);
 

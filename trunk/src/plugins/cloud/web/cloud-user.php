@@ -39,8 +39,22 @@ if(htmlobject_request('action') != '') {
 				$output = shell_exec($openqrm_server_command);
 				// remove from db
 				$cl_user->remove($id);
+			}
+			break;
 
+		case 'enable':
+			foreach($_REQUEST['identifier'] as $id) {
+				$cl_user = new clouduser();
+				$cl_user->get_instance_by_id($id);
+				$cl_user->activate_user_status($id, 1);
+			}
+			break;
 
+		case 'disable':
+			foreach($_REQUEST['identifier'] as $id) {
+				$cl_user = new clouduser();
+				$cl_user->get_instance_by_id($id);
+				$cl_user->activate_user_status($id, 0);
 			}
 			break;
 	}
@@ -82,12 +96,21 @@ function cloud_user_manager() {
 	$arHead['cu_email'] = array();
 	$arHead['cu_email']['title'] ='Email';
 
+	$arHead['cu_status'] = array();
+	$arHead['cu_status']['title'] ='Status';
+
 	$arBody = array();
 
 	// db select
 	$cl_user = new clouduser();
 	$user_array = $cl_user->display_overview(0, 100, 'cu_id', 'ASC');
 	foreach ($user_array as $index => $cu) {
+		$cu_status = $cu["cu_status"];
+		if ($cu_status == 1) {
+			$status_icon = "<img src=\"/cloud-portal/img/active.png\">";
+		} else {
+			$status_icon = "<img src=\"/cloud-portal/img/inactive.png\">";
+		}
 		$arBody[] = array(
 			'cu_id' => $cu["cu_id"],
 			'cu_name' => $cu["cu_name"],
@@ -95,6 +118,7 @@ function cloud_user_manager() {
 			'cu_forename' => $cu["cu_forename"],
 			'cu_lastname' => $cu["cu_lastname"],
 			'cu_email' => $cu["cu_email"],
+			'cu_status' => $status_icon,
 		);
 	}
 
@@ -108,7 +132,7 @@ function cloud_user_manager() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('delete');
+		$table->bottom = array('enable', 'disable', 'delete');
 		$table->identifier = 'cu_id';
 	}
 	$table->max = 100;
