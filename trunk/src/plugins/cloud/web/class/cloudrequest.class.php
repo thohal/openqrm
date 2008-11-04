@@ -44,6 +44,7 @@ var $deployment_type_req = '';
 var $ha_req = '';
 var $shared_req = '';
 var $appliance_id = '';
+var $lastbill = '';
 
 
 // ---------------------------------------------------------------------------------
@@ -75,6 +76,7 @@ function get_instance($id) {
 		$this->ha_req = $cloudrequest["cr_ha_req"];
 		$this->shared_req = $cloudrequest["cr_shared_req"];
 		$this->appliance_id = $cloudrequest["cr_appliance_id"];
+		$this->lastbill = $cloudrequest["cr_lastbill"];
 	}
 	return $this;
 }
@@ -188,6 +190,37 @@ function get_all_ids() {
 	return $cloudrequest_list;
 
 }
+
+// returns the cost of a request (in cc_units)
+function get_cost() {
+	// basic cost
+	$cr_costs = 1;
+	// + per cpu
+	$cr_costs = $cr_costs + $this->cpu_req;
+	// + per nic
+	$cr_costs = $cr_costs + $this->network_req;
+	// ha cost double
+	if (!strcmp($this->ha_req, '1')) {
+		$cr_costs = $cr_costs * 2;
+	}
+	// TODO : disk costs
+	// TODO : network-traffic costs
+	
+	return $cr_costs;	
+}
+
+
+
+// set requests lastbill
+function set_requests_lastbill($cr_id, $timestamp) {
+	global $CLOUD_REQUEST_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute("update $CLOUD_REQUEST_TABLE set cr_lastbill=$timestamp where cr_id=$cr_id");
+}
+
+
+
 
 
 // function to set the status of a request

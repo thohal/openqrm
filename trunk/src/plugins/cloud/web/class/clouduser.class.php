@@ -29,7 +29,7 @@ var $city = '';
 var $country = '';
 var $phone = '';
 var $status = '';
-var $bill = '';
+var $ccunits = '';
 var $token = '';
 
 
@@ -65,6 +65,7 @@ function get_instance($id, $name) {
 		$this->phone = $clouduser["cu_phone"];
 		$this->status = $clouduser["cu_status"];
 		$this->token = $clouduser["cu_token"];
+		$this->ccunits = $clouduser["cu_ccunits"];
 	}
 	return $this;
 }
@@ -164,6 +165,15 @@ function activate_user_status($cu_id, $stat) {
 	global $event;
 	$db=openqrm_get_db_connection();
 	$rs = $db->Execute("update $CLOUD_USER_TABLE set cu_status=$stat where cu_id=$cu_id");
+}
+
+
+// set users ccunits
+function set_users_ccunits($cu_id, $ccunits) {
+	global $CLOUD_USER_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute("update $CLOUD_USER_TABLE set cu_ccunits=$ccunits where cu_id=$cu_id");
 }
 
 

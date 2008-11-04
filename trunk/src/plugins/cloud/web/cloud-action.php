@@ -124,6 +124,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			// cr_ha_req VARCHAR(5)
 			// cr_shared_req VARCHAR(5)
 			// cr_appliance_id INT(5)
+			// cr_lastbill VARCHAR(20)
 			// 
 			// -> cloudusers
 			// cu_id INT(5)
@@ -138,15 +139,15 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			// cu_phone VARCHAR(100)
 			// cu_status INT(5)
 			// cu_token VARCHAR(100)
-			// cu_bill VARCHAR(100)
+			// cu_ccunits BIGINT(10)
 			// 
 			// -> cloudconfig
 			// cc_id INT(5)
 			// cc_key VARCHAR(50)
 			// cc_value VARCHAR(50)
 			
-			$create_cloud_requests = "create table cloud_requests(cr_id INT(5), cr_cu_id INT(5), cr_status INT(5), cr_request_time VARCHAR(20), cr_start VARCHAR(20), cr_stop VARCHAR(20), cr_kernel_id INT(5), cr_image_id INT(5), cr_ram_req VARCHAR(20), cr_cpu_req VARCHAR(20), cr_disk_req VARCHAR(20), cr_network_req VARCHAR(255), cr_resource_type_req VARCHAR(20), cr_deployment_type_req VARCHAR(50), cr_ha_req VARCHAR(5), cr_shared_req VARCHAR(5), cr_appliance_id INT(5))";
-			$create_cloud_users = "create table cloud_users(cu_id INT(5), cu_name VARCHAR(20), cu_password VARCHAR(20), cu_forename VARCHAR(50), cu_lastname VARCHAR(50), cu_email VARCHAR(50), cu_street VARCHAR(100), cu_city VARCHAR(100), cu_country VARCHAR(100), cu_phone VARCHAR(100), cu_status INT(5), cu_token VARCHAR(100), cu_bill VARCHAR(100))";
+			$create_cloud_requests = "create table cloud_requests(cr_id INT(5), cr_cu_id INT(5), cr_status INT(5), cr_request_time VARCHAR(20), cr_start VARCHAR(20), cr_stop VARCHAR(20), cr_kernel_id INT(5), cr_image_id INT(5), cr_ram_req VARCHAR(20), cr_cpu_req VARCHAR(20), cr_disk_req VARCHAR(20), cr_network_req VARCHAR(255), cr_resource_type_req VARCHAR(20), cr_deployment_type_req VARCHAR(50), cr_ha_req VARCHAR(5), cr_shared_req VARCHAR(5), cr_appliance_id INT(5), cr_lastbill VARCHAR(20))";
+			$create_cloud_users = "create table cloud_users(cu_id INT(5), cu_name VARCHAR(20), cu_password VARCHAR(20), cu_forename VARCHAR(50), cu_lastname VARCHAR(50), cu_email VARCHAR(50), cu_street VARCHAR(100), cu_city VARCHAR(100), cu_country VARCHAR(100), cu_phone VARCHAR(100), cu_status INT(5), cu_token VARCHAR(100), cu_ccunits BIGINT(10))";
 			$create_cloud_config = "create table cloud_config(cc_id INT(5), cc_key VARCHAR(50), cc_value VARCHAR(50))";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($create_cloud_requests);
@@ -179,6 +180,8 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$user_fields['cu_id'] = openqrm_db_get_free_id('cu_id', $CLOUD_USER_TABLE);
 			// enabled by default
 			$user_fields['cu_status'] = 1;
+			// no ccunits for now
+			$user_fields['cu_ccunits'] = 0;
 			$cl_user = new clouduser();
 			$cl_user->add($user_fields);
 			// add user to htpasswd
@@ -207,13 +210,20 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$arr = array('@@USER@@'=>"$username", '@@PASSWORD@@'=>"$password", '@@EXTERNALPORTALNAME@@'=>"$external_portal_name", '@@FORENAME@@'=>"$forename", '@@LASTNAME@@'=>"$lastname");
 			$rmail->var_array = $arr;
 			$rmail->send();
-
-
-
 			break;
 
+
 		case 'create_request':
-			echo "creating new cloud request<br>";
+			// check if the user has ccunits
+			$cr_cu_id = $request_fields['cr_cu_id'];
+			$cl_user = new clouduser();
+			$cl_user->get_instance_by_id($cr_cu_id);
+			if ($cl_user->ccunits < 1) {
+				echo "User does not have any ccunits ! Not adding the request<br>";
+				flush();
+				sleep(2);
+				break;
+			}
 			// parse start date
 			$startt = $request_fields['cr_start'];
 			$tstart = date_to_timestamp($startt);
@@ -225,6 +235,8 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			// get next free id
 			$request_fields['cr_id'] = openqrm_db_get_free_id('cr_id', $CLOUD_REQUEST_TABLE);
 			$cr_request = new cloudrequest();
+			// set lastbill to empty
+			$request_fields['cr_lastbill'] = '';
 			// add request
 			$cr_request->add($request_fields);
 
@@ -233,9 +245,6 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$cc_conf = new cloudconfig();
 			$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
 			$cr_id = $request_fields['cr_id'];
-			$cr_cu_id = $request_fields['cr_cu_id'];
-			$cl_user = new clouduser();
-			$cl_user->get_instance_by_id($cr_cu_id);
 			$cu_name = $cl_user->name;
 			$cu_email = $cl_user->email;
 			$rmail = new cloudmailer();

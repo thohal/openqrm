@@ -58,6 +58,16 @@ if(htmlobject_request('action') != '') {
 				$cl_user->activate_user_status($id, 0);
 			}
 			break;
+
+		case 'update':
+			foreach($_REQUEST['identifier'] as $id) {
+				$up_ccunits = $_REQUEST['cu_ccunits'];
+				$cl_user = new clouduser();
+				$cl_user->get_instance_by_id($id);
+				$cl_user->set_users_ccunits($id, $up_ccunits);
+			}
+			break;
+
 	}
 }
 
@@ -77,7 +87,6 @@ function cloud_user_manager() {
 	if (!strlen($external_portal_name)) {
 		$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 	}
-
 
 	$disp = "<h1>Cloud User Manager for portal at <a href=\"$external_portal_name\">$external_portal_name</a></h1>";
 	$disp = $disp."<br>";
@@ -104,6 +113,9 @@ function cloud_user_manager() {
 	$arHead['cu_email'] = array();
 	$arHead['cu_email']['title'] ='Email';
 
+	$arHead['cu_ccunits'] = array();
+	$arHead['cu_ccunits']['title'] ='CC-Units';
+
 	$arHead['cu_status'] = array();
 	$arHead['cu_status']['title'] ='Status';
 
@@ -119,6 +131,13 @@ function cloud_user_manager() {
 		} else {
 			$status_icon = "<img src=\"/cloud-portal/img/inactive.png\">";
 		}
+		// set the ccunits input
+		$ccunits = $cu["cu_ccunits"];
+		if (!strlen($ccunits)) {
+			$ccunits = 0;
+		}
+		$ccunits_input = "<input type=\"text\" name=\"cu_ccunits\" value=\"$ccunits\" size=\"5\ maxsize=\"10\">";
+		
 		$arBody[] = array(
 			'cu_id' => $cu["cu_id"],
 			'cu_name' => $cu["cu_name"],
@@ -126,6 +145,7 @@ function cloud_user_manager() {
 			'cu_forename' => $cu["cu_forename"],
 			'cu_lastname' => $cu["cu_lastname"],
 			'cu_email' => $cu["cu_email"],
+			'cu_ccunits' => $ccunits_input,
 			'cu_status' => $status_icon,
 		);
 	}
@@ -140,7 +160,7 @@ function cloud_user_manager() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('enable', 'disable', 'delete');
+		$table->bottom = array('update', 'enable', 'disable', 'delete');
 		$table->identifier = 'cu_id';
 	}
 	$table->max = 100;

@@ -67,6 +67,18 @@ function openqrm_cloud_monitor() {
 		$cu->get_instance_by_id($cr_cu_id);
 		$cu_name = $cu->name;
 
+		// #################### auto-provisioning ################################		
+		// here we only care about the requests status new and set them to approved (2)
+		if ($cr_status == 1) {
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Found new request ID $cr_id. Checking if Auto-provisioning is enabled", "", "", 0, 0, 0);
+			$cc_conf = new cloudconfig();
+			$cc_auto_provision = $cc_conf->get_value(2);  // 1 is auto_provision
+			if (!strcmp($cc_auto_provision, "true")) {
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Found new request ID $cr_id. Auto-provisioning is enabled! Approving the request", "", "", 0, 0, 0);
+				$cr->setstatus($cr_id, "approve");
+			}
+		}
+
 		// #################### provisioning ################################		
 		// provision, only care about approved requests
 		if ($cr_status == 2) {
@@ -163,9 +175,55 @@ function openqrm_cloud_monitor() {
 			$rmail->send();
 
 			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Provisioning request ID $cr_id finished", "", "", 0, 0, 0);
+		}
 
-		} else {
-			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Request ID $cr_id not approved", "", "", 0, 0, 0);
+
+		// #################### monitoring for billing ################################		
+		// billing, only care about active requests
+
+		if ($cr_status == 3) {
+
+//			$one_hour = 3600;
+// for testing
+			$one_hour = 36;
+
+			$now=$_SERVER['REQUEST_TIME'];
+
+			$cu_id = $cr->cu_id;
+			$cu = new clouduser();
+			$cu->get_instance_by_id($cu_id);
+			$cu_ccunits = $cu->ccunits;
+			// in case the user has no ccunits any more we set the status to deprovision
+			if ($cu_ccunits <= 0) {
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "User $cu->name does not have any CC-Untis left for request ID $cr_id, deprovisioning.", "", "", 0, 0, 0);
+				$cr->setstatus($cr_id, "deprovsion");
+				continue;
+			}
+
+			$cr_lastbill = $cr->lastbill;
+			if (!strlen($cr_lastbill)) {
+				// we set the last-bill time to now and bill
+				$cr->set_requests_lastbill($cr_id, $now);
+				$cr_costs = $cr->get_cost();
+				$cu_ccunits = $cu_ccunits-$cr_costs;
+				$cu->set_users_ccunits($cu_id, $cu_ccunits);
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Billing (first hour) user $cu->name for request ID $cr_id", "", "", 0, 0, 0);
+			} else {
+				// we check if we need to bill according the last-bill var
+				$active_cr_time = $now - $cr_lastbill;
+				if ($active_cr_time >= $one_hour) {
+					// set lastbill to now
+					$cr->set_requests_lastbill($cr_id, $now);
+					// bill for an hour
+					$cr_costs = $cr->get_cost();
+					$cu_ccunits = $cu_ccunits-$cr_costs;
+					$cu->set_users_ccunits($cu_id, $cu_ccunits);
+					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Billing (an hour) user $cu->name for request ID $cr_id", "", "", 0, 0, 0);
+				}
+			}
+
+
+
 		}
 
 
@@ -212,14 +270,17 @@ function openqrm_cloud_monitor() {
 		// set request status to 6 = done
 		$cr->setstatus($cr_id, "done");
 
+		// set lastbill empty
+		$cu_id = $cr->cu_id;
+		$cu = new clouduser();
+		$cu->get_instance_by_id($cu_id);
+		$cu->set_users_lastbill($cu_id, '');
+
 		// send mail to user for deprovision started
 		// get admin email
 		$cc_conf = new cloudconfig();
 		$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
 		// get user + request + appliance details
-		$cu_id = $cr->cu_id;
-		$cu = new clouduser();
-		$cu->get_instance_by_id($cu_id);
 		$cu_name = $cu->name;
 		$cu_forename = $cu->forename;
 		$cu_lastname = $cu->lastname;
@@ -244,6 +305,7 @@ function openqrm_cloud_monitor() {
 		// remove appliance			
 		$appliance->remove($cr_appliance_id);
 		$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Deprovisioning request ID $cr_id finished", "", "", 0, 0, 0);
+
 		
 	
 	}
