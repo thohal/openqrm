@@ -107,8 +107,8 @@ function openqrm_cloud_monitor() {
 			$appliance->find_resource($appliance_virtualization);
 			// check if we got a resource !
 			$appliance->get_instance_by_id($appliance_id);
-			if ($appliance->id == -1) {
-				$event->log("cloud", $_SERVER['REQUEST_TIME'], 1, "cloud-monitor", "Could not find a resource for request ID $cr_id", "", "", 0, 0, 0);
+			if ($appliance->resources == -1) {
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Could not find a resource for request ID $cr_id", "", "", 0, 0, 0);
 				continue;
 			}
 			// before we assign + start the appliance we generate a random passwor to send to the user
