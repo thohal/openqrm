@@ -100,7 +100,7 @@ function openqrm_cloud_monitor() {
 			// create + start the appliance :)
 			$appliance = new appliance();
 			$appliance->add($ar_request);
-
+			
 			// lets find a resource for this new appliance
 			$appliance->get_instance_by_id($appliance_id);
 			$appliance_virtualization=$cr->resource_type_req;
@@ -111,6 +111,11 @@ function openqrm_cloud_monitor() {
 				$event->log("cloud", $_SERVER['REQUEST_TIME'], 1, "cloud-monitor", "Could not find a resource for request ID $cr_id", "", "", 0, 0, 0);
 				continue;
 			}
+			// before we assign + start the appliance we generate a random passwor to send to the user
+			$image = new image();
+			$appliance_password = $image->generatePassword(8);
+			$image->set_root_password($cr->image_id, $appliance_password);
+
 			// assign the resource
 			$kernel = new kernel();
 			$kernel->get_instance_by_id($appliance->kernelid);
@@ -149,9 +154,6 @@ function openqrm_cloud_monitor() {
 			$resource = get_instance_by_id($appliance->resources);
 			$resource_ip = $resource->ip;
 			
-			// generate password 
-			$appliance_password = "test";
-
 			$rmail = new cloudmailer();
 			$rmail->to = "$cu_email";
 			$rmail->from = "$cc_admin_email";
