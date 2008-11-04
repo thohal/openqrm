@@ -123,15 +123,14 @@ function openqrm_cloud_monitor() {
 			$resource->get_instance_by_id($appliance->resources);
 			// send command to the openQRM-server
 			$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac $kernel->name");
-			
+
 			//start the appliance
 			$appliance->start();
-
+			
 			// update appliance id in request
 			$cr->setappliance($cr_id, $appliance_id);
 			// update request status
 			$cr->setstatus($cr_id, "active");
-			
 			// send mail to user
 			// get admin email
 			$cc_conf = new cloudconfig();
@@ -151,21 +150,19 @@ function openqrm_cloud_monitor() {
 			$stop = date("d-m-Y H-i", $cr_stop);
 			// appliance infos
 			$resource = new resource();
-			$resource = get_instance_by_id($appliance->resources);
+			$resource->get_instance_by_id($appliance->resources);
 			$resource_ip = $resource->ip;
-			
+		
 			$rmail = new cloudmailer();
 			$rmail->to = "$cu_email";
 			$rmail->from = "$cc_admin_email";
 			$rmail->subject = "openQRM Cloud: Your request $id is now active";
 			$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/active_cloud_request.mail.tmpl";
-			$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@PASSWORD@@'=>"$appliance_password", '@@IP@@'=>"$resource_ip");
+			$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@PASSWORD@@'=>"$appliance_password", '@@IP@@'=>"$resource_ip");
 			$rmail->var_array = $arr;
 			$rmail->send();
 
 			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Provisioning request ID $cr_id finished", "", "", 0, 0, 0);
-
-
 
 		} else {
 			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Request ID $cr_id not approved", "", "", 0, 0, 0);
@@ -240,7 +237,7 @@ function openqrm_cloud_monitor() {
 		$rmail->from = "$cc_admin_email";
 		$rmail->subject = "openQRM Cloud: Your request $id is fully deprovisioned now";
 		$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/done_cloud_request.mail.tmpl";
-		$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@IP@@'=>"$resource_ip");
+		$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@IP@@'=>"$resource_ip");
 		$rmail->var_array = $arr;
 		$rmail->send();
 
