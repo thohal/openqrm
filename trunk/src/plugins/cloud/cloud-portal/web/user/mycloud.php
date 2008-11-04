@@ -52,6 +52,7 @@ global $CLOUD_REQUEST_TABLE;
 
 // who are you ?
 $auth_user = $_SERVER['PHP_AUTH_USER'];
+global $auth_user;
 
 // gather request parameter in array
 foreach ($_REQUEST as $key => $value) {
@@ -200,6 +201,7 @@ function my_cloud_manager() {
 
 	global $OPENQRM_USER;
 	global $thisfile;
+	global $auth_user;
 	$table = new htmlobject_db_table('cr_id');
 
 	$disp = "<h1>My Cloud Requests</h1>";
@@ -236,6 +238,11 @@ function my_cloud_manager() {
 		$cu_tmp = new clouduser();
 		$cu_tmp_id = $cr["cr_cu_id"];
 		$cu_tmp->get_instance_by_id($cu_tmp_id);
+	
+		// only display our own requests
+		if (strcmp($cu_tmp->name, $auth_user)) {
+			continue;
+		}
 		
 		// status
 		$cr_status = $cr["cr_status"];
