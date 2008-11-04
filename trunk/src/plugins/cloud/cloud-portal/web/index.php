@@ -76,6 +76,15 @@ if(htmlobject_request('action') != '') {
 			check_param("Country", $user_fields['cu_country']);
 			check_param("Phone", $user_fields['cu_phone']);
 
+			// email valid ?
+			$cloud_email = new clouduser();
+			if (!$cloud_email->checkEmail($user_fields['cu_email'])) {
+				$strMsg = "Email address is invalid. <br>";
+				$c_error = 1;
+				redirect($strMsg, tab1);
+				exit(0);
+			}
+
 			// password equal ?
 			if (strcmp($user_fields['cu_password'], $user_fields['cu_password_check'])) {
 				$strMsg = "Passwords are not equal <br>";

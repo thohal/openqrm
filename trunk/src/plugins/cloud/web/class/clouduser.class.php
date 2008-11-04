@@ -231,6 +231,21 @@ function get_all_ids() {
 }
 
 
+function checkEmail($email) {  
+	if(eregi("^[a-zA-Z0-9_]+@[a-zA-Z0-9\-]+\.[a-zA-Z0-9\-\.]+$]", $email)) {  
+		return false;  
+	}
+	list($Username, $Domain) = split("@",$email);  
+	if(getmxrr($Domain, $MXHost)) {  
+		return true;  
+	} else {  
+		if(@fsockopen($Domain, 25, $errno, $errstr, 30)) {
+			return true;  
+		} else {  
+			return false;  
+		}  
+	}  
+}  
 
 
 // displays the clouduser-overview
