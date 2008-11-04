@@ -149,6 +149,13 @@ if(htmlobject_request('action') != '') {
 		case 'create_request':
 			$request_user = new clouduser();
 			$request_user->get_instance_by_name("$auth_user");
+			if ($request_user->ccunits < 1) {
+				echo "You do not have any CloudComputing-Units left! Please buy some CC-Units before submitting a request.<br>";
+				flush();
+				sleep(2);
+				break;
+			}
+
 			// set user id
 			$request_user_id = $request_user->id;
 			$request_fields['cr_cu_id'] = $request_user_id;
@@ -460,6 +467,98 @@ function back_to_home() {
 
 
 
+function mycloud_account() {
+
+	global $OPENQRM_USER;
+	global $OPENQRM_SERVER_IP_ADDRESS;
+	global $thisfile;
+	global $auth_user;
+
+	$table = new htmlobject_db_table('cu_id');
+
+	$disp = "<h1>My Cloud-Account details</h1>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$arHead = array();
+
+	$arHead['cu_id'] = array();
+	$arHead['cu_id']['title'] ='ID';
+
+	$arHead['cu_name'] = array();
+	$arHead['cu_name']['title'] ='Name';
+
+	$arHead['cu_password'] = array();
+	$arHead['cu_password']['title'] ='Password';
+
+	$arHead['cu_fore_name'] = array();
+	$arHead['cu_fore_name']['title'] ='Fore name';
+
+	$arHead['cu_last_name'] = array();
+	$arHead['cu_last_name']['title'] ='Last name';
+
+	$arHead['cu_email'] = array();
+	$arHead['cu_email']['title'] ='Email';
+
+	$arHead['cu_ccunits'] = array();
+	$arHead['cu_ccunits']['title'] ='CC-Units';
+
+	$arHead['cu_status'] = array();
+	$arHead['cu_status']['title'] ='Status';
+
+	$arBody = array();
+
+	// db select
+	$cl_user = new clouduser();
+	$user_array = $cl_user->display_overview(0, 100, 'cu_id', 'ASC');
+	foreach ($user_array as $index => $cu) {
+
+		// only display our user record
+		if (strcmp($auth_user, $cu["cu_name"])) {
+			continue;
+		}
+	
+		$cu_status = $cu["cu_status"];
+		if ($cu_status == 1) {
+			$status_icon = "<img src=\"/cloud-portal/img/active.png\">";
+		} else {
+			$status_icon = "<img src=\"/cloud-portal/img/inactive.png\">";
+		}
+		// set the ccunits input
+		$ccunits = $cu["cu_ccunits"];
+		if (!strlen($ccunits)) {
+			$ccunits = 0;
+		}
+		
+		$arBody[] = array(
+			'cu_id' => $cu["cu_id"],
+			'cu_name' => $cu["cu_name"],
+			'cu_password' => $cu["cu_password"],
+			'cu_forename' => $cu["cu_forename"],
+			'cu_lastname' => $cu["cu_lastname"],
+			'cu_email' => $cu["cu_email"],
+			'cu_ccunits' => $ccunits,
+			'cu_status' => $status_icon,
+		);
+	}
+
+	$table->id = 'Tabelle';
+	$table->css = 'htmlobject_table';
+	$table->border = 1;
+	$table->cellspacing = 0;
+	$table->cellpadding = 3;
+	$table->form_action = $thisfile;
+	$table->identifier_type = "checkbox";
+	$table->identifier_disabled = array($cu["cu_id"]);
+	$table->head = $arHead;
+	$table->body = $arBody;
+	$table->identifier = 'cu_id';
+	$table->max = 100;
+	return $disp.$table->get_string();
+}
+
+
+
 $output = array();
 
 // include header
@@ -471,6 +570,7 @@ if ($cloudu->status == 1) {
 	$output[] = array('label' => 'My Cloud Manager', 'value' => my_cloud_manager());
 	$output[] = array('label' => 'Create Cloud Request', 'value' => my_cloud_create_request());
 	$output[] = array('label' => 'My Cloud Appliances', 'value' => my_cloud_appliances());
+	$output[] = array('label' => 'My Cloud Account', 'value' => mycloud_account());
 	$output[] = array('label' => 'Logout', 'value' => back_to_home());
 } else {
 	$output[] = array('label' => 'Your account has been disabled', 'value' => my_cloud_account_disabled());
