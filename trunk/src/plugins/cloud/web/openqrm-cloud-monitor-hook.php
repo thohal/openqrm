@@ -271,10 +271,7 @@ function openqrm_cloud_monitor() {
 		$cr->setstatus($cr_id, "done");
 
 		// set lastbill empty
-		$cu_id = $cr->cu_id;
-		$cu = new clouduser();
-		$cu->get_instance_by_id($cu_id);
-		$cu->set_users_lastbill($cu_id, '');
+		$cr->set_requests_lastbill($cr_id, '');
 
 		// send mail to user for deprovision started
 		// get admin email
