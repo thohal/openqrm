@@ -24,6 +24,10 @@ global $OPENQRM_SERVER_BASE_DIR;
 global $CLOUD_IPGROUP_TABLE;
 $refresh_delay=5;
 
+$openqrm_server = new openqrm_server();
+$OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
+global $OPENQRM_SERVER_IP_ADDRESS;
+
 // gather ipgroup parameter in array
 foreach ($_REQUEST as $key => $value) {
 	if (strncmp($key, "ig_", 3) == 0) {
@@ -75,7 +79,7 @@ function cloud_ipgroup_manager() {
 	if (!strlen($external_portal_name)) {
 		$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 	}
-
+	
 	$disp = "<h1>Cloud IpGroups for portal at <a href=\"$external_portal_name\">$external_portal_name</a></h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
