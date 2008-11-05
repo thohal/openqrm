@@ -3,6 +3,16 @@
 	width:25px;
 	vertical-align:top;
 }
+.htmlobject_td.storage_icon {
+	text-align:center;
+	width:25px;
+	vertical-align:top;
+}
+.htmlobject_td.storage_state {
+	text-align:center;
+	width:25px;
+	vertical-align:top;
+}
 .htmlobject_td.storage_name {
 	text-align:left;
 	width:110px;
@@ -25,15 +35,20 @@
 }
 .htmlobject_td.storage_edit {
 	text-align:center;
-	width:80px;
+	width:40px;
 	vertical-align:top;
 }
-.htmlobject_td.identifier {
+.htmlobject_td.id {
 	text-align:center;
 	vertical-align:top;
 	width:20px;
 }
-
+.htmlobject_td.storage_data {
+	text-align:left;
+	width:300px;
+	vertical-align:top;
+	white-space:nowrap;
+}
 
 .htmlobject_td.resource_state {
 	text-align:center;

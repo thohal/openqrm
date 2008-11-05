@@ -1,6 +1,14 @@
 .htmlobject_td {
 	padding:5px !important;
 }
+.htmlobject_td.appliance_icon {
+	text-align:left;
+	vertical-align:top;
+}
+.htmlobject_td.appliance_state {
+	text-align:left;
+	vertical-align:top;
+}
 .htmlobject_td.appliance_id {
 	text-align:center;
 	width:25px;
@@ -26,10 +34,11 @@
 	width:200px;
 	vertical-align:top;
 }
-.htmlobject_td.appliance_type {
+.htmlobject_td.appliance_values {
 	text-align:left;
 	width:300px;
 	vertical-align:top;
+	white-space:nowrap;
 }
 .htmlobject_td.appliance_comment {
 	text-align:left;

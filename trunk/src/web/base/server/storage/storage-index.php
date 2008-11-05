@@ -44,7 +44,7 @@ $strMsg = '';
 								'storage_type' => $deployment->storagedescription,
 							);
 							$str_ident .= htmlobject_input('identifier[]', array('value' => $id), 'hidden');
-							$args =  array_merge($args, array('id[]' => $value));
+							$args =  array_merge($args, array('id[]' => $id));
 							$checked[] = $id;
 							$i++;
 						}
@@ -126,9 +126,15 @@ function storage_display() {
 
 	$arHead['storage_type'] = array();
 	$arHead['storage_type']['title'] ='Storage Type';
+	$arHead['storage_type']['hidden'] = true;
 
 	$arHead['storage_resource_id'] = array();
 	$arHead['storage_resource_id']['title'] ='Resource';
+	$arHead['storage_resource_id']['hidden'] = true;
+
+	$arHead['storage_data'] = array();
+	$arHead['storage_data']['title'] ='Data';
+	$arHead['storage_data']['sortable'] = false;
 
 	$arHead['storage_comment'] = array();
 	$arHead['storage_comment']['title'] ='Comment';
@@ -160,13 +166,18 @@ function storage_display() {
 			$resource_icon_default=$storage_icon;
 		}
 
+		$str = '<b>Type:</b> '.$deployment->storagedescription.'<br>
+				<b>Resource ID:</b> '.$storage_resource->id.'<br>
+				<b>Resource IP:</b> '.$storage_resource->ip;
+
 		$arBody[] = array(
 			'storage_state' => "<img src=$state_icon>",
 			'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 			'storage_id' => $storage_db["storage_id"],
 			'storage_name' => $storage_db["storage_name"],
-			'storage_type' => $deployment->storagedescription,
-			'storage_resource_id' => "$storage_resource->id/$storage_resource->ip",
+			'storage_type' => '',
+			'storage_resource_id' => "",
+			'storage_data' => $str,
 			'storage_comment' => $storage_db["storage_comment"],
 			'storage_edit' => '<a href="storage-edit.php?storage_id='.$storage_db["storage_id"].'&currenttab=tab2">edit</a>',
 		);
