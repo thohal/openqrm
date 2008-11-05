@@ -45,7 +45,11 @@
 	width:300px;
 	vertical-align:top;
 }
-
+.htmlobject_td.appliance_edit {
+	text-align:center;
+	width:40px;
+	vertical-align:top;
+}
 
 .htmlobject_td.identifier {
 	text-align:center;
