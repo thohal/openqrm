@@ -141,11 +141,12 @@ function appliance_display() {
 	$arHead['appliance_type']['sortable'] = false;
 
 	$arHead['appliance_values'] = array();
-	$arHead['appliance_values']['title'] ='Data';
+	$arHead['appliance_values']['title'] ='';
 	$arHead['appliance_values']['sortable'] = false;
 
 	$arHead['appliance_comment'] = array();
-	$arHead['appliance_comment']['title'] ='Comment';
+	$arHead['appliance_comment']['title'] ='';
+	$arHead['appliance_comment']['sortable'] = false;
 
 	$arHead['appliance_edit'] = array();
 	$arHead['appliance_edit']['title'] ='';
@@ -198,8 +199,7 @@ function appliance_display() {
 
 		$str = '<b>Kernel:</b> '.$kernel->name.'<br>
 				<b>Image:</b> '.$image->name.'<br>
-				<b>Resource ID:</b> '.$resource->id.'<br>
-				<b>Resource IP:</b> '.$resource->ip.'<br>
+				<b>Resource:</b> '.$appliance_resources_str.'<br>
 				<b>Type:</b> '.$appliance_virtualization_type;
 
 		$arBody[] = array(

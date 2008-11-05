@@ -133,11 +133,12 @@ function storage_display() {
 	$arHead['storage_resource_id']['hidden'] = true;
 
 	$arHead['storage_data'] = array();
-	$arHead['storage_data']['title'] ='Data';
+	$arHead['storage_data']['title'] ='';
 	$arHead['storage_data']['sortable'] = false;
 
 	$arHead['storage_comment'] = array();
-	$arHead['storage_comment']['title'] ='Comment';
+	$arHead['storage_comment']['title'] ='';
+	$arHead['storage_comment']['sortable'] = false;
 
 	$arHead['storage_edit'] = array();
 	$arHead['storage_edit']['title'] ='';
@@ -166,9 +167,8 @@ function storage_display() {
 			$resource_icon_default=$storage_icon;
 		}
 
-		$str = '<b>Type:</b> '.$deployment->storagedescription.'<br>
-				<b>Resource ID:</b> '.$storage_resource->id.'<br>
-				<b>Resource IP:</b> '.$storage_resource->ip;
+		$str = '<b>Resource:</b> '.$storage_resource->id.' / '.$storage_resource->ip.'<br>
+				<b>Type:</b> '.$deployment->storagedescription;
 
 		$arBody[] = array(
 			'storage_state' => "<img src=$state_icon>",
