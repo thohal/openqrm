@@ -8,3 +8,4 @@
 ..|Cloud User|plugins/cloud/cloud-user.php
 ..|Cloud Requests|plugins/cloud/cloud-manager.php
 ..|Cloud Config|plugins/cloud/cloud-config.php
+..|Cloud IpGroups|plugins/cloud/cloud-ipgroup-manager.php
