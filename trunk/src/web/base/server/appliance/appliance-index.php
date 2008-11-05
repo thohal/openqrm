@@ -87,6 +87,16 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 
 
 
+function appliance_htmlobject_select($name, $value, $title = '', $selected = '') {
+		$html = new htmlobject_select();
+		$html->name = $name;
+		$html->title = $title;
+		$html->selected = $selected;
+		$html->text_index = array("value" => "value", "text" => "label");
+		$html->text = $value;
+		return $html->get_string();
+}
+
 
 function appliance_display() {
 	global $OPENQRM_USER;
@@ -115,15 +125,24 @@ function appliance_display() {
 
 	$arHead['appliance_kernelid'] = array();
 	$arHead['appliance_kernelid']['title'] ='Kernel';
+	$arHead['appliance_kernelid']['hidden'] = true;
 
 	$arHead['appliance_imageid'] = array();
 	$arHead['appliance_imageid']['title'] ='Image';
+	$arHead['appliance_imageid']['hidden'] = true;
 
 	$arHead['appliance_resources'] = array();
-	$arHead['appliance_resources']['title'] ='Resource <small>[id/ip]</small>';
+	$arHead['appliance_resources']['title'] ='Resource';
+	$arHead['appliance_resources']['hidden'] = true;
 
 	$arHead['appliance_type'] = array();
 	$arHead['appliance_type']['title'] ='Type';
+	$arHead['appliance_type']['hidden'] = true;
+	$arHead['appliance_type']['sortable'] = false;
+
+	$arHead['appliance_values'] = array();
+	$arHead['appliance_values']['title'] ='Data';
+	$arHead['appliance_values']['sortable'] = false;
 
 	$arHead['appliance_comment'] = array();
 	$arHead['appliance_comment']['title'] ='Comment';
@@ -147,7 +166,7 @@ function appliance_display() {
 		if ($appliance_resources >=0) {
 			// an appliance with a pre-selected resource
 			$resource->get_instance_by_id($appliance_resources);
-			$appliance_resources_str = "$resource->id/$resource->ip";
+			$appliance_resources_str = "$resource->id / $resource->ip";
 		} else {
 			// an appliance with resource auto-select enabled
 			$appliance_resources_str = "auto-select";
@@ -177,15 +196,22 @@ function appliance_display() {
 		#}
 
 
+		$str = '<b>Kernel:</b> '.$kernel->name.'<br>
+				<b>Image:</b> '.$image->name.'<br>
+				<b>Resource ID:</b> '.$resource->id.'<br>
+				<b>Resource IP:</b> '.$resource->ip.'<br>
+				<b>Type:</b> '.$appliance_virtualization_type;
+
 		$arBody[] = array(
 			'appliance_state' => "<img src=$state_icon>",
 			'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 			'appliance_id' => $appliance_db["appliance_id"],
 			'appliance_name' => $appliance_db["appliance_name"],
-			'appliance_kernelid' => $kernel->name,
-			'appliance_imageid' => $image->name,
-			'appliance_resources' => "$appliance_resources_str",
-			'appliance_type' => $appliance_virtualization_type,
+			'appliance_kernelid' => '',
+			'appliance_imageid' => '',
+			'appliance_resources' => '',
+			'appliance_values' => $str,
+			'appliance_type' => '',
 			'appliance_comment' => $appliance_db["appliance_comment"],
 			'appliance_edit' => $strEdit,
 		);
