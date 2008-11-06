@@ -21,44 +21,68 @@ fi
 
 if ! which screen 1>/dev/null; then
 	echo "ERROR: The 'screen' utility is not installed! Please install and try again."
-	image_shelf_log "ERROR: The 'screen' utility is not installed! Please install and try again."
+	cloud_manager_log "ERROR: The 'screen' utility is not installed! Please install and try again."
 	exit 6
 fi
 
 function cloud_manager_usage() {
-	echo "Usage : $0"
+	echo "Usage : $0 enable-ssl"
 	exit 1
 }
 
 
 # re-run in background via screen
-if [ "$RUN_IN_BACKGROUND" != "true" ]; then
-	export RUN_IN_BACKGROUND=true
-	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-	screen -dmS $SCREEN_NAME $0 $@
-	exit	
-fi
+#if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+#	export RUN_IN_BACKGROUND=true
+#	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+#	screen -dmS $SCREEN_NAME $0 $@
+#	exit	
+#fi
 
-CLOUD_MANAGER_COMMAND=$1
-shift
-while [ $# -ne 0 ]; do
-	case "$1" in
-		*)
-			echo "ERROR: Free commandline arguments are not allowed"
-			cloud_manager_usage
-			exit 6
-			;;
-	esac
-	shift
-done
 
 
 # main
 
-
-
 case "$CLOUD_MANAGER_COMMAND" in 
 
+	enable-ssl)
+		PRIVATE_KEY=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/ssl/private/private.key
+		CERTIFICATE_FILE=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/ssl/cerst/$SERVER.crt
+		VALID_DAYS=3650
+
+		echo Delete old private key and create dir, they may not exist
+		mkdir -p `dirname $PRIVATE_KEY`
+		mkdir -p `dirname $CERTIFICATE_FILE`
+		rm $PRIVATE_KEY
+		echo Create new private/public-keys without passphrase for server
+		openssl genrsa -out $PRIVATE_KEY 1024
+
+		echo Create selfsigned certificate
+		rm $CERTIFICATE_FILE
+		# From man req:
+		#  -x509
+		#    this option outputs a self signed certificate instead
+		#    of a certificate request. This is typically used to
+		#    generate a test certificate or a self signed root CA.
+		#    The extensions added to the certificate (if any) are
+		#    specified in the configuration file.
+
+		openssl req -new \
+		        -days $VALID_DAYS \
+		        -key $PRIVATE_KEY \
+		        -x509 \
+		        -out $CERTIFICATE_FILE
+
+		echo private-keyfile is $PRIVATE_KEY
+		echo server-certificate-file is $CERTIFICATE_FILE	
+		
+		# ;) please do the cat/sed-magic for the ssl https.conf here
+		# the template you will find in the cloud-plugins etc/httpd/ dir
+		# btw: when you source openqrm-server.conf (the main conf file)
+		# you will get the doc-root dir for the different supported linux-distris
+
+		
+		;;
 
 
 	*)
