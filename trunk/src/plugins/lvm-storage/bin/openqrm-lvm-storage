@@ -5,6 +5,8 @@ OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/include/openqrm-plugin-lvm-storage-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/include/openqrm-plugin-aoe-storage-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/include/openqrm-plugin-iscsi-storage-functions
 OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
 if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
@@ -81,6 +83,10 @@ while [ $# -ne 0 ]; do
 			LVM_STORAGE_SERVER_VOLUME_GROUP=$2
 			shift
 			;;
+		-d)	
+			LVM_DISK=$2
+            shift
+            ;;
 		*)
 			echo "ERROR: Free commandline arguments are not allowed"
 			lvm_storage_usage
@@ -295,6 +301,29 @@ case "$LVM_COMMAND" in
 		fi
 		rm -f $STORAGE_STATUS_TMP
 		rm -f $STORAGE_STATUS_TMP.post
+		;;
+	create_aoeblade)
+			# currently just one static shelf !
+			AOE_SHELF=1
+			# slots are dynamic
+			AOE_SLOT=`cat $VBLADECONF | grep disk | awk {' print $3 '} | sort -n -r | head -n 1`
+			AOE_SLOT=$(( AOE_SLOT + 1 ))
+			if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+				. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+				AOE_INTERFACE=$OPENQRM_SERVER_INTERFACE
+			else
+				AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '} | tail -1`
+			fi
+			echo "disk $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $LVM_DISK" >> $VBLADECONF
+			# start vbladed
+			vbladed $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $LVM_DISK
+			;;
+	create_iscsilun)
+		# Lvol2ISCSI-LUN
+		IMAGE_LUN=`cat $IETDCONF | grep Lun | awk {' print $2 '} | sort -n -r | head -n 1`
+		IMAGE_LUN=$(( IMAGE_LUN + 1 ))
+		echo "	Lun $IMAGE_LUN Path=$LVM_DISK" >> $IETDCONF
+		nohup /etc/init.d/iscsi-target restart
 		;;
 	*)
 		lvm_storage_usage
