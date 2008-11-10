@@ -1,7 +1,7 @@
 #!/bin/bash
 # this is the functions file for the aoe-storage-plugin
 
-VBLADECONF=/etc/vblade/vblade.conf
+VBLADECONF=/etc/vblade.conf
 # some definitions
 DEFAULT_IMAGE_SIZE=5000
 AOE_MGMT_LOCK_FILE=/var/run/aoe-storage/aoe-storage-plugin.lock
@@ -89,7 +89,7 @@ function manage_aoe() {
 			# currently just one static shelf !
 			AOE_SHELF=1
 			# slots are dynamic
-			AOE_SLOT=`cat $VBLADECONF | grep disk | awk {' print $3 '} | sort -n -r | head -n 1`
+			AOE_SLOT=`cat $VBLADECONF | grep -v '^#' /etc/$VBLADECONF | awk {' print $3 '} | sort -n -r | head -n 1`
 			AOE_SLOT=$(( AOE_SLOT + 1 ))
 			if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 				. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
@@ -97,7 +97,7 @@ function manage_aoe() {
 			else
 				AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '} | tail -1`
 			fi
-			echo "disk $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME" >> $VBLADECONF
+			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME" >> $VBLADECONF
 			# start vbladed
 			vbladed $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME
 			;;
