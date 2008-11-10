@@ -12,12 +12,37 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 function openqrm_plugin_aoe_storage_start() {
 	echo "Starting the openQRM aoe-storage-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aoe-storage/.running
+	if [ -x /etc/init.d/vblade ]; then
+	/etc/init.d/vblade start; else
+	log_daemon_msg "Starting vblade deaemons" "vblade"
+   if [ `grep -vc '^#\|^$' /etc/$prog.conf` ]
+   then
+        grep -v '^#' /etc/$prog.conf | sed -e 's/       / /g' -e 's/  / /g' | while read line
+        do
+                 start_vblade $line
+        done
+   else
+        echo -n "empty $prog.conf?"
+        echo
+   fi
+   fi
 }
 
 
 function openqrm_plugin_aoe_storage_stop() {
 	echo "Stopping the openQRM aoe-storage-plugin"
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aoe-storage/.running
+	if [ -x /etc/init.d/vblade ]; then
+	/etc/init.d/vblade start; else
+	log_daemon_msg "Stopping vblade daemons" "vblade"
+   log_progress_msg "vblade"
+   for pidfile in `ls /var/run/$prog/*.pid`
+   do
+        kill -9 `cat $pidfile`
+        rm -f $pidfile
+  done
+  echo
+	fi
 }
 
 function openqrm_plugin_aoe_storage_uninstall() {
@@ -101,6 +126,25 @@ function openqrm_plugin_aoe_storage_init() {
 USER=$2
 PASS=$3
 
+### additions for autostarting aoe-blades
+. /lib/lsb/init-functions
+
+RETVAL=0
+prog=vblade
+
+start_vblade() {
+   ALLOWMACS=""
+   [ -n "$5" ] && ALLOWMACS="-m $5"
+   ID="$1-e$2.$3"
+   PID_FILE=/var/run/$prog/${ID}.pid
+   $prog $ALLOWMACS $2 $3 $1 $4 >> /var/log/$prog.log 2>&1 &
+   pid=$i
+   echo $pid > $PID_FILE
+   echo -n $"$4 (e$2.$3@$1) [pid $pid]"
+   [ "$RETVAL" = 0 ] && log_end_msg 0 || log_end_msg 1
+   echo
+}
+
 case "$1" in
 	start)
 		openqrm_plugin_aoe_storage_start
@@ -125,7 +169,3 @@ case "$1" in
 
 esac
 exit $?
-
-
-
-
