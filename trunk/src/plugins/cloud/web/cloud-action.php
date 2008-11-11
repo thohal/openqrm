@@ -225,7 +225,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			// get external name
 			$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
 			if (!strlen($external_portal_name)) {
-				$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS";
+				$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 			}
 			$email = $user_fields['cu_email'];
 			$forename = $user_fields['cu_forename'];
