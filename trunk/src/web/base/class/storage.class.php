@@ -10,7 +10,9 @@
  */
 
 
-class storage {
+class storage
+{
+
 /**
 * storage id
 * @access public
@@ -69,6 +71,12 @@ var $_db_table;
 */
 var $_event;
 
+
+	//--------------------------------------------------
+	/**
+	* Constructor
+	*/
+	//--------------------------------------------------
 	function storage() {
 		$this->init();
 	}
@@ -308,6 +316,10 @@ var $_event;
 	/**
 	* get an array of storages
 	* @access public
+	* @param int $offset
+	* @param int $limit
+	* @param string $sort
+	* @param enum $order [ASC/DESC]
 	* @return array
 	*/
 	//--------------------------------------------------
