@@ -49,14 +49,26 @@ if(htmlobject_request('action') != '') {
 		case 'create_ipgroup':
 			$ig_name = $ipgroup_fields['ig_name'];
 			echo "Creating IpGroup $ipgroup_name <br>";
-			
 			print_r($ipgroup_fields);
 			flush();
-			
 			$ig = new cloudipgroup();
 			$ipgroup_fields['ig_id'] = openqrm_db_get_free_id('ig_id', $CLOUD_IPGROUP_TABLE);
 			$ig->add($ipgroup_fields);
+			break;
 
+		case 'load_ipgroup':
+			$ipgroup = $_REQUEST['ig_id'];
+			$cloud_ips = $_REQUEST['cloud_ips'];
+			$cloud_ips = trim($cloud_ips);
+			$cloud_ips = htmlentities($cloud_ips);
+			$cloud_ips1 = nl2br($cloud_ips);
+			$cloud_ips2 = str_replace("<br />", ",", $cloud_ips1);
+			$cloud_ip_arr = array();
+			$cloud_ip_arr = explode(',', $cloud_ips2);
+
+			echo "Loading IpGroup $ipgroup <br>";
+
+			print_r($cloud_ip_arr);
 
 			break;
 
@@ -93,11 +105,8 @@ function cloud_ipgroup_manager() {
 	$arHead['ig_name'] = array();
 	$arHead['ig_name']['title'] ='Name';
 
-	$arHead['ig_start'] = array();
-	$arHead['ig_start']['title'] ='1. Ip';
-
-	$arHead['ig_stop'] = array();
-	$arHead['ig_stop']['title'] ='Last Ip';
+	$arHead['ig_network'] = array();
+	$arHead['ig_network']['title'] ='Network';
 
 	$arHead['ig_subnet'] = array();
 	$arHead['ig_subnet']['title'] ='Subnet';
@@ -111,6 +120,9 @@ function cloud_ipgroup_manager() {
 	$arHead['ig_dns2'] = array();
 	$arHead['ig_dns2']['title'] ='2. DNS';
 
+	$arHead['ig_activeips'] = array();
+	$arHead['ig_activeips']['title'] ='Active IPs';
+
 	$arBody = array();
 
 	// db select
@@ -121,12 +133,12 @@ function cloud_ipgroup_manager() {
 		$arBody[] = array(
 			'ig_id' => $ipg["ig_id"],
 			'ig_name' => $ipg["ig_name"],
-			'ig_start' => $ipg["ig_start"],
-			'ig_stop' => $ipg["ig_stop"],
+			'ig_network' => $ipg["ig_network"],
 			'ig_subnet' => $ipg["ig_subnet"],
 			'ig_gateway' => $ipg["ig_gateway"],
 			'ig_dns1' => $ipg["ig_dns1"],
 			'ig_dns2' => $ipg["ig_dns2"],
+			'ig_activeips' => $ipg["ig_activeips"],
 		);
 	}
 
@@ -140,7 +152,7 @@ function cloud_ipgroup_manager() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('delete');
+		$table->bottom = array('load-ips', 'delete');
 		$table->identifier = 'ig_id';
 	}
 	$table->max = 100;
@@ -161,8 +173,7 @@ function cloud_create_ipgroup() {
 	$disp = $disp."<br>";
 	$disp = $disp."<form action=$thisfile method=post>";
 	$disp = $disp.htmlobject_input('ig_name', array("value" => '[IpGroup-Name]', "label" => 'Name'), 'text', 20);
-	$disp = $disp.htmlobject_input('ig_start', array("value" => '[start-ip-address]', "label" => 'Start-Ip'), 'text', 20);
-	$disp = $disp.htmlobject_input('ig_stop', array("value" => '[stop-ip-address]', "label" => 'Stop-Ip'), 'text', 20);
+	$disp = $disp.htmlobject_input('ig_network', array("value" => '[network-address]', "label" => 'Network'), 'text', 20);
 	$disp = $disp.htmlobject_input('ig_subnet', array("value" => '[subnet-mask]', "label" => 'Subnet'), 'text', 20);
 	$disp = $disp.htmlobject_input('ig_gateway', array("value" => '[gateway]', "label" => 'Gateway'), 'text', 20);
 	$disp = $disp.htmlobject_input('ig_dns1', array("value" => '[fist-dns-server]', "label" => '1. DNS'), 'text', 20);
@@ -182,6 +193,40 @@ function cloud_create_ipgroup() {
 
 
 
+function cloud_load_ipgroup($ipgroup) {
+
+	global $OPENQRM_USER;
+	global $thisfile;
+
+	$ipg = new cloudipgroup();
+	$ipg->get_instance_by_id($ipgroup);
+
+	$disp = "<h1>Load ip-adresses into Cloud IpGroup $ipg->name</h1>";
+	$disp = $disp."<br>";
+	$disp = $disp."<form action=$thisfile method=post>";
+	$disp = $disp."<table><tr><td>";
+	$disp = $disp."</td><td>";
+	$disp = $disp."Please cut-and-paste a block of ip-addresses for the IpGroup $ipg->name";
+	$disp = $disp." into the box on the right and click 'Load'. to activate them in the Cloud Ip-Pool.";
+	$disp = $disp."</td><td>";
+	$disp = $disp." <textarea name=\"cloud_ips\" cols=\"20\" rows=\"20\"></textarea>";
+	$disp = $disp."<input type=hidden name=ig_id value=$ipgroup>";
+	$disp = $disp."<input type=hidden name='action' value='load_ipgroup'>";
+	$disp = $disp."</td><td>";
+	$disp = $disp."</td></tr><tr><td>";
+	$disp = $disp."</td><td>";
+	$disp = $disp."</td><td>";
+	$disp = $disp."<input type=submit value='Load'>";
+	$disp = $disp."</td><td>";
+	$disp = $disp."</td></tr></table>";
+	$disp = $disp."</form>";
+
+
+
+	return $disp;
+}
+
+
 
 $output = array();
 
@@ -190,6 +235,11 @@ if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'create':
 			$output[] = array('label' => 'Create Cloud IpGroup', 'value' => cloud_create_ipgroup());
+			break;
+		case 'load-ips':
+			foreach($_REQUEST['identifier'] as $id) {
+				$output[] = array('label' => 'Load ip-addresses into IpGroup', 'value' => cloud_load_ipgroup($id));
+			}
 			break;
 		default:
 			$output[] = array('label' => 'Cloud Manager', 'value' => cloud_ipgroup_manager());

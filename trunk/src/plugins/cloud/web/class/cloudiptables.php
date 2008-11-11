@@ -18,14 +18,16 @@ global $event;
 
 class cloudipgroup {
 
-var $ig_id = '';
-var $ig_name = '';
-var $ig_network = '';
-var $ig_subnet = '';
-var $ig_gateway = '';
-var $ig_dns1 = '';
-var $ig_dns2 = '';
-var $ig_activeips = '';
+var $ip_id = '';
+var $ip_ig_id = '';
+var $ip_appliance_id = '';
+var $ip_cr_id = '';
+var $ip_active = '';
+var $ip_address = '';
+var $ip_subnet = '';
+var $ip_gateway = '';
+var $ip_dns1 = '';
+var $ip_dns2 = '';
 
 
 // ---------------------------------------------------------------------------------
@@ -47,14 +49,16 @@ function get_instance($id, $name) {
 	}
 
 	foreach ($cloudipgroup_array as $index => $cloudipgroup) {
-		$this->ig_id = $cloudipgroup["ig_id"];
-		$this->ig_name = $cloudipgroup["ig_name"];
-		$this->ig_network = $cloudipgroup["ig_network"];
-		$this->ig_subnet = $cloudipgroup["ig_subnet"];
-		$this->ig_gateway = $cloudipgroup["ig_gateway"];
-		$this->ig_dns1 = $cloudipgroup["ig_dns1"];
-		$this->ig_dns2 = $cloudipgroup["ig_dns2"];
-		$this->ig_activeips = $cloudipgroup["ig_activeips"];
+		$this->ip_id = $cloudipgroup["ip_id"];
+		$this->ip_ig_id = $cloudipgroup["ip_ig_id"];
+		$this->ip_appliance_id = $cloudipgroup["ip_appliance_id"];
+		$this->ip_cr_id = $cloudipgroup["ip_cr_id"];
+		$this->ip_active = $cloudipgroup["ip_active"];
+		$this->ip_address = $cloudipgroup["ip_address"];
+		$this->ip_subnet = $cloudipgroup["ip_subnet"];
+		$this->ip_gateway = $cloudipgroup["ip_gateway"];
+		$this->ip_dns1 = $cloudipgroup["ip_dns1"];
+		$this->ip_dns2 = $cloudipgroup["ip_dns2"];
 	}
 	return $this;
 }
