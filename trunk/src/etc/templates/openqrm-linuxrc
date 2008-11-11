@@ -81,6 +81,7 @@ function import_kernel() {
 	modprobe ide-generic
 	modprobe ide-disk
 	modprobe ata_piix
+	modprobe sata_nv
 	hwsetup -p
 	umount /tmp_download
 	rmdir /tmp_download
