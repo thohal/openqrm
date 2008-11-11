@@ -222,7 +222,7 @@ var $_event;
 	/**
 	* remove a storage by name
 	* @access public
-	* @param int $storage_name
+	* @param string $storage_name
 	*/
 	//--------------------------------------------------
 	function remove_by_name($storage_name) {

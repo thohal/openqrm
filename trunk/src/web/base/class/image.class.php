@@ -1,4 +1,10 @@
 <?php
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
+require_once "$RootDir/include/openqrm-server-config.php";
+require_once "$RootDir/include/openqrm-database-functions.php";
+require_once "$RootDir/class/event.class.php";
+
+
 /**
  * This class represents a filesystem-image (rootfs) 
  * In combination with a kernel it can be deployed to a resource
@@ -121,9 +127,6 @@ var $_event;
 	//--------------------------------------------------
 	function init() {
 		global $IMAGE_INFO_TABLE, $OPENQRM_SERVER_BASE_DIR;
-		$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
-		require_once "$RootDir/include/openqrm-database-functions.php";
-		require_once "$RootDir/class/event.class.php";
 		$this->_event = new event();
 		$this->_db_table = $IMAGE_INFO_TABLE;
 		$this->_base_dir = $OPENQRM_SERVER_BASE_DIR;
