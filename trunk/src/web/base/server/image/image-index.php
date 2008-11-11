@@ -18,7 +18,7 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	exit;
 }
 
-
+/*
 if(htmlobject_request('action') != '') {
 $strMsg = '';
 
@@ -35,6 +35,82 @@ $strMsg = '';
 	}
 
 }
+*/
+
+
+
+if(htmlobject_request('action') != '' && strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
+$strMsg = '';
+
+	switch (htmlobject_request('action')) {
+		case 'remove':
+			switch (htmlobject_request('subaction')) {
+				case '' :
+					if(isset($_REQUEST['id'])) {
+						$i = 0;
+						$str_ident = '';
+						$args = array('action' => 'remove');
+						$checked = array();
+						$arBody = array();
+						$image = new image();
+
+						foreach($_REQUEST['id'] as $id) {
+							$image->get_instance_by_id($id);
+							#$deployment->get_instance_by_id($image->type);
+							$arBody[$i] = array(
+								'image_id' => $image->id,
+								'image_name' => $image->name,
+								'image_type' => $image->comment,
+							);
+							$str_ident .= htmlobject_input('identifier[]', array('value' => $id), 'hidden');
+							$args =  array_merge($args, array('id[]' => $id));
+							$checked[] = $id;
+							$i++;
+						}
+						$arHead = array();
+						$arHead['image_id'] = array();
+						$arHead['image_id']['title'] ='ID';
+						$arHead['image_name'] = array();
+						$arHead['image_name']['title'] ='Name';
+						$arHead['image_type'] = array();
+						$arHead['image_type']['title'] ='image Type';
+					
+						$table = new htmlobject_table_builder('','','','','','del_');
+						$table->add_headrow('<a href="'.$thisfile.'"><< cancel</a>'.htmlobject_input('action', array('value' => 'remove'), 'hidden').$str_ident);
+						$table->id = 'Tabelle';
+						$table->css = 'htmlobject_table';
+						$table->border = 1;
+						$table->cellspacing = 0;
+						$table->cellpadding = 3;
+						$table->form_action = $thisfile;
+						$table->head = $arHead;
+						$table->body = $arBody;
+						$table->bottom_buttons_name = 'subaction';
+						$table->bottom = array('remove');
+						$table->identifier_checked = $checked;
+						$table->identifier_name = 'delident';
+						$table->identifier = 'image_id';
+						$table->max = count($arBody);
+
+						$arAction = array("label" => 'Remove image', "value" => $table->get_string(), "request" => $args); // change tabs
+					}
+				break;
+				//-----------------------------------------------------------
+				case 'remove' :
+					$image = new image();
+					if(isset($_REQUEST['delident'])) {
+						foreach($_REQUEST['delident'] as $id) {
+							$strMsg .= $image->remove($id);
+						}
+						redirect($strMsg);
+					}
+				break;
+			}
+		break;
+	}
+
+}
+
 
 // we need to include the resource.class after the redirect to not send any header
 require_once "$RootDir/class/resource.class.php";
@@ -121,6 +197,7 @@ function image_display() {
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('remove');
 		$table->identifier = 'image_id';
+		$table->identifier_name = 'id';
 		$table->identifier_disabled = array(1);
 	}
 	$table->max = count($image_array);
@@ -130,10 +207,14 @@ function image_display() {
 }
 
 
-$output = array();
-$output[] = array('label' => 'Image List', 'value' => image_display());
-if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
-	$output[] = array('label' => 'New Image', 'target' => 'image-new.php');
+$ar_tabs = array();
+if(isset($arAction)) {
+	$ar_tabs[] = $arAction;
+} else {
+	$ar_tabs[] = array('label' => 'Image List', 'value' => image_display());
+	if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
+		$ar_tabs[] = array('label' => 'New Image', 'target' => 'image-new.php');
+	}
 }
 
 
@@ -141,6 +222,5 @@ if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
 <link rel="stylesheet" type="text/css" href="image.css" />
 <?php
-echo htmlobject_tabmenu($output);
+echo htmlobject_tabmenu($ar_tabs);
 ?>
-
