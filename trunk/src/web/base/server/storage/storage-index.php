@@ -150,6 +150,8 @@ function storage_display() {
 	$arBody = array();
 	$storage_array = $storage_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 
+	$storagetypes_tmp = array();
+
 	foreach ($storage_array as $index => $storage_db) {
 		$storage = new storage();
 		$storage->get_instance_by_id($storage_db["storage_id"]);
@@ -157,6 +159,9 @@ function storage_display() {
 		$storage_resource->get_instance_by_id($storage->resource_id);
 		$deployment = new deployment();
 		$deployment->get_instance_by_id($storage->type);
+
+		$storagetypes_tmp[] = $deployment->storagetype;
+
 		$resource_icon_default="/openqrm/base/img/resource.png";
 		$storage_icon = "/openqrm/base/plugins/$deployment->storagetype/img/storage.png";
 		$state_icon="/openqrm/base/img/$storage_resource->state.png";
@@ -168,23 +173,35 @@ function storage_display() {
 		}
 
 		$str = '<b>Resource:</b> '.$storage_resource->id.' / '.$storage_resource->ip.'<br>
-				<b>Type:</b> '.$deployment->storagedescription;
+				<b>Storage Type:</b> '.$deployment->storagetype.'<br>
+				<b>Deployment:</b> '.$deployment->name;
 
-		$arBody[] = array(
-			'storage_state' => "<img src=$state_icon>",
-			'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-			'storage_id' => $storage_db["storage_id"],
-			'storage_name' => $storage_db["storage_name"],
-			'storage_type' => '',
-			'storage_resource_id' => "",
-			'storage_data' => $str,
-			'storage_comment' => $storage_db["storage_comment"],
-			'storage_edit' => '<a href="storage-edit.php?storage_id='.$storage_db["storage_id"].'&currenttab=tab2">edit</a>',
-		);
+		if (!strlen(htmlobject_request('storage_filter')) || strstr(htmlobject_request('storage_filter'), $deployment->storagetype )) {
+			$arBody[] = array(
+				'storage_state' => "<img src=$state_icon>",
+				'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+				'storage_id' => $storage_db["storage_id"],
+				'storage_name' => $storage_db["storage_name"],
+				'storage_type' => '',
+				'storage_resource_id' => "",
+				'storage_data' => $str,
+				'storage_comment' => $storage_db["storage_comment"],
+				'storage_edit' => '<a href="storage-edit.php?storage_id='.$storage_db["storage_id"].'&currenttab=tab2">edit</a>',
+			);
+		}
 
 	}
+	
+	$storagetypes_tmp = array_unique($storagetypes_tmp);
+	$storagetypes = array();
+	$storagetypes[] = array('label' => '', 'value' => '');
+	foreach($storagetypes_tmp as $val) {
+		$storagetypes[] = array('label' => $val, 'value' => $val);
+	}
+
 
 	$table->id = 'Tabelle';
+	$table->add_headrow(htmlobject_select('storage_filter', $storagetypes, 'Filter by Type', array(htmlobject_request('storage_filter'))));
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
 	$table->cellspacing = 0;
@@ -197,7 +214,7 @@ function storage_display() {
 		$table->identifier_name = 'id';
 		$table->identifier = 'storage_id';
 	}
-	$table->max = $storage_tmp->get_count();
+	$table->max = count($arBody);
 	#$table->limit = 10;
 	
 	return $disp.$table->get_string();
