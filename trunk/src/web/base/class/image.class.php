@@ -1,10 +1,4 @@
 <?php
-$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
-require_once "$RootDir/include/openqrm-server-config.php";
-require_once "$RootDir/include/openqrm-database-functions.php";
-require_once "$RootDir/class/event.class.php";
-
-
 /**
  * This class represents a filesystem-image (rootfs) 
  * In combination with a kernel it can be deployed to a resource
@@ -19,6 +13,10 @@ require_once "$RootDir/class/event.class.php";
  * @version 1.1 added documentation
  */
 
+	$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
+	require_once "$RootDir/include/openqrm-server-config.php";
+	require_once "$RootDir/include/openqrm-database-functions.php";
+	require_once "$RootDir/class/event.class.php";
 
 
 class image

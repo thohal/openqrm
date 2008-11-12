@@ -9,6 +9,10 @@
  * @version 1.1 added documentation
  */
 
+		$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
+		require_once "$RootDir/include/openqrm-database-functions.php";
+		require_once "$RootDir/class/event.class.php";
+
 
 class storage
 {
@@ -89,9 +93,6 @@ var $_event;
 	//--------------------------------------------------
 	function init() {
 		global $STORAGE_INFO_TABLE;
-		$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
-		require_once "$RootDir/include/openqrm-database-functions.php";
-		require_once "$RootDir/class/event.class.php";
 		$this->_db_table = $STORAGE_INFO_TABLE;
 		$this->_event = new event();
 	}
