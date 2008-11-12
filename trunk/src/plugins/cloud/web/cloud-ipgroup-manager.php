@@ -19,6 +19,7 @@ require_once "$RootDir/include/htmlobject.inc.php";
 // special clouduser class
 require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudipgroup.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudiptables.class.php";
 
 global $OPENQRM_SERVER_BASE_DIR;
 global $CLOUD_IPGROUP_TABLE;
@@ -67,6 +68,9 @@ if(htmlobject_request('action') != '') {
 			$cloud_ip_arr = explode(',', $cloud_ips2);
 
 			echo "Loading IpGroup $ipgroup <br>";
+
+			$cloud_ipt = new cloudiptables();
+			$cloud_ipt->load($ipgroup, $cloud_ip_arr);
 
 			print_r($cloud_ip_arr);
 
@@ -123,6 +127,9 @@ function cloud_ipgroup_manager() {
 	$arHead['ig_activeips'] = array();
 	$arHead['ig_activeips']['title'] ='Active IPs';
 
+	$arHead['ig_list'] = array();
+	$arHead['ig_list']['title'] ='';
+
 	$arBody = array();
 
 	// db select
@@ -130,6 +137,8 @@ function cloud_ipgroup_manager() {
 	$ig_array = array();
 	$ig_array = $ig->display_overview(0, 100, 'ig_id', 'ASC');
 	foreach ($ig_array as $index => $ipg) {
+			$igid = $ipg["ig_id"];
+			$listlink = "<a href=\"cloud-iptables-manager.php?ig_id=$igid\">list</a>";
 		$arBody[] = array(
 			'ig_id' => $ipg["ig_id"],
 			'ig_name' => $ipg["ig_name"],
@@ -139,6 +148,7 @@ function cloud_ipgroup_manager() {
 			'ig_dns1' => $ipg["ig_dns1"],
 			'ig_dns2' => $ipg["ig_dns2"],
 			'ig_activeips' => $ipg["ig_activeips"],
+			'ig_list' => $listlink,
 		);
 	}
 
@@ -221,10 +231,11 @@ function cloud_load_ipgroup($ipgroup) {
 	$disp = $disp."</td></tr></table>";
 	$disp = $disp."</form>";
 
-
-
 	return $disp;
 }
+
+
+
 
 
 

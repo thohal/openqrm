@@ -84,7 +84,7 @@ function is_id_free($cloudipgroup_id) {
 	global $CLOUD_IPGROUP_TABLE;
 	global $event;
 	$db=openqrm_get_db_connection();
-	$rs = &$db->Execute("select cu_id from $CLOUD_IPGROUP_TABLE where ig_id=$cloudipgroup_id");
+	$rs = &$db->Execute("select ig_id from $CLOUD_IPGROUP_TABLE where ig_id=$cloudipgroup_id");
 	if (!$rs)
 		$event->log("is_id_free", $_SERVER['REQUEST_TIME'], 2, "cloudipgroup.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
@@ -101,7 +101,7 @@ function is_name_free($cloudipgroup_name) {
 	global $CLOUD_IPGROUP_TABLE;
 	global $event;
 	$db=openqrm_get_db_connection();
-	$rs = &$db->Execute("select cu_id from $CLOUD_IPGROUP_TABLE where ig_name='$cloudipgroup_name'");
+	$rs = &$db->Execute("select ig_id from $CLOUD_IPGROUP_TABLE where ig_name='$cloudipgroup_name'");
 	if (!$rs)
 		$event->log("is_name_free", $_SERVER['REQUEST_TIME'], 2, "cloudipgroup.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else

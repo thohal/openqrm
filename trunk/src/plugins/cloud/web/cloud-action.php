@@ -173,7 +173,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$create_cloud_users = "create table cloud_users(cu_id INT(5), cu_name VARCHAR(20), cu_password VARCHAR(20), cu_forename VARCHAR(50), cu_lastname VARCHAR(50), cu_email VARCHAR(50), cu_street VARCHAR(100), cu_city VARCHAR(100), cu_country VARCHAR(100), cu_phone VARCHAR(100), cu_status INT(5), cu_token VARCHAR(100), cu_ccunits BIGINT(10))";
 			$create_cloud_config = "create table cloud_config(cc_id INT(5), cc_key VARCHAR(50), cc_value VARCHAR(50))";
 			$create_cloud_ipgroups = "create table cloud_ipgroups(ig_id INT(5), ig_name VARCHAR(50), ig_network VARCHAR(50), ig_subnet VARCHAR(50), ig_gateway VARCHAR(50), ig_dns1 VARCHAR(50), ig_dns2 VARCHAR(50), ig_activeips INT(5))";
-			$create_cloud_iptables = "create table cloud_iptables(ip_id INT(5), ip_ig_id INT(5), ip_appliance_id INT(5), ip_cr_id INT(5), ip_active INT(5), ig_address VARCHAR(50), ig_subnet VARCHAR(50), ig_gateway VARCHAR(50), ig_dns1 VARCHAR(50), ig_dns2 VARCHAR(50))";
+			$create_cloud_iptables = "create table cloud_iptables(ip_id INT(5), ip_ig_id INT(5), ip_appliance_id INT(5), ip_cr_id INT(5), ip_active INT(5), ip_address VARCHAR(50), ip_subnet VARCHAR(50), ip_gateway VARCHAR(50), ip_dns1 VARCHAR(50), ip_dns2 VARCHAR(50))";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($create_cloud_requests);
 			$recordSet = &$db->Execute($create_cloud_users);
