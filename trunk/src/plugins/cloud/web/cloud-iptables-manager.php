@@ -91,13 +91,13 @@ function cloud_list_ipgroup($id) {
 	$arHead['ip_ig_id']['title'] ='IG';
 
 	$arHead['ip_appliance_id'] = array();
-	$arHead['ip_appliance_id']['title'] ='App-ID';
+	$arHead['ip_appliance_id']['title'] ='App';
 
 	$arHead['ip_cr_id'] = array();
 	$arHead['ip_cr_id']['title'] ='CR';
 
 	$arHead['ip_active'] = array();
-	$arHead['ip_active']['title'] ='Active';
+	$arHead['ip_active']['title'] ='Act';
 
 	$arHead['ip_address'] = array();
 	$arHead['ip_address']['title'] ='Address';

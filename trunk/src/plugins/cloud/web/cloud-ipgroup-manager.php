@@ -66,14 +66,8 @@ if(htmlobject_request('action') != '') {
 			$cloud_ips2 = str_replace("<br />", ",", $cloud_ips1);
 			$cloud_ip_arr = array();
 			$cloud_ip_arr = explode(',', $cloud_ips2);
-
-			echo "Loading IpGroup $ipgroup <br>";
-
 			$cloud_ipt = new cloudiptables();
 			$cloud_ipt->load($ipgroup, $cloud_ip_arr);
-
-			print_r($cloud_ip_arr);
-
 			break;
 
 	}

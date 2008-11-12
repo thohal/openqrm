@@ -37,14 +37,12 @@ var $ip_dns2 = '';
 // ---------------------------------------------------------------------------------
 
 // returns an appliance from the db selected by id or name
-function get_instance($id, $name) {
+function get_instance($id) {
 	global $CLOUD_IPTABLE;
 	global $event;
 	$db=openqrm_get_db_connection();
 	if ("$id" != "") {
-		$cloudiptables_array = &$db->Execute("select * from $CLOUD_IPTABLE where ig_id=$id");
-	} else if ("$name" != "") {
-		$cloudiptables_array = &$db->Execute("select * from $CLOUD_IPTABLE where ig_name='$name'");
+		$cloudiptables_array = &$db->Execute("select * from $CLOUD_IPTABLE where ip_id=$id");
 	} else {
 		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "cloudiptables.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
 		exit(-1);
@@ -67,15 +65,10 @@ function get_instance($id, $name) {
 
 // returns an appliance from the db selected by id
 function get_instance_by_id($id) {
-	$this->get_instance($id, "");
+	$this->get_instance($id);
 	return $this;
 }
 
-// returns an appliance from the db selected by iname
-function get_instance_by_name($name) {
-	$this->get_instance("", $name);
-	return $this;
-}
 
 
 // ---------------------------------------------------------------------------------
@@ -156,10 +149,6 @@ function load($ig_id, $ip_array) {
 
 
 
-
-
-
-
 // removes cloudiptables from the database
 function remove($cloudiptables_id) {
 	global $CLOUD_IPTABLE;
@@ -183,6 +172,14 @@ function activate($cloudiptables_id, $state) {
 }
 
 
+
+// set the appliance + cr id in the ip 
+function assign_to_appliance($cloudiptables_id, $appliance_id, $cr_id) {
+	global $CLOUD_IPTABLE;
+	$db=openqrm_get_db_connection();
+	$asql = "update $CLOUD_IPTABLE set ip_appliance_id=$appliance_id, ip_cr_id=$cr_id where ip_id=$cloudiptables_id";
+	$rs = $db->Execute($asql);
+}
 
 
 
@@ -219,7 +216,7 @@ function get_all_ids() {
 	global $CLOUD_IPTABLE;
 	global $event;
 	$cloudiptables_list = array();
-	$query = "select ip_id from $CLOUD_IPTABLE";
+	$query = "select ip_id from $CLOUD_IPTABLE order by ip_id ASC";
 	$db=openqrm_get_db_connection();
 	$rs = $db->Execute($query);
 	if (!$rs)
