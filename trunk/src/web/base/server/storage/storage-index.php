@@ -11,7 +11,7 @@ require_once "$RootDir/include/htmlobject.inc.php";
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	global $thisfile;
 	if($url == '') {
-		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
+		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&storage_filter='.htmlobject_request('storage_filter');
 	}
 	header("Location: $url");
 	exit;
