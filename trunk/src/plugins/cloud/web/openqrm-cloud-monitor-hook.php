@@ -20,6 +20,9 @@ require_once "$RootDir/plugins/cloud/class/clouduser.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudrequest.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudipgroup.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudiptables.class.php";
+
 global $CLOUD_USER_TABLE;
 global $CLOUD_REQUEST_TABLE;
 global $APPLIANCE_INFO_TABLE;
@@ -112,7 +115,7 @@ function openqrm_cloud_monitor() {
 			// create + start the appliance :)
 			$appliance = new appliance();
 			$appliance->add($ar_request);
-			
+
 			// lets find a resource for this new appliance
 			$appliance->get_instance_by_id($appliance_id);
 			$appliance_virtualization=$cr->resource_type_req;
@@ -121,12 +124,9 @@ function openqrm_cloud_monitor() {
 			$appliance->get_instance_by_id($appliance_id);
 			if ($appliance->resources == -1) {
 				$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Could not find a resource for request ID $cr_id", "", "", 0, 0, 0);
+				$appliance->remove($appliance_id);
 				continue;
 			}
-			// before we assign + start the appliance we generate a random passwor to send to the user
-			$image = new image();
-			$appliance_password = $image->generatePassword(8);
-			$image->set_root_password($cr->image_id, $appliance_password);
 
 			// assign the resource
 			$kernel = new kernel();
@@ -143,6 +143,39 @@ function openqrm_cloud_monitor() {
 			$cr->setappliance($cr_id, $appliance_id);
 			// update request status
 			$cr->setstatus($cr_id, "active");
+
+			// now we generate a random password to send to the user
+			$image = new image();
+			$appliance_password = $image->generatePassword(8);
+			$image->set_root_password($cr->image_id, $appliance_password);
+
+			// here we prepare the ip-config for the appliance according the users requests
+			$iptable = new cloudiptables();
+			$ip_ids_arr = $iptable->get_all_ids();
+			$loop = 0;
+			foreach($ip_ids_arr as $id_arr) {
+				foreach($id_arr as $id) {
+					$ipt = new cloudiptables();
+					$ipt->get_instance_by_id($id);
+					// check if the ip is free
+					if (($ipt->ip_active == 1) && ($ipt->ip_appliance_id == 0) && ($ipt->ip_cr_id == 0)) {
+						$loop++;
+						echo "$ipt->ip_address:$ipt->ip_subnet:$ipt->ip_gateway:$ipt->ip_dns1:$ipt->ip_dns2\n";
+						$ipt->activate($id, false);
+						$ipt->assign_to_appliance($id, $appliance_id, $cr_id);
+						// the first ip we mail to the user
+						if ($loop == 1) {
+							resource_ip = $ipt->ip_address;
+						}
+						if ($loop == $cr->network_req) {
+							return;
+						}
+					}
+				}
+			}
+
+
+
 			// send mail to user
 			// get admin email
 			$cc_conf = new cloudconfig();
@@ -160,10 +193,6 @@ function openqrm_cloud_monitor() {
 			$start = date("d-m-Y H-i", $cr_start);
 			$cr_stop = $cr->stop;
 			$stop = date("d-m-Y H-i", $cr_stop);
-			// appliance infos
-			$resource = new resource();
-			$resource->get_instance_by_id($appliance->resources);
-			$resource_ip = $resource->ip;
 		
 			$rmail = new cloudmailer();
 			$rmail->to = "$cu_email";

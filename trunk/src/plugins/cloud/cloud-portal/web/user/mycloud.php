@@ -409,14 +409,13 @@ function my_cloud_create_request() {
 	$disp = $disp."</a>";
 	$disp = $disp."<br>";
 
-	
 	$disp = $disp.htmlobject_select('cr_kernel_id', $kernel_list, 'Kernel');
 	$disp = $disp.htmlobject_select('cr_image_id', $image_list, 'Image');
 	$disp = $disp.htmlobject_select('cr_resource_type_req', $virtualization_list_select, 'Resource type');
 	$disp = $disp.htmlobject_select('cr_ram_req', $available_memtotal, 'Memory');
 	$disp = $disp.htmlobject_select('cr_cpu_req', $available_cpunumber, 'CPUs');
 //	$disp = $disp.htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk'), 'text', 20);
-//	$disp = $disp.htmlobject_input('cr_network_req', array("value" => '', "label" => 'Network'), 'text', 255);
+	$disp = $disp.htmlobject_select('cr_network_req', array(array('value' =>1, 'label' =>1), array('value' =>2, 'label' =>2), array('value' =>3, 'label' =>3), array('value' =>4, 'label' =>4)), 'Network-cards');
 	$disp = $disp.htmlobject_input('cr_ha_req', array("value" => 1, "label" => 'Highavailable'), 'checkbox', false);
 	$disp = $disp.htmlobject_input('cr_shared_req', array("value" => 1, "label" => 'Clone-on-deploy'), 'checkbox', false);
 

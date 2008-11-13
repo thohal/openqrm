@@ -266,6 +266,24 @@ function setappliance($cloudrequest_id, $appliance_id) {
 }
 
 
+
+
+// find a cr according to its appliance id
+function get_cr_for_appliance($appliance_id) {
+	global $CLOUD_REQUEST_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$cloudrequest_array = &$db->Execute("select cr_id from $CLOUD_REQUEST_TABLE where cr_appliance_id=$appliance_id");
+	foreach ($cloudrequest_array as $index => $cloudrequest) {
+		return $cloudrequest["cr_id"];
+	}
+}
+
+
+
+
+
+
 // displays the cloudrequest-overview
 function display_overview($offset, $limit, $sort, $order) {
 	global $CLOUD_REQUEST_TABLE;
