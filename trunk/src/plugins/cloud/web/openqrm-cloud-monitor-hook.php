@@ -153,6 +153,10 @@ function openqrm_cloud_monitor() {
 			$iptable = new cloudiptables();
 			$ip_ids_arr = $iptable->get_all_ids();
 			$loop = 0;
+			// open the appliances netconfig file
+			$appliance_netconf = "$OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf/cloud-net.conf.$appliance_id";
+			$fp = fopen($appliance_netconf, 'w+');
+			$finished = 0;
 			foreach($ip_ids_arr as $id_arr) {
 				foreach($id_arr as $id) {
 					$ipt = new cloudiptables();
@@ -160,21 +164,25 @@ function openqrm_cloud_monitor() {
 					// check if the ip is free
 					if (($ipt->ip_active == 1) && ($ipt->ip_appliance_id == 0) && ($ipt->ip_cr_id == 0)) {
 						$loop++;
-						echo "$ipt->ip_address:$ipt->ip_subnet:$ipt->ip_gateway:$ipt->ip_dns1:$ipt->ip_dns2\n";
+						$ipstr="$ipt->ip_address:$ipt->ip_subnet:$ipt->ip_gateway:$ipt->ip_dns1:$ipt->ip_dns2\n";
+						fwrite($fp, $ipstr);						
 						$ipt->activate($id, false);
 						$ipt->assign_to_appliance($id, $appliance_id, $cr_id);
 						// the first ip we mail to the user
 						if ($loop == 1) {
-							resource_ip = $ipt->ip_address;
+							$resource_ip = $ipt->ip_address;
 						}
 						if ($loop == $cr->network_req) {
-							return;
+							$finished = 1;
+							break;
 						}
 					}
 				}
+				if ($finished == 1) {
+					break;
+				}
 			}
-
-
+			fclose($fp);
 
 			// send mail to user
 			// get admin email
@@ -294,6 +302,28 @@ function openqrm_cloud_monitor() {
 		// now stop
 		$appliance->stop();
 
+		// here we free up the ip addresses used by the appliance again
+		$iptable = new cloudiptables();
+		$ip_ids_arr = $iptable->get_all_ids();
+		$loop = 0;
+		foreach($ip_ids_arr as $id_arr) {
+			foreach($id_arr as $id) {
+				$ipt = new cloudiptables();
+				$ipt->get_instance_by_id($id);
+				// check if the ip is free
+				if (($ipt->ip_active == 0) && ($ipt->ip_appliance_id == $cr_appliance_id) && ($ipt->ip_cr_id == $cr_id)) {
+					$loop++;
+					$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-monitor-hook.php", "Freeing up ip $ipt->ip_address", "", "", 0, 0, $appliance_id);
+					$ipt->activate($id, true);
+					$ipt->assign_to_appliance($id, 0, 0);
+					// the first ip we mail to the user
+					if ($loop == 1) {
+						$resource_ip = $ipt->ip_address;
+					}
+				}
+			}
+		}
+
 		// update appliance_id to 0 in request
 		$cr->setappliance($cr_id, 0);
 		// set request status to 6 = done
@@ -316,8 +346,6 @@ function openqrm_cloud_monitor() {
 		$start = date("d-m-Y H-i", $cr_start);
 		$cr_stop = $cr->stop;
 		$stop = date("d-m-Y H-i", $cr_stop);
-		// appliance infos
-		$resource_ip = $resource->ip;
 		
 		$rmail = new cloudmailer();
 		$rmail->to = "$cu_email";

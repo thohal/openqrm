@@ -50,8 +50,6 @@ if(htmlobject_request('action') != '') {
 		case 'create_ipgroup':
 			$ig_name = $ipgroup_fields['ig_name'];
 			echo "Creating IpGroup $ipgroup_name <br>";
-			print_r($ipgroup_fields);
-			flush();
 			$ig = new cloudipgroup();
 			$ipgroup_fields['ig_id'] = openqrm_db_get_free_id('ig_id', $CLOUD_IPGROUP_TABLE);
 			$ig->add($ipgroup_fields);

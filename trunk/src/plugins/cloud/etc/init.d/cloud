@@ -25,7 +25,7 @@ function cloud_start() {
 
 	# get the ip-config from the cloud-network-config provider
 	rm -f $NETWORK_CONF
-	if ! wget -q -O $NETWORK_CONF "http://$resource_openqrmserver/cloud-portal/conf/cloud-network-provider.php?appliance_id=$appliance_id"; then
+	if ! wget -q -O $NETWORK_CONF "http://$resource_openqrmserver/openqrm/action/cloud-conf/cloud-net.conf.$appliance_id"; then
 		echo "ERROR: Could not get Cloud network-config from openQRM-server $resource_openqrmserver"
 		return 1
 	fi
@@ -50,6 +50,7 @@ function cloud_start() {
 			break
 		done
 	done
+	rm -f $NETWORK_CONF
 
 
 

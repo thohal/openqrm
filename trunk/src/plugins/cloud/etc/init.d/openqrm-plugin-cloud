@@ -38,6 +38,8 @@ function openqrm_plugin_cloud_uninstall() {
 		cloud_manager_log uninstall "ERROR: Could not drop the cloud-plugin tables in the database!"
 		exit 1
 	fi
+	# remove netconf dir
+	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf
 	# remove auth files
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/user/.htaccess
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/user/.htpasswd
@@ -109,6 +111,9 @@ function openqrm_plugin_cloud_init() {
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/user/.htpasswd
 	chmod 666 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/cloud-portal/user/.htpasswd
 
+	# create the directory for the cloud network-config of the appliances
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf/
+	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf/
 	
 }
 
