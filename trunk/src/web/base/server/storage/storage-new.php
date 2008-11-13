@@ -153,9 +153,16 @@ global $thisfile;
 		}
 
 		else {
+			$selected = array();
+			if(htmlobject_request('storage_type') != '') {		
+				$selected = array(htmlobject_request('storage_type'));
+			} elseif (htmlobject_request('storage_filter') != '') {
+				$tmp = $deployment->get_id_by_storagetype(htmlobject_request('storage_filter'));
+				$selected = array($tmp['value']);
+			}
 
 			$store = "";
-			$store .= htmlobject_select('storage_type', $deployment_list, 'Deployment', array(htmlobject_request('storage_type')));
+			$store .= htmlobject_select('storage_type', $deployment_list, 'Deployment', $selected);
 			$store .= htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden');
 			$store .= htmlobject_input('storage_filter', array("value" => htmlobject_request('storage_filter'), "label" => ''), 'hidden');
 			$store_action = array('select');
