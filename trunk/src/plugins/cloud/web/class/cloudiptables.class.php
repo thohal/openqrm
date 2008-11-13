@@ -140,7 +140,7 @@ function load($ig_id, $ip_array) {
 		$ip = str_replace("\r", "", $ip_tmp);
 		$ip_id = openqrm_db_get_free_id('ip_id', $CLOUD_IPTABLE);
 		$isql = "insert into $CLOUD_IPTABLE (ip_id, ip_ig_id, ip_appliance_id, ip_cr_id, ip_active, ip_address, ip_subnet, ip_gateway, ip_dns1, ip_dns2) values ($ip_id, $ig_id, 0, 0, 1, \"$ip\", \"$ig_subnet\", \"$ig_gateway\", \"$ig_dns1\", \"$ig_dns2\")";
-		$event->log("load", $_SERVER['REQUEST_TIME'], 2, "cloudiptables.class.php", "Loading ip-address $ip into the Cloud portal", "", "", 0, 0, 0);
+//		$event->log("load", $_SERVER['REQUEST_TIME'], 2, "cloudiptables.class.php", "Loading ip-address $ip into the Cloud portal", "", "", 0, 0, 0);
 		$rs = $db->Execute($isql);
 	}
 

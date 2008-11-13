@@ -8,6 +8,9 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 OPENQRM_SERVER_IP=$resource_openqrmserver
 NETWORK_CONF="/tmp/cloud-net.conf"
 
+# for testing just one ip
+howmany=1
+
 # do not start on the intitrd
 if [ -f /etc/initrd-devices.conf ]; then
 	exit 0
@@ -22,9 +25,9 @@ function cloud_start() {
 	echo "Starting the openQRM cloud-plugin"
 	cloud_stop 1>/dev/null 2>&1
 
-	// get the ip-config from the cloud-network-config provider
+	# get the ip-config from the cloud-network-config provider
 	rm -f $NETWORK_CONF
-	if ! wget -q -O $NETWORK_CONF "http://$resource_openqrmserver/cloud-portal/conf/cloud-network-provider.php?appliance_id=1&howmany=4"; then
+	if ! wget -q -O $NETWORK_CONF "http://$resource_openqrmserver/cloud-portal/conf/cloud-network-provider.php?appliance_id=$appliance_id&howmany=$howmany"; then
 		echo "ERROR: Could not get Cloud network-config from openQRM-server $resource_openqrmserver"
 		return 1
 	fi
@@ -41,10 +44,6 @@ function cloud_start() {
 		for INTERFACE in $EXTERNAL_INTERFACES_LIST; do
 			// here we set the interface
 			ifconfig $INTERFACE $IP netmask $SUBNET up
-			// set the dns server
-			> /etc/resolv.conf
-			echo "nameserver $DNS1" >> /etc/resolv.conf
-			echo "nameserver $DNS2" >> /etc/resolv.conf
 			// configure the route
 			route add default gw $GATEWAY
 			// remove interface from the list

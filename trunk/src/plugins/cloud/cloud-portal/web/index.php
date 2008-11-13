@@ -100,7 +100,7 @@ if(htmlobject_request('action') != '') {
 				exit(0);
 			}
 			// username min 4 characters
-			if (strlen($user_fields['cu_name'])<6) {
+			if (strlen($user_fields['cu_name'])<4) {
 				$strMsg .= "Username must be at least 4 characters long <br>";
 				$c_error = 1;
 				redirect($strMsg, tab1);
