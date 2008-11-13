@@ -318,5 +318,24 @@ var $_event;
 		return $ar_Return;
 	}
 
+	//--------------------------------------------------
+	/**
+	* get id by deployment storagetype
+	* <code>
+	* $deployment = new deployment();
+	* $arr = $deployment->get_id_by_storagetype();
+	* // $arr['value']
+	* // $arr['label']
+	* </code>
+	* @access public
+	* @return array
+	*/
+	//--------------------------------------------------
+	function get_id_by_storagetype($type) {
+		$query = "select deployment_id from $this->_db_table where deployment_storagetype=\"$type\"";
+		$ar_Return = array();
+		$ar_Return = openqrm_db_get_result_single($query);
+		return $ar_Return;
+	}
 }
 ?>

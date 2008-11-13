@@ -121,5 +121,36 @@ var $_event;
 		return $plugin_array;
 	}
 
+	//--------------------------------------------------
+	/**
+	* get plugin config 
+	* @access public
+	* @param string $plugin_name
+	* @return array
+	*/
+	//--------------------------------------------------
+	function get_config($plugin_name) {
+	$ar_Return = array();
+		$plugin_config="$this->_base_dir/openqrm/plugins/$plugin_name/etc/openqrm-plugin-$plugin_name.conf";
+		$plugin_description="";
+		$plugin_type="";
+		$config_array=file($plugin_config);
+		foreach ($config_array as $index => $line) {
+			if (strstr($line, "OPENQRM_PLUGIN_DESCRIPTION")) {
+				$plugin_description=str_replace("OPENQRM_PLUGIN_DESCRIPTION=", "", $line);
+				$plugin_description=str_replace("\"", "", $plugin_description);
+				$plugin_description=trim($plugin_description);
+			}
+			if (strstr($line, "OPENQRM_PLUGIN_TYPE")) {
+				$plugin_type=str_replace("OPENQRM_PLUGIN_TYPE=", "", $line);
+				$plugin_type=str_replace("\"", "", $plugin_type);
+				$plugin_type=trim($plugin_type);
+			}
+		}
+		$ar_Return['type'] = $plugin_type;
+		$ar_Return['description'] = $plugin_description;
+	return $ar_Return;
+	}
+
 }
 ?>
