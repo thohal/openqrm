@@ -176,7 +176,7 @@ if(htmlobject_request('action') != '') {
 			break;
 
 
-		case 'extend':
+		case 'update':
 			foreach($_REQUEST['identifier'] as $id) {
 				$cr_request = new cloudrequest();
 				$cr_request->get_instance_by_id($id);
@@ -187,7 +187,7 @@ if(htmlobject_request('action') != '') {
 					continue;				
 				}
 
-				$cr_stop=$_REQUEST['cr_stop'];
+				$cr_stop=$_REQUEST['extend_cr_stop'];
 				$new_stop_timestmp=date_to_timestamp($cr_stop);
 				$cr_request->extend_stop_time($id, $new_stop_timestmp);
 				$strMsg="Extended Cloud request $id to $cr_stop";
@@ -199,9 +199,8 @@ if(htmlobject_request('action') != '') {
 			$request_user = new clouduser();
 			$request_user->get_instance_by_name("$auth_user");
 			if ($request_user->ccunits < 1) {
-				echo "You do not have any CloudComputing-Units left! Please buy some CC-Units before submitting a request.<br>";
-				flush();
-				sleep(2);
+				$strMsg="You do not have any CloudComputing-Units left! Please buy some CC-Units before submitting a request.";
+				redirect($strMsg);
 				break;
 			}
 
@@ -330,9 +329,117 @@ function my_cloud_manager() {
 		$cr_start = date("d-m-Y H-i", $timestamp);
 		$timestamp=$cr["cr_stop"];
 		$cr_stop = date("d-m-Y H-i", $timestamp);
+
+		// fill the array for the table
+		$arBody[] = array(
+			'cr_id' => $cr["cr_id"],
+			'cr_cu_name' => $cu_tmp->name,
+			'cr_status' => $cr_status_disp,
+			'cr_request_time' => $cr_request_time,
+			'cr_start' => $cr_start,
+			'cr_stop' => $cr_stop,
+			'cr_appliance_id' => $cr["cr_appliance_id"],
+		);
+	}
+
+	$table->id = 'Tabelle';
+	$table->css = 'htmlobject_table';
+	$table->border = 1;
+	$table->cellspacing = 0;
+	$table->cellpadding = 3;
+	$table->form_action = $thisfile;
+	$table->identifier_type = "checkbox";
+	$table->head = $arHead;
+	$table->body = $arBody;
+	$table->bottom = array('reload', 'deprovision', 'extend', 'delete');
+	$table->identifier = 'cr_id';
+	$table->max = 100;
+	return $disp.$table->get_string();
+}
+
+
+
+
+
+
+
+
+function my_cloud_extend_request($cr_id) {
+
+	global $OPENQRM_USER;
+	global $thisfile;
+	global $auth_user;
+	$table = new htmlobject_db_table('cr_id');
+
+	$disp = "<h1>Extend Cloud Requests</h1>";
+	$arHead = array();
+
+	$arHead['cr_id'] = array();
+	$arHead['cr_id']['title'] ='ID';
+
+	$arHead['cr_cu_name'] = array();
+	$arHead['cr_cu_name']['title'] ='User';
+
+	$arHead['cr_status'] = array();
+	$arHead['cr_status']['title'] ='Status';
+
+	$arHead['cr_request_time'] = array();
+	$arHead['cr_request_time']['title'] ='Request-time';
+
+	$arHead['cr_start'] = array();
+	$arHead['cr_start']['title'] ='Start-time';
+
+	$arHead['cr_stop'] = array();
+	$arHead['cr_stop']['title'] ='Stop-time';
+
+	$arHead['cr_appliance_id'] = array();
+	$arHead['cr_appliance_id']['title'] ='Appliance ID';
+
+	$arBody = array();
+
+	// db select
+	$cl_request = new cloudrequest();
+	$request_array = $cl_request->display_overview(0, 100, 'cr_id', 'ASC');
+	foreach ($request_array as $index => $cr) {
+	
+		// only display one request
+		$db_cr_id = $cr["cr_id"];
+		if ($db_cr_id != $cr_id) {
+			continue;
+		}
+		
+		// status
+		$cr_status = $cr["cr_status"];
+		switch ($cr_status) {
+			case '1':
+				$cr_status_disp="New";
+				break;
+			case '2':
+				$cr_status_disp="Approved";
+				break;
+			case '3':
+				$cr_status_disp="Active";
+				break;
+			case '4':
+				$cr_status_disp="Denied";
+				break;
+			case '5':
+				$cr_status_disp="Deprovisioned";
+				break;
+			case '6':
+				$cr_status_disp="Done";
+				break;
+		}	
+		// format time
+		$timestamp=$cr["cr_request_time"];
+		$cr_request_time = date("d-m-Y H-i", $timestamp);
+		$timestamp=$cr["cr_start"];
+		$cr_start = date("d-m-Y H-i", $timestamp);
+		$timestamp=$cr["cr_stop"];
+		$cr_stop = date("d-m-Y H-i", $timestamp);
 		// preprare a calendar to let the user extend the request
-		$cr_stop_input="<input id=\"cr_stop\" type=\"text\" name=\"cr_stop\" value=\"$cr_stop\" size=\"20\" maxlength=\"20\">";
-		$cal="$cr_stop_input Extend <a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
+		$cr_stop_input="<input id=\"extend_cr_stop\" type=\"text\" name=\"extend_cr_stop\" value=\"$cr_stop\" size=\"20\" maxlength=\"20\">";
+		$cal="$cr_stop_input Extend <a href=\"javascript:NewCal('extend_cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
 		$cal = $cal."<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
 		$cal = $cal."</a>";
 
@@ -358,11 +465,33 @@ function my_cloud_manager() {
 	$table->identifier_type = "checkbox";
 	$table->head = $arHead;
 	$table->body = $arBody;
-	$table->bottom = array('reload', 'deprovision', 'extend', 'delete');
+	$table->bottom = array('update');
 	$table->identifier = 'cr_id';
 	$table->max = 100;
 	return $disp.$table->get_string();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -619,6 +748,17 @@ $output = array();
 // include header
 include "$DocRoot/cloud-portal/mycloud-head.php";
 
+
+if(htmlobject_request('action') != '') {
+	switch (htmlobject_request('action')) {
+		case 'extend':
+			foreach($_REQUEST['identifier'] as $id) {
+				$output[] = array('label' => 'Extend My Cloud Request', 'value' => my_cloud_extend_request($id));
+			}
+	}
+}
+
+
 $cloudu = new clouduser();
 $cloudu->get_instance_by_name($auth_user);
 if ($cloudu->status == 1) {
@@ -630,6 +770,9 @@ if ($cloudu->status == 1) {
 } else {
 	$output[] = array('label' => 'Your account has been disabled', 'value' => my_cloud_account_disabled());
 }
+
+
+
 
 echo htmlobject_tabmenu($output);
 
