@@ -257,6 +257,17 @@ function setstatus($cloudrequest_id, $cloud_status) {
 
 
 
+// function to set the image_id of a request  --> this is for clone-on-deploy
+function setimage($cloudrequest_id, $image_id) {
+	global $CLOUD_REQUEST_TABLE;
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute("update $CLOUD_REQUEST_TABLE set cr_image_id=$image_id where cr_id=$cloudrequest_id");
+
+}
+
+
+
+
 // function to set the appliance_id of a request
 function setappliance($cloudrequest_id, $appliance_id) {
 	global $CLOUD_REQUEST_TABLE;

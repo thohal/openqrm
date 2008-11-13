@@ -11,6 +11,7 @@ require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/appliance.class.php";
+require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/class/event.class.php";
@@ -26,6 +27,7 @@ require_once "$RootDir/plugins/cloud/class/cloudiptables.class.php";
 global $CLOUD_USER_TABLE;
 global $CLOUD_REQUEST_TABLE;
 global $APPLIANCE_INFO_TABLE;
+global $IMAGE_INFO_TABLE;
 
 global $OPENQRM_SERVER_BASE_DIR;
 $refresh_delay=5;
@@ -50,6 +52,7 @@ global $event;
 function openqrm_cloud_monitor() {
 	global $event;
 	global $APPLIANCE_INFO_TABLE;
+	global $IMAGE_INFO_TABLE;
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $openqrm_server;
@@ -93,6 +96,9 @@ function openqrm_cloud_monitor() {
 				continue;
 			}
 			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Provisioning request ID $cr_id", "", "", 0, 0, 0);
+
+			// ################################## create appliance ###############################
+
 			$appliance_name = "cloud".$cr_id;
 			$appliance_id = openqrm_db_get_free_id('appliance_id', $APPLIANCE_INFO_TABLE);
 			
@@ -127,6 +133,77 @@ function openqrm_cloud_monitor() {
 				$appliance->remove($appliance_id);
 				continue;
 			}
+
+			// ################################## clone on deploy ###############################
+
+			// here we have a resource but
+			// do we have to clone the image before deployment ?
+			if ($cr->shared_req == 1) {
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Request ID $cr_id has clone-on-deploy activated. Cloning the image", "", "", 0, 0, 0);
+			
+				// get image definition
+				$image = new image();
+				$image->get_instance_by_id($cr->image_id);
+				$image_name = $image->name;
+				$image_clone_name = "$image_name.$cr_id";
+				$image_type = $image->type;
+				$image_version = $image->version;
+				$image_rootdevice = $image->rootdevice;
+				$image_rootfstype = $image->rootfstype;
+				$image_storageid = $image->storageid;
+				$image_isshared = $image->isshared;
+				$image_comment = $image->comment;
+				$image_capabilities = $image->capabilities;
+				$image_deployment_parameter = $image->deployment_parameter;
+				// get new image id
+				$image_id  = openqrm_db_get_free_id('image_id', $IMAGE_INFO_TABLE);
+
+				// add the new image to the openQRM db
+				$ar_request = array(
+					'image_id' => $image_id,
+					'image_name' => $image_clone_name,
+					'image_version' => $image_version,
+					'image_type' => $image_type,
+					'image_rootdevice' => $image_rootdevice,
+					'image_rootfstype' => $image_rootfstype,
+					'image_storageid' => $image_storageid,
+					'image_isshared' => $image_isshared,
+					'image_comment' => "Requested by user $cu_name",
+					'image_capabilities' => $image_capabilities,
+					'image_deployment_parameter' => $image_deployment_parameter,
+				);
+				$image->add($ar_request);
+				// and set the cr to the new image id
+				$cr->setimage($cr_id, $image_id);
+				$cr->image_id=$image_id;
+				// and set the new image in the appliance !
+				// prepare array to update appliance
+				$ar_appliance_update = array(
+					'appliance_imageid' => $cr->image_id,
+				);
+				$appliance->update($appliance_id, $ar_appliance_update);
+
+				// get image storage
+				$storage = new storage();
+				$storage->get_instance_by_id($image_storageid);
+				$storage_resource_id = $storage->resource_id;
+				// get storage resource
+				$resource = new resource();
+				$resource->get_instance_by_id($storage_resource_id);
+				$resource_id = $resource->id;
+				$resource_ip = $resource->ip;
+	
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Sending clone command to storage server resource $resource_ip / $resource_id", "", "", 0, 0, 0);
+
+
+			
+			
+			}
+
+
+
+
+			// ################################## start appliance ###############################
 
 			// assign the resource
 			$kernel = new kernel();
@@ -183,6 +260,7 @@ function openqrm_cloud_monitor() {
 				}
 			}
 			fclose($fp);
+			// ################################## mail user provisioning ###############################
 
 			// send mail to user
 			// get admin email
@@ -326,6 +404,23 @@ function openqrm_cloud_monitor() {
 		// unlink the netconf file
 		$appliance_netconf = "$OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf/cloud-net.conf.$cr_appliance_id";
 		unlink($appliance_netconf);
+
+		// ################################## deprovisioning clone-on-deploy ###############################
+
+		// do we have remove the clone of the image after deployment ?
+		if ($cr->shared_req == 1) {
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Request ID $cr_id has clone-on-deploy activated. Removing the cloned image", "", "", 0, 0, 0);
+			
+			$image = new image();
+			$image->remove($cr->image_id);
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Removing the cloned image $cr->image_id !", "", "", 0, 0, 0);
+
+			
+			
+		}
+
+
+		// ################################## deprovisioning mail user ###############################
 	
 		// update appliance_id to 0 in request
 		$cr->setappliance($cr_id, 0);
