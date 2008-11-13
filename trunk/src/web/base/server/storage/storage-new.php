@@ -158,7 +158,7 @@ global $thisfile;
 				$selected = array(htmlobject_request('storage_type'));
 			} elseif (htmlobject_request('storage_filter') != '') {
 				$tmp = $deployment->get_id_by_storagetype(htmlobject_request('storage_filter'));
-				$selected = array($tmp['value']);
+				$selected = array($tmp[0]['value']);
 			}
 
 			$store = "";

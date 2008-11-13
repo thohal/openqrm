@@ -1,7 +1,4 @@
 <?php
-
-error_reporting(E_ALL);
-
 $thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once ($RootDir.'/class/plugin.class.php');
@@ -34,6 +31,7 @@ global $thisfile;
 
 if(htmlobject_request('action') != '' && $OPENQRM_USER->role == "administrator") {
 require_once ($RootDir.'/class/event.class.php');
+require_once ($RootDir.'/class/deployment.class.php');
 require_once ($RootDir.'/class/openqrm_server.class.php');
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
@@ -48,12 +46,29 @@ $identifier = htmlobject_request('identifier');
 	switch (htmlobject_request('action')) {
 		case 'enable':
 			$event = new event();
-			foreach($identifier as $id) {
-				$return = $openqrm_server->send_command("openqrm_server_plugin_command $id init $OPENQRM_USER->name $OPENQRM_USER->password");
-				if($return === true) {
-					$strMsg .= 'enabled '.$id.'<br>';
-				} else {
-					$strMsg .= $id.' not enabled <br>';
+			foreach($identifier as $plugin_name) {
+				$error = false;
+
+				$tmp = $plugin->get_config($plugin_name);
+				switch($tmp['type']) {
+					//------------------------- check if storage allready enabled
+					case 'storage':
+						$deployment = new deployment();
+						$dep = $deployment->get_id_by_storagetype($plugin_name);
+						if(count($dep) > 0) {
+							$strMsg .= $plugin_name.' allready enabled<br>';
+							$error = true;
+						}
+					break;
+				}
+
+				if($error === false) {
+					$return = $openqrm_server->send_command("openqrm_server_plugin_command $plugin_name init $OPENQRM_USER->name $OPENQRM_USER->password");
+					if($return === true) {
+						$strMsg .= 'enabled '.$plugin_name.'<br>';
+					} else {
+						$strMsg .= $plugin_name.' not enabled <br>';
+					}
 				}
 			}
 			redirect($strMsg);
@@ -139,22 +154,10 @@ $plugin_disabled='<img src="/openqrm/base/plugins/aa_plugins/img/enable.png" bor
 $plugtype = array();
 
 foreach ($plugins_available as $index => $plugin_name) {
-	$plugin_config="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$plugin_name/etc/openqrm-plugin-$plugin_name.conf";
-	$plugin_description="";
-	$plugin_type="";
-	$config_array=file($plugin_config);
-	foreach ($config_array as $index => $line) {
-	    if (strstr($line, "OPENQRM_PLUGIN_DESCRIPTION")) {
-		    $plugin_description=str_replace("OPENQRM_PLUGIN_DESCRIPTION=", "", $line);
-		    $plugin_description=str_replace("\"", "", $plugin_description);
-			$plugin_description=trim($plugin_description);
-	    }
-	    if (strstr($line, "OPENQRM_PLUGIN_TYPE")) {
-		    $plugin_type=str_replace("OPENQRM_PLUGIN_TYPE=", "", $line);
-		    $plugin_type=str_replace("\"", "", $plugin_type);
-			$plugin_type=trim($plugin_type);
-	    }
-	}
+	$tmp = $plugin->get_config($plugin_name);
+	$plugin_description = $tmp['description'];
+	$plugin_type =  $tmp['type'];
+
 	$plugtype[] = $plugin_type;
 	if (!strlen(htmlobject_request('plugin_filter')) || strstr(htmlobject_request('plugin_filter'), $plugin_type )) {
 		$arBody[$i] = array();

@@ -334,7 +334,7 @@ var $_event;
 	function get_id_by_storagetype($type) {
 		$query = "select deployment_id from $this->_db_table where deployment_storagetype=\"$type\"";
 		$ar_Return = array();
-		$ar_Return = openqrm_db_get_result_single($query);
+		$ar_Return = openqrm_db_get_result_double($query);
 		return $ar_Return;
 	}
 }
