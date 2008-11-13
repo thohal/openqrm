@@ -219,6 +219,58 @@ if(htmlobject_request('action') != '') {
 			break;
 
 
+
+
+
+		case 'forgotpass':
+
+			$fusername = $_REQUEST['fusername'];
+
+			$cloud_user = new clouduser();
+			if ($cloud_user->is_name_free($fusername)) {
+				$strMsg = "No such user on the openQRM Cloud";
+				redirect($strMsg, tab0);
+				break;			
+			}
+
+			$cloud_user->get_instance_by_name($fusername);
+			// mail again that account is active now
+			$cc_conf = new cloudconfig();
+			$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
+			// get external name
+			$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
+			if (!strlen($external_portal_name)) {
+				$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
+			}
+			$email = $cloud_user->email;
+			$forename = $cloud_user->forename;
+			$lastname = $cloud_user->lastname;
+			$username = $cloud_user->name;
+
+			// generate a new password
+			$image_tmp = new image();
+			$password = $image_tmp->generatePassword(8);
+			// remove old user
+			$openqrm_server_command="htpasswd -D $CloudDir/user/.htpasswd $username";
+			$output = shell_exec($openqrm_server_command);
+			// create new + new password
+			$openqrm_server_command="htpasswd -b $CloudDir/user/.htpasswd $username $password";
+			$output = shell_exec($openqrm_server_command);
+
+			$rmail = new cloudmailer();
+			$rmail->to = "$email";
+			$rmail->from = "$cc_admin_email";
+			$rmail->subject = "openQRM Cloud: Your password has been reseted";
+			$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/your_password_has_been_reseted.tmpl";
+			$arr = array('@@USER@@'=>"$username", '@@PASSWORD@@'=>"$password", '@@EXTERNALPORTALNAME@@'=>"$external_portal_name", '@@FORENAME@@'=>"$forename", '@@LASTNAME@@'=>"$lastname");
+			$rmail->var_array = $arr;
+			$rmail->send();
+
+			$strMsg = "Your password on the openQRM Cloud has been reseted and sent to you. Please check your mailbox.";
+			redirect($strMsg, tab0);
+
+			break;
+
 	}
 }
 
@@ -291,8 +343,21 @@ function login_user() {
 	global $thisfile;
 
 	$disp = "<a href=\"/cloud-portal/user/mycloud.php\"><h1>Click here to login to the openQRM Cloud</h1></a>";
+	$disp = $disp."<form action=$thisfile method=post>";
 	$disp = $disp."<br>";
-
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."You already have an existing account on the openQRM Cloud but forgot your password ?";
+	$disp = $disp."<br>";
+	$disp = $disp."Then please just put your username in the box below and click on 'Forgot-Password' to";
+	$disp = $disp." let the Cloud sent you a new password.";
+	$disp = $disp."<br>";
+	$disp = $disp.htmlobject_input('fusername', array("value" => '[Username]', "label" => 'Username'), 'text', 20);
+	$disp = $disp."<input type=hidden name='action' value='forgotpass'>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."<input type=submit value='Forgot-Password'>";
+	$disp = $disp."</form>";
 	return $disp;
 }
 
