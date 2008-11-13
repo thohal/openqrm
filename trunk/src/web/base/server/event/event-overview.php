@@ -99,7 +99,7 @@ global $thisfile;
 		$arBody[] = array(
 			'event_priority' => '<img src="/openqrm/base/img/'.$prio_icon.'">',
 			'event_id' => $event_db["event_id"],
-			'event_time' => date('d F Y h:i:s', $event->time),
+			'event_time' => date('Y/m/d H:i:s', $event->time),
 			'event_source' => $event->source,
 			'event_description' => $event->description,
 		);
