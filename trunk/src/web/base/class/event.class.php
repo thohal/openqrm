@@ -21,75 +21,74 @@ class event
 
 /**
 * event id
-* @access public
+* @access protected
 * @var int
 */
 var $id = '';
 /**
 * event name
-* @access public
+* @access protected
 * @var string
 */
 var $name = '';
 /**
 * event date
-* @access public
+* @access protected
 * @var date
 */
 var $time = '';
 /**
 * event priority
-* @access public
+* @access protected
 * @var int
 */
 var $priority = '';
 /**
 * event source
-* @access public
+* @access protected
 * @var string
 */
 var $source = '';
 /**
 * event description
-* @access public
+* @access protected
 * @var string
 */
 var $description = '';
 /**
 * event comment
-* @access public
+* @access protected
 * @var string
 */
 var $comment = '';
 /**
 * event description
-* @access public
+* @access protected
 * @var string
 */
 var $capabilities = '';
 /**
 * event status (acknowledged etc.)
-* @access public
+* @access protected
 * @var string
 */
 var $status = '';
 /**
 * event image id
-* @access public
+* @access protected
 * @var int
 */
 var $image_id = '';
 /**
 * event resource id
-* @access public
+* @access protected
 * @var int
 */
 var $resource_id = '';
 
-//----------------------------------------------- private section
 /**
 * name of database table
-* @access public
+* @access protected
 * @var string
 */
 var $_db_table;
@@ -396,8 +395,8 @@ var $_db_table;
 	* <code>
 	* $event = new event();
 	* $arr = $event->get_list();
-	* // $arr[0]['id']
-	* // $arr[0]['name']
+	* // $arr[0]['value']
+	* // $arr[0]['label']
 	* </code>
 	* @access public
 	* @return array

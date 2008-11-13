@@ -19,58 +19,57 @@ class storage
 
 /**
 * storage id
-* @access public
+* @access protected
 * @var int
 */
 var $id = '';
 /**
 * storage name
-* @access public
+* @access protected
 * @var string
 */
 var $name = '';
 /**
 * resource id used by storage
-* @access public
+* @access protected
 * @var int
 */
 var $resource_id = '';
 /**
 * storage type
-* @access public
+* @access protected
 * @var string
 */
 var $type = '';
 /**
 * state of storage
-* @access public
+* @access protected
 * @var string
 */
 var $state = '';
 /**
 * comment for storage
-* @access public
+* @access protected
 * @var string
 */
 var $comment = '';
 /**
 * storage capabilities
-* @access public
+* @access protected
 * @var string
 */
 var $capabilities = '';
 
-//----------------------------------------------- private section
 /**
 * name of database table
-* @access public
+* @access protected
 * @var string
 */
 var $_db_table;
 
 /**
 * event object
-* @access public
+* @access protected
 * @var object
 */
 var $_event;
@@ -299,8 +298,8 @@ var $_event;
 	* <code>
 	* $storage = new storage();
 	* $arr = $storage->get_list();
-	* // $arr[0]['id']
-	* // $arr[0]['name']
+	* // $arr[0]['value']
+	* // $arr[0]['label']
 	* </code>
 	* @access public
 	* @return array

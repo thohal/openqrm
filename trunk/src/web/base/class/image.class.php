@@ -24,86 +24,86 @@ class image
 
 /**
 * image id
-* @access public
+* @access protected
 * @var int
 */
 var $id = '';
 /**
 * image name
-* @access public
+* @access protected
 * @var string
 */
 var $name = '';
 /**
 * image version
-* @access public
+* @access protected
 * @var string
 */
 var $version = '';
 /**
 * image type
-* @access public
+* @access protected
 * @var string
 */
 var $type = '';
 /**
 * image rootdevice
-* @access public
+* @access protected
 * @var string
 */
 var $rootdevice = '';
 /**
 * image root filesystem
-* @access public
+* @access protected
 * @var string
 */
 var $rootfstype = '';
 /**
 * storage id
-* @access public
+* @access protected
 * @var int
 */
 var $storageid = '';
 /**
 * deployment parameter
-* @access public
+* @access protected
 * @var string
 */
 var $deployment_parameter = '';
 /**
 * image is shared?
-* @access public
+* @access protected
 * @var bool
 */
 var $isshared = '';
 /**
 * image comment
-* @access public
+* @access protected
 * @var string
 */
 var $comment = '';
 /**
 * image capabilities
-* @access public
+* @access protected
 * @var string
 */
 var $capabilities = '';
-//----------------------------------------------- private section
+
 /**
 * name of database table
-* @access public
+* @access protected
 * @var string
 */
 var $_db_table;
 /**
 * path to openqrm basedir
-* @access public
+* @access protected
 * @var string
 */
 var $_base_dir;
 /**
 * event object
-* @access public
+* @access protected
 * @var object
 */
 var $_event;
@@ -352,8 +352,8 @@ var $_event;
 	* <code>
 	* $image = new image();
 	* $arr = $image->get_list();
-	* // $arr[0]['id']
-	* // $arr[0]['name']
+	* // $arr[0]['value']
+	* // $arr[0]['label']
 	* </code>
 	* @access public
 	* @return array

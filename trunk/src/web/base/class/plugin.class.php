@@ -19,19 +19,19 @@ class plugin
 {
 /**
 * path to openqrm webdir
-* @access privat
+* @access protected
 * @var string
 */
 var $_web_dir;
 /**
 * path to openqrm basedir
-* @access privat
+* @access protected
 * @var string
 */
 var $_base_dir;
 /**
 * event object
-* @access privat
+* @access protected
 * @var object
 */
 var $_event;

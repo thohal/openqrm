@@ -1,163 +1,322 @@
 <?php
+/**
+ * @copyright Copyright (c) 2008, openqrm
+ * @license see openqrm licence
+ * @package base
+ * @author Matt Rechenburg <mattr_sf@users.sourceforge.net>
+ * @version 1.0
+ * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @version 1.1 added documentation
+ */
 
-// This class represents a deployment type
 
-$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
-require_once "$RootDir/include/openqrm-database-functions.php";
-require_once "$RootDir/class/event.class.php";
+	$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
+	require_once "$RootDir/include/openqrm-database-functions.php";
+	require_once "$RootDir/class/event.class.php";
 
-global $DEPLOYMENT_INFO_TABLE;
-$event = new event();
-global $event;
 
-class deployment {
 
+class deployment
+{
+
+/**
+* deployment id
+* @access protected
+* @var int
+*/
 var $id = '';
+/**
+* deployment name
+* @access protected
+* @var string
+*/
 var $name = '';
+/**
+* deployment type
+* @access protected
+* @var string
+*/
 var $type = '';
+/**
+* deployment description
+* @access protected
+* @var string
+*/
 var $description = '';
+/**
+* deployment storagetype
+* @access protected
+* @var string
+*/
 var $storagetype = '';
+/**
+* deployment storagedescription
+* @access protected
+* @var string
+*/
 var $storagedescription = '';
+/**
+* deployment mapping
+* @access protected
+* @var string
+*/
 var $mapping = '';
 
-// ---------------------------------------------------------------------------------
-// methods to create an instance of an deployment object filled from the db
-// ---------------------------------------------------------------------------------
+/**
+* name of database table
+* @access protected
+* @var string
+*/
+var $_db_table;
+/**
+* event object
+* @access protected
+* @var object
+*/
+var $_event;
 
-// returns an deployment from the db selected by id, type or name
-function get_instance($id, $name, $type) {
-	global $DEPLOYMENT_INFO_TABLE;
-	global $event;
-	$db=openqrm_get_db_connection();
-	if ("$id" != "") {
-		$deployment_array = &$db->Execute("select * from $DEPLOYMENT_INFO_TABLE where deployment_id=$id");
-	} else if ("$name" != "") {
-		$deployment_array = &$db->Execute("select * from $DEPLOYMENT_INFO_TABLE where deployment_name='$name'");
-	} else if ("$type" != "") {
-		$deployment_array = &$db->Execute("select * from $DEPLOYMENT_INFO_TABLE where deployment_type='$type'");
-	} else {
-		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "deployment.class.php", "Could not create instance of deployment without data", "", "", 0, 0, 0);
-		exit(-1);
+
+	//--------------------------------------------------
+	/**
+	* Constructor
+	*/
+	//--------------------------------------------------
+	function deployment() {
+		$this->init();
 	}
-	foreach ($deployment_array as $index => $deployment) {
-		$this->id = $deployment["deployment_id"];
 
-		$this->id = $deployment["deployment_id"];
-		$this->name = $deployment["deployment_name"];
-		$this->type = $deployment["deployment_type"];
-		$this->description = $deployment["deployment_description"];
-		$this->storagetype = $deployment["deployment_storagetype"];
-		$this->storagedescription = $deployment["deployment_storagedescription"];
-		$this->mapping = $deployment["deployment_mapping"];
+	//--------------------------------------------------
+	/**
+	* init deployment environment
+	* @access public
+	*/
+	//--------------------------------------------------
+	function init() {
+		global $DEPLOYMENT_INFO_TABLE;
+		$this->_db_table = $DEPLOYMENT_INFO_TABLE;
+		$this->_event = new event();
 	}
-	return $this;
-}
 
-// returns an deployment from the db selected by id
-function get_instance_by_id($id) {
-	$this->get_instance($id, "", "");
-	return $this;
-}
-
-// returns an deployment from the db selected by name
-function get_instance_by_name($name) {
-	$this->get_instance("", $name, "");
-	return $this;
-}
-
-// returns an deployment from the db selected by type
-function get_instance_by_type($type) {
-	$this->get_instance("", "", $type);
-	return $this;
-}
-
-// ---------------------------------------------------------------------------------
-// general deployment methods
-// ---------------------------------------------------------------------------------
-
-
-// checks if given deployment id is free in the db
-function is_id_free($deployment_id) {
-	global $DEPLOYMENT_INFO_TABLE;
-	global $event;
-	$db=openqrm_get_db_connection();
-	$rs = &$db->Execute("select deployment_id from $DEPLOYMENT_INFO_TABLE where deployment_id=$deployment_id");
-	if (!$rs)
-		$event->log("is_id_free", $_SERVER['REQUEST_TIME'], 2, "deployment.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
-	else
-	if ($rs->EOF) {
-		return true;
-	} else {
-		return false;
+	//--------------------------------------------------
+	/**
+	* get an instance of a deployment object from db
+	* @access public
+	* @param int $id
+	* @param string $name
+	* @param string $type
+	* @return object
+	*/
+	//--------------------------------------------------
+	function get_instance($id, $name, $type) {
+		$db=openqrm_get_db_connection();
+		if ("$id" != "") {
+			$deployment_array = &$db->Execute("select * from $this->_db_table where deployment_id=$id");
+		} else if ("$name" != "") {
+			$deployment_array = &$db->Execute("select * from $this->_db_table where deployment_name='$name'");
+		} else if ("$type" != "") {
+			$deployment_array = &$db->Execute("select * from $this->_db_table where deployment_type='$type'");
+		} else {
+			$this->_event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "deployment.class.php", "Could not create instance of deployment without data", "", "", 0, 0, 0);
+			exit(-1);
+		}
+		foreach ($deployment_array as $index => $deployment) {
+			$this->id = $deployment["deployment_id"];
+			$this->name = $deployment["deployment_name"];
+			$this->type = $deployment["deployment_type"];
+			$this->description = $deployment["deployment_description"];
+			$this->storagetype = $deployment["deployment_storagetype"];
+			$this->storagedescription = $deployment["deployment_storagedescription"];
+			$this->mapping = $deployment["deployment_mapping"];
+		}
+		return $this;
 	}
-}
 
-
-// adds deployment to the database
-function add($deployment_fields) {
-	global $DEPLOYMENT_INFO_TABLE;
-	global $event;
-	if (!is_array($deployment_fields)) {
-		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "deployment.class.php", "Deployment_field not well defined", "", "", 0, 0, 0);
-		return 1;
+	//--------------------------------------------------
+	/**
+	* get an instance of a deployment object by id
+	* @access public
+	* @param int $id
+	* @return object
+	*/
+	//--------------------------------------------------
+	function get_instance_by_id($id) {
+		$this->get_instance($id, "", "");
+		return $this;
 	}
-	$db=openqrm_get_db_connection();
-	$result = $db->AutoExecute($DEPLOYMENT_INFO_TABLE, $deployment_fields, 'INSERT');
-	if (! $result) {
-		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "deployment.class.php", "Failed adding new deployment to database", "", "", 0, 0, 0);
+
+	//--------------------------------------------------
+	/**
+	* get an instance of a deployment object by name
+	* @access public
+	* @param string $name
+	* @return object
+	*/
+	//--------------------------------------------------
+	function get_instance_by_name($name) {
+		$this->get_instance("", $name, "");
+		return $this;
 	}
+
+	//--------------------------------------------------
+	/**
+	* get an instance of a deployment object by type
+	* @access public
+	* @param string $type
+	* @return object
+	*/
+	//--------------------------------------------------
+	function get_instance_by_type($type) {
+		$this->get_instance("", "", $type);
+		return $this;
+	}
+
+	//--------------------------------------------------
+	/**
+	* add a deployment
+	* <code>
+	* $fields = array();
+	* $fields['deployment_name'] = 'somename';
+	* $fields['deployment_type'] = 'sometext';
+	* $fields['deployment_description'] = 'sometext';
+	* $fields['deployment_storagetype'] = 'sometext';
+	* $fields['deployment_storagedescription'] = 'sometext';
+	* $fields['deployment_mapping'] = 'sometext';
+	* $deployment = new deployment();
+	* $deployment->add($fields);
+	* </code>
+	* @access public
+	* @param array $deployment_fields
+	* @return bool
+	*/
+	//--------------------------------------------------
+	function add($deployment_fields) {
+		if (!is_array($deployment_fields)) {
+			$this->_event->log("add", $_SERVER['REQUEST_TIME'], 2, "deployment.class.php", "Deployment_field not well defined", "", "", 0, 0, 0);
+			return 1;
+		}
+		$db=openqrm_get_db_connection();
+		$result = $db->AutoExecute($this->_db_table, $deployment_fields, 'INSERT');
+		if (! $result) {
+			$this->_event->log("add", $_SERVER['REQUEST_TIME'], 2, "deployment.class.php", "Failed adding new deployment to database", "", "", 0, 0, 0);
+		}
+	}
+
+	//--------------------------------------------------
+	/**
+	* remove deployment by id
+	* @access public
+	* @param int $deployment_id
+	*/
+	//--------------------------------------------------
+	function remove($deployment_id) {
+		$db=openqrm_get_db_connection();
+		$rs = $db->Execute("delete from $this->_db_table where deployment_id=$deployment_id");
+	}
+
+	//--------------------------------------------------
+	/**
+	* remove deployment by deployment_type
+	* @access public
+	* @param int $deployment_id
+	*/
+	//--------------------------------------------------
+	function remove_by_type($type) {
+		$db=openqrm_get_db_connection();
+		$rs = $db->Execute("delete from $this->_db_table where deployment_type='$type'");
+	}
+
+	//--------------------------------------------------
+	/**
+	* get an array of all deployment names
+	* <code>
+	* $deployment = new deployment();
+	* $arr = $deployment->get_list();
+	* // $arr[0]['value']
+	* // $arr[0]['label']
+	* </code>
+	* @access public
+	* @return array
+	*/
+	//--------------------------------------------------
+	function get_list() {
+		$query = "select deployment_id, deployment_name from $this->_db_table";
+		$deployment_name_array = array();
+		$deployment_name_array = openqrm_db_get_result_double ($query);
+		return $deployment_name_array;
+	}
+
+	//--------------------------------------------------
+	/**
+	* get an array of all deployment descriptions
+	* <code>
+	* $deployment = new deployment();
+	* $arr = $deployment->get_description_list();
+	* // $arr[0]['value']
+	* // $arr[0]['label']
+	* </code>
+	* @access public
+	* @return array
+	*/
+	//--------------------------------------------------
+	function get_description_list() {
+		$query = "select deployment_id, deployment_description from $this->_db_table";
+		$deployment_name_array = array();
+		$deployment_name_array = openqrm_db_get_result_double ($query);
+		return $deployment_name_array;
+	}
+
+	//--------------------------------------------------
+	/**
+	* get an array of all deployment storage descriptions
+	* <code>
+	* $deployment = new deployment();
+	* $arr = $deployment->get_storagedescription_list();
+	* // $arr[0]['value']
+	* // $arr[0]['label']
+	* </code>
+	* @access public
+	* @return array
+	*/
+	//--------------------------------------------------
+	function get_storagedescription_list() {
+		$query = "select deployment_id, deployment_storagedescription from $this->_db_table";
+		$deployment_name_array = array();
+		$deployment_name_array = openqrm_db_get_result_double ($query);
+		return $deployment_name_array;
+	}
+
+	//--------------------------------------------------
+	/**
+	* get an array of all deployment storagetypes
+	* <code>
+	* $deployment = new deployment();
+	* $arr = $deployment->get_storagetype_list();
+	* // $arr[0]['value']
+	* // $arr[0]['label']
+	* </code>
+	* @access public
+	* @return array
+	*/
+	//--------------------------------------------------
+	function get_storagetype_list() {
+		$query = "select deployment_id, deployment_storagetype from $this->_db_table";
+		$ar_Return = array();
+		$ar_tmp = array();
+		$ar_result = openqrm_db_get_result_double ($query);
+
+		foreach($ar_result as $val) {
+			if($val['label'] != 'none') {
+				$ar_tmp[] = $val['label'];
+			}
+		}
+		$ar_tmp = array_unique($ar_tmp);
+
+		foreach($ar_tmp as $val) {
+			$ar_Return[] = array('label' => $val, 'value' => $val);
+		}
+	
+		return $ar_Return;
+	}
+
 }
-
-
-// removes deployment from the database
-function remove($deployment_id) {
-	global $DEPLOYMENT_INFO_TABLE;
-	$db=openqrm_get_db_connection();
-	$rs = $db->Execute("delete from $DEPLOYMENT_INFO_TABLE where deployment_id=$deployment_id");
-}
-
-// removes deployment from the database by deployment_type
-function remove_by_type($type) {
-	global $DEPLOYMENT_INFO_TABLE;
-	$db=openqrm_get_db_connection();
-	$rs = $db->Execute("delete from $DEPLOYMENT_INFO_TABLE where deployment_type='$type'");
-}
-
-
-
-// returns a list of all deployment names
-function get_list() {
-	global $DEPLOYMENT_INFO_TABLE;
-	$query = "select deployment_id, deployment_name from $DEPLOYMENT_INFO_TABLE";
-	$deployment_name_array = array();
-	$deployment_name_array = openqrm_db_get_result_double ($query);
-	return $deployment_name_array;
-}
-
-// returns a list of all deployment descriptions
-function get_description_list() {
-	global $DEPLOYMENT_INFO_TABLE;
-	$query = "select deployment_id, deployment_description from $DEPLOYMENT_INFO_TABLE";
-	$deployment_name_array = array();
-	$deployment_name_array = openqrm_db_get_result_double ($query);
-	return $deployment_name_array;
-}
-
-
-// returns a list of all deployment storage descriptions
-function get_storagedescription_list() {
-	global $DEPLOYMENT_INFO_TABLE;
-	$query = "select deployment_id, deployment_storagedescription from $DEPLOYMENT_INFO_TABLE";
-	$deployment_name_array = array();
-	$deployment_name_array = openqrm_db_get_result_double ($query);
-	return $deployment_name_array;
-}
-
-
-
-
-// ---------------------------------------------------------------------------------
-
-}
-
 ?>
