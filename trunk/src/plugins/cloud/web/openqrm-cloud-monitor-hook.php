@@ -164,7 +164,7 @@ function openqrm_cloud_monitor() {
 					// check if the ip is free
 					if (($ipt->ip_active == 1) && ($ipt->ip_appliance_id == 0) && ($ipt->ip_cr_id == 0)) {
 						$loop++;
-						$ipstr="$ipt->ip_address:$ipt->ip_subnet:$ipt->ip_gateway:$ipt->ip_dns1:$ipt->ip_dns2\n";
+						$ipstr="$ipt->ip_address:$ipt->ip_subnet:$ipt->ip_gateway:$ipt->ip_dns1:$ipt->ip_dns2:$ipt->ip_domain\n";
 						fwrite($fp, $ipstr);						
 						$ipt->activate($id, false);
 						$ipt->assign_to_appliance($id, $appliance_id, $cr_id);
@@ -205,7 +205,7 @@ function openqrm_cloud_monitor() {
 			$rmail = new cloudmailer();
 			$rmail->to = "$cu_email";
 			$rmail->from = "$cc_admin_email";
-			$rmail->subject = "openQRM Cloud: Your request $id is now active";
+			$rmail->subject = "openQRM Cloud: Your request $cr_id is now active";
 			$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/active_cloud_request.mail.tmpl";
 			$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@PASSWORD@@'=>"$appliance_password", '@@IP@@'=>"$resource_ip");
 			$rmail->var_array = $arr;
@@ -323,7 +323,10 @@ function openqrm_cloud_monitor() {
 				}
 			}
 		}
-
+		// unlink the netconf file
+		$appliance_netconf = "$OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf/cloud-net.conf.$cr_appliance_id";
+		unlink($appliance_netconf);
+	
 		// update appliance_id to 0 in request
 		$cr->setappliance($cr_id, 0);
 		// set request status to 6 = done
@@ -350,7 +353,7 @@ function openqrm_cloud_monitor() {
 		$rmail = new cloudmailer();
 		$rmail->to = "$cu_email";
 		$rmail->from = "$cc_admin_email";
-		$rmail->subject = "openQRM Cloud: Your request $id is fully deprovisioned now";
+		$rmail->subject = "openQRM Cloud: Your request $cr_id is fully deprovisioned now";
 		$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/done_cloud_request.mail.tmpl";
 		$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@IP@@'=>"$resource_ip");
 		$rmail->var_array = $arr;

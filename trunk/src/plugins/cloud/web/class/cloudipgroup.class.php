@@ -25,6 +25,7 @@ var $ig_subnet = '';
 var $ig_gateway = '';
 var $ig_dns1 = '';
 var $ig_dns2 = '';
+var $ig_domain = '';
 var $ig_activeips = '';
 
 
@@ -54,6 +55,7 @@ function get_instance($id, $name) {
 		$this->ig_gateway = $cloudipgroup["ig_gateway"];
 		$this->ig_dns1 = $cloudipgroup["ig_dns1"];
 		$this->ig_dns2 = $cloudipgroup["ig_dns2"];
+		$this->ig_domain = $cloudipgroup["ig_domain"];
 		$this->ig_activeips = $cloudipgroup["ig_activeips"];
 	}
 	return $this;

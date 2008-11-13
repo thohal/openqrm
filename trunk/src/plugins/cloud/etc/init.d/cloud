@@ -32,19 +32,26 @@ function cloud_start() {
 	OPENQRM_INTERFACE=`ifconfig | grep $resource_mac | grep :oq | cut -d':' -f1`
 	EXTERNAL_INTERFACES_LIST=`ifconfig -a | grep eth | awk {' print $1 '} | grep -v $OPENQRM_INTERFACE`
 
-	// assign the network conf
+	# assign the network conf
 	for CONFIG in `cat $NETWORK_CONF`; do
 		IP=`echo $CONFIG | cut -d':' -f1`
 		SUBNET=`echo $CONFIG | cut -d':' -f2`
 		GATEWAY=`echo $CONFIG | cut -d':' -f3`
 		DNS1=`echo $CONFIG | cut -d':' -f4`
 		DNS2=`echo $CONFIG | cut -d':' -f5`
+		DOMAIN=`echo $CONFIG | cut -d':' -f6`
 		for INTERFACE in $EXTERNAL_INTERFACES_LIST; do
-			// here we set the interface
+			# here we set the interface
 			ifconfig $INTERFACE $IP netmask $SUBNET up
-			// configure the route
+			# configure the route
 			route add default gw $GATEWAY
-			// remove interface from the list
+			# configure /etc/resolv.conf
+			> /etc/resolv.conf
+			echo "domain $DOMAIN" >> /etc/resolv.conf
+			echo "search $DOMAIN" >> /etc/resolv.conf
+			echo "nameserver $DNS1" >> /etc/resolv.conf
+			echo "nameserver $DNS2" >> /etc/resolv.conf
+			# remove interface from the list
 			EXTERNAL_INTERFACES_LIST=`echo $EXTERNAL_INTERFACES_LIST | sed -e "s/$INTERFACE//g"`
 			export EXTERNAL_INTERFACES_LIST
 			break

@@ -1,0 +1,15 @@
+.htmlobject_tab_box {
+	width:800px;
+}
+.htmlobject_td {
+	padding:5px !important;
+}
+
+
+
+.tr_hover {
+background-color:#eee;
+}
+.tr_click {
+background-color:#ddd;
+}

@@ -30,6 +30,7 @@ var $ip_subnet = '';
 var $ip_gateway = '';
 var $ip_dns1 = '';
 var $ip_dns2 = '';
+var $ip_domain = '';
 
 
 // ---------------------------------------------------------------------------------
@@ -59,6 +60,7 @@ function get_instance($id) {
 		$this->ip_gateway = $cloudiptables["ip_gateway"];
 		$this->ip_dns1 = $cloudiptables["ip_dns1"];
 		$this->ip_dns2 = $cloudiptables["ip_dns2"];
+		$this->ip_domain = $cloudiptables["ip_domain"];
 	}
 	return $this;
 }
@@ -133,13 +135,14 @@ function load($ig_id, $ip_array) {
 	$ig_gateway = $ig->ig_gateway;
 	$ig_dns1 = $ig->ig_dns1;
 	$ig_dns2 = $ig->ig_dns2;
+	$ig_domain = $ig->ig_domain;
 
 	$db=openqrm_get_db_connection();
 	foreach($ip_array as $ipadr) {	
 		$ip_tmp = str_replace("\n", "", $ipadr);
 		$ip = str_replace("\r", "", $ip_tmp);
 		$ip_id = openqrm_db_get_free_id('ip_id', $CLOUD_IPTABLE);
-		$isql = "insert into $CLOUD_IPTABLE (ip_id, ip_ig_id, ip_appliance_id, ip_cr_id, ip_active, ip_address, ip_subnet, ip_gateway, ip_dns1, ip_dns2) values ($ip_id, $ig_id, 0, 0, 1, \"$ip\", \"$ig_subnet\", \"$ig_gateway\", \"$ig_dns1\", \"$ig_dns2\")";
+		$isql = "insert into $CLOUD_IPTABLE (ip_id, ip_ig_id, ip_appliance_id, ip_cr_id, ip_active, ip_address, ip_subnet, ip_gateway, ip_dns1, ip_dns2, ip_domain) values ($ip_id, $ig_id, 0, 0, 1, \"$ip\", \"$ig_subnet\", \"$ig_gateway\", \"$ig_dns1\", \"$ig_dns2\", \"$ig_domain\")";
 //		$event->log("load", $_SERVER['REQUEST_TIME'], 2, "cloudiptables.class.php", "Loading ip-address $ip into the Cloud portal", "", "", 0, 0, 0);
 		$rs = $db->Execute($isql);
 	}
@@ -198,6 +201,25 @@ function get_count() {
 }
 
 
+
+
+// returns the number of active ips per ipgroup in the table
+function get_active_count($ipgroup) {
+	global $CLOUD_IPTABLE;
+	global $event;
+	$count=0;
+	$query = "select ip_id from $CLOUD_IPTABLE where ip_active=1 and ip_ig_id=$ipgroup";
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute($query);
+	if (!$rs)
+		$event->log("get_list", $_SERVER['REQUEST_TIME'], 2, "cloudiptables.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	else
+	while (!$rs->EOF) {
+		$count++;
+		$rs->MoveNext();
+	}
+	return $count;
+}
 
 
 

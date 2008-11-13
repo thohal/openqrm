@@ -1,5 +1,6 @@
 
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+<link rel="stylesheet" type="text/css" href="cloud.css" />
 
 <?php
 
@@ -49,7 +50,6 @@ if(htmlobject_request('action') != '') {
 
 		case 'create_ipgroup':
 			$ig_name = $ipgroup_fields['ig_name'];
-			echo "Creating IpGroup $ipgroup_name <br>";
 			$ig = new cloudipgroup();
 			$ipgroup_fields['ig_id'] = openqrm_db_get_free_id('ig_id', $CLOUD_IPGROUP_TABLE);
 			$ig->add($ipgroup_fields);
@@ -116,6 +116,9 @@ function cloud_ipgroup_manager() {
 	$arHead['ig_dns2'] = array();
 	$arHead['ig_dns2']['title'] ='2. DNS';
 
+	$arHead['ig_domain'] = array();
+	$arHead['ig_domain']['title'] ='Domain';
+
 	$arHead['ig_activeips'] = array();
 	$arHead['ig_activeips']['title'] ='Active IPs';
 
@@ -129,8 +132,10 @@ function cloud_ipgroup_manager() {
 	$ig_array = array();
 	$ig_array = $ig->display_overview(0, 100, 'ig_id', 'ASC');
 	foreach ($ig_array as $index => $ipg) {
-			$igid = $ipg["ig_id"];
-			$listlink = "<a href=\"cloud-iptables-manager.php?ig_id=$igid\">list</a>";
+		$igid = $ipg["ig_id"];
+		$listlink = "<a href=\"cloud-iptables-manager.php?ig_id=$igid\">list</a>";
+		$iptab = new cloudiptables();
+		$active_ips = $iptab->get_active_count($igid);
 		$arBody[] = array(
 			'ig_id' => $ipg["ig_id"],
 			'ig_name' => $ipg["ig_name"],
@@ -139,7 +144,8 @@ function cloud_ipgroup_manager() {
 			'ig_gateway' => $ipg["ig_gateway"],
 			'ig_dns1' => $ipg["ig_dns1"],
 			'ig_dns2' => $ipg["ig_dns2"],
-			'ig_activeips' => $ipg["ig_activeips"],
+			'ig_domain' => $ipg["ig_domain"],
+			'ig_activeips' => $active_ips,
 			'ig_list' => $listlink,
 		);
 	}
@@ -180,7 +186,7 @@ function cloud_create_ipgroup() {
 	$disp = $disp.htmlobject_input('ig_gateway', array("value" => '[gateway]', "label" => 'Gateway'), 'text', 20);
 	$disp = $disp.htmlobject_input('ig_dns1', array("value" => '[fist-dns-server]', "label" => '1. DNS'), 'text', 20);
 	$disp = $disp.htmlobject_input('ig_dns2', array("value" => '[second-dns-server]', "label" => '2. DNS'), 'text', 20);
-
+	$disp = $disp.htmlobject_input('ig_domain', array("value" => '[domain-name]', "label" => 'Domain'), 'text', 20);
 	$disp = $disp."<input type=hidden name='action' value='create_ipgroup'>";
 	$disp = $disp."<br>";
 	$disp = $disp."<input type=submit value='Create'>";

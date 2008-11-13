@@ -1,5 +1,6 @@
 
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+<link rel="stylesheet" type="text/css" href="cloud.css" />
 
 <?php
 
@@ -114,6 +115,8 @@ function cloud_list_ipgroup($id) {
 	$arHead['ip_dns2'] = array();
 	$arHead['ip_dns2']['title'] ='2. DNS';
 
+	$arHead['ip_domain'] = array();
+	$arHead['ip_domain']['title'] ='Domain';
 
 	$arBody = array();
 
@@ -135,6 +138,7 @@ function cloud_list_ipgroup($id) {
 			'ip_gateway' => $ipg["ip_gateway"],
 			'ip_dns1' => $ipg["ip_dns1"],
 			'ip_dns2' => $ipg["ip_dns2"],
+			'ip_domain' => $ipg["ip_domain"],
 		);
 	}
 
