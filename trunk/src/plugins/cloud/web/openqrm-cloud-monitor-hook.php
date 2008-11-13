@@ -30,6 +30,7 @@ global $APPLIANCE_INFO_TABLE;
 global $IMAGE_INFO_TABLE;
 
 global $OPENQRM_SERVER_BASE_DIR;
+global $OPENQRM_EXEC_PORT;
 $refresh_delay=5;
 
 $event = new event();
@@ -55,6 +56,7 @@ function openqrm_cloud_monitor() {
 	global $IMAGE_INFO_TABLE;
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_SERVER_IP_ADDRESS;
+	global $OPENQRM_EXEC_PORT;
 	global $openqrm_server;
 
 	$event->log("openqrm_cloud_monitor", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-monitor-hook.php", "Checking for Cloud events to be handled.", "", "", 0, 0, 0);
@@ -155,6 +157,21 @@ function openqrm_cloud_monitor() {
 				$image_comment = $image->comment;
 				$image_capabilities = $image->capabilities;
 				$image_deployment_parameter = $image->deployment_parameter;
+
+// storage dependency !
+// currently supported storage types are 
+// lvm-nfs-deployment
+// netapp-nfs-deployment
+// nfs-deployment
+				// in case of any nfs-deployment type we need to update the IMAGE_ROOT_DIR param
+				if ( (!strcmp($image_type, "lvm-nfs-deployment")) || (!strcmp($image_type, "netapp-nfs-deployment")) || (!strcmp($image_type, "nfs-deployment")) ) {
+					$image_clone_deployment_parameter = str_replace($image_name, $image_clone_name, $image_deployment_parameter);
+					$image_deployment_parameter = $image_clone_deployment_parameter;
+				}
+
+// storage dependency !
+
+
 				// get new image id
 				$image_id  = openqrm_db_get_free_id('image_id', $IMAGE_INFO_TABLE);
 
@@ -195,6 +212,39 @@ function openqrm_cloud_monitor() {
 	
 				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Sending clone command to storage server resource $resource_ip / $resource_id", "", "", 0, 0, 0);
 
+// storage dependency !
+// currently supported storage types are 
+// lvm-nfs-deployment
+// netapp-nfs-deployment
+// nfs-deployment
+				// in case of any nfs-deployment type we need to update the IMAGE_ROOT_DIR param
+				if (!strcmp($image_type, "lvm-nfs-deployment")) {
+
+					$vol_tmp=trim($image_deployment_parameter);
+					$vol_tmp1=str_replace("IMAGE_ROOT_DIR=\"", "", $vol_tmp);
+					$endpos=strpos('"', $vol_tmp1);
+					$full_vol_name=substr($vol_tmp1, 0, $endpos-1);
+					$vol_dir=dirname($full_vol_name);
+					$vol=str_replace("/", "", $vol_dir);
+					// set default snapshot size
+					$disk_size=5000;
+					if (strlen($cr->disk_req)) {
+						$disk_size=$cr->disk_req;
+					}
+					$image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage snap -n $image_name -v $vol -t lvm-nfs-deployment -s $image_clone_name -m $cr->disk_req";
+					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_clone_cmd", "", "", 0, 0, 0);
+					$resource->send_command($resource_ip, $image_clone_cmd);
+				} else if (!strcmp($image_type, "netapp-nfs-deployment")) {
+					$image_clone_cmd="";
+//					$resource->send_command($resource_ip, $image_clone_cmd);
+				} else if (!strcmp($image_type, "nfs-deployment")) {
+					$image_clone_cmd="";
+//					$resource->send_command($resource_ip, $image_clone_cmd);
+				} else {
+					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to clone the image from type $image_type.", "", "", 0, 0, 0);
+					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types are lvm-nfs-deployment, netapp-nfs-deployment and nfs-deployment.", "", "", 0, 0, 0);
+				}
+// storage dependency !
 
 			
 			
@@ -213,7 +263,8 @@ function openqrm_cloud_monitor() {
 			// send command to the openQRM-server
 			$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac $kernel->name");
 
-			//start the appliance
+			//start the appliance, refresh the object before in case of clone-on-deploy
+			$appliance->get_instance_by_id($appliance_id);
 			$appliance->start();
 			
 			// update appliance id in request
@@ -411,7 +462,55 @@ function openqrm_cloud_monitor() {
 		if ($cr->shared_req == 1) {
 			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Request ID $cr_id has clone-on-deploy activated. Removing the cloned image", "", "", 0, 0, 0);
 			
+
+			// get image definition
 			$image = new image();
+			$image->get_instance_by_id($cr->image_id);
+			$image_name = $image->name;
+			$image_type = $image->type;
+			$image_storageid = $image->storageid;
+			$image_deployment_parameter = $image->deployment_parameter;
+
+			// get image storage
+			$storage = new storage();
+			$storage->get_instance_by_id($image_storageid);
+			$storage_resource_id = $storage->resource_id;
+			// get storage resource
+			$resource = new resource();
+			$resource->get_instance_by_id($storage_resource_id);
+			$resource_id = $resource->id;
+			$resource_ip = $resource->ip;
+							
+// storage dependency !
+// currently supported storage types are 
+// lvm-nfs-deployment
+// netapp-nfs-deployment
+// nfs-deployment
+			// in case of any nfs-deployment type we need to update the IMAGE_ROOT_DIR param
+			if (!strcmp($image_type, "lvm-nfs-deployment")) {
+				$vol_tmp=trim($image_deployment_parameter);
+				$vol_tmp1=str_replace("IMAGE_ROOT_DIR=\"", "", $vol_tmp);
+				$endpos=strpos('"', $vol_tmp1);
+				$full_vol_name=substr($vol_tmp1, 0, $endpos-1);
+				$vol_dir=dirname($full_vol_name);
+				$vol=str_replace("/", "", $vol_dir);
+
+				$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage remove -n $image_name -v $vol -t lvm-nfs-deployment";
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+				$resource->send_command($resource_ip, $image_remove_clone_cmd);
+			} else if (!strcmp($image_type, "netapp-nfs-deployment")) {
+				$image_clone_cmd="";
+//					$resource->send_command($resource_ip, $image_clone_cmd);
+			} else if (!strcmp($image_type, "nfs-deployment")) {
+				$image_clone_cmd="";
+//					$resource->send_command($resource_ip, $image_clone_cmd);
+			} else {
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to remove clone from image type $image_type.", "", "", 0, 0, 0);
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types are lvm-nfs-deployment, netapp-nfs-deployment and nfs-deployment.", "", "", 0, 0, 0);
+			}
+// storage dependency !
+		
+			
 			$image->remove($cr->image_id);
 			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Removing the cloned image $cr->image_id !", "", "", 0, 0, 0);
 

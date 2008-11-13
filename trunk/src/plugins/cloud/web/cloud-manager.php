@@ -416,7 +416,7 @@ function cloud_create_request() {
 	
 	$disp = $disp.htmlobject_select('cr_ram_req', $available_memtotal, 'Memory');
 	$disp = $disp.htmlobject_select('cr_cpu_req', $available_cpunumber, 'CPUs');
-//	$disp = $disp.htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk'), 'text', 20);
+	$disp = $disp.htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk'), 'text', 20);
 	$disp = $disp.htmlobject_select('cr_network_req', array(array('value' =>1, 'label' =>1), array('value' =>2, 'label' =>2), array('value' =>3, 'label' =>3), array('value' =>4, 'label' =>4)), 'Network-cards');
 	$disp = $disp.htmlobject_input('cr_ha_req', array("value" => 1, "label" => 'Highavailable'), 'checkbox', false);
 	$disp = $disp.htmlobject_input('cr_shared_req', array("value" => 1, "label" => 'Clone-on-deploy'), 'checkbox', false);
