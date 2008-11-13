@@ -38,11 +38,6 @@
 	width:40px;
 	vertical-align:top;
 }
-.htmlobject_td.id {
-	text-align:center;
-	vertical-align:top;
-	width:20px;
-}
 .htmlobject_td.storage_data {
 	text-align:left;
 	width:300px;
@@ -65,6 +60,13 @@
 	vertical-align:top;
 	width:25px;
 }
+.htmlobject_td.id,
+.htmlobject_td.delident {
+	text-align:center;
+	vertical-align:top;
+	width:20px;
+}
+
 .htmlobject_td.head {
 	border: 0px none;
 }

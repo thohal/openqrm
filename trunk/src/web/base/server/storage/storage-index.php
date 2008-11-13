@@ -26,6 +26,7 @@ $strMsg = '';
 			switch (htmlobject_request('subaction')) {
 				case '' :
 					if(isset($_REQUEST['id'])) {
+						require_once "$RootDir/class/resource.class.php";
 						$i = 0;
 						$str_ident = '';
 						$args = array('action' => 'remove');
@@ -33,15 +34,22 @@ $strMsg = '';
 						$arBody = array();
 						$storage = new storage();
 						$deployment = new deployment();
-	
+						$resource = new resource();
 
 						foreach($_REQUEST['id'] as $id) {
 							$storage->get_instance_by_id($id);
 							$deployment->get_instance_by_id($storage->type);
+							$resource->get_instance_by_id($storage->resource_id);
+
+						$str = '<b>Resource:</b> '.$resource->id.' / '.$resource->ip.'<br>
+								<b>Type:</b> '.$deployment->storagetype.'<br>
+								<b>Deployment:</b> '.$deployment->storagedescription;
+
 							$arBody[$i] = array(
 								'storage_id' => $storage->id,
 								'storage_name' => $storage->name,
-								'storage_type' => $deployment->storagedescription,
+								'storage_data' => $str,
+								'storage_comment' => $storage->comment,
 							);
 							$str_ident .= htmlobject_input('identifier[]', array('value' => $id), 'hidden');
 							$args =  array_merge($args, array('id[]' => $id));
@@ -53,11 +61,21 @@ $strMsg = '';
 						$arHead['storage_id']['title'] ='ID';
 						$arHead['storage_name'] = array();
 						$arHead['storage_name']['title'] ='Name';
-						$arHead['storage_type'] = array();
-						$arHead['storage_type']['title'] ='Storage Type';
+						$arHead['storage_data'] = array();
+						$arHead['storage_data']['title'] ='';
+						$arHead['storage_comment'] = array();
+						$arHead['storage_comment']['title'] ='';
+
+						$headdata = '<a href="'.$thisfile.'?storage_filter='.htmlobject_request('storage_filter').'"><< cancel</a>';
+						$headdata .= htmlobject_input('action', array('value' => 'remove'), 'hidden');
+						$headdata .= htmlobject_input('storage_filter', array("value" => htmlobject_request('storage_filter'), "label" => ''), 'hidden');
+						$headdata .= $str_ident;
+						$headdata .= '<br><br>';
+
+						$args =  array_merge($args, array('storage_filter' => htmlobject_request('storage_filter')));
 					
 						$table = new htmlobject_table_builder('','','','','','del_');
-						$table->add_headrow('<a href="'.$thisfile.'"><< cancel</a>'.htmlobject_input('action', array('value' => 'remove'), 'hidden').$str_ident);
+						$table->add_headrow($headdata);
 						$table->id = 'Tabelle';
 						$table->css = 'htmlobject_table';
 						$table->border = 1;
@@ -125,7 +143,7 @@ function storage_display() {
 	$arHead['storage_name']['title'] ='Name';
 
 	$arHead['storage_type'] = array();
-	$arHead['storage_type']['title'] ='Storage Type';
+	$arHead['storage_type']['title'] ='Type';
 	$arHead['storage_type']['hidden'] = true;
 
 	$arHead['storage_resource_id'] = array();
@@ -168,8 +186,8 @@ function storage_display() {
 		}
 
 		$str = '<b>Resource:</b> '.$storage_resource->id.' / '.$storage_resource->ip.'<br>
-				<b>Storage Type:</b> '.$deployment->storagetype.'<br>
-				<b>Deployment:</b> '.$deployment->name;
+				<b>Type:</b> '.$deployment->storagetype.'<br>
+				<b>Deployment:</b> '.$deployment->storagedescription;
 
 		if (!strlen(htmlobject_request('storage_filter')) || strstr(htmlobject_request('storage_filter'), $deployment->storagetype )) {
 			$arBody[] = array(
@@ -181,7 +199,7 @@ function storage_display() {
 				'storage_resource_id' => "",
 				'storage_data' => $str,
 				'storage_comment' => $storage_db["storage_comment"],
-				'storage_edit' => '<a href="storage-edit.php?storage_id='.$storage_db["storage_id"].'&currenttab=tab2">edit</a>',
+				'storage_edit' => '<a href="storage-edit.php?storage_id='.$storage_db["storage_id"].'&currenttab=tab2&storage_filter='.htmlobject_request('storage_filter').'">edit</a>',
 			);
 		}
 
@@ -217,9 +235,9 @@ $ar_tabs = array();
 if(isset($arAction)) {
 	$ar_tabs[] = $arAction;
 } else {
-	$ar_tabs[] = array('label' => 'Storage List', 'value' => storage_display());
+	$ar_tabs[] = array('label' => 'Storage List', 'value' => storage_display(), 'request' => array('storage_filter' => htmlobject_request('storage_filter')));
 	if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
-		$ar_tabs[] = array('label' => 'New Storage', 'target' => 'storage-new.php');
+		$ar_tabs[] = array('label' => 'New Storage', 'target' => 'storage-new.php', 'request' => array('storage_filter' => htmlobject_request('storage_filter')));
 	}
 }
 

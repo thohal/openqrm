@@ -18,7 +18,7 @@ $storage_id = htmlobject_request("storage_id");
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 global $thisfile;
 	if($url == '') {
-		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
+		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&storage_filter='.htmlobject_request('storage_filter');
 	}
 	header("Location: $url");
 	exit;
@@ -73,6 +73,7 @@ $error = 0;
 				$args = '?strMsg='.$strMsg;
 				$args .= '&storage_id='.$storage_fields["storage_id"];
 				$args .= '&currenttab=tab0';
+				$args .= '&storage_filter='.htmlobject_request('storage_filter');
 				$url = 'storage-index.php'.$args;
 
 			} 
@@ -144,6 +145,7 @@ function storage_edit($storage_id='') {
 	$store .= htmlobject_textarea('storage_comment', array("value" => $comment, "label" => 'Comment'));
 	$store .= htmlobject_input('storage_id', array("value" => $storage_id, "label" => ''), 'hidden');
 	$store .= htmlobject_input('currenttab', array("value" => 'tab2', "label" => ''), 'hidden');
+	$store .= htmlobject_input('storage_filter', array("value" => htmlobject_request('storage_filter'), "label" => ''), 'hidden');
 
 	$store_action = array('update');
 
@@ -239,9 +241,9 @@ function storage_edit($storage_id='') {
 
 
 $output = array();
-$output[] = array('label' => 'Storage List', 'value' => '', 'target' => 'storage-index.php');
-$output[] = array('label' => 'New Storage', 'value' => '', 'target' => 'storage-new.php');
-$output[] = array('label' => 'Edit Storage', 'value' => storage_edit($storage_id), 'request' => array('storage_id' => $storage_id));
+$output[] = array('label' => 'Storage List', 'value' => '', 'target' => 'storage-index.php', 'request' => array('storage_filter' => htmlobject_request('storage_filter')));
+$output[] = array('label' => 'New Storage', 'value' => '', 'target' => 'storage-new.php', 'request' => array('storage_filter' => htmlobject_request('storage_filter')));
+$output[] = array('label' => 'Edit Storage', 'value' => storage_edit($storage_id), 'request' => array('storage_id' => $storage_id, 'storage_filter' => htmlobject_request('storage_filter')));
 
 
 		

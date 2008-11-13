@@ -146,6 +146,7 @@ global $thisfile;
 			$store .= htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden');
 			$store .= htmlobject_input('step', array("value" => '2', "label" => ''), 'hidden');
 			$store .= htmlobject_input('identifier[]', array("value" => $_REQUEST['identifier'][0], "label" => ''), 'hidden');
+			$store .= htmlobject_input('storage_filter', array("value" => htmlobject_request('storage_filter'), "label" => ''), 'hidden');
 				
 			$store_action = array('save');
 
@@ -154,8 +155,9 @@ global $thisfile;
 		else {
 
 			$store = "";
-			$store .= htmlobject_select('storage_type', $deployment_list, 'Storage type', array(htmlobject_request('storage_type')));
+			$store .= htmlobject_select('storage_type', $deployment_list, 'Deployment', array(htmlobject_request('storage_type')));
 			$store .= htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden');
+			$store .= htmlobject_input('storage_filter', array("value" => htmlobject_request('storage_filter'), "label" => ''), 'hidden');
 			$store_action = array('select');
 
 		}
@@ -294,8 +296,8 @@ global $thisfile;
 
 
 $output = array();
-$output[] = array('label' => 'Storage List', 'value' => '', 'target' => 'storage-index.php');
-$output[] = array('label' => 'New Storage', 'value' => storage_edit());
+$output[] = array('label' => 'Storage List', 'value' => '', 'target' => 'storage-index.php', 'request' => array('storage_filter' => htmlobject_request('storage_filter')));
+$output[] = array('label' => 'New Storage', 'value' => storage_edit(), 'request' => array('storage_filter' => htmlobject_request('storage_filter')));
 
 
 ?>
