@@ -85,6 +85,15 @@ function date_to_timestamp($date) {
 }
 
 
+function redirect($strMsg, $currenttab = 'tab0', $url = '') {
+	global $thisfile;
+	if($url == '') {
+		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
+	}
+	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
+	exit;
+}
+
 
 
 
@@ -95,6 +104,13 @@ if(htmlobject_request('action') != '') {
 			foreach($_REQUEST['identifier'] as $id) {
 				$cr_request = new cloudrequest();
 				$cr_request->get_instance_by_id($id);
+
+				// only allow to delete requests which are not provisioned yet
+				if (($cr_request->status == 3) || ($cr_request->status == 5)) {
+					$strMsg="Request cannot be removed when in state active or deprovisioned";
+					redirect($strMsg);					
+					continue;				
+				}
 
 				// mail user before removing
 				$cr_cu_id = $cr_request->cu_id;
@@ -120,8 +136,15 @@ if(htmlobject_request('action') != '') {
 		case 'deprovision':
 			foreach($_REQUEST['identifier'] as $id) {
 				$cr_request = new cloudrequest();
-				// mail user before deprovisioning
 				$cr_request->get_instance_by_id($id);
+				// only allow to deprovision if cr is in state active
+				if ($cr_request->status != 3) {
+					$strMsg="Request only can be deprovisioned when in state active";
+					redirect($strMsg);					
+					continue;				
+				}
+
+				// mail user before deprovisioning
 				$cr_cu_id = $cr_request->cu_id;
 				$cl_user = new clouduser();
 				$cl_user->get_instance_by_id($cr_cu_id);
@@ -191,7 +214,8 @@ if(htmlobject_request('action') != '') {
 			$rmail->var_array = $arr;
 			$rmail->send();
 
-
+			$strMsg="Created new Cloud request";
+			redirect($strMsg);					
 			break;
 
 
