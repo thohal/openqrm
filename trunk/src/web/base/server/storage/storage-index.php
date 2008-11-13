@@ -150,8 +150,6 @@ function storage_display() {
 	$arBody = array();
 	$storage_array = $storage_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 
-	$storagetypes_tmp = array();
-
 	foreach ($storage_array as $index => $storage_db) {
 		$storage = new storage();
 		$storage->get_instance_by_id($storage_db["storage_id"]);
@@ -159,9 +157,6 @@ function storage_display() {
 		$storage_resource->get_instance_by_id($storage->resource_id);
 		$deployment = new deployment();
 		$deployment->get_instance_by_id($storage->type);
-
-		$storagetypes_tmp[] = $deployment->storagetype;
-
 		$resource_icon_default="/openqrm/base/img/resource.png";
 		$storage_icon = "/openqrm/base/plugins/$deployment->storagetype/img/storage.png";
 		$state_icon="/openqrm/base/img/$storage_resource->state.png";
@@ -192,13 +187,10 @@ function storage_display() {
 
 	}
 	
-	$storagetypes_tmp = array_unique($storagetypes_tmp);
+	$deployment = new deployment();
 	$storagetypes = array();
 	$storagetypes[] = array('label' => '', 'value' => '');
-	foreach($storagetypes_tmp as $val) {
-		$storagetypes[] = array('label' => $val, 'value' => $val);
-	}
-
+	$storagetypes = array_merge($storagetypes, $deployment->get_storagetype_list());
 
 	$table->id = 'Tabelle';
 	$table->add_headrow(htmlobject_select('storage_filter', $storagetypes, 'Filter by Type', array(htmlobject_request('storage_filter'))));
@@ -215,7 +207,6 @@ function storage_display() {
 		$table->identifier = 'storage_id';
 	}
 	$table->max = count($arBody);
-	#$table->limit = 10;
 	
 	return $disp.$table->get_string();
 }
