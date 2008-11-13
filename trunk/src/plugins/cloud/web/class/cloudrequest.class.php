@@ -294,6 +294,15 @@ function get_cr_for_appliance($appliance_id) {
 
 
 
+// function to re-set stop-time of a request
+function extend_stop_time($cloudrequest_id, $stop_time) {
+	global $CLOUD_REQUEST_TABLE;
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute("update $CLOUD_REQUEST_TABLE set cr_stop=$stop_time where cr_id=$cloudrequest_id");
+
+}
+
+
 
 // displays the cloudrequest-overview
 function display_overview($offset, $limit, $sort, $order) {

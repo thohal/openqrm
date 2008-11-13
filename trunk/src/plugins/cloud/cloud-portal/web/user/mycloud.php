@@ -130,6 +130,9 @@ if(htmlobject_request('action') != '') {
 				$rmail->send();
 
 				$cr_request->remove($id);
+
+				$strMsg="Removed Cloud request $id";
+				redirect($strMsg);					
 			}
 			break;
 
@@ -164,8 +167,31 @@ if(htmlobject_request('action') != '') {
 				$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop");
 				$rmail->var_array = $arr;
 				$rmail->send();
-
 				$cr_request->setstatus($id, 'deprovsion');
+
+				$strMsg="Set Cloud request $id to deprovision";
+				redirect($strMsg);					
+
+			}
+			break;
+
+
+		case 'extend':
+			foreach($_REQUEST['identifier'] as $id) {
+				$cr_request = new cloudrequest();
+				$cr_request->get_instance_by_id($id);
+				// only allow to delete requests which are not provisioned yet
+				if ($cr_request->status == 5) {
+					$strMsg="Request cannot be extended when in state deprovisioned";
+					redirect($strMsg);					
+					continue;				
+				}
+
+				$cr_stop=$_REQUEST['cr_stop'];
+				$new_stop_timestmp=date_to_timestamp($cr_stop);
+				$cr_request->extend_stop_time($id, $new_stop_timestmp);
+				$strMsg="Extended Cloud request $id to $cr_stop";
+				redirect($strMsg);
 			}
 			break;
 
@@ -304,6 +330,12 @@ function my_cloud_manager() {
 		$cr_start = date("d-m-Y H-i", $timestamp);
 		$timestamp=$cr["cr_stop"];
 		$cr_stop = date("d-m-Y H-i", $timestamp);
+		// preprare a calendar to let the user extend the request
+		$cr_stop_input="<input id=\"cr_stop\" type=\"text\" name=\"cr_stop\" value=\"$cr_stop\" size=\"20\" maxlength=\"20\">";
+		$cal="$cr_stop_input Extend <a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
+		$cal = $cal."<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+		$cal = $cal."</a>";
+
 
 		// fill the array for the table
 		$arBody[] = array(
@@ -312,7 +344,7 @@ function my_cloud_manager() {
 			'cr_status' => $cr_status_disp,
 			'cr_request_time' => $cr_request_time,
 			'cr_start' => $cr_start,
-			'cr_stop' => $cr_stop,
+			'cr_stop' => $cal,
 			'cr_appliance_id' => $cr["cr_appliance_id"],
 		);
 	}
@@ -326,7 +358,7 @@ function my_cloud_manager() {
 	$table->identifier_type = "checkbox";
 	$table->head = $arHead;
 	$table->body = $arBody;
-	$table->bottom = array('reload', 'deprovision', 'delete');
+	$table->bottom = array('reload', 'deprovision', 'extend', 'delete');
 	$table->identifier = 'cr_id';
 	$table->max = 100;
 	return $disp.$table->get_string();
