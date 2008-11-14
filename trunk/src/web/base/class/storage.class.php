@@ -314,6 +314,23 @@ var $_event;
 
 	//--------------------------------------------------
 	/**
+	* get an array of all storage types
+	* @access public
+	* @return array
+	*/
+	//--------------------------------------------------
+	function get_storage_types() {
+		$ar_Return = array();
+		$db=openqrm_get_db_connection();
+		$ar_tmp = $db->Execute("select storage_type, storage_name from $this->_db_table");
+		foreach($ar_tmp as $val) {
+			$ar_Return[] = $val['storage_type'];
+		}
+		return array_unique($ar_Return);
+	}
+
+	//--------------------------------------------------
+	/**
 	* get an array of storages
 	* @access public
 	* @param int $offset

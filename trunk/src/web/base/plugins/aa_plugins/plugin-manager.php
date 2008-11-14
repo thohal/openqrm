@@ -32,6 +32,7 @@ global $thisfile;
 if(htmlobject_request('action') != '' && $OPENQRM_USER->role == "administrator") {
 require_once ($RootDir.'/class/event.class.php');
 require_once ($RootDir.'/class/deployment.class.php');
+require_once ($RootDir.'/class/storage.class.php');
 require_once ($RootDir.'/class/openqrm_server.class.php');
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
@@ -48,7 +49,6 @@ $identifier = htmlobject_request('identifier');
 			$event = new event();
 			foreach($identifier as $plugin_name) {
 				$error = false;
-
 				$tmp = $plugin->get_config($plugin_name);
 				switch($tmp['type']) {
 					//------------------------- check if storage allready enabled
@@ -75,12 +75,32 @@ $identifier = htmlobject_request('identifier');
 			break;
 		case 'disable':
 			$event = new event();
-			foreach($identifier as $id) {
-				$return = $openqrm_server->send_command("openqrm_server_plugin_command $id uninstall $OPENQRM_USER->name $OPENQRM_USER->password");
-				if($return === true) {
-					$strMsg .= 'disabled '.$id.'<br>';
-				} else {
-					$strMsg .= $id.' not disabled <br>';
+			foreach($identifier as $plugin_name) {
+				$error = false;
+				$tmp = $plugin->get_config($plugin_name);
+				switch($tmp['type']) {
+					//------------------------- check if storage in use
+					case 'storage':
+						$storage = new storage();
+						$types = $storage->get_storage_types();
+						$deployment = new deployment();
+						$dep = $deployment->get_id_by_storagetype($plugin_name);
+						foreach($dep as $val) {
+							if(in_array($val['value'], $types)) {
+								$strMsg .= $plugin_name.' in use by storage<br>';
+								$error = true;
+							}
+						}
+					break;
+				}
+
+				if($error === false) {
+					$return = $openqrm_server->send_command("openqrm_server_plugin_command $plugin_name uninstall $OPENQRM_USER->name $OPENQRM_USER->password");
+					if($return === true) {
+						$strMsg .= 'disabled '.$plugin_name.'<br>';
+					} else {
+						$strMsg .= $plugin_name.' not disabled <br>';
+					}
 				}
 			}
 			redirect($strMsg);
