@@ -345,9 +345,7 @@ function openqrm_cloud_monitor() {
 
 		if ($cr_status == 3) {
 
-//			$one_hour = 3600;
-// for testing
-			$one_hour = 36;
+			$one_hour = 3600;
 
 			$now=$_SERVER['REQUEST_TIME'];
 
