@@ -1,21 +1,20 @@
 <?php
-$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
-require_once "$RootDir/include/openqrm-database-functions.php";
+/**
+ * @package openQRM
+ */
 
+	$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
+	require_once "$RootDir/include/openqrm-database-functions.php";
 
 /**
  * This class represents an event in the openQRM engine
  *
- * @copyright Copyright (c) 2008, openqrm
- * @license see openqrm licence
- * @package base
+ * @package openQRM
  * @author Matt Rechenburg <mattr_sf@users.sourceforge.net>
  * @version 1.0
  * @author Alexander Kuballa <akuballa@users.sourceforge.net>
  * @version 1.1 added documentation
  */
-
-
 class event
 {
 

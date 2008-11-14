@@ -1,21 +1,19 @@
 <?php
 /**
- * @copyright Copyright (c) 2008, openqrm
- * @license see openqrm licence
- * @package base
- * @author Matt Rechenburg <mattr_sf@users.sourceforge.net>
- * @version 1.0
- * @author Alexander Kuballa <akuballa@users.sourceforge.net>
- * @version 1.1 added documentation
+ * @package openQRM
  */
-
 
 	$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 	require_once "$RootDir/include/openqrm-database-functions.php";
 	require_once "$RootDir/class/event.class.php";
 
-
-
+/**
+ * @package openQRM
+ * @author Matt Rechenburg <mattr_sf@users.sourceforge.net>
+ * @version 1.0
+ * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @version 1.1 added documentation
+ */
 class deployment
 {
 

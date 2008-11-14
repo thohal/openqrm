@@ -1,4 +1,15 @@
 <?php
+/**
+ * @package Htmlobjects
+ */
+
+
+/**
+ * @package Htmlobjects
+ * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @version 1.0
+ */
+
 class htmlobject extends http
 {
 /**
@@ -47,8 +58,12 @@ var $_init_htmlobject;
 	}
 	
 }
-//--------------------------------------------------------------------------------------
 
+/**
+ * @package Htmlobjects
+ * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @version 1.0
+ */
 class htmlobject_select extends htmlobject
 {
 /**
@@ -159,48 +174,71 @@ var $_init_select;
 	}
 }
 
-//-----------------------------------------------------------------------
-
+/**
+ * @package Htmlobjects
+ * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @version 1.0
+ */
 class htmlobject_input extends htmlobject
 {
 /**
-* @access public * @var bool
+* @access public 
+* @var bool
 */
 var $checked = false;
 /**
 * disable select 
-* @access public * @var bool
+* @access public 
+* @var bool
 */
 var $disabled = false;
 /**
 * maxlength
-* @access public * @var int
+* @access public 
+* @var int
 */
 var $maxlength;
 /**
 * Attribute name
-* @access public * @var string
+* @access public 
+* @var string
 */
 var $name = '';
 /**
 * number of lines to be shown
-* @access public * @var int
+* @access public 
+* @var int
 */
 var $size = '';
 /**
 * Attribute tabindex
-* @access public * @var int
+* @access public 
+* @var int
 */
 var $tabindex = '';
 /**
 * type of element
-* @access public * @var string
-* @values text | password | checkbox | radio | submit | reset | file | hidden | image | button
+*
+* possible values
+*
+* -password 
+* -checkbox 
+* -radio 
+* -submit 
+* -reset 
+* -file 
+* -hidden 
+* -image 
+* -button
+*
+* @access public 
+* @var enum
 */
 var $type = '';
 /**
 * value of input
-* @access public * @var string
+* @access public 
+* @var string
 */
 var $value = '';
 
@@ -230,8 +268,11 @@ var $_init_input;
 	}
 }
 
-//------------------------------------------------------------------
-
+/**
+ * @package Htmlobjects
+ * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @version 1.0
+ */
 class htmlobject_textarea extends htmlobject
 {
 /**
@@ -311,8 +352,11 @@ var $_init_textarea;
 	}
 }
 
-//------------------------------------------------------------------
-
+/**
+ * @package Htmlobjects
+ * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @version 1.0
+ */
 class htmlobject_div extends htmlobject
 {
 /**

@@ -1,6 +1,14 @@
 <?php
+/**
+ * @package Htmlobjects
+ */
 
-//--------------------------------------------------------------------------------------
+
+/**
+ * @package Htmlobjects
+ * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @version 1.0
+ */
 class htmlobject_box extends htmlobject
 {
 

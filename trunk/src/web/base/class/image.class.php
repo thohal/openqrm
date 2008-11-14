@@ -1,16 +1,6 @@
 <?php
 /**
- * This class represents a filesystem-image (rootfs) 
- * In combination with a kernel it can be deployed to a resource
- * via the appliance.class
- *
- * @copyright Copyright (c) 2008, openqrm
- * @license see openqrm licence
- * @package base
- * @author Matt Rechenburg <mattr_sf@users.sourceforge.net>
- * @version 1.0
- * @author Alexander Kuballa <akuballa@users.sourceforge.net>
- * @version 1.1 added documentation
+ * @package openQRM
  */
 
 	$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
@@ -18,7 +8,17 @@
 	require_once "$RootDir/include/openqrm-database-functions.php";
 	require_once "$RootDir/class/event.class.php";
 
-
+/**
+ * This class represents a filesystem-image (rootfs) 
+ * In combination with a kernel it can be deployed to a resource
+ * via the appliance.class
+ *
+ * @package openQRM
+ * @author Matt Rechenburg <mattr_sf@users.sourceforge.net>
+ * @version 1.0
+ * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @version 1.1 added documentation
+ */
 class image
 {
 
@@ -229,8 +229,8 @@ var $_event;
 	* $image->update(1, $fields);
 	* </code>
 	* @access public
-	* @param int $storage_id
-	* @param array $storage_fields
+	* @param int $image_id
+	* @param array $image_fields
 	* @return bool
 	*/
 	//--------------------------------------------------

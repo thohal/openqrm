@@ -3,7 +3,7 @@
 
 /**
 * This file contains the code of the LayersMenuCommon class.
-* @package PHPLayersMenu
+* @package Htmlobjects
 */
 
 /**
@@ -12,7 +12,7 @@
 * You need to include PEAR.php and DB.php if (and only if) you want to use the DB support provided by ths class.
 *
 * @version 3.2.0-rc
-* @package PHPLayersMenu
+* @package Htmlobjects
 */
 class LayersMenuCommon
 {
@@ -952,24 +952,8 @@ function error($errormsg)
 
 } /* END OF CLASS */
 
-?>
 
-<?php
-// PHP Layers Menu 3.2.0-rc (C) 2001-2004 Marco Pratesi - http://www.marcopratesi.it/
 
-/**
-* This file contains the code of the TreeMenu class.
-* @package PHPLayersMenu
-*/
-
-/**
-* This is the TreeMenu class of the PHP Layers Menu library.
-*
-* This class depends on the LayersMenuCommon class and on the PEAR conforming version of the PHPLib Template class, i.e. on HTML_Template_PHPLIB
-*
-* @version 3.2.0-rc
-* @package PHPLayersMenu
-*/
 class TreeMenu extends LayersMenuCommon
 {
 
