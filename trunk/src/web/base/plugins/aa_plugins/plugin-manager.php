@@ -233,6 +233,7 @@ $table_1->add_headrow(htmlobject_select('plugin_filter', $plugs, 'Filter by Type
 $table_1->id = 'Tabelle';
 $table_1->css = 'htmlobject_table';
 $table_1->border = 1;
+$table_1->limit = 50;
 $table_1->cellspacing = 0;
 $table_1->cellpadding = 3;
 $table_1->form_action = $thisfile;
