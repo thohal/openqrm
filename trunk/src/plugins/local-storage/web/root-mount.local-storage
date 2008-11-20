@@ -211,8 +211,7 @@ function transform_rootfs_to_nfs() {
 		/bin/bash
 	fi
 	echo "local-storage: Started tranformation phase to nfs. This can take a while ...."
-	cp -af /mnt/.* /mnt2/
-	cp -af /mnt/* /mnt2/
+	rsync -aq /mnt/* /mnt2/
 	echo "local-storage: Transform phase to nfs finished. Continuing boot-up"
 
 	umount /mnt2
@@ -240,8 +239,7 @@ function install_rootfs_from_nfs() {
 		/bin/bash
 	fi
 	echo "local-storage: Started install phase from nfs. This can take a while ...."
-	cp -af /mnt2/.* /mnt/
-	cp -af /mnt2/* /mnt/
+	rsync -aq /mnt2/* /mnt/
 	echo "local-storage: Install phase from nfs finished. Continuing boot-up"
 
 	umount /mnt2
