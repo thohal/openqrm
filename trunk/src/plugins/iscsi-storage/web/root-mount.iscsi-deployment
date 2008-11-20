@@ -54,6 +54,15 @@ function mount_rootfs() {
 	wget -q -O /sbin/iscsiadm http://$resource_openqrmserver/openqrm/boot-service/iscsiadm
 	chmod +x /sbin/iscsi*
 
+	# perstistance iscsi device names
+	echo "BUS==\"scsi\", SYSFS{vendor}==\"IET\", SYSFS{model}==\"VIRTUAL-DISK\", KERNEL==\"sd*\", NAME=\"%k\", PROGRAM=\"/lib/udev/getlun.sh \$id\", SYMLINK+=\"iscsi_%c%n\"" >>/etc/udev/rules.d/10_persistant_scsi.rules
+	mkdir -p /tmp
+	cat <<! >> /lib/udev/getlun.sh
+#!/bin/bash
+echo \$1 | awk -F":" '{print $NF}' | cut -d':' -f4
+!
+	chmod +x /lib/udev/getlun.sh
+
 	# load iscsi related modules
 	modprobe iscsi_tcp
 	modprobe libiscsi
