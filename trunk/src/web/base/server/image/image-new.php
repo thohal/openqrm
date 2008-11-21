@@ -119,6 +119,14 @@ function image_form() {
 		else { $shared = false; }
 
 		// making the deployment parameters plugg-able
+		$deployment_default_parameters="";
+		$deployment_default_parameters_file = "$BaseDir/boot-service/image.$deployment->type";
+		if (file_exists($deployment_default_parameters_file) && htmlobject_request('image_deployment_parameter') == '') {
+			$deployment_default_parameters = file_get_contents("$deployment_default_parameters_file");
+		} else {
+			$deployment_default_parameters = htmlobject_request('image_deployment_parameter');
+		}
+		// making the rootdevice parameter plugg-able
 		$rootdevice_identifier_hook="";
 		$rootdevice_identifier_hook = "$BaseDir/boot-service/image.$deployment->type.php";
 		// require once 
