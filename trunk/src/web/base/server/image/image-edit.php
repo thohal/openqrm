@@ -149,6 +149,20 @@ function image_form() {
 		$image_storageid = htmlobject_request('image_storageid');
 		if($image_storageid == '')  $image_storageid = $image->storageid;
 
+		// making the deployment parameters plugg-able
+		$rootdevice_identifier_hook="";
+		$rootdevice_identifier_hook = "$BaseDir/boot-service/image.$deployment->type.php";
+		// require once 
+		if (file_exists($rootdevice_identifier_hook)) {
+			require_once "$rootdevice_identifier_hook";
+			// run function returning rootdevice array
+			$rootdevice_identifier_arr = array();
+			$rootdevice_identifier_arr = get_image_rootdevice_identifier($image_storageid);
+			$rootdevice_input = htmlobject_select('image_rootdevice', $rootdevice_identifier_arr, 'Root-device', array($image_rootdevice));
+		} else {
+			$rootdevice_input = htmlobject_input('image_rootdevice', array("value" => htmlobject_request('image_rootdevice'), "label" => 'Root-device'), 'text', 20);
+		}
+
 
 		$html = new htmlobject_div();
 		$html->text = '<a href="../../plugins/'.$deployment->storagetype.'/'.$deployment->storagetype.'-about.php" target="_blank" class="doculink">'.$deployment->description.'</a>';
@@ -194,7 +208,7 @@ function image_form() {
 			'image_name' => htmlobject_input('image_name', array("value" => $image_name, "label" => 'Name'), 'text', 20),
 			'image_version' => htmlobject_input('image_version', array("value" => $image_version, "label" => 'Version'), 'text', 20),
 			'image_passwd' => htmlobject_input('image_passwd', array("value" => htmlobject_request('image_passwd'), "label" => 'Root-Password'), 'password', 20),
-			'image_rootdevice' => htmlobject_input('image_rootdevice', array("value" => $image_rootdevice, "label" => 'Root-device'), 'text', 20),
+			'image_rootdevice' => $rootdevice_input,
 			'image_rootfstype' => htmlobject_input('image_rootfstype', array("value" => $image_rootfstype, "label" => 'Root-fs type'), 'text', 20),
 			'image_isshared' => htmlobject_input('image_isshared', array("value" => '1', "label" => 'Shared'), 'checkbox', $image_isshared),
 			'image_deployment_parameter' => htmlobject_textarea('image_deployment_parameter', array("value" => $image_deployment_parameter, "label" => 'Deployment parameter')),

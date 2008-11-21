@@ -27,6 +27,7 @@ function iscsi_storage_usage() {
 	echo "             [-m size in MB]"
 	echo "             [-s image-snapshot-name]"
 	echo "        $0 post_luns <-u username> <-p password>"
+	echo "        $0 post_indetifier <-u username> <-p password>"
 	exit 1
 }
 
@@ -73,7 +74,7 @@ if [ "$ISCSI_COMMAND" == "" ]; then
 	iscsi_storage_usage
 fi
 
-if [ "$ISCSI_COMMAND" == "post_luns" ]; then
+if [ "$ISCSI_COMMAND" == "post_luns" ] || [ "$ISCSI_COMMAND" == "post_identifier" ]; then
 	if [ "$ISCSI_OPENQRM_USERNAME" == "" ]; then
 		iscsi_storage_usage
 	fi
@@ -153,6 +154,28 @@ case "$ISCSI_COMMAND" in
 		cat $IETDCONF > $STORAGE_STATUS_TMP
 		if ! wget -q -O /dev/null --http-user=$ISCSI_OPENQRM_USERNAME --http-password=$ISCSI_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/iscsi-storage/iscsi-storage-action.php?iscsi_storage_command=get_storage; then
 			echo "ERROR: Could not post the iscsi-export status to the openQRM-server at $resource_openqrmserver!"
+			echo "ERROR: Could not post the iscsi-export status to the openQRM-server at $resource_openqrmserver!" | logger
+		fi
+		rm -f $STORAGE_STATUS_TMP
+		rm -f $STORAGE_STATUS_TMP.post
+		;;
+	post_identifier)
+		echo "Posting current iscsi-identifier to the openQRM-server"
+		STORAGE_STATUS_TMP=$resource_id.iscsi.ident
+		TARGET=`cat $IETDCONF | grep -v "#" | grep Target | awk {' print $2 '}`
+		> $STORAGE_STATUS_TMP
+		OLD_IFS=$IFS
+IFS='
+'
+		for LUN_STR in `cat $IETDCONF | grep -v "#" | grep Lun`; do
+			LUN=`echo $LUN_STR | awk {'print $2 '}`
+			IMAGE_NAME=`echo $LUN_STR | awk {'print $3 '}`
+			IMAGE_NAME=`basename $IMAGE_NAME | cut -d',' -f1`
+			echo "$IMAGE_NAME,/dev/$TARGET/$LUN"
+			echo "$IMAGE_NAME,/dev/$TARGET/$LUN" >> $STORAGE_STATUS_TMP
+		done
+		IFS=$OLD_IFS
+		if ! wget -q -O /dev/null --http-user=$ISCSI_OPENQRM_USERNAME --http-password=$ISCSI_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/iscsi-storage/iscsi-storage-action.php?iscsi_storage_command=get_ident; then			echo "ERROR: Could not post the iscsi-export status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the iscsi-export status to the openQRM-server at $resource_openqrmserver!" | logger
 		fi
 		rm -f $STORAGE_STATUS_TMP

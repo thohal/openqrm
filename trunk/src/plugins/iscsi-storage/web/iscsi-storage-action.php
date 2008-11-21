@@ -65,6 +65,18 @@ unset($iscsi_storage_fields["iscsi_storage_command"]);
 			fclose($fout);
 			break;
 
+		case 'get_ident':
+			if (!file_exists($StorageDir)) {
+				mkdir($StorageDir);
+			}
+			$filename = $StorageDir."/".$_POST['filename'];
+			$filedata = base64_decode($_POST['filedata']);
+			echo "<h1>$filename</h1>";
+			$fout = fopen($filename,"wb");
+			fwrite($fout, $filedata);
+			fclose($fout);
+			break;
+
 		case 'refresh_luns':
 			$storage = new storage();
 			$storage->get_instance_by_id($iscsi_storage_id);
