@@ -26,6 +26,7 @@ function nfs_storage_usage() {
 	echo "Usage : $0 add/remove/snap/list <-n image-name>"
 	echo "             [-s image-snapshot-name]"
 	echo "        $0 post_exports <-u username> <-p password>"
+	echo "        $0 post_identifier <-u username> <-p password>"
 	exit 1
 }
 
@@ -68,7 +69,7 @@ if [ "$NFS_COMMAND" == "" ]; then
 	nfs_storage_usage
 fi
 
-if [ "$NFS_COMMAND" == "post_exports" ]; then
+if [ "$NFS_COMMAND" == "post_exports" ]  || [ "$NFS_COMMAND" == "post_identifier" ]; then
 	if [ "$NFS_OPENQRM_USERNAME" == "" ]; then
 		nfs_storage_usage
 	fi
@@ -139,6 +140,21 @@ case "$NFS_COMMAND" in
 		STORAGE_STATUS_TMP=$resource_id.nfs.stat
 		exportfs -v > $STORAGE_STATUS_TMP
 		if ! wget -q -O /dev/null --http-user=$NFS_OPENQRM_USERNAME --http-password=$NFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/nfs-storage/nfs-storage-action.php?nfs_storage_command=get_storage; then
+			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!"
+			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!" | logger
+		fi
+		rm -f $STORAGE_STATUS_TMP
+		rm -f $STORAGE_STATUS_TMP.post
+		;;
+	post_identifier)
+		echo "Posting current nfs-identifier to the openQRM-server"
+		STORAGE_STATUS_TMP=$resource_id.nfs.ident
+		> $STORAGE_STATUS_TMP
+		for EXPORT_STR in `exportfs -v | awk {' print $1 '} | grep -v "<.*>"`; do
+			IMAGE_NAME=`basename $EXPORT_STR`
+			echo "$IMAGE_NAME,$EXPORT_STR" >> $STORAGE_STATUS_TMP
+		done
+		if ! wget -q -O /dev/null --http-user=$NFS_OPENQRM_USERNAME --http-password=$NFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/nfs-storage/nfs-storage-action.php?nfs_storage_command=get_ident; then
 			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!" | logger
 		fi

@@ -27,7 +27,7 @@ function iscsi_storage_usage() {
 	echo "             [-m size in MB]"
 	echo "             [-s image-snapshot-name]"
 	echo "        $0 post_luns <-u username> <-p password>"
-	echo "        $0 post_indetifier <-u username> <-p password>"
+	echo "        $0 post_identifier <-u username> <-p password>"
 	exit 1
 }
 

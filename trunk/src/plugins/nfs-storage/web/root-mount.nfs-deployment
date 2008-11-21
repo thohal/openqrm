@@ -39,6 +39,9 @@ if [ "$IMAGE_NFS_MOUNT_OPTIONS" != "" ]; then
 	IMAGE_NFS_MOUNT_OPTIONS=",$IMAGE_NFS_MOUNT_OPTIONS"
 fi
 
+# adapt the rootdevice parameters
+IMAGE_ROOT_DIR=$image_rootdevice
+
 #######################################################################
 # required functions ##################################################
 #######################################################################

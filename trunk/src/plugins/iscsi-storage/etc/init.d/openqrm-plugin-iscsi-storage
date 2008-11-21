@@ -37,7 +37,7 @@ function openqrm_plugin_iscsi_storage_uninstall() {
 	openqrm_server_remove_deployment_type $USERNAME $PASSWORD iscsi-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.iscsi-deployment
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.iscsi-deployment
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.iscsi-deployment.php
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-iscsi-storage.tgz
 
 	# remove only if lvm-storage is not enabled
@@ -70,7 +70,7 @@ function openqrm_plugin_iscsi_storage_init() {
 	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/root-mount.iscsi-deployment
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/root-mount.iscsi-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.iscsi-deployment
 	# linking the default image-parameters
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/image.iscsi-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.iscsi-deployment
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/image.iscsi-deployment.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.iscsi-deployment.php
 
 	# copying iscsid to boot-service dir
 	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsid ]; then
