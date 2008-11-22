@@ -34,6 +34,18 @@ if(htmlobject_request('action') != '') {
 				sleep($refresh_delay);
 			}
 			break;
+
+		case 'select':
+			foreach($_REQUEST['identifier'] as $id) {
+				$storage = new storage();
+				$storage->get_instance_by_id($id);
+				$storage_resource = new resource();
+				$storage_resource->get_instance_by_id($storage->resource_id);
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/bin/openqrm-aoe-storage post_luns -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+				$storage_resource->send_command($storage_resource->ip, $resource_command);
+				sleep($refresh_delay);
+			}
+			break;
 	}
 }
 
