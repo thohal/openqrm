@@ -13,12 +13,30 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 function openqrm_plugin_nfs_storage_start() {
 	echo "Starting the openQRM nfs-storage-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nfs-storage/.running
+	if [ -x /etc/init.d/nfs-kernel-server ]; then
+		/etc/init.d/nfs-kernel-server start
+	fi
+	if [ -x /etc/init.d/nfs ]; then
+		/etc/init.d/nfs start
+	fi
+	if [ -x /etc/init.d/nfslock ]; then
+		/etc/init.d/nfslock start
+	fi
 }
 
 
 function openqrm_plugin_nfs_storage_stop() {
 	echo "Stopping the openQRM nfs-storage-plugin"
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nfs-storage/.running
+	if [ -x /etc/init.d/nfs-kernel-server ]; then
+		/etc/init.d/nfs-kernel-server stop
+	fi
+	if [ -x /etc/init.d/nfs ]; then
+		/etc/init.d/nfs stop
+	fi
+	if [ -x /etc/init.d/nfslock ]; then
+		/etc/init.d/nfslock stop
+	fi
 }
 
 function openqrm_plugin_nfs_storage_uninstall() {

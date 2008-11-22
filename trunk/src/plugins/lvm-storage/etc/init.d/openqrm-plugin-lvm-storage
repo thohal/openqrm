@@ -17,23 +17,46 @@ function openqrm_plugin_lvm-storage_start() {
 	echo "Starting the openQRM lvm-storage-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/lvm-storage/.running
 
+	# aoe
 	mkdir -p /var/run/vblade/
 	if [ -x /etc/init.d/vblade ]; then
 		/etc/init.d/vblade start
 	else
-		echo "Starting vblades ..."
-		OLD_IFS=$IFS
-		IFS=$LINE_IFS
-		for VBLADE_L in `cat $VBLADECONF | grep -v '#' | sed '/^$/d'`; do
-			V_INTERFACE=`echo $VBLADE_L | awk {' print $1 '}`
-			V_SHELF=`echo $VBLADE_L | awk {' print $2 '}`
-			V_SLOT=`echo $VBLADE_L | awk {' print $3 '}`
-			V_IMAGE=`echo $VBLADE_L | awk {' print $4 '}`
-			V_ALLOWED_MAC=`echo $VBLADE_L | awk {' print $5 '}`
-			vbladed $V_SHELF $V_SLOT $V_INTERFACE $V_IMAGE
-		done
-		IFS=$OLD_IFS
+		if [ -f $VBLADECONF ]; then
+			if which vbladed 1>/dev/null; then
+				echo "Starting vblades ..."
+				OLD_IFS=$IFS
+				IFS=$LINE_IFS
+				for VBLADE_L in `cat $VBLADECONF | grep -v '#' | sed '/^$/d'`; do
+					V_INTERFACE=`echo $VBLADE_L | awk {' print $1 '}`
+					V_SHELF=`echo $VBLADE_L | awk {' print $2 '}`
+					V_SLOT=`echo $VBLADE_L | awk {' print $3 '}`
+					V_IMAGE=`echo $VBLADE_L | awk {' print $4 '}`
+					V_ALLOWED_MAC=`echo $VBLADE_L | awk {' print $5 '}`
+					vbladed $V_SHELF $V_SLOT $V_INTERFACE $V_IMAGE
+				done
+				IFS=$OLD_IFS
+			fi
+		fi
 	fi
+	
+	# nfs
+	if [ -x /etc/init.d/nfs-kernel-server ]; then
+		/etc/init.d/nfs-kernel-server start
+	fi
+	if [ -x /etc/init.d/nfs ]; then
+		/etc/init.d/nfs start
+	fi
+	if [ -x /etc/init.d/nfslock ]; then
+		/etc/init.d/nfslock start
+	fi
+
+	# iscsi-target
+	if [ -x /etc/init.d/iscsi-target ]; then
+		/etc/init.d/iscsi-target start
+	fi
+
+	
 }
 
 
@@ -41,25 +64,45 @@ function openqrm_plugin_lvm-storage_stop() {
 	echo "Stopping the openQRM lvm-storage-plugin"
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/lvm-storage/.running
 
+	# aoe
 	if [ -x /etc/init.d/vblade ]; then
 		/etc/init.d/vblade stop
 	else
-		echo "Stopping vblades ..."
-		OLD_IFS=$IFS
-		IFS=$LINE_IFS
-		for VBLADE_L in `cat $VBLADECONF | grep -v '#' | sed '/^$/d'`; do
-			V_INTERFACE=`echo $VBLADE_L | awk {' print $1 '}`
-			V_SHELF=`echo $VBLADE_L | awk {' print $2 '}`
-			V_SLOT=`echo $VBLADE_L | awk {' print $3 '}`
-			V_IMAGE=`echo $VBLADE_L | awk {' print $4 '}`
-			V_ALLOWED_MAC=`echo $VBLADE_L | awk {' print $5 '}`
-			for VBLADE_PID in `ps ax | grep vblade | grep -w $V_IMAGE | awk {' print $1 '}`; do
-				kill $VBLADE_PID
+		if [ -f $VBLADECONF ]; then
+			echo "Stopping vblades ..."
+			OLD_IFS=$IFS
+			IFS=$LINE_IFS
+			for VBLADE_L in `cat $VBLADECONF | grep -v '#' | sed '/^$/d'`; do
+				V_INTERFACE=`echo $VBLADE_L | awk {' print $1 '}`
+				V_SHELF=`echo $VBLADE_L | awk {' print $2 '}`
+				V_SLOT=`echo $VBLADE_L | awk {' print $3 '}`
+				V_IMAGE=`echo $VBLADE_L | awk {' print $4 '}`
+				V_ALLOWED_MAC=`echo $VBLADE_L | awk {' print $5 '}`
+				for VBLADE_PID in `ps ax | grep vblade | grep -w $V_IMAGE | awk {' print $1 '}`; do
+					kill $VBLADE_PID
+				done
 			done
-		done
-		IFS=$OLD_IFS
+			IFS=$OLD_IFS
+		fi
+		killall vblade 1>/dev/null 2>&1
 	fi
-	killall vblade 1>/dev/null 2>&1
+	
+	# nfs
+	if [ -x /etc/init.d/nfs-kernel-server ]; then
+		/etc/init.d/nfs-kernel-server stop
+	fi
+	if [ -x /etc/init.d/nfs ]; then
+		/etc/init.d/nfs stop
+	fi
+	if [ -x /etc/init.d/nfslock ]; then
+		/etc/init.d/nfslock stop
+	fi
+
+	# iscsi
+	if [ -x /etc/init.d/iscsi-target ]; then
+		/etc/init.d/iscsi-target stop
+	fi
+
 }
 
 function openqrm_plugin_lvm-storage_uninstall() {
