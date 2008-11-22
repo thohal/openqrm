@@ -42,6 +42,11 @@ if [ "$IMAGE_NFS_MOUNT_OPTIONS" != "" ]; then
 	IMAGE_NFS_MOUNT_OPTIONS=",$IMAGE_NFS_MOUNT_OPTIONS"
 fi
 
+
+# here we gather the target name + lun from the image_rootdevice
+IMAGE_LUN=`echo $image_rootdevice | cut -d'/' -f4`
+IMAGE_ROOT_DEVICE="/dev/iscsi_$IMAGE_LUN"
+
 #######################################################################
 # required functions ##################################################
 #######################################################################
@@ -54,6 +59,14 @@ function mount_rootfs() {
 	wget -q -O /sbin/iscsiadm http://$resource_openqrmserver/openqrm/boot-service/iscsiadm
 	chmod +x /sbin/iscsi*
 
+	# perstistance iscsi device names
+	echo "BUS==\"scsi\", SYSFS{vendor}==\"IET\", SYSFS{model}==\"VIRTUAL-DISK\", KERNEL==\"sd*\", NAME=\"%k\", PROGRAM=\"/lib/udev/getlun.sh \$id\", SYMLINK+=\"iscsi_%c%n\"" >>/etc/udev/rules.d/10_persistant_scsi.rules
+	mkdir -p /tmp
+	cat <<! >> /lib/udev/getlun.sh
+#!/bin/bash
+echo \$1 | awk -F":" '{print $NF}' | cut -d':' -f4
+!
+	chmod +x /lib/udev/getlun.sh
 	# load iscsi related modules
 	modprobe iscsi_tcp
 	modprobe libiscsi
@@ -97,18 +110,18 @@ EOF
 
 	# discover
 	echo "iscsi-storage: Discoverying Iscsi-target $image_storage_server_ip:3260"
-	iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260
+	IMAGE_TARGET=`iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260 | head -n 1 | awk {' print $2 '}`
 
 	# login
 	iscsiadm -m node -T $IMAGE_TARGET -p $image_storage_server_ip:3260 --login
 
 	# finallly mount
-	if ! mount -t $image_rootfstype $image_rootdevice /mnt; then
-		echo "ERROR: Could not mount $image_rootdevice via iscsi"
+	if ! mount -t $image_rootfstype $IMAGE_ROOT_DEVICE /mnt; then
+		echo "ERROR: Could not mount $IMAGE_ROOT_DEVICE via iscsi"
 		# give a shell for the admin
 		/bin/bash
 	else
-		echo "iscsi-storage: Mounted $image_rootdevice rw"
+		echo "iscsi-storage: Mounted $IMAGE_ROOT_DEVICE rw"
 	fi
 	
 	if  [ "$IMAGE_INSTALL_FROM" != "" ]; then
@@ -133,7 +146,7 @@ function remount_rootfs() {
 
 	REMOUNT_LOOP=0
 	# remont /mnt ro
-	while ! mount -t $image_rootfstype -o ro,remount $image_rootdevice /mnt; do
+	while ! mount -t $image_rootfstype -o ro,remount $IMAGE_ROOT_DEVICE /mnt; do
 		echo -n "."
 		sleep 1
 		REMOUNT_LOOP=$[ REMOUNT_LOOP + 1 ]
@@ -142,14 +155,14 @@ function remount_rootfs() {
 			/bin/bash
 		fi
 	done
-	echo "iscsi-storage: Re-mounted $image_rootdevice ro"
+	echo "iscsi-storage: Re-mounted $IMAGE_ROOT_DEVICE ro"
 	
 }
 
 
 function create_fstab() {
 	rm -f $IMAGE_FSTAB
-	echo "$image_rootdevice   /     $image_rootfstype  defaults   0 0" >> $IMAGE_FSTAB
+	echo "$IMAGE_ROOT_DEVICE   /     $image_rootfstype  defaults   0 0" >> $IMAGE_FSTAB
 }
 
 

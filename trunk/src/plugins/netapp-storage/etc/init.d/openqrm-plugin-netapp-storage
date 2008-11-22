@@ -38,7 +38,7 @@ function openqrm_plugin_netapp_storage_uninstall() {
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.netapp-iscsi-deployment 
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.netapp-nfs-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.netapp-iscsi-deployment
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.netapp-nfs-deployment
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.netapp-nfs-deployment.php
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storage.netapp-storage
 
 	# remove only if nfs/iscsi/aoe is not enabled
@@ -72,8 +72,8 @@ function openqrm_plugin_netapp_storage_init() {
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/root-mount.netapp-iscsi-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.netapp-iscsi-deployment
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/root-mount.netapp-nfs-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.netapp-nfs-deployment
 	# linking the image deployment parameters menu
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/image.netapp-iscsi-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.netapp-iscsi-deployment
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/image.netapp-nfs-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.netapp-nfs-deployment
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/image.netapp-iscsi-deployment.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.netapp-iscsi-deployment.php
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/image.netapp-nfs-deployment.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.netapp-nfs-deployment.php
 	# linking the storage capabilities default parameters
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage.netapp-storage $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storage.netapp-storage
 

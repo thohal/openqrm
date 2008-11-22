@@ -30,6 +30,10 @@ spawn /bin/bash
 match_max 100000
 expect "*$ "
 send -- "ssh root@$NETAPP_IP\r"
+
+expect "(yes/no)?" {
+	send -- "yes\r"
+}
 expect "root@$NETAPP_IP's password:" {
 	send -- "$NETAPP_PASSWORD\r"
 	expect "*> "
