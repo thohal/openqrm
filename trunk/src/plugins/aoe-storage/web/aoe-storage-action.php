@@ -7,7 +7,7 @@ $source_tab=$_REQUEST["source_tab"];
 
 <html>
 <head>
-<title>openQRM Nfs-storage actions</title>
+<title>openQRM Aoe-storage actions</title>
 <meta http-equiv="refresh" content="0; URL=aoe-storage-manager.php?currenttab=<?php echo $source_tab; ?>&aoe_storage_id=<?php echo $aoe_storage_id; ?>&strMsg=Processing <?php echo $aoe_storage_command; ?> on storage <?php echo $aoe_storage_id; ?>">
 </head>
 <body>
@@ -54,6 +54,18 @@ unset($aoe_storage_fields["aoe_storage_command"]);
 	$event->log("$aoe_storage_command", $_SERVER['REQUEST_TIME'], 5, "aoe-storage-action", "Processing aoe-storage command $aoe_storage_command", "", "", 0, 0, 0);
 	switch ($aoe_storage_command) {
 		case 'get_storage':
+			if (!file_exists($StorageDir)) {
+				mkdir($StorageDir);
+			}
+			$filename = $StorageDir."/".$_POST['filename'];
+			$filedata = base64_decode($_POST['filedata']);
+			echo "<h1>$filename</h1>";
+			$fout = fopen($filename,"wb");
+			fwrite($fout, $filedata);
+			fclose($fout);
+			break;
+
+		case 'get_ident':
 			if (!file_exists($StorageDir)) {
 				mkdir($StorageDir);
 			}

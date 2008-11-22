@@ -236,7 +236,7 @@ function aoe_storage_display($aoe_storage_id) {
 		$storage_vg_content=file($storage_export_list);
 		foreach ($storage_vg_content as $index => $aoe) {
 			// find export name
-			if (strstr($aoe, "disk")) {
+			if (!strstr($aoe, "#")) {
 				$export_name = trim($aoe);
 				$real_image_name = strrchr($export_name, '/');
 				$real_image_name = substr($real_image_name, 1);
