@@ -151,7 +151,7 @@ case "$NFS_COMMAND" in
 		STORAGE_STATUS_TMP=$resource_id.nfs.ident
 		> $STORAGE_STATUS_TMP
 		for EXPORT_STR in `exportfs -v | awk {' print $1 '} | grep -v "<.*>"`; do
-			IMAGE_NAME=`basename $EXPORT_STR`
+			IMAGE_NAME=$EXPORT_STR
 			echo "$IMAGE_NAME,$EXPORT_STR" >> $STORAGE_STATUS_TMP
 		done
 		if ! wget -q -O /dev/null --http-user=$NFS_OPENQRM_USERNAME --http-password=$NFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/nfs-storage/nfs-storage-action.php?nfs_storage_command=get_ident; then
