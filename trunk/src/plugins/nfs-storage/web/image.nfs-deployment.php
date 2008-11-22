@@ -47,6 +47,12 @@ function get_image_rootdevice_identifier($nfs_storage_id) {
 
 }
 
+
+
+function get_image_default_rootfs() {
+	return "nfs";
+}
+
 ?>
 
 
