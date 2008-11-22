@@ -16,7 +16,7 @@ global $OPENQRM_SERVER_BASE_DIR;
 $event = new event();
 global $event;
 
-function get_image_rootdevice_identifier($iscsi_storage_id) {
+function get_image_rootdevice_identifier($nfs_storage_id) {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
 	global $event;
@@ -26,7 +26,7 @@ function get_image_rootdevice_identifier($iscsi_storage_id) {
 	$StorageDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/nfs-storage/storage';
 	$rootdevice_identifier_array = array();
 	$storage = new storage();
-	$storage->get_instance_by_id($iscsi_storage_id);
+	$storage->get_instance_by_id($nfs_storage_id);
 	$storage_resource = new resource();
 	$storage_resource->get_instance_by_id($storage->resource_id);
 	$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/bin/openqrm-nfs-storage post_identifier -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
