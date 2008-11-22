@@ -314,9 +314,35 @@ case "$LVM_COMMAND" in
 		rm -f $STORAGE_STATUS_TMP.post
 		;;
 	post_lv)
-		echo "Posting current logic volume status to the openQRM-server"
+		echo "Posting current $LVM_IMAGE_TYPE logic volume status to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.$LVM_STORAGE_SERVER_VOLUME_GROUP.lv.stat
-		lvdisplay > $STORAGE_STATUS_TMP
+		> $STORAGE_STATUS_TMP
+
+		for LVOL in `lvdisplay | grep "LV Name" | awk {' print $3 '}`; do
+			LVOL_SHORT=`basename $LVOL`
+			case $LVM_IMAGE_TYPE in
+				lvm-nfs-deployment)
+					exportfs -v | awk {' print $1 '} | grep -v "<.*>" > /tmp/$STORAGE_STATUS_TMP
+					if grep $LVOL_SHORT /tmp/$STORAGE_STATUS_TMP 1>/dev/null; then
+						lvdisplay $LVOL >> $STORAGE_STATUS_TMP
+					fi
+					rm -f /tmp/$STORAGE_STATUS_TMP
+					;;
+
+				lvm-iscsi-deployment)
+					if grep $LVOL_SHORT $IETDCONF 1>/dev/null; then
+						lvdisplay $LVOL >> $STORAGE_STATUS_TMP
+					fi					
+					;;
+
+				lvm-aoe-deployment)
+					if grep $LVOL_SHORT $VBLADECONF 1>/dev/null; then
+						lvdisplay $LVOL >> $STORAGE_STATUS_TMP
+					fi
+					;;
+			esac
+		done
+
 		if ! wget -q -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/lvm-storage/lvm-storage-action.php?lvm_storage_command=get_storage; then
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!" | logger
