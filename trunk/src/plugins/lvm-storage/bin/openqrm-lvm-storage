@@ -29,6 +29,7 @@ function lvm_storage_usage() {
 	echo "             [-s image-snapshot-name]"
 	echo "        $0 post_vg <-u username> <-p password>"
 	echo "        $0 post_lv <-u username> <-p password> <-v volume-group>"
+	echo "        $0 post_identifier <-t lvm-nfs-deployment/lvm-iscsi-deployment/lvm-aoe-deployment> <-u username> <-p password>"
 	exit 1
 }
 
@@ -98,7 +99,7 @@ if [ "$LVM_COMMAND" == "" ]; then
 	lvm_storage_usage
 fi
 
-if [ "$LVM_COMMAND" == "post_lv" ] || [ "$LVM_COMMAND" == "post_vg" ]; then
+if [ "$LVM_COMMAND" == "post_lv" ] || [ "$LVM_COMMAND" == "post_vg" ] || [ "$LVM_COMMAND" == "post_identifier" ]; then
 		if [ "$LVM_OPENQRM_USERNAME" == "" ]; then
 			lvm_storage_usage
 		fi
@@ -110,6 +111,12 @@ if [ "$LVM_COMMAND" == "post_lv" ] || [ "$LVM_COMMAND" == "post_vg" ]; then
 				lvm_storage_usage
 			fi
 		fi
+		if [ "$LVM_COMMAND" == "post_identifier" ]; then
+			if [ "$LVM_IMAGE_TYPE" == "" ]; then
+				lvm_storage_usage
+			fi
+		fi
+
 else
 
 	if [ "$LVM_COMMAND" != "list" ]; then
@@ -132,7 +139,7 @@ if ! grep dm_mod /proc/modules 1>/dev/null; then
 	sleep 2
 fi
 
-if [ "$LVM_COMMAND" != "list" ] && [ "$LVM_COMMAND" != "post_vg" ]; then
+if [ "$LVM_COMMAND" != "list" ] && [ "$LVM_COMMAND" != "post_vg" ] && [ "$LVM_COMMAND" != "post_identifier" ]; then
 	# check if volume group exists
 	if ! `vgdisplay | grep $LVM_STORAGE_SERVER_VOLUME_GROUP 1>/dev/null`; then
 		echo "ERROR: Could not find volume-group $LVM_STORAGE_SERVER_VOLUME_GROUP on the storage-server"
@@ -311,6 +318,55 @@ case "$LVM_COMMAND" in
 		STORAGE_STATUS_TMP=$resource_id.$LVM_STORAGE_SERVER_VOLUME_GROUP.lv.stat
 		lvdisplay > $STORAGE_STATUS_TMP
 		if ! wget -q -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/lvm-storage/lvm-storage-action.php?lvm_storage_command=get_storage; then
+			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!"
+			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!" | logger
+		fi
+		rm -f $STORAGE_STATUS_TMP
+		rm -f $STORAGE_STATUS_TMP.post
+		;;
+	post_identifier)
+		echo "Posting current $LVM_IMAGE_TYPE logical volume identifier to the openQRM-server"
+		STORAGE_STATUS_TMP=$resource_id.lv.$LVM_IMAGE_TYPE.ident
+		> $STORAGE_STATUS_TMP
+
+		for LVOL in `lvdisplay | grep "LV Name" | awk {' print $3 '}`; do
+			LVOL_SHORT=`basename $LVOL`
+			case $LVM_IMAGE_TYPE in
+				lvm-nfs-deployment)
+					exportfs -v | awk {' print $1 '} | grep -v "<.*>" > /tmp/$STORAGE_STATUS_TMP
+					if grep $LVOL_SHORT /tmp/$STORAGE_STATUS_TMP 1>/dev/null; then
+						echo "$LVOL,$LVOL"
+						echo "$LVOL,$LVOL" >> $STORAGE_STATUS_TMP
+					fi
+					rm -f /tmp/$STORAGE_STATUS_TMP
+					;;
+
+				lvm-iscsi-deployment)
+					if grep $LVOL_SHORT $IETDCONF 1>/dev/null; then
+						LUN=`grep $LVOL_SHORT $IETDCONF | awk {'print $2 '}`
+						TARGET=`cat $IETDCONF | grep -v "#" | grep Target | awk {' print $2 '}`
+						IMAGE_NAME=$LVOL_SHORT
+						echo "$IMAGE_NAME,/dev/$TARGET/$LUN"
+						echo "$IMAGE_NAME,/dev/$TARGET/$LUN" >> $STORAGE_STATUS_TMP
+					fi					
+					;;
+
+				lvm-aoe-deployment)
+					if grep $LVOL_SHORT $VBLADECONF 1>/dev/null; then
+						INTERFACE=`grep $LVOL_SHORT $VBLADECONF | awk {'print $1	'}`
+						V_SHELF=`grep $LVOL_SHORT $VBLADECONF | awk {' print $2 '}`
+						V_SLOT=`grep $LVOL_SHORT $VBLADECONF | awk {' print $3 '}`
+						V_IMAGE=`grep $LVOL_SHORT $VBLADECONF | awk {' print $4 '}`
+						V_ALLOWED_MAC=`grep $LVOL_SHORT $VBLADECONF | awk {' print $5 '}`
+						echo "$V_IMAGE,/dev/etherd/e$V_SHELF.$V_SLOT"
+						echo "$V_IMAGE,/dev/etherd/e$V_SHELF.$V_SLOT" >> $STORAGE_STATUS_TMP
+					fi
+					;;
+			esac
+		
+		done
+
+		if ! wget -q -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/lvm-storage/lvm-storage-action.php?lvm_storage_command=get_ident; then
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!" | logger
 		fi

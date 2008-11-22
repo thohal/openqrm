@@ -68,6 +68,18 @@ unset($lvm_storage_fields["lvm_storage_command"]);
 			fclose($fout);
 			break;
 
+		case 'get_ident':
+			if (!file_exists($StorageDir)) {
+				mkdir($StorageDir);
+			}
+			$filename = $StorageDir."/".$_POST['filename'];
+			$filedata = base64_decode($_POST['filedata']);
+			echo "<h1>$filename</h1>";
+			$fout = fopen($filename,"wb");
+			fwrite($fout, $filedata);
+			fclose($fout);
+			break;
+
 		case 'refresh_vg':
 			$storage = new storage();
 			$storage->get_instance_by_id($lvm_storage_id);

@@ -59,7 +59,6 @@ function mount_rootfs() {
 
 	# load aoe related modules
 	mkdir /dev/etherd
-	aoe-mkdevs /dev/etherd
 	modprobe aoe
 
 	# discover

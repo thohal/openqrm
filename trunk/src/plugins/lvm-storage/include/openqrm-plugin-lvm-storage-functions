@@ -4,7 +4,7 @@
 
 # iscsi-target config file
 IETDCONF=/etc/ietd.conf
-VBLADECONF=/etc/vblade/vblade.conf
+VBLADECONF=/etc/vblade.conf
 # some definitions
 DEFAULT_IMAGE_SIZE=5000
 LVM_MGMT_LOCK_FILE=/var/run/lvm-storage/lvm-storage-plugin.lock
@@ -183,7 +183,7 @@ function manage_iscsi() {
 			;;
 		transform)
 			# here please check before if the devices was already added to the iscsi-conf
-					IMAGE_LUN=`cat $IETDCONF | grep Lun | awk {' print $2 '} | sort -n -r | head -n 1`
+			IMAGE_LUN=`cat $IETDCONF | grep Lun | awk {' print $2 '} | sort -n -r | head -n 1`
 			IMAGE_LUN=$(( IMAGE_LUN + 1 ))
 			echo "	Lun $IMAGE_LUN Path=/dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME,Type=fileio" >> $IETDCONF
 			nohup /etc/init.d/iscsi-target restart
@@ -219,10 +219,14 @@ function manage_vblade() {
 	
 	case "$1" in
 		add)
+			if [ "$2" != "snap" ]; then
+				# create fs, currently static all ext3
+				mkfs.ext3 -F /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
+			fi
 			# currently just one static shelf !
 			AOE_SHELF=1
 			# slots are dynamic
-			AOE_SLOT=`cat $VBLADECONF | grep disk | awk {' print $3 '} | sort -n -r | head -n 1`
+			AOE_SLOT=`cat $VBLADECONF | grep -v '^#' | awk {' print $3 '} | sort -n -r | head -n 1`
 			AOE_SLOT=$(( AOE_SLOT + 1 ))
 			if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 				. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
@@ -230,9 +234,8 @@ function manage_vblade() {
 			else
 				AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '} | tail -1`
 			fi
-			echo "disk $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME" >> $VBLADECONF
-			# create fs, currently static all ext3
-			mkfs.ext3 -F /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
+			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME" >> $VBLADECONF
+			sed -i '/^$/d' $VBLADECONF
 			# start vbladed
 			vbladed $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
 			;;
@@ -240,15 +243,15 @@ function manage_vblade() {
 			for VBLADE_PID in `ps ax | grep vblade | grep -w $LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME | awk {' print $1 '}`; do
 				kill $VBLADE_PID
 			done
-			sync			
-			cat $VBLADECONF | sed -e "s#.*$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME.*##g" > /tmp/vblade.conf.tmp-update
-			/bin/mv -f /tmp/vblade.conf.tmp-update $VBLADECONF
+			sync
+			sed -i -e "s#.*$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME.*##g" $VBLADECONF
+			sed -i '/^$/d' $VBLADECONF
 			;;
 		transform)
 			# currently just one static shelf !
 			AOE_SHELF=1
 			# slots are dynamic
-			AOE_SLOT=`cat $VBLADECONF | grep disk | awk {' print $3 '} | sort -n -r | head -n 1`
+			AOE_SLOT=`cat $VBLADECONF | grep -v '^#' | awk {' print $3 '} | sort -n -r | head -n 1`
 			AOE_SLOT=$(( AOE_SLOT + 1 ))
 			if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 				. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
@@ -256,9 +259,10 @@ function manage_vblade() {
 			else
 				AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '} | tail -1`
 			fi
-			echo "disk $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $LVM_DISK" >> $VBLADECONF
+			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME" >> $VBLADECONF
+			sed -i '/^$/d' $VBLADECONF
 			# start vbladed
-			vbladed $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $LVM_DISK
+			vbladed $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
 			;;
 	esac
 }
