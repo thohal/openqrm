@@ -14,6 +14,7 @@ LINE_IFS='
 function openqrm_plugin_aoe_storage_start() {
 	echo "Starting the openQRM aoe-storage-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aoe-storage/.running
+	mkdir -p /var/run/vblade/
 	if [ -x /etc/init.d/vblade ]; then
 		/etc/init.d/vblade start
 	else
@@ -37,7 +38,7 @@ function openqrm_plugin_aoe_storage_stop() {
 	echo "Stopping the openQRM aoe-storage-plugin"
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aoe-storage/.running
 	if [ -x /etc/init.d/vblade ]; then
-		/etc/init.d/vblade start
+		/etc/init.d/vblade stop
 	else
 		echo "Stopping vblades ..."
 		OLD_IFS=$IFS
@@ -53,12 +54,8 @@ function openqrm_plugin_aoe_storage_stop() {
 			done
 		done
 		IFS=$OLD_IFS
-
-
-
-
-
 	fi
+	killall vblade 1>/dev/null 2>&1
 }
 
 function openqrm_plugin_aoe_storage_uninstall() {
