@@ -93,9 +93,11 @@ unset($lvm_storage_fields["lvm_storage_command"]);
 		case 'refresh_lv':
 			$storage = new storage();
 			$storage->get_instance_by_id($lvm_storage_id);
+			$deployment = new deployment();
+			$deployment->get_instance_by_id($storage->type);
 			$storage_resource = new resource();
 			$storage_resource->get_instance_by_id($storage->resource_id);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage post_lv -u $OPENQRM_USER->name -p $OPENQRM_USER->password -v $lvm_volume_group";
+			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage post_lv -u $OPENQRM_USER->name -p $OPENQRM_USER->password -v $lvm_volume_group -t $deployment->type";
 			$storage_resource->send_command($storage_resource->ip, $resource_command);
 			sleep($refresh_delay);
 			break;

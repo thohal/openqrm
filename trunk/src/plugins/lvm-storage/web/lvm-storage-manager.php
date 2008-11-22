@@ -29,12 +29,13 @@ if(htmlobject_request('action') != '') {
 			foreach($_REQUEST['identifier'] as $id) {
 				$storage = new storage();
 				$storage->get_instance_by_id($id);
+				$deployment = new deployment();
+				$deployment->get_instance_by_id($storage->type);
 				$storage_resource = new resource();
 				$storage_resource->get_instance_by_id($storage->resource_id);
-
 				if (strlen($lvm_volume_group)) {
 					// post lv status
-					$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage post_lv -u $OPENQRM_USER->name -p $OPENQRM_USER->password -v $lvm_volume_group";
+					$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage post_lv -u $OPENQRM_USER->name -p $OPENQRM_USER->password -v $lvm_volume_group -t $deployment->type";
 				} else {
 					// post vg status
 					$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage post_vg -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
@@ -43,6 +44,23 @@ if(htmlobject_request('action') != '') {
 				sleep($refresh_delay);
 			}
 			break;
+
+		case 'select':
+			foreach($_REQUEST['identifier'] as $id) {
+				$storage = new storage();
+				$storage->get_instance_by_id($id);
+				$deployment = new deployment();
+				$deployment->get_instance_by_id($storage->type);
+				$storage_resource = new resource();
+				$storage_resource->get_instance_by_id($storage->resource_id);
+				// post vg status
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage post_vg -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+				$storage_resource->send_command($storage_resource->ip, $resource_command);
+				sleep($refresh_delay);
+			}
+			break;
+
+
 	}
 }
 
@@ -240,7 +258,7 @@ function lvm_storage_display($lvm_storage_id) {
 			if (strstr($lvm, "VG Name")) {
 				$volume_name = substr($lvm, 10, -1);
 				$volume_name = trim($volume_name);
-				$disp = $disp." VG Name <b><a class=\"eterminalhighlight\" href=\"lvm-storage-manager.php?currenttab=tab0&lvm_volume_group=$volume_name&lvm_storage_id=$storage->id\">$volume_name</a></b>";
+				$disp = $disp." VG Name <b><a class=\"eterminalhighlight\" href=\"lvm-storage-manager.php?currenttab=tab0&lvm_volume_group=$volume_name&lvm_storage_id=$storage->id&action=refresh&identifier[]=$storage->id\">$volume_name</a></b>";
 				$disp = $disp."<br>";
 			} else {
 				$disp = $disp.$lvm;
