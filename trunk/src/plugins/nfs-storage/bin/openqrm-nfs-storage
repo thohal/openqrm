@@ -25,6 +25,7 @@ fi
 function nfs_storage_usage() {
 	echo "Usage : $0 add/remove/snap/list <-n image-name>"
 	echo "             [-s image-snapshot-name]"
+	echo "        $0 auth <-n image-name> <-i ip-address>"
 	echo "        $0 post_exports <-u username> <-p password>"
 	echo "        $0 post_identifier <-u username> <-p password>"
 	exit 1
@@ -42,6 +43,10 @@ while [ $# -ne 0 ]; do
 			;;
 		-s)
 			NFS_IMAGE_SNAPSHOT_NAME=$2
+			shift
+			;;
+		-i)
+			NFS_IMAGE_AUTH_IP=$2
 			shift
 			;;
 		-u)
@@ -90,7 +95,7 @@ case "$NFS_COMMAND" in
 		echo -n "Creating NFS export for image $NFS_IMAGE_NAME"
 		# add to exports
 		nfs_storage_lock aquire
-		manage_nfs add
+		manage_nfs add $OPENQRM_SERVER_IP
 		nfs_storage_lock release
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$NFS_OPENQRM_USERNAME" != "" ] && [ "$NFS_OPENQRM_PASSWORD" != "" ]; then
@@ -123,10 +128,22 @@ case "$NFS_COMMAND" in
 		echo -n "Creating snapshot from image $NFS_IMAGE_NAME -> $NFS_IMAGE_SNAPSHOT_NAME"
 		mkdir -p $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_SNAPSHOT_NAME
 		nfs_storage_lock aquire
-		manage_nfs add
+		manage_nfs add $OPENQRM_SERVER_IP
 		nfs_storage_lock release
 		cp -aR $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME/* $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_SNAPSHOT_NAME/
 		export NFS_IMAGE_NAME=$NFS_IMAGE_SNAPSHOT_NAME
+		if [ "$NFS_OPENQRM_USERNAME" != "" ] && [ "$NFS_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_exports -u $NFS_OPENQRM_USERNAME -p $NFS_OPENQRM_PASSWORD
+		fi
+		;;
+
+	auth)
+		echo -n "Authenticating NFS export $NFS_IMAGE_NAME to $NFS_IMAGE_AUTH_IP"
+		# auth in exports
+		nfs_storage_lock aquire
+		manage_nfs auth $NFS_IMAGE_AUTH_IP
+		nfs_storage_lock release
+		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$NFS_OPENQRM_USERNAME" != "" ] && [ "$NFS_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_exports -u $NFS_OPENQRM_USERNAME -p $NFS_OPENQRM_PASSWORD
 		fi

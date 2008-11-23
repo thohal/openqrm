@@ -56,8 +56,10 @@ function nfs_storage_lock() {
 function manage_nfs() {
 	case "$1" in
 		add)
+			OPENQRM_SERVER=$2
 			mkdir -p $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME
-			echo "$NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME	*(rw,insecure,no_root_squash,async)" >> /etc/exports
+			echo "$NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME	$OPENQRM_SERVER(rw,insecure,no_root_squash,async)" >> /etc/exports
+			sed -i '/^$/d' /etc/exports
 			if [ -x /etc/init.d/nfs ]; then
 				/etc/init.d/nfs reload
 			elif [ -x /etc/init.d/nfs-kernel-server ]; then
@@ -67,8 +69,8 @@ function manage_nfs() {
 			fi
 			;;
 		remove)
-			cat /etc/exports | sed -e "s#^$NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME.*##g" > /tmp/exports.tmp-update
-			/bin/mv -f /tmp/exports.tmp-update /etc/exports
+			sed -i -e "s#^$NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME.*##g" /etc/exports
+			sed -i '/^$/d' /etc/exports
 			if [ -x /etc/init.d/nfs ]; then
 				/etc/init.d/nfs reload
 			elif [ -x /etc/init.d/nfs-kernel-server ]; then
@@ -79,6 +81,20 @@ function manage_nfs() {
 			rm -rf $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME/*
 			rmdir $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME
 			;;
+
+		auth)
+			AUTH_IP=$2
+			sed -i -e "s#^$NFS_IMAGE_NAME.*#$NFS_IMAGE_NAME	$AUTH_IP(rw,insecure,no_root_squash,async)#g" /etc/exports
+			sed -i '/^$/d' /etc/exports
+			if [ -x /etc/init.d/nfs ]; then
+				/etc/init.d/nfs reload
+			elif [ -x /etc/init.d/nfs-kernel-server ]; then
+				/etc/init.d/nfs-kernel-server reload
+			else
+				echo "WARNING: Could not find nfs-server init script !"
+			fi
+			;;
+
 	esac
 }
 
