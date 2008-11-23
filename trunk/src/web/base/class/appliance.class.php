@@ -310,20 +310,6 @@ function stop() {
 	$appliance_fields["appliance_comment"]=$this->comment;
 	$appliance_fields["appliance_event"]=$this->event;
 
-	// storage authentication hook
-	$image = new image();
-	$image->get_instance_by_id($this->imageid);
-	$deployment = new deployment();
-	$deployment->get_instance_by_type($image->type);
-	$deployment_type = $deployment->type;
-	$deployment_plugin_name = $deployment->storagetype;
-	$storage_auth_hook = "$RootDir/plugins/$deployment_plugin_name/openqrm-$deployment_type-auth-hook.php";
-	if (file_exists($storage_auth_hook)) {
-		$event->log("stop", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found deployment type $deployment_type handling the stop auth hook.", "", "", 0, 0, $resource->id);
-		require_once "$storage_auth_hook";
-		storage_auth_function("stop", $this->id);
-	}
-
 	// stop the hook
 	$plugin = new plugin();
 	$enabled_plugins = $plugin->enabled();
@@ -338,6 +324,21 @@ function stop() {
 	}
 
 	$resource->send_command("$resource->ip", "reboot");
+
+	// storage authentication hook
+	$image = new image();
+	$image->get_instance_by_id($this->imageid);
+	$deployment = new deployment();
+	$deployment->get_instance_by_type($image->type);
+	$deployment_type = $deployment->type;
+	$deployment_plugin_name = $deployment->storagetype;
+	$storage_auth_hook = "$RootDir/plugins/$deployment_plugin_name/openqrm-$deployment_type-auth-hook.php";
+	if (file_exists($storage_auth_hook)) {
+		$event->log("stop", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found deployment type $deployment_type handling the stop auth hook.", "", "", 0, 0, $resource->id);
+		require_once "$storage_auth_hook";
+		storage_auth_function("stop", $this->id);
+	}
+
 }
 
 

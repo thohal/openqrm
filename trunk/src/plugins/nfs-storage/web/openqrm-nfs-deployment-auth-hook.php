@@ -56,8 +56,24 @@ function storage_auth_function($cmd, $appliance_id) {
 			$resource->send_command($storage_ip, $auth_start_cmd);
 			break;
 		case "stop":
-			$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -n $image_rootdevice -i $OPENQRM_SERVER_IP_ADDRESS";
-			$resource->send_command($storage_ip, $auth_start_cmd);
+			$loop=0;
+			while(1) {
+				$resource->get_instance_by_id($appliance->resources);
+				if (!strcmp($resource->state, "active")) {
+					$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 2, "openqrm-dns-appliance-hook.php", "Resource is idle again, applying stop auth", "", "", 0, 0, $appliance_id);
+					break;				
+				} else {
+					$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 2, "openqrm-dns-appliance-hook.php", "Resource in transition loop $loop", "", "", 0, 0, $appliance_id);
+				}
+				if ($loop > 10) {
+					$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 2, "openqrm-dns-appliance-hook.php", "Timeout for stop auth hook, exiting !", "", "", 0, 0, $appliance_id);
+					return;
+				}
+				sleep(10);
+				$loop++;
+			}
+			$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -n $image_rootdevice -i $OPENQRM_SERVER_IP_ADDRESS";
+			$resource->send_command($storage_ip, $auth_stop_cmd);
 			break;
 		
 	}
