@@ -84,7 +84,7 @@ function manage_nfs() {
 
 		auth)
 			AUTH_IP=$2
-			sed -i -e "s#^$NFS_IMAGE_NAME.*#$NFS_IMAGE_NAME	$AUTH_IP(rw,insecure,no_root_squash,async)#g" /etc/exports
+			sed -i -e "s#^$NFS_IMAGE_ROOTDEVICE.*#$NFS_IMAGE_ROOTDEVICE	$AUTH_IP(rw,insecure,no_root_squash,async)#g" /etc/exports
 			sed -i '/^$/d' /etc/exports
 			if [ -x /etc/init.d/nfs ]; then
 				/etc/init.d/nfs reload

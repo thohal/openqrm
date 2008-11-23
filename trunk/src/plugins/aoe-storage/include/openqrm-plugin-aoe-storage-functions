@@ -106,16 +106,18 @@ function manage_aoe() {
 
 		auth)
 			AUTHENTICATED_MAC=$2
-			sed -i -e "s#$AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME .*#$AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME $AUTHENTICATED_MAC#g" $VBLADECONF
+			AOE_SLOT=`echo $AOE_IMAGE_ROOTDEVICE | cut -d'.' -f2`
+			AOE_SHELF=`echo $AOE_IMAGE_ROOTDEVICE | cut -d'.' -f1 | sed -e "s#/dev/etherd/e##g"`
+			AOE_INTERFACE=`cat $VBLADECONF | grep -v "#" | grep "$AOE_SHELF $AOE_SLOT" | awk {' print $1'}`
+			AOE_IMAGE_ROOTDEVICE_PATH=`cat $VBLADECONF | grep "$AOE_SHELF $AOE_SLOT" | awk {' print $4 '}`
+			sed -i -e "s#$AOE_IMAGE_ROOTDEVICE_PATH .*#$AOE_IMAGE_ROOTDEVICE_PATH $AUTHENTICATED_MAC#g" $VBLADECONF
 			sed -i '/^$/d' $VBLADECONF
-			for VBLADE_PID in `ps ax | grep vblade | grep -w $AOE_IMAGE_NAME | awk {' print $1 '}`; do
+			for VBLADE_PID in `ps ax | grep vblade | grep -w $AOE_IMAGE_ROOTDEVICE_PATH | awk {' print $1 '}`; do
 				kill $VBLADE_PID
 			done
 			sync			
 			# start vbladed
-			AOE_INTERFACE=`cat $VBLADECONF | grep $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME | awk {' print $1'}`
-			AOE_SLOT=`cat $VBLADECONF | grep $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME | awk {' print $3'}`
-			sh -c "vblade -m $AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME < /dev/null 2>&1 | logger -t vbladed" &
+			sh -c "vblade -m $AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_IMAGE_ROOTDEVICE_PATH < /dev/null 2>&1 | logger -t vbladed" &
 			;;
 
 		remove)

@@ -27,7 +27,7 @@ function aoe_storage_usage() {
 	echo "Usage : $0 add/remove/snap/list <-n image-name> "
 	echo "             [-m size in MB]"
 	echo "             [-s image-snapshot-name]"
-	echo "        $0 auth <-n image-name> <-i mac-address>"
+	echo "        $0 auth <-r image-rootdevice> <-i mac-address>"
 	echo "        $0 post_luns <-u username> <-p password>"
 	echo "        $0 post_identifier <-u username> <-p password>"
 	exit 1
@@ -70,6 +70,10 @@ while [ $# -ne 0 ]; do
 			AOE_IMAGE_AUTH_MAC=$2
 			shift
 			;;
+		-r)
+			AOE_IMAGE_ROOTDEVICE=$2
+			shift
+			;;
 		-u)
 			AOE_OPENQRM_USERNAME=$2
 			shift
@@ -103,7 +107,7 @@ if [ "$AOE_COMMAND" == "post_luns" ] || [ "$AOE_COMMAND" == "post_identifier" ];
 		aoe_storage_usage
 	fi
 else
-	if [ "$AOE_COMMAND" != "list" ]; then
+	if [ "$AOE_COMMAND" != "list" ] && [ "$AOE_COMMAND" != "auth" ]; then
 		if [ "$AOE_IMAGE_NAME" == "" ]; then
 			aoe_storage_usage
 		fi
@@ -171,7 +175,7 @@ case "$AOE_COMMAND" in
 		;;
 
 	auth)
-		echo "Authenticating AOE Shelf for image $AOE_IMAGE_NAME to $AOE_IMAGE_AUTH_MAC"
+		echo "Authenticating AOE Shelf for image $AOE_IMAGE_ROOTDEVICE to $AOE_IMAGE_AUTH_MAC"
 		aoe_storage_lock aquire
 		manage_aoe auth $AOE_IMAGE_AUTH_MAC
 		aoe_restart_exec

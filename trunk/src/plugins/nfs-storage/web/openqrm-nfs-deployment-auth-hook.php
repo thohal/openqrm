@@ -56,7 +56,7 @@ function storage_auth_function($cmd, $appliance_id) {
 	switch($cmd) {
 		case "start":
 			$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-dns-appliance-hook.php", "Authenticating $image_name to resource $resource_ip", "", "", 0, 0, $appliance_id);
-			$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -n $image_rootdevice -i $resource_ip";
+			$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $resource_ip";
 			$resource->send_command($storage_ip, $auth_start_cmd);
 			break;
 		case "stop":
@@ -119,7 +119,7 @@ function storage_auth_stop_in_background($appliance_id) {
 		sleep(2);
 		$loop++;
 	}
-	$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -n $image_rootdevice -i $OPENQRM_SERVER_IP_ADDRESS";
+	$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $OPENQRM_SERVER_IP_ADDRESS";
 	$resource->send_command($storage_ip, $auth_stop_cmd);
 
 }
