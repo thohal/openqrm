@@ -361,8 +361,9 @@ case "$LVM_COMMAND" in
 				lvm-nfs-deployment)
 					exportfs -v | awk {' print $1 '} | grep -v "<.*>" > /tmp/$STORAGE_STATUS_TMP
 					if grep $LVOL_SHORT /tmp/$STORAGE_STATUS_TMP 1>/dev/null; then
-						echo "$LVOL,$LVOL"
-						echo "$LVOL,$LVOL" >> $STORAGE_STATUS_TMP
+						EXPORT_PATH=`echo $LVOL | sed -e "s#^/dev##g"`
+						echo "$LVOL,$EXPORT_PATH"
+						echo "$LVOL,$EXPORT_PATH" >> $STORAGE_STATUS_TMP
 					fi
 					rm -f /tmp/$STORAGE_STATUS_TMP
 					;;

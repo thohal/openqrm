@@ -167,7 +167,7 @@ case "$NFS_COMMAND" in
 		echo "Posting current nfs-identifier to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.nfs.ident
 		> $STORAGE_STATUS_TMP
-		for EXPORT_STR in `exportfs -v | awk {' print $1 '} | grep -v "<.*>"`; do
+		for EXPORT_STR in `exportfs -v | awk {' print $1 '} | grep -v "<.*>" | grep -v "(.*)"`; do
 			IMAGE_NAME=$EXPORT_STR
 			echo "$IMAGE_NAME,$EXPORT_STR" >> $STORAGE_STATUS_TMP
 		done
