@@ -43,7 +43,7 @@ function openqrm_plugin_aoe_storage_stop() {
 	echo "Stopping the openQRM aoe-storage-plugin"
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aoe-storage/.running
 	if [ -x /etc/init.d/vblade ]; then
-		/etc/init.d/vblade stop
+		/etc/init.d/vblade stop 1>/dev/null 2>&1
 	else
 		if [ -f $VBLADECONF ]; then
 			echo "Stopping vblades ..."

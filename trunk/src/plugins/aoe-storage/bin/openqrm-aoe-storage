@@ -27,6 +27,7 @@ function aoe_storage_usage() {
 	echo "Usage : $0 add/remove/snap/list <-n image-name> "
 	echo "             [-m size in MB]"
 	echo "             [-s image-snapshot-name]"
+	echo "        $0 auth <-n image-name> <-i mac-address>"
 	echo "        $0 post_luns <-u username> <-p password>"
 	echo "        $0 post_identifier <-u username> <-p password>"
 	exit 1
@@ -63,6 +64,10 @@ while [ $# -ne 0 ]; do
 			;;
 		-m)
 			AOE_IMAGE_SIZE=$2
+			shift
+			;;
+		-i)
+			AOE_IMAGE_AUTH_MAC=$2
 			shift
 			;;
 		-u)
@@ -118,10 +123,10 @@ case "$AOE_COMMAND" in
 		# add to exports
 		aoe_storage_lock aquire
 		manage_aoe add
-		aoe_storage_lock release
 		# this is a trick !
 		# vbladed used waitpid which blocks qrm-execd, using nohup, screen or & does not help so we restart the openqrm-client
 		aoe_restart_exec
+		aoe_storage_lock release
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$AOE_OPENQRM_USERNAME" != "" ] && [ "$AOE_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_luns -u $AOE_OPENQRM_USERNAME -p $AOE_OPENQRM_PASSWORD
@@ -157,6 +162,19 @@ case "$AOE_COMMAND" in
 		export AOE_IMAGE_NAME=$AOE_IMAGE_SNAPSHOT_NAME
 		aoe_storage_lock aquire
 		manage_aoe add snap
+		aoe_restart_exec
+		aoe_storage_lock release
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$AOE_OPENQRM_USERNAME" != "" ] && [ "$AOE_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_luns -u $AOE_OPENQRM_USERNAME -p $AOE_OPENQRM_PASSWORD
+		fi
+		;;
+
+	auth)
+		echo "Authenticating AOE Shelf for image $AOE_IMAGE_NAME to $AOE_IMAGE_AUTH_MAC"
+		aoe_storage_lock aquire
+		manage_aoe auth $AOE_IMAGE_AUTH_MAC
+		aoe_restart_exec
 		aoe_storage_lock release
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$AOE_OPENQRM_USERNAME" != "" ] && [ "$AOE_OPENQRM_PASSWORD" != "" ]; then

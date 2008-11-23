@@ -9,6 +9,8 @@ AOE_MGMT_LOCK_DELAY=5
 AOE_MGMT_LOCK_RETRY=100
 AOE_MGMT_LOCK_TIMEOUT=500
 AOE_STORAGE_SERVER_IMAGE_DIRECTORY="/coraid"
+# currently just one static shelf !
+AOE_SHELF=1
 
 
 ################ common aoe-storage functions
@@ -81,13 +83,12 @@ function manage_aoe() {
 	
 	case "$1" in
 		add)
+			AUTHENTICATED_MAC="00:00:00:00:00:00"
 			if [ "$2" != "snap" ]; then
 				dd if=/dev/zero of=$AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME bs=1M count=$AOE_IMAGE_SIZE
 				# create fs, currently static all ext3
 				mkfs.ext3 -F $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME
 			fi
-			# currently just one static shelf !
-			AOE_SHELF=1
 			# slots are dynamic
 			AOE_SLOT=`cat $VBLADECONF | grep -v '^#' | awk {' print $3 '} | sort -n -r | head -n 1`
 			AOE_SLOT=$(( AOE_SLOT + 1 ))
@@ -97,11 +98,26 @@ function manage_aoe() {
 			else
 				AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '} | tail -1`
 			fi
-			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME" >> $VBLADECONF
+			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME $AUTHENTICATED_MAC" >> $VBLADECONF
 			sed -i '/^$/d' $VBLADECONF
 			# start vbladed
-			vbladed $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME
+			sh -c "vblade -m $AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME < /dev/null 2>&1 | logger -t vbladed" &
 			;;
+
+		auth)
+			AUTHENTICATED_MAC=$2
+			sed -i -e "s#$AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME .*#$AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME $AUTHENTICATED_MAC#g" $VBLADECONF
+			sed -i '/^$/d' $VBLADECONF
+			for VBLADE_PID in `ps ax | grep vblade | grep -w $AOE_IMAGE_NAME | awk {' print $1 '}`; do
+				kill $VBLADE_PID
+			done
+			sync			
+			# start vbladed
+			AOE_INTERFACE=`cat $VBLADECONF | grep $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME | awk {' print $1'}`
+			AOE_SLOT=`cat $VBLADECONF | grep $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME | awk {' print $3'}`
+			sh -c "vblade -m $AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME < /dev/null 2>&1 | logger -t vbladed" &
+			;;
+
 		remove)
 			for VBLADE_PID in `ps ax | grep vblade | grep -w $AOE_IMAGE_NAME | awk {' print $1 '}`; do
 				kill $VBLADE_PID
