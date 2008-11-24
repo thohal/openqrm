@@ -23,9 +23,10 @@ if [ "$WHOAMI" != "root" ]; then
 fi
 
 function iscsi_storage_usage() {
-	echo "Usage : $0 add/remove/snap/list <-n image-name> "
+	echo "Usage : $0 add/remove/snap/list <-n image-name> <-i image-password>"
 	echo "             [-m size in MB]"
 	echo "             [-s image-snapshot-name]"
+	echo "        $0 auth <-r image-rootdevice> <-i image-password>"
 	echo "        $0 post_luns <-u username> <-p password>"
 	echo "        $0 post_identifier <-u username> <-p password>"
 	exit 1
@@ -47,6 +48,14 @@ while [ $# -ne 0 ]; do
 			;;
 		-m)
 			ISCSI_IMAGE_SIZE=$2
+			shift
+			;;
+		-i)
+			ISCSI_IMAGE_PASSWORD=$2
+			shift
+			;;
+		-r)
+			ISCSI_IMAGE_ROOTDEVICE=$2
 			shift
 			;;
 		-u)
@@ -82,7 +91,7 @@ if [ "$ISCSI_COMMAND" == "post_luns" ] || [ "$ISCSI_COMMAND" == "post_identifier
 		iscsi_storage_usage
 	fi
 else
-	if [ "$ISCSI_COMMAND" != "list" ]; then
+	if [ "$ISCSI_COMMAND" != "list" ] && [ "$ISCSI_COMMAND" != "auth" ]; then
 		if [ "$ISCSI_IMAGE_NAME" == "" ]; then
 			iscsi_storage_usage
 		fi
@@ -101,7 +110,7 @@ case "$ISCSI_COMMAND" in
 		mkdir -p $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY
 		# add to exports
 		iscsi_storage_lock aquire
-		manage_iscsi add
+		manage_iscsi add regular $ISCSI_IMAGE_PASSWORD
 		iscsi_storage_lock release
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$ISCSI_OPENQRM_USERNAME" != "" ] && [ "$ISCSI_OPENQRM_PASSWORD" != "" ]; then
@@ -137,7 +146,18 @@ case "$ISCSI_COMMAND" in
 		cp -a $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_SNAPSHOT_NAME
 		export ISCSI_IMAGE_NAME=$ISCSI_IMAGE_SNAPSHOT_NAME
 		iscsi_storage_lock aquire
-		manage_iscsi add snap
+		manage_iscsi add snap $ISCSI_IMAGE_PASSWORD
+		iscsi_storage_lock release
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$ISCSI_OPENQRM_USERNAME" != "" ] && [ "$ISCSI_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_luns -u $ISCSI_OPENQRM_USERNAME -p $ISCSI_OPENQRM_PASSWORD
+		fi
+		;;
+
+	auth)
+		echo -n "Authenticating ISCSI Lun for image rootdevice $ISCSI_IMAGE_ROOTDEVICE"
+		iscsi_storage_lock aquire
+		manage_iscsi auth $ISCSI_IMAGE_PASSWORD
 		iscsi_storage_lock release
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$ISCSI_OPENQRM_USERNAME" != "" ] && [ "$ISCSI_OPENQRM_PASSWORD" != "" ]; then
@@ -162,7 +182,6 @@ case "$ISCSI_COMMAND" in
 	post_identifier)
 		echo "Posting current iscsi-identifier to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.iscsi.ident
-		TARGET=`cat $IETDCONF | grep -v "#" | grep Target | awk {' print $2 '}`
 		> $STORAGE_STATUS_TMP
 		OLD_IFS=$IFS
 IFS='
@@ -171,8 +190,8 @@ IFS='
 			LUN=`echo $LUN_STR | awk {'print $2 '}`
 			IMAGE_NAME=`echo $LUN_STR | awk {'print $3 '}`
 			IMAGE_NAME=`basename $IMAGE_NAME | cut -d',' -f1`
-			echo "$IMAGE_NAME,/dev/$TARGET/$LUN"
-			echo "$IMAGE_NAME,/dev/$TARGET/$LUN" >> $STORAGE_STATUS_TMP
+			echo "$IMAGE_NAME,/dev/$IMAGE_NAME/$LUN"
+			echo "$IMAGE_NAME,/dev/$IMAGE_NAME/$LUN" >> $STORAGE_STATUS_TMP
 		done
 		IFS=$OLD_IFS
 		if ! wget -q -O /dev/null --http-user=$ISCSI_OPENQRM_USERNAME --http-password=$ISCSI_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/iscsi-storage/iscsi-storage-action.php?iscsi_storage_command=get_ident; then			echo "ERROR: Could not post the iscsi-export status to the openQRM-server at $resource_openqrmserver!"

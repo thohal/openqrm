@@ -93,6 +93,10 @@ node.session.iscsi.FirstBurstLength = 262144
 node.session.iscsi.MaxBurstLength = 16776192
 node.conn[0].iscsi.MaxRecvDataSegmentLength = 65536
 
+node.session.auth.authmethod = CHAP
+node.session.auth.username = $IMAGE_TARGET
+node.session.auth.password = $IMAGE_ISCSI_AUTH
+
 EOF
 
 	# create /etc/iscsi/initiatorname.iscsi

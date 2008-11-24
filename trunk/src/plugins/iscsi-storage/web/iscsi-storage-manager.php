@@ -259,6 +259,8 @@ function iscsi_storage_display($iscsi_storage_id) {
 				$name_end = strpos($real_image_name, ",");
 				$real_image_name = substr($real_image_name, 0, $name_end);
 				$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
+				$disp = $disp."Target $real_image_name";
+				$disp = $disp."<br>";
 				$disp = $disp.$iscsi;
 				$disp = $disp."</div>";
 				$disp = $disp."<br>";

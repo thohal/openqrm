@@ -80,20 +80,29 @@ function manage_iscsi() {
 	fi
 	case "$1" in
 		add)
+			IMAGE_PASS=$3
 			# create the image file
 			if [ "$2" != "snap" ]; then
 				dd if=/dev/zero of=$ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME bs=1M count=$ISCSI_IMAGE_SIZE
+				# create fs, currently static all ext3
+				mkfs.ext3 -F $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME
 			fi
-			# create fs, currently static all ext3
-			mkfs.ext3 -F $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME
-			IMAGE_LUN=`cat $IETDCONF | grep Lun | awk {' print $2 '} | sort -n -r | head -n 1`
-			IMAGE_LUN=$(( IMAGE_LUN + 1 ))
+			IMAGE_LUN=1
+			echo "Target $ISCSI_IMAGE_NAME" >> $IETDCONF
+			echo "	IncomingUser $ISCSI_IMAGE_NAME $IMAGE_PASS" >> $IETDCONF
 			echo "	Lun $IMAGE_LUN Path=$ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME,Type=fileio" >> $IETDCONF
 			nohup /etc/init.d/iscsi-target restart
 			;;
+		auth)
+			IMAGE_PASS=$2
+			IMAGE_AUTHNAME=`echo $ISCSI_IMAGE_ROOTDEVICE | cut -d'/' -f3`
+			sed -i -e "s#IncomingUser $IMAGE_AUTHNAME .*#IncomingUser $IMAGE_AUTHNAME $IMAGE_PASS#g" $IETDCONF
+			sed -i '/^$/d' $IETDCONF
+			nohup /etc/init.d/iscsi-target restart
+			;;
 		remove)
-			cat $IETDCONF | sed -e "s#.*$ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME.*##g" > /tmp/ietd.conf.tmp-update
-			/bin/mv -f /tmp/ietd.conf.tmp-update $IETDCONF
+			sed -i -e "s#.*$ISCSI_IMAGE_NAME.*##g" $IETDCONF
+			sed -i '/^$/d' $IETDCONF
 			nohup /etc/init.d/iscsi-target restart
 			rm -f $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME
 			;;
