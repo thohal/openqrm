@@ -188,22 +188,35 @@ function manage_iscsi() {
 	fi
 	case "$1" in
 		add)
-			IMAGE_LUN=`cat $IETDCONF | grep Lun | awk {' print $2 '} | sort -n -r | head -n 1`
-			IMAGE_LUN=$(( IMAGE_LUN + 1 ))
+			IMAGE_PASS=$3
+			IMAGE_LUN=1
+			if [ "$2" != "snap" ]; then
+				# create fs, currently static all ext3
+				mkfs.ext3 -F /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
+			fi
+			echo "Target $LVM_IMAGE_NAME" >> $IETDCONF
+			echo "	IncomingUser $LVM_IMAGE_NAME $IMAGE_PASS" >> $IETDCONF
 			echo "	Lun $IMAGE_LUN Path=/dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME,Type=fileio" >> $IETDCONF
-			# create fs, currently static all ext3
-			mkfs.ext3 -F /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
 			nohup /etc/init.d/iscsi-target restart
 			;;
 		remove)
-			cat $IETDCONF | sed -e "s#.*$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME.*##g" > /tmp/ietd.conf.tmp-update
-			/bin/mv -f /tmp/ietd.conf.tmp-update $IETDCONF
+			sed -i -e "s#.*$LVM_IMAGE_NAME.*##g" $IETDCONF
 			nohup /etc/init.d/iscsi-target restart
 			;;
+		auth)
+			IMAGE_PASS=$2
+			IMAGE_AUTHNAME=`echo $LVM_IMAGE_ROOTDEVICE | cut -d'/' -f3`
+			sed -i -e "s#IncomingUser $IMAGE_AUTHNAME .*#IncomingUser $IMAGE_AUTHNAME $IMAGE_PASS#g" $IETDCONF
+			sed -i '/^$/d' $IETDCONF
+			nohup /etc/init.d/iscsi-target restart
+			;;
+
 		transform)
+			IMAGE_PASS=$3
+			IMAGE_LUN=1
 			# here please check before if the devices was already added to the iscsi-conf
-			IMAGE_LUN=`cat $IETDCONF | grep Lun | awk {' print $2 '} | sort -n -r | head -n 1`
-			IMAGE_LUN=$(( IMAGE_LUN + 1 ))
+			echo "Target $LVM_IMAGE_NAME" >> $IETDCONF
+			echo "	IncomingUser $LVM_IMAGE_NAME $IMAGE_PASS" >> $IETDCONF
 			echo "	Lun $IMAGE_LUN Path=/dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME,Type=fileio" >> $IETDCONF
 			nohup /etc/init.d/iscsi-target restart
 			;;
