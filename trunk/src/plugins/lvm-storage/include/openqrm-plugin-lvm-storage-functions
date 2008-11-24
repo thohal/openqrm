@@ -80,6 +80,7 @@ function manage_fstab() {
 function manage_nfs() {
 	case "$1" in
 		add)
+			OPENQRM_SERVER=$3
 			if [ "$2" != "snap" ]; then
 				lvm_storage_log manage_nfs "NOTICE: creating ext3 filesytem on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
 				if ! mkfs.ext3 -F /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME; then
@@ -96,7 +97,7 @@ function manage_nfs() {
 				lvm_storage_lock release
 				return 1
 			fi
-			echo "/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME	*(rw,insecure,no_root_squash,async)" >> /etc/exports
+			echo "/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME	$OPENQRM_SERVER(rw,insecure,no_root_squash,async)" >> /etc/exports
 			if [ -x /etc/init.d/nfs ]; then
 				/etc/init.d/nfs reload
 			elif [ -x /etc/init.d/nfs-kernel-server ]; then
@@ -106,8 +107,7 @@ function manage_nfs() {
 			fi
 			;;
 		remove)
-			cat /etc/exports | sed -e "s#^/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME.*##g" > /tmp/exports.tmp-update
-			/bin/mv -f /tmp/exports.tmp-update /etc/exports
+			sed -i -e "s#^/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME.*##g" /etc/exports
 			if [ -x /etc/init.d/nfs ]; then
 				/etc/init.d/nfs reload
 			elif [ -x /etc/init.d/nfs-kernel-server ]; then
@@ -130,7 +130,20 @@ function manage_nfs() {
 			done
 			rmdir /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
 			;;
+		auth)
+			AUTH_IP=$2
+			sed -i -e "s#^$LVM_IMAGE_ROOTDEVICE.*#$LVM_IMAGE_ROOTDEVICE	$AUTH_IP(rw,insecure,no_root_squash,async)#g" /etc/exports
+			sed -i '/^$/d' /etc/exports
+			if [ -x /etc/init.d/nfs ]; then
+				/etc/init.d/nfs reload
+			elif [ -x /etc/init.d/nfs-kernel-server ]; then
+				/etc/init.d/nfs-kernel-server reload
+			else
+				echo "WARNING: Could not find nfs-server init script !"
+			fi
+			;;
 		transform)
+			OPENQRM_SERVER=$2
 			# here please check before if the devices was already added to the iscsi-conf
 			if ! `mount /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME`; then
 				lvm_storage_log lvm-storage-functions "ERROR: Could not mount /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME at /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
@@ -138,7 +151,7 @@ function manage_nfs() {
 				lvm_storage_lock release
 				return 1
 			fi
-			echo "/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME	*(rw,insecure,no_root_squash,async)" >> /etc/exports
+			echo "/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME	$OPENQRM_SERVER(rw,insecure,no_root_squash,async)" >> /etc/exports
 			if [ -x /etc/init.d/nfs ]; then
 				/etc/init.d/nfs reload
 			elif [ -x /etc/init.d/nfs-kernel-server ]; then

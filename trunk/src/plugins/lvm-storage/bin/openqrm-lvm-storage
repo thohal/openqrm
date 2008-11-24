@@ -180,7 +180,7 @@ case "$LVM_COMMAND" in
 			echo "Detected NFS-image. Mounting and adding $LVM_IMAGE_NAME to /etc/fstab + /etc/exports"
 			lvm_storage_lock aquire
 			manage_fstab add
-			manage_nfs add
+			manage_nfs add regular $OPENQRM_SYSTEM_IP
 			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
 			echo "Detected Aoe-image. Adding to $VBLADECONF"
@@ -267,7 +267,7 @@ case "$LVM_COMMAND" in
 			echo "Detected NFS-image. Mounting and adding $IMAGE_NAME to /etc/fstab + /etc/exports"
 			lvm_storage_lock aquire
 			manage_fstab add
-			manage_nfs add snap
+			manage_nfs add snap $OPENQRM_SYSTEM_IP
 			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
 			echo "Detected Aoe-image. Adding to $VBLADECONF"
@@ -295,7 +295,7 @@ case "$LVM_COMMAND" in
 			echo "Detected NFS-image. Mounting and adding $IMAGE_NAME to /etc/fstab + /etc/exports"
 			lvm_storage_lock aquire
 			manage_fstab add
-			manage_nfs transform
+			manage_nfs transform $OPENQRM_SYSTEM_IP
 			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
 			echo "Detected Aoe-image. Adding to $VBLADECONF"
@@ -312,7 +312,9 @@ case "$LVM_COMMAND" in
 		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
 			:
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
-			:
+			lvm_storage_lock aquire
+			manage_nfs auth $LVM_IMAGE_AUTH
+			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
 			check_vblade
 			lvm_storage_lock aquire
