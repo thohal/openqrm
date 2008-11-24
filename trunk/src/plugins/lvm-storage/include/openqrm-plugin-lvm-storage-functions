@@ -4,6 +4,7 @@
 
 # iscsi-target config file
 IETDCONF=/etc/ietd.conf
+# vblade config file
 VBLADECONF=/etc/vblade.conf
 # some definitions
 DEFAULT_IMAGE_SIZE=5000
@@ -14,7 +15,9 @@ LVM_MGMT_LOCK_TIMEOUT=500
 MAX_UMOUNT_LOOP=5
 LV_SIZE_DEFAULT=5000
 ISCSI_TARGET_URL=http://iscsitarget.sourceforge.net/
-
+# currently just one static shelf !
+AOE_SHELF=1
+AOE_AUTHENTICATED_MAC="00:00:00:00:00:00"
 
 ################ common lvm-storage functions
 
@@ -59,19 +62,7 @@ function lvm_storage_lock() {
 
 ################ lvm-storage functions
 
-
-function check_iscsi_target() {
-	# iscsi-target installed ?
-	if ! ls $IETDCONF 1>/dev/null; then
-		echo "ERROR: Iscsi Enterprise Target not installed !"
-		echo "ERROR: For managing Iscsi filesystem-images please download and install from"
-		echo "       $ISCSI_TARGET_URL"
-		lvm_storage_log lvm-storage-functions "ERROR: Iscsi Enterprise Target not installed !"
-		lvm_storage_lock release
-		return 1
-	fi			
-}
-
+################ lvm-nfs ###################################
 
 
 function manage_fstab() {
@@ -80,8 +71,7 @@ function manage_fstab() {
 			echo "/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME    /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME      ext3    defaults        1 1" >> /etc/fstab
 			;;
 		remove)
-			cat /etc/fstab | sed -e "s#^/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME.*##g" > /tmp/fstab.tmp-update
-			/bin/mv -f /tmp/fstab.tmp-update /etc/fstab
+			sed -i -e "s#^/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME.*##g" /etc/fstab
 			;;
 	esac
 }
@@ -162,6 +152,22 @@ function manage_nfs() {
 
 
 
+################ lvm-iscsi ###################################
+
+
+function check_iscsi_target() {
+	# iscsi-target installed ?
+	if ! ls $IETDCONF 1>/dev/null; then
+		echo "ERROR: Iscsi Enterprise Target not installed !"
+		echo "ERROR: For managing Iscsi filesystem-images please download and install from"
+		echo "       $ISCSI_TARGET_URL"
+		lvm_storage_log lvm-storage-functions "ERROR: Iscsi Enterprise Target not installed !"
+		lvm_storage_lock release
+		return 1
+	fi			
+}
+
+
 function manage_iscsi() {
 
 	if ! check_iscsi_target; then
@@ -194,6 +200,10 @@ function manage_iscsi() {
 
 
 
+################ lvm-aoe ###################################
+
+
+
 function check_vblade() {
 	# vblade installed ?
 	if ! which vbladed 1>/dev/null; then
@@ -219,12 +229,11 @@ function manage_vblade() {
 	
 	case "$1" in
 		add)
+			AUTHENTICATED_MAC="00:00:00:00:00:00"
 			if [ "$2" != "snap" ]; then
 				# create fs, currently static all ext3
 				mkfs.ext3 -F /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
 			fi
-			# currently just one static shelf !
-			AOE_SHELF=1
 			# slots are dynamic
 			AOE_SLOT=`cat $VBLADECONF | grep -v '^#' | awk {' print $3 '} | sort -n -r | head -n 1`
 			AOE_SLOT=$(( AOE_SLOT + 1 ))
@@ -234,10 +243,25 @@ function manage_vblade() {
 			else
 				AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '} | tail -1`
 			fi
-			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME" >> $VBLADECONF
+			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME $AOE_AUTHENTICATED_MAC" >> $VBLADECONF
 			sed -i '/^$/d' $VBLADECONF
 			# start vbladed
-			vbladed $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
+			sh -c "vblade -m $AOE_AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME < /dev/null 2>&1 | logger -t vbladed" &
+			;;
+		auth)
+			AUTHENTICATED_MAC=$2
+			AOE_SLOT=`echo $LVM_IMAGE_ROOTDEVICE | cut -d'.' -f2`
+			AOE_SHELF=`echo $LVM_IMAGE_ROOTDEVICE | cut -d'.' -f1 | sed -e "s#/dev/etherd/e##g"`
+			AOE_INTERFACE=`cat $VBLADECONF | grep -v "#" | grep "$AOE_SHELF $AOE_SLOT" | awk {' print $1'}`
+			AOE_IMAGE_ROOTDEVICE_PATH=`cat $VBLADECONF | grep "$AOE_SHELF $AOE_SLOT" | awk {' print $4 '}`
+			sed -i -e "s#$AOE_IMAGE_ROOTDEVICE_PATH .*#$AOE_IMAGE_ROOTDEVICE_PATH $AUTHENTICATED_MAC#g" $VBLADECONF
+			sed -i '/^$/d' $VBLADECONF
+			for VBLADE_PID in `ps ax | grep vblade | grep -w $AOE_IMAGE_ROOTDEVICE_PATH | awk {' print $1 '}`; do
+				kill $VBLADE_PID
+			done
+			sync			
+			# start vbladed
+			sh -c "vblade -m $AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_IMAGE_ROOTDEVICE_PATH < /dev/null 2>&1 | logger -t vbladed" &
 			;;
 		remove)
 			for VBLADE_PID in `ps ax | grep vblade | grep -w $LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME | awk {' print $1 '}`; do
@@ -248,8 +272,6 @@ function manage_vblade() {
 			sed -i '/^$/d' $VBLADECONF
 			;;
 		transform)
-			# currently just one static shelf !
-			AOE_SHELF=1
 			# slots are dynamic
 			AOE_SLOT=`cat $VBLADECONF | grep -v '^#' | awk {' print $3 '} | sort -n -r | head -n 1`
 			AOE_SLOT=$(( AOE_SLOT + 1 ))
@@ -259,10 +281,10 @@ function manage_vblade() {
 			else
 				AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '} | tail -1`
 			fi
-			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME" >> $VBLADECONF
+			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME $AOE_AUTHENTICATED_MAC" >> $VBLADECONF
 			sed -i '/^$/d' $VBLADECONF
 			# start vbladed
-			vbladed $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
+			sh -c "vblade -m $AOE_AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME < /dev/null 2>&1 | logger -t vbladed" &
 			;;
 	esac
 }

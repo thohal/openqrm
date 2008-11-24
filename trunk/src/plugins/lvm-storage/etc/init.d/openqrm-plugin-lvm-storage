@@ -66,7 +66,7 @@ function openqrm_plugin_lvm-storage_stop() {
 
 	# aoe
 	if [ -x /etc/init.d/vblade ]; then
-		/etc/init.d/vblade stop
+		/etc/init.d/vblade stop 1>/dev/null 2>&1
 	else
 		if [ -f $VBLADECONF ]; then
 			echo "Stopping vblades ..."

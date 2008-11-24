@@ -27,6 +27,7 @@ function lvm_storage_usage() {
 	echo "Usage : $0 add/remove/snap/transform/list <-n image-name> <-v volume-group> <-t lvm-nfs-deployment/lvm-iscsi-deployment/lvm-aoe-deployment>"
 	echo "             [-m size in MB]"
 	echo "             [-s image-snapshot-name]"
+	echo "        $0 auth <-r image-rootdevice> <-i authidentifier> <-t lvm-nfs-deployment/lvm-iscsi-deployment/lvm-aoe-deployment>"
 	echo "        $0 post_vg <-u username> <-p password>"
 	echo "        $0 post_lv <-u username> <-p password> <-v volume-group>"
 	echo "        $0 post_identifier <-t lvm-nfs-deployment/lvm-iscsi-deployment/lvm-aoe-deployment> <-u username> <-p password>"
@@ -68,6 +69,14 @@ while [ $# -ne 0 ]; do
 			;;
 		-t)
 			LVM_IMAGE_TYPE=$2
+			shift
+			;;
+		-i)
+			LVM_IMAGE_AUTH=$2
+			shift
+			;;
+		-r)
+			LVM_IMAGE_ROOTDEVICE=$2
 			shift
 			;;
 		-u)
@@ -119,7 +128,7 @@ if [ "$LVM_COMMAND" == "post_lv" ] || [ "$LVM_COMMAND" == "post_vg" ] || [ "$LVM
 
 else
 
-	if [ "$LVM_COMMAND" != "list" ]; then
+	if [ "$LVM_COMMAND" != "list" ] && [ "$LVM_COMMAND" != "auth" ]; then
 		if [ "$LVM_IMAGE_NAME" == "" ]; then
 			lvm_storage_usage
 		fi
@@ -139,7 +148,7 @@ if ! grep dm_mod /proc/modules 1>/dev/null; then
 	sleep 2
 fi
 
-if [ "$LVM_COMMAND" != "list" ] && [ "$LVM_COMMAND" != "post_vg" ] && [ "$LVM_COMMAND" != "post_identifier" ]; then
+if [ "$LVM_COMMAND" != "list" ] && [ "$LVM_COMMAND" != "post_vg" ] && [ "$LVM_COMMAND" != "post_identifier" ] && [ "$LVM_COMMAND" != "auth" ]; then
 	# check if volume group exists
 	if ! `vgdisplay | grep $LVM_STORAGE_SERVER_VOLUME_GROUP 1>/dev/null`; then
 		echo "ERROR: Could not find volume-group $LVM_STORAGE_SERVER_VOLUME_GROUP on the storage-server"
@@ -154,8 +163,6 @@ case "$LVM_COMMAND" in
 		if [ "$LVM_IMAGE_SIZE" == "" ]; then
 			LVM_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
 			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
-			echo "... press return to continue"
-			read
 		fi
 		export LVM_IMAGE_SIZE
 		echo -n "Creating logical volume $LVM_IMAGE_NAME size $LVM_IMAGE_SIZE MB using volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
@@ -238,8 +245,6 @@ case "$LVM_COMMAND" in
 		if [ "$LVM_IMAGE_SIZE" == "" ]; then
 			LVM_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
 			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
-			echo "... press return to continue"
-			read
 		fi
 		export LVM_IMAGE_SIZE
 		
@@ -269,6 +274,7 @@ case "$LVM_COMMAND" in
 			check_vblade
 			lvm_storage_lock aquire
 			manage_vblade add
+			lvm_aoe_restart_exec
 			lvm_storage_lock release
 		fi
 
@@ -289,16 +295,33 @@ case "$LVM_COMMAND" in
 			echo "Detected NFS-image. Mounting and adding $IMAGE_NAME to /etc/fstab + /etc/exports"
 			lvm_storage_lock aquire
 			manage_fstab add
-			manage_nfs add transform
+			manage_nfs transform
 			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
 			echo "Detected Aoe-image. Adding to $VBLADECONF"
 			check_vblade
 			lvm_storage_lock aquire
 			manage_vblade transform
+			lvm_aoe_restart_exec
 			lvm_storage_lock release
 		fi
 		;;
+
+	auth)
+		echo "Authenticating $LVM_IMAGE_TYPE image $LVM_IMAGE_ROOTDEVICE to $LVM_IMAGE_AUTH"
+		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
+			:
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
+			:
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
+			check_vblade
+			lvm_storage_lock aquire
+			manage_vblade auth $LVM_IMAGE_AUTH
+			lvm_aoe_restart_exec
+			lvm_storage_lock release
+		fi
+		;;
+
 	list)
 		lvm lvs
 		;;
