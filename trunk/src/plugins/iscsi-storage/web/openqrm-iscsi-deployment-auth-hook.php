@@ -75,7 +75,7 @@ function storage_auth_function($cmd, $appliance_id) {
 			$image_fields["image_deployment_parameter"]="$new_image_deployment_parameter";
 			$image->update($image->id, $image_fields);
 
-			$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-dns-appliance-hook.php", "Authenticating $image_name / $image_rootdevice to resource $resource_mac with password $image_password", "", "", 0, 0, $appliance_id);
+			$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice to resource $resource_mac with password $image_password", "", "", 0, 0, $appliance_id);
 			$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $image_password";
 			$resource->send_command($storage_ip, $auth_start_cmd);
 			break;
@@ -145,17 +145,17 @@ function storage_auth_stop_in_background($appliance_id) {
 	while(1) {
 		$resource->get_instance_by_id($appliance->resources);
 		if (!strcmp($resource->state, "active")) {
-			$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-dns-appliance-hook.php", "Resource $resource_ip is idle again, applying stop auth for image $image_name", "", "", 0, 0, $appliance_id);
+			$event->log("storage_auth_stop_in_background", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-deployment-auth-hook.php", "Resource $resource_ip is idle again, applying stop auth for image $image_name", "", "", 0, 0, $appliance_id);
 			break;				
 		}
 		if ($loop > 500) {
-			$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 2, "openqrm-dns-appliance-hook.php", "Timeout for stop auth hook image $image_name, exiting !", "", "", 0, 0, $appliance_id);
+			$event->log("storage_auth_stop_in_background", $_SERVER['REQUEST_TIME'], 2, "openqrm-iscsi-deployment-auth-hook.php", "Timeout for stop auth hook image $image_name, exiting !", "", "", 0, 0, $appliance_id);
 			return;
 		}
 		sleep(2);
 		$loop++;
 	}
-	$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-dns-appliance-hook.php", "Authenticating $image_name / $image_rootdevice with password $image_password", "", "", 0, 0, $appliance_id);
+	$event->log("storage_auth_stop_in_background", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice with password $image_password", "", "", 0, 0, $appliance_id);
 	$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $image_password";
 	$resource->send_command($storage_ip, $auth_stop_cmd);
 	// and update the image params
