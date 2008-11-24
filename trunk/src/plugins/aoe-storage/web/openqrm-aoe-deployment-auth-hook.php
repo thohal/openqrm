@@ -61,7 +61,7 @@ function storage_auth_function($cmd, $appliance_id) {
 			break;
 		case "stop":
 			$stop_hook_file = "/tmp/openqrm-aoe-deployment-auth-hook.$appliance_id";
-			$auth_stop_cmd = "(ln -s $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/openqrm-aoe-deployment-auth-hook.php $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-aoe-deployment-auth-hook.$appliance_id.php && wget -q -O /dev/null \"http://localhost/openqrm/boot-service/openqrm-aoe-deployment-auth-hook.$appliance_id.php?bgcmd=stop_auth&appliance_id=$appliance_id\" && rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-aoe-deployment-auth-hook.$appliance_id.php $stop_hook_file) &";
+			$auth_stop_cmd = "(ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/web/openqrm-aoe-deployment-auth-hook.php $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-aoe-deployment-auth-hook.$appliance_id.php && wget -q -O /dev/null \"http://localhost/openqrm/boot-service/openqrm-aoe-deployment-auth-hook.$appliance_id.php?bgcmd=stop_auth&appliance_id=$appliance_id\" && rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-aoe-deployment-auth-hook.$appliance_id.php $stop_hook_file) &";
 			$fp = fopen($stop_hook_file, 'w');
 			fwrite($fp, $auth_stop_cmd);
 			fclose($fp);
