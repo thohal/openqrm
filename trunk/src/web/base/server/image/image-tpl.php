@@ -17,11 +17,6 @@
 	{image_passwd}
 	{image_rootdevice}
 	{image_rootfstype}
-	{image_isshared}
-	{install_from_nfs}
-	{transfer_to_nfs}
-	{install_from_local}
-	{transfer_to_local}
 	</div>
 	<div style="float:right;">
 		<div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
@@ -30,6 +25,17 @@
 		{storage_resource_id}
 		</div>
 	</div>
+	<div style="clear:both;line-height:0px;">&#160;</div>
+
+	<div style="float:left;">
+	{install_from_nfs}
+	{transfer_to_nfs}
+	</div>
+	<div style="float:right;">
+	{install_from_local}
+	{transfer_to_local}
+	</div>
+
 	<div style="clear:both;line-height:0px;">&#160;</div>
 </div>
 
