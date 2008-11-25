@@ -213,7 +213,73 @@ function image_form() {
 		// root password input plus generate password button
 		$generate_pass = "Root password &nbsp;&nbsp;&nbsp;<input name=\"image_passwd\" type=\"text\" id=\"image_passwd\" value=\"\" size=\"10\" maxlength=\"10\">";
 		$generate_pass .= "<input type=\"button\" name=\"gen\" value=\"generate\" onclick=\"this.form.image_passwd.value=getPassword(10, false, true, true, true, false, true, true, true, false);\">";
-		
+
+		// prepare the install-from and transfer-to selects
+		$nfs_rootdevice_identifier_array = array();
+		$nfs_rootdevice_identifier_array[] = array("value" => "", "label" => "");
+		$image = new image();
+		$image_arr = $image->get_ids();
+		foreach ($image_arr as $id) {
+			$image_id = $id['image_id'];
+			$timage = new image();
+			$timage->get_instance_by_id($image_id);
+			if (strstr($timage->type, "nfs")) {
+				$timage_name = $timage->name;
+				$timage_root_device = $timage->rootdevice;
+				$nfs_rootdevice_identifier_array[] = array("value" => "$timage_root_device", "label" => "$timage_name");
+			}
+		}
+		$install_from_nfs_input = htmlobject_select('install_from_nfs_rootdevice', $nfs_rootdevice_identifier_array, 'Install-from-NFS');
+		$transfer_to_nfs_input = htmlobject_select('transfer_to_nfs_rootdevice', $nfs_rootdevice_identifier_array, 'Transfer-to-NFS');
+
+		// install/transfer local		
+		$local_rootdevice_identifier_array = array();
+		$local_rootdevice_identifier_array[] = array("value" => "", "label" => "");
+
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hda", "label" => "/dev/hda");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hda1", "label" => "/dev/hda1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hda2", "label" => "/dev/hda2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hda3", "label" => "/dev/hda3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hda4", "label" => "/dev/hda4");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdb", "label" => "/dev/hdb");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdb1", "label" => "/dev/hdb1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdb2", "label" => "/dev/hdb2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdb3", "label" => "/dev/hdb3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdb4", "label" => "/dev/hdb4");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdc", "label" => "/dev/hdc");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdc1", "label" => "/dev/hdc1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdc2", "label" => "/dev/hdc2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdc3", "label" => "/dev/hdc3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdc4", "label" => "/dev/hdc4");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdd", "label" => "/dev/hdd");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdd1", "label" => "/dev/hdd1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdd2", "label" => "/dev/hdd2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdd3", "label" => "/dev/hdd3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdd4", "label" => "/dev/hdd4");
+
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sda", "label" => "/dev/sda");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sda1", "label" => "/dev/sda1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sda2", "label" => "/dev/sda2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sda3", "label" => "/dev/sda3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sda4", "label" => "/dev/sda4");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdb", "label" => "/dev/sdb");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdb1", "label" => "/dev/sdb1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdb2", "label" => "/dev/sdb2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdb3", "label" => "/dev/sdb3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdb4", "label" => "/dev/sdb4");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdc", "label" => "/dev/sdc");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdc1", "label" => "/dev/sdc1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdc2", "label" => "/dev/sdc2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdc3", "label" => "/dev/sdc3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdc4", "label" => "/dev/sdc4");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdd", "label" => "/dev/sdd");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdd1", "label" => "/dev/sdd1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdd2", "label" => "/dev/sdd2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdd3", "label" => "/dev/sdd3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdd4", "label" => "/dev/sdd4");
+
+		$install_from_local_input = htmlobject_select('install_from_local_rootdevice', $local_rootdevice_identifier_array, 'Install-from-local');
+		$transfer_to_local_input = htmlobject_select('transfer_to_local_rootdevice', $local_rootdevice_identifier_array, 'Transfer-to-local');
 
 		//------------------------------------------------------------ set template
 		$t = new Template_PHPLIB();
@@ -231,6 +297,10 @@ function image_form() {
 			'image_rootdevice' => $rootdevice_input,
 			'image_rootfstype' => htmlobject_input('image_rootfstype', array("value" => $rootfs_default, "label" => 'Root-fs type'), 'text', 20),
 			'image_isshared' => htmlobject_input('image_isshared', array("value" => '1', "label" => 'Shared'), 'checkbox', $shared),
+			'install_from_nfs' => $install_from_nfs_input,
+			'transfer_to_nfs' => $transfer_to_nfs_input,
+			'install_from_local' => $install_from_local_input,
+			'transfer_to_local' => $transfer_to_local_input,
 			'image_deployment_parameter' => htmlobject_textarea('image_deployment_parameter', array("value" => $deployment_default_parameters, "label" => 'Deployment parameter')),
 			'image_deployment_comment' => htmlobject_textarea('image_comment', array("value" => htmlobject_request('image_comment'), "label" => 'Comment')),
 			'image_capabilities' => htmlobject_textarea('image_capabilities', array("value" => htmlobject_request('image_capabilities'), "label" => 'Capabilities')),

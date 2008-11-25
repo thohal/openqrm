@@ -366,6 +366,34 @@ var $_event;
 		return $image_name_array;
 	}
 
+
+	//--------------------------------------------------
+	/**
+	* get an array of all image ids
+	* <code>
+	* $image = new image();
+	* $arr = $image->get_ids();
+	* // $arr['value']
+	* </code>
+	* @access public
+	* @return array
+	*/
+	//--------------------------------------------------
+	function get_ids() {
+		$image_array = array();
+		$query = "select image_id from $this->_db_table";
+		$db=openqrm_get_db_connection();
+		$rs = $db->Execute($query);
+		if (!$rs)
+			$event->log("get_list", $_SERVER['REQUEST_TIME'], 2, "image.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+		else
+		while (!$rs->EOF) {
+			$image_array[] = $rs->fields;
+			$rs->MoveNext();
+		}
+		return $image_array;
+	}
+
 	//--------------------------------------------------
 	/**
 	* get an array of images

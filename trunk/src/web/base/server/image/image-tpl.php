@@ -18,6 +18,10 @@
 	{image_rootdevice}
 	{image_rootfstype}
 	{image_isshared}
+	{install_from_nfs}
+	{transfer_to_nfs}
+	{install_from_local}
+	{transfer_to_local}
 	</div>
 	<div style="float:right;">
 		<div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">

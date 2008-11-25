@@ -1,3 +1,38 @@
+
+<SCRIPT LANGUAGE="JavaScript">
+<!-- Original:  ataxx@visto.com -->
+
+function getRandomNum(lbound, ubound) {
+	return (Math.floor(Math.random() * (ubound - lbound)) + lbound);
+}
+
+function getRandomChar(number, lower, upper, other, extra) {
+	var numberChars = "0123456789";
+	var lowerChars = "abcdefghijklmnopqrstuvwxyz";
+	var upperChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	var otherChars = "`~!@#$%^&*()-_=+[{]}\\|;:'\",<.>/? ";
+	var charSet = extra;
+	if (number == true)
+		charSet += numberChars;
+	if (lower == true)
+		charSet += lowerChars;
+	if (upper == true)
+		charSet += upperChars;
+	if (other == true)
+		charSet += otherChars;
+	return charSet.charAt(getRandomNum(0, charSet.length));
+}
+function getPassword(length, extraChars, firstNumber, firstLower, firstUpper, firstOther, latterNumber, latterLower, latterUpper, latterOther) {
+	var rc = "";
+	if (length > 0)
+		rc = rc + getRandomChar(firstNumber, firstLower, firstUpper, firstOther, extraChars);
+	for (var idx = 1; idx < length; ++idx) {
+		rc = rc + getRandomChar(latterNumber, latterLower, latterUpper, latterOther, extraChars);
+	}
+	return rc;
+}
+</script>
+
 <?php
 $thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
@@ -19,7 +54,8 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	if($url == '') {
 		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
 	}
-	header("Location: $url");
+	// using meta refresh because of the java-script in the header	
+	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
 
@@ -163,7 +199,10 @@ function image_form() {
 			$rootdevice_input = htmlobject_input('image_rootdevice', array("value" => htmlobject_request('image_rootdevice'), "label" => 'Root-device'), 'text', 20);
 		}
 
-
+		// root password input plus generate password button
+		$generate_pass = "Root password &nbsp;&nbsp;&nbsp;<input name=\"image_passwd\" type=\"text\" id=\"image_passwd\" value=\"\" size=\"10\" maxlength=\"10\">";
+		$generate_pass .= "<input type=\"button\" name=\"gen\" value=\"generate\" onclick=\"this.form.image_passwd.value=getPassword(10, false, true, true, true, false, true, true, true, false);\">";
+		
 		$html = new htmlobject_div();
 		$html->text = '<a href="../../plugins/'.$deployment->storagetype.'/'.$deployment->storagetype.'-about.php" target="_blank" class="doculink">'.$deployment->description.'</a>';
 		$html->id = 'htmlobject_image_type';
@@ -195,6 +234,73 @@ function image_form() {
 		$storage_resource_box->label = 'Resource';
 		$storage_resource_box->content = $html;
 
+		// prepare the install-from and transfer-to selects
+		$nfs_rootdevice_identifier_array = array();
+		$nfs_rootdevice_identifier_array[] = array("value" => "", "label" => "");
+		$image = new image();
+		$image_arr = $image->get_ids();
+		foreach ($image_arr as $id) {
+			$image_id = $id['image_id'];
+			$timage = new image();
+			$timage->get_instance_by_id($image_id);
+			if (strstr($timage->type, "nfs")) {
+				$timage_name = $timage->name;
+				$timage_root_device = $timage->rootdevice;
+				$nfs_rootdevice_identifier_array[] = array("value" => "$timage_root_device", "label" => "$timage_name");
+			}
+		}
+		$install_from_nfs_input = htmlobject_select('install_from_nfs_rootdevice', $nfs_rootdevice_identifier_array, 'Install-from-NFS');
+		$transfer_to_nfs_input = htmlobject_select('transfer_to_nfs_rootdevice', $nfs_rootdevice_identifier_array, 'Transfer-to-NFS');
+
+		// install/transfer local		
+		$local_rootdevice_identifier_array = array();
+		$local_rootdevice_identifier_array[] = array("value" => "", "label" => "");
+
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hda", "label" => "/dev/hda");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hda1", "label" => "/dev/hda1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hda2", "label" => "/dev/hda2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hda3", "label" => "/dev/hda3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hda4", "label" => "/dev/hda4");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdb", "label" => "/dev/hdb");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdb1", "label" => "/dev/hdb1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdb2", "label" => "/dev/hdb2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdb3", "label" => "/dev/hdb3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdb4", "label" => "/dev/hdb4");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdc", "label" => "/dev/hdc");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdc1", "label" => "/dev/hdc1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdc2", "label" => "/dev/hdc2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdc3", "label" => "/dev/hdc3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdc4", "label" => "/dev/hdc4");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdd", "label" => "/dev/hdd");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdd1", "label" => "/dev/hdd1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdd2", "label" => "/dev/hdd2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdd3", "label" => "/dev/hdd3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/hdd4", "label" => "/dev/hdd4");
+
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sda", "label" => "/dev/sda");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sda1", "label" => "/dev/sda1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sda2", "label" => "/dev/sda2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sda3", "label" => "/dev/sda3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sda4", "label" => "/dev/sda4");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdb", "label" => "/dev/sdb");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdb1", "label" => "/dev/sdb1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdb2", "label" => "/dev/sdb2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdb3", "label" => "/dev/sdb3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdb4", "label" => "/dev/sdb4");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdc", "label" => "/dev/sdc");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdc1", "label" => "/dev/sdc1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdc2", "label" => "/dev/sdc2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdc3", "label" => "/dev/sdc3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdc4", "label" => "/dev/sdc4");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdd", "label" => "/dev/sdd");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdd1", "label" => "/dev/sdd1");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdd2", "label" => "/dev/sdd2");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdd3", "label" => "/dev/sdd3");
+		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdd4", "label" => "/dev/sdd4");
+
+		$install_from_local_input = htmlobject_select('install_from_local_rootdevice', $local_rootdevice_identifier_array, 'Install-from-local');
+		$transfer_to_local_input = htmlobject_select('transfer_to_local_rootdevice', $local_rootdevice_identifier_array, 'Transfer-to-local');
+
 		//------------------------------------------------------------ set template
 		$t = new Template_PHPLIB();
 		$t->debug = false;
@@ -207,10 +313,14 @@ function image_form() {
 			'image_type' => htmlobject_input('image_type', array("value" => $image_type, "label" => ''), 'hidden'),
 			'image_name' => htmlobject_input('image_name', array("value" => $image_name, "label" => 'Name'), 'text', 20),
 			'image_version' => htmlobject_input('image_version', array("value" => $image_version, "label" => 'Version'), 'text', 20),
-			'image_passwd' => htmlobject_input('image_passwd', array("value" => htmlobject_request('image_passwd'), "label" => 'Root-Password'), 'password', 20),
+			'image_passwd' => $generate_pass,
 			'image_rootdevice' => $rootdevice_input,
 			'image_rootfstype' => htmlobject_input('image_rootfstype', array("value" => $image_rootfstype, "label" => 'Root-fs type'), 'text', 20),
 			'image_isshared' => htmlobject_input('image_isshared', array("value" => '1', "label" => 'Shared'), 'checkbox', $image_isshared),
+			'install_from_nfs' => $install_from_nfs_input,
+			'transfer_to_nfs' => $transfer_to_nfs_input,
+			'install_from_local' => $install_from_local_input,
+			'transfer_to_local' => $transfer_to_local_input,
 			'image_deployment_parameter' => htmlobject_textarea('image_deployment_parameter', array("value" => $image_deployment_parameter, "label" => 'Deployment parameter')),
 			'image_deployment_comment' => htmlobject_textarea('image_comment', array("value" => $image_comment, "label" => 'Comment')),
 			'image_capabilities' => htmlobject_textarea('image_capabilities', array("value" => $image_capabilities, "label" => 'Capabilities')),
