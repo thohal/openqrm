@@ -183,7 +183,7 @@ function transfer_rootfs_to_nfs() {
 	fi
 	echo "aoe-storage: Starting transfer-to-nfs phase. This can take a while ...."
 	rsync -aq /mnt/* /mnt2/
-	echo "aoe-storage: Transfer-to-nfs finished. Continuing boot-up"
+	echo "aoe-storage: Transfer-to-nfs phase finished. Continuing boot-up"
 	umount /mnt2
 	rmdir /mnt2
 	openqrm_portmap_stop
@@ -218,7 +218,7 @@ function transfer_rootfs_to_local() {
 	fi
 	echo "aoe-storage: Starting transfer-to-local phase. This can take a while ...."
 	rsync -aq /mnt/* /mnt2/
-	echo "aoe-storage: Transfer-to-local finished. Continuing boot-up"
+	echo "aoe-storage: Transfer-to-local phase finished. Continuing boot-up"
 	umount /mnt2
 	rmdir /mnt2
 }
