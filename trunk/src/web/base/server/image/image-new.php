@@ -1,3 +1,38 @@
+
+<SCRIPT LANGUAGE="JavaScript">
+<!-- Original:  ataxx@visto.com -->
+
+function getRandomNum(lbound, ubound) {
+	return (Math.floor(Math.random() * (ubound - lbound)) + lbound);
+}
+
+function getRandomChar(number, lower, upper, other, extra) {
+	var numberChars = "0123456789";
+	var lowerChars = "abcdefghijklmnopqrstuvwxyz";
+	var upperChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	var otherChars = "`~!@#$%^&*()-_=+[{]}\\|;:'\",<.>/? ";
+	var charSet = extra;
+	if (number == true)
+		charSet += numberChars;
+	if (lower == true)
+		charSet += lowerChars;
+	if (upper == true)
+		charSet += upperChars;
+	if (other == true)
+		charSet += otherChars;
+	return charSet.charAt(getRandomNum(0, charSet.length));
+}
+function getPassword(length, extraChars, firstNumber, firstLower, firstUpper, firstOther, latterNumber, latterLower, latterUpper, latterOther) {
+	var rc = "";
+	if (length > 0)
+		rc = rc + getRandomChar(firstNumber, firstLower, firstUpper, firstOther, extraChars);
+	for (var idx = 1; idx < length; ++idx) {
+		rc = rc + getRandomChar(latterNumber, latterLower, latterUpper, latterOther, extraChars);
+	}
+	return rc;
+}
+</script>
+
 <?php
 $thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
@@ -18,7 +53,8 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	if($url == '') {
 		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
 	}
-	header("Location: $url");
+	// using meta refresh because of the java-script in the header	
+	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
 
@@ -174,6 +210,11 @@ function image_form() {
 		$storage_resource_box->label = 'Resource';
 		$storage_resource_box->content = $html;
 
+		// root password input plus generate password button
+		$generate_pass = "Root password &nbsp;&nbsp;&nbsp;<input name=\"image_passwd\" type=\"text\" id=\"image_passwd\" value=\"\" size=\"10\" maxlength=\"10\">";
+		$generate_pass .= "<input type=\"button\" name=\"gen\" value=\"generate\" onclick=\"this.form.image_passwd.value=getPassword(8, false, true, true, true, false, true, true, true, false);\">";
+		
+
 		//------------------------------------------------------------ set template
 		$t = new Template_PHPLIB();
 		$t->debug = false;
@@ -186,7 +227,7 @@ function image_form() {
 			'image_type' => htmlobject_input('image_type', array("value" => $deployment->id, "label" => ''), 'hidden'),
 			'image_name' => htmlobject_input('image_name', array("value" => htmlobject_request('image_name'), "label" => 'Name'), 'text', 20),
 			'image_version' => htmlobject_input('image_version', array("value" => htmlobject_request('image_version'), "label" => 'Version'), 'text', 20),
-			'image_passwd' => htmlobject_input('image_passwd', array("value" => htmlobject_request('image_passwd'), "label" => 'Root-Password'), 'password', 20),
+			'image_passwd' => $generate_pass,
 			'image_rootdevice' => $rootdevice_input,
 			'image_rootfstype' => htmlobject_input('image_rootfstype', array("value" => $rootfs_default, "label" => 'Root-fs type'), 'text', 20),
 			'image_isshared' => htmlobject_input('image_isshared', array("value" => '1', "label" => 'Shared'), 'checkbox', $shared),
