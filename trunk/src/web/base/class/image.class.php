@@ -305,6 +305,44 @@ var $_event;
 		}
 	}
 
+
+
+
+	//--------------------------------------------------
+	/**
+	* set the deployment parameters of an image
+	* @access public
+	* @param int $key
+	* @param int $value
+	*/
+	//--------------------------------------------------
+	function set_deployment_parameters($key, $value) {
+
+		$image_deployment_parameter = $this->deployment_parameter;
+		if (strstr($image_deployment_parameter, $key)) {
+			// change
+			$cp1=trim($image_deployment_parameter);
+			$cp2 = strstr($cp1, $key);
+			$cp3=str_replace("$key=\"", "", $cp2);
+			$endpos=strpos('"', $cp3);
+			$cp=substr($cp3, 0, $endpos-1);
+			$new_image_deployment_parameter = str_replace("$key=\"$cp\"", "$key=\"$value\"", $image_deployment_parameter);
+		} else {
+			// add
+			$new_image_deployment_parameter = "$image_deployment_parameter $key=\"$value\"";
+		}
+		$image_fields=array();
+		$image_fields["image_deployment_parameter"]="$new_image_deployment_parameter";
+		$this->update($this->id, $image_fields);
+
+	}
+
+
+
+
+
+
+
 	//--------------------------------------------------
 	/**
 	* get image capabilities by id

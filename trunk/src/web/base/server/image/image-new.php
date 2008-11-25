@@ -40,6 +40,7 @@ $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/storage.class.php";
+require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
@@ -115,6 +116,78 @@ $error = 0;
 					$image->set_root_password($image_auth_id, $image_passwd);
 				}
 
+				// here we set the deployment parameters
+				$new_image_id = $fields["image_id"];
+				// install-from-nfs
+				// we have to refresh the image object here
+				$image->get_instance_by_id($new_image_id);
+				if(strlen($_REQUEST["install_from_nfs"])) {
+					
+					$install_from_nfs_id = $_REQUEST["install_from_nfs"];
+					$install_from_nfs_image = new image();
+					$install_from_nfs_image->get_instance_by_id($install_from_nfs_id);
+					
+					$install_from_nfs_storage = new storage();
+					$install_from_nfs_storage->get_instance_by_id($install_from_nfs_image->storageid);
+					
+					$install_from_nfs_storage_resource = new resource();
+					$install_from_nfs_storage_resource->get_instance_by_id($install_from_nfs_storage->resource_id);
+
+					$install_from_nfs_storage_ip=$install_from_nfs_storage_resource->ip;
+					$install_from_nfs_storage_path=$install_from_nfs_image->rootdevice;
+					$install_from_nfs_path = "$install_from_nfs_storage_ip:$install_from_nfs_storage_path";
+
+					$image->set_deployment_parameters("IMAGE_INSTALL_FROM_NFS", $install_from_nfs_path);
+				} else {
+					$image->set_deployment_parameters("IMAGE_INSTALL_FROM_NFS", "");
+				}
+
+				// transfer-to-nfs
+				// we have to refresh the image object here
+				$image->get_instance_by_id($new_image_id);
+				if(strlen($_REQUEST["transfer_to_nfs"])) {
+					
+					$transfer_to_nfs_id = $_REQUEST["transfer_to_nfs"];
+					$transfer_to_nfs_image = new image();
+					$transfer_to_nfs_image->get_instance_by_id($transfer_to_nfs_id);
+					
+					$transfer_to_nfs_storage = new storage();
+					$transfer_to_nfs_storage->get_instance_by_id($transfer_to_nfs_image->storageid);
+					
+					$transfer_to_nfs_storage_resource = new resource();
+					$transfer_to_nfs_storage_resource->get_instance_by_id($transfer_to_nfs_storage->resource_id);
+
+					$transfer_to_nfs_storage_ip=$transfer_to_nfs_storage_resource->ip;
+					$transfer_to_nfs_storage_path=$transfer_to_nfs_image->rootdevice;
+					$transfer_to_nfs_path = "$transfer_to_nfs_storage_ip:$transfer_to_nfs_storage_path";
+
+					$image->set_deployment_parameters("IMAGE_TRANSFER_TO_NFS", $transfer_to_nfs_path);
+				} else {
+					$image->set_deployment_parameters("IMAGE_TRANSFER_TO_NFS", "");
+				}
+
+				// install-from-local
+				// we have to refresh the image object here
+				$image->get_instance_by_id($new_image_id);
+				if(strlen($_REQUEST["install_from_local"])) {
+					$install_from_local_device = $_REQUEST["install_from_local"];
+					$image->set_deployment_parameters("IMAGE_INSTALL_FROM_LOCAL", $install_from_local_device);
+				} else {
+					$image->set_deployment_parameters("IMAGE_INSTALL_FROM_LOCAL", "");
+				}
+
+				// transfer-to-local
+				// we have to refresh the image object here
+				$image->get_instance_by_id($new_image_id);
+				if(strlen($_REQUEST["transfer_to_local"])) {
+					$transfer_to_local_device = $_REQUEST["transfer_to_local"];
+					$image->set_deployment_parameters("IMAGE_TRANSFER_TO_LOCAL", $transfer_to_local_device);
+				} else {
+					$image->set_deployment_parameters("IMAGE_TRANSFER_TO_LOCAL", "");
+				}
+
+
+
 				$strMsg .= 'added new image <b>'.$fields["image_name"].'</b><br>';
 				$args = '?strMsg='.$strMsg;
 				$args .= '&image_id='.$fields["image_id"];
@@ -130,8 +203,7 @@ $error = 0;
 	}
 }
 
-// we need to include the resource.class after the redirect to not send any header
-require_once "$RootDir/class/resource.class.php";
+
 
 function image_form() {
 	global $BaseDir, $OPENQRM_USER, $thisfile;
@@ -215,22 +287,21 @@ function image_form() {
 		$generate_pass .= "<input type=\"button\" name=\"gen\" value=\"generate\" onclick=\"this.form.image_passwd.value=getPassword(10, false, true, true, true, false, true, true, true, false);\">";
 
 		// prepare the install-from and transfer-to selects
-		$nfs_rootdevice_identifier_array = array();
-		$nfs_rootdevice_identifier_array[] = array("value" => "", "label" => "");
-		$image = new image();
-		$image_arr = $image->get_ids();
+		$nfs_image_identifier_array = array();
+		$nfs_image_identifier_array[] = array("value" => "", "label" => "");
+		$nfs_image = new image();
+		$image_arr = $nfs_image->get_ids();
 		foreach ($image_arr as $id) {
-			$image_id = $id['image_id'];
+			$i_id = $id['image_id'];
 			$timage = new image();
-			$timage->get_instance_by_id($image_id);
+			$timage->get_instance_by_id($i_id);
 			if (strstr($timage->type, "nfs")) {
 				$timage_name = $timage->name;
-				$timage_root_device = $timage->rootdevice;
-				$nfs_rootdevice_identifier_array[] = array("value" => "$timage_root_device", "label" => "$timage_name");
+				$nfs_image_identifier_array[] = array("value" => "$i_id", "label" => "$timage_name");
 			}
 		}
-		$install_from_nfs_input = htmlobject_select('install_from_nfs_rootdevice', $nfs_rootdevice_identifier_array, 'Install-from-NFS');
-		$transfer_to_nfs_input = htmlobject_select('transfer_to_nfs_rootdevice', $nfs_rootdevice_identifier_array, 'Transfer-to-NFS');
+		$install_from_nfs_input = htmlobject_select('install_from_nfs', $nfs_image_identifier_array, 'Install-from-NFS');
+		$transfer_to_nfs_input = htmlobject_select('transfer_to_nfs', $nfs_image_identifier_array, 'Transfer-to-NFS');
 
 		// install/transfer local		
 		$local_rootdevice_identifier_array = array();
@@ -278,8 +349,8 @@ function image_form() {
 		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdd3", "label" => "/dev/sdd3");
 		$local_rootdevice_identifier_array[] = array("value" => "/dev/sdd4", "label" => "/dev/sdd4");
 
-		$install_from_local_input = htmlobject_select('install_from_local_rootdevice', $local_rootdevice_identifier_array, 'Install-from-local');
-		$transfer_to_local_input = htmlobject_select('transfer_to_local_rootdevice', $local_rootdevice_identifier_array, 'Transfer-to-local');
+		$install_from_local_input = htmlobject_select('install_from_local', $local_rootdevice_identifier_array, 'Install-from-local');
+		$transfer_to_local_input = htmlobject_select('transfer_to_local', $local_rootdevice_identifier_array, 'Transfer-to-local');
 
 		//------------------------------------------------------------ set template
 		$t = new Template_PHPLIB();
