@@ -8,25 +8,34 @@
 #
 #
 # Optional parameters 
-# IMAGE_NFS_MOUNT_OPTIONS			- can be e.g. set to proto=tcp for the install/transform phase
 #
-# IMAGE_INSTALL_FROM				- can be set to an (nfs) location from
+# IMAGE_INSTALL_FROM_NFS			- can be set to an (nfs) location from
 #									  which the image will be installed at
 #									  deployment time
 #									  syntax is : ip_of_nfs-server:path_to_target_image
 #
-# IMAGE_INSTALL_FROM_LOCAL_DEVICE	- set to a local harddisk device (e.g. /dev/hda1) this
+# IMAGE_TRANSFER_TO_NFS				- can be set to an (nfs) location from
+#									  which the image will be transfered to at
+#									  deployment time
+#									  syntax is : ip_of_nfs-server:path_to_target_image
+#
+# IMAGE_INSTALL_FROM_LOCAL			- set to a local harddisk device (e.g. /dev/hda1) this
 #									  option will install the aoe-storage image on 
 #									  boot-time from the local-device
 #
-# IMAGE_INSTALL_FROM_LOCAL_DEVICE_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
-#
-# IMAGE_TRANSFORM_TO_LOCAL_DEVICE	- set to a local harddisk device (e.g. /dev/hda1) this option will transfrom
+# IMAGE_TRANSFER_TO_LOCAL			- set to a local harddisk device (e.g. /dev/hda1) this option will transfrom
 #									  the aoe-storage image on boot-time to the local-device
 #
-# IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
 #
 #
+# IMAGE_INSTALL_FROM_LOCAL_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
+#
+# IMAGE_TRANSFER_TO_LOCAL_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
+#
+# IMAGE_NFS_MOUNT_OPTIONS			- can be e.g. set to proto=tcp for the install/transform phase
+#
+
+
 # get the deployment parameters from openqrm.conf
 OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
 . $OPENQRM_RESOURCE_PARAMETER_FILE
@@ -37,6 +46,13 @@ export OPENQRM_SERVER_BASE_DIR=$resource_basedir
 # nfs-options for the install+transform phase
 if [ "$IMAGE_NFS_MOUNT_OPTIONS" != "" ]; then
 	IMAGE_NFS_MOUNT_OPTIONS=",$IMAGE_NFS_MOUNT_OPTIONS"
+fi
+# default to ext3
+if [ "$IMAGE_INSTALL_FROM_LOCAL_FS_TYPE" == "" ]; then
+	IMAGE_INSTALL_FROM_LOCAL_FS_TYPE="ext3"
+fi
+if [ "$IMAGE_TRANSFER_TO_LOCAL_FS_TYPE" == "" ]; then
+	IMAGE_TRANSFER_TO_LOCAL_FS_TYPE="ext3"
 fi
 
 #######################################################################
@@ -77,20 +93,25 @@ function mount_rootfs() {
 		echo "aoe-storage: Mounted $image_rootdevice rw"
 	fi
 	
-	if  [ "$IMAGE_INSTALL_FROM" != "" ]; then
-		install_rootfs
+	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
+		install_rootfs_from_nfs
 	else
-		echo "aoe-storage: Skipping install phase"
+		echo "aoe-storage: Skipping install-to-nfs phase"
 	fi
-	if  [ "$IMAGE_INSTALL_FROM_LOCAL_DEVICE" != "" ]; then
+	if  [ "$IMAGE_TRANSFER_TO_NFS" != "" ]; then
+		transfer_rootfs_to_nfs
+	else
+		echo "aoe-storage: Skipping transfer-to-nfs phase"
+	fi
+	if  [ "$IMAGE_INSTALL_FROM_LOCAL" != "" ]; then
 		install_rootfs_from_local
 	else
-		echo "aoe-storage: Skipping install from local phase"
+		echo "aoe-storage: Skipping install-from-local phase"
 	fi
-	if  [ "$IMAGE_TRANSFORM_TO_LOCAL" != "" ]; then
-		transform_rootfs_to_local
+	if  [ "$IMAGE_TRANSFER_TO_LOCAL" != "" ]; then
+		transfer_rootfs_to_local
 	else
-		echo "aoe-storage: Skipping transform to local phase"
+		echo "aoe-storage: Skipping transfer-to-local phase"
 	fi
 }
 
@@ -123,54 +144,81 @@ function create_fstab() {
 # optional functions ##################################################
 #######################################################################
 
-function install_rootfs() {
+function install_rootfs_from_nfs() {
 	modprobe sunrpc 1>/dev/null 2>&1
 	modprobe lockd 1>/dev/null 2>&1
 	modprobe nfs 1>/dev/null 2>&1
 	rm -rf /dev/null
 	mknod -m 666 /dev/null c 1 3
 	openqrm_portmap_start
-	echo "aoe-storage: Installing $resource_image from $IMAGE_INSTALL_FROM"
+	echo "aoe-storage: Installing $resource_image from $IMAGE_INSTALL_FROM_NFS"
 	mkdir -p /mnt2
-	if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_INSTALL_FROM /mnt2; then
-		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM by nfs"
+	if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_INSTALL_FROM_NFS /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM_NFS by nfs"
 		# give a shell for the admin
 		/bin/bash
 	fi
-	echo "aoe-storage: Starting copying. This can take a while ...."
+	echo "aoe-storage: Starting install-from-nfs phase. This can take a while ...."
 	rsync -aq /mnt2/* /mnt/
-	echo "aoe-storage: Copying finished. Continuing boot-up"
+	echo "aoe-storage: Install-from-nfs phase finished. Continuing boot-up"
 	umount /mnt2
 	rmdir /mnt2
 	openqrm_portmap_stop
 }
 
 
-function install_rootfs_from_local() {
-	modprobe ext3 1>/dev/null 2>&1
+function transfer_rootfs_to_nfs() {
+	modprobe sunrpc 1>/dev/null 2>&1
+	modprobe lockd 1>/dev/null 2>&1
+	modprobe nfs 1>/dev/null 2>&1
+	rm -rf /dev/null
+	mknod -m 666 /dev/null c 1 3
+	openqrm_portmap_start
+	echo "aoe-storage: Transfering $resource_image to $IMAGE_TRANSFER_TO_NFS"
 	mkdir -p /mnt2
-	if ! mount -t $IMAGE_INSTALL_FROM_LOCAL_DEVICE_FS_TYPE -o ro $IMAGE_INSTALL_FROM_LOCAL_DEVICE /mnt2; then
-		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM_LOCAL_DEVICE / $IMAGE_INSTALL_FROM_LOCAL_DEVICE_FS_TYPE"
+	if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_TRANSFER_TO_NFS /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_TRANSFER_TO_NFS by nfs"
 		# give a shell for the admin
 		/bin/bash
 	fi
-	echo "aoe-storage: Starting install phase from local device."
+	echo "aoe-storage: Starting transfer-to-nfs phase. This can take a while ...."
+	rsync -aq /mnt/* /mnt2/
+	echo "aoe-storage: Transfer-to-nfs finished. Continuing boot-up"
+	umount /mnt2
+	rmdir /mnt2
+	openqrm_portmap_stop
+}
+
+
+
+
+function install_rootfs_from_local() {
+	modprobe ext3 1>/dev/null 2>&1
+	mkdir -p /mnt2
+	if ! mount -t $IMAGE_INSTALL_FROM_LOCAL_FS_TYPE -o ro $IMAGE_INSTALL_FROM_LOCAL /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM_LOCAL / $IMAGE_INSTALL_FROM_LOCAL_FS_TYPE"
+		# give a shell for the admin
+		/bin/bash
+	fi
+	echo "aoe-storage: Starting install-from-local phase. This can take a while ...."
 	rsync -aq /mnt2/* /mnt/
+	echo "aoe-storage: Install-from-local phase finished. Continuing boot-up"
 	umount /mnt2
 	rmdir /mnt2
 }
 
 
-function transform_rootfs_to_local() {
+function transfer_rootfs_to_local() {
 	modprobe ext3 1>/dev/null 2>&1
 	mkdir -p /mnt2
-	if ! mount -t $IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE -o rw $IMAGE_TRANSFORM_TO_LOCAL_DEVICE /mnt2; then
-		echo "ERROR: Could not mount $IMAGE_TRANSFORM_TO_LOCAL_DEVICE / $IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE"
+	if ! mount -t $IMAGE_TRANSFER_TO_LOCAL_FS_TYPE -o rw $IMAGE_TRANSFER_TO_LOCAL /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_TRANSFER_TO_LOCAL / $IMAGE_TRANSFER_TO_LOCAL_FS_TYPE"
 		# give a shell for the admin
 		/bin/bash
 	fi
-	echo "aoe-storage: Starting install phase to local device"
+	echo "aoe-storage: Starting transfer-to-local phase. This can take a while ...."
 	rsync -aq /mnt/* /mnt2/
+	echo "aoe-storage: Transfer-to-local finished. Continuing boot-up"
 	umount /mnt2
 	rmdir /mnt2
 }
