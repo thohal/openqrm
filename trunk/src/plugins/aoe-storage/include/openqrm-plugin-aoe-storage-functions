@@ -85,7 +85,7 @@ function manage_aoe() {
 		add)
 			AUTHENTICATED_MAC="00:00:00:00:00:00"
 			if [ "$2" != "snap" ]; then
-				dd if=/dev/zero of=$AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME bs=1M count=$AOE_IMAGE_SIZE
+				dd if=/dev/zero of=$AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME bs=1M seek=$AOE_IMAGE_SIZE count=1
 				# create fs, currently static all ext3
 				mkfs.ext3 -F $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME
 			fi
