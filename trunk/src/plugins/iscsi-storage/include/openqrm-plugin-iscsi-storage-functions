@@ -83,7 +83,7 @@ function manage_iscsi() {
 			IMAGE_PASS=$3
 			# create the image file
 			if [ "$2" != "snap" ]; then
-				dd if=/dev/zero of=$ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME bs=1M count=$ISCSI_IMAGE_SIZE
+				dd if=/dev/zero of=$ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME bs=1M seek=$ISCSI_IMAGE_SIZE count=1
 				# create fs, currently static all ext3
 				mkfs.ext3 -F $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME
 			fi
