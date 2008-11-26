@@ -25,9 +25,7 @@ build-stamp: configure-stamp
 
 	# Add here commands to compile the package.
 	#docbook-to-man debian/openqrm-ng.sgml > openqrm-ng.1
-	# Compile the one C-blah
-#	LDFLAGS=-static make sbin/openqrm-exec-port-monitor
-
+	make
 clean:
 	dh_testdir
 	dh_testroot
@@ -47,10 +45,7 @@ install: build
 	dh_installdirs
 
 	# Add here commands to install the package into debian/openqrm-ng.
-	#make && make install
-	$(MAKE) DESTDIR=$(CURDIR)/debian/openqrm
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/openqrm
-	for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn"`; do cd $$SRC_DIR && make install DESTDIR=$(CURDIR)/debian/openqrm/plugins && cd ..; done
+	$(MAKE) install DESTINATION_DIR=$(CURDIR)/debian/openqrm
 
 # Build architecture-independent files here.
 binary-indep: build install
@@ -64,14 +59,14 @@ binary-arch: build install
 	dh_installdocs
 	dh_installexamples
 	dh_install
-#	dh_installmenu
-#	dh_installdebconf	
+	dh_installmenu
+	dh_installdebconf	
 #	dh_installlogrotate
 #	dh_installemacsen
 #	dh_installpam
 #	dh_installmime
 #	dh_python
-#	dh_installinit
+	dh_installinit
 #	dh_installcron
 #	dh_installinfo
 	dh_installman
