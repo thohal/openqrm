@@ -87,6 +87,8 @@ function import_kernel() {
 	rmdir /tmp_download
 	# start udev
 	udevd --daemon
+	# give time to settle, especially needed for some scsi devices
+	sleep 3
 }
 
 
