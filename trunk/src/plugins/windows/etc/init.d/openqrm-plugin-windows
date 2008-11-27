@@ -1,0 +1,92 @@
+#!/bin/bash
+# init script for the openQRM windows-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/include/openqrm-plugin-windows-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/etc/openqrm-plugin-windows.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+openqrm_server_get_config
+export LANG=C
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+
+function openqrm_plugin_windows_start() {
+	echo "Starting the openQRM windows-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/windows/.running
+}
+
+
+function openqrm_plugin_windows_stop() {
+	echo "Stopping the openQRM windows-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/windows/.running
+}
+
+function openqrm_plugin_windows_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "windows: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "windows: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM windows-plugin"
+	openqrm_plugin_windows_stop
+	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD windows
+	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD windows-vm
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/windows
+}
+
+function openqrm_plugin_windows_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "windows: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "windows: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Initializing the openQRM windows-plugin"
+	# adding virtualization type	
+	openqrm_server_add_virtualization_type $USERNAME $PASSWORD windows "Windows Host"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/windows
+	
+}
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_windows_start
+		;;
+	stop)
+		openqrm_plugin_windows_stop
+		;;
+	restart)
+		openqrm_plugin_windows_stop
+		sleep 1
+		openqrm_plugin_windows_start
+		;;
+	init)
+		openqrm_plugin_windows_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_windows_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+

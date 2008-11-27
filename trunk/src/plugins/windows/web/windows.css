@@ -1,0 +1,16 @@
+.eterminal {
+	background-color:#000000;
+	position:relative;
+	width: 80%;
+	border-width:5px;
+    border-style:solid;
+    border-color:#91a7b4;
+    color: #ffffff !important;
+
+}
+
+
+.eterminalhighlight	{
+    color: #ffffff !important;
+	font-size: 20px !important;
+}

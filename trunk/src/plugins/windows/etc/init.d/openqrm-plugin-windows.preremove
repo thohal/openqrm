@@ -1,0 +1,3 @@
+#!/bin/bash
+# this is the openqrm-plugin-windows preremove script
+`dirname $0`/openqrm-plugin-windows stop
