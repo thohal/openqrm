@@ -15,8 +15,6 @@ LVM_MGMT_LOCK_TIMEOUT=500
 MAX_UMOUNT_LOOP=5
 LV_SIZE_DEFAULT=5000
 ISCSI_TARGET_URL=http://iscsitarget.sourceforge.net/
-# currently just one static shelf !
-AOE_SHELF=1
 AOE_AUTHENTICATED_MAC="00:00:00:00:00:00"
 
 ################ common lvm-storage functions
@@ -255,7 +253,6 @@ function manage_vblade() {
 	
 	case "$1" in
 		add)
-			AUTHENTICATED_MAC="00:00:00:00:00:00"
 			if [ "$2" != "snap" ]; then
 				# create fs, currently static all ext3
 				mkfs.ext3 -F /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME

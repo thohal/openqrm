@@ -9,8 +9,6 @@ AOE_MGMT_LOCK_DELAY=5
 AOE_MGMT_LOCK_RETRY=100
 AOE_MGMT_LOCK_TIMEOUT=500
 AOE_STORAGE_SERVER_IMAGE_DIRECTORY="/coraid"
-# currently just one static shelf !
-AOE_SHELF=1
 
 
 ################ common aoe-storage functions
