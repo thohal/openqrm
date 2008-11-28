@@ -157,12 +157,12 @@ EOF
 	if  [ "$IMAGE_INSTALL_FROM_LOCAL" != "" ]; then
 		install_rootfs_from_local
 	else
-		echo "iscsi-storage: Skipping install from local phase"
+		echo "iscsi-storage: Skipping install-from-local phase"
 	fi
 	if  [ "$IMAGE_TRANSFER_TO_LOCAL" != "" ]; then
 		transfer_rootfs_to_local
 	else
-		echo "iscsi-storage: Skipping transform to local phase"
+		echo "iscsi-storage: Skipping transfer-to-local phase"
 	fi
 }
 
