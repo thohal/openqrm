@@ -75,20 +75,25 @@ function mount_rootfs() {
 		echo "nfs-storage: Mounted $image_storage_server_ip:$IMAGE_ROOT_DIR rw"
 	fi
 	
-	if  [ "$IMAGE_INSTALL_FROM" != "" ]; then
-		install_rootfs
+	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
+		install_rootfs_from_nfs
 	else
-		echo "nfs-storage: Skipping install phase"
+		echo "lvm-nfs-storage: Skipping install phase"
 	fi
-	if  [ "$IMAGE_INSTALL_FROM_LOCAL_DEVICE" != "" ]; then
+	if  [ "$IMAGE_TRANSFER_TO_NFS" != "" ]; then
+		transfer_rootfs_to_nfs
+	else
+		echo "lvm-nfs-storage: Skipping transfer-to-nfs phase"
+	fi
+	if  [ "$IMAGE_INSTALL_FROM_LOCAL" != "" ]; then
 		install_rootfs_from_local
 	else
-		echo "nfs-storage: Skipping install-from-local phase"
+		echo "lvm-nfs-storage: Skipping install-from-local phase"
 	fi
-	if  [ "$IMAGE_TRANSFORM_TO_LOCAL_DEVICE" != "" ]; then
-		transform_rootfs_to_local
+	if  [ "$IMAGE_TRANSFER_TO_LOCAL" != "" ]; then
+		transfer_rootfs_to_local
 	else
-		echo "nfs-storage: Skipping transfer-to-local phase"
+		echo "lvm-nfs-storage: Skipping transfer-to-local phase"
 	fi
 }
 

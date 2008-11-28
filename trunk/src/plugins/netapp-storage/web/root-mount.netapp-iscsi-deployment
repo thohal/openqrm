@@ -1,35 +1,40 @@
 #!/bin/bash
 # this is the root-mount initrd-service
 # which proivdes function to mount/remount the remote
-# iscsi-rootfs according to the image_deployment_parameters at /mnt
+# netapp-iscsi-rootfs according to the image_deployment_parameters at /mnt
 
-# iscsi-storage
+# netapp-iscsi-storage
 # Required defines in the image_deploy_paramters
-#
-# IMAGE_TARGET						- target name of the Iscsi-target server
-#									  where the image is located
 #
 #
 # Optional parameters 
-# IMAGE_NFS_MOUNT_OPTIONS			- can be e.g. set to proto=tcp for the install/transform phase
 #
-# IMAGE_INSTALL_FROM				- can be set to an (nfs) location from
+# IMAGE_INSTALL_FROM_NFS			- can be set to an (nfs) location from
 #									  which the image will be installed at
 #									  deployment time
 #									  syntax is : ip_of_nfs-server:path_to_target_image
 #
-# IMAGE_INSTALL_FROM_LOCAL_DEVICE	- set to a local harddisk device (e.g. /dev/hda1) this
-#									  option will install the iscsi-storage image on 
+# IMAGE_TRANSFER_TO_NFS				- can be set to an (nfs) location from
+#									  which the image will be transfered to at
+#									  deployment time
+#									  syntax is : ip_of_nfs-server:path_to_target_image
+#
+# IMAGE_INSTALL_FROM_LOCAL			- set to a local harddisk device (e.g. /dev/hda1) this
+#									  option will install the netapp-iscsi-storage image on 
 #									  boot-time from the local-device
 #
-# IMAGE_INSTALL_FROM_LOCAL_DEVICE_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
-#
-# IMAGE_TRANSFORM_TO_LOCAL_DEVICE	- set to a local harddisk device (e.g. /dev/hda1) this option will transfrom
-#									  the iscsi-storage image on boot-time to the local-device
-#
-# IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
+# IMAGE_TRANSFER_TO_LOCAL			- set to a local harddisk device (e.g. /dev/hda1) this option will transfrom
+#									  the netapp-iscsi-storage image on boot-time to the local-device
 #
 #
+#
+# IMAGE_INSTALL_FROM_LOCAL_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
+#
+# IMAGE_TRANSFER_TO_LOCAL_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
+#
+# IMAGE_NFS_MOUNT_OPTIONS			- can be e.g. set to proto=tcp for the install/transform phase
+#
+
 # get the deployment parameters from openqrm.conf
 OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
 . $OPENQRM_RESOURCE_PARAMETER_FILE
@@ -40,6 +45,13 @@ export OPENQRM_SERVER_BASE_DIR=$resource_basedir
 # nfs-options for the install+transform phase
 if [ "$IMAGE_NFS_MOUNT_OPTIONS" != "" ]; then
 	IMAGE_NFS_MOUNT_OPTIONS=",$IMAGE_NFS_MOUNT_OPTIONS"
+fi
+# default to ext3
+if [ "$IMAGE_INSTALL_FROM_LOCAL_FS_TYPE" == "" ]; then
+	IMAGE_INSTALL_FROM_LOCAL_FS_TYPE="ext3"
+fi
+if [ "$IMAGE_TRANSFER_TO_LOCAL_FS_TYPE" == "" ]; then
+	IMAGE_TRANSFER_TO_LOCAL_FS_TYPE="ext3"
 fi
 
 
@@ -109,7 +121,7 @@ EOF
 	sleep 2
 
 	# discover
-	echo "iscsi-storage: Discoverying Iscsi-target $image_storage_server_ip:3260"
+	echo "netapp-iscsi-storage: Discoverying Iscsi-target $image_storage_server_ip:3260"
 	IMAGE_TARGET=`iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260 | head -n 1 | awk {' print $2 '}`
 
 	# login
@@ -121,23 +133,28 @@ EOF
 		# give a shell for the admin
 		/bin/bash
 	else
-		echo "iscsi-storage: Mounted $IMAGE_ROOT_DEVICE rw"
+		echo "netapp-iscsi-storage: Mounted $IMAGE_ROOT_DEVICE rw"
 	fi
 	
-	if  [ "$IMAGE_INSTALL_FROM" != "" ]; then
-		install_rootfs
+	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
+		install_rootfs_from_nfs
 	else
-		echo "iscsi-storage: Skipping install phase"
+		echo "netapp-iscsi-storage: Skipping install phase"
 	fi
-	if  [ "$IMAGE_INSTALL_FROM_LOCAL_DEVICE" != "" ]; then
+	if  [ "$IMAGE_TRANSFER_TO_NFS" != "" ]; then
+		transfer_rootfs_to_nfs
+	else
+		echo "netapp-iscsi-storage: Skipping transfer-to-nfs phase"
+	fi
+	if  [ "$IMAGE_INSTALL_FROM_LOCAL" != "" ]; then
 		install_rootfs_from_local
 	else
-		echo "iscsi-storage: Skipping install from local phase"
+		echo "netapp-iscsi-storage: Skipping install-from-local phase"
 	fi
-	if  [ "$IMAGE_TRANSFORM_TO_LOCAL_DEVICE" != "" ]; then
-		transform_rootfs_to_local
+	if  [ "$IMAGE_TRANSFER_TO_LOCAL" != "" ]; then
+		transfer_rootfs_to_local
 	else
-		echo "iscsi-storage: Skipping transform to local phase"
+		echo "netapp-iscsi-storage: Skipping transfer-to-local phase"
 	fi
 }
 
@@ -151,11 +168,11 @@ function remount_rootfs() {
 		sleep 1
 		REMOUNT_LOOP=$[ REMOUNT_LOOP + 1 ]
 		if [ "$REMOUNT_LOOP" == "10" ]; then
-			echo "ERROR: iscsi-storage could not remount /mnt "
+			echo "ERROR: netapp-iscsi-storage could not remount /mnt "
 			/bin/bash
 		fi
 	done
-	echo "iscsi-storage: Re-mounted $IMAGE_ROOT_DEVICE ro"
+	echo "netapp-iscsi-storage: Re-mounted $IMAGE_ROOT_DEVICE ro"
 	
 }
 
@@ -170,23 +187,47 @@ function create_fstab() {
 # optional functions ##################################################
 #######################################################################
 
-function install_rootfs() {
+
+function install_rootfs_from_nfs() {
 	modprobe sunrpc 1>/dev/null 2>&1
 	modprobe lockd 1>/dev/null 2>&1
 	modprobe nfs 1>/dev/null 2>&1
 	rm -rf /dev/null
 	mknod -m 666 /dev/null c 1 3
 	openqrm_portmap_start
-	echo "iscsi-storage: Installing $resource_image from $IMAGE_INSTALL_FROM"
+	echo "netapp-iscsi-storage: Installing $resource_image from $IMAGE_INSTALL_FROM_NFS"
 	mkdir -p /mnt2
-	if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_INSTALL_FROM /mnt2; then
-		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM by nfs"
+	if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_INSTALL_FROM_NFS /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM_NFS by nfs"
 		# give a shell for the admin
 		/bin/bash
 	fi
-	echo "iscsi-storage: Starting copying. This can take a while ...."
+	echo "netapp-iscsi-storage: Starting install-from-nfs phase. This can take a while ...."
 	rsync -aq /mnt2/* /mnt/
-	echo "iscsi-storage: Copying finished. Continuing boot-up"
+	echo "netapp-iscsi-storage: Install-from-nfs phase finished. Continuing boot-up"
+	umount /mnt2
+	rmdir /mnt2
+	openqrm_portmap_stop
+}
+
+
+function transfer_rootfs_to_nfs() {
+	modprobe sunrpc 1>/dev/null 2>&1
+	modprobe lockd 1>/dev/null 2>&1
+	modprobe nfs 1>/dev/null 2>&1
+	rm -rf /dev/null
+	mknod -m 666 /dev/null c 1 3
+	openqrm_portmap_start
+	echo "netapp-iscsi-storage: Transfering $resource_image to $IMAGE_TRANSFER_TO_NFS"
+	mkdir -p /mnt2
+	if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_TRANSFER_TO_NFS /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_TRANSFER_TO_NFS by nfs"
+		# give a shell for the admin
+		/bin/bash
+	fi
+	echo "netapp-iscsi-storage: Starting transfer-to-nfs phase. This can take a while ...."
+	rsync -aq /mnt/* /mnt2/
+	echo "netapp-iscsi-storage: Transfer-to-nfs phase finished. Continuing boot-up"
 	umount /mnt2
 	rmdir /mnt2
 	openqrm_portmap_stop
@@ -196,28 +237,30 @@ function install_rootfs() {
 function install_rootfs_from_local() {
 	modprobe ext3 1>/dev/null 2>&1
 	mkdir -p /mnt2
-	if ! mount -t $IMAGE_INSTALL_FROM_LOCAL_DEVICE_FS_TYPE -o ro $IMAGE_INSTALL_FROM_LOCAL_DEVICE /mnt2; then
-		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM_LOCAL_DEVICE / $IMAGE_INSTALL_FROM_LOCAL_DEVICE_FS_TYPE"
+	if ! mount -t $IMAGE_INSTALL_FROM_LOCAL_FS_TYPE -o ro $IMAGE_INSTALL_FROM_LOCAL /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM_LOCAL / $IMAGE_INSTALL_FROM_LOCAL_FS_TYPE"
 		# give a shell for the admin
 		/bin/bash
 	fi
-	echo "iscsi-storage: Starting install phase from local device."
+	echo "netapp-iscsi-storage: Starting install-to-local phase. This can take a while ...."
 	rsync -aq /mnt2/* /mnt/
+	echo "netapp-iscsi-storage: Install-to-local phase finished. Continuing boot-up"
 	umount /mnt2
 	rmdir /mnt2
 }
 
 
-function transform_rootfs_to_local() {
+function transfer_rootfs_to_local() {
 	modprobe ext3 1>/dev/null 2>&1
 	mkdir -p /mnt2
-	if ! mount -t $IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE -o rw $IMAGE_TRANSFORM_TO_LOCAL_DEVICE /mnt2; then
-		echo "ERROR: Could not mount $IMAGE_TRANSFORM_TO_LOCAL_DEVICE / $IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE"
+	if ! mount -t $IMAGE_TRANSFER_TO_LOCAL_FS_TYPE -o rw $IMAGE_TRANSFER_TO_LOCAL /mnt2; then
+		echo "ERROR: Could not mount $IMAGE_TRANSFER_TO_LOCAL / $IMAGE_TRANSFER_TO_LOCAL_FS_TYPE"
 		# give a shell for the admin
 		/bin/bash
 	fi
-	echo "iscsi-storage: Starting install phase to local device"
+	echo "netapp-iscsi-storage: Starting transfer-to-local phase. This can take a while ...."
 	rsync -aq /mnt/* /mnt2/
+	echo "iscsi-storage: Transfer-to-local phase finished. Continuing boot-up"
 	umount /mnt2
 	rmdir /mnt2
 }
