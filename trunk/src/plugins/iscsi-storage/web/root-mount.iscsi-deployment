@@ -20,11 +20,11 @@
 #									  syntax is : ip_of_nfs-server:path_to_target_image
 #
 # IMAGE_INSTALL_FROM_LOCAL			- set to a local harddisk device (e.g. /dev/hda1) this
-#									  option will install the aoe-storage image on 
+#									  option will install the iscsi-storage image on 
 #									  boot-time from the local-device
 #
 # IMAGE_TRANSFER_TO_LOCAL			- set to a local harddisk device (e.g. /dev/hda1) this option will transfrom
-#									  the aoe-storage image on boot-time to the local-device
+#									  the iscsi-storage image on boot-time to the local-device
 #
 #
 #
