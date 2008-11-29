@@ -22,6 +22,27 @@ $event = new event();
 global $event;
 
 
+function lvm_nfs_parse_deployment_parameter($key, $paramstr) {
+	$ip1=trim($paramstr);
+	$ipos=strpos(':', $ip1);
+	$ip_storage_id=substr($ip1, 0, $ipos-1);
+	$ipr=substr($ip1, $ipos);
+	$ipos1=strpos(':', $ipr);
+	$ip_storage_ip=substr($ipr, 0, $ipos1-1);
+	$ip_image_rootdevice=substr($ipr, $ipos1);
+	switch ($key) {
+		case "id":
+			return $ip_storage_id;
+			break;
+		case "ip":
+			return $ip_storage_ip;
+			break;
+		case "path":
+			return $ip_image_rootdevice;
+			break;
+	}
+}
+
 
 function storage_auth_function($cmd, $appliance_id) {
 	global $event;
@@ -59,6 +80,56 @@ function storage_auth_function($cmd, $appliance_id) {
 			$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-nfs-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice to resource $resource_ip", "", "", 0, 0, $appliance_id);
 			$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $resource_ip -t lvm-nfs-deployment";
 			$resource->send_command($storage_ip, $auth_start_cmd);
+ 
+			// get install deployment params
+			$install_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_INSTALL_FROM_NFS"));
+			if (strlen($install_from_nfs_param)) {
+				// storage -> resource -> auth
+				$ip_storage_id=lvm_nfs_parse_deployment_parameter("id", $install_from_nfs_param);
+				$ip_storage_ip=lvm_nfs_parse_deployment_parameter("ip", $install_from_nfs_param);
+				$ip_image_rootdevice=lvm_nfs_parse_deployment_parameter("path", $install_from_nfs_param);
+
+				$ip_storage = new storage();
+				$ip_storage->get_instance_by_id($ip_storage_id);
+				$ip_storage_resource = new resource();
+				$ip_storage_resource->get_instance_by_id($ip_storage->resource_id);
+				$op_storage_ip = $ip_storage_resource->ip;
+
+				$ip_deployment = new deployment();
+				$ip_deployment->get_instance_by_id($ip_storage->type);
+				$ip_deployment_type = $ip_deployment->type;
+				$ip_deployment_plugin_name = $ip_deployment->storagetype;
+
+				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-nfs-deployment-auth-hook.php", "Install-from-NFS: Authenticating $resource_ip on storage id $ip_storage_id:$ip_storage_ip:$ip_image_rootdevice", "", "", 0, 0, $appliance_id);
+				$auth_install_from_nfs_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$ip_deployment_plugin_name/bin/openqrm-$ip_deployment_plugin_name auth -r $ip_image_rootdevice -i $resource_ip -t $ip_deployment_type";
+				$resource->send_command($ip_storage_ip, $auth_install_from_nfs_start_cmd);
+			}
+
+			// get transfer deployment params
+			$transfer_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_TRANSFER_FROM_NFS"));
+			if (strlen($transfer_from_nfs_params)) {
+				// storage -> resource -> auth
+				$tp_storage_id=lvm_nfs_parse_deployment_parameter("id", $transfer_from_nfs_params);
+				$tp_storage_ip=lvm_nfs_parse_deployment_parameter("ip", $transfer_from_nfs_params);
+				$tp_image_rootdevice=lvm_nfs_parse_deployment_parameter("path", $transfer_from_nfs_params);
+
+				$tp_storage = new storage();
+				$tp_storage->get_instance_by_id($tp_storage_id);
+				$tp_storage_resource = new resource();
+				$tp_storage_resource->get_instance_by_id($tp_storage->resource_id);
+				$op_storage_ip = $tp_storage_resource->ip;
+
+				$tp_deployment = new deployment();
+				$tp_deployment->get_instance_by_id($tp_storage->type);
+				$tp_deployment_type = $tp_deployment->type;
+				$tp_deployment_plugin_name = $tp_deployment->storagetype;
+
+				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-nfs-deployment-auth-hook.php", "Install-from-NFS: Authenticating $resource_ip on storage id $tp_storage_id:$tp_storage_ip:$tp_image_rootdevice", "", "", 0, 0, $appliance_id);
+				$auth_install_from_nfs_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$tp_deployment_plugin_name/bin/openqrm-$tp_deployment_plugin_name auth -r $tp_image_rootdevice -i $resource_ip -t $tp_deployment_type";
+				$resource->send_command($tp_storage_ip, $auth_install_from_nfs_start_cmd);
+			}
+
+
 			break;
 		case "stop":
 			$stop_hook_file = "/tmp/openqrm-lvm-nfs-deployment-auth-hook.$appliance_id";
@@ -122,6 +193,55 @@ function storage_auth_stop_in_background($appliance_id) {
 	}
 	$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $OPENQRM_SERVER_IP_ADDRESS -t lvm-nfs-deployment";
 	$resource->send_command($storage_ip, $auth_stop_cmd);
+
+
+	// get install deployment params
+	$install_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_INSTALL_FROM_NFS"));
+	if (strlen($install_from_nfs_param)) {
+		// storage -> resource -> auth
+		$ip_storage_id=lvm_nfs_parse_deployment_parameter("id", $install_from_nfs_param);
+		$ip_storage_ip=lvm_nfs_parse_deployment_parameter("ip", $install_from_nfs_param);
+		$ip_image_rootdevice=lvm_nfs_parse_deployment_parameter("path", $install_from_nfs_param);
+
+		$ip_storage = new storage();
+		$ip_storage->get_instance_by_id($ip_storage_id);
+		$ip_storage_resource = new resource();
+		$ip_storage_resource->get_instance_by_id($ip_storage->resource_id);
+		$op_storage_ip = $ip_storage_resource->ip;
+
+		$ip_deployment = new deployment();
+		$ip_deployment->get_instance_by_id($ip_storage->type);
+		$ip_deployment_type = $ip_deployment->type;
+		$ip_deployment_plugin_name = $ip_deployment->storagetype;
+
+		$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-nfs-deployment-auth-hook.php", "Install-from-NFS: Authenticating $resource_ip on storage id $ip_storage_id:$ip_storage_ip:$ip_image_rootdevice", "", "", 0, 0, $appliance_id);
+		$auth_install_from_nfs_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$ip_deployment_plugin_name/bin/openqrm-$ip_deployment_plugin_name auth -r $ip_image_rootdevice -i $OPENQRM_SERVER_IP_ADDRESS -t $ip_deployment_type";
+		$resource->send_command($ip_storage_ip, $auth_install_from_nfs_start_cmd);
+	}
+
+	// get transfer deployment params
+	$transfer_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_TRANSFER_FROM_NFS"));
+	if (strlen($transfer_from_nfs_params)) {
+		// storage -> resource -> auth
+		$tp_storage_id=lvm_nfs_parse_deployment_parameter("id", $transfer_from_nfs_params);
+		$tp_storage_ip=lvm_nfs_parse_deployment_parameter("ip", $transfer_from_nfs_params);
+		$tp_image_rootdevice=lvm_nfs_parse_deployment_parameter("path", $transfer_from_nfs_params);
+
+		$tp_storage = new storage();
+		$tp_storage->get_instance_by_id($tp_storage_id);
+		$tp_storage_resource = new resource();
+		$tp_storage_resource->get_instance_by_id($tp_storage->resource_id);
+		$op_storage_ip = $tp_storage_resource->ip;
+
+		$tp_deployment = new deployment();
+		$tp_deployment->get_instance_by_id($tp_storage->type);
+		$tp_deployment_type = $tp_deployment->type;
+		$tp_deployment_plugin_name = $tp_deployment->storagetype;
+
+		$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-nfs-deployment-auth-hook.php", "Install-from-NFS: Authenticating $resource_ip on storage id $tp_storage_id:$tp_storage_ip:$tp_image_rootdevice", "", "", 0, 0, $appliance_id);
+		$auth_install_from_nfs_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$tp_deployment_plugin_name/bin/openqrm-$tp_deployment_plugin_name auth -r $tp_image_rootdevice -i $OPENQRM_SERVER_IP_ADDRESS -t $tp_deployment_type";
+		$resource->send_command($tp_storage_ip, $auth_install_from_nfs_start_cmd);
+	}
 
 }
 
