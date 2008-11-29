@@ -135,7 +135,7 @@ $error = 0;
 
 					$install_from_nfs_storage_ip=$install_from_nfs_storage_resource->ip;
 					$install_from_nfs_storage_path=$install_from_nfs_image->rootdevice;
-					$install_from_nfs_path = "$install_from_nfs_storage_ip:$install_from_nfs_storage_path";
+					$install_from_nfs_path = "$install_from_nfs_image->storageid:$install_from_nfs_storage_ip:$install_from_nfs_storage_path";
 
 					$image->set_deployment_parameters("IMAGE_INSTALL_FROM_NFS", $install_from_nfs_path);
 				} else {
@@ -159,7 +159,7 @@ $error = 0;
 
 					$transfer_to_nfs_storage_ip=$transfer_to_nfs_storage_resource->ip;
 					$transfer_to_nfs_storage_path=$transfer_to_nfs_image->rootdevice;
-					$transfer_to_nfs_path = "$transfer_to_nfs_storage_ip:$transfer_to_nfs_storage_path";
+					$transfer_to_nfs_path = "$transfer_to_nfs_image->storageid:$transfer_to_nfs_storage_ip:$transfer_to_nfs_storage_path";
 
 					$image->set_deployment_parameters("IMAGE_TRANSFER_TO_NFS", $transfer_to_nfs_path);
 				} else {
