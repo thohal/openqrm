@@ -5,8 +5,11 @@
 OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 SVN_COMMIT_MESSAGE="Automatically updated through openQRM puppet plugin"
-
 CUR=`pwd`
+export LANGUAGE=C
+export LANG=C
+export LC_ALL=C
+
 # here it commits any changes made through the web-interface
 cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/web/puppet/
 # remove deleted files

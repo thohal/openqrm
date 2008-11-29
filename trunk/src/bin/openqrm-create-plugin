@@ -4,6 +4,10 @@ SOURCE_PLUGIN=$1
 DESTINATION_PLUGIN=$2
 WORKSPACE=`dirname $0`/../plugins
 
+export LANGUAGE=C
+export LANG=C
+export LC_ALL=C
+
 if [ "$#" != "2" ]; then
 	echo "Usage : $0 <SOURCE_PLUGIN> <DESTINATION_PLUGIN>"
 	exit 1
