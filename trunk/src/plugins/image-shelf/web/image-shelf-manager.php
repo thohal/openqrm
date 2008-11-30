@@ -345,11 +345,7 @@ function image_shelf_final($final_image_id, $image_id, $image_shelf_url) {
 	$final_storage_resource = new resource();
 	$final_storage_resource->get_instance_by_id($final_storage->resource_id);
 	$final_storage_resource_ip = $final_storage_resource->ip;
-
-	$final_image_export = $final_image->deployment_parameter;
-	$final_image_export = str_replace("IMAGE_ROOT_DIR=", "", $final_image_export);
-	$final_image_export = str_replace('"', '', $final_image_export);
-	$final_image_export = trim($final_image_export);
+	$final_image_export = $final_image->rootdevice;
 
 	$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/bin/openqrm-image-shelf get -i $image_shelf_url -f $image_filename -n $final_storage_resource_ip:$final_image_export -d $image_distribution -u $OPENQRM_USER->name -p $OPENQRM_USER->password");
 
