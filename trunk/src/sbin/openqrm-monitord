@@ -25,7 +25,7 @@ fi
 # local used functions
 
 function send_info() {
-	if [ -f /etc/initrd-devices.conf ]; then
+	if [ -f /etc/initrd-devices.conf ] && [ "$image_type" != "ram" ]; then
 		current_state=`urlencodestring $OPENQRM_STARTING_STATE`
 	else
 		current_state=`urlencodestring $OPENQRM_ACTIVE_STATE`
