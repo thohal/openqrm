@@ -216,13 +216,10 @@ function openqrm_cloud_monitor() {
 // currently supported storage types are 
 // lvm-nfs-deployment
 // nfs-deployment
-				// in case of any nfs-deployment type we need to update the IMAGE_ROOT_DIR param
+				// in case of any nfs-deployment type we need to update the rootdevice param
 				if (!strcmp($image_type, "lvm-nfs-deployment")) {
 
-					$vol_tmp=trim($image_deployment_parameter);
-					$vol_tmp1=str_replace("IMAGE_ROOT_DIR=\"", "", $vol_tmp);
-					$endpos=strpos('"', $vol_tmp1);
-					$full_vol_name=substr($vol_tmp1, 0, $endpos-1);
+					$full_vol_name=$image_rootdevice;
 					$vol_dir=dirname($full_vol_name);
 					$vol=str_replace("/", "", $vol_dir);
 					// set default snapshot size
@@ -479,12 +476,9 @@ function openqrm_cloud_monitor() {
 // currently supported storage types are 
 // lvm-nfs-deployment
 // nfs-deployment
-			// in case of any nfs-deployment type we need to update the IMAGE_ROOT_DIR param
+			// in case of any nfs-deployment type we need to update the rootdevice param
 			if (!strcmp($image_type, "lvm-nfs-deployment")) {
-				$vol_tmp=trim($image_deployment_parameter);
-				$vol_tmp1=str_replace("IMAGE_ROOT_DIR=\"", "", $vol_tmp);
-				$endpos=strpos('"', $vol_tmp1);
-				$full_vol_name=substr($vol_tmp1, 0, $endpos-1);
+				$full_vol_name=$image_rootdevice;
 				$vol_dir=dirname($full_vol_name);
 				$vol=str_replace("/", "", $vol_dir);
 

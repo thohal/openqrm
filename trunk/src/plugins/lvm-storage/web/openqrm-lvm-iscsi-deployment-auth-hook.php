@@ -59,23 +59,7 @@ function storage_auth_function($cmd, $appliance_id) {
 			// generate a password for the image
 			$image_password = $image->generatePassword(12);
 			$image_deployment_parameter = $image->deployment_parameter;
-			if (strstr($image_deployment_parameter, "IMAGE_ISCSI_AUTH")) {
-				// change
-				$cp1=trim($image_deployment_parameter);
-				$cp2 = strstr($cp1, "IMAGE_ISCSI_AUTH");
-				$cp3=str_replace("IMAGE_ISCSI_AUTH=\"", "", $cp2);
-				$endpos=strpos('"', $cp3);
-				$cp=substr($cp3, 0, $endpos-1);
-				$new_image_deployment_parameter = str_replace("IMAGE_ISCSI_AUTH=\"$cp\"", "IMAGE_ISCSI_AUTH=\"$image_password\"", $image_deployment_parameter);
-			} else {
-				// add
-				$new_image_deployment_parameter = "$image_deployment_parameter IMAGE_ISCSI_AUTH=\"$image_password\"";
-			}
-			$image_fields=array();
-			$image_fields["image_deployment_parameter"]="$new_image_deployment_parameter";
-			$image->update($image->id, $image_fields);
-
-
+			$image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
 			$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-iscsi-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice to resource $resource_mac", "", "", 0, 0, $appliance_id);
 			$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $image_password -t lvm-iscsi-deployment";
 			$resource->send_command($storage_ip, $auth_start_cmd);
@@ -113,19 +97,6 @@ function storage_auth_stop_in_background($appliance_id) {
 	// generate a password for the image
 	$image_password = $image->generatePassword(12);
 	$image_deployment_parameter = $image->deployment_parameter;
-	if (strstr($image_deployment_parameter, "IMAGE_ISCSI_AUTH")) {
-		// change
-		$cp1=trim($image_deployment_parameter);
-		$cp2 = strstr($cp1, "IMAGE_ISCSI_AUTH");
-		$cp3=str_replace("IMAGE_ISCSI_AUTH=\"", "", $cp2);
-		$endpos=strpos('"', $cp3);
-		$cp=substr($cp3, 0, $endpos-1);
-		$new_image_deployment_parameter = str_replace("IMAGE_ISCSI_AUTH=\"$cp\"", "IMAGE_ISCSI_AUTH=\"$image_password\"", $image_deployment_parameter);
-
-	} else {
-		// add
-		$new_image_deployment_parameter = "$image_deployment_parameter IMAGE_ISCSI_AUTH=\"$image_password\"";
-	}
 
 	$storage = new storage();
 	$storage->get_instance_by_id($image->storageid);
@@ -159,10 +130,7 @@ function storage_auth_stop_in_background($appliance_id) {
 	$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $image_password -t lvm-iscsi-deployment";
 	$resource->send_command($storage_ip, $auth_stop_cmd);
 	// and update the image params
-	$image_fields=array();
-	$image_fields["image_deployment_parameter"]="$new_image_deployment_parameter";
-	$image->update($image->id, $image_fields);
-
+	$image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
 
 }
 

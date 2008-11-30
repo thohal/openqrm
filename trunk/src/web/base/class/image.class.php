@@ -319,12 +319,15 @@ var $_event;
 	function set_deployment_parameters($key, $value) {
 
 		$image_deployment_parameter = $this->deployment_parameter;
+		$key=trim($key);
 		if (strstr($image_deployment_parameter, $key)) {
 			// change
 			$cp1=trim($image_deployment_parameter);
 			$cp2 = strstr($cp1, $key);
-			$cp3=str_replace("$key=\"", "", $cp2);
-			$endpos=strpos('"', $cp3);
+			$keystr="$key=\"";
+			$endmark="\"";
+			$cp3=str_replace($keystr, "", $cp2);
+			$endpos=strpos($cp3, $endmark);
 			$cp=substr($cp3, 0, $endpos-1);
 			$new_image_deployment_parameter = str_replace("$key=\"$cp\"", "$key=\"$value\"", $image_deployment_parameter);
 		} else {
@@ -350,13 +353,16 @@ var $_event;
 	function get_deployment_parameter($key) {
 
 		$image_deployment_parameter = $this->deployment_parameter;
+		$key=trim($key);
 		if (strstr($image_deployment_parameter, $key)) {
 			// change
 			$cp1=trim($image_deployment_parameter);
 			$cp2 = strstr($cp1, $key);
-			$cp3=str_replace("$key=\"", "", $cp2);
-			$endpos=strpos('"', $cp3);
-			$cp=substr($cp3, 0, $endpos-1);
+			$keystr="$key=\"";
+			$endmark="\"";
+			$cp3=str_replace($keystr, "", $cp2);
+			$endpos=strpos($cp3, $endmark);
+			$cp=substr($cp3, 0, $endpos);
 			return $cp;
 		} else {
 			return "";

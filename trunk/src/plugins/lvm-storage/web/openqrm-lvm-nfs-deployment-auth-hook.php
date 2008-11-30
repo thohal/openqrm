@@ -24,12 +24,12 @@ global $event;
 
 function lvm_nfs_parse_deployment_parameter($key, $paramstr) {
 	$ip1=trim($paramstr);
-	$ipos=strpos(':', $ip1);
-	$ip_storage_id=substr($ip1, 0, $ipos-1);
-	$ipr=substr($ip1, $ipos);
-	$ipos1=strpos(':', $ipr);
-	$ip_storage_ip=substr($ipr, 0, $ipos1-1);
-	$ip_image_rootdevice=substr($ipr, $ipos1);
+	$ipos=strpos($ip1, ':');
+	$ip_storage_id=substr($ip1, 0, $ipos);
+	$ipr=substr($ip1, $ipos+1);
+	$ipos1=strpos($ipr, ':');
+	$ip_storage_ip=substr($ipr, 0, $ipos1);
+	$ip_image_rootdevice=substr($ipr, $ipos1+1);
 	switch ($key) {
 		case "id":
 			return $ip_storage_id;
@@ -84,10 +84,15 @@ function storage_auth_function($cmd, $appliance_id) {
 			// get install deployment params
 			$install_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_INSTALL_FROM_NFS"));
 			if (strlen($install_from_nfs_param)) {
+
 				// storage -> resource -> auth
 				$ip_storage_id=lvm_nfs_parse_deployment_parameter("id", $install_from_nfs_param);
 				$ip_storage_ip=lvm_nfs_parse_deployment_parameter("ip", $install_from_nfs_param);
 				$ip_image_rootdevice=lvm_nfs_parse_deployment_parameter("path", $install_from_nfs_param);
+
+				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 3, "openqrm-lvm-nfs-deployment-auth-hook.php", "!!!! install-from-nfs -- $ip_storage_id - $ip_storage_ip - $ip_image_rootdevice -- install_from_nfs_param $install_from_nfs_param --", "", "", 0, 0, $appliance_id);
+
+
 
 				$ip_storage = new storage();
 				$ip_storage->get_instance_by_id($ip_storage_id);
