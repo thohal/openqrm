@@ -35,8 +35,6 @@ function openqrm_plugin_windows_uninstall() {
 	fi
 	echo "Uninstalling the openQRM windows-plugin"
 	openqrm_plugin_windows_stop
-	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD windows
-	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD windows-vm
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/windows
 }
 
@@ -52,8 +50,6 @@ function openqrm_plugin_windows_init() {
 		echo
 	fi
 	echo "Initializing the openQRM windows-plugin"
-	# adding virtualization type	
-	openqrm_server_add_virtualization_type $USERNAME $PASSWORD windows "Windows Host"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/windows
 	
