@@ -328,7 +328,7 @@ var $_event;
 			$endmark="\"";
 			$cp3=str_replace($keystr, "", $cp2);
 			$endpos=strpos($cp3, $endmark);
-			$cp=substr($cp3, 0, $endpos-1);
+			$cp=substr($cp3, 0, $endpos);
 			$new_image_deployment_parameter = str_replace("$key=\"$cp\"", "$key=\"$value\"", $image_deployment_parameter);
 		} else {
 			// add
