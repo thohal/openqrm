@@ -9,9 +9,12 @@ OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
 if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
 	OPENQRM_SERVER_IP=$resource_openqrmserver
+	OPENQRM_EXEC_PORT=$resource_execdport
 elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
-	OPENQRM_SERVER_IP=localhost
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	resource_id=0
 fi
 export LANG=C
@@ -41,18 +44,9 @@ function lvm_storage_usage() {
 
 
 function lvm_aoe_restart_exec() {
-	if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
-		. $OPENQRM_RESOURCE_PARAMETER_FILE
-		OPENQRM_SYSTEM_IP=$resource_ip
-		OPENQRM_EXEC_PORT=$resource_execdport
-	elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
-		. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
-		openqrm_server_get_config
-		OPENQRM_SYSTEM_IP=$OPENQRM_SERVER_IP_ADDRESS
-	fi
 	killall openqrm-exec-port-monitor 1>/dev/null 2>&1
 	killall openqrm-execd 1>/dev/null 2>&1
-	$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec-port-monitor $OPENQRM_SYSTEM_IP $OPENQRM_EXEC_PORT | $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-execd &
+	$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec-port-monitor $OPENQRM_SERVER_IP $OPENQRM_EXEC_PORT | $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-execd &
 }
 
 LVM_COMMAND=$1
@@ -185,7 +179,7 @@ case "$LVM_COMMAND" in
 			echo "Detected NFS-image. Mounting and adding $LVM_IMAGE_NAME to /etc/fstab + /etc/exports"
 			lvm_storage_lock aquire
 			manage_fstab add
-			manage_nfs add regular $OPENQRM_SYSTEM_IP
+			manage_nfs add regular $OPENQRM_SERVER_IP
 			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
 			echo "Detected Aoe-image. Adding to $VBLADECONF"
@@ -272,7 +266,7 @@ case "$LVM_COMMAND" in
 			echo "Detected NFS-image. Mounting and adding $IMAGE_NAME to /etc/fstab + /etc/exports"
 			lvm_storage_lock aquire
 			manage_fstab add
-			manage_nfs add snap $OPENQRM_SYSTEM_IP
+			manage_nfs add snap $OPENQRM_SERVER_IP
 			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
 			echo "Detected Aoe-image. Adding to $VBLADECONF"
@@ -300,7 +294,7 @@ case "$LVM_COMMAND" in
 			echo "Detected NFS-image. Mounting and adding $IMAGE_NAME to /etc/fstab + /etc/exports"
 			lvm_storage_lock aquire
 			manage_fstab add
-			manage_nfs transform $OPENQRM_SYSTEM_IP
+			manage_nfs transform $OPENQRM_SERVER_IP
 			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
 			echo "Detected Aoe-image. Adding to $VBLADECONF"
