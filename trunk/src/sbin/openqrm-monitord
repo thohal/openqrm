@@ -4,7 +4,8 @@
 OPENQRM_SBIN_DIR=`dirname $0`
 OPENQRM_BASE_DIR=`pushd $OPENQRM_SBIN_DIR/.. 1>/dev/null && pwd && popd 1>/dev/null`
 OPENQRM_EVENT="statistics"
-OPENQRM_STATE="active"
+OPENQRM_ACTIVE_STATE="active"
+OPENQRM_STARTING_STATE="starting"
 
 # check if running on the server or on a managed resource
 if [ -f "$OPENQRM_BASE_DIR/include/openqrm-server-functions" ]; then
@@ -24,7 +25,11 @@ fi
 # local used functions
 
 function send_info() {
-	current_state=`urlencodestring $OPENQRM_STATE`
+	if [ -f /etc/initrd-devices.conf ]; then
+		current_state=`urlencodestring $OPENQRM_STARTING_STATE`
+	else
+		current_state=`urlencodestring $OPENQRM_ACTIVE_STATE`
+	fi
 	current_event=`urlencodestring $OPENQRM_EVENT`
 	MESSAGEDATA="resource_id=$resource_id&resource_uptime=$current_uptime&resource_cpunumber=$current_cpu_number&resource_cpuspeed=$current_cpu_speed&resource_cpumodel=$current_cpu_model&resource_memtotal=$current_mem_total&resource_memused=$current_mem_used&resource_swaptotal=$current_swap_total&resource_swapused=$current_swap_used&resource_hostname=$current_hostname&resource_load=$current_cpu_load&resource_state=$current_state&resource_event=$current_event";
 	OPENQRM_RESOURCE_INFO_URL="http://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=update_info&$MESSAGEDATA"
