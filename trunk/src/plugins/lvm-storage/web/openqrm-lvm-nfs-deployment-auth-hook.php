@@ -77,11 +77,13 @@ function storage_auth_function($cmd, $appliance_id) {
 
 	switch($cmd) {
 		case "start":
+			// authenticate the rootfs
 			$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-nfs-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice to resource $resource_ip", "", "", 0, 0, $appliance_id);
 			$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $resource_ip -t lvm-nfs-deployment";
 			$resource->send_command($storage_ip, $auth_start_cmd);
  
-			// get install deployment params
+ 			// authenticate the install-from-nfs export
+			$run_disable_deployment_export=0;
 			$install_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_INSTALL_FROM_NFS"));
 			if (strlen($install_from_nfs_param)) {
 
@@ -104,9 +106,11 @@ function storage_auth_function($cmd, $appliance_id) {
 				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-nfs-deployment-auth-hook.php", "Install-from-NFS: Authenticating $resource_ip on storage id $ip_storage_id:$ip_storage_ip:$ip_image_rootdevice", "", "", 0, 0, $appliance_id);
 				$auth_install_from_nfs_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$ip_deployment_plugin_name/bin/openqrm-$ip_deployment_plugin_name auth -r $ip_image_rootdevice -i $resource_ip -t $ip_deployment_type";
 				$resource->send_command($ip_storage_ip, $auth_install_from_nfs_start_cmd);
+
+				$run_disable_deployment_export=1;
 			}
 
-			// get transfer deployment params
+ 			// authenticate the transfer-to-nfs export
 			$transfer_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_TRANSFER_TO_NFS"));
 			if (strlen($transfer_from_nfs_param)) {
 				// storage -> resource -> auth
@@ -128,7 +132,21 @@ function storage_auth_function($cmd, $appliance_id) {
 				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-nfs-deployment-auth-hook.php", "Install-from-NFS: Authenticating $resource_ip on storage id $tp_storage_id:$tp_storage_ip:$tp_image_rootdevice", "", "", 0, 0, $appliance_id);
 				$auth_install_from_nfs_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$tp_deployment_plugin_name/bin/openqrm-$tp_deployment_plugin_name auth -r $tp_image_rootdevice -i $resource_ip -t $tp_deployment_type";
 				$resource->send_command($tp_storage_ip, $auth_install_from_nfs_start_cmd);
+
+				$run_disable_deployment_export=1;
 			}
+
+			// do we need to disable the install-from/transfer-to-nfs exports ?
+			if ($run_disable_deployment_export == 1) {
+				$stop_deployment_hook_file = "/tmp/openqrm-lvm-nfs-deployment-export-auth-hook.$appliance_id";
+				$auth_deployment_stop_cmd = "(ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/openqrm-lvm-nfs-deployment-auth-hook.php $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-lvm-nfs-deployment-export-auth-hook.$appliance_id.php && wget -q -O /dev/null \"http://localhost/openqrm/boot-service/openqrm-lvm-nfs-deployment-export-auth-hook.$appliance_id.php?bgcmd=stop_deployment_auth&appliance_id=$appliance_id\" && rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-lvm-nfs-deployment-export-auth-hook.$appliance_id.php $stop_deployment_hook_file) &";
+				$fp = fopen($stop_deployment_hook_file, 'w');
+				fwrite($fp, $auth_deployment_stop_cmd);
+				fclose($fp);
+				chmod($stop_deployment_hook_file, 0750);
+				$openqrm_server->send_command($stop_deployment_hook_file);
+			}
+			
 
 
 			break;
@@ -195,6 +213,54 @@ function storage_auth_stop_in_background($appliance_id) {
 	$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $OPENQRM_SERVER_IP_ADDRESS -t lvm-nfs-deployment";
 	$resource->send_command($storage_ip, $auth_stop_cmd);
 
+}
+
+
+
+function storage_auth_deployment_stop_in_background($appliance_id) {
+
+	global $event;
+	global $OPENQRM_SERVER_BASE_DIR;
+	global $OPENQRM_SERVER_IP_ADDRESS;
+	global $OPENQRM_EXEC_PORT;
+
+	$appliance = new appliance();
+	$appliance->get_instance_by_id($appliance_id);
+
+	$image = new image();
+	$image->get_instance_by_id($appliance->imageid);
+	$image_name=$image->name;
+	$image_rootdevice=$image->rootdevice;
+
+	$storage = new storage();
+	$storage->get_instance_by_id($image->storageid);
+	$storage_resource = new resource();
+	$storage_resource->get_instance_by_id($storage->resource_id);
+	$storage_ip = $storage_resource->ip;
+
+	$deployment = new deployment();
+	$deployment->get_instance_by_type($image->type);
+	$deployment_type = $deployment->type;
+	$deployment_plugin_name = $deployment->storagetype;
+
+	$resource = new resource();
+	$resource->get_instance_by_id($appliance->resources);
+	$resource_mac=$resource->mac;
+
+	$loop=0;
+	while(1) {
+		$resource->get_instance_by_id($appliance->resources);
+		if (!strcmp($resource->state, "active")) {
+			$event->log("storage_auth_deployment_stop_in_background", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-nfs-deployment-auth-hook.php", "Resource $resource_ip is active now, applying stop auth for deployment exports", "", "", 0, 0, $appliance_id);
+			break;				
+		}
+		if ($loop > 500) {
+			$event->log("storage_auth_deployment_stop_in_background", $_SERVER['REQUEST_TIME'], 2, "openqrm-lvm-nfs-deployment-auth-hook.php", "Timeout for deployment stop auth hook image $image_name, exiting !", "", "", 0, 0, $appliance_id);
+			return;
+		}
+		sleep(2);
+		$loop++;
+	}
 
 	// get install deployment params
 	$install_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_INSTALL_FROM_NFS"));
@@ -247,6 +313,7 @@ function storage_auth_stop_in_background($appliance_id) {
 }
 
 
+
 // do we run the background hook ?
 $bgcmd = $_REQUEST["bgcmd"];
 $appliance_id = $_REQUEST["appliance_id"];
@@ -254,6 +321,9 @@ $appliance_id = $_REQUEST["appliance_id"];
 	switch ($bgcmd) {
 		case 'stop_auth':
 			storage_auth_stop_in_background($appliance_id);
+			break;
+		case 'stop_deployment_auth':
+			storage_auth_deployment_stop_in_background($appliance_id);
 			break;
 	}
 
