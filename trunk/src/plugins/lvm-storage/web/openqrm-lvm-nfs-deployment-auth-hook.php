@@ -90,10 +90,6 @@ function storage_auth_function($cmd, $appliance_id) {
 				$ip_storage_ip=lvm_nfs_parse_deployment_parameter("ip", $install_from_nfs_param);
 				$ip_image_rootdevice=lvm_nfs_parse_deployment_parameter("path", $install_from_nfs_param);
 
-				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 3, "openqrm-lvm-nfs-deployment-auth-hook.php", "!!!! install-from-nfs -- $ip_storage_id - $ip_storage_ip - $ip_image_rootdevice -- install_from_nfs_param $install_from_nfs_param --", "", "", 0, 0, $appliance_id);
-
-
-
 				$ip_storage = new storage();
 				$ip_storage->get_instance_by_id($ip_storage_id);
 				$ip_storage_resource = new resource();
@@ -111,12 +107,12 @@ function storage_auth_function($cmd, $appliance_id) {
 			}
 
 			// get transfer deployment params
-			$transfer_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_TRANSFER_FROM_NFS"));
-			if (strlen($transfer_from_nfs_params)) {
+			$transfer_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_TRANSFER_TO_NFS"));
+			if (strlen($transfer_from_nfs_param)) {
 				// storage -> resource -> auth
-				$tp_storage_id=lvm_nfs_parse_deployment_parameter("id", $transfer_from_nfs_params);
-				$tp_storage_ip=lvm_nfs_parse_deployment_parameter("ip", $transfer_from_nfs_params);
-				$tp_image_rootdevice=lvm_nfs_parse_deployment_parameter("path", $transfer_from_nfs_params);
+				$tp_storage_id=lvm_nfs_parse_deployment_parameter("id", $transfer_from_nfs_param);
+				$tp_storage_ip=lvm_nfs_parse_deployment_parameter("ip", $transfer_from_nfs_param);
+				$tp_image_rootdevice=lvm_nfs_parse_deployment_parameter("path", $transfer_from_nfs_param);
 
 				$tp_storage = new storage();
 				$tp_storage->get_instance_by_id($tp_storage_id);
@@ -225,12 +221,12 @@ function storage_auth_stop_in_background($appliance_id) {
 	}
 
 	// get transfer deployment params
-	$transfer_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_TRANSFER_FROM_NFS"));
-	if (strlen($transfer_from_nfs_params)) {
+	$transfer_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_TRANSFER_TO_NFS"));
+	if (strlen($transfer_from_nfs_param)) {
 		// storage -> resource -> auth
-		$tp_storage_id=lvm_nfs_parse_deployment_parameter("id", $transfer_from_nfs_params);
-		$tp_storage_ip=lvm_nfs_parse_deployment_parameter("ip", $transfer_from_nfs_params);
-		$tp_image_rootdevice=lvm_nfs_parse_deployment_parameter("path", $transfer_from_nfs_params);
+		$tp_storage_id=lvm_nfs_parse_deployment_parameter("id", $transfer_from_nfs_param);
+		$tp_storage_ip=lvm_nfs_parse_deployment_parameter("ip", $transfer_from_nfs_param);
+		$tp_image_rootdevice=lvm_nfs_parse_deployment_parameter("path", $transfer_from_nfs_param);
 
 		$tp_storage = new storage();
 		$tp_storage->get_instance_by_id($tp_storage_id);

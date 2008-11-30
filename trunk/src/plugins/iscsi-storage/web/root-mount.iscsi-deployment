@@ -231,7 +231,7 @@ function transfer_rootfs_to_nfs() {
 	IMAGE_TRANSFER_TO_NFS=`echo $IMAGE_TRANSFER_TO_NFS | cut -d':' -f2-`
 	echo "iscsi-storage: Transfering $resource_image to $IMAGE_TRANSFER_TO_NFS ($STORAGE_ID)"
 	mkdir -p /mnt2
-	if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_TRANSFER_TO_NFS /mnt2; then
+	if ! mount -t nfs -o rw$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_TRANSFER_TO_NFS /mnt2; then
 		echo "ERROR: Could not mount $IMAGE_TRANSFER_TO_NFS by nfs"
 		# give a shell for the admin
 		/bin/bash
