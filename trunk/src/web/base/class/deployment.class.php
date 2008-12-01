@@ -335,5 +335,44 @@ var $_event;
 		$ar_Return = openqrm_db_get_result_double($query);
 		return $ar_Return;
 	}
+
+
+
+	//--------------------------------------------------
+	/**
+	* parse deployment parameters
+	* <code>
+	* $deployment = new deployment();
+	* $id = $deployment->parse_deployment_parameter("id", $paramstr);
+	* $ip = $deployment->parse_deployment_parameter("ip", $paramstr);
+	* $path = $deployment->parse_deployment_parameter("path", $paramstr);
+	* </code>
+	* @access public
+	* @return string
+	*/
+	//--------------------------------------------------
+	function parse_deployment_parameter($key, $paramstr) {
+		$ip1=trim($paramstr);
+		$ipos=strpos($ip1, ':');
+		$ip_storage_id=substr($ip1, 0, $ipos);
+		$ipr=substr($ip1, $ipos+1);
+		$ipos1=strpos($ipr, ':');
+		$ip_storage_ip=substr($ipr, 0, $ipos1);
+		$ip_image_rootdevice=substr($ipr, $ipos1+1);
+		switch ($key) {
+			case "id":
+				return $ip_storage_id;
+				break;
+			case "ip":
+				return $ip_storage_ip;
+				break;
+			case "path":
+				return $ip_image_rootdevice;
+				break;
+		}
+	}
+
+
+
 }
 ?>
