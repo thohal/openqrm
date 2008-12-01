@@ -71,6 +71,7 @@ global $event;
 		$resource = new resource();
 		$resource->get_instance_by_id($appliance->resources);
 		$resource_mac=$resource->mac;
+		$resource_ip=$resource->ip;
 	
 		switch($cmd) {
 			case "start":
@@ -152,7 +153,7 @@ global $event;
 					fwrite($fp, "ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/openqrm-iscsi-deployment-auth-hook.php $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-iscsi-deployment-export-auth-hook.$appliance_id.php\n");
 					fwrite($fp, "wget -q -O /dev/null \"http://localhost/openqrm/boot-service/openqrm-iscsi-deployment-export-auth-hook.$appliance_id.php?bgcmd=stop_deployment_auth&appliance_id=$appliance_id\"\n");
 					fwrite($fp, "rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-iscsi-deployment-export-auth-hook.$appliance_id.php\n");
-					fwrite($fp, "$stop_deployment_hook_file\n");
+					fwrite($fp, "rm -f $stop_deployment_hook_file\n");
 					fwrite($fp, "\n");
 					fclose($fp);
 					chmod($stop_deployment_hook_file, 0750);
@@ -231,7 +232,8 @@ global $event;
 		$resource = new resource();
 		$resource->get_instance_by_id($appliance->resources);
 		$resource_mac=$resource->mac;
-	
+		$resource_ip=$resource->ip;
+
 		$loop=0;
 		while(1) {
 			$resource->get_instance_by_id($appliance->resources);

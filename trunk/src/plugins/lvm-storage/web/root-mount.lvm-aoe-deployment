@@ -84,6 +84,9 @@ function mount_rootfs() {
 	aoe-discover
 	aoe-stat
 
+	# let udev settle
+	sleep 4
+
 	# finallly mount
 	if ! mount -t $image_rootfstype $image_rootdevice /mnt; then
 		echo "ERROR: Could not mount $image_rootdevice via aoe"

@@ -69,12 +69,16 @@ global $event;
 		$resource = new resource();
 		$resource->get_instance_by_id($appliance->resources);
 		$resource_mac=$resource->mac;
-	
+		$resource_ip=$resource->ip;
+
 		switch($cmd) {
 			case "start":
 				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-aoe-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice to resource $resource_mac", "", "", 0, 0, $appliance_id);
 				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $resource_mac";
 				$resource->send_command($storage_ip, $auth_start_cmd);
+
+				// give time to settle restart of openqrm-exec daemon
+				sleep(3);
 
 	 			// authenticate the install-from-nfs export
 				$run_disable_deployment_export=0;
@@ -222,7 +226,8 @@ global $event;
 		$resource = new resource();
 		$resource->get_instance_by_id($appliance->resources);
 		$resource_mac=$resource->mac;
-	
+		$resource_ip=$resource->ip;
+
 		$loop=0;
 		while(1) {
 			$resource->get_instance_by_id($appliance->resources);
@@ -282,7 +287,8 @@ global $event;
 		$resource = new resource();
 		$resource->get_instance_by_id($appliance->resources);
 		$resource_mac=$resource->mac;
-	
+		$resource_ip=$resource->ip;
+
 		$loop=0;
 		while(1) {
 			$resource->get_instance_by_id($appliance->resources);

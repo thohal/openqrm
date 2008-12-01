@@ -397,7 +397,7 @@ case "$LVM_COMMAND" in
 				lvm-iscsi-deployment)
 					if grep $LVOL_SHORT $IETDCONF 1>/dev/null; then
 						LUN=`grep $LVOL_SHORT $IETDCONF | grep Lun | awk {'print $2 '}`
-						TARGET=`cat $IETDCONF | grep -v "#" | grep Target | awk {' print $2 '}`
+						TARGET=`cat $IETDCONF | grep -v "#" | grep Target | grep $LVOL_SHORT | awk {' print $2 '}`
 						IMAGE_NAME=$LVOL_SHORT
 						echo "$IMAGE_NAME,/dev/$TARGET/$LUN"
 						echo "$IMAGE_NAME,/dev/$TARGET/$LUN" >> $STORAGE_STATUS_TMP

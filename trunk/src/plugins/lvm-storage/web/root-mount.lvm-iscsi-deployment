@@ -132,6 +132,9 @@ EOF
 	# login
 	iscsiadm -m node -T $IMAGE_TARGET -p $image_storage_server_ip:3260 --login
 
+	# let udev settle
+	sleep 4
+
 	# finallly mount
 	if ! mount -t $image_rootfstype $IMAGE_ROOT_DEVICE /mnt; then
 		echo "ERROR: Could not mount $IMAGE_ROOT_DEVICE via iscsi"

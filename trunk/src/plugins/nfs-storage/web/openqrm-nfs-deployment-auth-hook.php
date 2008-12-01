@@ -158,9 +158,21 @@ global $event;
 
 			case "stop":
 				$stop_hook_file = "/tmp/openqrm-nfs-deployment-auth-hook.$appliance_id";
-				$auth_stop_cmd = "(ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/web/openqrm-nfs-deployment-auth-hook.php $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-nfs-deployment-auth-hook.$appliance_id.php && screen -dm wget -q -O /dev/null \"http://localhost/openqrm/boot-service/openqrm-nfs-deployment-auth-hook.$appliance_id.php?bgcmd=stop_auth&appliance_id=$appliance_id\" && rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-nfs-deployment-auth-hook.$appliance_id.php $stop_hook_file)";
 				$fp = fopen($stop_hook_file, 'w');
-				fwrite($fp, $auth_stop_cmd);
+				fwrite($fp, "#!/bin/bash\n");
+				fwrite($fp, "\n");
+				fwrite($fp, "if [ \"\$RUN_IN_BACKGROUND\" != \"true\" ]; then\n");
+				fwrite($fp, "	export RUN_IN_BACKGROUND=true\n");
+				fwrite($fp, "	SCREEN_NAME=`date +%T%x | sed -e \"s/://g\" | sed -e \"s#/##g\"`\n");
+				fwrite($fp, "	screen -dmS \$SCREEN_NAME \$0 \$@\n");
+				fwrite($fp, "	exit\n");
+				fwrite($fp, "fi\n");
+				fwrite($fp, "sleep 10\n");
+				fwrite($fp, "ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/web/openqrm-nfs-deployment-auth-hook.php $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-nfs-deployment-auth-hook.$appliance_id.php\n");
+				fwrite($fp, "wget -q -O /dev/null \"http://localhost/openqrm/boot-service/openqrm-nfs-deployment-auth-hook.$appliance_id.php?bgcmd=stop_auth&appliance_id=$appliance_id\"\n");
+				fwrite($fp, "rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-nfs-deployment-auth-hook.$appliance_id.php\n");
+				fwrite($fp, "rm -f $stop_hook_file\n");
+				fwrite($fp, "\n");
 				fclose($fp);
 				chmod($stop_hook_file, 0750);
 				$openqrm_server->send_command($stop_hook_file);
@@ -271,7 +283,8 @@ global $event;
 		$resource = new resource();
 		$resource->get_instance_by_id($appliance->resources);
 		$resource_mac=$resource->mac;
-	
+		$resource_ip=$resource->ip;
+
 		$loop=0;
 		while(1) {
 			$resource->get_instance_by_id($appliance->resources);

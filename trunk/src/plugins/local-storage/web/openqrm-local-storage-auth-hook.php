@@ -199,7 +199,8 @@ global $event;
 		$resource = new resource();
 		$resource->get_instance_by_id($appliance->resources);
 		$resource_mac=$resource->mac;
-	
+		$resource_ip=$resource->ip;
+
 		$loop=0;
 		while(1) {
 			$resource->get_instance_by_id($appliance->resources);
