@@ -126,7 +126,7 @@ global $event;
 					$tp_deployment_type = $tp_deployment->type;
 					$tp_deployment_plugin_name = $tp_deployment->storagetype;
 	
-					$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-nfs-deployment-auth-hook.php", "Install-from-NFS: Authenticating $resource_ip on storage id $tp_storage_id:$tp_storage_ip:$tp_image_rootdevice", "", "", 0, 0, $appliance_id);
+					$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-nfs-deployment-auth-hook.php", "Transfer-to-NFS: Authenticating $resource_ip on storage id $tp_storage_id:$tp_storage_ip:$tp_image_rootdevice", "", "", 0, 0, $appliance_id);
 					$auth_install_from_nfs_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$tp_deployment_plugin_name/bin/openqrm-$tp_deployment_plugin_name auth -r $tp_image_rootdevice -i $resource_ip -t $tp_deployment_type";
 					$resource->send_command($tp_storage_ip, $auth_install_from_nfs_start_cmd);
 	
