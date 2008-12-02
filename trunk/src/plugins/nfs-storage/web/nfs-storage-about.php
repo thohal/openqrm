@@ -48,8 +48,7 @@ function nfs_about() {
 	$disp = $disp."Create an new nfs-export on the Nfs-storage using the 'Exports' link (Nfs-plugin menu)";
 	$disp = $disp."</li><li>";
 	$disp = $disp."Create an (Nfs-) Image ('Add Image' in the Image-overview).";
-	$disp = $disp." Then select the Nfs-storage server and give 'nfs' as the 'root-device' and 'root-device-type'.";
-	$disp = $disp." Eventually add addtional optional Image-parameter in the 'image-capabilites' field.";
+	$disp = $disp." Then select the Nfs-storage server and choose one of the Nfs-storage-devices as the 'root-device'.";
 	$disp = $disp."</li><li>";
 	$disp = $disp."Create an Appliance using one of the available kernel and the Nfs-Image created in the previous steps.";
 	$disp = $disp."</li><li>";
@@ -58,41 +57,6 @@ function nfs_about() {
 	$disp = $disp."</ul>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<b>Additional Nfs image-parameters :</b>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."IMAGE_INSTALL_FROM=[nfs-storage:path-to-existing-nfs-image]";
-	$disp = $disp."<br>";
-	$disp = $disp."This parameter can be set to an (nfs) location from which the image will be installed at";
-	$disp = $disp." deployment time.";
-	$disp = $disp."<br>";
-	$disp = $disp."The syntax is : ip_of_nfs-server:path_to_target_image";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."IMAGE_INSTALL_FROM_LOCAL_DEVICE=[/dev/hdX|/dev/sdX]";
-	$disp = $disp."<br>";
-	$disp = $disp."Set to a local harddisk device (e.g. /dev/hda1) this option will install the nfs-storage image on";
-	$disp = $disp." boot-time from the local-device.";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."IMAGE_INSTALL_FROM_LOCAL_DEVICE_FS_TYPE=[ext3]";
-	$disp = $disp."<br>";
-	$disp = $disp."Should be set to a local harddisk device fs-type (e.g. ext3) in combination with the IMAGE_INSTALL_FROM_LOCAL_DEVICE parameter.";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."IMAGE_TRANSFORM_TO_LOCAL_DEVICE=[/dev/hdX|/dev/sdX]";
-	$disp = $disp."<br>";
-	$disp = $disp."If this parameter is set to a local harddisk device (e.g. /dev/hda1) this option will transfrom";
-	$disp = $disp." the nfs-storage image on boot-time to the local-device.";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."IMAGE_TRANSFORM_TO_LOCAL_DEVICE_FS_TYPE=[ext3]";
-	$disp = $disp."<br>";
-	$disp = $disp."Should be set to a local harddisk device fs-type (e.g. ext3) in combination with the IMAGE_TRANSFORM_TO_LOCAL_DEVICE parameter.";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-
 	return $disp;
 }
 

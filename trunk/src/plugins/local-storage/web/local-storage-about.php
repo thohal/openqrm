@@ -85,26 +85,6 @@ function local_storage_about() {
 	$disp = $disp." <i>/path_to_image_directory_on_the_storage_server</i>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<b>Additional (optional) Local-storage image-parameters for 'grabbing':</b>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."IMAGE_INSTALL_FROM_NFS=[nfs-storage:path-to-existing-nfs-image]";
-	$disp = $disp."<br>";
-	$disp = $disp."This parameter can be set to an (nfs) location from which the image will be installed (to the local disk) at";
-	$disp = $disp." deployment time.";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."IMAGE_TRANSFORM_TO_NFS=[nfs-storage:path-to-existing-nfs-image]";
-	$disp = $disp."<br>";
-	$disp = $disp."This parameter can be set to an (nfs) location to which the local disk content will be transferred to.";
-	$disp = $disp." at deployment time (local to nfs).";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."IMAGE_NFS_MOUNT_OPTIONS=[tcp]";
-	$disp = $disp."<br>";
-	$disp = $disp."Can be used to configure addtional nfs-mount option e.g. tcp";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 
 	$disp = $disp."<br>";
 	$disp = $disp."<b>Deploying a 'local' server-image to an available resource</b>";
@@ -142,13 +122,6 @@ function local_storage_about() {
 	$disp = $disp."<br>";
 	$disp = $disp." <i>/path_to_image_directory_on_the_storage_server</i>";
 	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<b>Additional (optional) Local-storage image-parameters for 'deployment':</b>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."IMAGE_NFS_MOUNT_OPTIONS=[tcp]";
-	$disp = $disp."<br>";
-	$disp = $disp."Can be used to configure addtional nfs-mount option e.g. tcp";
 	$disp = $disp."<br>";
 	return $disp;
 }
