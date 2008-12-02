@@ -55,8 +55,10 @@ if [ "$IMAGE_TRANSFER_TO_LOCAL_FS_TYPE" == "" ]; then
 fi
 
 # here we gather the target name + lun from the image_rootdevice
-IMAGE_TARGET=`echo $image_rootdevice | cut -d'/' -f3`
-IMAGE_LUN=`echo $image_rootdevice | cut -d'/' -f4`
+VOLUME_GROUP=`echo $image_rootdevice | cut -d':' -f1`
+IMAGE_ROOTDEVICE=`echo $image_rootdevice | cut -d':' -f2`
+IMAGE_TARGET=`echo $IMAGE_ROOTDEVICE | cut -d'/' -f3`
+IMAGE_LUN=`echo $IMAGE_ROOTDEVICE | cut -d'/' -f4`
 IMAGE_ROOT_DEVICE="/dev/iscsi_$IMAGE_LUN"
 
 #######################################################################

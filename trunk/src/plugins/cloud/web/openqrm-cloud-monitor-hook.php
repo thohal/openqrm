@@ -245,21 +245,22 @@ function openqrm_cloud_monitor() {
 					$image->get_instance_by_id($image_id);
 					$image_password = $image->generatePassword(12);
 					$image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
-					$image_location=dirname($image_rootdevice);
+					// parse the volume group info in the identifier
+					$ident_separate=strpos($image_rootdevice, ":");
+					$volume_group=substr($image_rootdevice, 0, $ident_separate);
+					$root_device=substr($image_rootdevice, $ident_separate);
+					$image_location=dirname($root_device);
 					$image_location_name=basename($image_location);
-
-// !!! currently testing with static volume group name !!!
-$vol="vol";
 					// set default snapshot size
 					$disk_size=5000;
 					if (strlen($cr->disk_req)) {
 						$disk_size=$cr->disk_req;
 					}
-					$image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage snap -n $image_location_name -v $vol -t lvm-iscsi-deployment -s $image_clone_name -m $disk_size -i $image_password";
+					$image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage snap -n $image_location_name -v $volume_group -t lvm-iscsi-deployment -s $image_clone_name -m $disk_size -i $image_password";
 					$resource->send_command($resource_ip, $image_clone_cmd);
 					// update the image rootdevice parameter
 					$ar_image_update = array(
-						'image_rootdevice' => "/dev/$image_clone_name/1",
+						'image_rootdevice' => "$volume_group:/dev/$image_clone_name/1",
 					);
 					$image->update($image_id, $ar_image_update);
 
@@ -280,6 +281,12 @@ $vol="vol";
 						'image_rootdevice' => "/dev/$image_clone_name/1",
 					);
 					$image->update($image_id, $ar_image_update);
+
+
+
+
+
+
 
 				} else {
 					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to clone the image from type $image_type.", "", "", 0, 0, 0);
@@ -549,12 +556,14 @@ $vol="vol";
 
 			// lvm-iscsi-storage
 			} else if (!strcmp($image_type, "lvm-iscsi-deployment")) {
-				$image_location=dirname($image_rootdevice);
-				$image_location_name=basename($image_location);
 
-// !!! currently testing with static volume group name !!!
-$vol="vol";
-				$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage remove -n $image_location_name -v $vol -t lvm-iscsi-deployment";
+				// parse the volume group info in the identifier
+				$ident_separate=strpos($image_rootdevice, ":");
+				$volume_group=substr($image_rootdevice, 0, $ident_separate);
+				$root_device=substr($image_rootdevice, $ident_separate);
+				$image_location=dirname($root_device);
+				$image_location_name=basename($image_location);
+				$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage remove -n $image_location_name -v $volume_group -t lvm-iscsi-deployment";
 				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
 				$resource->send_command($resource_ip, $image_remove_clone_cmd);
 

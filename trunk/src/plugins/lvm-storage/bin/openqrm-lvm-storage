@@ -367,8 +367,9 @@ case "$LVM_COMMAND" in
 						LUN=`grep $LVOL_SHORT $IETDCONF | grep Lun | awk {'print $2 '}`
 						TARGET=`cat $IETDCONF | grep -v "#" | grep Target | grep $LVOL_SHORT | awk {' print $2 '}`
 						IMAGE_NAME=$LVOL_SHORT
-						echo "$IMAGE_NAME,/dev/$TARGET/$LUN"
-						echo "$IMAGE_NAME,/dev/$TARGET/$LUN" >> $STORAGE_STATUS_TMP
+						VOLUME_GROUP=`echo $LVOL | cut -d'/' -f3`
+						echo "$IMAGE_NAME,$VOLUME_GROUP:/dev/$TARGET/$LUN"
+						echo "$IMAGE_NAME,$VOLUME_GROUP:/dev/$TARGET/$LUN" >> $STORAGE_STATUS_TMP
 					fi					
 					;;
 
