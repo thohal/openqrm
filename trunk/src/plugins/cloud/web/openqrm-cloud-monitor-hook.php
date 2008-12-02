@@ -58,6 +58,7 @@ function openqrm_cloud_monitor() {
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $OPENQRM_EXEC_PORT;
 	global $openqrm_server;
+	global $BaseDir;
 
 	$event->log("openqrm_cloud_monitor", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-monitor-hook.php", "Checking for Cloud events to be handled.", "", "", 0, 0, 0);
 
@@ -279,6 +280,49 @@ function openqrm_cloud_monitor() {
 					// update the image rootdevice parameter
 					$ar_image_update = array(
 						'image_rootdevice' => "/dev/$image_clone_name/1",
+					);
+					$image->update($image_id, $ar_image_update);
+
+
+				// lvm-aoe-storage
+				} else if (!strcmp($image_type, "lvm-aoe-deployment")) {
+					$image->get_instance_by_id($image_id);
+
+					// parse the volume group info in the identifier
+					$ident_separate=strpos($image_rootdevice, ":");
+					$volume_group=substr($image_rootdevice, 0, $ident_separate);
+					$image_rootdevice_rest=substr($image_rootdevice, $ident_separate+1);
+					$ident_separate2=strpos($image_rootdevice_rest, ":");
+					$image_location_name=substr($image_rootdevice_rest, 0, $ident_separate2);
+					$root_device=substr($image_rootdevice_rest, $ident_separate2+1);
+					// set default snapshot size
+					$disk_size=5000;
+					if (strlen($cr->disk_req)) {
+						$disk_size=$cr->disk_req;
+					}
+
+			$testy="ident_separate $ident_separate volume_group $volume_group image_rootdevice_rest $image_rootdevice_rest ident_separate2 $ident_separate2 image_location_name $image_location_name root_device $root_device";
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "!2!!!!!!!! $testy", "", "", 0, 0, 0);
+
+					$image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage snap -n $image_location_name -v $volume_group -t lvm-aoe-deployment -s $image_clone_name -m $disk_size";
+					$resource->send_command($resource_ip, $image_clone_cmd);
+
+					// wait for clone
+					sleep(4);
+
+					$rootdevice_identifier_hook = "$BaseDir/boot-service/image.lvm-aoe-deployment.php";
+					// require once 
+					require_once "$rootdevice_identifier_hook";
+					$rootdevice_identifier_arr = array();
+					$rootdevice_identifier_arr = get_image_rootdevice_identifier($image->storageid);
+			
+			$testy=print_r($rootdevice_identifier_arr);
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "!!!!!!!!!! $testy", "", "", 0, 0, 0);
+
+
+					// update the image rootdevice parameter
+					$ar_image_update = array(
+						'image_rootdevice' => "$volume_group:$image_location_name:$root_device",
 					);
 					$image->update($image_id, $ar_image_update);
 

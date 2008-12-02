@@ -265,7 +265,7 @@ case "$LVM_COMMAND" in
 			echo "Detected Aoe-image. Adding to $VBLADECONF"
 			check_vblade
 			lvm_storage_lock aquire
-			manage_vblade add
+			manage_vblade add snap
 			lvm_storage_lock release
 		fi
 
@@ -380,8 +380,9 @@ case "$LVM_COMMAND" in
 						V_SLOT=`grep $LVOL_SHORT $VBLADECONF | awk {' print $3 '}`
 						V_IMAGE=`grep $LVOL_SHORT $VBLADECONF | awk {' print $4 '}`
 						V_ALLOWED_MAC=`grep $LVOL_SHORT $VBLADECONF | awk {' print $5 '}`
-						echo "$V_IMAGE,/dev/etherd/e$V_SHELF.$V_SLOT"
-						echo "$V_IMAGE,/dev/etherd/e$V_SHELF.$V_SLOT" >> $STORAGE_STATUS_TMP
+						VOLUME_GROUP=`echo $LVOL | cut -d'/' -f3`
+						echo "$V_IMAGE,$VOLUME_GROUP:$LVOL_SHORT:/dev/etherd/e$V_SHELF.$V_SLOT"
+						echo "$V_IMAGE,$VOLUME_GROUP:$LVOL_SHORT:/dev/etherd/e$V_SHELF.$V_SLOT" >> $STORAGE_STATUS_TMP
 					fi
 					;;
 			esac
