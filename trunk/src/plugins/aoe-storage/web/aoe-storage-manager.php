@@ -252,6 +252,8 @@ function aoe_storage_display($aoe_storage_id) {
 				$export_name = trim($aoe);
 				$real_image_name = strrchr($export_name, '/');
 				$real_image_name = substr($real_image_name, 1);
+				$real_image_name_end = strpos($real_image_name, " ");
+				$real_image_name = substr($real_image_name, 0, $real_image_name_end);
 				$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
 				$disp = $disp.$aoe;
 				$disp = $disp."</div>";

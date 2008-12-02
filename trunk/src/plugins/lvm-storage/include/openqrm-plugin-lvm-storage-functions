@@ -269,7 +269,8 @@ function manage_vblade() {
 			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME $AOE_AUTHENTICATED_MAC" >> $VBLADECONF
 			sed -i '/^$/d' $VBLADECONF
 			# start vbladed
-			sh -c "vblade -m $AOE_AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME < /dev/null 2>&1 | logger -t vbladed" &
+			SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+			screen -dmS $SCREEN_NAME vblade -m $AOE_AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
 			;;
 		auth)
 			AUTHENTICATED_MAC=$2
@@ -284,7 +285,8 @@ function manage_vblade() {
 			done
 			sync			
 			# start vbladed
-			sh -c "vblade -m $AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_IMAGE_ROOTDEVICE_PATH < /dev/null 2>&1 | logger -t vbladed" &
+			SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+			screen -dmS $SCREEN_NAME vblade -m $AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_IMAGE_ROOTDEVICE_PATH
 			;;
 		remove)
 			for VBLADE_PID in `ps ax | grep vblade | grep -w $LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME | awk {' print $1 '}`; do
