@@ -26,6 +26,21 @@ if [ "$WHOAMI" != "root" ]; then
 	exit 6
 fi
 
+if ! which screen 1>/dev/null; then
+	echo "ERROR: The 'screen' utility is not installed! Please install and try again."
+	nfs_storage_log "ERROR: The 'screen' utility is not installed! Please install and try again."
+	exit 6
+fi
+
+# re-run in background via screen
+if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+	export RUN_IN_BACKGROUND=true
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	screen -dmS $SCREEN_NAME $0 $@
+	exit	
+fi
+
+
 function nfs_storage_usage() {
 	echo "Usage : $0 add/remove/snap/list <-n image-name>"
 	echo "             [-s image-snapshot-name]"
@@ -136,10 +151,11 @@ case "$NFS_COMMAND" in
 		echo -n "Creating snapshot from image $NFS_IMAGE_NAME -> $NFS_IMAGE_SNAPSHOT_NAME"
 		mkdir -p $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_SNAPSHOT_NAME
 		nfs_storage_lock aquire
+		export ORG_IMAGE_NAME=$NFS_IMAGE_NAME
+		export NFS_IMAGE_NAME=$NFS_IMAGE_SNAPSHOT_NAME
 		manage_nfs add $OPENQRM_SERVER_IP
 		nfs_storage_lock release
-		cp -aR $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_NAME/* $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_SNAPSHOT_NAME/
-		export NFS_IMAGE_NAME=$NFS_IMAGE_SNAPSHOT_NAME
+		rsync -a $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$ORG_IMAGE_NAME/* $NFS_STORAGE_SERVER_IMAGE_DIRECTORY/$NFS_IMAGE_SNAPSHOT_NAME/
 		if [ "$NFS_OPENQRM_USERNAME" != "" ] && [ "$NFS_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_exports -u $NFS_OPENQRM_USERNAME -p $NFS_OPENQRM_PASSWORD
 		fi
