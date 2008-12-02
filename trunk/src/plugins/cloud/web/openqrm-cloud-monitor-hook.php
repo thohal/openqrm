@@ -202,7 +202,8 @@ function openqrm_cloud_monitor() {
 // currently supported storage types are 
 // lvm-nfs-deployment
 // nfs-deployment
-				// in case of any nfs-deployment type we need to update the rootdevice param
+
+				// lvm-nfs-storage
 				if (!strcmp($image_type, "lvm-nfs-deployment")) {
 
 					$full_vol_name=$image_rootdevice;
@@ -224,6 +225,7 @@ function openqrm_cloud_monitor() {
 					);
 					$image->update($image_id, $ar_image_update);
 
+				// nfs-storage
 				} else if (!strcmp($image_type, "nfs-deployment")) {
 					$export_dir=dirname($image_rootdevice);
 					$image_location_name=basename($image_rootdevice);
@@ -233,6 +235,49 @@ function openqrm_cloud_monitor() {
 					$image->get_instance_by_id($image_id);
 					$ar_image_update = array(
 						'image_rootdevice' => "$export_dir/$image_clone_name",
+					);
+					$image->update($image_id, $ar_image_update);
+
+
+				// lvm-iscsi-storage
+				} else if (!strcmp($image_type, "lvm-iscsi-deployment")) {
+					// generate a new image password for the clone
+					$image->get_instance_by_id($image_id);
+					$image_password = $image->generatePassword(12);
+					$image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
+					$image_location=dirname($image_rootdevice);
+					$image_location_name=basename($image_location);
+
+// !!! currently testing with static volume group name !!!
+$vol="vol";
+					// set default snapshot size
+					$disk_size=5000;
+					if (strlen($cr->disk_req)) {
+						$disk_size=$cr->disk_req;
+					}
+					$image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage snap -n $image_location_name -v $vol -t lvm-iscsi-deployment -s $image_clone_name -m $disk_size -i $image_password";
+					$resource->send_command($resource_ip, $image_clone_cmd);
+					// update the image rootdevice parameter
+					$ar_image_update = array(
+						'image_rootdevice' => "/dev/$image_clone_name/1",
+					);
+					$image->update($image_id, $ar_image_update);
+
+
+
+				// iscsi-storage
+				} else if (!strcmp($image_type, "iscsi-deployment")) {
+					// generate a new image password for the clone
+					$image->get_instance_by_id($image_id);
+					$image_password = $image->generatePassword(12);
+					$image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
+					$image_location=dirname($image_rootdevice);
+					$image_location_name=basename($image_location);
+					$image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/bin/openqrm-iscsi-storage snap -n $image_location_name -s $image_clone_name -i $image_password";
+					$resource->send_command($resource_ip, $image_clone_cmd);
+					// update the image rootdevice parameter
+					$ar_image_update = array(
+						'image_rootdevice' => "/dev/$image_clone_name/1",
 					);
 					$image->update($image_id, $ar_image_update);
 
@@ -483,20 +528,46 @@ function openqrm_cloud_monitor() {
 
 			// ugly way to wait until the resource rebooted
 			sleep(60);
-			// in case of any nfs-deployment type we need to update the rootdevice param
+
+			// lvm-iscsi-storage
 			if (!strcmp($image_type, "lvm-nfs-deployment")) {
 				$full_vol_name=$image_rootdevice;
 				$vol_dir=dirname($full_vol_name);
 				$vol=str_replace("/", "", $vol_dir);
 				$image_location_name=basename($full_vol_name);
-
 				$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage remove -n $image_location_name -v $vol -t lvm-nfs-deployment";
 				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
 				$resource->send_command($resource_ip, $image_remove_clone_cmd);
+
+			// nfs-storage
 			} else if (!strcmp($image_type, "nfs-deployment")) {
 				$image_location_name=basename($image_rootdevice);
 				$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/bin/openqrm-nfs-storage remove -n $image_location_name";
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
 				$resource->send_command($resource_ip, $image_remove_clone_cmd);
+
+
+			// lvm-iscsi-storage
+			} else if (!strcmp($image_type, "lvm-iscsi-deployment")) {
+				$image_location=dirname($image_rootdevice);
+				$image_location_name=basename($image_location);
+
+// !!! currently testing with static volume group name !!!
+$vol="vol";
+				$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage remove -n $image_location_name -v $vol -t lvm-iscsi-deployment";
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+				$resource->send_command($resource_ip, $image_remove_clone_cmd);
+
+
+			// iscsi-storage
+			} else if (!strcmp($image_type, "iscsi-deployment")) {
+				$image_location=dirname($image_rootdevice);
+				$image_location_name=basename($image_location);
+				$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/bin/openqrm-iscsi-storage remove -n $image_location_name";
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+				$resource->send_command($resource_ip, $image_remove_clone_cmd);
+
+
 			} else {
 				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to remove clone from image type $image_type.", "", "", 0, 0, 0);
 				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types are lvm-nfs-deployment and nfs-deployment.", "", "", 0, 0, 0);
