@@ -135,26 +135,6 @@ unset($lvm_storage_fields["lvm_storage_command"]);
 			sleep($refresh_delay);
 			break;
 		
-		case 'transform_lv':
-			$storage = new storage();
-			$storage->get_instance_by_id($lvm_storage_id);
-			$storage_resource = new resource();
-			$storage_resource->get_instance_by_id($storage->resource_id);
-			$storage_deployment = new deployment();
-			$storage_deployment->get_instance_by_id($storage->type);
-			// in case of lvm-iscsi we have to send a password when adding a lun
-			if (!strcmp($storage_deployment->type, "lvm-iscsi-deployment")) {
-				$image = new image();
-				// generate a password for the image
-				$image_password = $image->generatePassword(12);
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage transform -n $lvm_storage_logcial_volume_name -v $lvm_volume_group -t $storage_deployment->type -i $image_password -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			} else {
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage transform -n $lvm_storage_logcial_volume_name -v $lvm_volume_group -t $storage_deployment->type -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			}
-			$storage_resource->send_command($storage_resource->ip, $resource_command);
-			sleep($refresh_delay);
-			break;
-
 		case 'snap_lv':
 			$storage = new storage();
 			$storage->get_instance_by_id($lvm_storage_id);

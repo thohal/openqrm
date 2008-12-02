@@ -140,24 +140,6 @@ function manage_nfs() {
 				echo "WARNING: Could not find nfs-server init script !"
 			fi
 			;;
-		transform)
-			OPENQRM_SERVER=$2
-			# here please check before if the devices was already added to the iscsi-conf
-			if ! `mount /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME`; then
-				lvm_storage_log lvm-storage-functions "ERROR: Could not mount /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME at /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
-				manage_fstab remove
-				lvm_storage_lock release
-				return 1
-			fi
-			echo "/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME	$OPENQRM_SERVER(rw,insecure,no_root_squash,async)" >> /etc/exports
-			if [ -x /etc/init.d/nfs ]; then
-				/etc/init.d/nfs reload
-			elif [ -x /etc/init.d/nfs-kernel-server ]; then
-				/etc/init.d/nfs-kernel-server reload
-			else
-				echo "WARNING: Could not find nfs-server init script !"
-			fi
-			;;
 	esac
 }
 
@@ -206,16 +188,6 @@ function manage_iscsi() {
 			IMAGE_AUTHNAME=`echo $LVM_IMAGE_ROOTDEVICE | cut -d'/' -f3`
 			sed -i -e "s#IncomingUser $IMAGE_AUTHNAME .*#IncomingUser $IMAGE_AUTHNAME $IMAGE_PASS#g" $IETDCONF
 			sed -i '/^$/d' $IETDCONF
-			nohup /etc/init.d/iscsi-target restart
-			;;
-
-		transform)
-			IMAGE_PASS=$3
-			IMAGE_LUN=1
-			# here please check before if the devices was already added to the iscsi-conf
-			echo "Target $LVM_IMAGE_NAME" >> $IETDCONF
-			echo "	IncomingUser $LVM_IMAGE_NAME $IMAGE_PASS" >> $IETDCONF
-			echo "	Lun $IMAGE_LUN Path=/dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME,Type=fileio" >> $IETDCONF
 			nohup /etc/init.d/iscsi-target restart
 			;;
 	esac
@@ -295,21 +267,6 @@ function manage_vblade() {
 			sync
 			sed -i -e "s#.*$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME.*##g" $VBLADECONF
 			sed -i '/^$/d' $VBLADECONF
-			;;
-		transform)
-			# slots are dynamic
-			AOE_SLOT=`cat $VBLADECONF | grep -v '^#' | awk {' print $3 '} | sort -n -r | head -n 1`
-			AOE_SLOT=$(( AOE_SLOT + 1 ))
-			if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
-				. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
-				AOE_INTERFACE=$OPENQRM_SERVER_INTERFACE
-			else
-				AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '} | tail -1`
-			fi
-			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME $AOE_AUTHENTICATED_MAC" >> $VBLADECONF
-			sed -i '/^$/d' $VBLADECONF
-			# start vbladed
-			sh -c "vblade -m $AOE_AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME < /dev/null 2>&1 | logger -t vbladed" &
 			;;
 	esac
 }

@@ -406,9 +406,6 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
 					$disp = $disp."<b><a href=\"lvm-storage-action.php?source_tab=tab0&lvm_storage_command=remove_lv&lvm_storage_id=$lvm_storage_id&lvm_volume_group=$lvm_volume_group&lvm_storage_logcial_volume_name=$real_logical_volume_name\">";
 					$disp = $disp."<img src=\"../../img/error.png\" border=none> Remove</a></b>";
 					$disp = $disp."<br>";
-					$disp = $disp."<b><a href=\"lvm-storage-action.php?source_tab=tab0&lvm_storage_command=transform_lv&lvm_storage_id=$lvm_storage_id&lvm_volume_group=$lvm_volume_group&lvm_storage_logcial_volume_name=$real_logical_volume_name\">";
-					$disp = $disp."<img src=\"../../img/storage.png\" border=none> Transform</a></b>";
-					$disp = $disp."<br>";
 					$disp = $disp."<form action='lvm-storage-action.php' method=post>";
 					$disp = $disp."<br>";
 					$disp = $disp."<b>Create Clone :</b>";
