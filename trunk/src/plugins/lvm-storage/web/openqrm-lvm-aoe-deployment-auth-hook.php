@@ -55,6 +55,13 @@ global $event;
 		$image->get_instance_by_id($appliance->imageid);
 		$image_name=$image->name;
 		$image_rootdevice=$image->rootdevice;
+		// parse the rootdevice infos
+		$ident_separate=strpos($image_rootdevice, ":");
+		$volume_group=substr($image_rootdevice, 0, $ident_separate);
+		$image_rootdevice_rest=substr($image_rootdevice, $ident_separate+1);
+		$ident_separate2=strpos($image_rootdevice_rest, ":");
+		$image_location_name=substr($image_rootdevice_rest, 0, $ident_separate2);
+		$root_device=substr($image_rootdevice_rest, $ident_separate2+1);
 	
 		$storage = new storage();
 		$storage->get_instance_by_id($image->storageid);
@@ -74,8 +81,8 @@ global $event;
 	
 		switch($cmd) {
 			case "start":
-				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-aoe-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice to resource $resource_mac", "", "", 0, 0, $appliance_id);
-				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $resource_mac -t lvm-aoe-deployment";
+				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-aoe-deployment-auth-hook.php", "Authenticating $image_name / $root_device to resource $resource_mac", "", "", 0, 0, $appliance_id);
+				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $root_device -i $resource_mac -t lvm-aoe-deployment";
 				$resource->send_command($storage_ip, $auth_start_cmd);
 
 				// give time to settle restart of openqrm-exec daemon
@@ -212,6 +219,13 @@ global $event;
 		$image->get_instance_by_id($appliance->imageid);
 		$image_name=$image->name;
 		$image_rootdevice=$image->rootdevice;
+			// parse the rootdevice infos
+		$ident_separate=strpos($image_rootdevice, ":");
+		$volume_group=substr($image_rootdevice, 0, $ident_separate);
+		$image_rootdevice_rest=substr($image_rootdevice, $ident_separate+1);
+		$ident_separate2=strpos($image_rootdevice_rest, ":");
+		$image_location_name=substr($image_rootdevice_rest, 0, $ident_separate2);
+		$root_device=substr($image_rootdevice_rest, $ident_separate2+1);
 	
 		$storage = new storage();
 		$storage->get_instance_by_id($image->storageid);
@@ -243,7 +257,7 @@ global $event;
 			sleep(2);
 			$loop++;
 		}
-		$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i 00:00:00:00:00:00  -t lvm-aoe-deployment";
+		$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $root_device -i 00:00:00:00:00:00  -t lvm-aoe-deployment";
 		$resource->send_command($storage_ip, $auth_stop_cmd);
 	
 	}

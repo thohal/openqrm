@@ -306,7 +306,7 @@ function openqrm_create_default_initrd_template() {
 
 	# create lib dir + copy ld-linux
 	mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib
-	if ls /lib64/ld-* 2>&1 1>/dev/null; then
+	if ls /lib64/ld-* 2>/dev/null 1>&1; then
 		cp -af /lib64/ld-* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
 	else
 		cp -af /lib/ld-* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
@@ -367,7 +367,7 @@ EOF
 	echo "shadow:     files" >> nsswitch.conf
 	echo "group:      files" >> nsswitch.conf
 	# cp libnss
-	if ls /lib64/libnss_files* 2>&1 1>/dev/null; then
+	if ls /lib64/libnss_files* 2>/dev/null 1>&1; then
 		cp -aR /lib64/libnss_files* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
 	else
 		cp -aR /lib/libnss_files* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
