@@ -27,6 +27,9 @@ $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
 
+
+print_r($_REQUEST);
+
 // check if we got some actions to do
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
@@ -64,7 +67,7 @@ if(htmlobject_request('action') != '') {
 				$up_ccunits = $_REQUEST['cu_ccunits'];
 				$cl_user = new clouduser();
 				$cl_user->get_instance_by_id($id);
-				$cl_user->set_users_ccunits($id, $up_ccunits);
+				$cl_user->set_users_ccunits($id, $up_ccunits[$id]);
 			}
 			break;
 
@@ -136,7 +139,8 @@ function cloud_user_manager() {
 		if (!strlen($ccunits)) {
 			$ccunits = 0;
 		}
-		$ccunits_input = "<input type=\"text\" name=\"cu_ccunits\" value=\"$ccunits\" size=\"5\ maxsize=\"10\">";
+		$cu_id = $cu["cu_id"];
+		$ccunits_input = "<input type=\"text\" name=\"cu_ccunits[$cu_id]\" value=\"$ccunits\" size=\"5\ maxsize=\"10\">";
 		
 		$arBody[] = array(
 			'cu_id' => $cu["cu_id"],

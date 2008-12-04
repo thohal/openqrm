@@ -86,7 +86,7 @@ $strMsg = '';
 						$resource_type = $_REQUEST['resource_type'];
 
 						$virtualization = new virtualization();
-						$virtualization->get_instance_by_id($resource_type);
+						$virtualization->get_instance_by_id($resource_type[$id]);
 						$resource_fields = array();
 
 						if (strlen($resource->capabilities)) {
@@ -181,6 +181,7 @@ function resource_display() {
 		// prepare the values for the array
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);
+		$res_id = $resource->id;
 		$mem_total = $resource_db['resource_memtotal'];
 		$mem_used = $resource_db['resource_memused'];
 		$mem = "$mem_used/$mem_total";
@@ -200,9 +201,9 @@ function resource_display() {
 				$resource_type_name = substr($olds, 0, $nspos);
 				// translate name to id
 				$virtualization->get_instance_by_name($resource_type_name);
-				$resource_type_select = htmlobject_select('resource_type', $virtualization_list_select, '', array($virtualization->id));
+				$resource_type_select = htmlobject_select("resource_type[$res_id]", $virtualization_list_select, '', array($virtualization->id));
 			} else {
-				$resource_type_select = htmlobject_select('resource_type', $virtualization_list_select, '', array(0));
+				$resource_type_select = htmlobject_select("resource_type[$res_id]", $virtualization_list_select, '', array(0));
 			}
 		
 		}
