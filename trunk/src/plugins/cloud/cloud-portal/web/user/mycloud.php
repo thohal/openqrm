@@ -474,28 +474,6 @@ function my_cloud_extend_request($cr_id) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function my_cloud_create_request() {
 
 	global $thisfile;
@@ -526,7 +504,12 @@ function my_cloud_create_request() {
 	$virtualization_list = array();
 	$virtualization_list_select = array();
 	$virtualization_list = $virtualization->get_list();
-
+	// check if to show physical system type
+	$cc_conf = new cloudconfig();
+	$cc_request_physical_systems = $cc_conf->get_value(4);	// request_physical_systems
+	if (!strcmp($cc_request_physical_systems, "false")) {
+		array_shift($virtualization_list);
+	}
 	// filter out the virtualization hosts
 	foreach ($virtualization_list as $id => $virt) {
 		if (!strstr($virt[label], "Host")) {
@@ -602,7 +585,14 @@ function my_cloud_create_request() {
 	$disp = $disp.htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk'), 'text', 20);
 	$disp = $disp.htmlobject_select('cr_network_req', array(array('value' =>1, 'label' =>1), array('value' =>2, 'label' =>2), array('value' =>3, 'label' =>3), array('value' =>4, 'label' =>4)), 'Network-cards');
 	$disp = $disp.htmlobject_input('cr_ha_req', array("value" => 1, "label" => 'Highavailable'), 'checkbox', false);
-	$disp = $disp.htmlobject_input('cr_shared_req', array("value" => 1, "label" => 'Clone-on-deploy'), 'checkbox', false);
+	// check for default-clone-on-deploy
+	$cc_conf = new cloudconfig();
+	$cc_default_clone_on_deploy = $cc_conf->get_value(5);	// default_clone_on_deploy
+	if (!strcmp($cc_default_clone_on_deploy, "true")) {
+		$disp = $disp."<input type=hidden name='cr_shared_req' value='on'>";
+	} else {
+		$disp = $disp.htmlobject_input('cr_shared_req', array("value" => 1, "label" => 'Clone-on-deploy'), 'checkbox', false);
+	}
 
 	$disp = $disp."<input type=hidden name='action' value='create_request'>";
 	$disp = $disp."<br>";

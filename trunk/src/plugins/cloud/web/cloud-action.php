@@ -190,6 +190,10 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($create_default_cloud_config2);
 			$create_default_cloud_config3 = "insert into cloud_config(cc_id, cc_key) values (3, 'external_portal_url')";
 			$recordSet = &$db->Execute($create_default_cloud_config3);
+			$create_default_cloud_config4 = "insert into cloud_config(cc_id, cc_key, cc_value) values (4, 'request_physical_systems', 'true')";
+			$recordSet = &$db->Execute($create_default_cloud_config4);
+			$create_default_cloud_config5 = "insert into cloud_config(cc_id, cc_key, cc_value) values (5, 'default_clone_on_deploy', 'true')";
+			$recordSet = &$db->Execute($create_default_cloud_config5);
 
 		    $db->Close();
 			break;

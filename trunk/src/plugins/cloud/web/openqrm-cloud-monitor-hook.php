@@ -81,7 +81,7 @@ function openqrm_cloud_monitor() {
 		if ($cr_status == 1) {
 			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Found new request ID $cr_id. Checking if Auto-provisioning is enabled", "", "", 0, 0, 0);
 			$cc_conf = new cloudconfig();
-			$cc_auto_provision = $cc_conf->get_value(2);  // 1 is auto_provision
+			$cc_auto_provision = $cc_conf->get_value(2);  // 2 is auto_provision
 			if (!strcmp($cc_auto_provision, "true")) {
 				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Found new request ID $cr_id. Auto-provisioning is enabled! Approving the request", "", "", 0, 0, 0);
 				$cr->setstatus($cr_id, "approve");
