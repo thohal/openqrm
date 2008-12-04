@@ -27,9 +27,6 @@ $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
 
-
-print_r($_REQUEST);
-
 // check if we got some actions to do
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
