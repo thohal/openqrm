@@ -473,14 +473,6 @@ function my_cloud_extend_request($cr_id) {
 
 
 
-function my_cloud_filter_image($var) {
-	if (strstr($var, ".cloud_")) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
 
 function my_cloud_create_request() {
 
