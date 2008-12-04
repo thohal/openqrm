@@ -22,6 +22,11 @@ function get_image_rootdevice_identifier($aoe_storage_id) {
 	global $event;
 	$refresh_delay=5;
 
+	if (!strlen($OPENQRM_USER->name)) {
+		$OPENQRM_USER = new user("openqrm");
+		$OPENQRM_USER->set_user();
+	}
+
 	// place for the storage stat files
 	$StorageDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/aoe-storage/storage';
 	$rootdevice_identifier_array = array();

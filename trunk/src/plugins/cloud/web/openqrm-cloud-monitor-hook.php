@@ -148,7 +148,7 @@ function openqrm_cloud_monitor() {
 				$image = new image();
 				$image->get_instance_by_id($cr->image_id);
 				$image_name = $image->name;
-				$image_clone_name = "$image_name.$cr_id";
+				$image_clone_name = $image_name.".cloud_".$cr_id."_";
 				$image_type = $image->type;
 				$image_version = $image->version;
 				$image_rootdevice = $image->rootdevice;
@@ -203,6 +203,10 @@ function openqrm_cloud_monitor() {
 // currently supported storage types are 
 // lvm-nfs-deployment
 // nfs-deployment
+// lvm-iscsi-deployment
+// iscsi-deployment
+// lvm-aoe-deployment
+// aoe-deployment
 
 				// lvm-nfs-storage
 				if (!strcmp($image_type, "lvm-nfs-deployment")) {
@@ -327,10 +331,51 @@ function openqrm_cloud_monitor() {
 					$image->update($image_id, $ar_image_update);
 
 
+				// aoe-storage
+				} else if (!strcmp($image_type, "aoe-deployment")) {
+					$image->get_instance_by_id($image_id);
+					// parse the volume group info in the identifier
+					$ident_separate=strpos($image_rootdevice, ":");
+					$image_location_name=substr($image_rootdevice, 0, $ident_separate);
+					$root_device=substr($image_rootdevice, $ident_separate+1);
+					// set default snapshot size
+					$disk_size=5000;
+					if (strlen($cr->disk_req)) {
+						$disk_size=$cr->disk_req;
+					}
+					$image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/bin/openqrm-aoe-storage snap -n $image_location_name -s $image_clone_name -m $disk_size";
+					$resource->send_command($resource_ip, $image_clone_cmd);
+
+					// wait for clone
+					sleep(4);
+
+					// find the new rootdevice of the snapshot, get it via the storage-ident hook
+					$rootdevice_identifier_hook = "$BaseDir/boot-service/image.aoe-deployment.php";
+					// require once 
+					require_once "$rootdevice_identifier_hook";
+					$rootdevice_identifier_arr = array();
+					$rootdevice_identifier_arr = get_image_rootdevice_identifier($image->storageid);
+					foreach($rootdevice_identifier_arr as $id) {
+						foreach($id as $aoe_identifier_string) {
+							if (strstr($aoe_identifier_string, $image_clone_name)) {
+								$aoe_clone_rootdevice_tmp=strrchr($aoe_identifier_string, ":");
+								$aoe_clone_rootdevice=trim(str_replace(":", "", $aoe_clone_rootdevice_tmp));
+								break;
+							}
+						}
+					}
+					// update the image rootdevice parameter
+					$ar_image_update = array(
+						'image_rootdevice' => "$image_clone_name:$aoe_clone_rootdevice",
+					);
+					$image->update($image_id, $ar_image_update);
+
+
+
 
 				} else {
 					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to clone the image from type $image_type.", "", "", 0, 0, 0);
-					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types are lvm-nfs-deployment and nfs-deployment.", "", "", 0, 0, 0);
+					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types are lvm-nfs-deployment, nfs-deployment, lvm-iscsi-deployment, iscsi-deployment, lvm-aoe-deployment and aoe-deployment.", "", "", 0, 0, 0);
 				}
 // storage dependency !
 
@@ -617,6 +662,7 @@ function openqrm_cloud_monitor() {
 				$resource->send_command($resource_ip, $image_remove_clone_cmd);
 
 
+			// lvm-aoe-storage
 			} else if (!strcmp($image_type, "lvm-aoe-deployment")) {
 				// parse the volume group info in the identifier
 				$ident_separate=strpos($image_rootdevice, ":");
@@ -630,9 +676,20 @@ function openqrm_cloud_monitor() {
 				$resource->send_command($resource_ip, $image_remove_clone_cmd);
 
 
+			// aoe-storage
+			} else if (!strcmp($image_type, "aoe-deployment")) {
+				// parse the volume group info in the identifier
+				$ident_separate=strpos($image_rootdevice, ":");
+				$image_location_name=substr($image_rootdevice, 0, $ident_separate);
+				$root_device=substr($image_rootdevice, $ident_separate+1);
+				$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/bin/openqrm-aoe-storage remove -n $image_location_name";
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+				$resource->send_command($resource_ip, $image_remove_clone_cmd);
+
+
 			} else {
 				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to remove clone from image type $image_type.", "", "", 0, 0, 0);
-				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types are lvm-nfs-deployment and nfs-deployment.", "", "", 0, 0, 0);
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types are lvm-nfs-deployment, nfs-deployment, lvm-iscsi-deployment, iscsi-deployment, lvm-aoe-deployment and aoe-deployment.", "", "", 0, 0, 0);
 			}
 // storage dependency !
 		

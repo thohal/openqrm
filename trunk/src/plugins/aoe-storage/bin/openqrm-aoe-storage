@@ -135,6 +135,8 @@ case "$AOE_COMMAND" in
 		if [ "$AOE_OPENQRM_USERNAME" != "" ] && [ "$AOE_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_luns -u $AOE_OPENQRM_USERNAME -p $AOE_OPENQRM_PASSWORD
 		fi
+		# physical remove
+		rm -rf $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME
 		;;
 
 	snap)
@@ -199,10 +201,11 @@ IFS='
 			V_SHELF=`echo $SHELF_STR | awk {' print $2 '}`
 			V_SLOT=`echo $SHELF_STR | awk {' print $3 '}`
 			V_IMAGE=`echo $SHELF_STR | awk {' print $4 '}`
+			V_IMAGE_SHORT=`basename $V_IMAGE`
 			V_ALLOWED_MAC=`echo $SHELF_STR | awk {' print $5 '}`
 
-			echo "$V_IMAGE,/dev/etherd/e$V_SHELF.$V_SLOT"
-			echo "$V_IMAGE,/dev/etherd/e$V_SHELF.$V_SLOT" >> $STORAGE_STATUS_TMP
+			echo "$V_IMAGE,$V_IMAGE_SHORT:/dev/etherd/e$V_SHELF.$V_SLOT"
+			echo "$V_IMAGE,$V_IMAGE_SHORT:/dev/etherd/e$V_SHELF.$V_SLOT" >> $STORAGE_STATUS_TMP
 		done
 		IFS=$OLD_IFS
 		if ! wget -q -O /dev/null --http-user=$AOE_OPENQRM_USERNAME --http-password=$AOE_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/aoe-storage/aoe-storage-action.php?aoe_storage_command=get_ident; then

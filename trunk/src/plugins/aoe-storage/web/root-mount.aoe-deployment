@@ -55,6 +55,8 @@ if [ "$IMAGE_TRANSFER_TO_LOCAL_FS_TYPE" == "" ]; then
 	IMAGE_TRANSFER_TO_LOCAL_FS_TYPE="ext3"
 fi
 
+IMAGE_NAME=`echo $image_rootdevice | cut -d':' -f1`
+IMAGE_ROOT_DEVICE=`echo $image_rootdevice | cut -d':' -f2`
 #######################################################################
 # required functions ##################################################
 #######################################################################
@@ -88,12 +90,12 @@ function mount_rootfs() {
 	sleep 4
 
 	# finallly mount
-	if ! mount -t $image_rootfstype $image_rootdevice /mnt; then
-		echo "ERROR: Could not mount $image_rootdevice via aoe"
+	if ! mount -t $image_rootfstype $IMAGE_ROOT_DEVICE /mnt; then
+		echo "ERROR: Could not mount $IMAGE_ROOT_DEVICE via aoe"
 		# give a shell for the admin
 		/bin/bash
 	else
-		echo "aoe-storage: Mounted $image_rootdevice rw"
+		echo "aoe-storage: Mounted $IMAGE_ROOT_DEVICE rw"
 	fi
 	
 	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
@@ -123,7 +125,7 @@ function remount_rootfs() {
 
 	REMOUNT_LOOP=0
 	# remont /mnt ro
-	while ! mount -t $image_rootfstype -o ro,remount $image_rootdevice /mnt; do
+	while ! mount -t $image_rootfstype -o ro,remount $IMAGE_ROOT_DEVICE /mnt; do
 		echo -n "."
 		sleep 1
 		REMOUNT_LOOP=$[ REMOUNT_LOOP + 1 ]
@@ -132,14 +134,14 @@ function remount_rootfs() {
 			/bin/bash
 		fi
 	done
-	echo "aoe-storage: Re-mounted $image_rootdevice ro"
+	echo "aoe-storage: Re-mounted $IMAGE_ROOT_DEVICE ro"
 	
 }
 
 
 function create_fstab() {
 	rm -f $IMAGE_FSTAB
-	echo "$image_rootdevice   /     $image_rootfstype  defaults   0 0" >> $IMAGE_FSTAB
+	echo "$IMAGE_ROOT_DEVICE   /     $image_rootfstype  defaults   0 0" >> $IMAGE_FSTAB
 }
 
 

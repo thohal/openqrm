@@ -54,7 +54,10 @@ global $event;
 		$image->get_instance_by_id($appliance->imageid);
 		$image_name=$image->name;
 		$image_rootdevice=$image->rootdevice;
-	
+		$ident_separate=strpos($image_rootdevice, ":");
+		$image_location_name=substr($image_rootdevice, 0, $ident_separate);
+		$root_device=substr($image_rootdevice, $ident_separate+1);
+
 		$storage = new storage();
 		$storage->get_instance_by_id($image->storageid);
 		$storage_resource = new resource();
@@ -73,8 +76,8 @@ global $event;
 
 		switch($cmd) {
 			case "start":
-				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-aoe-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice to resource $resource_mac", "", "", 0, 0, $appliance_id);
-				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $resource_mac";
+				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-aoe-deployment-auth-hook.php", "Authenticating $image_name / $root_device to resource $resource_mac", "", "", 0, 0, $appliance_id);
+				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $root_device -i $resource_mac";
 				$resource->send_command($storage_ip, $auth_start_cmd);
 
 				// give time to settle restart of openqrm-exec daemon
@@ -211,7 +214,10 @@ global $event;
 		$image->get_instance_by_id($appliance->imageid);
 		$image_name=$image->name;
 		$image_rootdevice=$image->rootdevice;
-	
+		$ident_separate=strpos($image_rootdevice, ":");
+		$image_location_name=substr($image_rootdevice, 0, $ident_separate);
+		$root_device=substr($image_rootdevice, $ident_separate+1);
+
 		$storage = new storage();
 		$storage->get_instance_by_id($image->storageid);
 		$storage_resource = new resource();
@@ -242,7 +248,7 @@ global $event;
 			sleep(2);
 			$loop++;
 		}
-		$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i 00:00:00:00:00:00";
+		$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $root_device -i 00:00:00:00:00:00";
 		$resource->send_command($storage_ip, $auth_stop_cmd);
 	
 	}
