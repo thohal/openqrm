@@ -57,6 +57,12 @@ function check_param($param, $value) {
 		redirect($strMsg, tab1);
 		exit(0);
 	}
+	if(!ctype_alnum($value)){
+		$strMsg = "$param contains special characters <br>";
+		$c_error = 1;
+		redirect($strMsg, tab1);
+		exit(0);
+	}
 }
 
 // register action
@@ -70,7 +76,6 @@ if(htmlobject_request('action') != '') {
 			check_param("Password", $user_fields['cu_password']);
 			check_param("Lastname", $user_fields['cu_lastname']);
 			check_param("Forename", $user_fields['cu_forename']);
-			check_param("Email", $user_fields['cu_email']);
 			check_param("Street", $user_fields['cu_street']);
 			check_param("City", $user_fields['cu_city']);
 			check_param("Country", $user_fields['cu_country']);
@@ -162,6 +167,8 @@ if(htmlobject_request('action') != '') {
 			$u_error = 0;
 			$cu_id = $_REQUEST['i'];
 			$cu_token_post = $_REQUEST['token'];
+			check_param("cu_id", $cu_id);
+			check_param("cu_token_post", $cu_token_post);
 
 			$cloud_user = new clouduser();
 			$cloud_user->get_instance_by_id($cu_id);
@@ -218,13 +225,10 @@ if(htmlobject_request('action') != '') {
 
 			break;
 
-
-
-
-
 		case 'forgotpass':
 
 			$fusername = $_REQUEST['fusername'];
+			check_param("fusername", $fusername);
 
 			$cloud_user = new clouduser();
 			if ($cloud_user->is_name_free($fusername)) {
