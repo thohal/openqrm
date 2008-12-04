@@ -473,6 +473,14 @@ function my_cloud_extend_request($cr_id) {
 
 
 
+function my_cloud_filter_image($var) {
+	if (strstr($var, ".cloud_")) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 
 function my_cloud_create_request() {
 
@@ -493,11 +501,20 @@ function my_cloud_create_request() {
 
 	$image = new image();
 	$image_list = array();
-	$image_list = $image->get_list();
+	$image_list_tmp = array();
+	$image_list_tmp = $image->get_list();
 	// remove the openqrm + idle image from the list
 	//print_r($image_list);
-	array_shift($image_list);
-	array_shift($image_list);
+	array_shift($image_list_tmp);
+	array_shift($image_list_tmp);
+	// do not show the image-clones from other requests
+	foreach($image_list_tmp as $list) {
+		$iid = $list['label'];
+		$iname = $list['value'];
+		if (!strstr($var, ".cloud_")) {
+			$image_list[] = array("value" => $iname, "label" => $iid);
+		}
+	}
 	$image_count = count($image_list);
 
 	$virtualization = new virtualization();
