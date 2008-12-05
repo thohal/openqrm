@@ -39,6 +39,7 @@ var $ram_req = '';
 var $cpu_req = '';
 var $disk_req = '';
 var $network_req = '';
+var $resource_quantity = '';
 var $resource_type_req = '';
 var $deployment_type_req = '';
 var $ha_req = '';
@@ -71,6 +72,7 @@ function get_instance($id) {
 		$this->cpu_req = $cloudrequest["cr_cpu_req"];
 		$this->disk_req = $cloudrequest["cr_disk_req"];
 		$this->network_req = $cloudrequest["cr_network_req"];
+		$this->resource_quantity = $cloudrequest["cr_resource_quantity"];
 		$this->resource_type_req = $cloudrequest["cr_resource_type_req"];
 		$this->deployment_type_req = $cloudrequest["cr_deployment_type_req"];
 		$this->ha_req = $cloudrequest["cr_ha_req"];
@@ -206,6 +208,9 @@ function get_cost() {
 	// TODO : disk costs
 	// TODO : network-traffic costs
 	
+	// multiplied by resource_quantity
+	$cr_costs = $cr_costs * $this->resource_quantity;
+	
 	return $cr_costs;	
 }
 
@@ -257,22 +262,37 @@ function setstatus($cloudrequest_id, $cloud_status) {
 
 
 
-// function to set the image_id of a request  --> this is for clone-on-deploy
-function setimage($cloudrequest_id, $image_id) {
-	global $CLOUD_REQUEST_TABLE;
-	$db=openqrm_get_db_connection();
-	$rs = $db->Execute("update $CLOUD_REQUEST_TABLE set cr_image_id=$image_id where cr_id=$cloudrequest_id");
-
-}
-
-
-
-
 // function to set the appliance_id of a request
-function setappliance($cloudrequest_id, $appliance_id) {
+function setappliance($cmd, $appliance_id) {
 	global $CLOUD_REQUEST_TABLE;
+	$current_appliance_ids = $this->appliance_id;
+	switch ($cmd) {
+		case 'add':
+			if ($current_appliance_ids == 0) {
+				$updated_appliance_ids = "$appliance_id";
+			} else {
+				$updated_appliance_ids = "$current_appliance_ids,$appliance_id";
+			}
+			break;
+		case 'remove':
+			$app_id_arr = explode(",", $current_appliance_ids);
+			$loop=1;
+			foreach ($app_id_arr as $app_id) {
+				if (strcmp($app_id, $appliance_id)) {
+					if ($loop == 1) {
+						$updated_appliance_ids = $app_id;
+					} else {
+						$updated_appliance_ids = $updated_appliance_ids.",".$app_id;
+					}
+				}
+			}
+			break;
+		default:
+			exit(1);
+			break;
+	}
 	$db=openqrm_get_db_connection();
-	$rs = $db->Execute("update $CLOUD_REQUEST_TABLE set cr_appliance_id=$appliance_id where cr_id=$cloudrequest_id");
+	$rs = $db->Execute("update $CLOUD_REQUEST_TABLE set cr_appliance_id='$updated_appliance_ids' where cr_id=$this->id");
 
 }
 

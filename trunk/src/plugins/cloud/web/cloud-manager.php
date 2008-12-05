@@ -238,8 +238,11 @@ function cloud_manager() {
 	$arHead['cr_stop'] = array();
 	$arHead['cr_stop']['title'] ='Stop-time';
 
+	$arHead['cr_resource_quantity'] = array();
+	$arHead['cr_resource_quantity']['title'] ='#';
+
 	$arHead['cr_appliance_id'] = array();
-	$arHead['cr_appliance_id']['title'] ='Appliance ID';
+	$arHead['cr_appliance_id']['title'] ='App.ID';
 
 	$arBody = array();
 
@@ -281,7 +284,7 @@ function cloud_manager() {
 		$cr_start = date("d-m-Y H-i", $timestamp);
 		$timestamp=$cr["cr_stop"];
 		$cr_stop = date("d-m-Y H-i", $timestamp);
-
+		$cr_resource_quantity = $cr["cr_resource_quantity"];
 
 		// fill the array for the table
 		$arBody[] = array(
@@ -291,6 +294,7 @@ function cloud_manager() {
 			'cr_request_time' => $cr_request_time,
 			'cr_start' => $cr_start,
 			'cr_stop' => $cr_stop,
+			'cr_resource_quantity' => $cr_resource_quantity,
 			'cr_appliance_id' => $cr["cr_appliance_id"],
 		);
 	}
@@ -350,7 +354,7 @@ function cloud_create_request() {
 	}
 	$image_count = count($image_list);
 
-
+	// get the list of virtualization types
 	$virtualization = new virtualization();
 	$virtualization_list = array();
 	$virtualization_list_select = array();
@@ -367,6 +371,14 @@ function cloud_create_request() {
 			$virtualization_list_select[] = array("value" => $virt[value], "label" => $virt[label]);
 			
 		}
+	}
+
+	// prepare the array for the resource_quantity select
+	$max_resources_per_cr_select = array();
+	$cc_conf = new cloudconfig();
+	$cc_max_resources_per_cr = $cc_conf->get_value(6);	// max_resources_per_cr
+	for ($mres = 1; $mres <= $cc_max_resources_per_cr; $mres++) {
+		$max_resources_per_cr_select[] = array("value" => $mres, "label" => $mres);
 	}
 
 	// get list of available resource parameters
@@ -413,6 +425,7 @@ function cloud_create_request() {
 	
 	$disp = $disp.htmlobject_select('cr_cu_id', $cl_user_list, 'User');
 
+	$disp = $disp."<br>";
 	$disp = $disp."Start time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\">";
 	$disp = $disp."<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)\">";
 	$disp = $disp."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
@@ -424,10 +437,12 @@ function cloud_create_request() {
 	$disp = $disp."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
 	$disp = $disp."</a>";
 	$disp = $disp."<br>";
+	$disp = $disp."<br>";
 
+	$disp = $disp.htmlobject_select('cr_resource_quantity', $max_resources_per_cr_select, 'Quantity');
+	$disp = $disp.htmlobject_select('cr_resource_type_req', $virtualization_list_select, 'Resource type');
 	$disp = $disp.htmlobject_select('cr_kernel_id', $kernel_list, 'Kernel');
 	$disp = $disp.htmlobject_select('cr_image_id', $image_list, 'Image');
-	$disp = $disp.htmlobject_select('cr_resource_type_req', $virtualization_list_select, 'Resource type');
 	
 	$disp = $disp.htmlobject_select('cr_ram_req', $available_memtotal, 'Memory');
 	$disp = $disp.htmlobject_select('cr_cpu_req', $available_cpunumber, 'CPUs');
@@ -500,6 +515,7 @@ function cloud_request_details($cloud_request_id) {
 	$shared_req = $cr_request->shared_req;
 	// get resource type as name
 	$resource_type_req = $cr_request->resource_type_req;
+	$resource_quantity = $cr_request->resource_quantity;
 	$virtualization = new virtualization();
 	$virtualization->get_instance_by_id($resource_type_req);
 	$resource_type_name = $virtualization->name;
@@ -549,6 +565,12 @@ function cloud_request_details($cloud_request_id) {
 		'cr_value' => "$cu_email",
 	);
 	// requirements  -----------------------------
+
+	$arBody[] = array(
+		'cr_key' => "Quantity",
+		'cr_value' => "$resource_quantity",
+	);
+
 	$arBody[] = array(
 		'cr_key' => "Kernel",
 		'cr_value' => "$kernel",
