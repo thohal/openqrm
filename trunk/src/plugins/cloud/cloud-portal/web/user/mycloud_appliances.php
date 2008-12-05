@@ -62,13 +62,20 @@ if(htmlobject_request('action') != '') {
 					$cr_id = $cr['cr_id'];
 					$cl_tmp_req->get_instance_by_id($cr_id);
 					if ($cl_tmp_req->cu_id == $clouduser->id) {
-						// we have found one of our own request, check if we have an appliance-id > 0
-						if ($cl_tmp_req->appliance_id > 0) {
-							$my_appliances[] .= $cl_tmp_req->appliance_id; 
+						// we have found one of our own request, check if we have an appliance-id != 0
+						if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
+							$one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
+							foreach ($one_app_id_arr as $aid) {
+								$my_appliances[] .= $aid;
+							}
 						}
 					}
-				}	
-	
+				}
+				// is it ours ?
+				if (!in_array($id, $my_appliances)) {
+					continue;
+				}
+				
 				$appliance_restart = new appliance();
 				$appliance_restart->get_instance_by_id($id);
 				$resource_id = $appliance_restart->resources;
@@ -148,13 +155,15 @@ function my_cloud_appliances() {
 		$cr_id = $cr['cr_id'];
 		$cl_tmp_req->get_instance_by_id($cr_id);
 		if ($cl_tmp_req->cu_id == $clouduser->id) {
-			// we have found one of our own request, check if we have an appliance-id > 0
-			if ($cl_tmp_req->appliance_id > 0) {
-				$my_appliances[] .= $cl_tmp_req->appliance_id; 
+			// we have found one of our own request, check if we have an appliance-id != 0
+			if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
+				$one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
+				foreach ($one_app_id_arr as $aid) {
+					$my_appliances[] .= $aid;
+				}
 			}
 		}
 	}
-
 
 	foreach ($appliance_array as $index => $appliance_db) {
 		$appliance = new appliance();
