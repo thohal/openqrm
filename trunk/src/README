@@ -1,7 +1,12 @@
-This is an openQRM development project.
+openQRM is the next generation, open-source Data-center management platform.
+Its fully pluggable architecture focuses on automatic, rapid- and appliance-based
+deployment, monitoring, high-availability and especially on supporting and
+conforming multiple virtualization technologies. 
+openQRM is a single-management console for the complete IT-infra structure and
+provides a well defined API which can be used to integrate third-party tools as
+additional plugins.
 
-Its goal is it to archive the following improvements compared
-to current stable openQRM branch :
+Its goal is it to archive the following specifications :
 
 - KIS (keep it simple)
 - run everywhere (support for every linux distribution, especially Debian+Ubuntu)
@@ -16,8 +21,7 @@ to current stable openQRM branch :
 - removing the installer-stage, do the inititialization during firststart
 - ... and some more
 
-Please feel free to contribute to this project with your own
-ideas and code. 
+Please feel free to contribute to this project with your own ideas and code. 
 
 Matt Rechenburg
 
