@@ -23,6 +23,7 @@ require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudipgroup.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudiptables.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudvm.class.php";
 
 global $CLOUD_USER_TABLE;
 global $CLOUD_REQUEST_TABLE;
@@ -31,7 +32,7 @@ global $IMAGE_INFO_TABLE;
 
 global $OPENQRM_SERVER_BASE_DIR;
 global $OPENQRM_EXEC_PORT;
-$refresh_delay=5;
+$vm_create_timout=90;
 
 $event = new event();
 $openqrm_server = new openqrm_server();
@@ -59,7 +60,9 @@ function openqrm_cloud_monitor() {
 	global $OPENQRM_EXEC_PORT;
 	global $openqrm_server;
 	global $BaseDir;
+	global $vm_create_timout;
 
+echo "vm_create_timout $vm_create_timout ";
 	$event->log("openqrm_cloud_monitor", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-monitor-hook.php", "Checking for Cloud events to be handled.", "", "", 0, 0, 0);
 
 	$crl = new cloudrequest();
@@ -136,9 +139,50 @@ function openqrm_cloud_monitor() {
 				// check if we got a resource !
 				$appliance->get_instance_by_id($appliance_id);
 				if ($appliance->resources == -1) {
-					$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Could not find a resource for request ID $cr_id", "", "", 0, 0, 0);
-					$appliance->remove($appliance_id);
-					continue;
+					// ################################## auto create vm ###############################
+					// check if we should try to create one 
+
+					$cc_autovm_conf = new cloudconfig();
+					$cc_auto_create_vms = $cc_autovm_conf->get_value(7);  // 7 is auto_create_vms
+					if (!strcmp($cc_auto_create_vms, "true")) {
+						// generate a mac address
+						$mac_res = new resource();
+						$mac_res->generate_mac();
+						$new_vm_mac = $mac_res->mac;
+						// cpu req, for now just one cpu since not every virtualization technology can handle that
+						// $new_vm_cpu = $cr->cpu_req;
+						$new_vm_cpu = 1;
+						// memory
+						$new_vm_memory = 256;
+						if ($cr->ram_req != 0) {
+							$new_vm_memory = $cr->ram_req;
+						}
+						// disk size
+						$new_vm_disk = 5000;
+						if ($cr->disk_req != 0) {
+							$new_vm_disk = $cr->disk_req;
+						}
+						// here we start the new vm !
+						$cloudvm = new cloudvm();
+						$cloudvm->create($appliance_virtualization, $appliance_name, $new_vm_mac, $new_vm_cpu, $new_vm_memory, $new_vm_disk, $vm_create_timout);
+						$new_vm_resource_id = $cloudvm->resource_id;
+						if ($new_vm_resource_id == 0) {
+							$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Could not create a new resource for request ID $cr_id", "", "", 0, 0, 0);
+							$appliance->remove($appliance_id);
+							continue;
+						} else {
+							// we have a new vm as resource :) update it in the appliance
+							$appliance_fields = array();
+							$appliance_fields['appliance_resources'] = $new_vm_resource_id;
+							$appliance->update($appliance->id, $appliance_fields);
+							$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Created new resource $new_vm_resource_id for request ID $cr_id", "", "", 0, 0, 0);
+						}
+				
+					} else {
+						$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Could not find a resource for request ID $cr_id", "", "", 0, 0, 0);
+						$appliance->remove($appliance_id);
+						continue;
+					}
 				}
 	
 				// ################################## clone on deploy ###############################

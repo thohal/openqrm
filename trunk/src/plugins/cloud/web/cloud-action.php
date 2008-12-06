@@ -197,6 +197,8 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($create_default_cloud_config5);
 			$create_default_cloud_config6 = "insert into cloud_config(cc_id, cc_key, cc_value) values (6, 'max_resources_per_cr', '5')";
 			$recordSet = &$db->Execute($create_default_cloud_config6);
+			$create_default_cloud_config7 = "insert into cloud_config(cc_id, cc_key, cc_value) values (7, 'auto_create_vms', 'true')";
+			$recordSet = &$db->Execute($create_default_cloud_config7);
 
 		    $db->Close();
 			break;
