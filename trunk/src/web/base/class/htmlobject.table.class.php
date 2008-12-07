@@ -951,7 +951,7 @@ var $_var_prefix;
 	//----------------------------------------------------------------------------------------
 	function get_select() {
 	$strR = '';
-		if($this->identifier_type == 'checkbox') {
+		if($this->identifier != '' && $this->identifier_type == 'checkbox') {
 			$strR .= '<div class="selecttable" id="SelectTable" style="display:none;">';
 			$strR .= $this->lang_select_title;
 			$strR .= ' <a href="javascript:selectident(\'all\');">'.$this->lang_select_all.'</a>'."\n";
