@@ -38,8 +38,8 @@ function get_image_rootdevice_identifier($iscsi_storage_id) {
 		$fcontent = file($ident_file);
 		foreach($fcontent as $lun_info) {
 			$tpos = strpos($lun_info, ",");
-			$timage_name = substr($lun_info, 0, $tpos);
-			$troot_device = substr($lun_info, $tpos+1);
+			$timage_name = trim(substr($lun_info, 0, $tpos));
+			$troot_device = trim(substr($lun_info, $tpos+1));
 			$rootdevice_identifier_array[] = array("value" => "$troot_device", "label" => "$timage_name");
 		}
 	}

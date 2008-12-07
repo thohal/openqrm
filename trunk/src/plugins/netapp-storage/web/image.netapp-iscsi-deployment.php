@@ -48,8 +48,8 @@ function get_image_rootdevice_identifier($netapp_iscsi_storage_id) {
 	if (file_exists($ident_file)) {
 		$fcontent = file($ident_file);
 		foreach($fcontent as $lun_info) {
-			$image_name = $lun_info;
-			$troot_device = "/dev/netapp/$loop";
+			$image_name = trim($lun_info);
+			$troot_device = trim("/dev/netapp/$loop");
 			$rootdevice_identifier_array[] = array("value" => "$troot_device", "label" => "$image_name");
 			$loop++;
 		}

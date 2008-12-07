@@ -47,6 +47,7 @@ function get_image_rootdevice_identifier($netapp_nfs_storage_id) {
 	if (file_exists($ident_file)) {
 		$fcontent = file($ident_file);
 		foreach($fcontent as $lun_info) {
+			$lun_info = trim($lun_info);
 			$rootdevice_identifier_array[] = array("value" => "$lun_info", "label" => "$lun_info");
 		}
 	}
