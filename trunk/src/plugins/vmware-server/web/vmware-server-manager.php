@@ -90,7 +90,7 @@ function vmware_server_select() {
 	foreach ($vmware_server_array as $index => $vmware_server_db) {
 		$virtualization = new virtualization();
 		$virtualization->get_instance_by_id($vmware_server_db["appliance_virtualization"]);
-		if ((strstr($virtualization->type, "vmware-server")) && (!strstr($virtualization->type, "vmware-server-vm"))) {
+		if ((strstr($virtualization->type, "vmware-server")) && (!strstr($virtualization->type, "vmware-server-vm")) && (!strstr($virtualization->type, "vmware-server2"))) {
 			$vmware_server_resource = new resource();
 			$vmware_server_resource->get_instance_by_id($vmware_server_db["appliance_resources"]);
 			$vmware_server_count++;
