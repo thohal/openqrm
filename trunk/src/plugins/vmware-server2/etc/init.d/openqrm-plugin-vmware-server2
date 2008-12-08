@@ -1,0 +1,93 @@
+#!/bin/bash
+# init script for the openQRM vmware-server2-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/include/openqrm-plugin-vmware-server2-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/etc/openqrm-plugin-vmware-server2.conf
+
+function openqrm_plugin_vmware_server2_start() {
+	echo "Starting the openQRM vmware-server2-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-server2/.running
+}
+
+
+function openqrm_plugin_vmware_server2_stop() {
+	echo "Stopping the openQRM vmware-server2-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-server2/.running
+}
+
+function openqrm_plugin_vmware_server2_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "vmware-server2: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "vmware-server2: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM vmware-server2-plugin"
+	openqrm_plugin_vmware_server_stop
+	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD vmware-server2
+	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD vmware-server2-vm
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-server2
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-vmware-server2.tgz
+}
+
+function openqrm_plugin_vmware_server2_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "vmware-server2: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "vmware-server2: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Initializing the openQRM vmware-server2-plugin"
+	# adding virtualization type	
+	openqrm_server_add_virtualization_type $USERNAME $PASSWORD vmware-server2 "VMware-Server2 Host"
+	openqrm_server_add_virtualization_type $USERNAME $PASSWORD vmware-server2-vm "VMware-Server2 VM"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-server2
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/web/boot-service-vmware-server2.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-vmware-server2.tgz
+	
+}
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_vmware_server2_start
+		;;
+	stop)
+		openqrm_plugin_vmware_server2_stop
+		;;
+	restart)
+		openqrm_plugin_vmware_server2_stop
+		sleep 1
+		openqrm_plugin_vmware_server2_start
+		;;
+	init)
+		openqrm_plugin_vmware_server2_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_vmware_server2_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+

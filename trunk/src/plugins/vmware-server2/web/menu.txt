@@ -1,0 +1,8 @@
+#	Title
+#	Href
+#	Alt
+#	IMG
+#	Target
+.|VMware-server2
+..|About|plugins/vmware-server2/vmware-server2-about.php
+..|VMware Manager|plugins/vmware-server2/vmware-server2-manager.php

@@ -1,0 +1,331 @@
+#!/bin/bash
+
+# this script automatically manages vmware-server2
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/include/openqrm-plugin-vmware-server2-functions
+if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+	resource_id=0
+fi
+export LANG=C
+OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
+OPENQRM_VMWARE_SERVER_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/etc/templates/openqrm-vmware-server2-vm"
+OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY="sleep 5"
+VMWARE_VIM_CMD="vmware-vim-cmd"
+# is this a vmware-server2 ?
+if ! which $VMWARE_VIM_CMD 1>/dev/null 2>&1; then
+	echo "ERROR: VMware-server2 util $VMWARE_VIM_CMD not installed, exiting!"
+	exit 6
+fi
+
+# using the first datastore on the vmware-server2-tools
+eval `vmware-vim-cmd hostsvc/datastorebrowser/list firefox 2 | grep url | uniq | head -n1 | sed -e "s# ##g" | sed -e "s#,##g"`
+if [ "$url" == "" ]; then
+	echo "ERROR: Could not find a default datastore on the VMware-server2, exiting!"
+	exit 1
+fi
+OPENQRM_VM_DIR=$url
+
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+
+function vmware-server2_usage() {
+	echo "Usage : $0 start/stop/reboot/add/delete/remove/list <-n vm-name>"
+	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ]"
+	echo "        $0 post_vm_list <-u username> <-p password>"
+	exit 1
+}
+
+
+# returns the vmware-server2 vm id
+function vmware_server2_get_vmid() {
+	local VM_NAME=$1
+	local VMID=`$VMWARE_VIM_CMD vmsvc/getallvms | grep $VM_NAME.vmx | awk {' print $1 '}`
+	if [ "$VMID" == "" ]; then
+		echo "ERROR: Could not find the vm id for the ESX vm $VM_NAME"
+		openqrm_post_event 0 "vmware_server2_get_vmid" 3 "openqrm-vmware-server2" "Could not find the vm id for the VMWare-server2 vm $VM_NAME!"
+		return 1
+	else
+		echo $VMID
+	fi	
+}
+
+# returns the full path the the vmx file of a vm
+function vmware_server2_get_vmx() {
+	local VM_NAME=$1
+	local VMX=`$OPENQRM_ESX_CMD find $OPENQRM_VM_DIR/* -name $VM_NAME.vmx`
+	if [ "$VMX" == "" ]; then
+		echo "ERROR: Could not find the vmx config file for the ESX vm $VM_NAME"
+		openqrm_post_event 0 "vmware_server2_get_vmx" 3 "openqrm-vmware-server2" "Could not find the vmx config file for the ESX vm $VM_NAME!"
+		return 1
+	else
+		echo $VMX
+	fi	
+}
+
+
+VMWARE_SERVER_COMMAND=$1
+# re-run in background via screen
+if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+	export RUN_IN_BACKGROUND=true
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	screen -dmS $SCREEN_NAME $0 $@
+	exit	
+fi
+shift
+
+while [ $# -ne 0 ]; do
+	case "$1" in
+		-n)
+			VMWARE_SERVER_VM_NAME=$2
+			shift
+			;;
+		-m)
+			VMWARE_SERVER_VM_MAC=$2
+			shift
+			;;
+		-r)
+			VMWARE_SERVER_VM_RAM=$2
+			shift
+			;;
+		-d)
+			VMWARE_SERVER_VM_DISK=$2
+			shift
+			;;
+		-u)
+			VMWARE_SERVER_OPENQRM_USERNAME=$2
+			shift
+			;;
+		-p)
+			VMWARE_SERVER_OPENQRM_PASSWORD=$2
+			shift
+			;;
+		*)
+			echo "ERROR: Free commandline arguments are not allowed"
+			vmware-server2_usage
+			exit 6
+			;;
+	esac
+	shift
+done
+
+
+
+
+# main
+if [ "$VMWARE_SERVER_COMMAND" == "" ]; then
+	vmware-server2_usage
+fi
+
+if [ "$VMWARE_SERVER_COMMAND" == "post_vm_list" ]; then
+		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" == "" ]; then
+			vmware-server2_usage
+		fi
+		if [ "$VMWARE_SERVER_OPENQRM_PASSWORD" == "" ]; then
+			vmware-server2_usage
+		fi
+else
+
+	if [ "$VMWARE_SERVER_COMMAND" != "list" ]; then
+		if [ "$VMWARE_SERVER_VM_NAME" == "" ]; then
+			vmware-server2_usage
+		fi
+	fi
+fi
+
+
+case "$VMWARE_SERVER_COMMAND" in 
+
+	create)
+		if [ "$VMWARE_SERVER_VM_MAC" == "" ]; then
+			vmware-server2_usage
+		fi
+		if [ "$VMWARE_SERVER_VM_RAM" == "" ]; then
+			vmware-server2_usage
+		fi
+		vmware_server2_lock aquire
+		echo "Creating VMware vm $VMWARE_SERVER_VM_NAME -> $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx"
+		# creating the vmx
+		mkdir -p $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/
+		cat $OPENQRM_VMWARE_SERVER_VM_TEMPLATE |	\
+			sed -e "s/@@VMWARE_SERVER_VM_NAME@@/$VMWARE_SERVER_VM_NAME/g" |	\
+			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$VMWARE_SERVER_VM_RAM/g"	\
+			> $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
+
+		# disk + swap
+		if [ "$VMWARE_SERVER_VM_DISK" != "" ]; then
+			echo "-> Creating disk"
+			mkdir -p $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME
+			vmware-vdiskmanager -c -s $VMWARE_SERVER_VM_DISK""Mb -a ide -t 0 $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmdk
+			# add the disk to the config file
+			cat $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx |	\
+				sed -e "s/^ide/#ide0/g" > $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx.withdisk
+			mv -f $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx.withdisk $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
+			cat >> $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx << EOF
+ide0:0.present = "TRUE"
+ide0:0.fileName = "$VMWARE_SERVER_VM_NAME.vmdk"
+ide0:0.writeThrough = "TRUE"
+EOF
+		fi
+		
+		# register
+		chmod +x $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
+		$VMWARE_VIM_CMD solo/registervm $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
+		# start
+		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`		
+
+		$VMWARE_VIM_CMD vmsvc/power.on $VMID | logger
+		$OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
+		VM_STATE=`$VMWARE_VIM_CMD vmsvc/get.summary $VMID | grep powerState`
+		if echo $VM_STATE | grep poweredOn 1>/dev/null; then
+			vmware_server2_log openqrm-vmware-server2 "NOTICE: VMware-server2 vm $VMID starting."
+			openqrm_post_event 0 "openqrm-vmware-server2" 5 "openqrm-vmware-server2" "VMware-server2 vm $VMID starting."
+		else
+			vmware_server2_log openqrm-vmware-server2 "ERROR: VMware-server2 vm $VMID failed to start."
+			openqrm_post_event 0 "openqrm-vmware-server2" 3 "openqrm-vmware-server2" "VMware-server2 vm $VMID failed to start!"
+		fi		
+		vmware_server2_lock release
+		;;
+	add)
+		vmware_server2_lock aquire
+		echo "Adding VMware-server2 vm $VMWARE_SERVER_VM_NAME"
+		VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
+		$VMWARE_VIM_CMD solo/registervm $VMX_CONFIG | logger
+		$OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
+		VMID=`vmware_server2_get_vmid $VMWARE_ESX_VM_NAME`
+		REGISTERED=`$VMWARE_VIM_CMD vmsvc/getallvms | grep "^$VMID "`
+		if [ "$REGISTERED" == "" ]; then
+			vmware_server2_log openqrm-vmware-server2 "ERROR: VMware-server2 vm $VMID failed to register!"
+			openqrm_post_event 0 "openqrm-vmware-server2" 3 "openqrm-vmware-server2" "VMware-server2 vm $VMID failed to register!"
+		else
+			vmware_server2_log openqrm-vmware-server2 "NOTICE: VMware-server2 vm $VMID registerd,"
+			openqrm_post_event 0 "openqrm-vmware-server2" 5 "openqrm-vmware-server2" "VMware-server2 vm $VMID registered."
+		fi
+		vmware_server2_lock release
+		;;
+	start)
+		vmware_server2_lock aquire
+		echo "Starting VMware vm $VMWARE_SERVER_VM_NAME"
+
+		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+		$VMWARE_VIM_CMD vmsvc/power.on $VMID | logger
+		$OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
+		VM_STATE=`$VMWARE_VIM_CMD vmsvc/get.summary $VMID | grep powerState`
+		if echo $VM_STATE | grep poweredOn 1>/dev/null; then
+			vmware_server2_log openqrm-vmware-server2 "NOTICE: VMware-server2 vm $VMID starting."
+			openqrm_post_event 0 "openqrm-vmware-server2" 5 "openqrm-vmware-server2" "VMware-server2 vm $VMID starting."
+		else
+			vmware_server2_log openqrm-vmware-server2 "ERROR: VMware-server2 vm $VMID failed to start."
+			openqrm_post_event 0 "openqrm-vmware-server2" 3 "openqrm-vmware-server2" "VMware-server2 vm $VMID failed to start!"
+		fi
+		vmware_server2_lock release
+		;;
+	stop)
+		vmware_server2_lock aquire
+		echo "Stopping VMware vm $VMWARE_SERVER_VM_NAME"
+		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+		$VMWARE_VIM_CMD vmsvc/power.off $VMID | logger
+		$OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
+		VM_STATE=`$VMWARE_VIM_CMD vmsvc/get.summary $VMID | grep powerState`
+		if echo $VM_STATE | grep poweredOff 1>/dev/null; then
+			vmware_server2_log openqrm-vmware-server2 "NOTICE: VMware-server2 vm $VMID stopped"
+			openqrm_post_event 0 "openqrm-vmware-server2" 5 "openqrm-vmware-server2" "VMware-server2 vm $VMID stopped."
+		else
+			vmware_server2_log openqrm-vmware-server2 "ERROR: VMware-server2 vm $VMID failed to stop"
+			openqrm_post_event 0 "openqrm-vmware-server2" 3 "openqrm-vmware-server2" "VMware-server2 vm $VMID failed to stop!"
+		fi		
+		vmware_server2_lock release
+		;;
+	reboot)
+		vmware_server2_lock aquire
+		echo "Rebooting VMware vm $VMWARE_SERVER_VM_NAME"
+		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+		$VMWARE_VIM_CMD vmsvc/power.reboot $VMID | logger
+		vmware_server2_lock release
+		;;
+	remove)
+		vmware_server2_lock aquire
+		echo "Removing VMware vm $VMWARE_SERVER_VM_NAME"
+
+		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+		# make sure it is stopped
+		$VMWARE_VIM_CMD vmsvc/power.off $VMID | logger
+		$OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
+		# unregister
+		$VMWARE_VIM_CMD vmsvc/unregister $VMID | logger
+		$OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
+		REGISTERED=`$VMWARE_VIM_CMD vmsvc/getallvms | grep "^$VMID "`
+		if [ "$REGISTERED" == "" ]; then
+			vmware_server2_log openqrm-vmware-server2 "NOTICE: VMware-server2 vm $VMID unregisterd"
+			openqrm_post_event 0 "openqrm-vmware-server2" 5 "openqrm-vmware-server2" "VMware-server2 vm $VMID unregistered."
+		else
+			vmware_server2_log openqrm-vmware-server2 "ERROR: VMware-server2 vm $VMID failed to unregister"
+			openqrm_post_event 0 "openqrm-vmware-server2" 3 "openqrm-vmware-server2" "VMware-server2 vm $VMID failed to unregister!"
+		fi
+		vmware_server2_lock release
+		;;
+	delete)
+		vmware_server2_lock aquire
+		echo "Deleting VMware vm $VMWARE_SERVER_VM_NAME"
+		VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
+		# make sure it is registered so we can destroy it via its id
+		FOUND_VMID=true
+		while ! vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME; do
+			$VMWARE_VIM_CMD solo/registervm $VMX_CONFIG | logger
+			$OPENQRM_VMWARE_SERVER2_CMD_CHECK_DELAY
+			VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+			DEL_LOOP=$(( DEL_LOOP + 1 ))
+			if [ "$DEL_LOOP" == "3" ]; then
+				FOUND_VMID=false
+				break
+			fi
+		done
+		if [ "$FOUND_VMID" == "true" ]; then
+			VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+			$VMWARE_VIM_CMD vmsvc/destroy $VMID | logger
+			vmware_server2_log openqrm-vmware-server2 "NOTICE: Removed $VMWARE_SERVER_VM_NAME/$VMID from VMware-server2-host."
+			openqrm_post_event 0 "openqrm-vmware-server2" 5 "openqrm-vmware-server2" "Removed $VMWARE_SERVER_VM_NAME/$VMID from VMware-server2-host."
+		else
+			# remove hard
+			rm -rf $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME
+			vmware_server2_log openqrm-vmware-server2 "WARNING: Force remove of unregistered vm $VMWARE_SERVER_VM_NAME!"
+			openqrm_post_event 0 "openqrm-vmware-server2" 3 "openqrm-vmware-server2" "Force remove of unregistered vm $VMWARE_SERVER_VM_NAME!"
+		fi
+		vmware_server2_lock release
+		;;
+	list)
+		echo "Listing VMware vms"
+		$VMWARE_VIM_CMD vmsvc/getallvms | grep -v Vmid
+		;;
+	post_vm_list)
+		vmware_server2_lock aquire
+		echo "Posting vm list to the openQRM-server"
+		VM_LIST_TMP=$resource_id.vm_list
+		$VMWARE_VIM_CMD vmsvc/getallvms | grep -v Vmid > $VM_LIST_TMP
+		if ! wget -q -O /dev/null --http-user=$VMWARE_SERVER_OPENQRM_USERNAME --http-password=$VMWARE_SERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/vmware-server2/vmware-server2-action.php?vmware_server_command=get_vmware_server; then
+			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!"
+			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
+		fi
+		rm -f $VM_LIST_TMP
+		rm -f $VM_LIST_TMP.post
+		vmware_server2_lock release
+		;;
+	*)
+		vmware-server2_usage
+		;;
+
+
+esac
+
