@@ -111,6 +111,7 @@ function create($virtualization_type, $name, $mac, $cpu, $memory, $disk, $timeou
 // - Citrix
 // - VMware ESX
 // - VMWare Server
+// - VMWare Server2
 // - Xen
 
 	switch ($virtualization_plugin_name) {
@@ -124,6 +125,9 @@ function create($virtualization_type, $name, $mac, $cpu, $memory, $disk, $timeou
 			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -i ".$host_resource->ip." -n ".$name." -m ".$mac." -r ".$memory." -d ".$disk."";
 			break;
 		case 'vmware-server':
+			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -d ".$disk."";
+			break;
+		case 'vmware-server2':
 			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -d ".$disk."";
 			break;
 		default:
