@@ -100,7 +100,7 @@ function date_to_timestamp($date) {
 
 
 // main
-$event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Processing cloud command $citrix_command", "", "", 0, 0, 0);
+$event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Processing cloud command $cloud_command", "", "", 0, 0, 0);
 
 	switch ($cloud_command) {
 
@@ -302,7 +302,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			break;
 
 		default:
-			$event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 3, "cloud-action", "No such event command ($citrix_command)", "", "", 0, 0, 0);
+			$event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 3, "cloud-action", "No such event command ($cloud_command)", "", "", 0, 0, 0);
 			break;
 
 
