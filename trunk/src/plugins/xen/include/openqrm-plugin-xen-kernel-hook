@@ -21,11 +21,6 @@ function xen_kernel_hook() {
 				cp -f $XENFILE $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/xen-$KERNEL_NAME.gz
 			fi
 		done
-		# linking the initrd to the boot-service dir
-		if [ ! -f $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/initrd-$KERNEL_NAME.img ]; then
-			echo "xen-plugin: Linking $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$KERNEL_NAME.img to $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/initrd-$KERNEL_NAME.img"
-			ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$KERNEL_NAME.img $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/initrd-$KERNEL_NAME.img
-		fi
 	fi
 	
 	

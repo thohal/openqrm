@@ -9,12 +9,14 @@ if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
 	OPENQRM_SERVER_IP=$resource_openqrmserver
 	SYSTEM_IP=$resource_ip
+	OPENQRM_INTERFACE=`ifconfig | grep $resource_mac | grep :oq | cut -d':' -f1`
 elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 	openqrm_server_get_config
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	SYSTEM_IP=$OPENQRM_SERVER_IP_ADDRESS
+	OPENQRM_INTERFACE=$OPENQRM_SERVER_INTERFACE
 	resource_id=0
 	resource_kernel=xen
 fi
@@ -30,6 +32,18 @@ if [ "$WHOAMI" != "root" ]; then
 	echo "ERROR: Please run this script as root!"
 	exit 6
 fi
+# check interface
+if [ "$OPENQRM_INTERFACE" == "" ]; then
+	# we are doing a local boot and do not have an ethX:oq network device
+	OPENQRM_INTERFACE=`ifconfig | grep $resource_mac | cut -d':' -f1 | grep ^eth | awk {' print $1 '}`
+	LOCALBOOT=true
+	if [ "$OPENQRM_INTERFACE" == "" ]; then
+		echo "ERROR: Could not find out which network interface to use"
+		exit 1
+	fi
+fi
+
+
 
 function xen_usage() {
 	echo "Usage : $0 start/stop/reboot/kill/add/delete/remove/list <-n vm-name>"
@@ -132,7 +146,7 @@ case "$XEN_COMMAND" in
 		# gathering some infos
 		if [ "$XEN_VM_IP" == "dhcp" ]; then
 			echo "-> gathering an ip-address for $XEN_VM_MAC ..."
-			if ! xen_get_next_ip $XEN_VM_MAC; then
+			if ! xen_get_next_ip $OPENQRM_INTERFACE $XEN_VM_MAC; then
 				return 1			
 				xen_lock release
 			fi
@@ -143,11 +157,12 @@ case "$XEN_COMMAND" in
 		fi
 		export OPENQRM_XEN_DEFAULT_GATEWAY=`route -n | grep ^0.0.0.0 | head -n1 | awk {' print $2 '}`
 		export OPENQRM_RESOURCE_ID=-1
-		export OPENQRM_KERNEL_VERSION=`uname -r`
+		export OPENQRM_KERNEL_VERSION=`ls /lib/modules/ | grep xen | sort -r | head -n1`
+	
 		# creating the cfg
 		cat $OPENQRM_XEN_VM_TEMPLATE |	\
 			sed -e "s/@@XEN_VM_NAME@@/$XEN_VM_NAME/g" |	\
-			sed -e "s/@@KERNEL_NAME@@/$resource_kernel/g" |	\
+			sed -e "s/@@KERNEL_NAME@@/openqrm-xen/g" |	\
 			sed -e "s/@@KERNEL_VERSION@@/$OPENQRM_KERNEL_VERSION/g" |	\
 			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$XEN_VM_RAM/g" |	\
 			sed -e "s/@@OPENQRM_RESOURCE_ID@@/$OPENQRM_RESOURCE_ID/g" |	\
@@ -162,9 +177,9 @@ case "$XEN_COMMAND" in
 		if [ "$XEN_VM_DISK" != "" ] && [ "$XEN_VM_SWAP" != "" ]; then
 			echo "-> Creating disk + swap"
 			mkdir -p $OPENQRM_VM_DIR/$XEN_VM_NAME
-			dd if=/dev/zero of=$OPENQRM_VM_DIR/$XEN_VM_NAME/disk.img bs=1M count=$XEN_VM_DISK
+			dd if=/dev/zero of=$OPENQRM_VM_DIR/$XEN_VM_NAME/disk.img bs=1M seek=$XEN_VM_DISK count=1
 			mkfs.ext3 -F $OPENQRM_VM_DIR/$XEN_VM_NAME/disk.img
-			dd if=/dev/zero of=$OPENQRM_VM_DIR/$XEN_VM_NAME/swap.img bs=1M count=$XEN_VM_SWAP
+			dd if=/dev/zero of=$OPENQRM_VM_DIR/$XEN_VM_NAME/swap.img bs=1M seek=$XEN_VM_SWAP count=1
 			mkswap -f $OPENQRM_VM_DIR/$XEN_VM_NAME/swap.img
 			cat >> /etc/xen/$XEN_VM_NAME.cfg << EOF
 root        = '/dev/hda1 ro'

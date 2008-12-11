@@ -9,7 +9,8 @@ fi
 
 VETH="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/vethd"
 XEN_VDEVICE_NAME="xendhcp"
-XEN_LOCK_FILE=/var/run/lvm-storage/lvm-storage-plugin.lock
+XEN_VIRTUAL_BRIDGE_NAME="xvbr0"
+XEN_LOCK_FILE=/var/run/xen/xen-plugin.lock
 XEN_LOCK_DELAY=5
 XEN_LOCK_RETRY=100
 XEN_LOCK_TIMEOUT=500
@@ -60,10 +61,10 @@ function xen_lock() {
 
 # trick the dhcpd server
 function xen_get_next_ip() {
-	local PARTITION_MAC=$1
+	local OPENQRM_INTERFACE=$1
+	local PARTITION_MAC=$2
 	local RET=0
 	# create the virtual interface to trick the dhcpd
-	OPENQRM_INTERFACE=`ifconfig | grep eth | grep ":oq" | cut -d':' -f 1`
 	if ! $VETH -v $XEN_VDEVICE_NAME -e $OPENQRM_INTERFACE -m $PARTITION_MAC; then
 		xen_log get_next_ip "ERROR Could not start virtual interface $XEN_VDEVICE_NAME !"
 		return 1
