@@ -7,7 +7,7 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
 	OPENQRM_SERVER_IP=$resource_openqrmserver
-	OPENQRM_INTERFACE=`ifconfig | grep $resource_mac | grep :oq | cut -d':' -f1`
+	OPENQRM_INTERFACE=`ifconfig | grep -i $resource_mac | grep :oq | cut -d':' -f1`
 elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
@@ -16,8 +16,6 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_INTERFACE=$OPENQRM_SERVER_INTERFACE
 	resource_kernel=xen
 fi
-LOCALBOOT=false
-OPENQRM_UNWANTED_MODULES="cops.o ipddp.o ltpc.o hdlcdrv.o airo_cs.o aironet4500_cs.o airo.o axnet_cs.o fmvj18x_cs.o ibmtr_cs.o netwave_cs.o nmclan_cs.o pcnet_cs.o ray_cs.o smc91c92_cs.o wavelan_cs.o wvlan_cs.o xirc2ps_cs.o xircom_cb.o xircom_tulip_cb.o ppp_async.o ppp_deflate.o ppp_generic.o ppp_synctty.o wavelan.o wd.o winbond-840.o airo_cs.o airo.o hermes.o orinoco_cs.o orinoco.o orinoco_plx.o orinoco_old_cs.o cops.ko ipddp.ko ltpc.ko hdlcdrv.ko airo_cs.ko aironet4500_cs.ko airo.ko axnet_cs.ko fmvj18x_cs.ko ibmtr_cs.ko netwave_cs.ko nmclan_cs.ko pcnet_cs.ko ray_cs.ko smc91c92_cs.ko wavelan_cs.ko wvlan_cs.ko xirc2ps_cs.ko xircom_cb.ko xircom_tulip_cb.ko ppp_async.ko ppp_deflate.ko ppp_generic.ko ppp_synctty.ko wavelan.ko wd.ko winbond-840.ko airo_cs.ko airo.ko hermes.ko orinoco_cs.ko orinoco.ko orinoco_plx.ko orinoco_old_cs.ko de600.ko de620.ko defxx.ko depca.ko hp100.ko hp.ko hp-plus.ko ne3210.ko ne.ko netwave_cs.ko ipw2100.ko proteon.ko skisa.ko"
 
 # only run on xen hosts
 grep -q "control_d" /proc/xen/capabilities 2>/dev/null || exit 0
@@ -31,28 +29,6 @@ function xen_start() {
 	DIR_CURRENT=`pwd`
 	echo "Starting the openQRM xen-plugin"
 	xen_stop 1>/dev/null 2>&1
-
-	
-	# local-server resource	
-	if [ "$OPENQRM_INTERFACE" == "" ]; then
-		# we are doing a local boot and do not have an ethX:oq network device
-		OPENQRM_INTERFACE=`ifconfig | grep $resource_mac | cut -d':' -f1 | grep ^eth | awk {' print $1 '}`
-		LOCALBOOT=true
-		if [ "$OPENQRM_INTERFACE" == "" ]; then
-			echo "ERROR: Could not find out which network interface to use"
-			return 1
-		fi
-
-	else
-	# regular pxe-booted resource	
-		# we are doing netboot + network deployment
-		# create virtual interface for the bridge, we need to avoid xen restarting 
-		# on the openQRM interface because this will make the net-mounted rootfs inaccessible
-		$VETH -v $XEN_VIRTUAL_BRIDGE_NAME -e $OPENQRM_INTERFACE -m $PARTITION_MAC
-		if [ -x /etc/xen/scripts/network-bridge ]; then
-			/etc/xen/scripts/network-bridge start vifnum=0 bridge=xenbr0 netdev=$XEN_VIRTUAL_BRIDGE_NAME 
-		fi
-	fi
 
 	# adjust Xen-config	and enable migration
 	if [ -f /etc/xen/xend-config.sxp ]; then
@@ -74,20 +50,6 @@ function xen_start() {
 
 function xen_stop() {
 	echo "Stopping the openQRM xen-plugin"
-
-	# stopping the virtual bridge in case we are netbooting
-	# local-server resource	
-	if [ "$OPENQRM_INTERFACE" == "" ]; then
-		# we are doing a local boot and do not have an ethX:oq network device
-		LOCALBOOT=true
-
-	else
-				
-		# stop the bridge
-		kill `ps ax | grep $XEN_VIRTUAL_BRIDGE_NAME | grep -v grep | awk {' print $1 '}` 2>/dev/null
-		
-
-	fi
 
 }
 

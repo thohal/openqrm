@@ -9,7 +9,7 @@ if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
 	OPENQRM_SERVER_IP=$resource_openqrmserver
 	SYSTEM_IP=$resource_ip
-	OPENQRM_INTERFACE=`ifconfig | grep $resource_mac | grep :oq | cut -d':' -f1`
+	OPENQRM_INTERFACE=`ifconfig | grep -i $resource_mac | grep :oq | cut -d':' -f1`
 elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
@@ -167,7 +167,8 @@ disk        = [ 'file:$OPENQRM_VM_DIR/$XEN_VM_NAME/disk.img,ioemu:hda1,w', 'file
 EOF
 		fi
 		xm new /etc/xen/$XEN_VM_NAME.cfg
-		xm start $XEN_VM_NAME
+		SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+		screen -dmS $SCREEN_NAME xm start $XEN_VM_NAME
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
@@ -186,7 +187,8 @@ EOF
 	start)
 		xen_lock aquire
 		echo "Starting Xen vm $XEN_VM_NAME"
-		xm start $XEN_VM_NAME
+		SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+		screen -dmS $SCREEN_NAME xm start $XEN_VM_NAME
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
 		fi
