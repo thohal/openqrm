@@ -22,8 +22,7 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 fi
 OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
 OPENQRM_XEN_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/templates/openqrm-xen-vm"
-# using the xen-tools domain location
-OPENQRM_VM_DIR=`grep ^dir /etc/xen-tools/xen-tools.conf | cut -d'=' -f2 | awk {' print $1 '}`"/domains/"
+OPENQRM_VM_DIR="/var/openqrm/xen/vms/"
 export LANG=C
 
 # let only root run this script
@@ -143,34 +142,15 @@ case "$XEN_COMMAND" in
 		fi
 		xen_lock aquire
 		echo "Creating Xen vm $XEN_VM_NAME -> /etc/xen/$XEN_VM_NAME.cfg"
-		# gathering some infos
-		if [ "$XEN_VM_IP" == "dhcp" ]; then
-			echo "-> gathering an ip-address for $XEN_VM_MAC ..."
-			if ! xen_get_next_ip $OPENQRM_INTERFACE $XEN_VM_MAC; then
-				return 1			
-				xen_lock release
-			fi
-			export XEN_VM_IP=$PARTITION_IP
-			export OPENQRM_XEN_SUBNET_MASK=$PARTITION_SUBNET
-		else
-			export OPENQRM_XEN_SUBNET_MASK=`ifconfig | grep $SYSTEM_IP | cut -d':' -f3 | awk {' print $1 '}`
-		fi
-		export OPENQRM_XEN_DEFAULT_GATEWAY=`route -n | grep ^0.0.0.0 | head -n1 | awk {' print $2 '}`
-		export OPENQRM_RESOURCE_ID=-1
-		export OPENQRM_KERNEL_VERSION=`ls /lib/modules/ | grep xen | sort -r | head -n1`
-	
+		# find the hvmloader
+		HVM_LOADER=`find /usr/lib/xen* -name hvmloader | head -n1`
+		QEMU_DM=`find /usr/lib/xen* -name qemu-dm | head -n1`
 		# creating the cfg
 		cat $OPENQRM_XEN_VM_TEMPLATE |	\
 			sed -e "s/@@XEN_VM_NAME@@/$XEN_VM_NAME/g" |	\
-			sed -e "s/@@KERNEL_NAME@@/openqrm-xen/g" |	\
-			sed -e "s/@@KERNEL_VERSION@@/$OPENQRM_KERNEL_VERSION/g" |	\
-			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$XEN_VM_RAM/g" |	\
-			sed -e "s/@@OPENQRM_RESOURCE_ID@@/$OPENQRM_RESOURCE_ID/g" |	\
-			sed -e "s/@@OPENQRM_RESOURCE_IP@@/$XEN_VM_IP/g" |	\
-			sed -e "s/@@OPENQRM_RESOURCE_MAC@@/$XEN_VM_MAC/g" |	\
-			sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$OPENQRM_SERVER_IP/g" | \
-			sed -e "s/@@OPENQRM_XEN_SUBNET_MASK@@/$OPENQRM_XEN_SUBNET_MASK/g" | \
-			sed -e "s/@@OPENQRM_XEN_DEFAULT_GATEWAY@@/$OPENQRM_XEN_DEFAULT_GATEWAY/g" \
+			sed -e "s#@@HVM_LOADER@@#$HVM_LOADER#g" |	\
+			sed -e "s#@@QEMU_DM@@#$QEMU_DM#g" |	\
+			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$XEN_VM_RAM/g" \
 			> /etc/xen/$XEN_VM_NAME.cfg
 
 		# disk + swap
@@ -183,7 +163,7 @@ case "$XEN_COMMAND" in
 			mkswap -f $OPENQRM_VM_DIR/$XEN_VM_NAME/swap.img
 			cat >> /etc/xen/$XEN_VM_NAME.cfg << EOF
 root        = '/dev/hda1 ro'
-disk        = [ 'file:$OPENQRM_VM_DIR/$XEN_VM_NAME/disk.img,hda1,w', 'file:$OPENQRM_VM_DIR/$XEN_VM_NAME/swap.img,hda2,w' ]
+disk        = [ 'file:$OPENQRM_VM_DIR/$XEN_VM_NAME/disk.img,ioemu:hda1,w', 'file:$OPENQRM_VM_DIR/$XEN_VM_NAME/swap.img,hda2,w' ]
 EOF
 		fi
 		xm new /etc/xen/$XEN_VM_NAME.cfg

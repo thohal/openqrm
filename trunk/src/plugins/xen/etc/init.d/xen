@@ -54,44 +54,6 @@ function xen_start() {
 		fi
 	fi
 
-
-	# download the initrd-template
-	rm -rf /var/openqrm/xen-kernel
-	mkdir -p /var/openqrm/xen-kernel
-	if ! wget -q -O /var/openqrm/xen-kernel/openqrm-initrd-default.tgz http://$OPENQRM_SERVER_IP/openqrm/boot-service/openqrm-initrd-default.tgz; then
-		echo "ERROR: Could not download http://$OPENQRM_SERVER_IP/openqrm/boot-service/openqrm-initrd-default.tgz"
-		return 1
-	fi
-	# download the linuxrc
-	if ! wget -q -O /var/openqrm/xen-kernel/openqrm-linuxrc http://$OPENQRM_SERVER_IP/openqrm/boot-service/openqrm-linuxrc; then
-		echo "ERROR: Could not download http://$OPENQRM_SERVER_IP/openqrm/boot-service/openqrm-linuxrc"
-		return 1
-	fi
-	# create the initrd using the latest version of the available xen-kernel
-	XEN_KERNEL_VERSION=`ls /lib/modules/ | grep xen | sort -r | head -n1`
-	XEN_KERNEL_NAME="xen"
-
-	mkdir -p /var/openqrm/xen-kernel/initrd
-	mkdir -p /var/openqrm/xen-kernel/initrd/lib/modules/$XEN_KERNEL_VERSION
-	for MODULE in `find /lib/modules/$XEN_KERNEL_VERSION/kernel/drivers/net -type f | grep -v wireless`; do
-		MODULE_NAME=`echo $MODULE | sed -e "s/.*\///"`
-		if ! echo $OPENQRM_UNWANTED_MODULES | grep $MODULE_NAME 1>/dev/null; then
-			/bin/cp -f $MODULE /var/openqrm/xen-kernel/initrd/lib/modules/$XEN_KERNEL_VERSION
-		fi
-	done
-	# unpack the initrd-template
-	tar -C /var/openqrm/xen-kernel/initrd -xzf /var/openqrm/xen-kernel/openqrm-initrd-default.tgz
-	cp /var/openqrm/xen-kernel/openqrm-linuxrc /var/openqrm/xen-kernel/initrd/init
-	chmod +x /var/openqrm/xen-kernel/initrd/init
-	# pack with cpio
-	cd /var/openqrm/xen-kernel/initrd/
-	find . | cpio -o -H newc | gzip -9 > /boot/initrd-openqrm-xen.img
-	cd $DIR_CURRENT
-	# copy the kernel
-	cp -f /boot/vmlinuz-$XEN_KERNEL_VERSION /boot/vmlinuz-openqrm-xen
-	cp -f /boot/System.map-$XEN_KERNEL_VERSION /boot/System.map-openqrm-xen
-
-
 	# adjust Xen-config	and enable migration
 	if [ -f /etc/xen/xend-config.sxp ]; then
 		cat /etc/xen/xend-config.sxp |	\

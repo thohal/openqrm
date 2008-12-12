@@ -37,8 +37,6 @@ function openqrm_plugin_xen_uninstall() {
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/xen
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-xen.tgz
 	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux/com32
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-linuxrc
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-initrd-default.tgz
 }
 
 function openqrm_plugin_xen_init() {
@@ -71,11 +69,6 @@ function openqrm_plugin_xen_init() {
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/xen
 	# link the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web/boot-service-xen.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-xen.tgz
-	# linking the initrd-default.tgz
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-default.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-initrd-default.tgz
-	# linking the openqrm-linuxrc
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-linuxrc $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-linuxrc
-	chmod 0644 $OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-linuxrc
 
 }
 
