@@ -4,7 +4,7 @@ memory = '@@OPENQRM_RESOURCE_RAM@@'
 device_model='@@QEMU_DM@@'
 name = '@@XEN_VM_NAME@@'
 # Networking
-vif = ['type=ioemu, bridge=eth0']
+vif = ['mac=@@OPENQRM_RESOURCE_MAC@@, type=ioemu, bridge=@@OPENQRM_VM_BRIDGE@@']
 # Behaviour
 boot='n'
 vnc=1

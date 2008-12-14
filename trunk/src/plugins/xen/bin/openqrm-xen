@@ -25,6 +25,9 @@ OPENQRM_XEN_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/templa
 OPENQRM_VM_DIR="/var/openqrm/xen/vms/"
 export LANG=C
 
+# get the vm-bridge-config
+. $OPENQRM_VM_BRIDGE_CONFIG
+
 # let only root run this script
 WHOAMI=`whoami`
 if [ "$WHOAMI" != "root" ]; then
@@ -150,6 +153,8 @@ case "$XEN_COMMAND" in
 			sed -e "s/@@XEN_VM_NAME@@/$XEN_VM_NAME/g" |	\
 			sed -e "s#@@HVM_LOADER@@#$HVM_LOADER#g" |	\
 			sed -e "s#@@QEMU_DM@@#$QEMU_DM#g" |	\
+			sed -e "s#@@OPENQRM_RESOURCE_MAC@@#$XEN_VM_MAC#g" |	\
+			sed -e "s#@@OPENQRM_VM_BRIDGE@@#$OPENQRM_VM_BRIDGE#g" |	\
 			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$XEN_VM_RAM/g" \
 			> /etc/xen/$XEN_VM_NAME.cfg
 

@@ -67,19 +67,6 @@ unset($xen_fields["xen_command"]);
 			$xen->get_instance_by_id($xen_appliance->resources);
 			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen create -n $xen_name -m $xen_mac -i $xen_ip -r $xen_ram -d $xen_disk -s $xen_swap -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 			$xen->send_command($xen->ip, $resource_command);
-			// add vm to openQRM
-			$resource_new = new resource();
-			$resource_id = openqrm_db_get_free_id('resource_id', $RESOURCE_INFO_TABLE);
-			$resource_fields = array();
-			$resource_fields["resource_id"]=$resource_id;
-			$resource_fields["resource_mac"]=$xen_mac;
-			$resource_fields["resource_ip"]=$xen_ip;
-			$resource_fields["resource_capabilities"]="xen-vm";
-			$resource_new->add($resource_fields);
-			// assign to xen kernel
-			$kernel_xen = new kernel();
-			$kernel_xen->get_instance_by_id($xen->kernelid);
-			$resource_new->assign($resource_id, $kernel_xen->id, $kernel_xen->name, 1, "idle");
 			sleep($refresh_delay);
 			break;
 
