@@ -6,8 +6,9 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PW
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/include/openqrm-plugin-nagios2-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/etc/openqrm-plugin-nagios2.conf
 
-NAGIOS_CONF_DIR=/etc/nagios2/conf.d
+NAGIOS_CONF_DIR=$NAGIOS_ETC_DIRECTORY/conf.d
 NAGIOS_GENERATED_CONF="$NAGIOS_CONF_DIR/openqrm-network.cfg"
 NAGIOS_CHECK_CMD=$1
 RESOURCE_ID=$2
@@ -62,8 +63,16 @@ case "$NAGIOS_CHECK_CMD" in
 		./nmap2nagios-ng.pl -i -z -r $SUBNETFILE -o $NAGIOS_GENERATED_CONF
 		cd $CURRENTDIR
 
-		if nagios2 -v /etc/nagios2/nagios.cfg; then
-			/etc/init.d/nagios2 restart
+		if nagios2 -v $NAGIOS_ETC_DIRECTORY/nagios.cfg; then
+			if [ -x /etc/init.d/nagios2 ]; then
+				/etc/init.d/nagios2 restart
+			elif [ -x /etc/init.d/nagios ]; then
+				/etc/init.d/nagios restart
+			else
+				nagios_manager_lock release
+				openqrm_post_event 0 "get" 3 "openqrm-nagios-manager" "Could not restart Nagios. Init script not found !."
+				exit 1
+			fi
 			nagios_manager_lock release
 			openqrm_post_event 0 "get" 5 "openqrm-nagios-manager" "Automatic Nagios configuration finished successfully"
 		else

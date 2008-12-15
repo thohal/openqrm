@@ -15,7 +15,15 @@ fi
 function openqrm_plugin_nagios2_start() {
 	echo "Starting the openQRM nagios2-plugin"
 	openqrm_plugin_nagios2_stop 1>/dev/null 2>&1
-	/etc/init.d/nagios2 start 1>/dev/null 2>&1
+	if [ -x /etc/init.d/nagios2 ]; then
+		/etc/init.d/nagios2 start 1>/dev/null 2>&1
+	elif [ -x /etc/init.d/nagios ]; then
+		/etc/init.d/nagios start 1>/dev/null 2>&1
+	else
+		nagios_manager_lock release
+		openqrm_post_event 0 "get" 3 "openqrm-nagios-manager" "Could not start Nagios. Init script not found !."
+		exit 1
+	fi
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios2/.running
 	return 0
 }
@@ -23,7 +31,15 @@ function openqrm_plugin_nagios2_start() {
 
 function openqrm_plugin_nagios2_stop() {
 	echo "Stopping the openQRM nagios2-plugin"
-	/etc/init.d/nagios2 stop 2>&1
+	if [ -x /etc/init.d/nagios2 ]; then
+		/etc/init.d/nagios2 stop 1>/dev/null 2>&1
+	elif [ -x /etc/init.d/nagios ]; then
+		/etc/init.d/nagios stop 1>/dev/null 2>&1
+	else
+		nagios_manager_lock release
+		openqrm_post_event 0 "get" 3 "openqrm-nagios-manager" "Could not stop Nagios. Init script not found !."
+		exit 1
+	fi
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios2/.running
 	return 0
 }
@@ -45,14 +61,14 @@ function openqrm_plugin_nagios2_init() {
 	chmod 644 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrmserver_public_key
 	# Nagios Single-Sign-On
 	# First backup original nagios.password
-    mv /etc/nagios2/htpasswd.users /etc/nagios2/htpasswd.users.bkp
+    mv $NAGIOS_ETC_DIRECTORY/htpasswd.users $NAGIOS_ETC_DIRECTORY/htpasswd.users.bkp
     # link openqrm .htaccess to nagios
-    ln -s $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd /etc/nagios2/htpasswd.users
+    ln -s $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd $NAGIOS_ETC_DIRECTORY/htpasswd.users
     # change nagiosadmin 2 openqrm for accessing nagios-gui
-    sed -i -e 's/nagiosadmin/openqrm/' /etc/nagios2/cgi.cfg 
+    sed -i -e 's/nagiosadmin/openqrm/' $NAGIOS_ETC_DIRECTORY/cgi.cfg 
     # 	
 	# Add openqrm to nagios-contacts - not perfect, but working first :)
-	# sed -i "s/root/openqrm/g" /etc/nagios2/conf.d/contacts_nagios2.cfg
+	# sed -i "s/root/openqrm/g" $NAGIOS_ETC_DIRECTORY/conf.d/contacts_nagios2.cfg
 	# theme nagios
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/etc/build.conf/nuvola.conf
 	mkdir -p $OPENQRM_TEMP_DIR/nuvola_inst/
@@ -74,7 +90,7 @@ function openqrm_plugin_nagios2_uninstall() {
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-nagios2.tgz
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrmserver_public_key
 	# restore old nagios htpasswd
-	mv /etc/nagios2/htpasswd.users.bkp /etc/nagios2/htpasswd.users
+	mv $NAGIOS_ETC_DIRECTORY/htpasswd.users.bkp $NAGIOS_ETC_DIRECTORY/htpasswd.users
 }
 
 
