@@ -190,6 +190,17 @@ function openqrm_server_manage_kernel() {
 }
 
 
+# function to set the default kernel
+# param 1	: kernel-name
+function openqrm_server_set_default_kernel() {
+	OPENQRM_KERNEL_NAME=$1
+	echo "openQRM-server: Setting kernel $OPENQRM_KERNEL_NAME as default kernel" | logger
+	cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/vmlinuz-$OPENQRM_KERNEL_NAME $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/vmlinuz-default
+	cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/System.map-$OPENQRM_KERNEL_NAME $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/System.map-default
+	cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$OPENQRM_KERNEL_NAME.img $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-default.img
+	cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/modules-$OPENQRM_KERNEL_NAME.tgz $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/modules-default.tgz
+}
+
 
 # --------------------------------------------------------------------
 # ------------------------- image functions --------------------------

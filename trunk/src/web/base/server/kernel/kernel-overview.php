@@ -4,6 +4,10 @@ $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
+require_once "$RootDir/class/openqrm_server.class.php";
+$openqrm_server = new openqrm_server();
+$OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
+global $OPENQRM_SERVER_IP_ADDRESS;
 
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	global $thisfile;
@@ -26,6 +30,28 @@ $strMsg = '';
 			}
 			redirect($strMsg);
 			break;
+
+		case 'set-default':
+			$kernel = new kernel();
+			foreach($_REQUEST['identifier'] as $id) {
+				// update default kernel in db
+				$kernel->get_instance_by_id($id);
+				$ar_kernel_update = array(
+					'kernel_name' => "default",
+					'kernel_version' => $kernel->version,
+					'kernel_capabilities' => $kernel->capabilities,
+				);
+				$kernel->update(1, $ar_kernel_update);
+				// send set-default kernel command to openQRM
+				$openqrm_server->send_command("openqrm_server_set_default_kernel $kernel->name");
+				$strMsg .= "Set kernel ".$kernel->name." as the default kernel";
+			}
+			redirect($strMsg);
+			break;
+
+
+
+
 	}
 
 }
@@ -85,7 +111,7 @@ function kernel_display() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('remove', 'edit');
+		$table->bottom = array('remove', 'edit', 'set-default');
 		$table->identifier = 'kernel_id';
 	}
 	$table->max = $kernel_tmp->get_count();
