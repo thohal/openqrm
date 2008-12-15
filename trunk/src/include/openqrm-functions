@@ -112,7 +112,20 @@ function openqrm_get_distro()
 	# find out which version it is
 	# give the ROOT_DIR as the first cmdline param
 	local ROOT_DIR=${1:-/}
-	if [ -f $ROOT_DIR/etc/redhat-release ]; then
+	if [ -f $ROOT_DIR/etc/fedora-release ]; then
+		RELEASE=$(cat $ROOT_DIR/etc/fedora-release | head -1)
+			case $RELEASE in
+				*Fedora*9*)
+					echo "fedora9"
+					;;
+				*Fedora*10*)
+					echo "fedora10"
+					;;
+				*)
+					echo "fedora"
+					;;
+			esac
+	elif [ -f $ROOT_DIR/etc/redhat-release ]; then
 		RELEASE=$(cat $ROOT_DIR/etc/redhat-release | head -1)
 		case $RELEASE in
 			*Werewolf*)
