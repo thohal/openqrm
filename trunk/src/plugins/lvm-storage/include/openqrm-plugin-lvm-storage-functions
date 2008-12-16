@@ -177,18 +177,36 @@ function manage_iscsi() {
 			echo "Target $LVM_IMAGE_NAME" >> $IETDCONF
 			echo "	IncomingUser $LVM_IMAGE_NAME $IMAGE_PASS" >> $IETDCONF
 			echo "	Lun $IMAGE_LUN Path=/dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME,Type=fileio" >> $IETDCONF
-			nohup /etc/init.d/iscsi-target restart
+			if [ -x /etc/init.d/iscsi-target ]; then
+				nohup /etc/init.d/iscsi-target restart
+			elif [ -x /etc/init.d/iscsitarget ]; then
+				nohup /etc/init.d/iscsitarget restart
+			else
+				echo "ERROR: Coud not find the iscsi-target init script !" | logger
+			fi
 			;;
 		remove)
 			sed -i -e "s#.*$LVM_IMAGE_NAME.*##g" $IETDCONF
-			nohup /etc/init.d/iscsi-target restart
+			if [ -x /etc/init.d/iscsi-target ]; then
+				nohup /etc/init.d/iscsi-target restart
+			elif [ -x /etc/init.d/iscsitarget ]; then
+				nohup /etc/init.d/iscsitarget restart
+			else
+				echo "ERROR: Coud not find the iscsi-target init script !" | logger
+			fi
 			;;
 		auth)
 			IMAGE_PASS=$2
 			IMAGE_AUTHNAME=`echo $LVM_IMAGE_ROOTDEVICE | cut -d'/' -f3`
 			sed -i -e "s#IncomingUser $IMAGE_AUTHNAME .*#IncomingUser $IMAGE_AUTHNAME $IMAGE_PASS#g" $IETDCONF
 			sed -i '/^$/d' $IETDCONF
-			nohup /etc/init.d/iscsi-target restart
+			if [ -x /etc/init.d/iscsi-target ]; then
+				nohup /etc/init.d/iscsi-target restart
+			elif [ -x /etc/init.d/iscsitarget ]; then
+				nohup /etc/init.d/iscsitarget restart
+			else
+				echo "ERROR: Coud not find the iscsi-target init script !" | logger
+			fi
 			;;
 	esac
 }
