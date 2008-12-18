@@ -346,10 +346,10 @@ function cloud_create_request() {
 	array_shift($image_list_tmp);
 	// do not show the image-clones from other requests
 	foreach($image_list_tmp as $list) {
-		$iid = $list['label'];
-		$iname = $list['value'];
-		if (!strstr($var, ".cloud_")) {
-			$image_list[] = array("value" => $iname, "label" => $iid);
+		$iname = $list['label'];
+		$iid = $list['value'];
+		if (!strstr($iname, ".cloud_")) {
+			$image_list[] = array("value" => $iid, "label" => $iname);
 		}
 	}
 	$image_count = count($image_list);

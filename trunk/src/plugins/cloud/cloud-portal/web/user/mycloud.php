@@ -107,8 +107,7 @@ if(htmlobject_request('action') != '') {
 
 				// only allow to delete requests which are not provisioned yet
 				if (($cr_request->status == 3) || ($cr_request->status == 5)) {
-					$strMsg="Request cannot be removed when in state active or deprovisioned";
-					redirect($strMsg);					
+					$strMsg="Request cannot be removed when in state active or deprovisioned <br>";
 					continue;				
 				}
 
@@ -131,9 +130,9 @@ if(htmlobject_request('action') != '') {
 
 				$cr_request->remove($id);
 
-				$strMsg="Removed Cloud request $id";
-				redirect($strMsg);					
+				$strMsg .= "Removed Cloud request $id <br>";
 			}
+			redirect($strMsg);					
 			break;
 
 		case 'deprovision':
@@ -142,8 +141,7 @@ if(htmlobject_request('action') != '') {
 				$cr_request->get_instance_by_id($id);
 				// only allow to deprovision if cr is in state active
 				if ($cr_request->status != 3) {
-					$strMsg="Request only can be deprovisioned when in state active";
-					redirect($strMsg);					
+					$strMsg .="Request only can be deprovisioned when in state active <br>";
 					continue;				
 				}
 
@@ -169,10 +167,9 @@ if(htmlobject_request('action') != '') {
 				$rmail->send();
 				$cr_request->setstatus($id, 'deprovsion');
 
-				$strMsg="Set Cloud request $id to deprovision";
-				redirect($strMsg);					
-
+				$strMsg .="Set Cloud request $id to deprovision <br>";
 			}
+			redirect($strMsg);					
 			break;
 
 
@@ -182,24 +179,23 @@ if(htmlobject_request('action') != '') {
 				$cr_request->get_instance_by_id($id);
 				// only allow to delete requests which are not provisioned yet
 				if ($cr_request->status == 5) {
-					$strMsg="Request cannot be extended when in state deprovisioned";
-					redirect($strMsg);					
+					$strMsg .="Request cannot be extended when in state deprovisioned <br>";
 					continue;				
 				}
 
 				$cr_stop=$_REQUEST['extend_cr_stop'];
 				$new_stop_timestmp=date_to_timestamp($cr_stop);
 				$cr_request->extend_stop_time($id, $new_stop_timestmp);
-				$strMsg="Extended Cloud request $id to $cr_stop";
-				redirect($strMsg);
+				$strMsg .="Extended Cloud request $id to $cr_stop <br>";
 			}
+			redirect($strMsg);
 			break;
 
 		case 'create_request':
 			$request_user = new clouduser();
 			$request_user->get_instance_by_name("$auth_user");
 			if ($request_user->ccunits < 1) {
-				$strMsg="You do not have any CloudComputing-Units left! Please buy some CC-Units before submitting a request.";
+				$strMsg .="You do not have any CloudComputing-Units left! Please buy some CC-Units before submitting a request.";
 				redirect($strMsg);
 				break;
 			}
@@ -511,10 +507,10 @@ function my_cloud_create_request() {
 	array_shift($image_list_tmp);
 	// do not show the image-clones from other requests
 	foreach($image_list_tmp as $list) {
-		$iid = $list['label'];
-		$iname = $list['value'];
-		if (!strstr($var, ".cloud_")) {
-			$image_list[] = array("value" => $iname, "label" => $iid);
+		$iname = $list['label'];
+		$iid = $list['value'];
+		if (!strstr($iname, ".cloud_")) {
+			$image_list[] = array("value" => $iid, "label" => $iname);
 		}
 	}
 	$image_count = count($image_list);
