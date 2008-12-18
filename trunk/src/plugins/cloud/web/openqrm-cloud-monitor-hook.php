@@ -440,6 +440,8 @@ echo "vm_create_timout $vm_create_timout ";
 				$kernel->get_instance_by_id($appliance->kernelid);
 				$resource = new resource();
 				$resource->get_instance_by_id($appliance->resources);
+				// in case we do not have an external ip-config send the resource ip to the user
+				$resource_external_ip=$resource->ip;
 				// send command to the openQRM-server
 				$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac $kernel->name");
 	
@@ -456,7 +458,7 @@ echo "vm_create_timout $vm_create_timout ";
 				// now we generate a random password to send to the user
 				$image = new image();
 				$appliance_password = $image->generatePassword(8);
-				$image->set_root_password($cr->image_id, $appliance_password);
+				$image->set_root_password($appliance->imageid, $appliance_password);
 	
 				// here we prepare the ip-config for the appliance according the users requests
 				$iptable = new cloudiptables();
@@ -479,7 +481,7 @@ echo "vm_create_timout $vm_create_timout ";
 							$ipt->assign_to_appliance($id, $appliance_id, $cr_id);
 							// the first ip we mail to the user
 							if ($loop == 1) {
-								$resource_ip = $ipt->ip_address;
+								$resource_external_ip = $ipt->ip_address;
 							}
 							if ($loop == $cr->network_req) {
 								$finished = 1;
@@ -517,7 +519,7 @@ echo "vm_create_timout $vm_create_timout ";
 				$rmail->from = "$cc_admin_email";
 				$rmail->subject = "openQRM Cloud: Your $cr_resource_number. resource from request $cr_id is now active";
 				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/active_cloud_request.mail.tmpl";
-				$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@PASSWORD@@'=>"$appliance_password", '@@IP@@'=>"$resource_ip", '@@RESNUMBER@@'=>"$cr_resource_number");
+				$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@PASSWORD@@'=>"$appliance_password", '@@IP@@'=>"$resource_external_ip", '@@RESNUMBER@@'=>"$cr_resource_number");
 				$rmail->var_array = $arr;
 				$rmail->send();
 	
@@ -613,6 +615,7 @@ echo "vm_create_timout $vm_create_timout ";
 			$appliance->get_instance_by_id($app_id);
 			$resource = new resource();
 			$resource->get_instance_by_id($appliance->resources);
+			$resource_external_ip=$resource->ip;
 			$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
 			// now stop
 			$appliance->stop();
@@ -633,7 +636,7 @@ echo "vm_create_timout $vm_create_timout ";
 						$ipt->assign_to_appliance($id, 0, 0);
 						// the first ip we mail to the user
 						if ($loop == 1) {
-							$resource_ip = $ipt->ip_address;
+							$resource_external_ip = $ipt->ip_address;
 						}
 					}
 				}
@@ -789,7 +792,7 @@ echo "vm_create_timout $vm_create_timout ";
 			$rmail->from = "$cc_admin_email";
 			$rmail->subject = "openQRM Cloud: Your $deprovision_resource_number. resource from request $cr_id is fully deprovisioned now";
 			$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/done_cloud_request.mail.tmpl";
-			$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@IP@@'=>"$resource_ip", '@@RESNUMBER@@'=>"$deprovision_resource_number");
+			$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@IP@@'=>"$resource_external_ip", '@@RESNUMBER@@'=>"$deprovision_resource_number");
 			$rmail->var_array = $arr;
 			$rmail->send();
 	
