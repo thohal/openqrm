@@ -16,6 +16,7 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	openqrm_server_get_config
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	resource_id=0
+	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 fi
 export LANG=C
 

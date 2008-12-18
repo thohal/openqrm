@@ -315,7 +315,7 @@ if(htmlobject_request('action') != '') {
 	}
 } else if (strlen($vmware_server_id)) {
 	$output[] = array('label' => 'VMware-Server2 Admin', 'value' => vmware_server_display($vmware_server_id));
-	$output[] = array('label' => 'VMware-Server2 UI', 'value' => vmware_server_ui($id));
+	$output[] = array('label' => 'VMware-Server2 UI', 'value' => vmware_server_ui($vmware_server_id));
 } else  {
 	$output[] = array('label' => 'VMware-Server2 Admin', 'value' => vmware_server_select());
 }

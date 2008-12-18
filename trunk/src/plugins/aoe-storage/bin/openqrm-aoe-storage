@@ -13,6 +13,7 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 	OPENQRM_SERVER_IP=localhost
 	resource_id=0
+	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 fi
 export LANG=C
 

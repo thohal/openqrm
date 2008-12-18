@@ -16,6 +16,7 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	SYSTEM_IP=$OPENQRM_SERVER_IP_ADDRESS
 	resource_id=0
+	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 fi
 OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
 OPENQRM_LINUX_VSERVER_IDLE_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/templates/openqrm-initrd-default.tgz"

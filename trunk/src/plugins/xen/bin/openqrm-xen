@@ -19,6 +19,7 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_INTERFACE=$OPENQRM_SERVER_INTERFACE
 	resource_id=0
 	resource_kernel=xen
+	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 fi
 OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
 OPENQRM_XEN_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/templates/openqrm-xen-vm"
