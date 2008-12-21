@@ -24,9 +24,11 @@ require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudipgroup.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudiptables.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudvm.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 
 global $CLOUD_USER_TABLE;
 global $CLOUD_REQUEST_TABLE;
+global $CLOUD_IMAGE_TABLE;
 global $APPLIANCE_INFO_TABLE;
 global $IMAGE_INFO_TABLE;
 
@@ -62,8 +64,147 @@ function openqrm_cloud_monitor() {
 	global $BaseDir;
 	global $vm_create_timout;
 
-echo "vm_create_timout $vm_create_timout ";
 	$event->log("openqrm_cloud_monitor", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-monitor-hook.php", "Checking for Cloud events to be handled.", "", "", 0, 0, 0);
+
+
+	// #################### clone-on-deploy image remove ################################		
+	// here we check if we have any clone-on-deploy images to remove
+	// get cloudimage ids
+	$cil = new cloudimage();
+	$cloud_image_list = $cil->get_all_ids();	
+	foreach($cloud_image_list as $ci_list) {
+		$ci_id = $ci_list['ci_id'];
+		$ci = new cloudimage();
+		$ci->get_instance_by_id($ci_id);
+		$ci_state = $ci->state;
+		$ci_image_id = $ci->image_id;
+		$ci_resource_id = $ci->resource_id;
+
+		// image still in use ?
+		if ($ci_state == 1) {
+			// the image is still in use
+			continue;
+		}
+		// resource active (idle) again ?
+		$ci_resource = new resource();
+		$ci_resource->get_instance_by_id($ci_resource_id);
+		if (strcmp($ci_resource->state, "active")) {
+			// not yet active again
+			continue;
+		}
+		if ($ci_resource->imageid != 1) {
+			// not yet idle
+			continue;
+		}
+
+		// get image definition
+		$image = new image();
+		$image->get_instance_by_id($ci_image_id);
+		$image_name = $image->name;
+		$image_type = $image->type;
+		$image_rootdevice = $image->rootdevice;
+		$image_storageid = $image->storageid;
+		$image_deployment_parameter = $image->deployment_parameter;
+
+		// get image storage
+		$storage = new storage();
+		$storage->get_instance_by_id($image_storageid);
+		$storage_resource_id = $storage->resource_id;
+		// get storage resource
+		$resource = new resource();
+		$resource->get_instance_by_id($storage_resource_id);
+		$resource_id = $resource->id;
+		$resource_ip = $resource->ip;
+								
+// storage dependency !
+// currently supported storage types are 
+// lvm-nfs-deployment
+// nfs-deployment
+// lvm-iscsi-deployment
+// iscsi-deployment
+// lvm-aoe-deployment
+// aoe-deployment
+	
+		// lvm-iscsi-storage
+		if (!strcmp($image_type, "lvm-nfs-deployment")) {
+			$full_vol_name=$image_rootdevice;
+			$vol_dir=dirname($full_vol_name);
+			$vol=str_replace("/", "", $vol_dir);
+			$image_location_name=basename($full_vol_name);
+			$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage remove -n $image_location_name -v $vol -t lvm-nfs-deployment";
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+			$resource->send_command($resource_ip, $image_remove_clone_cmd);
+
+		// nfs-storage
+		} else if (!strcmp($image_type, "nfs-deployment")) {
+			$image_location_name=basename($image_rootdevice);
+			$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/bin/openqrm-nfs-storage remove -n $image_location_name";
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+			$resource->send_command($resource_ip, $image_remove_clone_cmd);
+
+
+		// lvm-iscsi-storage
+		} else if (!strcmp($image_type, "lvm-iscsi-deployment")) {
+
+			// parse the volume group info in the identifier
+			$ident_separate=strpos($image_rootdevice, ":");
+			$volume_group=substr($image_rootdevice, 0, $ident_separate);
+			$root_device=substr($image_rootdevice, $ident_separate);
+			$image_location=dirname($root_device);
+			$image_location_name=basename($image_location);
+			$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage remove -n $image_location_name -v $volume_group -t lvm-iscsi-deployment";
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+			$resource->send_command($resource_ip, $image_remove_clone_cmd);
+
+
+		// iscsi-storage
+		} else if (!strcmp($image_type, "iscsi-deployment")) {
+			$image_location=dirname($image_rootdevice);
+			$image_location_name=basename($image_location);
+			$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/bin/openqrm-iscsi-storage remove -n $image_location_name";
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+			$resource->send_command($resource_ip, $image_remove_clone_cmd);
+
+
+		// lvm-aoe-storage
+		} else if (!strcmp($image_type, "lvm-aoe-deployment")) {
+			// parse the volume group info in the identifier
+			$ident_separate=strpos($image_rootdevice, ":");
+			$volume_group=substr($image_rootdevice, 0, $ident_separate);
+			$image_rootdevice_rest=substr($image_rootdevice, $ident_separate+1);
+			$ident_separate2=strpos($image_rootdevice_rest, ":");
+			$image_location_name=substr($image_rootdevice_rest, 0, $ident_separate2);
+			$root_device=substr($image_rootdevice_rest, $ident_separate2+1);
+			$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage remove -n $image_location_name -v $volume_group -t lvm-aoe-deployment";
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+			$resource->send_command($resource_ip, $image_remove_clone_cmd);
+
+
+		// aoe-storage
+		} else if (!strcmp($image_type, "aoe-deployment")) {
+			// parse the volume group info in the identifier
+			$ident_separate=strpos($image_rootdevice, ":");
+			$image_location_name=substr($image_rootdevice, 0, $ident_separate);
+			$root_device=substr($image_rootdevice, $ident_separate+1);
+			$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/bin/openqrm-aoe-storage remove -n $image_location_name";
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+			$resource->send_command($resource_ip, $image_remove_clone_cmd);
+
+
+		} else {
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to remove clone from image type $image_type.", "", "", 0, 0, 0);
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types are lvm-nfs-deployment, nfs-deployment, lvm-iscsi-deployment, iscsi-deployment, lvm-aoe-deployment and aoe-deployment.", "", "", 0, 0, 0);
+		}
+// storage dependency !
+			
+				
+		$image->remove($ci_image_id);
+		$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Removing the cloned image $ci_image_id !", "", "", 0, 0, 0);
+	}	
+
+
+
+	// #################### main cloud request loop ################################		
 
 	$crl = new cloudrequest();
 	$cr_list = $crl->get_all_ids();
@@ -235,7 +376,25 @@ echo "vm_create_timout $vm_create_timout ";
 						'appliance_imageid' => $image_id,
 					);
 					$appliance->update($appliance_id, $ar_appliance_update);
+					// refresh the appliance object
+					$appliance->get_instance_by_id($appliance_id);
 	
+                    // here we put the image + resource definition into an cloudimage
+                    // this cares e.g. later to remove the image after the resource gets idle again
+                    // -> the check for the resource-idle state happens at the beginning
+                    //    of every cloud-monitor loop
+                    // get a new ci_id
+                    $cloud_image_id  = openqrm_db_get_free_id('ci_id', $CLOUD_IMAGE_TABLE);
+                    $cloud_image_arr = array(
+                            'ci_id' => $cloud_image_id,
+                            'ci_cr_id' => $cr->id,
+                            'ci_image_id' => $appliance->imageid,
+                            'ci_resource_id' => $appliance->resources,
+                            'ci_state' => 1,
+                    );
+                    $cloud_image = new cloudimage();
+                    $cloud_image->add($cloud_image_arr);
+
 					// get image storage
 					$storage = new storage();
 					$storage->get_instance_by_id($image_storageid);
@@ -653,111 +812,15 @@ echo "vm_create_timout $vm_create_timout ";
 			if ($cr->shared_req == 1) {
 				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Request ID $cr_id has clone-on-deploy activated. Removing the cloned image", "", "", 0, 0, 0);
 				
-	
-				// get image definition
-				$image = new image();
-				$image->get_instance_by_id($appliance->imageid);
-				$image_name = $image->name;
-				$image_type = $image->type;
-				$image_rootdevice = $image->rootdevice;
-				$image_storageid = $image->storageid;
-				$image_deployment_parameter = $image->deployment_parameter;
-	
-				// get image storage
-				$storage = new storage();
-				$storage->get_instance_by_id($image_storageid);
-				$storage_resource_id = $storage->resource_id;
-				// get storage resource
-				$resource = new resource();
-				$resource->get_instance_by_id($storage_resource_id);
-				$resource_id = $resource->id;
-				$resource_ip = $resource->ip;
-								
-// storage dependency !
-// currently supported storage types are 
-// lvm-nfs-deployment
-// nfs-deployment
-	
-				// ugly way to wait until the resource rebooted
-				sleep(60);
-	
-				// lvm-iscsi-storage
-				if (!strcmp($image_type, "lvm-nfs-deployment")) {
-					$full_vol_name=$image_rootdevice;
-					$vol_dir=dirname($full_vol_name);
-					$vol=str_replace("/", "", $vol_dir);
-					$image_location_name=basename($full_vol_name);
-					$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage remove -n $image_location_name -v $vol -t lvm-nfs-deployment";
-					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
-					$resource->send_command($resource_ip, $image_remove_clone_cmd);
-	
-				// nfs-storage
-				} else if (!strcmp($image_type, "nfs-deployment")) {
-					$image_location_name=basename($image_rootdevice);
-					$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/bin/openqrm-nfs-storage remove -n $image_location_name";
-					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
-					$resource->send_command($resource_ip, $image_remove_clone_cmd);
-	
-	
-				// lvm-iscsi-storage
-				} else if (!strcmp($image_type, "lvm-iscsi-deployment")) {
-	
-					// parse the volume group info in the identifier
-					$ident_separate=strpos($image_rootdevice, ":");
-					$volume_group=substr($image_rootdevice, 0, $ident_separate);
-					$root_device=substr($image_rootdevice, $ident_separate);
-					$image_location=dirname($root_device);
-					$image_location_name=basename($image_location);
-					$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage remove -n $image_location_name -v $volume_group -t lvm-iscsi-deployment";
-					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
-					$resource->send_command($resource_ip, $image_remove_clone_cmd);
-	
-	
-				// iscsi-storage
-				} else if (!strcmp($image_type, "iscsi-deployment")) {
-					$image_location=dirname($image_rootdevice);
-					$image_location_name=basename($image_location);
-					$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/bin/openqrm-iscsi-storage remove -n $image_location_name";
-					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
-					$resource->send_command($resource_ip, $image_remove_clone_cmd);
-	
-	
-				// lvm-aoe-storage
-				} else if (!strcmp($image_type, "lvm-aoe-deployment")) {
-					// parse the volume group info in the identifier
-					$ident_separate=strpos($image_rootdevice, ":");
-					$volume_group=substr($image_rootdevice, 0, $ident_separate);
-					$image_rootdevice_rest=substr($image_rootdevice, $ident_separate+1);
-					$ident_separate2=strpos($image_rootdevice_rest, ":");
-					$image_location_name=substr($image_rootdevice_rest, 0, $ident_separate2);
-					$root_device=substr($image_rootdevice_rest, $ident_separate2+1);
-					$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage remove -n $image_location_name -v $volume_group -t lvm-aoe-deployment";
-					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
-					$resource->send_command($resource_ip, $image_remove_clone_cmd);
-	
-	
-				// aoe-storage
-				} else if (!strcmp($image_type, "aoe-deployment")) {
-					// parse the volume group info in the identifier
-					$ident_separate=strpos($image_rootdevice, ":");
-					$image_location_name=substr($image_rootdevice, 0, $ident_separate);
-					$root_device=substr($image_rootdevice, $ident_separate+1);
-					$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/bin/openqrm-aoe-storage remove -n $image_location_name";
-					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
-					$resource->send_command($resource_ip, $image_remove_clone_cmd);
-	
-	
-				} else {
-					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to remove clone from image type $image_type.", "", "", 0, 0, 0);
-					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types are lvm-nfs-deployment, nfs-deployment, lvm-iscsi-deployment, iscsi-deployment, lvm-aoe-deployment and aoe-deployment.", "", "", 0, 0, 0);
-				}
-// storage dependency !
-			
-				
-				$image->remove($appliance->imageid);
-				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Removing the cloned image $appliance->imageid !", "", "", 0, 0, 0);
-	
-				
+				// here we set the state of the cloud-image to remove
+				// this will check the state of the resource which still has
+				// the image as active rootfs. If the resource is idle again the
+				// image will be removed.
+				// The check for this mechanism is being executed at the beginning
+				// of each cloud-monitor loop
+				$cloud_image = new cloudimage();
+				$cloud_image->get_instance_by_image_id($appliance->imageid);
+				$cloud_image->set_state($cloud_image->id, "remove");
 				
 			}
 	

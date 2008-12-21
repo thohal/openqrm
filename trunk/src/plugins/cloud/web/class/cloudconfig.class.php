@@ -37,7 +37,7 @@ function get_instance($id, $name) {
 	} else if ("$name" != "") {
 		$cloudconfig_array = &$db->Execute("select * from $CLOUD_CONFIG_TABLE where cc_key='$name'");
 	} else {
-		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "coulduser.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
+		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "cloudconfig.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
 		exit(-1);
 	}
 
@@ -91,7 +91,7 @@ function add($cloudconfig_fields) {
 	global $CLOUD_CONFIG_TABLE;
 	global $event;
 	if (!is_array($cloudconfig_fields)) {
-		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "cloudconfig.class.php", "coulduser_field not well defined", "", "", 0, 0, 0);
+		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "cloudconfig.class.php", "cloudconfig_field not well defined", "", "", 0, 0, 0);
 		return 1;
 	}
 	// set stop time and status to now
