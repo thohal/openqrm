@@ -164,6 +164,8 @@ echo "vm_create_timout $vm_create_timout ";
 						}
 						// here we start the new vm !
 						$cloudvm = new cloudvm();
+						// this method returns the resource-id when the resource gets idle
+						// it blocks until the resource is up or it reacges the timeout 
 						$cloudvm->create($appliance_virtualization, $appliance_name, $new_vm_mac, $new_vm_cpu, $new_vm_memory, $new_vm_disk, $vm_create_timout);
 						$new_vm_resource_id = $cloudvm->resource_id;
 						if ($new_vm_resource_id == 0) {
@@ -196,7 +198,7 @@ echo "vm_create_timout $vm_create_timout ";
 					$image = new image();
 					$image->get_instance_by_id($cr->image_id);
 					$image_name = $image->name;
-					$image_clone_name = $image_name.".cloud_".$cr_id."_".$cr_resource_number."_";
+					$image_clone_name = $cr->image_id.".cloud_".$cr_id."_".$cr_resource_number."_";
 					$image_type = $image->type;
 					$image_version = $image->version;
 					$image_rootdevice = $image->rootdevice;
