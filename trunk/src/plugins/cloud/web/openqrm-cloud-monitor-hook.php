@@ -57,6 +57,7 @@ function openqrm_cloud_monitor() {
 	global $event;
 	global $APPLIANCE_INFO_TABLE;
 	global $IMAGE_INFO_TABLE;
+	global $CLOUD_IMAGE_TABLE;
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $OPENQRM_EXEC_PORT;
@@ -72,6 +73,7 @@ function openqrm_cloud_monitor() {
 	// get cloudimage ids
 	$cil = new cloudimage();
 	$cloud_image_list = $cil->get_all_ids();	
+
 	foreach($cloud_image_list as $ci_list) {
 		$ci_id = $ci_list['ci_id'];
 		$ci = new cloudimage();
@@ -197,8 +199,10 @@ function openqrm_cloud_monitor() {
 		}
 // storage dependency !
 			
-				
+		// remove the image in openQRM				
 		$image->remove($ci_image_id);
+		// remove the image in the cloud
+		$ci->remove($ci_id);
 		$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Removing the cloned image $ci_image_id !", "", "", 0, 0, 0);
 	}	
 
@@ -810,7 +814,7 @@ function openqrm_cloud_monitor() {
 	
 			// do we have remove the clone of the image after deployment ?
 			if ($cr->shared_req == 1) {
-				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Request ID $cr_id has clone-on-deploy activated. Removing the cloned image", "", "", 0, 0, 0);
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Request ID $cr_id has clone-on-deploy activated. Removing the cloned image id $appliance->imageid", "", "", 0, 0, 0);
 				
 				// here we set the state of the cloud-image to remove
 				// this will check the state of the resource which still has
@@ -818,12 +822,13 @@ function openqrm_cloud_monitor() {
 				// image will be removed.
 				// The check for this mechanism is being executed at the beginning
 				// of each cloud-monitor loop
-				$cloud_image = new cloudimage();
-				$cloud_image->get_instance_by_image_id($appliance->imageid);
-				$cloud_image->set_state($cloud_image->id, "remove");
+				if ($appliance->imageid > 0) {
+					$cloud_image = new cloudimage();
+					$cloud_image->get_instance_by_image_id($appliance->imageid);
+					$cloud_image->set_state($cloud_image->id, "remove");
 				
+				}
 			}
-	
 	
 			// ################################## deprovisioning mail user ###############################
 		
@@ -873,6 +878,7 @@ function openqrm_cloud_monitor() {
 	
 	}
 }
+
 
 
 ?>

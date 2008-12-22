@@ -126,7 +126,7 @@ function remove($cloudimage_id) {
 
 // sets the state of a cloudimage
 function set_state($cloudimage_id, $state_str) {
-	global $CLOUD_CONFIG_TABLE;
+	global $CLOUD_IMAGE_TABLE;
 	global $event;
 	$cloudimage_state = 0;
 	switch ($state_str) {
