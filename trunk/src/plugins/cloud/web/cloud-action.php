@@ -175,6 +175,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
             // ci_id INT(5)
             // ci_cr_id INT(5)
             // ci_image_id INT(5)
+            // ci_appliance_id INT(5)
             // ci_resource_id INT(5)
             // ci_state INT(5)
 			
@@ -183,13 +184,14 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$create_cloud_config = "create table cloud_config(cc_id INT(5), cc_key VARCHAR(50), cc_value VARCHAR(50))";
 			$create_cloud_ipgroups = "create table cloud_ipgroups(ig_id INT(5), ig_name VARCHAR(50), ig_network VARCHAR(50), ig_subnet VARCHAR(50), ig_gateway VARCHAR(50), ig_dns1 VARCHAR(50), ig_dns2 VARCHAR(50), ig_domain VARCHAR(50), ig_activeips INT(5))";
 			$create_cloud_iptables = "create table cloud_iptables(ip_id INT(5), ip_ig_id INT(5), ip_appliance_id INT(5), ip_cr_id INT(5), ip_active INT(5), ip_address VARCHAR(50), ip_subnet VARCHAR(50), ip_gateway VARCHAR(50), ip_dns1 VARCHAR(50), ip_dns2 VARCHAR(50), ip_domain VARCHAR(50))";
-			$create_cloud_image = "create table cloud_image(ci_id INT(5), ci_cr_id INT(5), ci_image_id INT(5), ci_resource_id INT(5), ci_state INT(5))";
+			$create_cloud_image = "create table cloud_image(ci_id INT(5), ci_cr_id INT(5), ci_image_id INT(5), ci_appliance_id INT(5), ci_resource_id INT(5), ci_state INT(5))";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($create_cloud_requests);
 			$recordSet = &$db->Execute($create_cloud_users);
 			$recordSet = &$db->Execute($create_cloud_config);
 			$recordSet = &$db->Execute($create_cloud_ipgroups);
 			$recordSet = &$db->Execute($create_cloud_iptables);
+			$recordSet = &$db->Execute($create_cloud_image);
 
 			// create the default configuration
 			$create_default_cloud_config1 = "insert into cloud_config(cc_id, cc_key, cc_value) values (1, 'cloud_admin_email', 'root@localhost')";
@@ -216,12 +218,14 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$drop_cloud_config = "drop table cloud_config";
 			$drop_cloud_ipgroups = "drop table cloud_ipgroups";
 			$drop_cloud_iptables = "drop table cloud_iptables";
+			$drop_cloud_image = "drop table cloud_image";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($drop_cloud_requests);
 			$recordSet = &$db->Execute($drop_cloud_users);
 			$recordSet = &$db->Execute($drop_cloud_config);
 			$recordSet = &$db->Execute($drop_cloud_ipgroups);
 			$recordSet = &$db->Execute($drop_cloud_iptables);
+			$recordSet = &$db->Execute($drop_cloud_image);
 		    $db->Close();
 			break;
 

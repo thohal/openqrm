@@ -80,6 +80,7 @@ function openqrm_cloud_monitor() {
 		$ci->get_instance_by_id($ci_id);
 		$ci_state = $ci->state;
 		$ci_image_id = $ci->image_id;
+		$ci_appliance_id = $ci->appliance_id;
 		$ci_resource_id = $ci->resource_id;
 
 		// image still in use ?
@@ -201,9 +202,12 @@ function openqrm_cloud_monitor() {
 			
 		// remove the image in openQRM				
 		$image->remove($ci_image_id);
+		// remove the appliance
+		$rapp = new appliance();
+		$rapp->remove($ci_appliance_id);
 		// remove the image in the cloud
 		$ci->remove($ci_id);
-		$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Removing the cloned image $ci_image_id !", "", "", 0, 0, 0);
+		$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Removing the cloned image $ci_image_id and the appliance $ci_appliance_id !", "", "", 0, 0, 0);
 	}	
 
 
@@ -393,6 +397,7 @@ function openqrm_cloud_monitor() {
                             'ci_id' => $cloud_image_id,
                             'ci_cr_id' => $cr->id,
                             'ci_image_id' => $appliance->imageid,
+                            'ci_appliance_id' => $appliance->id,
                             'ci_resource_id' => $appliance->resources,
                             'ci_state' => 1,
                     );
@@ -866,8 +871,9 @@ function openqrm_cloud_monitor() {
 			$rmail->var_array = $arr;
 			$rmail->send();
 	
-			// remove appliance			
-			$appliance->remove($appliance->id);
+			// we cannot remove the appliance here because its image is still in use
+			// and the appliance (id) is needed for the removal
+			// so the image-remove mechanism also cares to remove the appliance
 			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Deprovisioning request ID $cr_id finished", "", "", 0, 0, 0);
 	
 			$deprovision_resource_number++;

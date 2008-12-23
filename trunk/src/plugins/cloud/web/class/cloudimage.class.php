@@ -28,6 +28,7 @@ class cloudimage {
 var $id = '';
 var $cr_id = '';
 var $image_id = '';
+var $appliance_id = '';
 var $resource_id = '';
 var $state = '';
 
@@ -54,6 +55,7 @@ function get_instance($id, $image_id) {
 		$this->id = $cloudimage["ci_id"];
 		$this->cr_id = $cloudimage["ci_cr_id"];
 		$this->image_id = $cloudimage["ci_image_id"];
+		$this->appliance_id = $cloudimage["ci_appliance_id"];
 		$this->resource_id = $cloudimage["ci_resource_id"];
 		$this->state = $cloudimage["ci_state"];
 	}
