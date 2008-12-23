@@ -237,7 +237,7 @@ global $event;
 		$loop=0;
 		while(1) {
 			$resource->get_instance_by_id($appliance->resources);
-			if (!strcmp($resource->state, "active")) {
+			if ((!strcmp($resource->state, "active")) && ($resource->imageid == 1)) {
 				$event->log("storage_auth_stop_in_background", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-deployment-auth-hook.php", "Resource $resource_ip is idle again, applying stop auth for image $image_name", "", "", 0, 0, $appliance_id);
 				break;				
 			}
@@ -300,7 +300,7 @@ global $event;
 		$loop=0;
 		while(1) {
 			$resource->get_instance_by_id($appliance->resources);
-			if (!strcmp($resource->state, "active")) {
+			if ((!strcmp($resource->state, "active")) && ($resource->imageid == 1)) {
 				$event->log("storage_auth_deployment_stop_in_background", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-deployment-auth-hook.php", "Resource $resource_ip is active now, applying stop auth for deployment exports", "", "", 0, 0, $appliance_id);
 				break;				
 			}
