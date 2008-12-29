@@ -10,11 +10,22 @@ fi
 
 
 function openqrm_usage() {
+	echo
 	echo "Usage:"
 	echo "`basename $0` help			- This help screen"
+	echo
 	echo "- Managing boot-images -"
 	echo "`basename $0` kernel add -n <name> -v <version> -u <username> -p <password> [-l <location> -i <initramfs/ext2> -t <path-to-initrd-template-file>]"
 	echo "`basename $0` kernel remove -n <name> -u <username> -p <password>"
+	echo
+	echo "- Managing server-states -"
+	echo "`basename $0` state backup -n <name>"
+	echo "`basename $0` state restore -n <name>"
+	echo "`basename $0` state remove -n <name>"
+	echo "`basename $0` state list"
+	echo
+
+
 }
 
 
@@ -129,6 +140,89 @@ case "$1" in
 		;;
 
 
+	state)
+		shift
+		if [ $# == 0 ]; then
+			openqrm_usage
+			exit 0
+		fi
+		export OPENQRM_SERVER_BASE_DIR
+
+		case "$1" in
+			backup)
+				shift
+				if [ $# == 0 ]; then
+					openqrm_usage
+					exit 0
+				fi
+				while [ $# -ne 0 ]; do
+					case "$1" in
+						-n)
+							BACKUP_STATE_NAME=$2
+							shift
+							;;
+					esac
+					shift
+				done
+				if [ "$BACKUP_STATE_NAME" == "" ]; then
+					openqrm_usage
+					exit 1
+				fi
+				openqrm_server_state backup $BACKUP_STATE_NAME
+				;;
+
+			restore)
+				shift
+				if [ $# == 0 ]; then
+					openqrm_usage
+					exit 0
+				fi
+				while [ $# -ne 0 ]; do
+					case "$1" in
+						-n)
+							BACKUP_STATE_NAME=$2
+							shift
+							;;
+					esac
+					shift
+				done
+				if [ "$BACKUP_STATE_NAME" == "" ]; then
+					openqrm_usage
+					exit 1
+				fi
+				openqrm_server_state restore $BACKUP_STATE_NAME
+				;;
+
+			remove)
+				shift
+				if [ $# == 0 ]; then
+					openqrm_usage
+					exit 0
+				fi
+				while [ $# -ne 0 ]; do
+					case "$1" in
+						-n)
+							BACKUP_STATE_NAME=$2
+							shift
+							;;
+					esac
+					shift
+				done
+				if [ "$BACKUP_STATE_NAME" == "" ]; then
+					openqrm_usage
+					exit 1
+				fi
+				openqrm_server_state remove $BACKUP_STATE_NAME
+				;;
+
+			list)
+				openqrm_server_state list
+				;;
+
+
+
+		esac
+		;;
 
 
 	*)
