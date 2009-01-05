@@ -42,23 +42,23 @@ function cloud_manager_usage() {
 
 
 # main
-
+CLOUD_MANAGER_COMMAND=$1
 case "$CLOUD_MANAGER_COMMAND" in 
 
 	enable-ssl)
 		PRIVATE_KEY=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/ssl/private/private.key
-		CERTIFICATE_FILE=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/ssl/cerst/$SERVER.crt
+		CERTIFICATE_FILE=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/ssl/cerst/openqrm.crt
 		VALID_DAYS=3650
 
 		echo Delete old private key and create dir, they may not exist
 		mkdir -p `dirname $PRIVATE_KEY`
 		mkdir -p `dirname $CERTIFICATE_FILE`
-		rm $PRIVATE_KEY
+		rm -f $PRIVATE_KEY
 		echo Create new private/public-keys without passphrase for server
 		openssl genrsa -out $PRIVATE_KEY 1024
 
 		echo Create selfsigned certificate
-		rm $CERTIFICATE_FILE
+		rm -f $CERTIFICATE_FILE
 		# From man req:
 		#  -x509
 		#    this option outputs a self signed certificate instead
