@@ -614,6 +614,8 @@ function openqrm_cloud_monitor() {
 				$resource_external_ip=$resource->ip;
 				// send command to the openQRM-server
 				$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac $kernel->name");
+				// wait until the resource got the new kernel assigned
+				sleep(5);
 	
 				//start the appliance, refresh the object before in case of clone-on-deploy
 				$appliance->get_instance_by_id($appliance_id);

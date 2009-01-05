@@ -71,6 +71,11 @@ if (!strcmp($request_fields['cr_shared_req'], "on")) {
 } else {
 	$request_fields['cr_shared_req']=0;
 }
+// default disk size
+if (!strlen($request_fields['cr_disk_req'])) {
+	$request_fields['cr_disk_req']=5000;
+}
+
 
 
 function date_to_timestamp($date) {
@@ -94,7 +99,26 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	exit;
 }
 
+function check_is_number($param, $value) {
+	if(!ctype_digit($value)){
+		$strMsg = "$param is not a number <br>";
+		redirect($strMsg);
+		exit(0);
+	}
+}
 
+function check_param($param, $value) {
+	if (!strlen($value)) {
+		$strMsg = "$param is empty <br>";
+		redirect($strMsg, tab1);
+		exit(0);
+	}
+	if(!ctype_alnum($value)){
+		$strMsg = "$param contains special characters <br>";
+		redirect($strMsg, tab1);
+		exit(0);
+	}
+}
 
 
 // check if we got some actions to do
@@ -197,7 +221,7 @@ if(htmlobject_request('action') != '') {
 			if ($request_user->ccunits < 1) {
 				$strMsg .="You do not have any CloudComputing-Units left! Please buy some CC-Units before submitting a request.";
 				redirect($strMsg);
-				break;
+				exit(0);
 			}
 
 			// set user id
@@ -212,6 +236,36 @@ if(htmlobject_request('action') != '') {
 			$stopp = $request_fields['cr_stop'];
 			$tstop = date_to_timestamp($stopp);
 			$request_fields['cr_stop'] = $tstop;
+
+			// check disk param
+			check_is_number("Disk", $request_fields['cr_disk_req']);
+			if ($request_fields['cr_disk_req'] <= 0) {
+				$strMsg .="Disk parameter must be > 0 <br>";
+				redirect($strMsg);
+				exit(0);
+			}
+			// max disk size
+			$cc_disk_conf = new cloudconfig();
+			$max_disk_size = $cc_disk_conf->get_value(8);  // 8 is max_disk_size config
+			if ($request_fields['cr_disk_req'] > $max_disk_size) {
+				$strMsg .="Disk parameter must be <= $max_disk_size <br>";
+				redirect($strMsg);
+				exit(0);
+			}
+			// max network interfaces
+			$max_network_infterfaces = $cc_disk_conf->get_value(9);  // 9 is max_network_interfaces
+			if ($request_fields['cr_network_req'] > $max_network_infterfaces) {
+				$strMsg .="Network parameter must be <= $max_network_infterfaces <br>";
+				redirect($strMsg);
+				exit(0);
+			}
+
+			check_param("Quantity", $request_fields['cr_resource_quantity']);
+			check_param("Kernel Id", $request_fields['cr_kernel_id']);
+			check_param("Image Id", $request_fields['cr_image_id']);
+			check_param("Memory", $request_fields['cr_ram_req']);
+			check_param("CPU", $request_fields['cr_cpu_req']);
+			check_param("Network", $request_fields['cr_network_req']);
 
 			// id
 			$request_fields['cr_id'] = openqrm_db_get_free_id('cr_id', $CLOUD_REQUEST_TABLE);
@@ -484,6 +538,7 @@ function my_cloud_create_request() {
 
 	global $thisfile;
 	global $auth_user;
+	global $RootDir;
 
 	$cl_user = new clouduser();
 	$cl_user_list = array();
@@ -538,6 +593,13 @@ function my_cloud_create_request() {
 	$cc_max_resources_per_cr = $cc_conf->get_value(6);	// max_resources_per_cr
 	for ($mres = 1; $mres <= $cc_max_resources_per_cr; $mres++) {
 		$max_resources_per_cr_select[] = array("value" => $mres, "label" => $mres);
+	}
+
+	// prepare the array for the network-interface select
+	$max_network_interfaces_select = array();
+	$max_network_interfaces = $cc_conf->get_value(9);	// max_network_interfaces
+	for ($mnet = 1; $mnet <= $max_network_interfaces; $mnet++) {
+		$max_network_interfaces_select[] = array("value" => $mnet, "label" => $mnet);
 	}
 
 	// get list of available resource parameters
@@ -606,9 +668,16 @@ function my_cloud_create_request() {
 	$disp = $disp.htmlobject_select('cr_image_id', $image_list, 'Image');
 	$disp = $disp.htmlobject_select('cr_ram_req', $available_memtotal, 'Memory');
 	$disp = $disp.htmlobject_select('cr_cpu_req', $available_cpunumber, 'CPUs');
-	$disp = $disp.htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk'), 'text', 20);
-	$disp = $disp.htmlobject_select('cr_network_req', array(array('value' =>1, 'label' =>1), array('value' =>2, 'label' =>2), array('value' =>3, 'label' =>3), array('value' =>4, 'label' =>4)), 'Network-cards');
-	$disp = $disp.htmlobject_input('cr_ha_req', array("value" => 1, "label" => 'Highavailable'), 'checkbox', false);
+	$disp = $disp.htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk(MB)'), 'text', 20);
+	$disp = $disp.htmlobject_select('cr_network_req', $max_network_interfaces_select, 'Network-cards');
+	// check if to show ha
+	$show_ha_checkbox = $cc_conf->get_value(10);	// show_ha_checkbox
+	if (!strcmp($show_ha_checkbox, "true")) {
+		// is ha enabled ?
+		if (file_exists("$RootDir/plugins/highavailability/.running")) {
+			$disp = $disp.htmlobject_input('cr_ha_req', array("value" => 1, "label" => 'Highavailable'), 'checkbox', false);
+		}
+	}
 	// check for default-clone-on-deploy
 	$cc_conf = new cloudconfig();
 	$cc_default_clone_on_deploy = $cc_conf->get_value(5);	// default_clone_on_deploy

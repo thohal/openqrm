@@ -208,6 +208,12 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($create_default_cloud_config6);
 			$create_default_cloud_config7 = "insert into cloud_config(cc_id, cc_key, cc_value) values (7, 'auto_create_vms', 'true')";
 			$recordSet = &$db->Execute($create_default_cloud_config7);
+			$create_default_cloud_config8 = "insert into cloud_config(cc_id, cc_key, cc_value) values (8, 'max_disk_size', '5000')";
+			$recordSet = &$db->Execute($create_default_cloud_config8);
+			$create_default_cloud_config9 = "insert into cloud_config(cc_id, cc_key, cc_value) values (9, 'max_network_interfaces', '1')";
+			$recordSet = &$db->Execute($create_default_cloud_config9);
+			$create_default_cloud_config10 = "insert into cloud_config(cc_id, cc_key, cc_value) values (10, 'show_ha_checkbox', 'true')";
+			$recordSet = &$db->Execute($create_default_cloud_config10);
 
 		    $db->Close();
 			break;
