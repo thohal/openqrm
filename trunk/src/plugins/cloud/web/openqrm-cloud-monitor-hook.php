@@ -64,8 +64,30 @@ function openqrm_cloud_monitor() {
 	global $openqrm_server;
 	global $BaseDir;
 	global $vm_create_timout;
+	$cloud_monitor_lock = "$OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf/cloud-monitor.lock";
+	$cloud_monitor_timeout = "360";
 
-	$event->log("openqrm_cloud_monitor", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-monitor-hook.php", "Checking for Cloud events to be handled.", "", "", 0, 0, 0);
+	// lock to prevent running multiple times in parallel
+	if (file_exists($cloud_monitor_lock)) {
+		// check from when it is, if it is too old we remove it and start
+		$cloud_monitor_lock_date = file_get_contents($cloud_monitor_lock);
+		$now=$_SERVER['REQUEST_TIME'];
+		if (($now - $cloud_monitor_lock_date) > $cloud_monitor_timeout) {
+			$event->log("openqrm_cloud_monitor", $_SERVER['REQUEST_TIME'], 2, "openqrm-cloud-monitor-hook.php", "Timeout for the cloud-monitor-lock reached, creating new lock at $cloud_monitor_lock", "", "", 0, 0, 0);
+			$cloud_lock_fp = fopen($cloud_monitor_lock, 'w');
+			fwrite($cloud_lock_fp, $now);
+			fclose($cloud_lock_fp);		
+		} else {	
+			$event->log("openqrm_cloud_monitor", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-monitor-hook.php", "Cloud is still processing, skipping Cloud event check !", "", "", 0, 0, 0);
+			return 0;
+		}
+	} else {
+		$event->log("openqrm_cloud_monitor", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-monitor-hook.php", "Checking for Cloud events to be handled. Created $cloud_monitor_lock", "", "", 0, 0, 0);
+		$now=$_SERVER['REQUEST_TIME'];
+		$cloud_lock_fp = fopen($cloud_monitor_lock, 'w');
+		fwrite($cloud_lock_fp, $now);
+		fclose($cloud_lock_fp);		
+	}
 
 
 	// #################### clone-on-deploy image remove ################################		
@@ -885,6 +907,10 @@ function openqrm_cloud_monitor() {
 		}
 	
 	}
+	
+	
+	$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Removing the cloud-monitor lock $cloud_monitor_lock", "", "", 0, 0, 0);
+	unlink($cloud_monitor_lock);
 }
 
 
