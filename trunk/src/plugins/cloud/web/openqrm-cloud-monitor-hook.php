@@ -269,7 +269,7 @@ function openqrm_cloud_monitor() {
 					'appliance_kernelid' => $cr->kernel_id,
 					'appliance_imageid' => $cr->image_id,
 					'appliance_virtualization' => $cr->resource_type_req,
-					'appliance_cpuspeed' => $cr->cpu_req,
+					'appliance_cpunumber' => $cr->cpu_req,
 					'appliance_memtotal' => $cr->ram_req,
 					'appliance_capabilities' => $appliance_name,
 					'appliance_comment' => "Requested by user $cu_name",
