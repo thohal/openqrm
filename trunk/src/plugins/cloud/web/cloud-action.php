@@ -179,12 +179,20 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
             // ci_resource_id INT(5)
             // ci_state INT(5)
 			
+            // -> cloudappliance
+            // ca_id INT(5)
+            // ca_appliance_id INT(5)
+            // ca_cr_id INT(5)
+            // ca_cmd INT(5)
+            // ca_state INT(5)
+
 			$create_cloud_requests = "create table cloud_requests(cr_id INT(5), cr_cu_id INT(5), cr_status INT(5), cr_request_time VARCHAR(20), cr_start VARCHAR(20), cr_stop VARCHAR(20), cr_kernel_id INT(5), cr_image_id INT(5), cr_ram_req VARCHAR(20), cr_cpu_req VARCHAR(20), cr_disk_req VARCHAR(20), cr_network_req VARCHAR(255), cr_resource_quantity INT(5), cr_resource_type_req VARCHAR(20), cr_deployment_type_req VARCHAR(50), cr_ha_req VARCHAR(5), cr_shared_req VARCHAR(5), cr_appliance_id VARCHAR(255), cr_lastbill VARCHAR(20))";
 			$create_cloud_users = "create table cloud_users(cu_id INT(5), cu_name VARCHAR(20), cu_password VARCHAR(20), cu_forename VARCHAR(50), cu_lastname VARCHAR(50), cu_email VARCHAR(50), cu_street VARCHAR(100), cu_city VARCHAR(100), cu_country VARCHAR(100), cu_phone VARCHAR(100), cu_status INT(5), cu_token VARCHAR(100), cu_ccunits BIGINT(10))";
 			$create_cloud_config = "create table cloud_config(cc_id INT(5), cc_key VARCHAR(50), cc_value VARCHAR(50))";
 			$create_cloud_ipgroups = "create table cloud_ipgroups(ig_id INT(5), ig_name VARCHAR(50), ig_network VARCHAR(50), ig_subnet VARCHAR(50), ig_gateway VARCHAR(50), ig_dns1 VARCHAR(50), ig_dns2 VARCHAR(50), ig_domain VARCHAR(50), ig_activeips INT(5))";
 			$create_cloud_iptables = "create table cloud_iptables(ip_id INT(5), ip_ig_id INT(5), ip_appliance_id INT(5), ip_cr_id INT(5), ip_active INT(5), ip_address VARCHAR(50), ip_subnet VARCHAR(50), ip_gateway VARCHAR(50), ip_dns1 VARCHAR(50), ip_dns2 VARCHAR(50), ip_domain VARCHAR(50))";
 			$create_cloud_image = "create table cloud_image(ci_id INT(5), ci_cr_id INT(5), ci_image_id INT(5), ci_appliance_id INT(5), ci_resource_id INT(5), ci_state INT(5))";
+			$create_cloud_appliance = "create table cloud_appliance(ca_id INT(5), ca_appliance_id INT(5), ca_cr_id INT(5), ca_cmd INT(5), ca_state INT(5))";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($create_cloud_requests);
 			$recordSet = &$db->Execute($create_cloud_users);
@@ -192,6 +200,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($create_cloud_ipgroups);
 			$recordSet = &$db->Execute($create_cloud_iptables);
 			$recordSet = &$db->Execute($create_cloud_image);
+			$recordSet = &$db->Execute($create_cloud_appliance);
 
 			// create the default configuration
 			$create_default_cloud_config1 = "insert into cloud_config(cc_id, cc_key, cc_value) values (1, 'cloud_admin_email', 'root@localhost')";
@@ -225,6 +234,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$drop_cloud_ipgroups = "drop table cloud_ipgroups";
 			$drop_cloud_iptables = "drop table cloud_iptables";
 			$drop_cloud_image = "drop table cloud_image";
+			$drop_cloud_appliance = "drop table cloud_appliance";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($drop_cloud_requests);
 			$recordSet = &$db->Execute($drop_cloud_users);
@@ -232,6 +242,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($drop_cloud_ipgroups);
 			$recordSet = &$db->Execute($drop_cloud_iptables);
 			$recordSet = &$db->Execute($drop_cloud_image);
+			$recordSet = &$db->Execute($drop_cloud_appliance);
 		    $db->Close();
 			break;
 

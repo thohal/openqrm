@@ -25,10 +25,12 @@ require_once "$RootDir/plugins/cloud/class/cloudipgroup.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudiptables.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudvm.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
 
 global $CLOUD_USER_TABLE;
 global $CLOUD_REQUEST_TABLE;
 global $CLOUD_IMAGE_TABLE;
+global $CLOUD_APPLIANCE_TABLE;
 global $APPLIANCE_INFO_TABLE;
 global $IMAGE_INFO_TABLE;
 
@@ -58,6 +60,7 @@ function openqrm_cloud_monitor() {
 	global $APPLIANCE_INFO_TABLE;
 	global $IMAGE_INFO_TABLE;
 	global $CLOUD_IMAGE_TABLE;
+	global $CLOUD_APPLIANCE_TABLE;
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $OPENQRM_EXEC_PORT;
@@ -688,6 +691,21 @@ function openqrm_cloud_monitor() {
 					}
 				}
 				fclose($fp);
+
+				// here we insert the new appliance into the cloud-appliance table
+                $cloud_appliance_id  = openqrm_db_get_free_id('ca_id', $CLOUD_APPLIANCE_TABLE);
+                $cloud_appliance_arr = array(
+                        'ca_id' => $cloud_appliance_id,
+                        'ca_cr_id' => $cr->id,
+                        'ca_appliance_id' => $appliance_id,
+                        'ca_cmd' => 0,
+                        'ca_state' => 1,
+                );
+                $cloud_appliance = new cloudappliance();
+                $cloud_appliance->add($cloud_appliance_arr);
+
+
+
 				// ################################## mail user provisioning ###############################
 	
 				// send mail to user
@@ -807,12 +825,18 @@ function openqrm_cloud_monitor() {
 			// stop the appliance, first de-assign its resource
 			$appliance = new appliance();
 			$appliance->get_instance_by_id($app_id);
-			$resource = new resource();
-			$resource->get_instance_by_id($appliance->resources);
-			$resource_external_ip=$resource->ip;
-			$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
-			// now stop
-			$appliance->stop();
+			// .. only if active and not stopped already by the user
+			if ($appliance->resources == -1)  {
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Appliance $app_id from request ID $cr_id stopped already", "", "", 0, 0, 0);
+			} else {
+				$resource = new resource();
+				$resource->get_instance_by_id($appliance->resources);
+				$resource_external_ip=$resource->ip;
+				$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
+				// now stop
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Stopping Appliance $app_id from request ID $cr_id", "", "", 0, 0, 0);
+				$appliance->stop();
+			}
 	
 			// here we free up the ip addresses used by the appliance again
 			$iptable = new cloudiptables();
@@ -838,6 +862,12 @@ function openqrm_cloud_monitor() {
 			// unlink the netconf file
 			$appliance_netconf = "$OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf/cloud-net.conf.$cr_appliance_id";
 			unlink($appliance_netconf);
+
+			// here we remove the appliance from the cloud-appliance table
+            $cloud_appliance = new cloudappliance();
+            $cloud_appliance->get_instance_by_appliance_id($appliance->id);
+			$cloud_appliance->remove($cloud_appliance->id);
+
 	
 			// ################################## deprovisioning clone-on-deploy ###############################
 	
@@ -907,7 +937,242 @@ function openqrm_cloud_monitor() {
 		}
 	
 	}
+
+	// ################################## run cloudappliance commands ###############################
+
+	$cloudapp = new cloudappliance();
+	$cloudapp_list = $cloudapp->get_all_ids();
 	
+	foreach($cloudapp_list as $list) {
+		$ca_id = $list['ca_id'];
+		$ca = new cloudappliance();
+		$ca->get_instance_by_id($ca_id);
+		$ca_appliance_id = $ca->appliance_id;
+		$ca_cr_id = $ca->cr_id;
+		$ca_cmd = $ca->cmd;
+		$ca_state = $ca->state;
+
+		switch ($ca_cmd) {
+			case 1:
+				// start
+				// prepare array to update appliance, be sure to set to auto-select resource
+				$ar_update = array(
+					'appliance_resources' => "-1",
+				);
+				// update appliance
+				$ca_appliance = new appliance();
+				$ca_appliance->update($ca_appliance_id, $ar_update);
+	
+				// lets find a resource for this new appliance according the cr, update the object first
+				$ca_appliance->get_instance_by_id($ca_appliance_id);
+				// get the cr
+				$ca_cr = new cloudrequest();
+				$ca_cr->get_instance_by_id($ca_cr_id);
+				$appliance_virtualization=$ca_cr->resource_type_req;
+				$ca_appliance->find_resource($appliance_virtualization);
+				// check if we got a resource !
+				$ca_appliance->get_instance_by_id($ca_appliance_id);
+				if ($ca_appliance->resources == -1) {
+					// ################################## auto create vm ###############################
+					// check if we should try to create one 
+
+					$cc_autovm_conf = new cloudconfig();
+					$cc_auto_create_vms = $cc_autovm_conf->get_value(7);  // 7 is auto_create_vms
+					if (!strcmp($cc_auto_create_vms, "true")) {
+						// generate a mac address
+						$mac_res = new resource();
+						$mac_res->generate_mac();
+						$new_vm_mac = $mac_res->mac;
+						// cpu req, for now just one cpu since not every virtualization technology can handle that
+						// $new_vm_cpu = $cr->cpu_req;
+						$new_vm_cpu = 1;
+						// memory
+						$new_vm_memory = 256;
+						if ($ca_cr->ram_req != 0) {
+							$new_vm_memory = $cr->ram_req;
+						}
+						// disk size
+						$new_vm_disk = 5000;
+						if ($ca_cr->disk_req != 0) {
+							$new_vm_disk = $cr->disk_req;
+						}
+
+						// here we start the new vm !
+						$cloudvm = new cloudvm();
+						// this method returns the resource-id when the resource gets idle
+						// it blocks until the resource is up or it reacges the timeout 
+						$cloudvm->create($appliance_virtualization, $ca_appliance->name, $new_vm_mac, $new_vm_cpu, $new_vm_memory, $new_vm_disk, $vm_create_timout);
+						$new_vm_resource_id = $cloudvm->resource_id;
+						if ($new_vm_resource_id == 0) {
+							$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Could not create a new resource for for appliance $ca_appliance->name start event!", "", "", 0, 0, 0);
+							continue;
+						} else {
+							// we have a new vm as resource :) update it in the appliance
+							$appliance_fields = array();
+							$appliance_fields['appliance_resources'] = $new_vm_resource_id;
+							$ca_appliance->update($ca_appliance_id, $appliance_fields);
+							$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Created new resource $new_vm_resource_id for appliance $ca_appliance->name start event", "", "", 0, 0, 0);
+						}
+				
+					} else {
+						$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Could not find a resource for appliance $ca_appliance->name start event", "", "", 0, 0, 0);
+						continue;
+					}
+				}
+
+				// assign the resource
+				$kernel = new kernel();
+				$kernel->get_instance_by_id($ca_appliance->kernelid);
+				$resource = new resource();
+				$resource->get_instance_by_id($ca_appliance->resources);
+				// in case we do not have an external ip-config send the resource ip to the user
+				$resource_external_ip=$resource->ip;
+				// send command to the openQRM-server
+				$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac $kernel->name");
+				// wait until the resource got the new kernel assigned
+				sleep(5);
+	
+				//start the appliance, refresh the object before in case of clone-on-deploy
+				$ca_appliance->get_instance_by_id($ca_appliance_id);
+				$ca_appliance->start();
+	
+				// here we prepare the ip-config for the appliance according the users requests
+				$iptable = new cloudiptables();
+				$ip_ids_arr = $iptable->get_all_ids();
+				$loop = 0;
+				// open the appliances netconfig file
+				$appliance_netconf = "$OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf/cloud-net.conf.$ca_appliance_id";
+				$fp = fopen($appliance_netconf, 'w+');
+				$finished = 0;
+				foreach($ip_ids_arr as $id_arr) {
+					foreach($id_arr as $id) {
+						$ipt = new cloudiptables();
+						$ipt->get_instance_by_id($id);
+						// check if the ip is free
+						if (($ipt->ip_active == 1) && ($ipt->ip_appliance_id == 0) && ($ipt->ip_cr_id == 0)) {
+							$loop++;
+							$ipstr="$ipt->ip_address:$ipt->ip_subnet:$ipt->ip_gateway:$ipt->ip_dns1:$ipt->ip_dns2:$ipt->ip_domain\n";
+							fwrite($fp, $ipstr);						
+							$ipt->activate($id, false);
+							$ipt->assign_to_appliance($id, $ca_appliance_id, $cr_id);
+							// the first ip we mail to the user
+							if ($loop == 1) {
+								$resource_external_ip = $ipt->ip_address;
+							}
+							if ($loop == $ca_cr->network_req) {
+								$finished = 1;
+								break;
+							}
+						}
+					}
+					if ($finished == 1) {
+						break;
+					}
+				}
+				fclose($fp);
+
+				// reset the cmd field
+				$ca->set_cmd($ca_id, "noop");
+				// set state to paused
+				$ca->set_state($ca_id, "active");
+
+				// send mail to user
+				// get admin email
+				$cc_conf = new cloudconfig();
+				$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
+				// get user + request + appliance details
+				$cu_id = $ca_cr->cu_id;
+				$cu = new clouduser();
+				$cu->get_instance_by_id($cu_id);
+				$cu_name = $cu->name;
+				$cu_forename = $cu->forename;
+				$cu_lastname = $cu->lastname;
+				$cu_email = $cu->email;
+				// start/stop time
+				$cr_start = $ca_cr->start;
+				$start = date("d-m-Y H-i", $cr_start);
+				$cr_stop = $ca_cr->stop;
+				$stop = date("d-m-Y H-i", $cr_stop);
+			
+				$rmail = new cloudmailer();
+				$rmail->to = "$cu_email";
+				$rmail->from = "$cc_admin_email";
+				$rmail->subject = "openQRM Cloud: Your unpaused appliacne $ca_appliance_id from request $ca_cr_id is now active";
+				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/active_cloud_request.mail.tmpl";
+				$arr = array('@@ID@@'=>"$ca_cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@PASSWORD@@'=>"(as before)", '@@IP@@'=>"$resource_external_ip", '@@RESNUMBER@@'=>"(as before)");
+				$rmail->var_array = $arr;
+				$rmail->send();
+				break;
+
+
+			case 2:
+				// stop/pause
+				$ca_appliance = new appliance();
+				$ca_appliance->get_instance_by_id($ca_appliance_id);
+				$ca_resource_id = $ca_appliance->resources;
+				$ca_resource_stop = new resource();
+				$ca_resource_stop->get_instance_by_id($ca_appliance->resources);
+				$resource_external_ip=$ca_resource_stop->ip;
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Restarting Appliance $ca_appliance->name ($ca_appliance_id/$ca_resource_stop->id/$resource_external_ip)", "", "", 0, 0, 0);
+				$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
+				// now stop
+				$ca_appliance->stop();
+				// remove resource
+				$ar_update = array(
+					'appliance_resources' => "-1",
+				);
+				// update appliance
+				$ca_appliance = new appliance();
+				$ca_appliance->update($ca_appliance_id, $ar_update);
+
+				// reset the cmd field
+				$ca->set_cmd($ca_id, "noop");
+				// set state to paused
+				$ca->set_state($ca_id, "paused");
+		
+				// here we free up the ip addresses used by the appliance again
+				$iptable = new cloudiptables();
+				$ip_ids_arr = $iptable->get_all_ids();
+				$loop = 0;
+				foreach($ip_ids_arr as $id_arr) {
+					foreach($id_arr as $id) {
+						$ipt = new cloudiptables();
+						$ipt->get_instance_by_id($id);
+						// check if the ip is free
+						if (($ipt->ip_active == 0) && ($ipt->ip_appliance_id == $ca_appliance_id)) {
+							$loop++;
+							$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-monitor-hook.php", "Freeing up ip $ipt->ip_address", "", "", 0, 0, $appliance_id);
+							$ipt->activate($id, true);
+							$ipt->assign_to_appliance($id, 0, 0);
+						}
+					}
+				}
+				// unlink the netconf file
+				$appliance_netconf = "$OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf/cloud-net.conf.$ca_appliance_id";
+				unlink($appliance_netconf);
+				break;
+
+			case 3:
+				// restart
+				$ca_appliance = new appliance();
+				$ca_appliance->get_instance_by_id($ca_appliance_id);
+				$ca_resource_id = $ca_appliance->resources;
+				$ca_resource_restart = new resource();
+				$ca_resource_restart->get_instance_by_id($ca_resource_id);
+				$ca_resource_ip = $ca_resource_restart->ip;
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Restarting Appliance $ca_appliance->name ($ca_appliance_id/$ca_resource_id/$ca_resource_ip)", "", "", 0, 0, 0);
+				$ca_resource_restart->send_command("$ca_resource_ip", "reboot");
+				// reset the cmd field
+				$ca->set_cmd($ca_id, "noop");
+				sleep(5);
+				// set state to transition
+				$resource_fields=array();
+				$resource_fields["resource_state"]="transition";
+				$ca_resource_restart->update_info($ca_resource_id, $resource_fields);
+				break;
+		}
+	}	
+	// ################################## end cloudappliance commands ###############################
 	
 	$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Removing the cloud-monitor lock $cloud_monitor_lock", "", "", 0, 0, 0);
 	unlink($cloud_monitor_lock);

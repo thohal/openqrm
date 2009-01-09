@@ -25,6 +25,7 @@ require_once "$RootDir/plugins/cloud/class/clouduser.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudrequest.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
 
 global $OPENQRM_SERVER_BASE_DIR;
 $refresh_delay=5;
@@ -76,20 +77,86 @@ if(htmlobject_request('action') != '') {
 					continue;
 				}
 				
-				$appliance_restart = new appliance();
-				$appliance_restart->get_instance_by_id($id);
-				$resource_id = $appliance_restart->resources;
-				$resource_restart = new resource();
-				$resource_restart->get_instance_by_id($resource_id);
-				$resource_ip = $resource_restart->ip;
-				$resource_restart->send_command("$resource_ip", "reboot");
-
-				// set state to transition
-				$resource_fields=array();
-				$resource_fields["resource_state"]="transition";
-				$resource_restart->update_info($resource_id, $resource_fields);
+				$cloud_appliance_restart = new cloudappliance();
+				$cloud_appliance_restart->get_instance_by_appliance_id($id);
+				$cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "restart");
 			}
 			break;
+
+		case 'stop':
+			foreach($_REQUEST['identifier'] as $id) {
+				// only allow our appliance to be restarted
+				$clouduser = new clouduser();
+				$clouduser->get_instance_by_name($auth_user);
+
+				$cloudreq_array = array();
+				$cloudreq = new cloudrequest();
+				$cloudreq_array = $cloudreq->get_all_ids();
+				$my_appliances = array();
+				// build an array of our appliance id's
+				foreach ($cloudreq_array as $cr) {
+					$cl_tmp_req = new cloudrequest();
+					$cr_id = $cr['cr_id'];
+					$cl_tmp_req->get_instance_by_id($cr_id);
+					if ($cl_tmp_req->cu_id == $clouduser->id) {
+						// we have found one of our own request, check if we have an appliance-id != 0
+						if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
+							$one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
+							foreach ($one_app_id_arr as $aid) {
+								$my_appliances[] .= $aid;
+							}
+						}
+					}
+				}
+				// is it ours ?
+				if (!in_array($id, $my_appliances)) {
+					continue;
+				}
+				
+				$cloud_appliance_restart = new cloudappliance();
+				$cloud_appliance_restart->get_instance_by_appliance_id($id);
+				$cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "stop");
+			}
+			break;
+
+		case 'start':
+			foreach($_REQUEST['identifier'] as $id) {
+				// only allow our appliance to be restarted
+				$clouduser = new clouduser();
+				$clouduser->get_instance_by_name($auth_user);
+
+				$cloudreq_array = array();
+				$cloudreq = new cloudrequest();
+				$cloudreq_array = $cloudreq->get_all_ids();
+				$my_appliances = array();
+				// build an array of our appliance id's
+				foreach ($cloudreq_array as $cr) {
+					$cl_tmp_req = new cloudrequest();
+					$cr_id = $cr['cr_id'];
+					$cl_tmp_req->get_instance_by_id($cr_id);
+					if ($cl_tmp_req->cu_id == $clouduser->id) {
+						// we have found one of our own request, check if we have an appliance-id != 0
+						if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
+							$one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
+							foreach ($one_app_id_arr as $aid) {
+								$my_appliances[] .= $aid;
+							}
+						}
+					}
+				}
+				// is it ours ?
+				if (!in_array($id, $my_appliances)) {
+					continue;
+				}
+				
+				$cloud_appliance_restart = new cloudappliance();
+				$cloud_appliance_restart->get_instance_by_appliance_id($id);
+				$cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "start");
+			}
+			break;
+
+
+
 
 	}
 }
@@ -224,7 +291,7 @@ function my_cloud_appliances() {
 	$table->form_action = $thisfile;
 	$table->head = $arHead;
 	$table->body = $arBody;
-	$table->bottom = array('restart');
+	$table->bottom = array('stop', 'start', 'restart');
 	$table->identifier = 'appliance_id';
 	$table->max = $appliance_tmp->get_count();
 	#$table->limit = 10;
