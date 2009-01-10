@@ -283,7 +283,7 @@ function openqrm_cloud_monitor() {
 	
 				// ################################## create appliance ###############################
 	
-				$appliance_name = "cloud_".$cr_id."_".$cr_resource_number."_";
+				$appliance_name = "cloud-".$cr_id."-".$cr_resource_number."-x";
 				$appliance_id = openqrm_db_get_free_id('appliance_id', $APPLIANCE_INFO_TABLE);
 				
 				// prepare array to add appliance
