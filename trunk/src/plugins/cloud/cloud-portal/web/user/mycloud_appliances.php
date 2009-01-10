@@ -40,11 +40,19 @@ $auth_user = $_SERVER['PHP_AUTH_USER'];
 global $auth_user;
 
 
+function redirect($strMsg, $currenttab = 'tab0', $url = '') {
+	global $thisfile;
+	if($url == '') {
+		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
+	}
+	//	using meta refresh here because the appliance and resourc class pre-sending header output
+	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
+}
 
 
 
 // check if we got some actions to do
-if(htmlobject_request('action') != '') {
+if ((htmlobject_request('action') != '') && (isset($_REQUEST['identifier']))) {
 	switch (htmlobject_request('action')) {
 
 		case 'restart':
@@ -79,7 +87,16 @@ if(htmlobject_request('action') != '') {
 				
 				$cloud_appliance_restart = new cloudappliance();
 				$cloud_appliance_restart->get_instance_by_appliance_id($id);
-				$cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "restart");
+				// check that state is active
+				if ($cloud_appliance_restart->state == 1) {
+					$cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "restart");
+					$strMsg = "Registered Cloud appliance $id for restart<br>";
+					redirect($strMsg, tab0);
+				} else {
+					$strMsg = "Can only restart Cloud appliance $id if it is in active state<br>";
+					redirect($strMsg, tab0);
+					continue;
+				}
 			}
 			break;
 
@@ -115,7 +132,16 @@ if(htmlobject_request('action') != '') {
 				
 				$cloud_appliance_restart = new cloudappliance();
 				$cloud_appliance_restart->get_instance_by_appliance_id($id);
-				$cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "stop");
+				// check that state is active
+				if ($cloud_appliance_restart->state == 1) {
+					$cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "stop");
+					$strMsg = "Registered Cloud appliance $id to stop (pause)<br>";
+					redirect($strMsg, tab0);
+				} else {
+					$strMsg = "Can only stop Cloud appliance $id if it is in active state<br>";
+					redirect($strMsg, tab0);
+					continue;
+				}
 			}
 			break;
 
@@ -151,7 +177,16 @@ if(htmlobject_request('action') != '') {
 				
 				$cloud_appliance_restart = new cloudappliance();
 				$cloud_appliance_restart->get_instance_by_appliance_id($id);
-				$cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "start");
+				// check if it is in state paused
+				if ($cloud_appliance_restart->state == 0) {
+					$cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "start");
+					$strMsg = "Registered Cloud appliance $id to start (unpause)<br>";
+					redirect($strMsg, tab0);
+				} else {
+					$strMsg = "Can only start Cloud appliance $id if it is in paused state<br>";
+					redirect($strMsg, tab0);
+					continue;
+				}
 			}
 			break;
 
@@ -204,6 +239,9 @@ function my_cloud_appliances() {
 
 	$arHead['appliance_comment'] = array();
 	$arHead['appliance_comment']['title'] ='Comment';
+
+	$arHead['appliance_cloud_state'] = array();
+	$arHead['appliance_cloud_state']['title'] ='State';
 
 	$arBody = array();
 	$appliance_array = $appliance_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
@@ -261,6 +299,18 @@ function my_cloud_appliances() {
 			$state_icon=$inactive_state_icon;
 		}
 
+		// state
+		$cloud_appliance = new cloudappliance();
+		$cloud_appliance->get_instance_by_appliance_id($appliance->id);
+		switch ($cloud_appliance->state) {
+			case 0:
+				$cloudappliance_state = "paused";
+				break;
+			case 1:
+				$cloudappliance_state = "active";
+				break;
+		}
+
 		$kernel = new kernel();
 		$kernel->get_instance_by_id($appliance_db["appliance_kernelid"]);
 		$image = new image();
@@ -279,6 +329,7 @@ function my_cloud_appliances() {
 			'appliance_resources' => "$appliance_resources_str",
 			'appliance_type' => $appliance_virtualization_type,
 			'appliance_comment' => $appliance_db["appliance_comment"],
+			'appliance_cloud_state' => $cloudappliance_state,
 		);
 
 	}

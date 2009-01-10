@@ -10,6 +10,7 @@ require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/class/plugin.class.php";
 require_once "$RootDir/class/event.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
 
 $CLOUD_REQUEST_TABLE="cloud_requests";
 global $CLOUD_REQUEST_TABLE;
@@ -195,23 +196,38 @@ function get_all_ids() {
 
 // returns the cost of a request (in cc_units)
 function get_cost() {
-	// basic cost
-	$cr_costs = 1;
-	// + per cpu
-	$cr_costs = $cr_costs + $this->cpu_req;
-	// + per nic
-	$cr_costs = $cr_costs + $this->network_req;
-	// ha cost double
-	if (!strcmp($this->ha_req, '1')) {
-		$cr_costs = $cr_costs * 2;
+	global $event;
+	$event->log("get_costs", $_SERVER['REQUEST_TIME'], 5, "cloudrequest.class.php", "Calulating bill for cr $this->id", "", "", 0, 0, 0);
+	$cr_appliance_id = $this->appliance_id;
+	$app_id_arr = explode(",", $cr_appliance_id);
+	$cr_costs_final = 0;
+	foreach ($app_id_arr as $app_id) {
+		$cloud_app = new cloudappliance();
+		$cloud_app->get_instance_by_appliance_id($app_id);
+		// check state, only bill if active
+		if ($cloud_app->state == 1) {
+			// basic cost
+			$cr_costs = 1;
+			// + per cpu
+			$cr_costs = $cr_costs + $this->cpu_req;
+			// + per nic
+			$cr_costs = $cr_costs + $this->network_req;
+			// ha cost double
+			if (!strcmp($this->ha_req, '1')) {
+				$cr_costs = $cr_costs * 2;
+			}
+			// TODO : disk costs
+			// TODO : network-traffic costs
+		
+			// sum
+			$cr_costs_final = $cr_costs_final + $cr_costs;
+			$event->log("get_costs", $_SERVER['REQUEST_TIME'], 5, "cloudrequest.class.php", "-> Billing active appliance $app_id (cr $this->id) = $cr_costs CC-units", "", "", 0, 0, 0);
+		} else {
+			$event->log("get_costs", $_SERVER['REQUEST_TIME'], 5, "cloudrequest.class.php", "-> Not billing paused appliance $app_id (cr $this->id)", "", "", 0, 0, 0);
+		}
 	}
-	// TODO : disk costs
-	// TODO : network-traffic costs
-	
-	// multiplied by resource_quantity
-	$cr_costs = $cr_costs * $this->resource_quantity;
-	
-	return $cr_costs;	
+	$event->log("get_costs", $_SERVER['REQUEST_TIME'], 5, "cloudrequest.class.php", "-> Final bill for cr $this->id = $cr_costs_final CC-units", "", "", 0, 0, 0);
+	return $cr_costs_final;	
 }
 
 

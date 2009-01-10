@@ -353,12 +353,17 @@ function openqrm_cloud_monitor() {
 							$appliance->update($appliance->id, $appliance_fields);
 							$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Created new resource $new_vm_resource_id for request ID $cr_id", "", "", 0, 0, 0);
 						}
-				
 					} else {
-						$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Could not find a resource for request ID $cr_id", "", "", 0, 0, 0);
+						// not set to auto-create vms
+						$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Not creating a new resource for request ID $cr_id since auto-create-vms is not enabled.", "", "", 0, 0, 0);
 						$appliance->remove($appliance_id);
 						continue;
 					}
+
+				// ################################## end auto create vm ###############################
+
+				} else {
+					$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Found resource (type $appliance_virtualization) for request ID $cr_id", "", "", 0, 0, 0);
 				}
 	
 				// ################################## clone on deploy ###############################
@@ -787,156 +792,179 @@ function openqrm_cloud_monitor() {
 		}
 
 
-		// #################### deprovisioning ################################		
+		// #################### check for deprovisioning ################################		
 		// de-provision, check if it is time or if status deprovisioning
 		$cr = new cloudrequest();
 		$cr->get_instance_by_id($cr_id);
+		// only active crs
+		if ($cr_status == 3) {
+	
+			// check for stop time
+			$now=$_SERVER['REQUEST_TIME'];
+			$cr_stop = $cr->stop;
+			if ($cr_stop < $now) {
+				// set to deprovisioning
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Cloud request ID $cr_id stop time reached, setting to deprovisioning", "", "", 0, 0, 0);
+				$cr->setstatus($cr_id, "deprovsion");
+			}
+		}
 
-		// check for stop time
-		$now=$_SERVER['REQUEST_TIME'];
-		$cr_stop = $cr->stop;
-		if ($cr_stop > $now) {
-			// if state is deprovisioning then we do it even if it is earlier than stop time
-			if ($cr_status != 5) {
+		// #################### deprovisioning ################################		
+		// refresh object
+		$cr->get_instance_by_id($cr_id);
+		if ($cr_status == 5) {
+
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Deprovisioning of Cloud request ID $cr_id started", "", "", 0, 0, 0);
+	
+			// get the requests appliance
+			$cr_appliance_id = $cr->appliance_id;
+			if (!strlen($cr_appliance_id)) {
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 1, "cloud-monitor", "Request $cr_id does not have an active appliance!", "", "", 0, 0, 0);
+				$cr->setstatus($cr_id, "done");
 				continue;
 			}
-		}
-
-		// get the requests appliance
-		$cr_appliance_id = $cr->appliance_id;
-		if (!strlen($cr_appliance_id)) {
-			// $event->log("cloud", $_SERVER['REQUEST_TIME'], 1, "cloud-monitor", "Request $cr_id does not have an active appliance!", "", "", 0, 0, 0);
-			continue;
-		}
-		if ($cr_appliance_id == 0) {
-			// $event->log("cloud", $_SERVER['REQUEST_TIME'], 1, "cloud-monitor", "Request $cr_id does not have an active appliance!", "", "", 0, 0, 0);
-			continue;
-		}
-
-
-		// ################################## quantity loop de-provisioning ###############################
-		$app_id_arr = explode(",", $cr_appliance_id);
-		// count the resource we deprovision for the request
-		$deprovision_resource_number=1;
-		foreach ($app_id_arr as $app_id) {
-
-			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Deprovisioning appliance $app_id from request ID $cr_id", "", "", 0, 0, 0);
-	
-			// stop the appliance, first de-assign its resource
-			$appliance = new appliance();
-			$appliance->get_instance_by_id($app_id);
-			// .. only if active and not stopped already by the user
-			if ($appliance->resources == -1)  {
-				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Appliance $app_id from request ID $cr_id stopped already", "", "", 0, 0, 0);
-			} else {
-				$resource = new resource();
-				$resource->get_instance_by_id($appliance->resources);
-				$resource_external_ip=$resource->ip;
-				$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
-				// now stop
-				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Stopping Appliance $app_id from request ID $cr_id", "", "", 0, 0, 0);
-				$appliance->stop();
+			if ($cr_appliance_id == 0) {
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 1, "cloud-monitor", "Request $cr_id does not have an active appliance!", "", "", 0, 0, 0);
+				$cr->setstatus($cr_id, "done");
+				continue;
 			}
 	
-			// here we free up the ip addresses used by the appliance again
-			$iptable = new cloudiptables();
-			$ip_ids_arr = $iptable->get_all_ids();
-			$loop = 0;
-			foreach($ip_ids_arr as $id_arr) {
-				foreach($id_arr as $id) {
-					$ipt = new cloudiptables();
-					$ipt->get_instance_by_id($id);
-					// check if the ip is free
-					if (($ipt->ip_active == 0) && ($ipt->ip_appliance_id == $cr_appliance_id) && ($ipt->ip_cr_id == $cr_id)) {
-						$loop++;
-						$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-monitor-hook.php", "Freeing up ip $ipt->ip_address", "", "", 0, 0, $appliance_id);
-						$ipt->activate($id, true);
-						$ipt->assign_to_appliance($id, 0, 0);
-						// the first ip we mail to the user
-						if ($loop == 1) {
-							$resource_external_ip = $ipt->ip_address;
+	
+			// ################################## quantity loop de-provisioning ###############################
+			$app_id_arr = explode(",", $cr_appliance_id);
+			// count the resource we deprovision for the request
+			$deprovision_resource_number=1;
+			foreach ($app_id_arr as $app_id) {
+	
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Deprovisioning appliance $app_id from request ID $cr_id", "", "", 0, 0, 0);
+		
+				// stop the appliance, first de-assign its resource
+				$appliance = new appliance();
+				$appliance->get_instance_by_id($app_id);
+				// .. only if active and not stopped already by the user
+				$cloud_appliance = new cloudappliance();
+	            $cloud_appliance->get_instance_by_appliance_id($appliance->id);
+				if ($cloud_appliance->state == 0) {
+					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Appliance $app_id from request ID $cr_id stopped already", "", "", 0, 0, 0);
+				} else {
+					if ($appliance->resources != -1)  {
+						$resource = new resource();
+						$resource->get_instance_by_id($appliance->resources);
+						$resource_external_ip=$resource->ip;
+						$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
+						// let the kernel assign command finish
+						sleep(4);
+						// now stop
+						$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Stopping Appliance $app_id from request ID $cr_id", "", "", 0, 0, 0);
+						$appliance->stop();
+					} else {
+						$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Not stopping Appliance $app_id from request ID $cr_id since resource is set to autoselect", "", "", 0, 0, 0);
+					}
+				}
+		
+				// here we free up the ip addresses used by the appliance again
+				$iptable = new cloudiptables();
+				$ip_ids_arr = $iptable->get_all_ids();
+				$loop = 0;
+				foreach($ip_ids_arr as $id_arr) {
+					foreach($id_arr as $id) {
+						$ipt = new cloudiptables();
+						$ipt->get_instance_by_id($id);
+						// check if the ip is free
+						if (($ipt->ip_active == 0) && ($ipt->ip_appliance_id == $cr_appliance_id) && ($ipt->ip_cr_id == $cr_id)) {
+							$loop++;
+							$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-monitor-hook.php", "Freeing up ip $ipt->ip_address", "", "", 0, 0, $appliance_id);
+							$ipt->activate($id, true);
+							$ipt->assign_to_appliance($id, 0, 0);
+							// the first ip we mail to the user
+							if ($loop == 1) {
+								$resource_external_ip = $ipt->ip_address;
+							}
 						}
 					}
 				}
-			}
-			// unlink the netconf file
-			$appliance_netconf = "$OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf/cloud-net.conf.$cr_appliance_id";
-			unlink($appliance_netconf);
-
-			// here we remove the appliance from the cloud-appliance table
-            $cloud_appliance = new cloudappliance();
-            $cloud_appliance->get_instance_by_appliance_id($appliance->id);
-			$cloud_appliance->remove($cloud_appliance->id);
-
+				// unlink the netconf file
+				$appliance_netconf = "$OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf/cloud-net.conf.$cr_appliance_id";
+				unlink($appliance_netconf);
 	
-			// ################################## deprovisioning clone-on-deploy ###############################
+				// here we remove the appliance from the cloud-appliance table
+	            $cloud_appliance = new cloudappliance();
+	            $cloud_appliance->get_instance_by_appliance_id($appliance->id);
+				$cloud_appliance->remove($cloud_appliance->id);
 	
-			// do we have remove the clone of the image after deployment ?
-			if ($cr->shared_req == 1) {
-				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Request ID $cr_id has clone-on-deploy activated. Removing the cloned image id $appliance->imageid", "", "", 0, 0, 0);
-				
-				// here we set the state of the cloud-image to remove
-				// this will check the state of the resource which still has
-				// the image as active rootfs. If the resource is idle again the
-				// image will be removed.
-				// The check for this mechanism is being executed at the beginning
-				// of each cloud-monitor loop
-				if ($appliance->imageid > 0) {
-					$cloud_image = new cloudimage();
-					$cloud_image->get_instance_by_image_id($appliance->imageid);
-					$cloud_image->set_state($cloud_image->id, "remove");
-				
-				}
-			}
-	
-			// ################################## deprovisioning mail user ###############################
 		
-			// remove appliance_id from request
-			$cr->get_instance_by_id($cr->id);
-			$cr->setappliance("remove", $appliance->id);
-			// when we are at the last resource for the request set status to 6 = done
-			if ($deprovision_resource_number == $cr->resource_quantity) {
-				$cr->setstatus($cr_id, "done");
-				// set lastbill empty
-				$cr->set_requests_lastbill($cr_id, '');
-			}
-	
-			// send mail to user for deprovision started
-			// get admin email
-			$cc_conf = new cloudconfig();
-			$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
-			// get user + request + appliance details
-			$cu_name = $cu->name;
-			$cu_forename = $cu->forename;
-			$cu_lastname = $cu->lastname;
-			$cu_email = $cu->email;
-			// start/stop time
-			$cr_start = $cr->start;
-			$start = date("d-m-Y H-i", $cr_start);
-			$cr_stop = $cr->stop;
-			$stop = date("d-m-Y H-i", $cr_stop);
+				// ################################## deprovisioning clone-on-deploy ###############################
+		
+				// do we have remove the clone of the image after deployment ?
+				if ($cr->shared_req == 1) {
+					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Request ID $cr_id has clone-on-deploy activated. Removing the cloned image id $appliance->imageid", "", "", 0, 0, 0);
+					
+					// here we set the state of the cloud-image to remove
+					// this will check the state of the resource which still has
+					// the image as active rootfs. If the resource is idle again the
+					// image will be removed.
+					// The check for this mechanism is being executed at the beginning
+					// of each cloud-monitor loop
+					if ($appliance->imageid > 0) {
+						$cloud_image = new cloudimage();
+						$cloud_image->get_instance_by_image_id($appliance->imageid);
+						$cloud_image->set_state($cloud_image->id, "remove");
+					
+					}
+				}
+		
+				// ################################## deprovisioning mail user ###############################
 			
-			$rmail = new cloudmailer();
-			$rmail->to = "$cu_email";
-			$rmail->from = "$cc_admin_email";
-			$rmail->subject = "openQRM Cloud: Your $deprovision_resource_number. resource from request $cr_id is fully deprovisioned now";
-			$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/done_cloud_request.mail.tmpl";
-			$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@IP@@'=>"$resource_external_ip", '@@RESNUMBER@@'=>"$deprovision_resource_number");
-			$rmail->var_array = $arr;
-			$rmail->send();
-	
-			// we cannot remove the appliance here because its image is still in use
-			// and the appliance (id) is needed for the removal
-			// so the image-remove mechanism also cares to remove the appliance
-			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Deprovisioning request ID $cr_id finished", "", "", 0, 0, 0);
-	
-			$deprovision_resource_number++;
-	
-	
-		// ################################## end quantity loop de-provisioning ###############################
+				// remove appliance_id from request
+				$cr->get_instance_by_id($cr->id);
+				$cr->setappliance("remove", $appliance->id);
+				// when we are at the last resource for the request set status to 6 = done
+				if ($deprovision_resource_number == $cr->resource_quantity) {
+					$cr->setstatus($cr_id, "done");
+					// set lastbill empty
+					$cr->set_requests_lastbill($cr_id, '');
+				}
+		
+				// send mail to user for deprovision started
+				// get admin email
+				$cc_conf = new cloudconfig();
+				$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
+				// get user + request + appliance details
+				$cu_name = $cu->name;
+				$cu_forename = $cu->forename;
+				$cu_lastname = $cu->lastname;
+				$cu_email = $cu->email;
+				// start/stop time
+				$cr_start = $cr->start;
+				$start = date("d-m-Y H-i", $cr_start);
+				$cr_stop = $cr->stop;
+				$stop = date("d-m-Y H-i", $cr_stop);
+				
+				$rmail = new cloudmailer();
+				$rmail->to = "$cu_email";
+				$rmail->from = "$cc_admin_email";
+				$rmail->subject = "openQRM Cloud: Your $deprovision_resource_number. resource from request $cr_id is fully deprovisioned now";
+				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/done_cloud_request.mail.tmpl";
+				$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@IP@@'=>"$resource_external_ip", '@@RESNUMBER@@'=>"$deprovision_resource_number");
+				$rmail->var_array = $arr;
+				$rmail->send();
+		
+				// we cannot remove the appliance here because its image is still in use
+				// and the appliance (id) is needed for the removal
+				// so the image-remove mechanism also cares to remove the appliance
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Deprovisioning request ID $cr_id finished", "", "", 0, 0, 0);
+		
+				$deprovision_resource_number++;
+		
+			// ################################## end quantity loop de-provisioning ###############################
+			}
+
+		// #################### end deprovisioning ################################		
 		}
-	
+
+	// #################### end cr-loop ################################		
 	}
+
 
 	// ################################## run cloudappliance commands ###############################
 
