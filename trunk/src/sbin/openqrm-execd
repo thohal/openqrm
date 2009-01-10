@@ -36,7 +36,29 @@ while (true); do
 		echo "    Running $OPENQRM_COMMAND" | logger
 		if [ "$SENDER_IP_ADDRESS" != "" ] && [ "$OPENQRM_COMMAND" != "" ]; then
 			if `openqrm_validate_execution`; then 
-				$OPENQRM_COMMAND  2>&1 | logger
+				case "$1" in
+					reboot)
+						// make sure openqrm-monitord does not send active again
+						killall openqrm-monitord 1>/dev/null 2>&1
+						# in case we do not have killall (e.g. on debian-minimal install) be sure to stop the openqrm-agents anyway
+						for OPENQRM_PID in `ps ax 2>/dev/null | grep openqrm-monitord | grep -v grep | awk {' print $1 '}`; do
+							kill $OPENQRM_PID
+						done
+						$OPENQRM_COMMAND  2>&1 | logger
+						;;
+					halt)
+						// make sure openqrm-monitord does not send active again
+						killall openqrm-monitord 1>/dev/null 2>&1
+						# in case we do not have killall (e.g. on debian-minimal install) be sure to stop the openqrm-agents anyway
+						for OPENQRM_PID in `ps ax 2>/dev/null | grep openqrm-monitord | grep -v grep | awk {' print $1 '}`; do
+							kill $OPENQRM_PID
+						done
+						$OPENQRM_COMMAND  2>&1 | logger
+						;;
+					*)
+						$OPENQRM_COMMAND  2>&1 | logger
+						;;
+				esac
 			fi
 		fi
 	fi
