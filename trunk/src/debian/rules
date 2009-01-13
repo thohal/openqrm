@@ -5,12 +5,17 @@
 # As a special exception, when this file is copied by dh-make into a
 # dh-make output file, you may use that output file without restriction.
 # This special exception was added by Craig Small in version 0.37 of dh-make.
+# include /usr/share/cdbs/1/rules/debhelper.mk
+# include /usr/share/cdbs/1/rules/patchsys-quilt.mk
+include /usr/share/cdbs/1/rules/simple-patchsys.mk
+# include /usr/share/cdbs/1/rules/utils.mk
+
 
 # Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+# export DH_VERBOSE=1
 
 
-configure: configure-stamp
+configure:: configure-stamp
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
@@ -26,11 +31,12 @@ build-stamp: configure-stamp
 	# Add here commands to compile the package.
 	#docbook-to-man debian/openqrm-ng.sgml > openqrm-ng.1
 	make
-clean:
+clean::
 	dh_testdir
 	dh_testroot
 #	rm sbin/openqrm-exec-port-monitor
 	rm -f build-stamp configure-stamp
+	rm -fr $(CURDIR)/debian/openqrm-ng
 
 	# Add here commands to clean up after the build process.
 	#dh_clean

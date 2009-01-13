@@ -1,0 +1,11 @@
+--- a/etc/openqrm-server.conf
++++ b/etc/openqrm-server.conf
+@@ -80,7 +80,7 @@
+ 
+ if [ -f /etc/debian_version ]; then
+ 	OPENQRM_SERVER_DEPENDENCIES="apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client-5.0, syslinux"
+-	OPENQRM_SERVER_BUILD_REQUIREMENTS="make, gcc, pciutils-dev, portmap, rsync, zlib1g-dev, wget, tar, bzip2"
++	OPENQRM_SERVER_BUILD_REQUIREMENTS="make, gcc, libpci-dev, portmap, rsync, zlib1g-dev, wget, tar, bzip2"
+ 	OPENQRM_WEBSERVER_DOCUMENT_ROOT=/var/www
+ 	OPENQRM_WEBSERVER_CONFIG=/etc/apache2/sites-available/default
+ 	OPENQRM_WEBSERVER_INIT=/etc/init.d/apache2

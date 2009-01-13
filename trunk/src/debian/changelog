@@ -1,3 +1,29 @@
+openqrm (4.3-1.1mea4) unstable; urgency=low
+
+  * added new missing packages
+
+ -- Martin Alfke <mea@alfke.s.schlund.de>  Thu, 08 Jan 2009 17:50:54 +0100
+
+openqrm (4.3-1.1mea3) unstable; urgency=low
+
+  * new control file
+
+ -- Martin Alfke <mea@alfke.s.schlund.de>  Thu, 08 Jan 2009 14:39:27 +0100
+
+openqrm (4.3-1.1mea2) unstable; urgency=low
+
+  * changed to cdbs
+  * added dependencies for lenny
+
+ -- Martin Alfke <mea@alfke.s.schlund.de>  Thu, 08 Jan 2009 13:50:36 +0100
+
+openqrm (4.3-1.1mea1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * first binary package
+
+ -- Martin Alfke <mea@alfke.s.schlund.de>  Thu, 08 Jan 2009 13:35:52 +0100
+
 openqrm (4.3-1) unstable; urgency=low
 
   * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
