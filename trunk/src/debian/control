@@ -161,3 +161,9 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
 Description: This openQRM plugin integrates windows
  <insert long description, indented with spaces>
 
+Package: openqrm-plugin-nagios3
+Architecture: i386
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, nagios3, nagios-images, nagios-plugins
+Description: This openQRM plugin integrates nagios3
+ <insert long description, indented with spaces>
+
