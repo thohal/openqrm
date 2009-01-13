@@ -1,0 +1,90 @@
+#!/bin/bash
+
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/include/openqrm-plugin-nagios3-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/etc/openqrm-plugin-nagios3.conf
+
+NAGIOS_CONF_DIR=$NAGIOS_ETC_DIRECTORY/conf.d
+NAGIOS_GENERATED_CONF="$NAGIOS_CONF_DIR/openqrm-network.cfg"
+NAGIOS_CHECK_CMD=$1
+RESOURCE_ID=$2
+RESOURCE_IP=$3
+HOSTNAME="resource$RESOURCE_ID"
+SUBNETFILE="/tmp/subnet.xml"
+CURRENTDIR=`pwd`
+export LANG=C
+
+
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+
+if ! which screen 1>/dev/null; then
+	echo "ERROR: The 'screen' utility is not installed! Please install and try again."
+	image_shelf_log "ERROR: The 'screen' utility is not installed! Please install and try again."
+	exit 6
+fi
+
+# re-run in background via screen
+if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+	export RUN_IN_BACKGROUND=true
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	screen -dmS $SCREEN_NAME $0 $@
+	exit	
+fi
+
+# get the ip config
+openqrm_server_get_config
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+
+
+case "$NAGIOS_CHECK_CMD" in
+	map)
+		echo "Mapping the openQRM network"
+		# for now quite simple gathering of which network to map
+		OPENQRM_NETWORK=`echo $OPENQRM_SERVER_IP_ADDRESS | cut -d'.' -f1-3`".*"
+		nagios_manager_lock aquire
+		openqrm_post_event 0 "get" 5 "openqrm-nagios-manager" "Starting to map the openQRM network!"
+		if ! nmap -sS -O -oX $SUBNETFILE $OPENQRM_NETWORK; then
+			nagios3_log openqrm-nagios-manager "ERROR while running nmap !"
+			nagios_manager_lock release
+			openqrm_post_event 0 "get" 3 "openqrm-nagios-manager" "Mapping the openQRM network failed!"
+			exit 1
+		fi
+		openqrm_post_event 0 "get" 5 "openqrm-nagios-manager" "Mapping finished, generating the Nagios configuration!"
+		cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/bin
+		./nmap2nagios-ng.pl -i -z -r $SUBNETFILE -o $NAGIOS_GENERATED_CONF
+		cd $CURRENTDIR
+
+		if nagios3 -v $NAGIOS_ETC_DIRECTORY/nagios.cfg; then
+			if [ -x /etc/init.d/nagios3 ]; then
+				/etc/init.d/nagios3 restart
+			elif [ -x /etc/init.d/nagios ]; then
+				/etc/init.d/nagios restart
+			else
+				nagios_manager_lock release
+				openqrm_post_event 0 "get" 3 "openqrm-nagios-manager" "Could not restart Nagios. Init script not found !."
+				exit 1
+			fi
+			nagios_manager_lock release
+			openqrm_post_event 0 "get" 5 "openqrm-nagios-manager" "Automatic Nagios configuration finished successfully"
+		else
+			rm -f $NAGIOS_GENERATED_CONF
+			nagios3_log openqrm-nagios-manager "ERROR: Generated nagios-configuration contains errors!"
+			nagios_manager_lock release
+			openqrm_post_event 0 "get" 3 "openqrm-nagios-manager" "The generated nagios-configuration contains errors! Please check manually."
+			exit 1
+		fi
+		;;
+	*)
+		echo "Usage: $0 [map]"
+		exit 1
+		;;
+esac

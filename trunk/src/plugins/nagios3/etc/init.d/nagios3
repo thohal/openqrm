@@ -1,0 +1,49 @@
+#!/bin/bash
+
+export `eval cat /proc/cmdline`	
+. /var/openqrm/openqrm-resource.conf
+export OPENQRM_SERVER_BASE_DIR=$resource_basedir
+. $resource_basedir/openqrm/include/openqrm-functions
+
+# do not start on the intitrd
+if [ -f /etc/initrd-devices.conf ]; then
+	exit 0
+fi
+
+function nagios3_start() {
+	echo "Starting the openQRM nagios3-plugin"
+	nagios3_stop 1>/dev/null 2>&1
+	if [ ! -d /root/.ssh/ ]; then
+		mkdir -p /root/.ssh/
+	fi
+	wget -q -O /dev/stdout "http://$resource_openqrmserver/openqrm/boot-service/openqrmserver_public_key" > /root/.ssh/authorized_keys 
+	return 0
+}
+
+
+function nagios3_stop() {
+	echo "Stopping the openQRM nagios3 plugin"
+	return 0
+}
+
+
+
+case "$1" in
+	start)
+		nagios3_start
+		;;
+	stop)
+		nagios3_stop
+		;;
+	restart)
+		nagios3_stop
+		sleep 1
+		nagios3_start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+
+esac
+exit $?
+

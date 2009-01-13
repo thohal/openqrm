@@ -1,0 +1,123 @@
+#!/bin/bash
+# init script for the openQRM nagios3 plugin
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/include/openqrm-plugin-nagios3-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/etc/openqrm-plugin-nagios3.conf
+
+HTPASSWD="htpasswd"
+if [ -f /etc/SuSE-release ]; then
+	HTPASSWD="htpasswd2"
+fi
+
+function openqrm_plugin_nagios3_start() {
+	echo "Starting the openQRM nagios3-plugin"
+	openqrm_plugin_nagios3_stop 1>/dev/null 2>&1
+	if [ -x /etc/init.d/nagios3 ]; then
+		/etc/init.d/nagios3 start 1>/dev/null 2>&1
+	elif [ -x /etc/init.d/nagios ]; then
+		/etc/init.d/nagios start 1>/dev/null 2>&1
+	else
+		nagios_manager_lock release
+		openqrm_post_event 0 "get" 3 "openqrm-nagios-manager" "Could not start Nagios. Init script not found !."
+		exit 1
+	fi
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios3/.running
+	return 0
+}
+
+
+function openqrm_plugin_nagios3_stop() {
+	echo "Stopping the openQRM nagios3-plugin"
+	if [ -x /etc/init.d/nagios3 ]; then
+		/etc/init.d/nagios3 stop 1>/dev/null 2>&1
+	elif [ -x /etc/init.d/nagios ]; then
+		/etc/init.d/nagios stop 1>/dev/null 2>&1
+	else
+		nagios_manager_lock release
+		openqrm_post_event 0 "get" 3 "openqrm-nagios-manager" "Could not stop Nagios. Init script not found !."
+		exit 1
+	fi
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios3/.running
+	return 0
+}
+
+
+function openqrm_plugin_nagios3_init() {
+	echo "Initializing the openQRM nagios3-plugin"
+	CURRENT_DIR=`pwd`
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios3
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web/boot-service-nagios3.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-nagios3.tgz
+	# link the public key
+	if [ ! -f /root/.ssh/id_dsa.pub ]; then 
+		echo "ERROR: Please create a plublic key for the root user before using the Nagios plugin"
+		sleep 4
+	fi
+	cp -f /root/.ssh/id_dsa.pub $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrmserver_public_key
+	chmod 644 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrmserver_public_key
+	# Nagios Single-Sign-On
+	# First backup original nagios.password
+    mv $NAGIOS_ETC_DIRECTORY/htpasswd.users $NAGIOS_ETC_DIRECTORY/htpasswd.users.bkp
+    # link openqrm .htaccess to nagios
+    ln -s $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd $NAGIOS_ETC_DIRECTORY/htpasswd.users
+    # change nagiosadmin 2 openqrm for accessing nagios-gui
+    sed -i -e 's/nagiosadmin/openqrm/' $NAGIOS_ETC_DIRECTORY/cgi.cfg 
+    # 	
+	# Add openqrm to nagios-contacts - not perfect, but working first :)
+	# sed -i "s/root/openqrm/g" $NAGIOS_ETC_DIRECTORY/conf.d/contacts_nagios3.cfg
+	# theme nagios
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/etc/build.conf/nuvola.conf
+	mkdir -p $OPENQRM_TEMP_DIR/nuvola_inst/
+	tar -C $OPENQRM_TEMP_DIR/nuvola_inst/ -zxf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/theme/nagios-nuvola-$OPENQRM_SOURCE_VERSION.tar.gz
+	cp -r $OPENQRM_TEMP_DIR/nuvola_inst/html/* /usr/share/nagios3/htdocs/
+	rm -rf $OPENQRM_TEMP_DIR/nuvola_inst/
+ 	# Fix WebGUI for Debian
+ 	sed -i "s/nagios\/cgi-bin/nagios3\/cgi-bin/g"  /usr/share/nagios3/htdocs/config.js
+ 	cd $CURRENT_DIR
+	return 0
+}
+
+
+function openqrm_plugin_nagios3_uninstall() {
+	echo "Uninstalling the openQRM nagios3-plugin"
+	openqrm_plugin_nagios3_stop
+	# unlinking the web dir
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios3
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-nagios3.tgz
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrmserver_public_key
+	# restore old nagios htpasswd
+	mv $NAGIOS_ETC_DIRECTORY/htpasswd.users.bkp $NAGIOS_ETC_DIRECTORY/htpasswd.users
+}
+
+
+
+case "$1" in
+	start)
+		openqrm_plugin_nagios3_start
+		;;
+	stop)
+		openqrm_plugin_nagios3_stop
+		;;
+	restart)
+		openqrm_plugin_nagios3_stop
+		sleep 1
+		openqrm_plugin_nagios3_start
+		;;
+	init)
+		openqrm_plugin_nagios3_init
+		;;
+	uninstall)
+		openqrm_plugin_nagios3_uninstall
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+

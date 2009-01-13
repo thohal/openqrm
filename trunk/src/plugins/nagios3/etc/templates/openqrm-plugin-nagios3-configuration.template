@@ -1,0 +1,20 @@
+# openQRM nagios3-plugin default
+
+
+define host{
+        use                     generic-host            ; Name of host template to use
+        host_name               NODE
+        alias                   NODE
+        address                 IPADDRESS
+        }
+
+# Define a service to check the disk space of the root partition
+# on the local machine.  Warning if < 20% free, critical if
+# < 10% free space on partition.
+
+define service{
+        use                             generic-service         ; Name of service template to use
+        host_name                       NODE
+        service_description             FTP-Server
+        check_command                   check_ftp
+        }
