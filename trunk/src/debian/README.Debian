@@ -1,6 +1,28 @@
 openqrm-ng for Debian
 ---------------------
 
-<possible notes regarding this package - if none, delete this file>
+- HowTo create packages
 
- -- Thomas Halinka <mail@thohal.de>  Thu, 01 May 2008 00:53:04 +0200
+check out latest version from svn.
+update changelog ( e.g.: dch -i)
+build package ( e.g.: debuild)
+
+ATTN for svn upload:
+
+run the following command to remove all binaries and unneccesary files from the debian directory:
+
+fakeroot make -f debian/rules clean
+
+- HowTo install openqrm
+
+there is - yet - no debian repository.
+use local dpkg to install all created packages.
+
+- General
+
+Openqrm installs completely into /usr/lib/openqrm
+Openqrm plugins will - in future - create symlinks to /etc/<plugins-name>.
+
+
+
+ -- Martin ALfke <tuxmea@users.sourceforge.net>  Thu, 01 May 2008 00:53:04 +0200
