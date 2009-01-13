@@ -5,6 +5,7 @@ OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/include/openqrm-plugin-vmware-server2-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/etc/openqrm-plugin-vmware-server2.conf
 if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
 	OPENQRM_SERVER_IP=$resource_openqrmserver
@@ -20,7 +21,7 @@ export LANG=C
 OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
 OPENQRM_VMWARE_SERVER_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/etc/templates/openqrm-vmware-server2-vm"
 OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY="sleep 5"
-VMWARE_VIM_CMD="vmware-vim-cmd"
+VMWARE_VIM_CMD="vmware-vim-cmd ${VMWARE_VIM_CMD_ARGS}"
 # is this a vmware-server2 ?
 if ! which $VMWARE_VIM_CMD 1>/dev/null 2>&1; then
 	echo "ERROR: VMware-server2 util $VMWARE_VIM_CMD not installed, exiting!"
