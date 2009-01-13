@@ -5,6 +5,7 @@ $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/image.class.php";
+require_once "$RootDir/class/image_authentication.class.php";
 require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/class/plugin.class.php";
 require_once "$RootDir/class/event.class.php";
@@ -91,6 +92,10 @@ $event = new event();
 			if ("$resource_id" == "0") {
 				$event->log("update_info", $_SERVER['REQUEST_TIME'], 5, "resource-monitor", "Checking states of all resources", "", "", 0, 0, 0);
 				$resource->check_all_states();			
+
+				// check if there are any image_authentications to manage
+				$image_auth = new image_authentication();
+				$image_auth->check_all_image_authentication();
 				
 				// here a plugin hook for things which needs to be done periodically
 				$plugin = new plugin();

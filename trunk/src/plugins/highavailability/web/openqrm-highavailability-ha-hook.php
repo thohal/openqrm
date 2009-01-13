@@ -5,6 +5,8 @@
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/event.class.php";
+require_once "$RootDir/class/image.class.php";
+require_once "$RootDir/class/image_authentication.class.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
@@ -82,6 +84,20 @@ function openqrm_highavailability_ha_hook($resource_id) {
 	$old_resource = new resource();
 	$old_resource->get_instance_by_id($resource_id);
 	$openqrm_server->send_command("openqrm_assign_kernel $old_resource->id $old_resource->mac default");
+
+	// since the image stays the same we just remove all 
+	// image_authentications for the resource
+	$image_authentication = new image_authentication();
+	$ia_id_ar = $image_authentication->get_all_ids();
+	foreach($ia_id_ar as $ia_list) {
+		$ia_auth_id = $ia_list['ia_id'];
+		$ia_auth = new image_authentication();
+		$ia_auth->get_instance_by_id($ia_auth_id);
+		if ($ia_auth->resource_id == $resource_id) {
+			$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 5, "openqrm-highavailability-ha-hook.php", "Removing image_authentication $ia_auth_id for resource id $resource_id", "", "", 0, 0, $resource_id);
+			$ia_auth->remove($ia_auth_id);
+		}
+	}
 
 	// prepare restart on other resource
 	$appliance_fields = array();
