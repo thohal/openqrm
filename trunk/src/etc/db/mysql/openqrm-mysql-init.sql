@@ -159,6 +159,15 @@ create table image_service (
 );
 
 
+# image_authentication table
+create table image_authentication_info(
+	ia_id INT(5) NOT NULL PRIMARY KEY,
+	ia_image_id INT(5),
+	ia_resource_id INT(5),
+	ia_auth_type INT(5)
+);
+
+
 # plugg-able deployment types
 create table deployment_info(
 	deployment_id INT(5) NOT NULL PRIMARY KEY,

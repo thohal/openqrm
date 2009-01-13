@@ -161,6 +161,14 @@ create table image_service (				\
 	primary key(image_id)				\
 )
 
+drop table image_authentication_info
+create table image_authentication_info (				\
+	ia_id bigint not null,			\
+	ia_image_id bigint		\
+	ia_resource_id bigint		\
+	ia_auth_type bigint		\
+)
+
 drop table deployment_info
 create table deployment_info(				\
 	deployment_id bigint not null,			\

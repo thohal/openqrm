@@ -150,6 +150,14 @@ create table image_service(
 	service char(50)
 );
 
+drop table image_authentication_info;
+create table image_authentication_info(
+	ia_id int8 NOT NULL PRIMARY KEY,
+	ia_image_id int8,
+	ia_resource_id int8,
+	ia_auth_type int8
+);
+
 drop table deployment_info;
 create table deployment_info(
 	deployment_id int8 NOT NULL PRIMARY KEY,

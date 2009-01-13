@@ -152,6 +152,14 @@ create table image_service(
 	service VARCHAR2(50)
 );
 
+drop table image_authentication_info;
+create table image_authentication_info(
+	ia_id INTEGER NOT NULL PRIMARY KEY,
+	ia_image_id INTEGER,
+	ia_resource_id INTEGER,
+	ia_auth_type INTEGER
+);
+
 drop table deployment_info;
 create table deployment_info(
 	deployment_id INTEGER NOT NULL PRIMARY KEY,
