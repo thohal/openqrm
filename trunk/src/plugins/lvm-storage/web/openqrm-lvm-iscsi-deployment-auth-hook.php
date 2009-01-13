@@ -9,6 +9,7 @@ require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/image.class.php";
+require_once "$RootDir/class/image_authentication.class.php";
 require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/class/appliance.class.php";
@@ -23,6 +24,7 @@ require_once "$RootDir/include/openqrm-server-config.php";
  
 global $OPENQRM_SERVER_BASE_DIR;
 global $OPENQRM_EXEC_PORT;
+global $IMAGE_AUTHENTICATION_TABLE;
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
@@ -45,6 +47,7 @@ global $event;
 		global $OPENQRM_SERVER_BASE_DIR;
 		global $OPENQRM_SERVER_IP_ADDRESS;
 		global $OPENQRM_EXEC_PORT;
+		global $IMAGE_AUTHENTICATION_TABLE;
 		global $openqrm_server;
 	
 		$appliance = new appliance();
@@ -143,49 +146,31 @@ global $event;
 	
 				// do we need to disable the install-from/transfer-to-nfs exports ?
 				if ($run_disable_deployment_export == 1) {
-					$stop_deployment_hook_file = "/tmp/openqrm-lvm-iscsi-deployment-export-auth-hook.$appliance_id";
-					$fp = fopen($stop_deployment_hook_file, 'w');
-					fwrite($fp, "#!/bin/bash\n");
-					fwrite($fp, "\n");
-					fwrite($fp, "if [ \"\$RUN_IN_BACKGROUND\" != \"true\" ]; then\n");
-					fwrite($fp, "	export RUN_IN_BACKGROUND=true\n");
-					fwrite($fp, "SCREEN_NAME=`date +%T%x | sed -e \"s/://g\" | sed -e \"s#/##g\"`\n");
-					fwrite($fp, "	screen -dmS \$SCREEN_NAME \$0 \$@\n");
-					fwrite($fp, "	exit\n");
-					fwrite($fp, "fi\n");
-					fwrite($fp, "sleep 60\n");
-					fwrite($fp, "ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/openqrm-lvm-iscsi-deployment-auth-hook.php $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-lvm-iscsi-deployment-export-auth-hook.$appliance_id.php\n");
-					fwrite($fp, "wget -q -O /dev/null \"http://localhost/openqrm/boot-service/openqrm-lvm-iscsi-deployment-export-auth-hook.$appliance_id.php?bgcmd=stop_deployment_auth&appliance_id=$appliance_id\"\n");
-					fwrite($fp, "rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-lvm-iscsi-deployment-export-auth-hook.$appliance_id.php\n");
-					fwrite($fp, "rm -f $stop_deployment_hook_file\n");
-					fwrite($fp, "\n");
-					fclose($fp);
-					chmod($stop_deployment_hook_file, 0750);
-					$openqrm_server->send_command($stop_deployment_hook_file);
+					$image_authentication = new image_authentication();
+					$ia_id = openqrm_db_get_free_id('ia_id', $IMAGE_AUTHENTICATION_TABLE);
+					$image_auth_ar = array(
+						'ia_id' => $ia_id,
+						'ia_image_id' => $appliance->imageid,
+						'ia_resource_id' => $appliance->resources,
+						'ia_auth_type' => 1,
+					);
+					$image_authentication->add($image_auth_ar);
+					$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-iscsi-deployment-auth-hook.php", "Registered image $appliance->imageid for de-authentication the deployment exports when resource $appliance->resources is fully up.", "", "", 0, 0, $appliance_id);
 				}
-				
 
 				break;
+
 			case "stop":
-				$stop_hook_file = "/tmp/openqrm-lvm-iscsi-deployment-auth-hook.$appliance_id";
-				$fp = fopen($stop_hook_file, 'w');
-				fwrite($fp, "#!/bin/bash\n");
-				fwrite($fp, "\n");
-				fwrite($fp, "if [ \"\$RUN_IN_BACKGROUND\" != \"true\" ]; then\n");
-				fwrite($fp, "	export RUN_IN_BACKGROUND=true\n");
-				fwrite($fp, "	SCREEN_NAME=`date +%T%x | sed -e \"s/://g\" | sed -e \"s#/##g\"`\n");
-				fwrite($fp, "	screen -dmS \$SCREEN_NAME \$0 \$@\n");
-				fwrite($fp, "	exit\n");
-				fwrite($fp, "fi\n");
-				fwrite($fp, "sleep 60\n");
-				fwrite($fp, "ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/web/openqrm-lvm-iscsi-deployment-auth-hook.php $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-lvm-iscsi-deployment-auth-hook.$appliance_id.php\n");
-				fwrite($fp, "wget -q -O /dev/null \"http://localhost/openqrm/boot-service/openqrm-lvm-iscsi-deployment-auth-hook.$appliance_id.php?bgcmd=stop_auth&appliance_id=$appliance_id\"\n");
-				fwrite($fp, "rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-lvm-iscsi-deployment-auth-hook.$appliance_id.php\n");
-				fwrite($fp, "rm -f $stop_hook_file\n");
-				fwrite($fp, "\n");
-				fclose($fp);
-				chmod($stop_hook_file, 0750);
-				$openqrm_server->send_command($stop_hook_file);
+				$image_authentication = new image_authentication();
+				$ia_id = openqrm_db_get_free_id('ia_id', $IMAGE_AUTHENTICATION_TABLE);
+				$image_auth_ar = array(
+					'ia_id' => $ia_id,
+					'ia_image_id' => $appliance->imageid,
+					'ia_resource_id' => $appliance->resources,
+					'ia_auth_type' => 0,
+				);
+				$image_authentication->add($image_auth_ar);
+				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-iscsi-deployment-auth-hook.php", "Registered image $appliance->imageid for de-authentication the root-fs exports when resource $appliance->resources is idle again.", "", "", 0, 0, $appliance_id);
 				break;
 			
 		}
@@ -197,25 +182,22 @@ global $event;
 	//--------------------------------------------------
 	/**
 	* de-authenticates the storage volume for the appliance resource
-	* (runs in background)
+	* (runs via the image_authentication class)
 	* <code>
-	* storage_auth_stop_in_background(2);
+	* storage_auth_stop(2);
 	* </code>
 	* @access public
 	*/
 	//--------------------------------------------------
-	function storage_auth_stop_in_background($appliance_id) {
+	function storage_auth_stop($image_id) {
 	
 		global $event;
 		global $OPENQRM_SERVER_BASE_DIR;
 		global $OPENQRM_SERVER_IP_ADDRESS;
 		global $OPENQRM_EXEC_PORT;
 	
-		$appliance = new appliance();
-		$appliance->get_instance_by_id($appliance_id);
-	
 		$image = new image();
-		$image->get_instance_by_id($appliance->imageid);
+		$image->get_instance_by_id($image_id);
 		$image_name=$image->name;
 		$image_rootdevice=$image->rootdevice;
 		// generate a password for the image
@@ -239,26 +221,8 @@ global $event;
 		$deployment_type = $deployment->type;
 		$deployment_plugin_name = $deployment->storagetype;
 	
-		$resource = new resource();
-		$resource->get_instance_by_id($appliance->resources);
-		$resource_mac=$resource->mac;
-		$resource_ip=$resource->ip;
-
-		$loop=0;
-		while(1) {
-			$resource->get_instance_by_id($appliance->resources);
-			if ((!strcmp($resource->state, "active")) && ($resource->imageid == 1)) {
-				$event->log("storage_auth_stop_in_background", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-iscsi-deployment-auth-hook.php", "Resource $resource_ip is idle again, applying stop auth for image $image_name", "", "", 0, 0, $appliance_id);
-				break;				
-			}
-			if ($loop > 500) {
-				$event->log("storage_auth_stop_in_background", $_SERVER['REQUEST_TIME'], 2, "openqrm-lvm-iscsi-deployment-auth-hook.php", "Timeout for stop auth hook image $image_name, exiting !", "", "", 0, 0, $appliance_id);
-				return;
-			}
-			sleep(2);
-			$loop++;
-		}
 		$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_location_name -i $image_password -t lvm-iscsi-deployment";
+		$resource = new resource();
 		$resource->send_command($storage_ip, $auth_stop_cmd);
 		// and update the image params
 		$image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
@@ -272,25 +236,22 @@ global $event;
 	//--------------------------------------------------
 	/**
 	* de-authenticates the storage deployment volumes for the appliance resource
-	* (runs in background)
+	* (runs via the image_authentication class)
 	* <code>
-	* storage_auth_deployment_stop_in_background(2);
+	* storage_auth_deployment_stop(2);
 	* </code>
 	* @access public
 	*/
 	//--------------------------------------------------
-	function storage_auth_deployment_stop_in_background($appliance_id) {
+	function storage_auth_deployment_stop($image_id) {
 	
 		global $event;
 		global $OPENQRM_SERVER_BASE_DIR;
 		global $OPENQRM_SERVER_IP_ADDRESS;
 		global $OPENQRM_EXEC_PORT;
 	
-		$appliance = new appliance();
-		$appliance->get_instance_by_id($appliance_id);
-	
 		$image = new image();
-		$image->get_instance_by_id($appliance->imageid);
+		$image->get_instance_by_id($image_id);
 		$image_name=$image->name;
 		$image_rootdevice=$image->rootdevice;
 	
@@ -305,25 +266,8 @@ global $event;
 		$deployment_type = $deployment->type;
 		$deployment_plugin_name = $deployment->storagetype;
 	
+		// just for sending the commands	
 		$resource = new resource();
-		$resource->get_instance_by_id($appliance->resources);
-		$resource_mac=$resource->mac;
-		$resource_ip=$resource->ip;
-
-		$loop=0;
-		while(1) {
-			$resource->get_instance_by_id($appliance->resources);
-			if ((!strcmp($resource->state, "active")) && ($resource->imageid == 1)) {
-				$event->log("storage_auth_deployment_stop_in_background", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-iscsi-deployment-auth-hook.php", "Resource $resource_ip is active now, applying stop auth for deployment exports", "", "", 0, 0, $appliance_id);
-				break;				
-			}
-			if ($loop > 500) {
-				$event->log("storage_auth_deployment_stop_in_background", $_SERVER['REQUEST_TIME'], 2, "openqrm-lvm-iscsi-deployment-auth-hook.php", "Timeout for deployment stop auth hook image $image_name, exiting !", "", "", 0, 0, $appliance_id);
-				return;
-			}
-			sleep(2);
-			$loop++;
-		}
 	
 		// get install deployment params
 		$install_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_INSTALL_FROM_NFS"));
@@ -375,23 +319,6 @@ global $event;
 	
 	}
 
-
-
-
-
-
-// do we run the background hook ?
-$bgcmd = $_REQUEST["bgcmd"];
-$appliance_id = $_REQUEST["appliance_id"];
-
-	switch ($bgcmd) {
-		case 'stop_auth':
-			storage_auth_stop_in_background($appliance_id);
-			break;
-		case 'stop_deployment_auth':
-			storage_auth_deployment_stop_in_background($appliance_id);
-			break;
-	}
 
 
 ?>
