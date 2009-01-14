@@ -60,7 +60,7 @@ case "$NAGIOS_CHECK_CMD" in
 		fi
 		openqrm_post_event 0 "get" 5 "openqrm-nagios-manager" "Mapping finished, generating the Nagios configuration!"
 		cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/bin
-		./nmap2nagios-ng.pl -i -z -r $SUBNETFILE -o $NAGIOS_GENERATED_CONF
+		./nmap2nagios-ng.pl -i -d -r $SUBNETFILE -o $NAGIOS_GENERATED_CONF
 		cd $CURRENTDIR
 
 		if nagios3 -v $NAGIOS_ETC_DIRECTORY/nagios.cfg; then

@@ -86,7 +86,8 @@ function openqrm_plugin_nagios3_uninstall() {
 	echo "Uninstalling the openQRM nagios3-plugin"
 	openqrm_plugin_nagios3_stop
 	# unlinking the web dir
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios3
+	
+	rm -arf $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios3
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-nagios3.tgz
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrmserver_public_key
 	# restore old nagios htpasswd
