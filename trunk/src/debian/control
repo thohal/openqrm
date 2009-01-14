@@ -121,7 +121,7 @@ Description: This openQRM plugin integrates cloud
 
 Package: openqrm-plugin-dns
 Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, bind9
 Description: This openQRM plugin integrates dns
  <insert long description, indented with spaces>
 
@@ -139,7 +139,7 @@ Description: This openQRM plugin integrates kvm
 
 Package: openqrm-plugin-puppet
 Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, puppetmaster
 Description: This openQRM plugin integrates puppet
  <insert long description, indented with spaces>
 
