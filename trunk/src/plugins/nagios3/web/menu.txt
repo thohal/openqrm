@@ -3,7 +3,7 @@
 #	Alt
 #	IMG
 #	Target
-.|Nagios2
+.|Nagios3
 ..|About|plugins/nagios3/nagios3-about.php
 ..|Config|plugins/nagios3/nagios3-overview.php
 ..|Overview|plugins/nagios3/nagios3-redir.php?re=cgi-bin/tac.cgi'
