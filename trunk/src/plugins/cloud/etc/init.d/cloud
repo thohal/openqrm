@@ -29,7 +29,7 @@ function cloud_start() {
 		echo "ERROR: Could not get Cloud network-config from openQRM-server $resource_openqrmserver"
 		return 1
 	fi
-	OPENQRM_INTERFACE=`ifconfig | grep $resource_mac | grep :oq | cut -d':' -f1`
+	OPENQRM_INTERFACE=`ifconfig | grep -i $resource_mac | grep :oq | cut -d':' -f1`
 	EXTERNAL_INTERFACES_LIST=`ifconfig -a | grep eth | awk {' print $1 '} | grep -v $OPENQRM_INTERFACE`
 
 	# assign the network conf
