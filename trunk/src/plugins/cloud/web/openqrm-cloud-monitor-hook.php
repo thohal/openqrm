@@ -8,6 +8,7 @@ $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 $CloudDir = $_SERVER["DOCUMENT_ROOT"].'/cloud-portal/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/image.class.php";
+require_once "$RootDir/class/image_authentication.class.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/appliance.class.php";
@@ -224,7 +225,22 @@ function openqrm_cloud_monitor() {
 			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types are lvm-nfs-deployment, nfs-deployment, lvm-iscsi-deployment, iscsi-deployment, lvm-aoe-deployment and aoe-deployment.", "", "", 0, 0, 0);
 		}
 // storage dependency !
-			
+
+		// remove any image_authentication for the image
+		// since we remove the image a image_authentication won't 
+		// find it anyway
+		$image_authentication = new image_authentication();
+		$ia_id_ar = $image_authentication->get_all_ids();
+		foreach($ia_id_ar as $ia_list) {
+			$ia_auth_id = $ia_list['ia_id'];
+			$ia_auth = new image_authentication();
+			$ia_auth->get_instance_by_id($ia_auth_id);
+			if ($ia_auth->image_id == $ci_image_id) {
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Removing image_authentication $ia_auth_id for cloud image $ci_image_id since we are on going to remove the image itself", "", "", 0, 0, $resource_id);
+				$ia_auth->remove($ia_auth_id);
+			}
+		}
+
 		// remove the image in openQRM				
 		$image->remove($ci_image_id);
 		// remove the appliance
