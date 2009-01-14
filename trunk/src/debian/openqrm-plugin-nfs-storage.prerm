@@ -1,3 +1,5 @@
 #!/bin/bash
 # this is the openqrm-plugin-nfs-storage preremove script
-`dirname $0`/openqrm-plugin-nfs-storage stop
+/etc/init.d/openqrm-plugin-nfs-storage stop
+rm /etc/init.d/openqrm-plugin-nfs-storage
+rm -fr /var/www/openqrm/base/plugins/nfs-storage

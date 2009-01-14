@@ -1,0 +1,4 @@
+#!/bin/bash
+# this is the openqrm-plugin-xen postinstall script
+ln -s /usr/lib/openqrm/plugins/xen/etc/init.d/openqrm-plugin-xen /etc/init.d/openqrm-plugin-xen
+mkdir -p /var/www/openqrm/base/plugins/xen

@@ -1,3 +1,5 @@
 #!/bin/bash
 # this is the openqrm-plugin-tftpd preremove script
-`dirname $0`/openqrm-plugin-tftpd stop
+/etc/init.d/openqrm-plugin-tftpd stop
+rm /etc/init.d/openqrm-plugin-tftpd
+rm -fr /var/www/openqrm/base/plugins/tftpd

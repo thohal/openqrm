@@ -1,0 +1,4 @@
+#!/bin/bash
+# this is the openqrm-plugin-iscsi-storage postinstall script
+ln -s /usr/lib/openqrm/plugins/iscsi-storage/etc/init.d/openqrm-plugin-iscsi-storage /etc/init.d/openqrm-plugin-iscsi-storage
+mkdir -p /var/www/openqrm/base/plugins/iscsi-storage

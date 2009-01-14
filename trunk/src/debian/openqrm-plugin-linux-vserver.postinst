@@ -1,0 +1,4 @@
+#!/bin/bash
+# this is the openqrm-plugin-linux-vserver postinstall script
+ln -s /usr/lib/openqrm/plugins/linux-vserver/etc/init.d/openqrm-plugin-linux-vserver /etc/init.d/openqrm-plugin-linux-vserver
+mkdir -p /var/www/openqrm/base/plugins/linux-vserver

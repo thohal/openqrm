@@ -1,0 +1,4 @@
+#!/bin/bash
+# this is the openqrm-plugin-windows postinstall script
+ln -s /usr/lib/openqrm/plugins/windows/etc/init.d/openqrm-plugin-windows /etc/init.d/openqrm-plugin-windows
+mkdir -p /var/www/openqrm/base/plugins/windows

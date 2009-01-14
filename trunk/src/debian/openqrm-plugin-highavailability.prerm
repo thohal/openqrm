@@ -1,3 +1,5 @@
 #!/bin/bash
 # this is the openqrm-plugin-highavailability preremove script
-`dirname $0`/openqrm-plugin-highavailability stop
+/etc/init.d/openqrm-plugin-highavailability stop
+rm /etc/init.d/openqrm-plugin-highavailability
+rm -fr /var/www/openqrm/base/plugins/highavailability

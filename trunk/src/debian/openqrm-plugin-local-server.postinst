@@ -1,0 +1,4 @@
+#!/bin/bash
+# this is the openqrm-plugin-local-server postinstall script
+ln -s /usr/lib/openqrm/plugins/local-server/etc/init.d/openqrm-plugin-local-server /etc/init.d/openqrm-plugin-local-server
+mkdir -p /var/www/openqrm/base/plugins/local-server

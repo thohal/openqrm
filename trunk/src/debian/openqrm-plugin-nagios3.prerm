@@ -1,3 +1,5 @@
 #!/bin/bash
 # this is the openqrm-plugin-nagios3 preremove script
-`dirname $0`/openqrm-plugin-nagios3 stop
+/etc/init.d/openqrm-plugin-nagios3 stop
+rm /etc/init.d/openqrm-plugin-nagios3
+rm -fr /var/www/openqrm/base/plugins/nagios3

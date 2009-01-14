@@ -1,0 +1,4 @@
+#!/bin/bash
+# this is the openqrm-plugin-nfs-storage postinstall script
+ln -s /usr/lib/openqrm/plugins/nfs-storage/etc/init.d/openqrm-plugin-nfs-storage /etc/init.d/openqrm-plugin-nfs-storage
+mkdir -p /var/www/openqrm/base/plugins/nfs-storage

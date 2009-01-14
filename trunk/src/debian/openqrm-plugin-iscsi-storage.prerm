@@ -1,3 +1,5 @@
 #!/bin/bash
 # this is the openqrm-plugin-iscsi-storage preremove script
-`dirname $0`/openqrm-plugin-iscsi-storage stop
+/etc/init.d/openqrm-plugin-iscsi-storage stop
+rm /etc/init.d/openqrm-plugin-iscsi-storage
+rm -fr /var/www/openqrm/base/plugins/iscsi-storage

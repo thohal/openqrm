@@ -1,0 +1,5 @@
+#!/bin/bash
+# this is the openqrm-plugin-dhcpd postinstall script
+mkdir -p /var/www/openqrm/base/plugins/dhcpd
+ln -s /usr/lib/openqrm/plugins/openqrm-plugin-dhcpd /etc/init.d/openqrm-plugin-dhcpd
+

@@ -1,3 +1,5 @@
 #!/bin/bash
 # this is the openqrm-plugin-vmware-server preremove script
-`dirname $0`/openqrm-plugin-vmware-server stop
+/etc/init.d/openqrm-plugin-vmware-server stop
+rm /etc/init.d/openqrm-plugin-vmware-server
+rm -fr /var/www/openqrm/base/plugins/vmware-server

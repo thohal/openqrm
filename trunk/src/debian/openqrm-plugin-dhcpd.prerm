@@ -1,3 +1,5 @@
 #!/bin/bash
 # this is the openqrm-plugin-dhcpd preremove script
-`dirname $0`/openqrm-plugin-dhcpd stop
+/etc/init.d/openqrm-plugin-dhcpd stop
+rm /etc/init.d/openqrm-plugin-dhcpd
+rm -fr /var/www/openqrm/base/plugins/dhcpd

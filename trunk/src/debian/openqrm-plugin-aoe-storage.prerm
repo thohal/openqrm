@@ -1,3 +1,5 @@
 #!/bin/bash
 # this is the openqrm-plugin-aoe-storage preremove script
-`dirname $0`/openqrm-plugin-aoe-storage stop
+/etc/init.d/openqrm-plugin-aoe-storage stop
+rm /etc/init.d/openqrm-plugin-aoe-storage
+rm -fr /var/www/openqrm/base/plugins/aoe-storage

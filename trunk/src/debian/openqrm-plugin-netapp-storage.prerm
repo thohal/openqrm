@@ -1,3 +1,5 @@
 #!/bin/bash
 # this is the openqrm-plugin-netapp-storage preremove script
-`dirname $0`/openqrm-plugin-netapp-storage stop
+/etc/init.d/openqrm-plugin-netapp-storage stop
+rm /etc/init.d/openqrm-plugin-netapp-storage
+rm -fr /var/www/openqrm/base/plugins/netapp-storage

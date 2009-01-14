@@ -1,3 +1,5 @@
 #!/bin/bash
 # this is the openqrm-plugin-linux-vserver preremove script
-`dirname $0`/openqrm-plugin-linux-vserver stop
+/etc/init.d/openqrm-plugin-linux-vserver stop
+rm /etc/init.d/openqrm-plugin-linux-vserver
+rm -fr /var/www/openqrm/base/plugins/linux-vserver

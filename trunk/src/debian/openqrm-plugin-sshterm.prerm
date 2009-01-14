@@ -1,3 +1,5 @@
 #!/bin/bash
 # this is the openqrm-plugin-sshterm preremove script
-`dirname $0`/openqrm-plugin-sshterm stop
+/etc/init.d/openqrm-plugin-sshterm stop
+rm /etc/init.d/openqrm-plugin-sshterm
+rm -fr /var/www/openqrm/base/plugins/sshterm

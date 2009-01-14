@@ -1,3 +1,5 @@
 #!/bin/bash
 # this is the openqrm-plugin-local-server preremove script
-`dirname $0`/openqrm-plugin-local-server stop
+/etc/init.d/openqrm-plugin-local-server stop
+rm /etc/init.d/openqrm-plugin-local-server
+rm -fr /var/www/openqrm/base/plugins/local-server
