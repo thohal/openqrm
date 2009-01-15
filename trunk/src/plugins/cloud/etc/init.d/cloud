@@ -43,12 +43,12 @@ function cloud_start() {
 		for INTERFACE in $EXTERNAL_INTERFACES_LIST; do
 			# here we set the interface
 			ifconfig $INTERFACE $IP netmask $SUBNET up
-
 			# configure the route, make sure there is just one default route
-			CURRENT_DEFAULT_ROUTE=`route -n | grep ^0.0.0.0 | awk {' print $2 '}`
-			CURRENT_DEFAULT_ROUTE_INTERFACE=`route -n | grep ^0.0.0.0 | awk {' print $8 '}`
-			route del default gw $CURRENT_DEFAULT_ROUTE 1>/dev/null 2>&1
-			route del default gw $CURRENT_DEFAULT_ROUTE $CURRENT_DEFAULT_ROUTE_INTERFACE 1>/dev/null 2>&1
+			for CURRENT_DEFAULT_ROUTE in `route -n | grep ^0.0.0.0 | awk {' print $2 '}`; do
+				CURRENT_DEFAULT_ROUTE_INTERFACE=`route -n | grep ^0.0.0.0 | grep $CURRENT_DEFAULT_ROUTE | awk {' print $8 '}`
+				route del default gw $CURRENT_DEFAULT_ROUTE 1>/dev/null 2>&1
+				route del default gw $CURRENT_DEFAULT_ROUTE $CURRENT_DEFAULT_ROUTE_INTERFACE 1>/dev/null 2>&1
+			done
 			route add default gw $GATEWAY
 			# configure /etc/resolv.conf
 			> /etc/resolv.conf
