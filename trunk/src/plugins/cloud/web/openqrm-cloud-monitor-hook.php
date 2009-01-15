@@ -887,7 +887,7 @@ function openqrm_cloud_monitor() {
 						$ipt = new cloudiptables();
 						$ipt->get_instance_by_id($id);
 						// check if the ip is free
-						if (($ipt->ip_active == 0) && ($ipt->ip_appliance_id == $cr_appliance_id) && ($ipt->ip_cr_id == $cr_id)) {
+						if (($ipt->ip_active == 0) && ($ipt->ip_appliance_id == $app_id) && ($ipt->ip_cr_id == $cr_id)) {
 							$loop++;
 							$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-monitor-hook.php", "Freeing up ip $ipt->ip_address", "", "", 0, 0, $appliance_id);
 							$ipt->activate($id, true);
@@ -1098,7 +1098,7 @@ function openqrm_cloud_monitor() {
 							$ipstr="$ipt->ip_address:$ipt->ip_subnet:$ipt->ip_gateway:$ipt->ip_dns1:$ipt->ip_dns2:$ipt->ip_domain\n";
 							fwrite($fp, $ipstr);						
 							$ipt->activate($id, false);
-							$ipt->assign_to_appliance($id, $ca_appliance_id, $cr_id);
+							$ipt->assign_to_appliance($id, $ca_appliance_id, $ca_cr_id);
 							// the first ip we mail to the user
 							if ($loop == 1) {
 								$resource_external_ip = $ipt->ip_address;
