@@ -64,6 +64,8 @@ function openqrm_plugin_nagios3_init() {
     mv $NAGIOS_ETC_DIRECTORY/htpasswd.users $NAGIOS_ETC_DIRECTORY/htpasswd.users.bkp
     # link openqrm .htaccess to nagios
     ln -s $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd $NAGIOS_ETC_DIRECTORY/htpasswd.users
+	# First backup original nagios cgi.cfg
+	cp $NAGIOS_ETC_DIRECTORY/cgi.cfg $NAGIOS_ETC_DIRECTORY/cgi.cfg.bkp
     # change nagiosadmin 2 openqrm for accessing nagios-gui
     sed -i -e 's/nagiosadmin/openqrm/' $NAGIOS_ETC_DIRECTORY/cgi.cfg 
     # 	
@@ -75,6 +77,8 @@ function openqrm_plugin_nagios3_init() {
 	tar -C $OPENQRM_TEMP_DIR/nuvola_inst/ -zxf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/theme/nagios-nuvola-$OPENQRM_SOURCE_VERSION.tar.gz
 	cp -r $OPENQRM_TEMP_DIR/nuvola_inst/html/* /usr/share/nagios3/htdocs/
 	rm -rf $OPENQRM_TEMP_DIR/nuvola_inst/
+	# First backup original config.js
+	cp /usr/share/nagios3/htdocs/config.js /usr/share/nagios3/htdocs/config.js.bkp
  	# Fix WebGUI for Debian
  	sed -i "s/nagios\/cgi-bin/nagios3\/cgi-bin/g"  /usr/share/nagios3/htdocs/config.js
  	cd $CURRENT_DIR
@@ -92,6 +96,10 @@ function openqrm_plugin_nagios3_uninstall() {
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrmserver_public_key
 	# restore old nagios htpasswd
 	mv $NAGIOS_ETC_DIRECTORY/htpasswd.users.bkp $NAGIOS_ETC_DIRECTORY/htpasswd.users
+	# restore old nagios config.js
+	mv /usr/share/nagios3/htdocs/config.js.bkp /usr/share/nagios3/htdocs/config.js
+	# restore old nagios cgi.cfg
+	mv $NAGIOS_ETC_DIRECTORY/cgi.cfg.bkp $NAGIOS_ETC_DIRECTORY/cgi.cfg
 }
 
 
