@@ -195,7 +195,11 @@ if(htmlobject_request('action') != '') {
 				// add user to htpasswd
 				$username = $cloud_user->name;
 				$password = $cloud_user->password;
-				$openqrm_server_command="htpasswd -b $CloudDir/user/.htpasswd $username $password";
+				if (file_exists($CloudDir/user/.htpasswd)) {
+					$openqrm_server_command="htpasswd -b $CloudDir/user/.htpasswd $username $password";
+				} else {
+					$openqrm_server_command="htpasswd -c -b $CloudDir/user/.htpasswd $username $password";
+				}
 				$output = shell_exec($openqrm_server_command);
 
 				// mail again that account is active now

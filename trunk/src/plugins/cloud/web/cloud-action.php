@@ -258,7 +258,11 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			// add user to htpasswd
 			$username = $user_fields['cu_name'];
 			$password = $user_fields['cu_password'];
-			$openqrm_server_command="htpasswd -b $CloudDir/user/.htpasswd $username $password";
+			if (file_exists($CloudDir/user/.htpasswd)) {
+				$openqrm_server_command="htpasswd -b $CloudDir/user/.htpasswd $username $password";
+			} else {
+				$openqrm_server_command="htpasswd -c -b $CloudDir/user/.htpasswd $username $password";
+			}
 			$output = shell_exec($openqrm_server_command);
 
 			// send mail to user
