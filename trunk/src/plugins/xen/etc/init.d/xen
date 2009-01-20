@@ -60,6 +60,7 @@ function xen_start() {
 		# we are doing netboot + network deployment
 		# create virtual interface for the bridge, we need to avoid xen restarting 
 		# on the openQRM interface because this will make the net-mounted rootfs inaccessible
+		modprobe netloop
 		$VETH -v $XEN_VIRTUAL_BRIDGE_NAME -e $OPENQRM_INTERFACE
 		# we need to create a config file for this bridge-interface to make ifup/ifdown work which
 		# gets executed while bringing up the bridge via the xen-scripts
@@ -70,7 +71,7 @@ function xen_start() {
 				echo "auto $XEN_VIRTUAL_BRIDGE_NAME" >> /etc/network/interfaces
 				echo "iface $XEN_VIRTUAL_BRIDGE_NAME inet dhcp" >> /etc/network/interfaces
 			fi
-		elif [ -d /etc/sysconfig/network-scrips/ ]; then
+		elif [ -d /etc/sysconfig/network-scripts/ ]; then
 		# redhat
 			if [ ! -f /etc/sysconfig/network-scripts/ifcfg-$XEN_VIRTUAL_BRIDGE_NAME ]; then
 				echo "# created by the openQRM xen-plugin" > /etc/sysconfig/network-scripts/ifcfg-$XEN_VIRTUAL_BRIDGE_NAME
