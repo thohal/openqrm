@@ -355,7 +355,9 @@ else
 		umount /sys
 	fi
 	umount /proc
-	
+	umount /boot
+	umount /lib/modules
+
 	cd /mnt
 
 	pivot_root . /mnt/initrd
