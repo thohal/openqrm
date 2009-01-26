@@ -195,7 +195,8 @@ if(htmlobject_request('action') != '') {
 				// add user to htpasswd
 				$username = $cloud_user->name;
 				$password = $cloud_user->password;
-				if (file_exists($CloudDir/user/.htpasswd)) {
+				$cloud_htpasswd = "$CloudDir/user/.htpasswd";
+				if (file_exists($cloud_htpasswd)) {
 					$openqrm_server_command="htpasswd -b $CloudDir/user/.htpasswd $username $password";
 				} else {
 					$openqrm_server_command="htpasswd -c -b $CloudDir/user/.htpasswd $username $password";
