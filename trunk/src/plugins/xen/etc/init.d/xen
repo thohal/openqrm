@@ -21,6 +21,11 @@ LOCALBOOT=false
 # only run on xen hosts
 grep -q "control_d" /proc/xen/capabilities 2>/dev/null || exit 0
 
+# do not start if xen is not installed
+if [ ! -x /etc/init.d/xend ]; then
+	exit 0
+fi
+
 # do not start on the intitrd
 if [ -f /etc/initrd-devices.conf ]; then
 	exit 0
@@ -31,6 +36,10 @@ function xen_start() {
 	echo "Starting the openQRM xen-plugin"
 	xen_stop 1>/dev/null 2>&1
 
+	# backup original Xen-config
+	if [ ! -f /etc/xen/xend-config.sxp.before-openqrm ]; then
+		/bin/cp -f /etc/xen/xend-config.sxp /etc/xen/xend-config.sxp.before-openqrm
+	fi
 	# adjust Xen-config	and enable migration
 	if [ -f /etc/xen/xend-config.sxp ]; then
 		cat /etc/xen/xend-config.sxp |	\
@@ -40,86 +49,16 @@ function xen_start() {
 			sed -e "s/^#(xend-relocation-address '')/(xend-relocation-address '')/g" > /tmp/xend-config.sxp.openqrm
 		mv -f /tmp/xend-config.sxp.openqrm /etc/xen/xend-config.sxp
 	fi
-
-	
-	# local-server resource	
-	if [ "$OPENQRM_INTERFACE" == "" ]; then
-		# we are doing a local boot and do not have an ethX:oq network device
-		OPENQRM_INTERFACE=`ifconfig | grep $resource_mac | cut -d':' -f1 | grep ^eth | awk {' print $1 '}`
-		LOCALBOOT=true
-		# create the vm-bridge config
-		echo "OPENQRM_VM_BRIDGE=$OPENQRM_DEFAULT_VM_BRIDGE" > $OPENQRM_VM_BRIDGE_CONFIG
-		# restart xen
-		if [ -x /etc/init.d/xend ]; then
-			/etc/init.d/xend stop
-			/etc/init.d/xend start
-		fi
-
-	else
-	# regular pxe-booted resource	
-		# we are doing netboot + network deployment
-		# create virtual interface for the bridge, we need to avoid xen restarting 
-		# on the openQRM interface because this will make the net-mounted rootfs inaccessible
-		modprobe netloop
-		$VETH -v $XEN_VIRTUAL_BRIDGE_NAME -e $OPENQRM_INTERFACE
-		# we need to create a config file for this bridge-interface to make ifup/ifdown work which
-		# gets executed while bringing up the bridge via the xen-scripts
-		# debian
-		if [ -f /etc/network/interfaces ]; then
-			if ! grep $XEN_VIRTUAL_BRIDGE_NAME /etc/network/interfaces 1>/dev/null; then
-				echo "# created by the openQRM xen-plugin" >> /etc/network/interfaces
-				echo "auto $XEN_VIRTUAL_BRIDGE_NAME" >> /etc/network/interfaces
-				echo "iface $XEN_VIRTUAL_BRIDGE_NAME inet dhcp" >> /etc/network/interfaces
-			fi
-		elif [ -d /etc/sysconfig/network-scripts/ ]; then
-		# redhat
-			if [ ! -f /etc/sysconfig/network-scripts/ifcfg-$XEN_VIRTUAL_BRIDGE_NAME ]; then
-				echo "# created by the openQRM xen-plugin" > /etc/sysconfig/network-scripts/ifcfg-$XEN_VIRTUAL_BRIDGE_NAME
-				echo "DEVICE=$XEN_VIRTUAL_BRIDGE_NAME" >> /etc/sysconfig/network-scripts/ifcfg-$XEN_VIRTUAL_BRIDGE_NAME
-				echo "BOOTPROTO=dhcp" >> /etc/sysconfig/network-scripts/ifcfg-$XEN_VIRTUAL_BRIDGE_NAME
-				echo "ONBOOT=no" >> /etc/sysconfig/network-scripts/ifcfg-$XEN_VIRTUAL_BRIDGE_NAME
-			fi
-
-		fi
-		ifup $XEN_VIRTUAL_BRIDGE_NAME
-		if [ -x /etc/xen/scripts/network-bridge ]; then
-			/etc/xen/scripts/network-bridge start vifnum=0 bridge=xenbr0 netdev=$XEN_VIRTUAL_BRIDGE_NAME 
-		fi
-		# create the vm-bridge config
-		echo "OPENQRM_VM_BRIDGE=xenbr0" > $OPENQRM_VM_BRIDGE_CONFIG
-		# restart xen
-		if [ -x /etc/init.d/xend ]; then
-			/etc/init.d/xend stop
-			/etc/init.d/xend start
-		fi
-	
-		# to get the bridge dhcp-ready
-		brctl setfd xenbr0 0
-		brctl stp xenbr0 on
-		ifconfig xenbr0 up
-		ifconfig pxvbr0 0.0.0.0 up
-
+	# restart xen
+	if [ -x /etc/init.d/xend ]; then
+		/etc/init.d/xend stop
+		/etc/init.d/xend start
 	fi
-
 }
 
 
 function xen_stop() {
 	echo "Stopping the openQRM xen-plugin"
-
-	# stopping the virtual bridge in case we are netbooting
-	# local-server resource	
-	if [ "$OPENQRM_INTERFACE" == "" ]; then
-		# we are doing a local boot and do not have an ethX:oq network device
-		LOCALBOOT=true
-
-	else
-				
-		# stop the bridge
-		kill `ps ax | grep $XEN_VIRTUAL_BRIDGE_NAME | grep -v grep | awk {' print $1 '}` 2>/dev/null
-		
-
-	fi
 
 }
 
