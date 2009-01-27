@@ -124,6 +124,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			// cr_deployment_type_req VARCHAR(50)
 			// cr_ha_req VARCHAR(5)
 			// cr_shared_req VARCHAR(5)
+			// cr_puppet_groups VARCHAR(255)
 			// cr_appliance_id VARCHAR(255)
 			// cr_lastbill VARCHAR(20)
 			// 
@@ -186,7 +187,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
             // ca_cmd INT(5)
             // ca_state INT(5)
 
-			$create_cloud_requests = "create table cloud_requests(cr_id INT(5), cr_cu_id INT(5), cr_status INT(5), cr_request_time VARCHAR(20), cr_start VARCHAR(20), cr_stop VARCHAR(20), cr_kernel_id INT(5), cr_image_id INT(5), cr_ram_req VARCHAR(20), cr_cpu_req VARCHAR(20), cr_disk_req VARCHAR(20), cr_network_req VARCHAR(255), cr_resource_quantity INT(5), cr_resource_type_req VARCHAR(20), cr_deployment_type_req VARCHAR(50), cr_ha_req VARCHAR(5), cr_shared_req VARCHAR(5), cr_appliance_id VARCHAR(255), cr_lastbill VARCHAR(20))";
+			$create_cloud_requests = "create table cloud_requests(cr_id INT(5), cr_cu_id INT(5), cr_status INT(5), cr_request_time VARCHAR(20), cr_start VARCHAR(20), cr_stop VARCHAR(20), cr_kernel_id INT(5), cr_image_id INT(5), cr_ram_req VARCHAR(20), cr_cpu_req VARCHAR(20), cr_disk_req VARCHAR(20), cr_network_req VARCHAR(255), cr_resource_quantity INT(5), cr_resource_type_req VARCHAR(20), cr_deployment_type_req VARCHAR(50), cr_ha_req VARCHAR(5), cr_shared_req VARCHAR(5), cr_appliance_id VARCHAR(255), cr_puppet_groups VARCHAR(255), cr_lastbill VARCHAR(20))";
 			$create_cloud_users = "create table cloud_users(cu_id INT(5), cu_name VARCHAR(20), cu_password VARCHAR(20), cu_forename VARCHAR(50), cu_lastname VARCHAR(50), cu_email VARCHAR(50), cu_street VARCHAR(100), cu_city VARCHAR(100), cu_country VARCHAR(100), cu_phone VARCHAR(100), cu_status INT(5), cu_token VARCHAR(100), cu_ccunits BIGINT(10))";
 			$create_cloud_config = "create table cloud_config(cc_id INT(5), cc_key VARCHAR(50), cc_value VARCHAR(50))";
 			$create_cloud_ipgroups = "create table cloud_ipgroups(ig_id INT(5), ig_name VARCHAR(50), ig_network VARCHAR(50), ig_subnet VARCHAR(50), ig_gateway VARCHAR(50), ig_dns1 VARCHAR(50), ig_dns2 VARCHAR(50), ig_domain VARCHAR(50), ig_activeips INT(5))";
@@ -223,6 +224,8 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($create_default_cloud_config9);
 			$create_default_cloud_config10 = "insert into cloud_config(cc_id, cc_key, cc_value) values (10, 'show_ha_checkbox', 'true')";
 			$recordSet = &$db->Execute($create_default_cloud_config10);
+			$create_default_cloud_config11 = "insert into cloud_config(cc_id, cc_key, cc_value) values (11, 'show_puppet_groups', 'true')";
+			$recordSet = &$db->Execute($create_default_cloud_config11);
 
 		    $db->Close();
 			break;
@@ -290,6 +293,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 
 
 		case 'create_request':
+		
 			// check if the user has ccunits
 			$cr_cu_id = $request_fields['cr_cu_id'];
 			$cl_user = new clouduser();
@@ -308,6 +312,20 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$stopp = $request_fields['cr_stop'];
 			$tstop = date_to_timestamp($stopp);
 			$request_fields['cr_stop'] = $tstop;
+
+			// set the eventual selected puppet groups
+			if(htmlobject_request('puppet_groups') != '') {
+				$puppet_groups_array = htmlobject_request('puppet_groups');
+				if (is_array($puppet_groups_array)) {
+					foreach($puppet_groups_array as $puppet_group) {
+						$puppet_groups_str .= "$puppet_group,";
+					}
+					// remove last ,
+					$puppet_groups_str = rtrim($puppet_groups_str, ",");
+					$request_fields['cr_puppet_groups'] = $puppet_groups_str;
+				}
+			}
+
 			// get next free id
 			$request_fields['cr_id'] = openqrm_db_get_free_id('cr_id', $CLOUD_REQUEST_TABLE);
 			$cr_request = new cloudrequest();

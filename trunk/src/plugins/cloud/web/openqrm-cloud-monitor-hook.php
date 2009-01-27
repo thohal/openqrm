@@ -67,6 +67,7 @@ function openqrm_cloud_monitor() {
 	global $OPENQRM_EXEC_PORT;
 	global $openqrm_server;
 	global $BaseDir;
+	global $RootDir;
 	global $vm_create_timout;
 	$cloud_monitor_lock = "$OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf/cloud-monitor.lock";
 	$cloud_monitor_timeout = "360";
@@ -82,7 +83,7 @@ function openqrm_cloud_monitor() {
 			fwrite($cloud_lock_fp, $now);
 			fclose($cloud_lock_fp);		
 		} else {	
-			$event->log("openqrm_cloud_monitor", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-monitor-hook.php", "Cloud is still processing, skipping Cloud event check !", "", "", 0, 0, 0);
+			$event->log("openqrm_cloud_monitor", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-monitor-hook.php", "Cloud is still processing ($cloud_monitor_lock), skipping Cloud event check !", "", "", 0, 0, 0);
 			return 0;
 		}
 	} else {
@@ -726,6 +727,39 @@ function openqrm_cloud_monitor() {
                 $cloud_appliance->add($cloud_appliance_arr);
 
 
+				// ################################## apply puppet groups ###############################
+
+				// check if puppet is enabled
+				$puppet_conf = new cloudconfig();
+				$show_puppet_groups = $puppet_conf->get_value(11);	// show_puppet_groups
+				if (!strcmp($show_puppet_groups, "true")) {
+					// is puppet enabled ?
+					if (file_exists("$RootDir/plugins/puppet/.running")) {
+						// check if we have a puppet config in the request
+						$puppet_appliance = $appliance->name;
+						if (strlen($cr->puppet_groups)) {
+							$puppet_groups_str = $cr->puppet_groups;
+							$puppet_appliance = $appliance->name;
+							$puppet_debug = "Applying $puppet_groups_str to appliance $puppet_appliance";
+							$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", $puppet_debug, "", "", 0, 0, 0);
+
+							require_once "$RootDir/plugins/puppet/class/puppet.class.php";
+							$puppet_group_dir = "$RootDir/plugins/puppet/puppet/manifests/groups";
+							global $puppet_group_dir;
+							$puppet_appliance_dir = "$RootDir/plugins/puppet/puppet/manifests/appliances";
+							global $puppet_appliance_dir;
+							// $puppet_group_array = array();
+							$puppet_group_array = explode(",", $cr->puppet_groups);
+							$puppet = new puppet();
+							$puppet->set_groups($appliance->name, $puppet_group_array);
+
+						} else {
+							$puppet_debug = "Not applying puppet to appliance $puppet_appliance since its config is empty";
+							$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", $puppet_debug, "", "", 0, 0, 0);
+						}
+					}
+				}
+
 
 				// ################################## mail user provisioning ###############################
 	
@@ -901,13 +935,46 @@ function openqrm_cloud_monitor() {
 				}
 				// unlink the netconf file
 				$appliance_netconf = "$OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf/cloud-net.conf.$cr_appliance_id";
-				unlink($appliance_netconf);
-	
+				if (file_exists($appliance_netconf)) {
+					unlink($appliance_netconf);
+				}
 				// here we remove the appliance from the cloud-appliance table
 	            $cloud_appliance = new cloudappliance();
 	            $cloud_appliance->get_instance_by_appliance_id($appliance->id);
 				$cloud_appliance->remove($cloud_appliance->id);
 	
+				// ################################## remove puppet groups ###############################
+
+				// check if puppet is enabled
+				$puppet_conf = new cloudconfig();
+				$show_puppet_groups = $puppet_conf->get_value(11);	// show_puppet_groups
+				if (!strcmp($show_puppet_groups, "true")) {
+					// is puppet enabled ?
+					if (file_exists("$RootDir/plugins/puppet/.running")) {
+						// check if we have a puppet config in the request
+						$puppet_appliance = $appliance->name;
+						if (strlen($cr->puppet_groups)) {
+							$puppet_debug = "Removing appliance $puppet_appliance from puppet";
+							$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", $puppet_debug, "", "", 0, 0, 0);
+
+							require_once "$RootDir/plugins/puppet/class/puppet.class.php";
+							$puppet_group_dir = "$RootDir/plugins/puppet/puppet/manifests/groups";
+							global $puppet_group_dir;
+							$puppet_appliance_dir = "$RootDir/plugins/puppet/puppet/manifests/appliances";
+							global $puppet_appliance_dir;
+							$PUPPET_CONFIG_TABLE="puppet_config";
+							global $PUPPET_CONFIG_TABLE;
+
+							$puppet = new puppet();
+							$puppet->remove_appliance($appliance->name);
+
+						} else {
+							$puppet_debug = "Now removing appliance $puppet_appliance from puppet since its config is empty";
+							$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", $puppet_debug, "", "", 0, 0, 0);
+						}
+					}
+				}
+
 		
 				// ################################## deprovisioning clone-on-deploy ###############################
 		
@@ -1221,7 +1288,6 @@ function openqrm_cloud_monitor() {
 	$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Removing the cloud-monitor lock $cloud_monitor_lock", "", "", 0, 0, 0);
 	unlink($cloud_monitor_lock);
 }
-
 
 
 ?>

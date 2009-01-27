@@ -15,6 +15,8 @@ $puppet_group_dir = "$RootDir/plugins/puppet/puppet/manifests/groups";
 global $puppet_group_dir;
 $puppet_appliance_dir = "$RootDir/plugins/puppet/puppet/manifests/appliances";
 global $puppet_appliance_dir;
+$PUPPET_CONFIG_TABLE="puppet_config";
+global $PUPPET_CONFIG_TABLE;
 
 class puppet {
 
@@ -65,6 +67,8 @@ function get_group_info($group_name) {
 
 
 function get_domain() {
+	global $event;
+	global $PUPPET_CONFIG_TABLE;
 	$puppetconfig = new puppetconfig();
 	$puppet_domain = $puppetconfig->get_value(2);  // 2 is the domain-name
 	return $puppet_domain;
@@ -77,7 +81,6 @@ function set_groups($appliance_name, $puppet_group_array) {
 	global $event;
 	$puppet_domain = $this->get_domain();
 	$filename = "$puppet_appliance_dir/$appliance_name.$puppet_domain.pp";
-
     if (!$handle = fopen($filename, 'w+')) {
     	$event->log("set_groups", $_SERVER['REQUEST_TIME'], 2, "puppet.class.php", "Cannot open file ($filename)", "", "", 0, 0, 0);
 		exit;

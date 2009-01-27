@@ -415,71 +415,89 @@ function cloud_create_request() {
 		}
 	}
 
-
-	$disp = "<h1>Create new Cloud Request</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	
 	if ($cl_user_count < 1) {
-		$disp = $disp."<b>Please create a <a href='/openqrm/base/plugins/cloud/cloud-user.php?action=create'>Cloud User</a> first!";
-		return $disp;
+		$subtitle = "<b>Please create a <a href='/openqrm/base/plugins/cloud/cloud-user.php?action=create'>Cloud User</a> first!";
 	}
 	if ($image_count < 1) {
-		$disp = $disp."<b>Please create <a href='/openqrm/base/server/image/image-new.php?currenttab=tab1'>Sever-Images</a> first!";
-		return $disp;
+		$subtitle = "<b>Please create <a href='/openqrm/base/server/image/image-new.php?currenttab=tab1'>Sever-Images</a> first!";
 	}
-	
-	$disp = $disp."<form action='cloud-action.php' method=post>";
-	
-	$disp = $disp.htmlobject_select('cr_cu_id', $cl_user_list, 'User');
 
-	$disp = $disp."<br>";
-	$disp = $disp."Start time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\">";
-	$disp = $disp."<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)\">";
-	$disp = $disp."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
-	$disp = $disp."</a>";
-	$disp = $disp."<br>";
-	
-	$disp = $disp."Stop time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\">";
-	$disp = $disp."<a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
-	$disp = $disp."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
-	$disp = $disp."</a>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
+	$start_request = $start_request."Start time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\">";
+	$start_request = $start_request."<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)\">";
+	$start_request = $start_request."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+	$start_request = $start_request."</a>";
 
-	$disp = $disp.htmlobject_select('cr_resource_quantity', $max_resources_per_cr_select, 'Quantity');
-	$disp = $disp.htmlobject_select('cr_resource_type_req', $virtualization_list_select, 'Resource type');
-	$disp = $disp.htmlobject_select('cr_kernel_id', $kernel_list, 'Kernel');
-	$disp = $disp.htmlobject_select('cr_image_id', $image_list, 'Image');
-	
-	$disp = $disp.htmlobject_select('cr_ram_req', $available_memtotal, 'Memory');
-	$disp = $disp.htmlobject_select('cr_cpu_req', $available_cpunumber, 'CPUs');
-	$disp = $disp.htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk(MB)'), 'text', 20);
-	$disp = $disp.htmlobject_select('cr_network_req', $max_network_interfaces_select, 'Network-cards');
+	$stop_request = $stop_request."Stop time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\">";
+	$stop_request = $stop_request."<a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
+	$stop_request = $stop_request."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+	$stop_request = $stop_request."</a>";
+
 	// check if to show ha
 	$show_ha_checkbox = $cc_conf->get_value(10);	// show_ha_checkbox
 	if (!strcmp($show_ha_checkbox, "true")) {
 		// is ha enabled ?
 		if (file_exists("$RootDir/plugins/highavailability/.running")) {
-			$disp = $disp.htmlobject_input('cr_ha_req', array("value" => 1, "label" => 'Highavailable'), 'checkbox', false);
+			$show_ha = htmlobject_input('cr_ha_req', array("value" => 1, "label" => 'Highavailable'), 'checkbox', false);
 		}
 	}
 	// check for default-clone-on-deploy
 	$cc_conf = new cloudconfig();
 	$cc_default_clone_on_deploy = $cc_conf->get_value(5);	// default_clone_on_deploy
 	if (!strcmp($cc_default_clone_on_deploy, "true")) {
-		$disp = $disp."<input type=hidden name='cr_shared_req' value='on'>";
+		$clone_on_deploy = "<input type=hidden name='cr_shared_req' value='on'>";
 	} else {
-		$disp = $disp.htmlobject_input('cr_shared_req', array("value" => 1, "label" => 'Clone-on-deploy'), 'checkbox', false);
+		$clone_on_deploy = htmlobject_input('cr_shared_req', array("value" => 1, "label" => 'Clone-on-deploy'), 'checkbox', false);
 	}
 
-	$disp = $disp."<input type=hidden name='cloud_command' value='create_request'>";
-	$disp = $disp."<br>";
-	$disp = $disp."<input type=submit value='Create'>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."</form>";
 
+	// check if to show puppet
+	$show_puppet_groups = $cc_conf->get_value(11);	// show_puppet_groups
+	if (!strcmp($show_puppet_groups, "true")) {
+		// is puppet enabled ?
+		if (file_exists("$RootDir/plugins/puppet/.running")) {
+			require_once "$RootDir/plugins/puppet/class/puppet.class.php";
+			$puppet_group_dir = "$RootDir/plugins/puppet/puppet/manifests/groups";
+			global $puppet_group_dir;
+			$puppet_group_array = array();
+			$puppet = new puppet();
+			$puppet_group_array = $puppet->get_available_groups();
+			foreach ($puppet_group_array as $index => $puppet_g) {
+				$puid=$index+1;
+				$puppet_info = $puppet->get_group_info($puppet_g);
+				// TODO use  $puppet_info for onmouseover info
+				$show_puppet = $show_puppet."<input type='checkbox' name='puppet_groups[]' value=$puppet_g>$puppet_g<br/>";
+			}
+			$show_puppet = $show_puppet."<br/>";
+
+		}
+	}
+
+	//------------------------------------------------------------ set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './' . 'cloud-request-tpl.php');
+	$t->setVar(array(
+		'formaction' => 'cloud-action.php',
+		'currentab' => htmlobject_input('currenttab', array("value" => 'tab0', "label" => ''), 'hidden'),
+		'cloud_command' => htmlobject_input('cloud_command', array("value" => 'create_request', "label" => ''), 'hidden'),
+		'subtitle' => $subtitle,
+		'cloud_user' => htmlobject_select('cr_cu_id', $cl_user_list, 'User'),
+		'cloud_request_start' => $start_request,
+		'cloud_request_stop' => $stop_request,
+		'cloud_resource_quantity' => htmlobject_select('cr_resource_quantity', $max_resources_per_cr_select, 'Quantity'),
+		'cloud_resource_type_req' => htmlobject_select('cr_resource_type_req', $virtualization_list_select, 'Resource type'),
+		'cloud_kernel_id' => htmlobject_select('cr_kernel_id', $kernel_list, 'Kernel'),
+		'cloud_image_id' => htmlobject_select('cr_image_id', $image_list, 'Image'),
+		'cloud_ram_req' => htmlobject_select('cr_ram_req', $available_memtotal, 'Memory'),
+		'cloud_cpu_req' => htmlobject_select('cr_cpu_req', $available_cpunumber, 'CPUs'),
+		'cloud_disk_req' => htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk(MB)'), 'text', 20),
+		'cloud_network_req' => htmlobject_select('cr_network_req', $max_network_interfaces_select, 'Network-cards'),
+		'cloud_ha' => $show_ha,
+		'cloud_clone_on_deploy' => $clone_on_deploy,
+		'cloud_show_puppet' => $show_puppet,
+		'submit_save' => htmlobject_input('action', array("value" => 'Create', "label" => 'Create'), 'submit'),
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
 
@@ -528,6 +546,7 @@ function cloud_request_details($cloud_request_id) {
 	$network_req = $cr_request->network_req;
 	$ha_req = $cr_request->ha_req;
 	$shared_req = $cr_request->shared_req;
+	$puppet_groups = $cr_request->puppet_groups;
 	// get resource type as name
 	$resource_type_req = $cr_request->resource_type_req;
 	$resource_quantity = $cr_request->resource_quantity;
@@ -624,6 +643,11 @@ function cloud_request_details($cloud_request_id) {
 		'cr_value' => "$shared_req",
 	);
 	
+	$arBody[] = array(
+		'cr_key' => "Puppet groups",
+		'cr_value' => "$puppet_groups",
+	);
+
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;

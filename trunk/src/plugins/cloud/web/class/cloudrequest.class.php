@@ -45,6 +45,7 @@ var $resource_type_req = '';
 var $deployment_type_req = '';
 var $ha_req = '';
 var $shared_req = '';
+var $puppet_groups = '';
 var $appliance_id = '';
 var $lastbill = '';
 
@@ -78,6 +79,7 @@ function get_instance($id) {
 		$this->deployment_type_req = $cloudrequest["cr_deployment_type_req"];
 		$this->ha_req = $cloudrequest["cr_ha_req"];
 		$this->shared_req = $cloudrequest["cr_shared_req"];
+		$this->puppet_groups = $cloudrequest["cr_puppet_groups"];
 		$this->appliance_id = $cloudrequest["cr_appliance_id"];
 		$this->lastbill = $cloudrequest["cr_lastbill"];
 	}
