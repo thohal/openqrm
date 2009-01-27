@@ -139,7 +139,7 @@ Description: This openQRM plugin integrates kvm
 
 Package: openqrm-plugin-puppet
 Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, puppetmaster
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, puppetmaster, subversion-tools
 Description: This openQRM plugin integrates puppet
  <insert long description, indented with spaces>
 
