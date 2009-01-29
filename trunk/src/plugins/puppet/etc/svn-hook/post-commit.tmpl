@@ -1,5 +1,6 @@
 #!/bin/sh
 
-cd @@OPENQRM_SERVER_BASE_DIR@@/openqrm/plugins/puppet/etc/puppet; svn up 1> /var/log/puppet-commit.log 2>&1
+cd @@OPENQRM_SERVER_BASE_DIR@@/openqrm/plugins/puppet/web/puppet; svn up 1> /var/log/puppet-commit.log 2>&1
+cd /etc/puppet; svn up 1> /var/log/puppet-commit.log 2>&1
 
 
