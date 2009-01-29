@@ -46,7 +46,7 @@ function openqrm_plugin_puppet_uninstall() {
 	openqrm_plugin_puppet_stop
 
 	# remove from cron
-	rm -f /etc/cron.d/openqrm-puppetm-config.cron
+	rm -f /etc/cron.d/openqrm-puppetm-config
 	/etc/init.d/cron reload
 
 	# removing the puppet tables
@@ -131,7 +131,7 @@ function openqrm_plugin_puppet_init() {
 	echo "*.$OPENQRM_SERVER_DOMAIN" > /etc/puppet/autosign.conf
 	# create cron job which will update the svn repo with files which were added by the web gui
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/cron.d/openqrm-puppetm-config.cron | \
-		sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > /etc/cron.d/openqrm-puppetm-config.cron
+		sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > /etc/cron.d/openqrm-puppetm-config
 	/etc/init.d/cron reload
 	# create svn post-commit hook to immediately update the puppet configuration
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/svn-hook/post-commit-tmpl | \
