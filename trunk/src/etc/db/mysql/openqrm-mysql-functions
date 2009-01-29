@@ -12,6 +12,9 @@ fi
 openqrm_server_get_config
 OPENQRM_DATABASE_INIT="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/mysql/openqrm-mysql-init.sql"
 
+OPENQRM_DATABASE_MAINTENANCE="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/mysql/openqrm-mysql-maintenance"
+OPENQRM_DATABASE_MAINTENANCE_FNAME=`basename $OPENQRM_DATABASE_MAINTENANCE`
+
 if ! which mysql 1>/dev/null 2>&1; then
 	echo "ERROR: Mysql client 'mysql' not installed/found on this system"
 	exit 1
@@ -46,6 +49,12 @@ function initialize_database() {
 		RET=$?
 	fi
 	rm -f $OPENQRM_DATABASE_INIT_TMP
+
+	# add the db maintenance to cron
+	cat $OPENQRM_DATABASE_MAINTENANCE | sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > /etc/cron.daily/$OPENQRM_DATABASE_MAINTENANCE_FNAME
+	chmod +x /etc/cron.daily/$OPENQRM_DATABASE_MAINTENANCE_FNAME
+	/etc/init.d/cron reload
+
 	return $RET
 }
 
@@ -86,6 +95,11 @@ function drop_database() {
 		$MYSQL_CLIENT -u $OPENQRM_DATABASE_USER -p$OPENQRM_DATABASE_PASSWORD --host $OPENQRM_DATABASE_SERVER -e "drop database $OPENQRM_DATABASE_NAME" 1>/dev/null 2>&1
 		RET=$?
 	fi
+
+	# remove maintenance cron job
+	rm -f /etc/cron.daily/$OPENQRM_DATABASE_MAINTENANCE_FNAME
+	/etc/init.d/cron reload
+
 	return $RET
 }
 

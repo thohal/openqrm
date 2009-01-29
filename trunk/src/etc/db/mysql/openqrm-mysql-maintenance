@@ -1,0 +1,43 @@
+#!/bin/bash
+# openQRM maintenance script, runs once a day via cron
+
+. @@OPENQRM_SERVER_BASE_DIR@@/openqrm/etc/openqrm-server.conf
+. @@OPENQRM_SERVER_BASE_DIR@@/openqrm/include/openqrm-server-functions
+# get full server config
+openqrm_server_get_config
+
+# define maintenance dir for mysql backup files
+DB_MAINTENANCE_DIR="/var/spool/openqrm_db/"
+
+
+if ! which mysql 1>/dev/null 2>&1; then
+	echo "ERROR: Mysql client 'mysql' not installed/found on this system" | logger
+	exit 1
+else
+	export MYSQL_CLIENT=`which mysql`
+fi
+if ! which mysqldump 1>/dev/null 2>&1; then
+	echo "ERROR: Mysql 'mysqldump' not installed/found on this system"  | logger
+	exit 1
+else
+	export MYSQL_DUMP=`which mysqldump`
+fi
+
+BACKUP_TIME=`date +%T--%x | sed -e "s/:/-/g" | sed -e "s#/#-#g"`
+if  [ "$OPENQRM_DATABASE_PASSWORD" != "" ]; then
+	DB_PASS="-p$OPENQRM_DATABASE_PASSWORD"
+fi
+
+if [ ! -d "$DB_MAINTENANCE_DIR" ]; then
+	mkdir -p $DB_MAINTENANCE_DIR
+fi
+
+# backup event_info table
+echo "NOTICE: Saving event_info table to $DB_MAINTENANCE_DIR/openqrm_db_event_info_$BACKUP_TIME.sql"  | logger
+$MYSQL_DUMP -u $OPENQRM_DATABASE_USER $DB_PASS --host $OPENQRM_DATABASE_SERVER $OPENQRM_DATABASE_NAME event_info > $DB_MAINTENANCE_DIR/openqrm_db_event_info_$BACKUP_TIME.sql
+# clean up event_info table
+echo "NOTICE: Cleaning event_info table"  | logger
+$MYSQL_CLIENT -u $OPENQRM_DATABASE_USER $DB_PASS --host $OPENQRM_DATABASE_SERVER $OPENQRM_DATABASE_NAME -e "delete from event_info"
+
+
+
