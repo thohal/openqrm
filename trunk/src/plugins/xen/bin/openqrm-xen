@@ -273,6 +273,18 @@ EOF
 		for cfg in `ls /etc/xen/*.cfg`; do
 			basename $cfg >> $VM_LIST_TMP
 		done
+		if [ -d /etc/xen/vm/ ]; then
+			for cfg in `ls /etc/xen/vm/*.cfg`; do
+				basename $cfg >> $VM_LIST_TMP
+			done
+		fi
+		if [ "$OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR" != "" ]; then
+			if [ -d "$OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR" ]; then
+				for cfg in `ls $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/*.cfg`; do
+					basename $cfg >> $VM_LIST_TMP
+				done
+			fi
+		fi
 		if ! wget -q -O /dev/null --http-user=$XEN_OPENQRM_USERNAME --http-password=$XEN_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/xen/xen-action.php?xen_command=get_xen; then
 			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!" | logger
