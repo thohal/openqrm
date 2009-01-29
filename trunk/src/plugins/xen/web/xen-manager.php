@@ -219,9 +219,10 @@ function xen_display($appliance_id) {
 				$xen_name = str_replace("#", "", $xen);
 				$xen_data = substr($xen_name, strpos($xen_name, " "));
 				$xen_name = substr($xen_name, 0, strpos($xen_name, " "));
+				$xen_name = trim($xen_name);
 				// skip Name and dom0 entry
 				$loop++;
-				if ($loop > 2) {
+				if ($loop > 1 && strcmp($xen_name, "Dom0") {
 					$active_vms[] = "$xen_name";
 					// check if on- or offline
 					if (strstr($xen, "---")) {
