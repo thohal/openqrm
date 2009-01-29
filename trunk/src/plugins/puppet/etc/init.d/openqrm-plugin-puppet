@@ -45,10 +45,9 @@ function openqrm_plugin_puppet_uninstall() {
 	echo "Uninstalling the openQRM puppet-plugin"
 	openqrm_plugin_puppet_stop
 
-	# disabling cron, we will use a svn hook for postcommit instead
-	## remove from cron
-	#rm -f /etc/cron.d/openqrm-puppetm-config.cron
-	#/etc/init.d/cron reload
+	# remove from cron
+	rm -f /etc/cron.d/openqrm-puppetm-config.cron
+	/etc/init.d/cron reload
 
 	# removing the puppet tables
 	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/puppet/puppet-action.php?puppet_command=uninstall"; then
@@ -130,9 +129,13 @@ function openqrm_plugin_puppet_init() {
 	cd $CURRENTD
 	# configure autosigning
 	echo "*.$OPENQRM_SERVER_DOMAIN" > /etc/puppet/autosign.conf
+	# create cron job which will update the svn repo with files which were added by the web gui
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/cron.d/openqrm-puppetm-config.cron | \
+		sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > /etc/cron.d/openqrm-puppetm-config.cron
+	/etc/init.d/cron reload
 	# create svn post-commit hook to immediately update the puppet configuration
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/svn-hook/post-commit-tmpl | \
-		sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" >> $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/hooks/post-commit
+		sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/hooks/post-commit
 	chmod 755 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/hooks/post-commit
 	
 	# eventually clean up old ssl dir before starting
