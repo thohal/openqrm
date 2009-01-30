@@ -1,0 +1,191 @@
+#!/bin/bash
+# this script provides a guided installation/uninstallation for linuxcoe
+
+# get the openQRM functions
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+OPENQRM_SOURCE_DIR=$OPENQRM_SERVER_BASE_DIR
+export OPENQRM_SOURCE_DIR
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-package-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/include/openqrm-plugin-linuxcoe-functions
+
+LCOE_BASE_VERSION="4"
+LCOE_SUB_VERSION="1"
+SD_BASE_VERSION="4"
+LCOE_BASE="linuxcoe-sd-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION.tar.gz"
+LCOE_DOCS="linuxcoe-sd-docs-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION.tar.gz"
+LCOE_DISTRIBUTIONS="centos debian fedora opensuse ubuntu"
+LCOE_INSTALL_DIR="/usr/local/linuxcoe-sd"
+LCOE_DOWNLOAD="http://www.instalinux.com/snapshots/"
+LCOE_INSTALL_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/lcoe-install"
+CURRENT_DIR=`pwd`
+
+if ! which screen 1>/dev/null; then
+	linuxcoe_log "ERROR: The 'screen' utility is not installed! Please install and try again."
+	exit 6
+fi
+
+# re-run in background via screen
+
+if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+	export RUN_IN_BACKGROUND=true
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	screen -dmS $SCREEN_NAME $0 $@
+	exit	
+fi
+
+
+
+function lcoe_download_if_needed() {
+	PACKAGE=$1
+	mkdir -p $LCOE_INSTALL_TMP/download
+	if [ ! -f $LCOE_INSTALL_TMP/download/$PACKAGE ]; then
+		linuxcoe_log "> $LCOE_INSTALL_TMP/download/$PACKAGE does not yet exists, attempting download .."
+		if wget -O $LCOE_INSTALL_TMP/download/$PACKAGE $LCOE_DOWNLOAD/$PACKAGE; then
+			linuxcoe_log "> Downloaded $PACKAGE"
+		else
+			linuxcoe_log "! Download of $PACKAGE failed !"
+			linuxcoe_log "Please put the $PACKAGE file at $LCOE_INSTALL_TMP/download/ and try again."
+			linuxcoe_lock release
+			exit 1
+		fi
+	else
+		linuxcoe_log "> $PACKAGE already available at $LCOE_INSTALL_TMP/download/. Skipping download"
+	fi
+
+}
+
+
+
+function lco_prepare() {
+
+	# install os deps autoconf, automake, perl
+	openqrm_install_os_dependency autoconf
+	openqrm_install_os_dependency automake
+	#openqrm_install_os_dependency perl
+
+	# download needed ?
+	lcoe_download_if_needed $LCOE_BASE
+	for DIST in $LCOE_DISTRIBUTIONS; do
+		lcoe_download_if_needed systemdesigner-$DIST-$SD_BASE_VERSION.tar.gz
+		lcoe_download_if_needed linuxcoe-sd-data-$DIST-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION.tar.gz
+	done
+
+	# unpack
+	mkdir -p $LCOE_INSTALL_TMP/install
+	if [ ! -d $LCOE_INSTALL_TMP/install/linuxcoe-sd-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION ]; then
+		tar -C $LCOE_INSTALL_TMP/install -xzf $LCOE_INSTALL_TMP/download/$LCOE_BASE
+	fi
+	for DIST in $LCOE_DISTRIBUTIONS; do
+		if [ ! -d $LCOE_INSTALL_TMP/install/systemdesigner-$DIST-$SD_BASE_VERSION ]; then
+			tar -C  $LCOE_INSTALL_TMP/install -xzf $LCOE_INSTALL_TMP/download/systemdesigner-$DIST-$SD_BASE_VERSION.tar.gz
+		fi
+		if [ ! -d $LCOE_INSTALL_TMP/install/linuxcoe-sd-data-$DIST-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION ]; then
+			tar -C  $LCOE_INSTALL_TMP/install -xzf $LCOE_INSTALL_TMP/download/linuxcoe-sd-data-$DIST-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION.tar.gz
+		fi
+	done
+}
+
+
+
+function lcoe_install() {
+	lco_prepare
+	linuxcoe_log "> Installing LinuxCOE base"
+	cd $LCOE_INSTALL_TMP/install/linuxcoe-sd-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION
+	if [ ! -f $LCOE_INSTALL_TMP/install/linuxcoe-sd-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION/Makefile ]; then
+		./autogen.sh 2>&1 | tee -a /var/log/messages
+		export CONFIG_SITE="./config.site"
+		if ! ./configure  2>&1 | tee -a /var/log/messages; then
+			linuxcoe_log "! Error during configure of LinuxCOE. Please check the requirements !"
+			linuxcoe_lock release
+			exit 1
+		fi
+	fi
+	make  2>&1 | tee -a /var/log/messages
+	make install  2>&1 | tee -a /var/log/messages
+	make integrate  2>&1 | tee -a /var/log/messages
+
+	for DIST in $LCOE_DISTRIBUTIONS; do
+		linuxcoe_log "> Installing systemdesigner-$DIST"
+		cd $LCOE_INSTALL_TMP/install/systemdesigner-$DIST-$SD_BASE_VERSION
+		export CONFIG_SITE="$LCOE_INSTALL_DIR/etc/includes/config.state"
+		./configure  2>&1 | tee -a /var/log/messages
+		make  2>&1 | tee -a /var/log/messages
+		make install  2>&1 | tee -a /var/log/messages
+		linuxcoe_log "> Installing linuxcoe-sd-data-$DIST"
+		cd $LCOE_INSTALL_TMP/install/linuxcoe-sd-data-$DIST-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION
+		./configure --prefix=$LCOE_INSTALL_DIR  2>&1 | tee -a /var/log/messages
+		make  2>&1 | tee -a /var/log/messages
+		make install 2>&1 | tee -a /var/log/messages
+	done
+
+	cd $CURRENT_DIR
+	linuxcoe_log "> Installation of LinuxCOE finished successfully"
+}
+
+
+function lcoe_uninstall() {
+	linuxcoe_log "> Un-installing LinuxCOE"
+	if [ ! -d $LCOE_INSTALL_TMP/install/linuxcoe-sd-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION ]; then
+		linuxcoe_log "! LinuxCOE base install directory does not exist."
+		if [ ! -f $LCOE_INSTALL_TMP/download/$LCOE_BASE ]; then
+			lcoe_download_if_needed $LCOE_BASE
+		else
+			linuxcoe_log "> Found $LCOE_BASE at $LCOE_INSTALL_TMP/download/, just unpacking it."
+		fi
+		mkdir -p $LCOE_INSTALL_TMP/install
+		tar -C $LCOE_INSTALL_TMP/install -xzf $LCOE_INSTALL_TMP/download/$LCOE_BASE
+	fi
+	rm -f /etc/apache2/conf.d/LinuxCOE-SystemDesigner.conf
+	cd $LCOE_INSTALL_TMP/install/linuxcoe-sd-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION
+	if [ ! -f $LCOE_INSTALL_TMP/install/linuxcoe-sd-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION/Makefile ]; then
+		./autogen.sh  2>&1 | tee -a /var/log/messages
+		export CONFIG_SITE="./config.site"
+		if ! ./configure  2>&1 | tee -a /var/log/messages; then
+			linuxcoe_log "! Error during configure of LinuxCOE. Please check the requirements !"
+			linuxcoe_lock release
+			exit 1
+		fi
+	fi
+	make uninstall  2>&1 | tee -a /var/log/messages
+	rm -rf /usr/local/linuxcoe-sd
+	rm -rf /etc/linuxcoe-sd
+	cd $CURRENT_DIR
+	linuxcoe_log "> Uninstallation of LinuxCOE finished successfully"
+	linuxcoe_log "> (You may want to run \"$0 clean\" to remove the temporary files and directories)"
+}
+
+
+
+function lcoe_clean() {
+	linuxcoe_log "> Cleaning temporary downloads and install directories"
+	rm -rf $LCOE_INSTALL_TMP/install/*
+#	rm -rf $LCOE_INSTALL_TMP/download/*
+}
+
+
+case "$1" in
+	install)
+		linuxcoe_lock aquire
+		lcoe_install
+		linuxcoe_lock release
+		;;
+	uninstall)
+		linuxcoe_lock aquire
+		lcoe_uninstall
+		linuxcoe_lock release
+		;;
+	clean)
+		linuxcoe_lock aquire
+		lcoe_clean
+		linuxcoe_lock release
+		;;
+        *)
+        echo $"Usage: $0 {install|uninstall|clean}"
+        exit 1
+		;;
+esac
+
+
+

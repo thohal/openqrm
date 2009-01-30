@@ -1,0 +1,50 @@
+#!/bin/bash
+# this is the functions file for the linuxcoe-plugin
+LINUXCOE_LOCK_FILE=/var/run/linuxcoe/linuxcoe-plugin.lock
+LINUXCOE_LOCK_DELAY=5
+LINUXCOE_LOCK_RETRY=100
+LINUXCOE_LOCK_TIMEOUT=500
+################ common linuxcoe functions
+
+# logs for linuxcoe
+function linuxcoe_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	echo "linuxcoe plug-in" "$COMPONENT : $MESSAGE"
+	logger -i -t "linuxcoe plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function linuxcoe_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $LINUXCOE_LOCK_FILE` ]; then
+		mkdir -p `dirname $LINUXCOE_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $LINUXCOE_LOCK_DELAY -r $LINUXCOE_LOCK_RETRY -l $LINUXCOE_LOCK_TIMEOUT $LINUXCOE_LOCK_FILE
+				RET=$?
+				linuxcoe_log linuxcoe_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $LINUXCOE_LOCK_FILE
+				RET=$?
+				linuxcoe_log linuxcoe_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			linuxcoe_log linuxcoe_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ linuxcoe functions
+

@@ -1,0 +1,12 @@
+#	Title
+#	Href
+#	Alt
+#	IMG
+#	Target
+.|LinuxCOE
+..|About|plugins/linuxcoe/linuxcoe-manager.php?page=about
+..|Main|plugins/linuxcoe/linuxcoe-manager.php?page=main
+..|Create|plugins/linuxcoe/linuxcoe-manager.php?page=create
+..|Profiles|plugins/linuxcoe/linuxcoe-manager.php?page=profile
+..|Retrofit|plugins/linuxcoe/linuxcoe-manager.php?page=retrofit
+..|Setup|plugins/linuxcoe/linuxcoe-manager.php?page=setup

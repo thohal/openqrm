@@ -1,0 +1,93 @@
+#!/bin/bash
+# init script for the openQRM linuxcoe-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/include/openqrm-plugin-linuxcoe-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/openqrm-plugin-linuxcoe.conf
+
+function openqrm_plugin_linuxcoe_start() {
+	echo "Starting the openQRM linuxcoe-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/linuxcoe/.running
+}
+
+
+function openqrm_plugin_linuxcoe_stop() {
+	echo "Stopping the openQRM linuxcoe-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/linuxcoe/.running
+}
+
+function openqrm_plugin_linuxcoe_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "linuxcoe: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "linuxcoe: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM linuxcoe-plugin"
+	openqrm_plugin_linuxcoe_stop
+
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/linuxcoe
+	# remove install-lock
+	rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/lock/install-lock
+
+}
+
+function openqrm_plugin_linuxcoe_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "linuxcoe: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "linuxcoe: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Initializing the openQRM linuxcoe-plugin"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/linuxcoe
+	# creating the dir for the install-lock
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/lock
+	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/lock
+	touch $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/lock/install-lock
+	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/lock/install-lock
+}
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_linuxcoe_start
+		;;
+	stop)
+		openqrm_plugin_linuxcoe_stop
+		;;
+	restart)
+		openqrm_plugin_linuxcoe_stop
+		sleep 1
+		openqrm_plugin_linuxcoe_start
+		;;
+	init)
+		openqrm_plugin_linuxcoe_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_linuxcoe_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+
