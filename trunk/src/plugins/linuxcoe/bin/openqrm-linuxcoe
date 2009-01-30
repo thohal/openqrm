@@ -168,6 +168,7 @@ function lcoe_clean() {
 case "$1" in
 	install)
 		linuxcoe_lock aquire
+		lcoe_uninstall
 		lcoe_install
 		linuxcoe_lock release
 		;;
