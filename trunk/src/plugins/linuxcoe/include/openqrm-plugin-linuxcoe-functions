@@ -4,6 +4,9 @@ LINUXCOE_LOCK_FILE=/var/run/linuxcoe/linuxcoe-plugin.lock
 LINUXCOE_LOCK_DELAY=5
 LINUXCOE_LOCK_RETRY=100
 LINUXCOE_LOCK_TIMEOUT=500
+LINUXCOE_PROFILE_DIR="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles"
+LINUXCOE_SYSTEMDESIGNER_DIR="/usr/local/linuxcoe-sd/var/cache/linuxcoe-sd/scratchmonkey/systemdesigner"
+
 ################ common linuxcoe functions
 
 # logs for linuxcoe

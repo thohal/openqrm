@@ -1,0 +1,189 @@
+#!/bin/bash
+# this script manages the linuxcoe profiles
+
+# get the openQRM functions
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+OPENQRM_SOURCE_DIR=$OPENQRM_SERVER_BASE_DIR
+export OPENQRM_SOURCE_DIR
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-package-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/include/openqrm-plugin-linuxcoe-functions
+CURRENT_DIR=`pwd`
+
+AUTO_INSTALL_PXE_TEMPLATE_PRESEED="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/templates/linuxcoe-pxe.preseed"
+AUTO_INSTALL_PXE_TEMPLATE_KICKSTART="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/templates/linuxcoe-pxe.kickstart"
+AUTO_INSTALL_PXE_TEMPLATE_AUTOYAST="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/templates/linuxcoe-pxe.autoyast"
+LINUXCOE_INSTALL_LANGUAGE="en";
+
+# get the full openQRM-server config
+openqrm_server_get_config
+
+if ! which screen 1>/dev/null; then
+	linuxcoe_log "ERROR: The 'screen' utility is not installed! Please install and try again."
+	exit 6
+fi
+
+# re-run in background via screen
+if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+	export RUN_IN_BACKGROUND=true
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	screen -dmS $SCREEN_NAME $0 $@
+	exit	
+fi
+
+
+
+
+
+function lcoe_check() {
+
+	linuxcoe_log "Checking for unpacked profiles ..."
+	for FILE in `file $LINUXCOE_SYSTEMDESIGNER_DIR/* | grep ISO | cut -d':' -f1`; do
+		FILENAME=`basename $FILE`
+		if [ ! -d $LINUXCOE_PROFILE_DIR/$FILENAME ]; then
+			linuxcoe_log "Unpacking $FILE..."
+			MOUNTPOINT=`mktemp -d /tmp/$FILENAME.XXXXXXXXXX` || exit 1
+			if ! mount -o loop $FILE $MOUNTPOINT; then
+				linuxcoe_log "ERROR: Could not loop mount $FILE at $MOUNTPOINT"
+				linuxcoe_lock release
+				return 1
+			fi
+			mkdir -p $LINUXCOE_PROFILE_DIR/$FILENAME
+			/bin/cp -aRv $MOUNTPOINT/* $LINUXCOE_PROFILE_DIR/$FILENAME/
+			umount $MOUNTPOINT		
+		fi
+	done
+
+
+}
+
+
+function lcoe_remove_profile() {
+	PROFILE_NAME=$1
+	if [ "$PROFILE_NAME" == "" ]; then
+		linuxcoe_lock release
+		return
+	fi
+	linuxcoe_log "Removing profile $PROFILE_NAME"
+	if [ -d $LINUXCOE_PROFILE_DIR/$PROFILE_NAME ]; then
+		rm -rf $LINUXCOE_PROFILE_DIR/$PROFILE_NAME
+	fi
+	if [ -f $LINUXCOE_SYSTEMDESIGNER_DIR/$PROFILE_NAME ]; then
+		rm -f $LINUXCOE_SYSTEMDESIGNER_DIR/$PROFILE_NAME
+	fi
+}
+
+
+
+
+function lcoe_apply_profile() {
+	local PROFILE_NAME=$1
+	local RESOURCE_ID=$2
+	local RESOURCE_IP=$3
+	local RESOURCE_MAC=$4
+	if [ "$PROFILE_NAME" == "" ]; then
+		linuxcoe_lock release
+		return
+	fi
+	if [ "$RESOURCE_ID" == "" ]; then
+		linuxcoe_lock release
+		return
+	fi
+	if [ "$RESOURCE_IP" == "" ]; then
+		linuxcoe_lock release
+		return
+	fi
+	if [ "$RESOURCE_MAC" == "" ]; then
+		linuxcoe_lock release
+		return
+	fi
+
+	linuxcoe_log "Applying profile $PROFILE_NAME to resource $RESOURCE_ID ($RESOURCE_IP/$RESOURCE_MAC)"
+	local RESOURCE_PXELINUXCFG_FILE=`echo 01-$RESOURCE_MAC | sed -e "s/:/-/g" | tr '[:upper:]' '[:lower:]'`
+	/bin/cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE.lcoe-bak
+
+	AUTO_INSTALL_METHOD="preseed"
+
+	case "$AUTO_INSTALL_METHOD" in
+		preseed)
+				linuxcoe_log "Using Automatic installation method $AUTO_INSTALL_METHOD."
+				
+				# prepare kernel + initrd for the aut-install
+
+				# TODO : find out which debian version to install
+				DEBIAN_VERSION="etch"
+
+				DEBIAN_NETINSTALL_KERNEL="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/debian/$DEBIAN_VERSION/debian-installer/i386/linux"
+				DEBIAN_NETINSTALL_INITRD="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/debian/$DEBIAN_VERSION/debian-installer/i386/initrd.gz"
+				if [ ! -f $DEBIAN_NETINSTALL_KERNEL ]; then
+					linuxcoe_log "ERROR: Could not find Debian auto-install kernel $DEBIAN_NETINSTALL_KERNEL"
+					linuxcoe_lock release
+					return
+				fi
+				if [ ! -f $DEBIAN_NETINSTALL_INITRD ]; then
+					linuxcoe_log "ERROR: Could not find Debian auto-install initrd $DEBIAN_NETINSTALL_INITRD"
+					linuxcoe_lock release
+					return
+				fi
+				/bin/cp -f $DEBIAN_NETINSTALL_KERNEL $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/vmlinuz-$RESOURCE_ID-$PROFILE_NAME
+				/bin/cp -f $DEBIAN_NETINSTALL_INITRD $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$RESOURCE_ID-$PROFILE_NAME.img
+			
+				# prepare the auto-install pxe boot
+				cat $AUTO_INSTALL_PXE_TEMPLATE_PRESEED | \
+					sed -e "s#@@OPENQRM_BOOTIMAGE_KERNEL@@#vmlinuz-$RESOURCE_ID-$PROFILE_NAME#g"	| \
+					sed -e "s#@@OPENQRM_BOOTIMAGE_INITRD@@#initrd-$RESOURCE_ID-$PROFILE_NAME.img#g"	| \
+					sed -e "s#@@LINUXCOE_INSTALL_LANGUAGE@@#$LINUXCOE_INSTALL_LANGUAGE#g"	| \
+					sed -e "s#@@OPENQRM_SERVER_IP_ADDRESS@@#$OPENQRM_SERVER_IP_ADDRESS#g"	| \
+					sed -e "s#@@LINUXCOE_PROFILE_NAME@@#$PROFILE_NAME#g"	| \
+					sed -e "s#@@OPENQRM_RESOURCE_ID@@#$RESOURCE_ID#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE
+
+				linuxcoe_log "Prepared resources pxe-configuration for the automatic installation ($OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE)"
+				# copy the preseed config to the boot-service dir
+				mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/lcoe
+				/bin/cp -f $LINUXCOE_PROFILE_DIR/$PROFILE_NAME/preseed $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/lcoe/preseed.$PROFILE_NAME.cfg
+
+
+				;;
+		*)
+				linuxcoe_log "Automatic installation method $AUTO_INSTALL_METHOD not supported yet."
+				linuxcoe_lock release
+				return 1
+				;;
+	esac
+	
+	
+	
+	
+}
+
+
+
+
+PROFILE_NAME=$2
+RESOURCE_ID=$3
+RESOURCE_IP=$4
+RESOURCE_MAC=$5
+case "$1" in
+	check)
+		linuxcoe_lock aquire
+		lcoe_check
+		linuxcoe_lock release
+		;;
+	remove)
+		linuxcoe_lock aquire
+		lcoe_remove_profile $PROFILE_NAME
+		linuxcoe_lock release
+		;;
+	apply)
+		linuxcoe_lock aquire
+		lcoe_apply_profile $PROFILE_NAME $RESOURCE_ID $RESOURCE_IP $RESOURCE_MAC
+		linuxcoe_lock release
+		;;
+        *)
+        echo $"Usage: $0 {check|remove|apply}"
+        exit 1
+		;;
+esac
+

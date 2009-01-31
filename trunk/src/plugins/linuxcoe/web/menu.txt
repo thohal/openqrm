@@ -8,5 +8,6 @@
 ..|Main|plugins/linuxcoe/linuxcoe-manager.php?page=main
 ..|Create|plugins/linuxcoe/linuxcoe-manager.php?page=create
 ..|Profiles|plugins/linuxcoe/linuxcoe-manager.php?page=profile
+..|Apply|plugins/linuxcoe/linuxcoe-manager.php?page=apply
 ..|Retrofit|plugins/linuxcoe/linuxcoe-manager.php?page=retrofit
 ..|Setup|plugins/linuxcoe/linuxcoe-manager.php?page=setup

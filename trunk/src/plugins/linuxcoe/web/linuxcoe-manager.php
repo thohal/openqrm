@@ -74,6 +74,9 @@ function linuxcoe_display($page) {
 		case 'setup':
 			$lcoe_url="./linuxcoe-install.php";
 			break;
+		case 'apply':
+			$lcoe_url="./linuxcoe-apply.php";
+			break;
 		default:
 			exit(1);
 	}

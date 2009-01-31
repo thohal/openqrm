@@ -21,13 +21,17 @@ LCOE_DOWNLOAD="http://www.instalinux.com/snapshots/"
 LCOE_INSTALL_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/lcoe-install"
 CURRENT_DIR=`pwd`
 
+# for debian we need the netinstaller images
+DEB_NETINSTALLER_ETCH="http://http.us.debian.org/debian/dists/etch/main/installer-i386/current/images/netboot/netboot.tar.gz"
+DEB_NETINSTALLER_LENNY="http://http.us.debian.org/debian/dists/lenny/main/installer-i386/current/images/netboot/netboot.tar.gz"
+
+
 if ! which screen 1>/dev/null; then
 	linuxcoe_log "ERROR: The 'screen' utility is not installed! Please install and try again."
 	exit 6
 fi
 
 # re-run in background via screen
-
 if [ "$RUN_IN_BACKGROUND" != "true" ]; then
 	export RUN_IN_BACKGROUND=true
 	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
@@ -38,11 +42,17 @@ fi
 
 
 function lcoe_download_if_needed() {
-	PACKAGE=$1
+	FULL_URL=$1
+	RESULT_FILENAME=$2
+	if [ "$RESULT_FILENAME" != "" ]; then
+		PACKAGE=$RESULT_FILENAME
+	else
+		PACKAGE=`basename $FULL_URL`
+	fi
 	mkdir -p $LCOE_INSTALL_TMP/download
 	if [ ! -f $LCOE_INSTALL_TMP/download/$PACKAGE ]; then
 		linuxcoe_log "> $LCOE_INSTALL_TMP/download/$PACKAGE does not yet exists, attempting download .."
-		if wget -O $LCOE_INSTALL_TMP/download/$PACKAGE $LCOE_DOWNLOAD/$PACKAGE; then
+		if wget -O $LCOE_INSTALL_TMP/download/$PACKAGE $FULL_URL; then
 			linuxcoe_log "> Downloaded $PACKAGE"
 		else
 			linuxcoe_log "! Download of $PACKAGE failed !"
@@ -66,10 +76,10 @@ function lco_prepare() {
 	#openqrm_install_os_dependency perl
 
 	# download needed ?
-	lcoe_download_if_needed $LCOE_BASE
+	lcoe_download_if_needed $LCOE_DOWNLOAD/$LCOE_BASE
 	for DIST in $LCOE_DISTRIBUTIONS; do
-		lcoe_download_if_needed systemdesigner-$DIST-$SD_BASE_VERSION.tar.gz
-		lcoe_download_if_needed linuxcoe-sd-data-$DIST-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION.tar.gz
+		lcoe_download_if_needed $LCOE_DOWNLOAD/systemdesigner-$DIST-$SD_BASE_VERSION.tar.gz
+		lcoe_download_if_needed $LCOE_DOWNLOAD/linuxcoe-sd-data-$DIST-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION.tar.gz
 	done
 
 	# unpack
@@ -85,6 +95,14 @@ function lco_prepare() {
 			tar -C  $LCOE_INSTALL_TMP/install -xzf $LCOE_INSTALL_TMP/download/linuxcoe-sd-data-$DIST-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION.tar.gz
 		fi
 	done
+
+	lcoe_download_if_needed $DEB_NETINSTALLER_ETCH netboot-etch.tar.gz
+	lcoe_download_if_needed $DEB_NETINSTALLER_LENNY netboot-lenny.tar.gz
+	mkdir -p $LCOE_INSTALL_TMP/install/debian/etch $LCOE_INSTALL_TMP/install/debian/lenny
+	tar -C  $LCOE_INSTALL_TMP/install/debian/etch -xzf $LCOE_INSTALL_TMP/download/netboot-etch.tar.gz
+	tar -C  $LCOE_INSTALL_TMP/install/debian/lenny -xzf $LCOE_INSTALL_TMP/download/netboot-lenny.tar.gz
+	/bin/cp -aR $LCOE_INSTALL_TMP/install/debian $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/
+
 }
 
 
@@ -130,7 +148,7 @@ function lcoe_uninstall() {
 	if [ ! -d $LCOE_INSTALL_TMP/install/linuxcoe-sd-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION ]; then
 		linuxcoe_log "! LinuxCOE base install directory does not exist."
 		if [ ! -f $LCOE_INSTALL_TMP/download/$LCOE_BASE ]; then
-			lcoe_download_if_needed $LCOE_BASE
+			lcoe_download_if_needed $LCOE_DOWNLOAD/$LCOE_BASE
 		else
 			linuxcoe_log "> Found $LCOE_BASE at $LCOE_INSTALL_TMP/download/, just unpacking it."
 		fi
@@ -182,8 +200,13 @@ case "$1" in
 		lcoe_clean
 		linuxcoe_lock release
 		;;
+	prepare)
+		linuxcoe_lock aquire
+		lco_prepare
+		linuxcoe_lock release
+		;;
         *)
-        echo $"Usage: $0 {install|uninstall|clean}"
+        echo $"Usage: $0 {install|uninstall|clean|prepare}"
         exit 1
 		;;
 esac

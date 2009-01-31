@@ -1,0 +1,9 @@
+default linux
+
+label linux
+kernel boot/@@OPENQRM_BOOTIMAGE_KERNEL@@
+append ramdisk_size=131072 initrd=boot/@@OPENQRM_BOOTIMAGE_INITRD@@  ks=http://@@OPENQRM_SERVER_IP_ADDRESS@@/openqrm/boot-service/lcoe/ks.@@LINUXCOE_PROFILE_NAME@@.cfg id=@@OPENQRM_RESOURCE_ID@@ openqrm=@@OPENQRM_SERVER_IPADDRESS@@ selinux=0
+ipappend 3
+
+label local
+LOCALBOOT 0

@@ -58,7 +58,10 @@ function openqrm_plugin_linuxcoe_init() {
 	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/lock
 	touch $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/lock/install-lock
 	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/lock/install-lock
+	# creating the dir for the linuxcoe profiles
+	mkdir -p $LINUXCOE_PROFILE_DIR
 }
+
 
 USER=$2
 PASS=$3
