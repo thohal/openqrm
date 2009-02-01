@@ -33,7 +33,6 @@ function openqrm_plugin_linuxcoe_uninstall() {
 	echo "Uninstalling the openQRM linuxcoe-plugin"
 	openqrm_plugin_linuxcoe_stop
 
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/linuxcoe
 	# remove install-lock
 	rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/lock/install-lock
 	# removing the table
@@ -41,6 +40,8 @@ function openqrm_plugin_linuxcoe_uninstall() {
 		linuxcoe_log init "ERROR: Could not drop the linuxcoe-plugin tables in the database!"
 		exit 1
 	fi
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/linuxcoe
+
 
 }
 

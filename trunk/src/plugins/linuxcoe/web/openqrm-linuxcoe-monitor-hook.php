@@ -32,15 +32,15 @@ function openqrm_linuxcoe_monitor() {
 
 
 	$lcoe_resource = new linuxcoeresource();
-	$lcoe_resource_list = $lcoe_resource->get_all_ids();	
+	$lcoe_resource_list = $lcoe_resource->get_ids();	
 
 	foreach($lcoe_resource_list as $lcoe_list) {
 		$linuxcoe_id = $lcoe_list['linuxcoe_id'];
 		$lcoe_res = new linuxcoeresource();
 		$lcoe_res->get_instance_by_id($linuxcoe_id);
-		$lcoe_resource_id = $lcoe_res->linuxcoe_resource_id;
-		$lcoe_install_time = $lcoe_res->linuxcoe_install_time;
-		$lcoe_profile_name = $lcoe_res->linuxcoe_profile_name;
+		$lcoe_resource_id = $lcoe_res->resource_id;
+		$lcoe_install_time = $lcoe_res->install_time;
+		$lcoe_profile_name = $lcoe_res->profile_name;
 		$now = $_SERVER['REQUEST_TIME'];
 		// check for timeout
 		if ($lcoe_install_time + $linuxcoe_resource_reboot_timeout > $now) {
