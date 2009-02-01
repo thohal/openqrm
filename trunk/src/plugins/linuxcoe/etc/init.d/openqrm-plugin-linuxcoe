@@ -36,6 +36,11 @@ function openqrm_plugin_linuxcoe_uninstall() {
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/linuxcoe
 	# remove install-lock
 	rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/lock/install-lock
+	# removing the table
+	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/linuxcoe/linuxcoe-action.php?linuxcoe_command=uninstall"; then
+		linuxcoe_log init "ERROR: Could not drop the linuxcoe-plugin tables in the database!"
+		exit 1
+	fi
 
 }
 
@@ -60,6 +65,13 @@ function openqrm_plugin_linuxcoe_init() {
 	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/lock/install-lock
 	# creating the dir for the linuxcoe profiles
 	mkdir -p $LINUXCOE_PROFILE_DIR
+
+	# creating the table
+	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/linuxcoe/linuxcoe-action.php?linuxcoe_command=init"; then
+		linuxcoe_log init "ERROR: Could not create the linuxcoe-plugin tables in the database!"
+		exit 1
+	fi
+
 }
 
 
