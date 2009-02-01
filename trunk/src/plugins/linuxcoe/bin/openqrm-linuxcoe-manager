@@ -102,7 +102,7 @@ function lcoe_apply_profile() {
 
 	linuxcoe_log "Applying profile $PROFILE_NAME to resource $RESOURCE_ID ($RESOURCE_IP/$RESOURCE_MAC)"
 	local RESOURCE_PXELINUXCFG_FILE=`echo 01-$RESOURCE_MAC | sed -e "s/:/-/g" | tr '[:upper:]' '[:lower:]'`
-	/bin/cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE.lcoe-bak
+	/bin/cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE.lcoe-$PROFILE_NAME
 
 	AUTO_INSTALL_METHOD="preseed"
 
@@ -161,6 +161,37 @@ function lcoe_apply_profile() {
 
 
 
+
+function lcoe_revert_profile() {
+	local PROFILE_NAME=$1
+	local RESOURCE_ID=$2
+	local RESOURCE_IP=$3
+	local RESOURCE_MAC=$4
+	if [ "$PROFILE_NAME" == "" ]; then
+		linuxcoe_lock release
+		return
+	fi
+	if [ "$RESOURCE_ID" == "" ]; then
+		linuxcoe_lock release
+		return
+	fi
+	if [ "$RESOURCE_IP" == "" ]; then
+		linuxcoe_lock release
+		return
+	fi
+	if [ "$RESOURCE_MAC" == "" ]; then
+		linuxcoe_lock release
+		return
+	fi
+
+	linuxcoe_log "Reverting profile $PROFILE_NAME to resource $RESOURCE_ID ($RESOURCE_IP/$RESOURCE_MAC)"
+	local RESOURCE_PXELINUXCFG_FILE=`echo 01-$RESOURCE_MAC | sed -e "s/:/-/g" | tr '[:upper:]' '[:lower:]'`
+	/bin/mv -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE.lcoe-$PROFILE_NAME $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE
+	
+}
+
+
+
 PROFILE_NAME=$2
 RESOURCE_ID=$3
 RESOURCE_IP=$4
@@ -181,8 +212,13 @@ case "$1" in
 		lcoe_apply_profile $PROFILE_NAME $RESOURCE_ID $RESOURCE_IP $RESOURCE_MAC
 		linuxcoe_lock release
 		;;
+	revert)
+		linuxcoe_lock aquire
+		lcoe_revert_profile $PROFILE_NAME $RESOURCE_ID $RESOURCE_IP $RESOURCE_MAC
+		linuxcoe_lock release
+		;;
         *)
-        echo $"Usage: $0 {check|remove|apply}"
+        echo $"Usage: $0 {check|remove|apply|revert}"
         exit 1
 		;;
 esac

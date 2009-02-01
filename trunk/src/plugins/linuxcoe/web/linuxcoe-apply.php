@@ -18,6 +18,10 @@ require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/openqrm-server-config.php";
 require_once "$RootDir/class/resource.class.php";
+// special linuxcoeresource classe
+require_once "$RootDir/plugins/linuxcoe/class/linuxcoeresource.class.php";
+
+// some static defines
 $refresh_delay=2;
 $step=1;
 
@@ -68,6 +72,15 @@ if(htmlobject_request('action') != '') {
 				$resource_fields=array();
 				$resource_fields["resource_state"]="transition";
 				$lcoe_resource->update_info($lcoe_resource_id, $resource_fields);
+
+				// create a linuxcoeresource object to monitor its state
+				$lcoe_resource = new linuxcoeresource();
+				$lcoe_resource_fields=array();
+				$lcoe_resource_fields['linuxcoe_id'] = openqrm_db_get_free_id('linuxcoe_id', $lcoe_resource->_db_table);
+				$lcoe_resource_fields['linuxcoe_resource_id'] = $lcoe_resource_id;
+				$lcoe_resource_fields['linuxcoe_install_time'] = $_SERVER['REQUEST_TIME'];
+				$lcoe_resource_fields['linuxcoe_profile_name'] = $lcoe_profile_name;
+				$lcoe_resource->add($lcoe_resource_fields);
 
 				break;
 			}

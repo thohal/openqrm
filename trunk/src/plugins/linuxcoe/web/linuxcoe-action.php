@@ -38,8 +38,9 @@ $event->log("$linuxcoe_command", $_SERVER['REQUEST_TIME'], 5, "linuxcoe-action",
 			// linuxcoe_id INT(5)
 			// linuxcoe_resource_id INT(5)
 			// linuxcoe_install_time VARCHAR(20)
+			// linuxcoe_profile_name VARCHAR(100)
 			
-			$create_linuxcoe_resources = "create table linuxcoe_resources(linuxcoe_id INT(5), linuxcoe_resource_id INT(5), linuxcoe_install_time VARCHAR(20))";
+			$create_linuxcoe_resources = "create table linuxcoe_resources(linuxcoe_id INT(5), linuxcoe_resource_id INT(5), linuxcoe_install_time VARCHAR(20), linuxcoe_profile_name VARCHAR(100))";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($create_linuxcoe_resources);
 
