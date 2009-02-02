@@ -109,7 +109,7 @@ function lcoe_apply_profile() {
 		AUTO_INSTALL_METHOD="preseed"
 	elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/ks.cfg ]; then
 		AUTO_INSTALL_METHOD="kickstart"
-	elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/info ]; then
+	elif grep autoyast $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/isolinux.cfg; then
 		AUTO_INSTALL_METHOD="autoyast"
 	else
 		linuxcoe_log "ERROR: Could not find out which Auto-install method to use. Exiting."
@@ -236,16 +236,34 @@ function lcoe_apply_profile() {
 
 				;;
 
+		autoyast)
+				OPENSUSE_NETINSTALL_KERNEL="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/linux"
+				OPENSUSE_NETINSTALL_INITRD="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/initrd"
+				if [ ! -f $OPENSUSE_NETINSTALL_KERNEL ]; then
+					linuxcoe_log "ERROR: Could not find autoyast auto-install kernel $OPENSUSE_NETINSTALL_KERNEL"
+					linuxcoe_lock release
+					return
+				fi
+				if [ ! -f $OPENSUSE_NETINSTALL_INITRD ]; then
+					linuxcoe_log "ERROR: Could not find autoyast auto-install initrd $OPENSUSE_NETINSTALL_INITRD"
+					linuxcoe_lock release
+					return
+				fi
+				/bin/cp -f $OPENSUSE_NETINSTALL_KERNEL $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/vmlinuz-$RESOURCE_ID-$PROFILE_NAME
+				/bin/cp -f $OPENSUSE_NETINSTALL_INITRD $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$RESOURCE_ID-$PROFILE_NAME.img
+			
+				# prepare the auto-install pxe boot
+				cat $AUTO_INSTALL_PXE_TEMPLATE_AUTOYAST | \
+					sed -e "s#@@OPENQRM_BOOTIMAGE_KERNEL@@#vmlinuz-$RESOURCE_ID-$PROFILE_NAME#g"	| \
+					sed -e "s#@@OPENQRM_BOOTIMAGE_INITRD@@#initrd-$RESOURCE_ID-$PROFILE_NAME.img#g"	| \
+					sed -e "s#@@LINUXCOE_INSTALL_LANGUAGE@@#$LINUXCOE_INSTALL_LANGUAGE#g"	| \
+					sed -e "s#@@OPENQRM_SERVER_IP_ADDRESS@@#$OPENQRM_SERVER_IP_ADDRESS#g"	| \
+					sed -e "s#@@LINUXCOE_PROFILE_NAME@@#$PROFILE_NAME#g"	| \
+					sed -e "s#@@OPENQRM_RESOURCE_ID@@#$RESOURCE_ID#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE
 
-
-
-
-
-
-
-
-
-
+				linuxcoe_log "Prepared resources pxe-configuration for the automatic installation ($OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE)"
+		
+				;;
 
 		*)
 				linuxcoe_log "Automatic installation method $AUTO_INSTALL_METHOD not supported yet."
