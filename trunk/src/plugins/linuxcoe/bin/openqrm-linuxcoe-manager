@@ -104,7 +104,18 @@ function lcoe_apply_profile() {
 	local RESOURCE_PXELINUXCFG_FILE=`echo 01-$RESOURCE_MAC | sed -e "s/:/-/g" | tr '[:upper:]' '[:lower:]'`
 	/bin/cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE.lcoe-$PROFILE_NAME
 
-	AUTO_INSTALL_METHOD="preseed"
+	# check which auto-install method to use
+	if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/preseed ]; then
+		AUTO_INSTALL_METHOD="preseed"
+	elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/ks.cfg ]; then
+		AUTO_INSTALL_METHOD="kickstart"
+	elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/info ]; then
+		AUTO_INSTALL_METHOD="autoyast"
+	else
+		linuxcoe_log "ERROR: Could not find out which Auto-install method to use. Exiting."
+		linuxcoe_lock release
+		return
+	fi
 
 	case "$AUTO_INSTALL_METHOD" in
 		preseed)
@@ -143,9 +154,99 @@ function lcoe_apply_profile() {
 				# copy the preseed config to the boot-service dir
 				mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/lcoe
 				/bin/cp -f $LINUXCOE_PROFILE_DIR/$PROFILE_NAME/preseed $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/lcoe/preseed.$PROFILE_NAME.cfg
+				sed -i -e "s#.*late_command.*##g" $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/lcoe/preseed.$PROFILE_NAME.cfg
+
+				;;
+
+
+		kickstart)
+				linuxcoe_log "Using Automatic installation method $AUTO_INSTALL_METHOD."
+
+
+				# copy the kickstart config to the boot-service dir early
+				mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/lcoe
+				/bin/cp -f $LINUXCOE_PROFILE_DIR/$PROFILE_NAME/ks.cfg $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/lcoe/ks.$PROFILE_NAME.cfg
+				
+				# prepare kernel + initrd for the aut-install
+				# check for os version
+				
+				if grep ^os $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/ks.cfg | grep -i centos 1>/dev/null; then
+					# centos
+					# check for centos version 
+					CENTOS_VERSION=`grep "\-\-url" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/ks.cfg | grep centos | sed -e "s#.*centos/##g" | cut -d'/' -f1`
+					linuxcoe_log "NOTICE: Dected CentOS $CENTOS_VERSION."
+					if echo $CENTOS_VERSION | grep ^4 1>/dev/null; then
+						# centos 4
+						KICKSTART_KERNEL="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/4/vmlinuz-centos4"
+						KICKSTART_INITRD="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/4/initrd-centos4.img"
+						# adapt version numbering (e.g. 5.1 is deprecated, 5 should be used
+						sed -i -e "s#/centos/.*/os#/centos/4/os#" $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/lcoe/ks.$PROFILE_NAME.cfg
+
+					elif echo $CENTOS_VERSION | grep ^5 1>/dev/null; then
+						# centos 5
+						KICKSTART_KERNEL="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5/vmlinuz-centos5"
+						KICKSTART_INITRD="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5/initrd-centos5.img"
+						sed -i -e "s#/centos/.*/os#/centos/5/os#" $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/lcoe/ks.$PROFILE_NAME.cfg
+
+					else
+						linuxcoe_log "ERROR: CentOS $CENTOS_VERSION not yet supported."
+						linuxcoe_lock release
+						return
+					fi
+					
+					
+				
+				elif grep ^os $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/ks.cfg | grep -i fedora 1>/dev/null; then
+					# fedora
+					linuxcoe_log "NOTICE: Dected Fedora $FEDORA_VERSION."
+
+
+				else
+					linuxcoe_log "ERROR: OS Verstion not yet supported."
+					linuxcoe_lock release
+					return
+				fi
+
+
+
+				if [ ! -f $KICKSTART_KERNEL ]; then
+					linuxcoe_log "ERROR: Could not find kickstart auto-install kernel $KICKSTART_KERNEL"
+					linuxcoe_lock release
+					return
+				fi
+				if [ ! -f $KICKSTART_INITRD ]; then
+					linuxcoe_log "ERROR: Could not find kickstart auto-install initrd $KICKSTART_INITRD"
+					linuxcoe_lock release
+					return
+				fi
+				/bin/cp -f $KICKSTART_KERNEL $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/vmlinuz-$RESOURCE_ID-$PROFILE_NAME
+				/bin/cp -f $KICKSTART_INITRD $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$RESOURCE_ID-$PROFILE_NAME.img
+			
+				# prepare the auto-install pxe boot
+				cat $AUTO_INSTALL_PXE_TEMPLATE_KICKSTART | \
+					sed -e "s#@@OPENQRM_BOOTIMAGE_KERNEL@@#vmlinuz-$RESOURCE_ID-$PROFILE_NAME#g"	| \
+					sed -e "s#@@OPENQRM_BOOTIMAGE_INITRD@@#initrd-$RESOURCE_ID-$PROFILE_NAME.img#g"	| \
+					sed -e "s#@@LINUXCOE_INSTALL_LANGUAGE@@#$LINUXCOE_INSTALL_LANGUAGE#g"	| \
+					sed -e "s#@@OPENQRM_SERVER_IP_ADDRESS@@#$OPENQRM_SERVER_IP_ADDRESS#g"	| \
+					sed -e "s#@@LINUXCOE_PROFILE_NAME@@#$PROFILE_NAME#g"	| \
+					sed -e "s#@@OPENQRM_RESOURCE_ID@@#$RESOURCE_ID#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE
+
+				linuxcoe_log "Prepared resources pxe-configuration for the automatic installation ($OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE)"
 
 
 				;;
+
+
+
+
+
+
+
+
+
+
+
+
 		*)
 				linuxcoe_log "Automatic installation method $AUTO_INSTALL_METHOD not supported yet."
 				linuxcoe_lock release
@@ -187,8 +288,27 @@ function lcoe_revert_profile() {
 	linuxcoe_log "Reverting profile $PROFILE_NAME to resource $RESOURCE_ID ($RESOURCE_IP/$RESOURCE_MAC)"
 	local RESOURCE_PXELINUXCFG_FILE=`echo 01-$RESOURCE_MAC | sed -e "s/:/-/g" | tr '[:upper:]' '[:lower:]'`
 	/bin/mv -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE.lcoe-$PROFILE_NAME $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/$RESOURCE_PXELINUXCFG_FILE
-	
-}
+	# clean-up kernel + initrd
+	rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/vmlinuz-$RESOURCE_ID-$PROFILE_NAME
+	rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/initrd-$RESOURCE_ID-$PROFILE_NAME.img
+
+	AUTO_INSTALL_METHOD="preseed"
+        case "$AUTO_INSTALL_METHOD" in
+                preseed)
+			rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/lcoe/preseed.$PROFILE_NAME.cfg
+			;;
+
+
+                *)
+			linuxcoe_log "Automatic installation method $AUTO_INSTALL_METHOD not supported yet."
+			linuxcoe_lock release
+			return 1
+			;;
+	esac
+
+		
+
+}			
 
 
 

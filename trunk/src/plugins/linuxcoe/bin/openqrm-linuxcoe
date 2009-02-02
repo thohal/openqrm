@@ -25,6 +25,11 @@ CURRENT_DIR=`pwd`
 DEB_NETINSTALLER_ETCH="http://http.us.debian.org/debian/dists/etch/main/installer-i386/current/images/netboot/netboot.tar.gz"
 DEB_NETINSTALLER_LENNY="http://http.us.debian.org/debian/dists/lenny/main/installer-i386/current/images/netboot/netboot.tar.gz"
 
+# for centos we need the pxeboot images
+CENTOS4_NETINSTALLER_KERNEL="http://linux.mirrors.es.net/centos/4/os/i386/images/pxeboot/vmlinuz"
+CENTOS4_NETINSTALLER_INITRD="http://linux.mirrors.es.net/centos/4/os/i386/images/pxeboot/initrd.img"
+CENTOS5_NETINSTALLER_KERNEL="http://linux.mirrors.es.net/centos/5/os/i386/images/pxeboot/vmlinuz"
+CENTOS5_NETINSTALLER_INITRD="http://linux.mirrors.es.net/centos/5/os/i386/images/pxeboot/initrd.img"
 
 if ! which screen 1>/dev/null; then
 	linuxcoe_log "ERROR: The 'screen' utility is not installed! Please install and try again."
@@ -96,12 +101,25 @@ function lco_prepare() {
 		fi
 	done
 
+	# debian netinstallers
 	lcoe_download_if_needed $DEB_NETINSTALLER_ETCH netboot-etch.tar.gz
 	lcoe_download_if_needed $DEB_NETINSTALLER_LENNY netboot-lenny.tar.gz
 	mkdir -p $LCOE_INSTALL_TMP/install/debian/etch $LCOE_INSTALL_TMP/install/debian/lenny
 	tar -C  $LCOE_INSTALL_TMP/install/debian/etch -xzf $LCOE_INSTALL_TMP/download/netboot-etch.tar.gz
 	tar -C  $LCOE_INSTALL_TMP/install/debian/lenny -xzf $LCOE_INSTALL_TMP/download/netboot-lenny.tar.gz
 	/bin/cp -aR $LCOE_INSTALL_TMP/install/debian $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/
+
+	# centos pxeboot images
+	lcoe_download_if_needed $CENTOS4_NETINSTALLER_KERNEL vmlinuz-centos4
+	lcoe_download_if_needed $CENTOS4_NETINSTALLER_INITRD initrd-centos4.img
+	lcoe_download_if_needed $CENTOS5_NETINSTALLER_KERNEL vmlinuz-centos5
+	lcoe_download_if_needed $CENTOS5_NETINSTALLER_INITRD initrd-centos5.img
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/4 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5
+	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-centos4 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/4/
+	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-centos4.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/4/
+	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-centos5 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5/
+	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-centos5.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5/
+
 
 }
 
