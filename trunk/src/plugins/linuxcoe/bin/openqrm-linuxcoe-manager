@@ -267,7 +267,31 @@ function lcoe_apply_profile() {
 				
 				elif grep ^os $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/ks.cfg | grep -i fedora 1>/dev/null; then
 					# fedora
-					linuxcoe_log "NOTICE: Detected Fedora $FEDORA_VERSION."
+
+					FEDORA_VERSION=`grep "\-\-url" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/ks.cfg | grep fedora | sed -e "s#.*fedora/releases/##g" | cut -d'/' -f1`
+					FEDORA_ARCH=`grep ^arch $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/ks.cfg | cut -d'=' -f2`
+					linuxcoe_log "NOTICE: Detected Fedora $FEDORA_VERSION architecture $FEDORA_ARCH."
+					if echo $FEDORA_VERSION | grep ^7 1>/dev/null; then
+						# fedora 7
+						KICKSTART_KERNEL="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/7/$FEDORA_ARCH/vmlinuz-$FEDORA_ARCH-fedora7"
+						KICKSTART_INITRD="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/7/$FEDORA_ARCH/initrd-$FEDORA_ARCH-fedora7.img"
+					elif echo $FEDORA_VERSION | grep ^8 1>/dev/null; then
+						# fedora 8
+						KICKSTART_KERNEL="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/8/$FEDORA_ARCH/vmlinuz-$FEDORA_ARCH-fedora8"
+						KICKSTART_INITRD="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/8/$FEDORA_ARCH/initrd-$FEDORA_ARCH-fedora8.img"
+					elif echo $FEDORA_VERSION | grep ^9 1>/dev/null; then
+						# fedora 9
+						KICKSTART_KERNEL="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/9/$FEDORA_ARCH/vmlinuz-$FEDORA_ARCH-fedora9"
+						KICKSTART_INITRD="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/9/$FEDORA_ARCH/initrd-$FEDORA_ARCH-fedora9.img"
+					elif echo $FEDORA_VERSION | grep ^10 1>/dev/null; then
+						# fedora 10
+						KICKSTART_KERNEL="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/10/$FEDORA_ARCH/vmlinuz-$FEDORA_ARCH-fedora10"
+						KICKSTART_INITRD="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/10/$FEDORA_ARCH/initrd-$FEDORA_ARCH-fedora10.img"
+					else
+						linuxcoe_log "ERROR: Fedora $FEDORA_VERSION not yet supported."
+						linuxcoe_lock release
+						return
+					fi
 
 
 				else
