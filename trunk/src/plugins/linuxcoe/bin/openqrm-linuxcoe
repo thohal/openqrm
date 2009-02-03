@@ -15,21 +15,47 @@ LCOE_SUB_VERSION="1"
 SD_BASE_VERSION="4"
 LCOE_BASE="linuxcoe-sd-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION.tar.gz"
 LCOE_DOCS="linuxcoe-sd-docs-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION.tar.gz"
-LCOE_DISTRIBUTIONS="centos debian fedora opensuse ubuntu"
+LCOE_DISTRIBUTIONS="centos debian fedora ubuntu"
 LCOE_INSTALL_DIR="/usr/local/linuxcoe-sd"
 LCOE_DOWNLOAD="http://www.instalinux.com/snapshots/"
 LCOE_INSTALL_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/lcoe-install"
 CURRENT_DIR=`pwd`
 
 # for debian we need the netinstaller images
-DEB_NETINSTALLER_ETCH="http://http.us.debian.org/debian/dists/etch/main/installer-i386/current/images/netboot/netboot.tar.gz"
-DEB_NETINSTALLER_LENNY="http://http.us.debian.org/debian/dists/lenny/main/installer-i386/current/images/netboot/netboot.tar.gz"
+DEB_NETINSTALLER_I386_ETCH="http://http.us.debian.org/debian/dists/etch/main/installer-i386/current/images/netboot/netboot.tar.gz"
+DEB_NETINSTALLER_I386_LENNY="http://http.us.debian.org/debian/dists/lenny/main/installer-i386/current/images/netboot/netboot.tar.gz"
+DEB_NETINSTALLER_X86_64_ETCH="http://http.us.debian.org/debian/dists/etch/main/installer-amd64/current/images/netboot/netboot.tar.gz"
+DEB_NETINSTALLER_X86_64_LENNY="http://http.us.debian.org/debian/dists/lenny/main/installer-amd64/current/images/netboot/netboot.tar.gz"
+# and additional lenny iso image.tar files from the instalinux download
+DEB_LCOE_ISO_TAR_I386_LENNY="http://www.instalinux.com/snapshots/images/Debian-Lenny-i386-iso.tar"
+DEB_LCOE_ISO_TAR_X86_64_LENNY="http://www.instalinux.com/snapshots/images/Debian-Lenny-x86_64-iso.tar"
+
+# for ubuntu we need the netinstaller images too
+UBUNTU_NETINSTALLER_I386_INTREPID="http://de.archive.ubuntu.com/ubuntu/dists/intrepid/main/installer-i386/current/images/netboot/netboot.tar.gz"
+UBUNTU_NETINSTALLER_X86_64_INTREPID="http://de.archive.ubuntu.com/ubuntu/dists/intrepid/main/installer-amd64/current/images/netboot/netboot.tar.gz"
+UBUNTU_NETINSTALLER_I386_HARDY="http://de.archive.ubuntu.com/ubuntu/dists/hardy/main/installer-i386/current/images/netboot/netboot.tar.gz"
+UBUNTU_NETINSTALLER_X86_64_HARDY="http://de.archive.ubuntu.com/ubuntu/dists/hardy/main/installer-amd64/current/images/netboot/netboot.tar.gz"
+UBUNTU_NETINSTALLER_I386_GUTSY="http://de.archive.ubuntu.com/ubuntu/dists/gutsy/main/installer-i386/current/images/netboot/netboot.tar.gz"
+UBUNTU_NETINSTALLER_X86_64_GUTSY="http://de.archive.ubuntu.com/ubuntu/dists/gutsy/main/installer-amd64/current/images/netboot/netboot.tar.gz"
+# ubuntu iso.tar images
+UBUNTU_LCOE_ISO_TAR_INTREPID_I386="http://www.instalinux.com/snapshots/images/Ubuntu-Intrepid-i386-iso.tar"
+UBUNTU_LCOE_ISO_TAR_INTREPID_X86_64="http://www.instalinux.com/snapshots/images/Ubuntu-Intrepid-x86_64-iso.tar"
+UBUNTU_LCOE_ISO_TAR_GUTSY_I386="http://www.instalinux.com/snapshots/images/Ubuntu-Gutsy-i386-iso.tar"
+UBUNTU_LCOE_ISO_TAR_GUTSY_X86_64="http://www.instalinux.com/snapshots/images/Ubuntu-Gutsy-x86_64-iso.tar"
+UBUNTU_LCOE_ISO_TAR_HARDY_I386="http://www.instalinux.com/snapshots/images/Ubuntu-Hardy-i386-iso.tar"
+UBUNTU_LCOE_ISO_TAR_HARDY_X86_64="http://www.instalinux.com/snapshots/images/Ubuntu-Hardy-x86_64-iso.tar"
+
 
 # for centos we need the pxeboot images
-CENTOS4_NETINSTALLER_KERNEL="http://linux.mirrors.es.net/centos/4/os/i386/images/pxeboot/vmlinuz"
-CENTOS4_NETINSTALLER_INITRD="http://linux.mirrors.es.net/centos/4/os/i386/images/pxeboot/initrd.img"
-CENTOS5_NETINSTALLER_KERNEL="http://linux.mirrors.es.net/centos/5/os/i386/images/pxeboot/vmlinuz"
-CENTOS5_NETINSTALLER_INITRD="http://linux.mirrors.es.net/centos/5/os/i386/images/pxeboot/initrd.img"
+CENTOS4_NETINSTALLER_I386_KERNEL="http://linux.mirrors.es.net/centos/4/os/i386/images/pxeboot/vmlinuz"
+CENTOS4_NETINSTALLER_I386_INITRD="http://linux.mirrors.es.net/centos/4/os/i386/images/pxeboot/initrd.img"
+CENTOS5_NETINSTALLER_I386_KERNEL="http://linux.mirrors.es.net/centos/5/os/i386/images/pxeboot/vmlinuz"
+CENTOS5_NETINSTALLER_I386_INITRD="http://linux.mirrors.es.net/centos/5/os/i386/images/pxeboot/initrd.img"
+CENTOS4_NETINSTALLER_X86_64_KERNEL="http://linux.mirrors.es.net/centos/4/os/x86_64/images/pxeboot/vmlinuz"
+CENTOS4_NETINSTALLER_X86_64_INITRD="http://linux.mirrors.es.net/centos/4/os/x86_64/images/pxeboot/initrd.img"
+CENTOS5_NETINSTALLER_X86_64_KERNEL="http://linux.mirrors.es.net/centos/5/os/x86_64/images/pxeboot/vmlinuz"
+CENTOS5_NETINSTALLER_X86_64_INITRD="http://linux.mirrors.es.net/centos/5/os/x86_64/images/pxeboot/initrd.img"
+
 
 if ! which screen 1>/dev/null; then
 	linuxcoe_log "ERROR: The 'screen' utility is not installed! Please install and try again."
@@ -102,23 +128,73 @@ function lco_prepare() {
 	done
 
 	# debian netinstallers
-	lcoe_download_if_needed $DEB_NETINSTALLER_ETCH netboot-etch.tar.gz
-	lcoe_download_if_needed $DEB_NETINSTALLER_LENNY netboot-lenny.tar.gz
-	mkdir -p $LCOE_INSTALL_TMP/install/debian/etch $LCOE_INSTALL_TMP/install/debian/lenny
-	tar -C  $LCOE_INSTALL_TMP/install/debian/etch -xzf $LCOE_INSTALL_TMP/download/netboot-etch.tar.gz
-	tar -C  $LCOE_INSTALL_TMP/install/debian/lenny -xzf $LCOE_INSTALL_TMP/download/netboot-lenny.tar.gz
+	lcoe_download_if_needed $DEB_NETINSTALLER_I386_ETCH netboot-i386-etch.tar.gz
+	lcoe_download_if_needed $DEB_NETINSTALLER_I386_LENNY netboot-i386-lenny.tar.gz
+	lcoe_download_if_needed $DEB_NETINSTALLER_X86_64_ETCH netboot-x86_64-etch.tar.gz
+	lcoe_download_if_needed $DEB_NETINSTALLER_X86_64_LENNY netboot-x86_64-lenny.tar.gz
+	mkdir -p $LCOE_INSTALL_TMP/install/debian/etch/i386 $LCOE_INSTALL_TMP/install/debian/lenny/i386
+	tar -C  $LCOE_INSTALL_TMP/install/debian/etch/i386 -xzf $LCOE_INSTALL_TMP/download/netboot-i386-etch.tar.gz
+	tar -C  $LCOE_INSTALL_TMP/install/debian/lenny/i386 -xzf $LCOE_INSTALL_TMP/download/netboot-i386-lenny.tar.gz
+	mkdir -p $LCOE_INSTALL_TMP/install/debian/etch/x86_64 $LCOE_INSTALL_TMP/install/debian/lenny/x86_64
+	tar -C  $LCOE_INSTALL_TMP/install/debian/etch/x86_64 -xzf $LCOE_INSTALL_TMP/download/netboot-x86_64-etch.tar.gz
+	tar -C  $LCOE_INSTALL_TMP/install/debian/lenny/x86_64 -xzf $LCOE_INSTALL_TMP/download/netboot-x86_64-lenny.tar.gz
 	/bin/cp -aR $LCOE_INSTALL_TMP/install/debian $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/
 
+	# the additional lenny iso-tar file images
+	lcoe_download_if_needed $DEB_LCOE_ISO_TAR_I386_LENNY Debian-Lenny-i386-iso.tar
+	lcoe_download_if_needed $DEB_LCOE_ISO_TAR_X86_64_LENNY Debian-Lenny-x86_64-iso.tar
+
+	# ubuntu netinstallers
+	lcoe_download_if_needed $UBUNTU_NETINSTALLER_I386_INTREPID netboot-i386-intrepid.tar.gz
+	lcoe_download_if_needed $UBUNTU_NETINSTALLER_X86_64_INTREPID netboot-x86_64-intrepid.tar.gz
+	mkdir -p $LCOE_INSTALL_TMP/install/ubuntu/intrepid/i386 $LCOE_INSTALL_TMP/install/ubuntu/intrepid/x86_64
+	tar -C  $LCOE_INSTALL_TMP/install/ubuntu/intrepid/i386 -xzf $LCOE_INSTALL_TMP/download/netboot-i386-intrepid.tar.gz
+	tar -C  $LCOE_INSTALL_TMP/install/ubuntu/intrepid/x86_64 -xzf $LCOE_INSTALL_TMP/download/netboot-x86_64-intrepid.tar.gz
+
+	lcoe_download_if_needed $UBUNTU_NETINSTALLER_I386_HARDY netboot-i386-hardy.tar.gz
+	lcoe_download_if_needed $UBUNTU_NETINSTALLER_X86_64_HARDY netboot-x86_64-hardy.tar.gz
+	mkdir -p $LCOE_INSTALL_TMP/install/ubuntu/hardy/i386 $LCOE_INSTALL_TMP/install/ubuntu/hardy/x86_64
+	tar -C  $LCOE_INSTALL_TMP/install/ubuntu/hardy/i386 -xzf $LCOE_INSTALL_TMP/download/netboot-i386-hardy.tar.gz
+	tar -C  $LCOE_INSTALL_TMP/install/ubuntu/hardy/x86_64 -xzf $LCOE_INSTALL_TMP/download/netboot-x86_64-hardy.tar.gz
+
+	lcoe_download_if_needed $UBUNTU_NETINSTALLER_I386_GUTSY netboot-i386-gutsy.tar.gz
+	lcoe_download_if_needed $UBUNTU_NETINSTALLER_X86_64_GUTSY netboot-x86_64-gutsy.tar.gz
+	mkdir -p $LCOE_INSTALL_TMP/install/ubuntu/gutsy/i386 $LCOE_INSTALL_TMP/install/ubuntu/gutsy/x86_64
+	tar -C  $LCOE_INSTALL_TMP/install/ubuntu/gutsy/i386 -xzf $LCOE_INSTALL_TMP/download/netboot-i386-gutsy.tar.gz
+	tar -C  $LCOE_INSTALL_TMP/install/ubuntu/gutsy/x86_64 -xzf $LCOE_INSTALL_TMP/download/netboot-x86_64-gutsy.tar.gz
+
+	/bin/cp -aR $LCOE_INSTALL_TMP/install/ubuntu $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/
+
+
+	# the additional ubuntu file images
+	lcoe_download_if_needed $UBUNTU_LCOE_ISO_TAR_INTREPID_I386 Ubuntu-Intrepid-i386-iso.tar
+	lcoe_download_if_needed $UBUNTU_LCOE_ISO_TAR_INTREPID_X86_64 Ubuntu-Intrepid-x86_64-iso.tar
+	lcoe_download_if_needed $UBUNTU_LCOE_ISO_TAR_GUTSY_I386 Ubuntu-Gutsy-i386-iso.tar
+	lcoe_download_if_needed $UBUNTU_LCOE_ISO_TAR_GUTSY_X86_64 Ubuntu-Gutsy-x86_64-iso.tar
+	lcoe_download_if_needed $UBUNTU_LCOE_ISO_TAR_HARDY_I386 Ubuntu-Hardy-i386-iso.tar
+	lcoe_download_if_needed $UBUNTU_LCOE_ISO_TAR_HARDY_X86_64 Ubuntu-Hardy-x86_64-iso.tar
+
+
+
 	# centos pxeboot images
-	lcoe_download_if_needed $CENTOS4_NETINSTALLER_KERNEL vmlinuz-centos4
-	lcoe_download_if_needed $CENTOS4_NETINSTALLER_INITRD initrd-centos4.img
-	lcoe_download_if_needed $CENTOS5_NETINSTALLER_KERNEL vmlinuz-centos5
-	lcoe_download_if_needed $CENTOS5_NETINSTALLER_INITRD initrd-centos5.img
-	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/4 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5
-	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-centos4 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/4/
-	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-centos4.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/4/
-	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-centos5 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5/
-	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-centos5.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5/
+	lcoe_download_if_needed $CENTOS4_NETINSTALLER_I386_KERNEL vmlinuz-i386-centos4
+	lcoe_download_if_needed $CENTOS4_NETINSTALLER_I386_INITRD initrd-i386-centos4.img
+	lcoe_download_if_needed $CENTOS5_NETINSTALLER_I386_KERNEL vmlinuz-i386-centos5
+	lcoe_download_if_needed $CENTOS5_NETINSTALLER_I386_INITRD initrd-i386-centos5.img
+	lcoe_download_if_needed $CENTOS4_NETINSTALLER_X86_64_KERNEL vmlinuz-x86_64-centos4
+	lcoe_download_if_needed $CENTOS4_NETINSTALLER_X86_64_INITRD initrd-x86_64-centos4.img
+	lcoe_download_if_needed $CENTOS5_NETINSTALLER_X86_64_KERNEL vmlinuz-x86_64-centos5
+	lcoe_download_if_needed $CENTOS5_NETINSTALLER_X86_64_INITRD initrd-x86_64-centos5.img
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/4/i386 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5/i386
+	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-i386-centos4 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/4/i386/
+	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-i386-centos4.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/4/i386/
+	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-i386-centos5 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5/i386/
+	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-i386-centos5.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5/i386/
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/4/x86_64 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5/x86_64
+	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-x86_64-centos4 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/4/x86_64/
+	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-x86_64-centos4.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/4/x86_64/
+	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-x86_64-centos5 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5/x86_64/
+	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-x86_64-centos5.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5/x86_64/
 
 
 }
@@ -155,6 +231,9 @@ function lcoe_install() {
 		make  2>&1 | tee -a /var/log/messages
 		make install 2>&1 | tee -a /var/log/messages
 	done
+
+	# cp all additional iso.tar images
+	/bin/cp -f $LCOE_INSTALL_TMP/download/*iso.tar $LCOE_INSTALL_DIR/images/
 
 	cd $CURRENT_DIR
 	linuxcoe_log "> Installation of LinuxCOE finished successfully"
