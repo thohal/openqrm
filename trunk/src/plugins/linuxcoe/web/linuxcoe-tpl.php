@@ -1,6 +1,6 @@
 <style>
 .htmlobject_tab_box {
-	width:750px;
+	width:800px;
 }
 </style>
 
@@ -8,7 +8,7 @@
 
 <div>
 	<div style="float:left;">
-	<iframe src="{lcoe_url}" width="740" height="600" name="LinuxCOE">
+	<iframe src="{lcoe_url}" width="790" height="600" name="LinuxCOE">
 	<p>Your browser has troubles to show Iframes. Please follow the link below :
 	<a href="{lcoe_url}">LinuxCOE</a></p>
 	</iframe>

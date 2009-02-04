@@ -210,8 +210,6 @@ function linuxcoe_select_resource($lcoe_profile_name) {
 	global $thisfile;
 	global $RootDir;
 
-				echo "Selected LCOE profile $lcoe_profile_name <br>";
-
 	$table = new htmlobject_db_table('resource_id');
 
 	$disp = "<h1><img border=0 src=\"/openqrm/base/plugins/linuxcoe/img/plugin.png\"> LinuxCOE Profile Manager</h1>";
@@ -252,9 +250,7 @@ function linuxcoe_select_resource($lcoe_profile_name) {
 		$state_icon="/openqrm/base/img/idle.png";
 		if ($resource->id != 0) {
 			// idle ?
-//			if (("$resource->imageid" == "1") && ("$resource->state" == "active")) {
-			if ("$resource->imageid" == "1") {
-
+			if (("$resource->imageid" == "1") && ("$resource->state" == "active")) {
 				$arBody[] = array(
 					'resource_state' => "<img src=$state_icon>",
 					'resource_icon' => "<img width=24 height=24 src=$resource_icon_default><input type='hidden' name='lcoe_profile_name' value=\"$lcoe_profile_name\">",

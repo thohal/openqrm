@@ -268,7 +268,7 @@ function lcoe_apply_profile() {
 				elif grep ^os $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/ks.cfg | grep -i fedora 1>/dev/null; then
 					# fedora
 
-					FEDORA_VERSION=`grep "\-\-url" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/ks.cfg | grep fedora | sed -e "s#.*fedora/releases/##g" | cut -d'/' -f1`
+					FEDORA_VERSION=`grep "\-\-url" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/ks.cfg | grep fedora | sed -e "s#.*/releases/##g" | cut -d'/' -f1`
 					FEDORA_ARCH=`grep ^arch $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/ks.cfg | cut -d'=' -f2`
 					linuxcoe_log "NOTICE: Detected Fedora $FEDORA_VERSION architecture $FEDORA_ARCH."
 					if echo $FEDORA_VERSION | grep ^7 1>/dev/null; then
