@@ -134,7 +134,7 @@ function openqrm_plugin_puppet_init() {
 		sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > /etc/cron.d/openqrm-puppetm-config
 	/etc/init.d/cron reload
 	# create svn post-commit hook to immediately update the puppet configuration
-	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/svn-hook/post-commit-tmpl | \
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/svn-hook/post-commit.tmpl | \
 		sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/hooks/post-commit
 	chmod 755 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/hooks/post-commit
 	

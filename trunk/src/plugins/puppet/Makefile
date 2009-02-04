@@ -14,6 +14,8 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp etc/init.d/puppet* $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/init.d/ && chmod 700 $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/init.d/*
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/default
 	. $(OPENQRM_SERVER_CONF) && cp -aR etc/default/* $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/default/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/svn-hook
+	. $(OPENQRM_SERVER_CONF) && cp -aR etc/svn-hook/*.tmpl $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/svn-hook/
 	. $(OPENQRM_SERVER_CONF) && rm -rf `find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/default/ -name .svn`
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/cron.d
 	. $(OPENQRM_SERVER_CONF) && cp -aR etc/cron.d/*.cron $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/cron.d/
