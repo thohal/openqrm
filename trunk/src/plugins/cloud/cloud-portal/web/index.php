@@ -30,6 +30,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 global $OPENQRM_SERVER_BASE_DIR;
 $refresh_delay=5;
 global $CLOUD_USER_TABLE;
+global $event;
 
 // gather user parameter in array
 foreach ($_REQUEST as $key => $value) {
@@ -164,9 +165,11 @@ if(htmlobject_request('action') != '') {
 
 		case 'activate':
 
+			$event->log("cloud-portal", $_SERVER['REQUEST_TIME'], 5, "index.php", "Processing activate user command", "", "", 0, 0, 0);
+
 			$u_error = 0;
-			$cu_id = $_REQUEST['i'];
-			$cu_token_post = $_REQUEST['token'];
+			$cu_id = $_REQUEST['cu_id'];
+			$cu_token_post = $_REQUEST['cu_token'];
 			check_param("cu_id", $cu_id);
 			check_param("cu_token_post", $cu_token_post);
 
@@ -175,6 +178,7 @@ if(htmlobject_request('action') != '') {
 			$cu_token_db = $cloud_user->token;
 			// some checks
 			if (!strlen($cu_token_db)) {
+				$event->log("cloud-portal", $_SERVER['REQUEST_TIME'], 2, "index.php", "Got emtpy token for user activation!", "", "", 0, 0, 0);
 				$strMsg .= "No token found. Aborting ... <br>";
 				$u_error = 1;
 				redirect($strMsg, tab1);
@@ -182,6 +186,7 @@ if(htmlobject_request('action') != '') {
 			}
 			// verify the token
 			if (strcmp($cu_token_db, $cu_token_post)) {
+				$event->log("cloud-portal", $_SERVER['REQUEST_TIME'], 2, "index.php", "Got invalid token for user activation!", "", "", 0, 0, 0);
 				$strMsg .= "Warning, invalid token. Aborting ... $cu_token_db -- $cu_token_post <br>";
 				$u_error = 1;
 				redirect($strMsg, tab1);
@@ -191,6 +196,7 @@ if(htmlobject_request('action') != '') {
 			// enable the user
 			if ($u_error == 0) {
 
+				$event->log("cloud-portal", $_SERVER['REQUEST_TIME'], 5, "index.php", "Enabling the user $cu_id", "", "", 0, 0, 0);
 				$cloud_user->activate_user_status($cu_id, 1);
 				// add user to htpasswd
 				$username = $cloud_user->name;
@@ -202,6 +208,7 @@ if(htmlobject_request('action') != '') {
 					$openqrm_server_command="htpasswd -c -b $CloudDir/user/.htpasswd $username $password";
 				}
 				$output = shell_exec($openqrm_server_command);
+				$event->log("cloud-portal", $_SERVER['REQUEST_TIME'], 5, "index.php", "User $cu_id added to the htpasswd", "", "", 0, 0, 0);
 
 				// mail again that account is active now
 				$cc_conf = new cloudconfig();
@@ -223,6 +230,8 @@ if(htmlobject_request('action') != '') {
 				$arr = array('@@USER@@'=>"$username", '@@PASSWORD@@'=>"$password", '@@EXTERNALPORTALNAME@@'=>"$external_portal_name", '@@FORENAME@@'=>"$forename", '@@LASTNAME@@'=>"$lastname");
 				$rmail->var_array = $arr;
 				$rmail->send();
+
+				$event->log("cloud-portal", $_SERVER['REQUEST_TIME'], 5, "index.php", "Send mail to User $cu_id", "", "", 0, 0, 0);
 
 				$strMsg = "Your account has been activate. You can now login to the openQRM Cloud.<br>";
 				redirect($strMsg, tab0);
@@ -346,6 +355,29 @@ function register_user() {
 
 
 
+function activate_user() {
+
+	global $OPENQRM_USER;
+	global $thisfile;
+	
+	$disp = "<h1>Activate your openQRM Cloud account</h1>";
+	$disp = $disp."<br>";
+	$disp = $disp."<form action=$thisfile method=post>";
+	$disp = $disp.htmlobject_input('cu_id', array("value" => '[Your-User-ID]', "label" => 'User ID'), 'text', 20);
+	$disp = $disp.htmlobject_input('cu_token', array("value" => '[Your-secret-token]', "label" => 'Token'), 'text', 100);
+	$disp = $disp."<input type=hidden name='action' value='activate'>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."<input type=submit value='Activate'>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."</form>";
+
+	return $disp;
+}
+
+
+
 function login_user() {
 
 	global $OPENQRM_USER;
@@ -379,6 +411,7 @@ include "$DocRoot/cloud-portal/mycloud-head.php";
 
 $output[] = array('label' => 'Welcome to the openQRM Cloud', 'value' => portal_home());
 $output[] = array('label' => 'Register to the openQRM Cloud', 'value' => register_user());
+$output[] = array('label' => 'Activate your Account', 'value' => activate_user());
 $output[] = array('label' => 'Login with existing account', 'value' => login_user());
 
 echo htmlobject_tabmenu($output);
