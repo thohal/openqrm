@@ -286,7 +286,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$rmail->from = "$cc_admin_email";
 			$rmail->subject = "openQRM Cloud: Your account has been created";
 			$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/welcome_new_cloud_user.mail.tmpl";
-			$arr = array('@@USER@@'=>"$username", '@@PASSWORD@@'=>"$password", '@@EXTERNALPORTALNAME@@'=>"$external_portal_name", '@@FORENAME@@'=>"$forename", '@@LASTNAME@@'=>"$lastname");
+			$arr = array('@@USER@@'=>"$username", '@@PASSWORD@@'=>"$password", '@@EXTERNALPORTALNAME@@'=>"$external_portal_name", '@@FORENAME@@'=>"$forename", '@@LASTNAME@@'=>"$lastname", '@@CLOUDADMIN@@'=>"$cc_admin_email");
 			$rmail->var_array = $arr;
 			$rmail->send();
 			break;
@@ -342,7 +342,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$cu_name = $cl_user->name;
 			$cu_email = $cl_user->email;
 			$rmail = new cloudmailer();
-			$rmail->to = "$cu_email";
+			$rmail->to = "$cc_admin_email";
 			$rmail->from = "$cc_admin_email";
 			$rmail->subject = "openQRM Cloud: New request from user $cu_name";
 			$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/new_cloud_request.mail.tmpl";

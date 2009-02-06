@@ -184,12 +184,14 @@ if (htmlobject_request('action') != '') {
 					$start = date("d-m-Y H-i", $cr_start);
 					$cr_stop = $cr_request->stop;
 					$stop = date("d-m-Y H-i", $cr_stop);
+					$nowstmp = $_SERVER['REQUEST_TIME'];
+					$now = date("d-m-Y H-i", $nowstmp);
 					$rmail = new cloudmailer();
 					$rmail->to = "$cu_email";
 					$rmail->from = "$cc_admin_email";
 					$rmail->subject = "openQRM Cloud: Your request $id is going to be deprovisioned now !";
 					$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/deprovision_cloud_request.mail.tmpl";
-					$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop");
+					$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$now");
 					$rmail->var_array = $arr;
 					$rmail->send();
 					$cr_request->setstatus($id, 'deprovsion');
@@ -300,7 +302,7 @@ if (htmlobject_request('action') != '') {
 			$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
 			
 			$rmail = new cloudmailer();
-			$rmail->to = "$cu_email";
+			$rmail->to = "$cc_admin_email";
 			$rmail->from = "$cc_admin_email";
 			$rmail->subject = "openQRM Cloud: New request from user $cu_name";
 			$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/new_cloud_request.mail.tmpl";

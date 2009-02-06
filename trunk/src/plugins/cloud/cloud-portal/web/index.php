@@ -50,6 +50,21 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 }
 
 
+function is_allowed($text) {
+	for ($i = 0; $i<strlen($text); $i++) {
+		if (!ctype_alpha($text[$i])) {
+			if (!ctype_digit($text[$i])) {
+				if (!ctype_space($text[$i])) {
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+	
+
+
 function check_param($param, $value) {
 	global $c_error;
 	if (!strlen($value)) {
@@ -58,7 +73,17 @@ function check_param($param, $value) {
 		redirect($strMsg, tab1);
 		exit(0);
 	}
-	if(!ctype_alnum($value)){
+	// remove whitespaces
+	$value = trim($value);
+	// remove any non-violent characters
+	$value = str_replace(".", "", $value);
+	$value = str_replace(",", "", $value);
+	$value = str_replace("-", "", $value);
+	$value = str_replace("_", "", $value);
+	$value = str_replace("(", "", $value);
+	$value = str_replace(")", "", $value);
+	$value = str_replace("/", "", $value);
+	if(!is_allowed($value)){
 		$strMsg = "$param contains special characters <br>";
 		$c_error = 1;
 		redirect($strMsg, tab1);
@@ -75,6 +100,7 @@ if(htmlobject_request('action') != '') {
 			// checks
 			check_param("Username", $user_fields['cu_name']);
 			check_param("Password", $user_fields['cu_password']);
+
 			check_param("Lastname", $user_fields['cu_lastname']);
 			check_param("Forename", $user_fields['cu_forename']);
 			check_param("Street", $user_fields['cu_street']);
@@ -227,7 +253,7 @@ if(htmlobject_request('action') != '') {
 				$rmail->from = "$cc_admin_email";
 				$rmail->subject = "openQRM Cloud: Your account has been activated";
 				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/welcome_new_cloud_user.mail.tmpl";
-				$arr = array('@@USER@@'=>"$username", '@@PASSWORD@@'=>"$password", '@@EXTERNALPORTALNAME@@'=>"$external_portal_name", '@@FORENAME@@'=>"$forename", '@@LASTNAME@@'=>"$lastname");
+				$arr = array('@@USER@@'=>"$username", '@@PASSWORD@@'=>"$password", '@@EXTERNALPORTALNAME@@'=>"$external_portal_name", '@@FORENAME@@'=>"$forename", '@@LASTNAME@@'=>"$lastname", '@@CLOUDADMIN@@'=>"$cc_admin_email");
 				$rmail->var_array = $arr;
 				$rmail->send();
 
@@ -340,9 +366,8 @@ function register_user() {
 	$disp = $disp.htmlobject_input('cu_city', array("value" => '[City]', "label" => 'City'), 'text', 100);
 	$disp = $disp.htmlobject_input('cu_country', array("value" => '[Country]', "label" => 'Country'), 'text', 100);
 	$disp = $disp.htmlobject_input('cu_phone', array("value" => '[Phone-number]', "label" => 'Phone'), 'text', 100);
-
 	$disp = $disp."<input type=hidden name='action' value='create_user'>";
-	$disp = $disp."<b><i>All values are mandatory.</i></b>";
+	$disp = $disp."<b><i>All values are mandatory. Please do not use any special characters.</i></b>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<input type=submit value='Register'>";
@@ -383,10 +408,12 @@ function login_user() {
 	global $OPENQRM_USER;
 	global $thisfile;
 
-	$disp = "<a href=\"/cloud-portal/user/mycloud.php\"><h1>Click here to login to the openQRM Cloud</h1></a>";
+	$disp = "<a href=\"/cloud-portal/user/mycloud.php\"><h1><b>Click here to login to the openQRM Cloud</b></h1></a>";
 	$disp = $disp."<form action=$thisfile method=post>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
+	$disp = $disp."<hr>";
+	$disp = $disp."<b>Forgot the password ?</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."You already have an existing account on the openQRM Cloud but forgot your password ?";
 	$disp = $disp."<br>";
