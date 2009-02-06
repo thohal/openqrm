@@ -120,6 +120,9 @@ function check_param($param, $value) {
 	}
 }
 
+// get admin email
+$cc_conf = new cloudconfig();
+$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
 
 // check if we got some actions to do
 if (htmlobject_request('action') != '') {
@@ -186,6 +189,9 @@ if (htmlobject_request('action') != '') {
 					$stop = date("d-m-Y H-i", $cr_stop);
 					$nowstmp = $_SERVER['REQUEST_TIME'];
 					$now = date("d-m-Y H-i", $nowstmp);
+					// get admin email
+					$cc_conf = new cloudconfig();
+					$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
 					$rmail = new cloudmailer();
 					$rmail->to = "$cu_email";
 					$rmail->from = "$cc_admin_email";
@@ -297,9 +303,6 @@ if (htmlobject_request('action') != '') {
 			$cr_id = $request_fields['cr_id'];
 			$cu_name = $request_user->name;
 			$cu_email = $request_user->email;
-			// get admin email
-			$cc_conf = new cloudconfig();
-			$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
 			
 			$rmail = new cloudmailer();
 			$rmail->to = "$cc_admin_email";
