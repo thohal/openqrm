@@ -355,7 +355,8 @@ function my_cloud_appliances() {
 
 function back_to_cloud_requests() {
 
-	$disp = "<a href=\"/cloud-portal/user/mycloud.php\"><h1>Click here go back to the request-overview</h1></a>";
+	$disp = "<a href=\"/cloud-portal/user/mycloud.php\"><img src='../img/backwards.gif' width='36' height='32' border='0' alt='' align='left'>";
+	$disp = $disp."<h1>Click here go back to the request-overview</h1></a>";
 	$disp = $disp."<br>";
 
 	return $disp;

@@ -328,16 +328,24 @@ function portal_home() {
 	global $thisfile;
 
 	$disp = "<h1>openQRM Cloud Portal</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 	$disp = $disp."This is the openQRM Cloud Portal providing computing power on-demand.";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
+	$disp = $disp."Here how it works :";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
+	$disp = $disp."- First register yourself to the openQRM Cloud portal";
+	$disp = $disp."<br>";
+	$disp = $disp."- You will receive a mail how to activate your account";
+	$disp = $disp."<br>";
+	$disp = $disp."- Activate your account";
+	$disp = $disp."<br>";
+	$disp = $disp."- Get some Cloud Computing Units (CCU's), the virtual currency in the Cloud";
+	$disp = $disp."<br>";
+	$disp = $disp."- Request your systems from the openQRM Cloud";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<br>";
+	$disp = $disp."Enjoy !";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
@@ -408,7 +416,8 @@ function login_user() {
 	global $OPENQRM_USER;
 	global $thisfile;
 
-	$disp = "<a href=\"/cloud-portal/user/mycloud.php\"><h1><b>Click here to login to the openQRM Cloud</b></h1></a>";
+	$disp = "<a href=\"/cloud-portal/user/mycloud.php\"><img src='img/forward.gif' width='36' height='32' border='0' alt='' align='left'>";
+	$disp = $disp."<h1><b>Click here to login to the openQRM Cloud</b></h1></a>";
 	$disp = $disp."<form action=$thisfile method=post>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
