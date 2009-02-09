@@ -188,7 +188,7 @@ var $_thisfile = '';
 	    $_strReturn .= '
 	    <div class="msgBox" id="msgBox">'.$_REQUEST['strMsg'].'</div>
 	    <script>
-	    var aktiv = window.setInterval("msgBox()", 5000);
+	    var aktiv = window.setInterval("msgBox()", 15000);
 
 	    function msgBox() {
 	        document.getElementById(\'msgBox\').style.display = \'none\';
