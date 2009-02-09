@@ -789,7 +789,17 @@ function openqrm_cloud_monitor() {
 				$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@PASSWORD@@'=>"$appliance_password", '@@IP@@'=>"$resource_external_ip", '@@RESNUMBER@@'=>"$cr_resource_number");
 				$rmail->var_array = $arr;
 				$rmail->send();
-	
+
+				# mail the ip + root password to the cloud admin	
+				$rmail_admin = new cloudmailer();
+				$rmail_admin->to = "$cc_admin_email";
+				$rmail_admin->from = "$cc_admin_email";
+				$rmail_admin->subject = "openQRM Cloud: $cr_resource_number. resource from request $cr_id is now active";
+				$rmail_admin->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/active_cloud_request_admin.mail.tmpl";
+				$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@PASSWORD@@'=>"$appliance_password", '@@IP@@'=>"$resource_external_ip", '@@RESNUMBER@@'=>"$cr_resource_number");
+				$rmail_admin->var_array = $arr;
+				$rmail_admin->send();
+
 				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Provisioning resource no. $cr_resource_number request ID $cr_id finished", "", "", 0, 0, 0);
 			}
 	
