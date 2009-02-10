@@ -214,14 +214,18 @@ if (htmlobject_request('action') != '') {
 				foreach($_REQUEST['identifier'] as $id) {
 					$cr_request = new cloudrequest();
 					$cr_request->get_instance_by_id($id);
+					$cr_stop=$_REQUEST['extend_cr_stop'];
+					$new_stop_timestmp=date_to_timestamp($cr_stop);
 					// only allow to delete requests which are not provisioned yet
 					if ($cr_request->status == 5) {
 						$strMsg .="Request cannot be extended when in state deprovisioned <br>";
 						continue;				
 					}
-	
-					$cr_stop=$_REQUEST['extend_cr_stop'];
-					$new_stop_timestmp=date_to_timestamp($cr_stop);
+					// check that the new stop time is later than the start time
+					if ($new_stop_timestmp < ($cr_request->start + 3600)) {
+						$strMsg .="Request cannot be extended with stop date before start. Request duration must be at least 1 hour.<br>";
+						continue;				
+					}
 					$cr_request->extend_stop_time($id, $new_stop_timestmp);
 					$strMsg .="Extended Cloud request $id to $cr_stop <br>";
 				}
@@ -250,6 +254,13 @@ if (htmlobject_request('action') != '') {
 			$stopp = $request_fields['cr_stop'];
 			$tstop = date_to_timestamp($stopp);
 			$request_fields['cr_stop'] = $tstop;
+
+			// check that the new stop time is later than the start time
+			if ($tstop < ($tstart + 3600)) {
+				$strMsg .="Request cannot be created with stop date before start. Request duration must be at least 1 hour.<br>";
+				redirect($strMsg);
+				exit(0);
+			}
 
 			// check disk param
 			check_is_number("Disk", $request_fields['cr_disk_req']);

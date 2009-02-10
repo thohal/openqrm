@@ -158,13 +158,16 @@ if(htmlobject_request('action') != '') {
 				// prepare more defaults
 				$user_fields['cu_status'] = 0;
 				$user_fields['cu_id'] = openqrm_db_get_free_id('cu_id', $CLOUD_USER_TABLE);
+				// check how many ccunits to give for a new user
+				$cc_conf = new cloudconfig();
+				$cc_auto_give_ccus = $cc_conf->get_value(12);  // 12 is auto_give_ccus
+				$user_fields['cu_ccunits'] = $cc_auto_give_ccus;
 				$cl_user = new clouduser();
 				// add user
 				$cl_user->add($user_fields);
 
 				// mail user
 				// get admin email
-				$cc_conf = new cloudconfig();
 				$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
 				// get external name
 				$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
@@ -349,7 +352,8 @@ function portal_home() {
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<br>";
+	$disp = $disp."<a href=\"/cloud-portal/user/mycloud.php\"><img src='img/forward.gif' width='36' height='32' border='0' alt='' align='left'>";
+	$disp = $disp."<h1><b>Click here to login to the openQRM Cloud</b></h1></a>";
 
 	return $disp;
 }

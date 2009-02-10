@@ -226,6 +226,8 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($create_default_cloud_config10);
 			$create_default_cloud_config11 = "insert into cloud_config(cc_id, cc_key, cc_value) values (11, 'show_puppet_groups', 'true')";
 			$recordSet = &$db->Execute($create_default_cloud_config11);
+			$create_default_cloud_config12 = "insert into cloud_config(cc_id, cc_key, cc_value) values (12, 'auto_give_ccus', '0')";
+			$recordSet = &$db->Execute($create_default_cloud_config12);
 
 		    $db->Close();
 			break;
@@ -254,8 +256,10 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$user_fields['cu_id'] = openqrm_db_get_free_id('cu_id', $CLOUD_USER_TABLE);
 			// enabled by default
 			$user_fields['cu_status'] = 1;
-			// no ccunits for now
-			$user_fields['cu_ccunits'] = 0;
+			// check how many ccunits to give for a new user
+			$cc_conf = new cloudconfig();
+			$cc_auto_give_ccus = $cc_conf->get_value(12);  // 12 is auto_give_ccus
+			$user_fields['cu_ccunits'] = $cc_auto_give_ccus;
 			$cl_user = new clouduser();
 			$cl_user->add($user_fields);
 			// add user to htpasswd
@@ -271,7 +275,6 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 
 			// send mail to user
 			// get admin email
-			$cc_conf = new cloudconfig();
 			$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
 			// get external name
 			$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
