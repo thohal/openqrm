@@ -279,6 +279,7 @@ function openqrm_cloud_monitor() {
 			if (!strcmp($cc_auto_provision, "true")) {
 				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Found new request ID $cr_id. Auto-provisioning is enabled! Approving the request", "", "", 0, 0, 0);
 				$cr->setstatus($cr_id, "approve");
+				$cr_status=2;
 			}
 		}
 
