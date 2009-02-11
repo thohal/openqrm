@@ -20,15 +20,60 @@ LCOE_INSTALL_DIR="/usr/local/linuxcoe-sd"
 LCOE_DOWNLOAD="http://www.instalinux.com/snapshots/"
 LCOE_INSTALL_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/lcoe-install"
 CURRENT_DIR=`pwd`
+LCOE_ISO_IMAGES="CentOS-4-i386-iso.tar	\
+	CentOS-4-x86_64-iso.tar	\
+	CentOS-5-i386-iso.tar	\
+	CentOS-5-x86_64-iso.tar	\
+	Debian-3.1-hppa-iso.tar	\
+	Debian-3.1-i386-iso.tar	\
+	Debian-3.1-ia64-iso.tar	\
+	Debian-Etch-i386-iso.tar	\
+	Debian-Etch-ia64-iso.tar	\
+	Debian-Etch-x86_64-iso.tar	\
+	Debian-Lenny-i386-iso.tar	\
+	Debian-Lenny-x86_64-iso.tar	\
+	Fedora-10-i386-iso.tar	\
+	Fedora-10-x86_64-iso.tar	\
+	Fedora-7-i386-iso.tar	\
+	Fedora-7-i386-usbboot.img	\
+	Fedora-7-x86_64-iso.tar	\
+	Fedora-7-x86_64-usbboot.img	\
+	Fedora-8-i386-iso.tar	\
+	Fedora-8-i386-usbboot.img	\
+	Fedora-8-x86_64-iso.tar	\
+	Fedora-8-x86_64-usbboot.img	\
+	Fedora-9-i386-iso.tar	\
+	Fedora-9-x86_64-iso.tar	\
+	Ubuntu-Dapper-i386-iso.tar	\
+	Ubuntu-Edgy-i386-iso.tar	\
+	Ubuntu-Feisty-i386-iso.tar	\
+	Ubuntu-Feisty-x86_64-iso.tar	\
+	Ubuntu-Gutsy-i386-iso.tar	\
+	Ubuntu-Gutsy-x86_64-iso.tar	\
+	Ubuntu-Hardy-i386-iso.tar	\
+	Ubuntu-Hardy-x86_64-iso.tar	\
+	Ubuntu-Intrepid-i386-iso.tar	\
+	Ubuntu-Intrepid-x86_64-iso.tar"
+
+
+# disabled for now
+#OpenSUSE-10.2-i386-iso.tar
+#OpenSUSE-10.2-x86_64-iso.tar
+#OpenSUSE-10.3-i386-iso.tar
+#OpenSUSE-10.3-x86_64-iso.tar
+#OpenSUSE-11.0-i386-iso.tar
+#OpenSUSE-11.0-x86_64-iso.tar
+#Scientific-4x-i386-iso.tar
+#Scientific-4x-x86_64-iso.tar
+#Scientific-5x-i386-iso.tar
+#Scientific-5x-x86_64-iso.tar
+
 
 # for debian we need the netinstaller images
 DEB_NETINSTALLER_I386_ETCH="http://http.us.debian.org/debian/dists/etch/main/installer-i386/current/images/netboot/netboot.tar.gz"
 DEB_NETINSTALLER_I386_LENNY="http://http.us.debian.org/debian/dists/lenny/main/installer-i386/current/images/netboot/netboot.tar.gz"
 DEB_NETINSTALLER_X86_64_ETCH="http://http.us.debian.org/debian/dists/etch/main/installer-amd64/current/images/netboot/netboot.tar.gz"
 DEB_NETINSTALLER_X86_64_LENNY="http://http.us.debian.org/debian/dists/lenny/main/installer-amd64/current/images/netboot/netboot.tar.gz"
-# and additional lenny iso image.tar files from the instalinux download
-DEB_LCOE_ISO_TAR_I386_LENNY="http://www.instalinux.com/snapshots/images/Debian-Lenny-i386-iso.tar"
-DEB_LCOE_ISO_TAR_X86_64_LENNY="http://www.instalinux.com/snapshots/images/Debian-Lenny-x86_64-iso.tar"
 
 # for ubuntu we need the netinstaller images too
 UBUNTU_NETINSTALLER_I386_INTREPID="http://de.archive.ubuntu.com/ubuntu/dists/intrepid/main/installer-i386/current/images/netboot/netboot.tar.gz"
@@ -37,31 +82,17 @@ UBUNTU_NETINSTALLER_I386_HARDY="http://de.archive.ubuntu.com/ubuntu/dists/hardy/
 UBUNTU_NETINSTALLER_X86_64_HARDY="http://de.archive.ubuntu.com/ubuntu/dists/hardy/main/installer-amd64/current/images/netboot/netboot.tar.gz"
 UBUNTU_NETINSTALLER_I386_GUTSY="http://de.archive.ubuntu.com/ubuntu/dists/gutsy/main/installer-i386/current/images/netboot/netboot.tar.gz"
 UBUNTU_NETINSTALLER_X86_64_GUTSY="http://de.archive.ubuntu.com/ubuntu/dists/gutsy/main/installer-amd64/current/images/netboot/netboot.tar.gz"
-# ubuntu iso.tar images
-UBUNTU_LCOE_ISO_TAR_INTREPID_I386="http://www.instalinux.com/snapshots/images/Ubuntu-Intrepid-i386-iso.tar"
-UBUNTU_LCOE_ISO_TAR_INTREPID_X86_64="http://www.instalinux.com/snapshots/images/Ubuntu-Intrepid-x86_64-iso.tar"
-UBUNTU_LCOE_ISO_TAR_GUTSY_I386="http://www.instalinux.com/snapshots/images/Ubuntu-Gutsy-i386-iso.tar"
-UBUNTU_LCOE_ISO_TAR_GUTSY_X86_64="http://www.instalinux.com/snapshots/images/Ubuntu-Gutsy-x86_64-iso.tar"
-UBUNTU_LCOE_ISO_TAR_HARDY_I386="http://www.instalinux.com/snapshots/images/Ubuntu-Hardy-i386-iso.tar"
-UBUNTU_LCOE_ISO_TAR_HARDY_X86_64="http://www.instalinux.com/snapshots/images/Ubuntu-Hardy-x86_64-iso.tar"
 
 # for centos we need the pxeboot images
-CENTOS4_NETINSTALLER_I386_KERNEL="http://linux.mirrors.es.net/centos/4/os/i386/images/pxeboot/vmlinuz"
-CENTOS4_NETINSTALLER_I386_INITRD="http://linux.mirrors.es.net/centos/4/os/i386/images/pxeboot/initrd.img"
-CENTOS5_NETINSTALLER_I386_KERNEL="http://linux.mirrors.es.net/centos/5/os/i386/images/pxeboot/vmlinuz"
-CENTOS5_NETINSTALLER_I386_INITRD="http://linux.mirrors.es.net/centos/5/os/i386/images/pxeboot/initrd.img"
-CENTOS4_NETINSTALLER_X86_64_KERNEL="http://linux.mirrors.es.net/centos/4/os/x86_64/images/pxeboot/vmlinuz"
-CENTOS4_NETINSTALLER_X86_64_INITRD="http://linux.mirrors.es.net/centos/4/os/x86_64/images/pxeboot/initrd.img"
-CENTOS5_NETINSTALLER_X86_64_KERNEL="http://linux.mirrors.es.net/centos/5/os/x86_64/images/pxeboot/vmlinuz"
-CENTOS5_NETINSTALLER_X86_64_INITRD="http://linux.mirrors.es.net/centos/5/os/x86_64/images/pxeboot/initrd.img"
+CENTOS4_NETINSTALLER_I386_KERNEL="http://mirror.fraunhofer.de/centos.org/4/os/i386/images/pxeboot/vmlinuz"
+CENTOS4_NETINSTALLER_I386_INITRD="http://mirror.fraunhofer.de/centos.org/4/os/i386/images/pxeboot/initrd.img"
+CENTOS5_NETINSTALLER_I386_KERNEL="http://mirror.fraunhofer.de/centos.org/5/os/i386/images/pxeboot/vmlinuz"
+CENTOS5_NETINSTALLER_I386_INITRD="http://mirror.fraunhofer.de/centos.org/5/os/i386/images/pxeboot/initrd.img"
+CENTOS4_NETINSTALLER_X86_64_KERNEL="http://mirror.fraunhofer.de/centos.org/4/os/x86_64/images/pxeboot/vmlinuz"
+CENTOS4_NETINSTALLER_X86_64_INITRD="http://mirror.fraunhofer.de/centos.org/4/os/x86_64/images/pxeboot/initrd.img"
+CENTOS5_NETINSTALLER_X86_64_KERNEL="http://mirror.fraunhofer.de/centos.org/5/os/x86_64/images/pxeboot/vmlinuz"
+CENTOS5_NETINSTALLER_X86_64_INITRD="http://mirror.fraunhofer.de/centos.org/5/os/x86_64/images/pxeboot/initrd.img"
 
-# fedora iso.tar images
-FEDORA_LCOE_ISO_TAR_8_I386="http://www.instalinux.com/snapshots/images/Fedora-8-i386-iso.tar"
-FEDORA_LCOE_ISO_TAR_8_X86_64="http://www.instalinux.com/snapshots/images/Fedora-8-x86_64-iso.tar"
-FEDORA_LCOE_ISO_TAR_9_I386="http://www.instalinux.com/snapshots/images/Fedora-9-i386-iso.tar"
-FEDORA_LCOE_ISO_TAR_9_X86_64="http://www.instalinux.com/snapshots/images/Fedora-9-x86_64-iso.tar"
-FEDORA_LCOE_ISO_TAR_10_I386="http://www.instalinux.com/snapshots/images/Fedora-10-i386-iso.tar"
-FEDORA_LCOE_ISO_TAR_10_X86_64="http://www.instalinux.com/snapshots/images/Fedora-10-x86_64-iso.tar"
 # fedora netboot images
 FEDORA_7_NETINSTALLER_I386_KERNEL="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/7/Fedora/i386/os/images/pxeboot/vmlinuz"
 FEDORA_7_NETINSTALLER_I386_INITRD="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/7/Fedora/i386/os/images/pxeboot/initrd.img"
@@ -133,7 +164,6 @@ function lco_prepare() {
 	# download needed ?
 	lcoe_download_if_needed $LCOE_DOWNLOAD/$LCOE_BASE
 	for DIST in $LCOE_DISTRIBUTIONS; do
-		lcoe_download_if_needed $LCOE_DOWNLOAD/systemdesigner-$DIST-$SD_BASE_VERSION.tar.gz
 		lcoe_download_if_needed $LCOE_DOWNLOAD/linuxcoe-sd-data-$DIST-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION.tar.gz
 	done
 
@@ -143,12 +173,15 @@ function lco_prepare() {
 		tar -C $LCOE_INSTALL_TMP/install -xzf $LCOE_INSTALL_TMP/download/$LCOE_BASE
 	fi
 	for DIST in $LCOE_DISTRIBUTIONS; do
-		if [ ! -d $LCOE_INSTALL_TMP/install/systemdesigner-$DIST-$SD_BASE_VERSION ]; then
-			tar -C  $LCOE_INSTALL_TMP/install -xzf $LCOE_INSTALL_TMP/download/systemdesigner-$DIST-$SD_BASE_VERSION.tar.gz
-		fi
 		if [ ! -d $LCOE_INSTALL_TMP/install/linuxcoe-sd-data-$DIST-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION ]; then
 			tar -C  $LCOE_INSTALL_TMP/install -xzf $LCOE_INSTALL_TMP/download/linuxcoe-sd-data-$DIST-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION.tar.gz
 		fi
+	done
+
+	# download iso.tar images for LinuxCOE
+	for ISOTAR in $LCOE_ISO_IMAGES; do
+		ISO_URL="$LCOE_DOWNLOAD/images/$ISOTAR"
+		lcoe_download_if_needed $ISO_URL
 	done
 
 	# debian netinstallers
@@ -163,10 +196,6 @@ function lco_prepare() {
 	tar -C  $LCOE_INSTALL_TMP/install/debian/etch/x86_64 -xzf $LCOE_INSTALL_TMP/download/netboot-x86_64-etch.tar.gz
 	tar -C  $LCOE_INSTALL_TMP/install/debian/lenny/x86_64 -xzf $LCOE_INSTALL_TMP/download/netboot-x86_64-lenny.tar.gz
 	/bin/cp -aR $LCOE_INSTALL_TMP/install/debian $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/
-
-	# the additional lenny iso-tar file images
-	lcoe_download_if_needed $DEB_LCOE_ISO_TAR_I386_LENNY Debian-Lenny-i386-iso.tar
-	lcoe_download_if_needed $DEB_LCOE_ISO_TAR_X86_64_LENNY Debian-Lenny-x86_64-iso.tar
 
 	# ubuntu netinstallers
 	lcoe_download_if_needed $UBUNTU_NETINSTALLER_I386_INTREPID netboot-i386-intrepid.tar.gz
@@ -189,15 +218,6 @@ function lco_prepare() {
 
 	/bin/cp -aR $LCOE_INSTALL_TMP/install/ubuntu $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/
 
-
-	# the additional ubuntu file images
-	lcoe_download_if_needed $UBUNTU_LCOE_ISO_TAR_INTREPID_I386 Ubuntu-Intrepid-i386-iso.tar
-	lcoe_download_if_needed $UBUNTU_LCOE_ISO_TAR_INTREPID_X86_64 Ubuntu-Intrepid-x86_64-iso.tar
-	lcoe_download_if_needed $UBUNTU_LCOE_ISO_TAR_GUTSY_I386 Ubuntu-Gutsy-i386-iso.tar
-	lcoe_download_if_needed $UBUNTU_LCOE_ISO_TAR_GUTSY_X86_64 Ubuntu-Gutsy-x86_64-iso.tar
-	lcoe_download_if_needed $UBUNTU_LCOE_ISO_TAR_HARDY_I386 Ubuntu-Hardy-i386-iso.tar
-	lcoe_download_if_needed $UBUNTU_LCOE_ISO_TAR_HARDY_X86_64 Ubuntu-Hardy-x86_64-iso.tar
-
 	# centos pxeboot images
 	lcoe_download_if_needed $CENTOS4_NETINSTALLER_I386_KERNEL vmlinuz-i386-centos4
 	lcoe_download_if_needed $CENTOS4_NETINSTALLER_I386_INITRD initrd-i386-centos4.img
@@ -217,14 +237,6 @@ function lco_prepare() {
 	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-x86_64-centos4.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/4/x86_64/
 	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-x86_64-centos5 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5/x86_64/
 	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-x86_64-centos5.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5/x86_64/
-
-	# the additional fedora file images
-	lcoe_download_if_needed $FEDORA_LCOE_ISO_TAR_8_I386 Fedora-8-i386-iso.tar
-	lcoe_download_if_needed $FEDORA_LCOE_ISO_TAR_8_X86_64 Fedora-8-x86_64-iso.tar
-	lcoe_download_if_needed $FEDORA_LCOE_ISO_TAR_9_I386 Fedora-9-i386-iso.tar
-	lcoe_download_if_needed $FEDORA_LCOE_ISO_TAR_9_X86_64 Fedora-9-x86_64-iso.tar
-	lcoe_download_if_needed $FEDORA_LCOE_ISO_TAR_10_I386 Fedora-10-i386-iso.tar
-	lcoe_download_if_needed $FEDORA_LCOE_ISO_TAR_10_X86_64 Fedora-10-x86_64-iso.tar
 
 	# and the fedora netboot kernel + initrds
 	lcoe_download_if_needed $FEDORA_7_NETINSTALLER_I386_KERNEL vmlinuz-i386-fedora7
@@ -289,12 +301,6 @@ function lcoe_install() {
 	make integrate  2>&1 | tee -a /var/log/messages
 
 	for DIST in $LCOE_DISTRIBUTIONS; do
-		linuxcoe_log "> Installing systemdesigner-$DIST"
-		cd $LCOE_INSTALL_TMP/install/systemdesigner-$DIST-$SD_BASE_VERSION
-		export CONFIG_SITE="$LCOE_INSTALL_DIR/etc/includes/config.state"
-		./configure  2>&1 | tee -a /var/log/messages
-		make  2>&1 | tee -a /var/log/messages
-		make install  2>&1 | tee -a /var/log/messages
 		linuxcoe_log "> Installing linuxcoe-sd-data-$DIST"
 		cd $LCOE_INSTALL_TMP/install/linuxcoe-sd-data-$DIST-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION
 		./configure --prefix=$LCOE_INSTALL_DIR  2>&1 | tee -a /var/log/messages
