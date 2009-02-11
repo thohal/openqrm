@@ -68,29 +68,41 @@ function openqrm_client_start() {
 	umount /initrd/ 1>/dev/null 2>&1
 	grep -q "/initrd" /proc/mounts && umount /initrd
 
-	# start dropbear as openqrm-execd
-	/bin/rm -rf $resource_basedir/openqrm/etc/dropbear
-	mkdir -p $resource_basedir/openqrm/etc/dropbear/
-	$resource_basedir/openqrm/bin/dropbearkey -t rsa -f $resource_basedir/openqrm/etc/dropbear/dropbear_rsa_host_key
-	# get the public key of the openQRM server
-	if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/openqrm-server-public-rsa-key; then
-		echo "ERROR: Could not get the public key of the openQRM-server at $resource_openqrmserver ! Please check the certificates !"
-		return 1
-	fi
-	if [ ! -d /root/.ssh ]; then
-		mkdir /root/.ssh
-	fi
-	if [ ! -f /root/.ssh/authorized_keys ]; then
-		mv -f openqrm-server-public-rsa-key /root/.ssh/authorized_keys
-	else
-		OPENQRM_HOST=`cat openqrm-server-public-rsa-key | awk {' print $3 '}`
-		if grep $OPENQRM_HOST /root/.ssh/authorized_keys 1>/dev/null; then
-			sed -i -e "s#.*$OPENQRM_HOST.*##g" /root/.ssh/authorized_keys
-		fi
-		cat openqrm-server-public-rsa-key >> /root/.ssh/authorized_keys
-		rm -f openqrm-server-public-rsa-key
-	fi
-	$resource_basedir/openqrm/sbin/dropbear -p $resource_execdport -r $resource_basedir/openqrm/etc/dropbear/dropbear_rsa_host_key
+	case "$openqrm_execution_layer" in
+		dropbear)
+			# start dropbear as openqrm-execd
+			/bin/rm -rf $resource_basedir/openqrm/etc/dropbear
+			mkdir -p $resource_basedir/openqrm/etc/dropbear/
+			$resource_basedir/openqrm/bin/dropbearkey -t rsa -f $resource_basedir/openqrm/etc/dropbear/dropbear_rsa_host_key
+			# get the public key of the openQRM server
+			if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/openqrm-server-public-rsa-key; then
+				echo "ERROR: Could not get the public key of the openQRM-server at $resource_openqrmserver ! Please check the certificates !"
+				return 1
+			fi
+			if [ ! -d /root/.ssh ]; then
+				mkdir /root/.ssh
+			fi
+			if [ ! -f /root/.ssh/authorized_keys ]; then
+				mv -f openqrm-server-public-rsa-key /root/.ssh/authorized_keys
+			else
+				OPENQRM_HOST=`cat openqrm-server-public-rsa-key | awk {' print $3 '}`
+				if grep $OPENQRM_HOST /root/.ssh/authorized_keys 1>/dev/null; then
+					sed -i -e "s#.*$OPENQRM_HOST.*##g" /root/.ssh/authorized_keys
+				fi
+				cat openqrm-server-public-rsa-key >> /root/.ssh/authorized_keys
+				rm -f openqrm-server-public-rsa-key
+			fi
+			$resource_basedir/openqrm/sbin/dropbear -p $resource_execdport -r $resource_basedir/openqrm/etc/dropbear/dropbear_rsa_host_key
+			;;
+		openqrm-execd)
+			# start openqrm-execd
+			$resource_basedir/openqrm/sbin/openqrm-exec-port-monitor $resource_ip $resource_execdport | $resource_basedir/openqrm/sbin/openqrm-execd &
+			;;
+		*)
+			echo "ERROR: Un-supported command execution layer $openqrm_execution_layer ! Exiting."
+			return 1
+			;;
+	esac
 
 	# start openqrm-monitord
 	$resource_basedir/openqrm/sbin/openqrm-monitord &
@@ -116,13 +128,31 @@ function openqrm_client_stop() {
 		done
 	fi
 	# stop openqrm-execd
-	killall dropbear 1>/dev/null 2>&1
+	case "$openqrm_execution_layer" in
+		dropbear)
+			killall dropbear 1>/dev/null 2>&1
+			for OPENQRM_PID in `ps ax 2>/dev/null | grep dropbear | grep -v grep | awk {' print $1 '}`; do
+				kill $OPENQRM_PID
+			done
+			;;
+		openqrm-execd)
+			killall openqrm-exec-port-monitor 1>/dev/null 2>&1
+			killall openqrm-execd 1>/dev/null 2>&1
+			for OPENQRM_PID in `ps ax 2>/dev/null | grep openqrm-monitord | grep -v grep | awk {' print $1 '}`; do
+				kill $OPENQRM_PID
+			done
+			for OPENQRM_PID in `ps ax 2>/dev/null | grep openqrm-execd | grep -v grep | awk {' print $1 '}`; do
+				kill $OPENQRM_PID
+			done
+			;;
+		*)
+			echo "ERROR: Un-supported command execution layer $openqrm_execution_layer ! Exiting."
+			return 1
+			;;
+	esac
 	killall openqrm-monitord 1>/dev/null 2>&1
 	# in case we do not have killall (e.g. on debian-minimal install) be sure to stop the openqrm-agents anyway
 	for OPENQRM_PID in `ps ax 2>/dev/null | grep openqrm-monitord | grep -v grep | awk {' print $1 '}`; do
-		kill $OPENQRM_PID
-	done
-	for OPENQRM_PID in `ps ax 2>/dev/null | grep dropbear | grep -v grep | awk {' print $1 '}`; do
 		kill $OPENQRM_PID
 	done
 	/bin/rm -f ${LOCKFILE}

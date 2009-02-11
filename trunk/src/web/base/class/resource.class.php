@@ -17,6 +17,7 @@ global $RESOURCE_TIME_OUT;
 $event = new event();
 global $event;
 global $OPENQRM_SERVER_BASE_DIR;
+global $OPENQRM_EXECUTION_LAYER;
 
 
 class resource {
@@ -282,6 +283,7 @@ function get_parameter($resource_id) {
 	global $APPLIANCE_INFO_TABLE;
 	global $BootServiceDir;
 	global $event;
+	global $OPENQRM_EXECUTION_LAYER;
 	$db=openqrm_get_db_connection();
 	// resource parameter
 	$recordSet = &$db->Execute("select * from $RESOURCE_INFO_TABLE where resource_id=$resource_id");
@@ -343,13 +345,14 @@ function get_parameter($resource_id) {
 		$recordSet->MoveNext();
 	}
 	$recordSet->Close();
-
-
 	$db->Close();
 
+	// command executation layer
+	echo "openqrm_execution_layer=\"$OPENQRM_EXECUTION_LAYER\"\n";
+
+	// plugin and bootservice list
 	$plugin = new plugin();
 	$enabled_plugins = $plugin->enabled();
-
 	foreach ($enabled_plugins as $index => $plugin_name) {
 		$plugin_list = "$plugin_list$plugin_name ";
 		// add to list of boot-services only if boot-services for the resource exists
@@ -459,6 +462,7 @@ function get_fields($which) {
 function send_command($resource_ip, $resource_command) {
 	global $OPENQRM_EXEC_PORT;
 	global $OPENQRM_SERVER_BASE_DIR;
+	global $OPENQRM_EXECUTION_LAYER;
 	global $event;
 	global $RootDir;
 
@@ -507,10 +511,25 @@ function send_command($resource_ip, $resource_command) {
 			break;
 	}
 
-	$final_resource_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-execd -i $resource_ip -c \"$resource_command\"";
-	$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Running : $final_resource_command", "", "", 0, 0, $resource->id);
-	shell_exec($final_resource_command);
-
+	// check which execution layer to use
+	switch($OPENQRM_EXECUTION_LAYER) {
+		case 'dropbear':
+			$final_resource_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec -i $resource_ip -c \"$resource_command\"";
+			$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Running : $final_resource_command", "", "", 0, 0, $resource->id);
+			shell_exec($final_resource_command);
+			break;
+		case 'openqrm-execd':
+			$fp = fsockopen($resource_ip, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
+			if(!$fp) {
+				$event->log("send_command", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "Could not send the command to resource $resource_ip", "", "", 0, 0, 0);
+				$event->log("send_command", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "$errstr ($errno)", "", "", 0, 0, 0);
+			} else {
+				$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Running : $resource_command", "", "", 0, 0, $resource->id);
+				fputs($fp,"$resource_command");
+				fclose($fp);
+			}
+			break;
+	}
 }
 
 
