@@ -52,13 +52,6 @@ function openqrm_plugin_nagios3_init() {
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios3
 	# link the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web/boot-service-nagios3.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-nagios3.tgz
-	# link the public key
-	if [ ! -f /root/.ssh/id_dsa.pub ]; then 
-		echo "ERROR: Please create a plublic key for the root user before using the Nagios plugin"
-		sleep 4
-	fi
-	cp -f /root/.ssh/id_dsa.pub $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrmserver_public_key
-	chmod 644 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrmserver_public_key
 	# Nagios Single-Sign-On
 	# First backup original nagios.password
     mv $NAGIOS_ETC_DIRECTORY/htpasswd.users $NAGIOS_ETC_DIRECTORY/htpasswd.users.bkp
@@ -93,7 +86,6 @@ function openqrm_plugin_nagios3_uninstall() {
 	
 	rm -arf $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios3
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-nagios3.tgz
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrmserver_public_key
 	# restore old nagios htpasswd
 	mv $NAGIOS_ETC_DIRECTORY/htpasswd.users.bkp $NAGIOS_ETC_DIRECTORY/htpasswd.users
 	# restore old nagios config.js

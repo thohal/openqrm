@@ -1,0 +1,26 @@
+#!/bin/bash
+#  openQRM-cmd-queue read queued commands and runs them
+
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../..
+	OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+fi
+export OPENQRM_SERVER_BASE_DIR
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+OPENQRM_COMMAND_QUEUE="$OPENQRM_SERVER_BASE_DIR/openqrm/var/spool/openqrm-queue"
+OPENQRM_QUEUEING_DELAY=1
+
+
+while (true); do
+	if [ -f $OPENQRM_COMMAND_QUEUE ]; then
+		mv -f $OPENQRM_COMMAND_QUEUE $OPENQRM_COMMAND_QUEUE.run
+		TORUN=`cat $OPENQRM_COMMAND_QUEUE.run`
+			echo "openQRM-cmd-queu: Running : " | logger
+			echo "$TORUN" | logger
+			chmod +x $OPENQRM_COMMAND_QUEUE.run
+			$OPENQRM_COMMAND_QUEUE.run 2>&1 | logger
+		rm -f $OPENQRM_COMMAND_QUEUE.run
+	fi
+	sleep $OPENQRM_QUEUEING_DELAY
+done
+

@@ -125,6 +125,33 @@ function openqrm_server_init() {
 	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth
 	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth
 
+	# init the openQRM exec-mechanism via dropbear
+	/bin/rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/
+	$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dropbearkey -t rsa -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key
+	# allow the webserver user to read it
+	chmod 600 $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key
+
+	# create authorized_keys
+	PUBLIC_KEY=`$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dropbearkey -y -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key | grep ssh`
+	if [ ! -d /root/.ssh ]; then
+		mkdir /root/.ssh
+	fi
+	if [ ! -f /root/.ssh/authorized_keys ]; then
+		echo "$PUBLIC_KEY" > /root/.ssh/authorized_keys
+	else
+		OPENQRM_HOST=`echo $PUBLIC_KEY | awk {' print $3 '}`
+		if grep $OPENQRM_HOST /root/.ssh/authorized_keys 1>/dev/null; then
+			sed -i -e "s#.*$OPENQRM_HOST.*##g" /root/.ssh/authorized_keys
+		fi
+		echo "$PUBLIC_KEY" >> /root/.ssh/authorized_keys
+	fi
+	# and put it in the boot-service dir for the resources to download
+	echo "$PUBLIC_KEY" > $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-server-public-rsa-key
+	# create the comman-queue dir
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/var/spool/
+	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/var/spool
+
 	# here we create + add the default kernel+kernel-version to the openQRM-server
 	# via the kernel-action.form. If this returns bad something is wrong
 	DEFAULT_KERNEL_VERSION=`uname -r`
@@ -220,7 +247,10 @@ function openqrm_server_uninstall() {
 
 	# remove default file to re-init at next startup
 	rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default
-
+	
+	# remove dropbear key
+	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear
+	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/var
 	echo "Uninstallation of openQRM-server finished"
 }
 
@@ -243,7 +273,13 @@ function openqrm_server_start() {
 		return 1
 	fi
 
+	# start the openqrm-execd daemon
+	$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/dropbear -p $OPENQRM_EXEC_PORT -r $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key
+	# start the openqrm-cmd-queue
+	$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-cmd-queue &
 
+	# and the monitoring infra-structure	
+	$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-monitord &
 
 	# start all enabled plugins
 	echo "Starting enabled openQRM-server plugins"
@@ -252,11 +288,6 @@ function openqrm_server_start() {
 			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN start
 		fi
 	done
-
-	# start the openqrm-execd daemon
-	$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec-port-monitor $OPENQRM_SERVER_IP_ADDRESS $OPENQRM_EXEC_PORT | $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-execd &
-	# and the monitoring infra-structure	
-	$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-monitord &
 
 	touch ${LOCKFILE}
 	
@@ -275,8 +306,8 @@ function openqrm_server_stop() {
 
 	echo "Stopping the openQRM-server ver. $OPENQRM_SERVER_VERSION"
 
-	killall openqrm-exec-port-monitor 1>/dev/null 2>&1
-	killall openqrm-execd 1>/dev/null 2>&1
+	killall dropbear 1>/dev/null 2>&1
+	killall openqrm-cmd-queue 1>/dev/null 2>&1
 	killall openqrm-monitord 1>/dev/null 2>&1
 	/bin/rm -f ${LOCKFILE}
 }

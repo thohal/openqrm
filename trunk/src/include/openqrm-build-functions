@@ -300,6 +300,13 @@ function openqrm_create_default_initrd_template() {
 	cc -I$OPENQRM_SOURCE_KUDZU_DIR -DBLACKLIST -Wall -fPIC -O2 -s -o hwsetup hwsetup.c -L$OPENQRM_SOURCE_KUDZU_DIR -lkudzu -lpci -lz
 	cd $CURRENT_DIR
 
+	# dropbear
+	. $OPENQRM_SOURCE_DIR/etc/build.conf/dropbear.conf
+	OPENQRM_SOURCE_DROPBEAR_DIR="$OPENQRM_BUILD_TMP_DIR/openqrm-build/dropbear/dropbear-$OPENQRM_SOURCE_VERSION/"
+	openqrm_cache_or_download dropbear
+	export OPENQRM_MAKE_TARGET="DROPBEAR_SERVER=1 DROPBEAR_CLIENT=1 MULTI=0 STATIC=1"
+	openqrm_compile_from_source dropbear
+
 	# create the initroot
 	mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot
 	cp -aR $OPENQRM_SOURCE_COMPONENT_BUILD_DIR/_install/* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
@@ -345,10 +352,14 @@ EOF
 	touch $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/var/lib/nfs/xtab
 	touch $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/var/lib/nfs/etab
 	touch $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/var/lib/nfs/state
+	# prepare etc
 	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc
 	ln -sf /proc/mounts mtab
 	ln -sf rc.d/init.d init.d
-	touch fstab
+	touch localtime
+	# create shells file
+	echo "/bin/bash" > shells	
+	echo "none            /dev/pts        devpts        gid=0,mode=620    0 0" > fstab
 	# passwd + group
 	echo "root:x:0:0:root:/root:/bin/bash" > passwd
 	echo "rpc:x:100:100:rpc:/tmp:/bin/bash" >> passwd
@@ -384,6 +395,12 @@ EOF
 			cp -a $LIB""* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
 		fi
 	done
+
+	# installing dropbear
+	cp -a $OPENQRM_SOURCE_DROPBEAR_DIR/dropbear $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/
+	cp -a $OPENQRM_SOURCE_DROPBEAR_DIR/dbclient $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/
+	cp -a $OPENQRM_SOURCE_DROPBEAR_DIR/dropbearconvert $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/
+	cp -a $OPENQRM_SOURCE_DROPBEAR_DIR/dropbearkey $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/
 
 	# creating the initrd devices
 	cp -a $OPENQRM_SOURCE_DIR_FULL_PATH/etc/build.conf/initrd-devices.conf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/
@@ -443,6 +460,12 @@ function openqrm_pack_default_initrd_template() {
 	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
 	tar -czf $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-default.tgz *
 	cd $CURRENT_DIR
+	# copy dropbear
+	mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/sbin $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin
+	cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/dropbear $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
+	cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/dbclient $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/
+	cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/dropbearconvert $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/
+	cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/dropbearkey $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/
 }
 
 

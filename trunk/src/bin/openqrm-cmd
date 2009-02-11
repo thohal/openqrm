@@ -1,0 +1,26 @@
+#!/bin/bash
+# this is the openQRM commandline client
+
+export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/X11R6/bin
+WHOAMI=`whoami`
+echo "openQRM engine: Running as $WHOAMI cmd : $@" | logger
+
+function stop_openqrm_monitord() {
+	killall openqrm-monitord 1>/dev/null 2>&1
+	# in case we do not have killall (e.g. on debian-minimal install) be sure to stop the openqrm-agents anyway
+	for OPENQRM_PID in `ps ax 2>/dev/null | grep openqrm-monitord | grep -v grep | awk {' print $1 '}`; do
+		kill $OPENQRM_PID
+	done
+}
+
+
+case "$@" in
+	reboot)
+		stop_openqrm_monitord
+		;;
+	halt)
+		stop_openqrm_monitord
+		;;
+esac
+
+$@ 2>&1 | logger

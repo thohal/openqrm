@@ -13,11 +13,6 @@ fi
 function nagios2_start() {
 	echo "Starting the openQRM nagios2-plugin"
 	nagios2_stop 1>/dev/null 2>&1
-	if [ ! -d /root/.ssh/ ]; then
-		mkdir -p /root/.ssh/
-	fi
-	wget -q -O /dev/stdout "http://$resource_openqrmserver/openqrm/boot-service/openqrmserver_public_key" > /root/.ssh/authorized_keys 
-	return 0
 }
 
 

@@ -75,6 +75,17 @@ function import_kernel() {
 	tftp $OPENQRM_SERVER_IP_ADDRESS -g -r boot/System.map-$kernel_name -l System.map-$kernel_name
 	mv System.map-$kernel_name System.map-$kernel_version
 	cd /
+	# create additional devices, mostly needed by dropbear
+	mknod /dev/urandom c 1 9
+	cd /dev/
+	ln -s urandom random
+	cd /
+	mknod /dev/ptmx c 5 2
+	chmod 666 /dev/ptmx
+	# and mount /dev/pts
+	mkdir -p /dev/pts
+	mount /dev/pts
+	
 	depmod -a
 	# load ide disk + cdroms
 	modprobe ide-core
@@ -266,6 +277,12 @@ cd /
 wget -q "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.tgz"
 tar -xzf openqrm-client.tgz
 rm -f openqrm-client.tgz
+# copy dropbear to its final destination inside the basedir
+mkdir -p $resource_basedir/openqrm/sbin $resource_basedir/openqrm/bin
+cp -af /sbin/dropbear $resource_basedir/openqrm/sbin/
+cp -af /bin/dbclient $resource_basedir/openqrm/bin/
+cp -af /bin/dropbearconvert $resource_basedir/openqrm/bin/
+cp -af /bin/dropbearkey $resource_basedir/openqrm/bin/
 $resource_basedir/openqrm/etc/init.d/openqrm-client start
 
 if [ "$image_type" == "ram" ] || [ "$image_type" == "" ]; then

@@ -1,68 +1,35 @@
 #!/bin/bash
 #  openQRM-rexecd, a openQRM-daemon for remote exection of openQRM-commands
 
-OPENQRM_SBIN_DIR=`dirname $0`
-OPENQRM_BASE_DIR=`pushd $OPENQRM_SBIN_DIR/.. 1>/dev/null && pwd && popd 1>/dev/null`
-
-# check if running on the server or on a managed resource
-if [ -f "$OPENQRM_BASE_DIR/include/openqrm-server-functions" ]; then
-	# we are running on the server
-	. $OPENQRM_BASE_DIR/include/openqrm-functions
-	. $OPENQRM_BASE_DIR/include/openqrm-server-functions
-else
-	# we are running on a managed resource
-	export OPENQRM_SERVER_BASE_DIR=$OPENQRM_BASE_DIR
-	. $OPENQRM_BASE_DIR/include/openqrm-functions
-	. $OPENQRM_RESOURCE_PARAMETER_FILE
-	OPENQRM_SERVER_IP_ADDRESS=$resource_openqrmserver
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../..
+	OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 fi
+export OPENQRM_SERVER_BASE_DIR
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+DB_IDLE=5
+DB_TIMEOUT=5
+OPENQRM_COMMAND_QUEUE="$OPENQRM_SERVER_BASE_DIR/openqrm/var/spool/openqrm-queue"
+WHOAMI=`whoami`
 
-function openqrm_validate_execution() {
-	if [ "$SENDER_IP_ADDRESS" == "$OPENQRM_SERVER_IP_ADDRESS" ]; then
-		return 0
-	else
-		return 1
-	fi
-}
-
-# main loop
-while (true); do
-	# wait for the openqrm-command
-	read OPENQRM_LISTEN
-	if [ ! -z "$OPENQRM_LISTEN" ]; then
-		export SENDER_IP_ADDRESS=`echo $OPENQRM_LISTEN | cut -d':' -f1 2>/dev/null`
-		export OPENQRM_COMMAND=`echo $OPENQRM_LISTEN | cut -d':' -f2- 2>/dev/null`
-		echo "$0: Received openQRM-command from $SENDER_IP_ADDRESS" | logger
-		echo "    Running $OPENQRM_COMMAND" | logger
-		if [ "$SENDER_IP_ADDRESS" != "" ] && [ "$OPENQRM_COMMAND" != "" ]; then
-			if `openqrm_validate_execution`; then 
-				case "$1" in
-					reboot)
-						// make sure openqrm-monitord does not send active again
-						killall openqrm-monitord 1>/dev/null 2>&1
-						# in case we do not have killall (e.g. on debian-minimal install) be sure to stop the openqrm-agents anyway
-						for OPENQRM_PID in `ps ax 2>/dev/null | grep openqrm-monitord | grep -v grep | awk {' print $1 '}`; do
-							kill $OPENQRM_PID
-						done
-						$OPENQRM_COMMAND  2>&1 | logger
-						;;
-					halt)
-						// make sure openqrm-monitord does not send active again
-						killall openqrm-monitord 1>/dev/null 2>&1
-						# in case we do not have killall (e.g. on debian-minimal install) be sure to stop the openqrm-agents anyway
-						for OPENQRM_PID in `ps ax 2>/dev/null | grep openqrm-monitord | grep -v grep | awk {' print $1 '}`; do
-							kill $OPENQRM_PID
-						done
-						$OPENQRM_COMMAND  2>&1 | logger
-						;;
-					*)
-						$OPENQRM_COMMAND  2>&1 | logger
-						;;
-				esac
-			fi
-		fi
-	fi
+# parse commandline args
+while [ $# -ne 0 ]; do
+	case "$1" in
+		-i)
+			RESOURCE_IP=$2
+			shift
+			;;
+		-c)
+			shift
+			OPENQRM_COMMAND=$@
+			shift
+			;;			
+	esac
+	shift
 done
-exit 1
+
+FULL_COMMAND="$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dbclient -I $DB_IDLE -K $DB_IDLE -y -i $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key -p $OPENQRM_EXEC_PORT root@$RESOURCE_IP \"$OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm-cmd $OPENQRM_COMMAND\""
+# echo "openQRM engine (as $WHOAMI) queuing : $FULL_COMMAND" | logger
+echo "$FULL_COMMAND" >> $OPENQRM_COMMAND_QUEUE
 
 

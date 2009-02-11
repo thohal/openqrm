@@ -7,6 +7,7 @@ require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/class/event.class.php";
 
 global $RESOURCE_INFO_TABLE;
+global $OPENQRM_SERVER_BASE_DIR;
 $event = new event();
 global $event;
 
@@ -40,17 +41,13 @@ function get_ip_address() {
 function send_command($server_command) {
 	global $OPENQRM_EXEC_PORT;
 	global $OPENQRM_SERVER_IP_ADDRESS;
+	global $OPENQRM_SERVER_BASE_DIR;
 	global $event;
-	$fp = fsockopen($OPENQRM_SERVER_IP_ADDRESS, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
-	if(!$fp) {
-		$event->log("send_command", $_SERVER['REQUEST_TIME'], 2, "openqrm_server.class.php", "Could not connect to the openQRM-Server", "", "", 0, 0, 0);
-		$event->log("send_command", $_SERVER['REQUEST_TIME'], 2, "openqrm_server.class.php", "$errstr ($errno)", "", "", 0, 0, 0);
-		return false;
-	} else {
-		fputs($fp,"$server_command");
-		fclose($fp);
-		return true;
-	}
+
+	$final_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-execd -i $OPENQRM_SERVER_IP_ADDRESS -c \"$server_command\"";
+	$event->log("send_command", $_SERVER['REQUEST_TIME'], 5, "openqrm_server.class.php", "Running : $final_command", "", "", 0, 0, 0);
+	shell_exec($final_command);
+	return true;
 }
 
 

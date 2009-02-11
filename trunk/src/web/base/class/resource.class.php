@@ -16,6 +16,8 @@ $RESOURCE_TIME_OUT=120;
 global $RESOURCE_TIME_OUT;
 $event = new event();
 global $event;
+global $OPENQRM_SERVER_BASE_DIR;
+
 
 class resource {
 
@@ -456,64 +458,59 @@ function get_fields($which) {
 // function to send a command to a resource by resource_ip
 function send_command($resource_ip, $resource_command) {
 	global $OPENQRM_EXEC_PORT;
+	global $OPENQRM_SERVER_BASE_DIR;
 	global $event;
 	global $RootDir;
-	$fp = fsockopen($resource_ip, $OPENQRM_EXEC_PORT, $errno, $errstr, 30);
-	if(!$fp) {
-		$event->log("send_command", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "Could not send the command to resource $resource_ip", "", "", 0, 0, 0);
-		$event->log("send_command", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "$errstr ($errno)", "", "", 0, 0, 0);
-	} else {
 
-		// plugin hook in case a resource gets rebooted or halted
-		
-		switch($resource_command) {
-			case 'reboot':
-				// start the hook
-				$plugin = new plugin();
-				$enabled_plugins = $plugin->enabled();
-				foreach ($enabled_plugins as $index => $plugin_name) {
-					$plugin_start_resource_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-resource-hook.php";
-					if (file_exists($plugin_start_resource_hook)) {
-						$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling start-resource event.", "", "", 0, 0, $resource->id);
-						// prepare resource_fields array
-						$resource = new resource();
-						$resource->get_instance_by_ip($resource_ip);
-						$resource_fields = array();
-						$resource_fields = $resource->get_fields($resource->id);
-						// include the plugin function file and run it						
-						require_once "$plugin_start_resource_hook";
-						$resource_function="openqrm_"."$plugin_name"."_resource";
-						$resource_function("start", $resource_fields);
-					}
+	$resource = new resource();
+	$resource->get_instance_by_ip($resource_ip);
+
+	// plugin hook in case a resource gets rebooted or halted
+	switch($resource_command) {
+		case 'reboot':
+			// start the hook
+			$plugin = new plugin();
+			$enabled_plugins = $plugin->enabled();
+			foreach ($enabled_plugins as $index => $plugin_name) {
+				$plugin_start_resource_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-resource-hook.php";
+				if (file_exists($plugin_start_resource_hook)) {
+					$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling start-resource event.", "", "", 0, 0, $resource->id);
+					// prepare resource_fields array
+					$resource_fields = array();
+					$resource_fields = $resource->get_fields($resource->id);
+					// include the plugin function file and run it						
+					require_once "$plugin_start_resource_hook";
+					$resource_function="openqrm_"."$plugin_name"."_resource";
+					$resource_function("start", $resource_fields);
 				}
-				break;
+			}
+			break;
 
-			case 'halt':
-				// stop hook
-				$plugin = new plugin();
-				$enabled_plugins = $plugin->enabled();
-				foreach ($enabled_plugins as $index => $plugin_name) {
-					$plugin_start_resource_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-resource-hook.php";
-					if (file_exists($plugin_start_resource_hook)) {
-						$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling start-resource event.", "", "", 0, 0, $resource->id);
-						// prepare resource_fields array
-						$resource = new resource();
-						$resource->get_instance_by_ip($resource_ip);
-						$resource_fields = array();
-						$resource_fields = $resource->get_fields($resource->id);
-						// include the plugin function file and run it						
-						require_once "$plugin_start_resource_hook";
-						$resource_function="openqrm_"."$plugin_name"."_resource";
-						$resource_function("stop", $resource_fields);
-					}
+		case 'halt':
+			// stop hook
+			$plugin = new plugin();
+			$enabled_plugins = $plugin->enabled();
+			foreach ($enabled_plugins as $index => $plugin_name) {
+				$plugin_start_resource_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-resource-hook.php";
+				if (file_exists($plugin_start_resource_hook)) {
+					$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling start-resource event.", "", "", 0, 0, $resource->id);
+					// prepare resource_fields array
+					$resource_fields = array();
+					$resource_fields = $resource->get_fields($resource->id);
+					// include the plugin function file and run it						
+					require_once "$plugin_start_resource_hook";
+					$resource_function="openqrm_"."$plugin_name"."_resource";
+					$resource_function("stop", $resource_fields);
 				}
+			}
 
-				break;
-		}
-
-		fputs($fp,"$resource_command");
-		fclose($fp);
+			break;
 	}
+
+	$final_resource_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-execd -i $resource_ip -c \"$resource_command\"";
+	$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Running : $final_resource_command", "", "", 0, 0, $resource->id);
+	shell_exec($final_resource_command);
+
 }
 
 
