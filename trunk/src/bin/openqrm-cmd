@@ -2,6 +2,23 @@
 # this is the openQRM commandline client
 
 export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/X11R6/bin
+
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../..
+	OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+fi
+export OPENQRM_SERVER_BASE_DIR
+# check if running on the server or on a managed resource
+if [ -f "$OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions" ]; then
+	# we are running on the server
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+else
+	# we are running on a managed resource
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+fi
+
 WHOAMI=`whoami`
 echo "openQRM engine: Running as $WHOAMI cmd : $@" | logger
 
