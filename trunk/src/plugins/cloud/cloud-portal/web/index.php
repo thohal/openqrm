@@ -399,6 +399,8 @@ function register_user() {
 		$disp = $disp."<br>";
 		$disp = $disp."<input type=submit value='Register'>";
 		$disp = $disp."<br>";
+		$disp = $disp."By registering I accept the <a href=\"/cloud-portal/web/conditions.php\" target=\"_BLANK\">general terms and conditions of this Cloud portal</a>";
+		$disp = $disp."<br>";
 		$disp = $disp."<br>";
 		$disp = $disp."</form>";
 	} else {
