@@ -116,7 +116,7 @@ function add($image_authentication_fields) {
 		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "image_authentication.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	} else {
 		if ($rs->EOF) {
-			$event->log("add", $_SERVER['REQUEST_TIME'], 2, "image_authentication.class.php", "Adding image_authentication for image id $image_id type $auth_type.", "", "", 0, 0, 0);
+			$event->log("add", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "Adding image_authentication for image id $image_id type $auth_type.", "", "", 0, 0, 0);
 			$result = $db->AutoExecute($IMAGE_AUTHENTICATION_TABLE, $image_authentication_fields, 'INSERT');
 			if (! $result) {
 				$event->log("add", $_SERVER['REQUEST_TIME'], 2, "image_authentication.class.php", "Failed adding new image_authentication to database", "", "", 0, 0, 0);
