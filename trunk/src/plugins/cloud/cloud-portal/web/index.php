@@ -32,6 +32,9 @@ $refresh_delay=5;
 global $CLOUD_USER_TABLE;
 global $event;
 
+// the location of the howto for the cloud portal
+$cloud_portal_howto="http://www.openqrm.com/?q=node/139";
+
 // gather user parameter in array
 foreach ($_REQUEST as $key => $value) {
 	if (strncmp($key, "cu_", 3) == 0) {
@@ -339,6 +342,7 @@ function portal_home() {
 
 	global $OPENQRM_USER;
 	global $thisfile;
+	global $cloud_portal_howto;
 
 	$disp = "<h1>openQRM Cloud Portal</h1>";
 	$disp = $disp."This is the openQRM Cloud Portal providing computing power on-demand.";
@@ -364,6 +368,7 @@ function portal_home() {
 	$disp = $disp."<br>";
 	$disp = $disp."<a href=\"/cloud-portal/user/mycloud.php\"><img src='img/forward.gif' width='36' height='32' border='0' alt='' align='left'>";
 	$disp = $disp."<h1><b>Click here to login to the openQRM Cloud</b></h1></a>";
+	$disp = $disp."Please find a detailed Howto about this Demo Cloud <a href=\"$cloud_portal_howto\" target=\"_BLANK\">here</a>.";
 
 	return $disp;
 }
