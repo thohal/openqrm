@@ -441,7 +441,7 @@ function my_cloud_manager() {
 	$table->identifier_type = "checkbox";
 	$table->head = $arHead;
 	$table->body = $arBody;
-	$table->bottom = array('reload', 'deprovision', 'extend', 'delete');
+	$table->bottom = array('reload', 'deprovision', 'extend');
 	$table->identifier = 'cr_id';
 	$table->max = 100;
 	return $disp.$table->get_string();
@@ -879,11 +879,23 @@ function mycloud_account() {
 
 
 
+
+
+// ################### main output section ###############
 $output = array();
+// is the cloud enabled ?
+$cc_config = new cloudconfig();
+$cloud_enabled = $cc_config->get_value(15);	// 15 is cloud_enabled
+
+if ($cloud_enabled != 'true') {	
+	$strMsg = "The openQRM cloud is currently in maintenance mode !<br>Please try again later";
+	redirect($strMsg, "tab0", "/cloud-portal?strMsg=$strMsg");
+	exit(0);
+}
+
 
 // include header
 include "$DocRoot/cloud-portal/mycloud-head.php";
-
 
 if ((htmlobject_request('action') != '') && (isset($_REQUEST['identifier']))) {
 	switch (htmlobject_request('action')) {

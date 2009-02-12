@@ -297,6 +297,38 @@ function openqrm_cloud_monitor() {
 
 			// ################################## quantity loop provisioning ###############################
 			$resource_quantity = $cr->resource_quantity;
+
+			// check for max_apps_per_user
+			$cloud_user_apps_arr = array();
+			$cloud_user_app = new cloudappliance();
+			$cloud_user_apps_arr = $cloud_user_app->get_all_ids();
+			$users_appliance_count=0;
+			foreach ($cloud_user_apps_arr as $capp) {
+				$tmp_cloud_app = new cloudappliance();
+				$tmp_cloud_app_id = $capp['ca_id'];
+				$tmp_cloud_app->get_instance_by_id($tmp_cloud_app_id);
+				// active ?
+				if ($tmp_cloud_app->state == 0) {
+					continue;
+				}
+				// check if the cr is ours
+				$rc_tmp_cr = new cloudrequest();
+				$rc_tmp_cr->get_instance_by_id($tmp_cloud_app->cr_id);
+				if ($rc_tmp_cr->cu_id != $cr_cu_id) {
+					continue;
+				}
+				$users_appliance_count++;
+			}
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "User $cr_cu_id has already $users_appliance_count appliance(s) running.", "", "", 0, 0, 0);
+
+			$cc_max_app = new cloudconfig();
+			$max_apps_per_user = $cc_max_app->get_value(13);  // 13 is max_apps_per_user
+			if (($users_appliance_count + $resource_quantity) > $max_apps_per_user) {
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Not provisining CR $cr_id from user $cr_cu_id who has already $users_appliance_count appliance(s) running.", "", "", 0, 0, 0);
+				$cr->setstatus($cr_id, 'deny');
+				continue;
+			}
+
 			for ($cr_resource_number = 1; $cr_resource_number <= $resource_quantity; $cr_resource_number++) {
 	
 				// ################################## create appliance ###############################
@@ -381,7 +413,7 @@ function openqrm_cloud_monitor() {
 				// ################################## end auto create vm ###############################
 
 				} else {
-					$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Found resource (type $appliance_virtualization) for request ID $cr_id", "", "", 0, 0, 0);
+					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Found resource (type $appliance_virtualization) for request ID $cr_id", "", "", 0, 0, 0);
 				}
 	
 				// ################################## clone on deploy ###############################
@@ -1219,7 +1251,7 @@ function openqrm_cloud_monitor() {
 				$rmail = new cloudmailer();
 				$rmail->to = "$cu_email";
 				$rmail->from = "$cc_admin_email";
-				$rmail->subject = "openQRM Cloud: Your unpaused appliacne $ca_appliance_id from request $ca_cr_id is now active";
+				$rmail->subject = "openQRM Cloud: Your unpaused appliance $ca_appliance_id from request $ca_cr_id is now active";
 				$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/active_cloud_request.mail.tmpl";
 				$arr = array('@@ID@@'=>"$ca_cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@PASSWORD@@'=>"(as before)", '@@IP@@'=>"$resource_external_ip", '@@RESNUMBER@@'=>"(as before)");
 				$rmail->var_array = $arr;

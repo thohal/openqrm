@@ -228,6 +228,12 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($create_default_cloud_config11);
 			$create_default_cloud_config12 = "insert into cloud_config(cc_id, cc_key, cc_value) values (12, 'auto_give_ccus', '0')";
 			$recordSet = &$db->Execute($create_default_cloud_config12);
+			$create_default_cloud_config13 = "insert into cloud_config(cc_id, cc_key, cc_value) values (13, 'max_apps_per_user', '10')";
+			$recordSet = &$db->Execute($create_default_cloud_config13);
+			$create_default_cloud_config14 = "insert into cloud_config(cc_id, cc_key, cc_value) values (14, 'public_register_enabled', 'true')";
+			$recordSet = &$db->Execute($create_default_cloud_config14);
+			$create_default_cloud_config15 = "insert into cloud_config(cc_id, cc_key, cc_value) values (15, 'cloud_enabled', 'true')";
+			$recordSet = &$db->Execute($create_default_cloud_config15);
 
 		    $db->Close();
 			break;

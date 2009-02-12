@@ -253,6 +253,26 @@ function get_all_ids() {
 }
 
 
+// returns a list of cloudiptables ips per appliance
+function get_ip_list_by_appliance($appliance_id) {
+	global $CLOUD_IPTABLE;
+	global $event;
+	$cloudiptables_list = array();
+	$query = "select ip_address from $CLOUD_IPTABLE where ip_appliance_id=$appliance_id";
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute($query);
+	if (!$rs)
+		$event->log("get_list", $_SERVER['REQUEST_TIME'], 2, "cloudiptables.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	else
+	while (!$rs->EOF) {
+		$cloudiptables_list[] = $rs->fields;
+		$rs->MoveNext();
+	}
+	return $cloudiptables_list;
+
+}
+
+
 
 // displays the cloudiptables-overview
 function display_overview($offset, $limit, $sort, $order) {

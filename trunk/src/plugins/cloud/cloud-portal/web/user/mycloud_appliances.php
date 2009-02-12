@@ -26,6 +26,7 @@ require_once "$RootDir/plugins/cloud/class/cloudrequest.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudiptables.class.php";
 
 global $OPENQRM_SERVER_BASE_DIR;
 $refresh_delay=5;
@@ -100,7 +101,7 @@ if ((htmlobject_request('action') != '') && (isset($_REQUEST['identifier']))) {
 			}
 			break;
 
-		case 'stop':
+		case 'pause':
 			foreach($_REQUEST['identifier'] as $id) {
 				// only allow our appliance to be restarted
 				$clouduser = new clouduser();
@@ -135,17 +136,18 @@ if ((htmlobject_request('action') != '') && (isset($_REQUEST['identifier']))) {
 				// check that state is active
 				if ($cloud_appliance_restart->state == 1) {
 					$cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "stop");
+					$cloud_appliance_restart->set_state($cloud_appliance_restart->id, "paused");
 					$strMsg = "Registered Cloud appliance $id to stop (pause)<br>";
 					redirect($strMsg, tab0);
 				} else {
-					$strMsg = "Can only stop Cloud appliance $id if it is in active state<br>";
+					$strMsg = "Can only pause Cloud appliance $id if it is in active state<br>";
 					redirect($strMsg, tab0);
 					continue;
 				}
 			}
 			break;
 
-		case 'start':
+		case 'unpause':
 			foreach($_REQUEST['identifier'] as $id) {
 				// only allow our appliance to be restarted
 				$clouduser = new clouduser();
@@ -180,10 +182,11 @@ if ((htmlobject_request('action') != '') && (isset($_REQUEST['identifier']))) {
 				// check if it is in state paused
 				if ($cloud_appliance_restart->state == 0) {
 					$cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "start");
+					$cloud_appliance_restart->set_state($cloud_appliance_restart->id, "active");
 					$strMsg = "Registered Cloud appliance $id to start (unpause)<br>";
 					redirect($strMsg, tab0);
 				} else {
-					$strMsg = "Can only start Cloud appliance $id if it is in paused state<br>";
+					$strMsg = "Can only unpause Cloud appliance $id if it is in paused state<br>";
 					redirect($strMsg, tab0);
 					continue;
 				}
@@ -232,7 +235,7 @@ function my_cloud_appliances() {
 	$arHead['appliance_imageid']['title'] ='Image';
 
 	$arHead['appliance_resources'] = array();
-	$arHead['appliance_resources']['title'] ='Resource <small>[id/ip]</small>';
+	$arHead['appliance_resources']['title'] ='Resource <small>[ip]</small>';
 
 	$arHead['appliance_type'] = array();
 	$arHead['appliance_type']['title'] ='Type';
@@ -282,8 +285,18 @@ function my_cloud_appliances() {
 		$appliance_resources=$appliance_db["appliance_resources"];
 		if ($appliance_resources >=0) {
 			// an appliance with a pre-selected resource
-			$resource->get_instance_by_id($appliance_resources);
-			$appliance_resources_str = "$resource->id/$resource->ip";
+			// get its ips from the iptables table
+			$cloud_iptable = new cloudiptables();
+			$app_ips = $cloud_iptable->get_ip_list_by_appliance($appliance->id);
+			if (is_array($app_ips)) {
+				foreach ($app_ips as $index => $app_ip_arr) {
+					$appliance_ip = $app_ip_arr['ip_address'];
+					$appliance_resources_str .= "$appliance_ip<br>";			
+				}
+			} else { 
+				$appliance_resources_str .= " - ";
+			}
+
 		} else {
 			// an appliance with resource auto-select enabled
 			$appliance_resources_str = "auto-select";
@@ -342,7 +355,7 @@ function my_cloud_appliances() {
 	$table->form_action = $thisfile;
 	$table->head = $arHead;
 	$table->body = $arBody;
-	$table->bottom = array('stop', 'start', 'restart');
+	$table->bottom = array('pause', 'unpause', 'restart');
 	$table->identifier = 'appliance_id';
 	$table->max = $appliance_tmp->get_count();
 	#$table->limit = 10;
@@ -364,6 +377,15 @@ function back_to_cloud_requests() {
 
 
 $output = array();
+// is the cloud enabled ?
+$cc_config = new cloudconfig();
+$cloud_enabled = $cc_config->get_value(15);	// 15 is cloud_enabled
+
+if ($cloud_enabled != 'true') {	
+	$strMsg = "The openQRM cloud is currently in maintenance mode !<br>Please try again later";
+	redirect($strMsg, "tab0", "/cloud-portal?strMsg=$strMsg");
+	exit(0);
+}
 
 // include header
 include "$DocRoot/cloud-portal/mycloud-head.php";

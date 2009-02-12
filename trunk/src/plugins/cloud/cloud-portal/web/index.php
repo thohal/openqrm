@@ -204,13 +204,23 @@ if(htmlobject_request('action') != '') {
 
 			$cloud_user = new clouduser();
 			$cloud_user->get_instance_by_id($cu_id);
-			$cu_token_db = $cloud_user->token;
 			// some checks
+
+			// already activated ?
+			if ($cloud_user->status == 1) {
+				$event->log("cloud-portal", $_SERVER['REQUEST_TIME'], 2, "index.php", "User $cu_id already activated!", "", "", 0, 0, 0);
+				$strMsg .= "User already actiavted ... <br>";
+				$u_error = 1;
+				redirect($strMsg, tab2);
+				exit(0);
+			}
+
+			$cu_token_db = $cloud_user->token;
 			if (!strlen($cu_token_db)) {
 				$event->log("cloud-portal", $_SERVER['REQUEST_TIME'], 2, "index.php", "Got emtpy token for user activation!", "", "", 0, 0, 0);
 				$strMsg .= "No token found. Aborting ... <br>";
 				$u_error = 1;
-				redirect($strMsg, tab1);
+				redirect($strMsg, tab2);
 				exit(0);
 			}
 			// verify the token
@@ -218,7 +228,7 @@ if(htmlobject_request('action') != '') {
 				$event->log("cloud-portal", $_SERVER['REQUEST_TIME'], 2, "index.php", "Got invalid token for user activation!", "", "", 0, 0, 0);
 				$strMsg .= "Warning, invalid token. Aborting ... $cu_token_db -- $cu_token_post <br>";
 				$u_error = 1;
-				redirect($strMsg, tab1);
+				redirect($strMsg, tab2);
 				exit(0);
 			}
 
@@ -364,29 +374,45 @@ function register_user() {
 
 	global $OPENQRM_USER;
 	global $thisfile;
-	
-	$disp = "<h1>Register to the openQRM Cloud</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<form action=$thisfile method=post>";
-	$disp = $disp.htmlobject_input('cu_name', array("value" => '[Username]', "label" => 'User name'), 'text', 20);
-	$disp = $disp.htmlobject_input('cu_password', array("value" => '', "label" => 'Password'), 'password', 20);
-	$disp = $disp.htmlobject_input('cu_password_check', array("value" => '', "label" => '(retype)'), 'password', 20);
-	$disp = $disp.htmlobject_input('cu_forename', array("value" => '[Forename]', "label" => 'Fore name'), 'text', 50);
-	$disp = $disp.htmlobject_input('cu_lastname', array("value" => '[Lastname]', "label" => 'Last name'), 'text', 50);
-	$disp = $disp.htmlobject_input('cu_email', array("value" => '[Email]', "label" => 'Email'), 'text', 50);
-	$disp = $disp.htmlobject_input('cu_street', array("value" => '[Street]', "label" => 'Street+number'), 'text', 100);
-	$disp = $disp.htmlobject_input('cu_city', array("value" => '[City]', "label" => 'City'), 'text', 100);
-	$disp = $disp.htmlobject_input('cu_country', array("value" => '[Country]', "label" => 'Country'), 'text', 100);
-	$disp = $disp.htmlobject_input('cu_phone', array("value" => '[Phone-number]', "label" => 'Phone'), 'text', 100);
-	$disp = $disp."<input type=hidden name='action' value='create_user'>";
-	$disp = $disp."<b><i>All values are mandatory. Please do not use any special characters.</i></b>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<input type=submit value='Register'>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."</form>";
 
+	$cc_conf = new cloudconfig();
+	$public_register_enabled = $cc_conf->get_value(14);  // 14 is public_register_enabled
+	$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
+
+	if ($public_register_enabled == 'true') {	
+		$disp = "<h1>Register to the openQRM Cloud</h1>";
+		$disp = $disp."<br>";
+		$disp = $disp."<form action=$thisfile method=post>";
+		$disp = $disp.htmlobject_input('cu_name', array("value" => '[Username]', "label" => 'User name'), 'text', 20);
+		$disp = $disp.htmlobject_input('cu_password', array("value" => '', "label" => 'Password'), 'password', 20);
+		$disp = $disp.htmlobject_input('cu_password_check', array("value" => '', "label" => '(retype)'), 'password', 20);
+		$disp = $disp.htmlobject_input('cu_forename', array("value" => '[Forename]', "label" => 'Fore name'), 'text', 50);
+		$disp = $disp.htmlobject_input('cu_lastname', array("value" => '[Lastname]', "label" => 'Last name'), 'text', 50);
+		$disp = $disp.htmlobject_input('cu_email', array("value" => '[Email]', "label" => 'Email'), 'text', 50);
+		$disp = $disp.htmlobject_input('cu_street', array("value" => '[Street]', "label" => 'Street+number'), 'text', 100);
+		$disp = $disp.htmlobject_input('cu_city', array("value" => '[City]', "label" => 'City'), 'text', 100);
+		$disp = $disp.htmlobject_input('cu_country', array("value" => '[Country]', "label" => 'Country'), 'text', 100);
+		$disp = $disp.htmlobject_input('cu_phone', array("value" => '[Phone-number]', "label" => 'Phone'), 'text', 100);
+		$disp = $disp."<input type=hidden name='action' value='create_user'>";
+		$disp = $disp."<b><i>All values are mandatory. Please do not use any special characters.</i></b>";
+		$disp = $disp."<br>";
+		$disp = $disp."<br>";
+		$disp = $disp."<input type=submit value='Register'>";
+		$disp = $disp."<br>";
+		$disp = $disp."<br>";
+		$disp = $disp."</form>";
+	} else {
+		$disp = "<h1>Public registration disabled !</h1>";
+		$disp = $disp."<br>";
+		$disp = $disp."This openQRM Cloud does not allow public registration.";
+		$disp = $disp."<br>";
+		$disp = $disp."Please contact <a href=\"mailto:$cc_admin_email?subject=openQRM Cloud: Account request\">$cc_admin_email</a> to ask for an account.";
+		$disp = $disp."<br>";
+		$disp = $disp."<br>";
+		$disp = $disp."<br>";
+		$disp = $disp."<br>";
+		$disp = $disp."<br>";
+	}
 	return $disp;
 }
 
@@ -448,6 +474,13 @@ $output = array();
 
 // include header
 include "$DocRoot/cloud-portal/mycloud-head.php";
+
+// check if the cloud is enabled
+$cc_config = new cloudconfig();
+$cloud_enabled = $cc_config->get_value(15);	// 15 is cloud_enabled
+if ($cloud_enabled != 'true') {	
+	include "$DocRoot/cloud-portal/mycloud-disabled.php";
+}
 
 $output[] = array('label' => 'Welcome to the openQRM Cloud', 'value' => portal_home());
 $output[] = array('label' => 'Register to the openQRM Cloud', 'value' => register_user());
