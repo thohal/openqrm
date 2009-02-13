@@ -177,6 +177,15 @@ function set_users_ccunits($cu_id, $ccunits) {
 }
 
 
+// set users password
+function set_users_password($cu_id, $password) {
+	global $CLOUD_USER_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute("update $CLOUD_USER_TABLE set cu_password=\"$password\" where cu_id=$cu_id");
+}
+
+
 // returns clouduser name by clouduser_id
 function get_name($clouduser_id) {
 	global $CLOUD_USER_TABLE;

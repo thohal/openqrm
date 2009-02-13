@@ -366,48 +366,131 @@ function openqrm_cloud_monitor() {
 					// ################################## auto create vm ###############################
 					// check if we should try to create one 
 
-					$cc_autovm_conf = new cloudconfig();
-					$cc_auto_create_vms = $cc_autovm_conf->get_value(7);  // 7 is auto_create_vms
-					if (!strcmp($cc_auto_create_vms, "true")) {
-						// generate a mac address
-						$mac_res = new resource();
-						$mac_res->generate_mac();
-						$new_vm_mac = $mac_res->mac;
-						// cpu req, for now just one cpu since not every virtualization technology can handle that
-						// $new_vm_cpu = $cr->cpu_req;
-						$new_vm_cpu = 1;
-						// memory
-						$new_vm_memory = 256;
-						if ($cr->ram_req != 0) {
-							$new_vm_memory = $cr->ram_req;
-						}
-						// disk size
-						$new_vm_disk = 5000;
-						if ($cr->disk_req != 0) {
-							$new_vm_disk = $cr->disk_req;
-						}
-						// here we start the new vm !
-						$cloudvm = new cloudvm();
-						// this method returns the resource-id when the resource gets idle
-						// it blocks until the resource is up or it reacges the timeout 
-						$cloudvm->create($appliance_virtualization, $appliance_name, $new_vm_mac, $new_vm_cpu, $new_vm_memory, $new_vm_disk, $vm_create_timout);
-						$new_vm_resource_id = $cloudvm->resource_id;
-						if ($new_vm_resource_id == 0) {
-							$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Could not create a new resource for request ID $cr_id", "", "", 0, 0, 0);
-							$appliance->remove($appliance_id);
-							continue;
-						} else {
-							// we have a new vm as resource :) update it in the appliance
-							$appliance_fields = array();
-							$appliance_fields['appliance_resources'] = $new_vm_resource_id;
-							$appliance->update($appliance->id, $appliance_fields);
-							$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Created new resource $new_vm_resource_id for request ID $cr_id", "", "", 0, 0, 0);
-						}
-					} else {
-						// not set to auto-create vms
-						$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Not creating a new resource for request ID $cr_id since auto-create-vms is not enabled.", "", "", 0, 0, 0);
+					// first get admin email
+					$cc_acr_conf = new cloudconfig();
+					$cc_acr_admin_email = $cc_acr_conf->get_value(1);  // 1 is admin_email
+					// and the user details
+					$cu_name = $cu->name;
+					$cu_forename = $cu->forename;
+					$cu_lastname = $cu->lastname;
+					$cu_email = $cu->email;
+
+
+					// physical system request ?
+					if ($appliance_virtualization == 1) {
+						$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Could not find a resource (type physical system) for request ID $cr_id.", "", "", 0, 0, 0);
 						$appliance->remove($appliance_id);
+						$cr->setstatus($cr_id, 'no-res');
+
+						// send mail to user
+						$rmail = new cloudmailer();
+						$rmail->to = "$cu_email";
+						$rmail->from = "$cc_acr_admin_email";
+						$rmail->subject = "openQRM Cloud: Not enough resources for provisioning your $cr_resource_number. system from request $cr_id";
+						$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/not_enough_resources.mail.tmpl";
+						$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@RESNUMBER@@'=>"$cr_resource_number", '@@YOUR@@'=>"your");
+						$rmail->var_array = $arr;
+						$rmail->send();
+						// send mail to admin
+						$rmail_admin = new cloudmailer();
+						$rmail_admin->to = "$cc_acr_admin_email";
+						$rmail_admin->from = "$cc_acr_admin_email";
+						$rmail_admin->subject = "openQRM Cloud: Not enough resources for provisioning the $cr_resource_number. system from request $cr_id";
+						$rmail_admin->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/not_enough_resources.mail.tmpl";
+						$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"Cloudadmin", '@@LASTNAME@@'=>"", '@@RESNUMBER@@'=>"$cr_resource_number", '@@YOUR@@'=>"the");
+						$rmail_admin->var_array = $arr;
+						$rmail_admin->send();
+
 						continue;
+
+					} else {
+						// request type vm
+						$cc_autovm_conf = new cloudconfig();
+						$cc_auto_create_vms = $cc_autovm_conf->get_value(7);  // 7 is auto_create_vms
+						if (!strcmp($cc_auto_create_vms, "true")) {
+							// generate a mac address
+							$mac_res = new resource();
+							$mac_res->generate_mac();
+							$new_vm_mac = $mac_res->mac;
+							// cpu req, for now just one cpu since not every virtualization technology can handle that
+							// $new_vm_cpu = $cr->cpu_req;
+							$new_vm_cpu = 1;
+							// memory
+							$new_vm_memory = 256;
+							if ($cr->ram_req != 0) {
+								$new_vm_memory = $cr->ram_req;
+							}
+							// disk size
+							$new_vm_disk = 5000;
+							if ($cr->disk_req != 0) {
+								$new_vm_disk = $cr->disk_req;
+							}
+							// here we start the new vm !
+							$cloudvm = new cloudvm();
+							// this method returns the resource-id when the resource gets idle
+							// it blocks until the resource is up or it reaches the timeout 
+							$cloudvm->create($appliance_virtualization, $appliance_name, $new_vm_mac, $new_vm_cpu, $new_vm_memory, $new_vm_disk, $vm_create_timout);
+							$new_vm_resource_id = $cloudvm->resource_id;
+							if ($new_vm_resource_id == 0) {
+								$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Could not create a new resource for request ID $cr_id", "", "", 0, 0, 0);
+								$appliance->remove($appliance_id);
+								$cr->setstatus($cr_id, 'no-res');
+
+								// send mail to user
+								$rmail = new cloudmailer();
+								$rmail->to = "$cu_email";
+								$rmail->from = "$cc_acr_admin_email";
+								$rmail->subject = "openQRM Cloud: Not enough resources for provisioning your $cr_resource_number. system from request $cr_id";
+								$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/not_enough_resources.mail.tmpl";
+								$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@RESNUMBER@@'=>"$cr_resource_number", '@@YOUR@@'=>"your");
+								$rmail->var_array = $arr;
+								$rmail->send();
+								// send mail to admin
+								$rmail_admin = new cloudmailer();
+								$rmail_admin->to = "$cc_acr_admin_email";
+								$rmail_admin->from = "$cc_acr_admin_email";
+								$rmail_admin->subject = "openQRM Cloud: Not enough resources for provisioning the $cr_resource_number. system from request $cr_id";
+								$rmail_admin->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/not_enough_resources.mail.tmpl";
+								$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"Cloudadmin", '@@LASTNAME@@'=>"", '@@RESNUMBER@@'=>"$cr_resource_number", '@@YOUR@@'=>"the");
+								$rmail_admin->var_array = $arr;
+								$rmail_admin->send();
+
+								continue;
+							} else {
+								// we have a new vm as resource :) update it in the appliance
+								$appliance_fields = array();
+								$appliance_fields['appliance_resources'] = $new_vm_resource_id;
+								$appliance->update($appliance->id, $appliance_fields);
+								$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Created new resource $new_vm_resource_id for request ID $cr_id", "", "", 0, 0, 0);
+							}
+						} else {
+							// not set to auto-create vms
+							$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Not creating a new resource for request ID $cr_id since auto-create-vms is not enabled.", "", "", 0, 0, 0);
+							$appliance->remove($appliance_id);
+							$cr->setstatus($cr_id, 'no-res');
+
+							// send mail to user
+							$rmail = new cloudmailer();
+							$rmail->to = "$cu_email";
+							$rmail->from = "$cc_acr_admin_email";
+							$rmail->subject = "openQRM Cloud: Not enough resources for provisioning your $cr_resource_number. system from request $cr_id";
+							$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/not_enough_resources.mail.tmpl";
+							$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@RESNUMBER@@'=>"$cr_resource_number", '@@YOUR@@'=>"your");
+							$rmail->var_array = $arr;
+							$rmail->send();
+							// send mail to admin
+							$rmail_admin = new cloudmailer();
+							$rmail_admin->to = "$cc_acr_admin_email";
+							$rmail_admin->from = "$cc_acr_admin_email";
+							$rmail_admin->subject = "openQRM Cloud: Not enough resources for provisioning the $cr_resource_number. system from request $cr_id";
+							$rmail_admin->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/not_enough_resources.mail.tmpl";
+							$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"Cloudadmin", '@@LASTNAME@@'=>"", '@@RESNUMBER@@'=>"$cr_resource_number", '@@YOUR@@'=>"the");
+							$rmail_admin->var_array = $arr;
+							$rmail_admin->send();
+
+							continue;
+						}
+
 					}
 
 				// ################################## end auto create vm ###############################

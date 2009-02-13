@@ -317,6 +317,9 @@ if(htmlobject_request('action') != '') {
 			$openqrm_server_command="htpasswd -b $CloudDir/user/.htpasswd $username $password";
 			$output = shell_exec($openqrm_server_command);
 
+			// set the new password in the db
+			$cloud_user->set_users_password($cloud_user->id, $password);
+
 			$rmail = new cloudmailer();
 			$rmail->to = "$email";
 			$rmail->from = "$cc_admin_email";

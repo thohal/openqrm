@@ -278,6 +278,9 @@ function cloud_manager() {
 			case '6':
 				$cr_status_disp="Done";
 				break;
+			case '7':
+				$cr_status_disp="NoResource";
+				break;
 		}	
 		// format time
 		$timestamp=$cr["cr_request_time"];

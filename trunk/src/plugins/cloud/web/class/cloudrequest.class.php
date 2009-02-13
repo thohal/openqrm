@@ -25,6 +25,7 @@ global $event;
 // 4 = denied
 // 5 = deprovisioned
 // 6 = done
+// 7 = no resource available
 
 class cloudrequest {
 
@@ -268,6 +269,9 @@ function setstatus($cloudrequest_id, $cloud_status) {
 			break;
 		case 'done':
 			$cr_status=6;
+			break;
+		case 'no-res':
+			$cr_status=7;
 			break;
 		default:
 			exit(1);

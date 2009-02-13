@@ -99,10 +99,11 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	exit;
 }
 
+// for checking the disk param
 function check_is_number($param, $value) {
 	if(!ctype_digit($value)){
 		$strMsg = "$param is not a number <br>";
-		redirect($strMsg);
+		redirect($strMsg, tab1);
 		exit(0);
 	}
 }
@@ -169,8 +170,8 @@ if (htmlobject_request('action') != '') {
 				foreach($_REQUEST['identifier'] as $id) {
 					$cr_request = new cloudrequest();
 					$cr_request->get_instance_by_id($id);
-					// only allow to deprovision if cr is in state active
-					if ($cr_request->status != 3) {
+					// only allow to deprovision if cr is in state active or no-res
+					if (($cr_request->status != 3) && ($cr_request->status != 7)) {
 						$strMsg .="Request only can be deprovisioned when in state active <br>";
 						continue;				
 					}
@@ -216,9 +217,13 @@ if (htmlobject_request('action') != '') {
 					$cr_request->get_instance_by_id($id);
 					$cr_stop=$_REQUEST['extend_cr_stop'];
 					$new_stop_timestmp=date_to_timestamp($cr_stop);
-					// only allow to delete requests which are not provisioned yet
+					// only allow to extend requests which are not deprovisioned or done
 					if ($cr_request->status == 5) {
 						$strMsg .="Request cannot be extended when in state deprovisioned <br>";
+						continue;				
+					}
+					if ($cr_request->status == 6) {
+						$strMsg .="Request cannot be extended when in state done <br>";
 						continue;				
 					}
 					// check that the new stop time is later than the start time
@@ -254,11 +259,19 @@ if (htmlobject_request('action') != '') {
 			$stopp = $request_fields['cr_stop'];
 			$tstop = date_to_timestamp($stopp);
 			$request_fields['cr_stop'] = $tstop;
+			$nowstmp = $_SERVER['REQUEST_TIME'];
 
 			// check that the new stop time is later than the start time
 			if ($tstop < ($tstart + 3600)) {
-				$strMsg .="Request cannot be created with stop date before start. Request duration must be at least 1 hour.<br>";
-				redirect($strMsg);
+				$strMsg .="Request cannot be created with stop date before start.<br>Request duration must be at least 1 hour.<br>";
+				redirect($strMsg, tab1);
+				exit(0);
+			}
+
+			// check that the new stop time is later than the now + 1 hour
+			if ($tstop < ($nowstmp + 3600)) {
+				$strMsg .="Request duration must be at least 1 hour.<br>Not creating the request.<br>";
+				redirect($strMsg, tab1);
 				exit(0);
 			}
 
@@ -266,7 +279,7 @@ if (htmlobject_request('action') != '') {
 			check_is_number("Disk", $request_fields['cr_disk_req']);
 			if ($request_fields['cr_disk_req'] <= 0) {
 				$strMsg .="Disk parameter must be > 0 <br>";
-				redirect($strMsg);
+				redirect($strMsg, tab1);
 				exit(0);
 			}
 			// max disk size
@@ -274,14 +287,14 @@ if (htmlobject_request('action') != '') {
 			$max_disk_size = $cc_disk_conf->get_value(8);  // 8 is max_disk_size config
 			if ($request_fields['cr_disk_req'] > $max_disk_size) {
 				$strMsg .="Disk parameter must be <= $max_disk_size <br>";
-				redirect($strMsg);
+				redirect($strMsg, tab1);
 				exit(0);
 			}
 			// max network interfaces
 			$max_network_infterfaces = $cc_disk_conf->get_value(9);  // 9 is max_network_interfaces
 			if ($request_fields['cr_network_req'] > $max_network_infterfaces) {
 				$strMsg .="Network parameter must be <= $max_network_infterfaces <br>";
-				redirect($strMsg);
+				redirect($strMsg, tab1);
 				exit(0);
 			}
 
@@ -409,6 +422,11 @@ function my_cloud_manager() {
 			case '6':
 				$cr_status_disp="Done";
 				break;
+			// status not-enough resources, some resources may already be deployed
+			// so we show the state active to the user
+			case '7':
+				$cr_status_disp="Active";
+				break;
 		}	
 		// format time
 		$timestamp=$cr["cr_request_time"];
@@ -521,6 +539,11 @@ function my_cloud_extend_request($cr_id) {
 				break;
 			case '6':
 				$cr_status_disp="Done";
+				break;
+			// status not-enough resources, some resources may already be deployed
+			// so we show the state active to the user
+			case '7':
+				$cr_status_disp="Active";
 				break;
 		}	
 		// format time
