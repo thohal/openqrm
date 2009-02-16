@@ -37,7 +37,7 @@ function get_instance($id, $name) {
 	} else if ("$name" != "") {
 		$puppetconfig_array = &$db->Execute("select * from $PUPPET_CONFIG_TABLE where cc_key='$name'");
 	} else {
-		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "coulduser.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
+		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "puppetconfig.class.php", "Could not create instance of puppetconfig without data", "", "", 0, 0, 0);
 		return;
 	}
 
