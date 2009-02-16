@@ -16,6 +16,7 @@ MAX_UMOUNT_LOOP=5
 LV_SIZE_DEFAULT=5000
 ISCSI_TARGET_URL=http://iscsitarget.sourceforge.net/
 AOE_AUTHENTICATED_MAC="00:00:00:00:00:00"
+IMAGE_LUN=1
 
 ################ common lvm-storage functions
 
@@ -101,7 +102,9 @@ function manage_nfs() {
 			elif [ -x /etc/init.d/nfs-kernel-server ]; then
 				/etc/init.d/nfs-kernel-server reload
 			else
-				echo "WARNING: Could not find nfs-server init script !"
+				lvm_storage_log lvm-storage-functions "WARNING: Could not find nfs-server init script !"
+				lvm_storage_lock release
+				return 1
 			fi
 			;;
 		remove)
@@ -111,7 +114,9 @@ function manage_nfs() {
 			elif [ -x /etc/init.d/nfs-kernel-server ]; then
 				/etc/init.d/nfs-kernel-server reload
 			else
-				echo "WARNING: Could not find nfs-server init script !"
+				lvm_storage_log lvm-storage-functions "WARNING: Could not find nfs-server init script !"
+				lvm_storage_lock release
+				return 1
 			fi
 			while ! `umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME`; do
 				echo "ERROR: Could not umount /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME, trying again ..."
@@ -137,7 +142,9 @@ function manage_nfs() {
 			elif [ -x /etc/init.d/nfs-kernel-server ]; then
 				/etc/init.d/nfs-kernel-server reload
 			else
-				echo "WARNING: Could not find nfs-server init script !"
+				lvm_storage_log lvm-storage-functions "WARNING: Could not find nfs-server init script !"
+				lvm_storage_lock release
+				return 1
 			fi
 			;;
 	esac
@@ -169,7 +176,6 @@ function manage_iscsi() {
 	case "$1" in
 		add)
 			IMAGE_PASS=$3
-			IMAGE_LUN=1
 			if [ "$2" != "snap" ]; then
 				# create fs, currently static all ext3
 				mkfs.ext3 -F /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME
@@ -177,26 +183,56 @@ function manage_iscsi() {
 			echo "Target $LVM_IMAGE_NAME" >> $IETDCONF
 			echo "	IncomingUser $LVM_IMAGE_NAME $IMAGE_PASS" >> $IETDCONF
 			echo "	Lun $IMAGE_LUN Path=/dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME,Type=fileio" >> $IETDCONF
-			if [ -x /etc/init.d/iscsi-target ]; then
-				/etc/init.d/iscsi-target stop
-				nohup /etc/init.d/iscsi-target start
-			elif [ -x /etc/init.d/iscsitarget ]; then
-				/etc/init.d/iscsitarget stop
-				nohup /etc/init.d/iscsitarget start
+			LAST_TID=`grep tid: /proc/net/iet/volume | cut -d':' -f2 | awk {' print $1 '} | sort | tail -n1`
+			NEW_TID=$(( $LAST_TID + 1 ))
+			# dynamically add new target
+			if ! ietadm --op new --tid=$NEW_TID --params Name=$LVM_IMAGE_NAME; then
+				lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not create new target !"
+				lvm_storage_lock release
+				return 1
+			fi
+			# set path to lvm device in the new target
+			if ! ietadm --op new --tid=$NEW_TID --lun=$IMAGE_LUN --params Path=/dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME; then
+				lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not set lvm-path in new target !"
+				lvm_storage_lock release
+				return 1
+			fi
+			# auth target
+			if ! ietadm --op new --tid=$NEW_TID --user --params IncomingUser=$LVM_IMAGE_NAME,Password=$IMAGE_PASS; then
+				lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not set username/password in new target !"
+				lvm_storage_lock release
+				return 1
 			else
-				echo "ERROR: Coud not find the iscsi-target init script !" | logger
+				lvm_storage_log lvm-storage-functions "lvm-iscsi created new target $LVM_IMAGE_NAME !"
 			fi
 			;;
 		remove)
 			sed -i -e "s#.*$LVM_IMAGE_NAME.*##g" $IETDCONF
-			if [ -x /etc/init.d/iscsi-target ]; then
-				/etc/init.d/iscsi-target stop
-				nohup /etc/init.d/iscsi-target start
-			elif [ -x /etc/init.d/iscsitarget ]; then
-				/etc/init.d/iscsitarget stop
-				nohup /etc/init.d/iscsitarget start
+			TID_TO_REMOVE=`cat /proc/net/iet/volume | grep "name:$LVM_IMAGE_NAME" | cut -d':' -f2 | awk {' print $1 '}`
+			OPEN_SESSION=`cat /proc/net/iet/session | grep -w ^tid:$TID_TO_REMOVE -A1 | grep sid: | cut -d':' -f2 | awk {' print $1 '}`
+			if [ "$OPEN_SESSION" != "" ]; then
+				# first remove active session (does not support multiple sessions yet)
+				if ! ietadm --op delete --tid=$TID_TO_REMOVE --sid=$OPEN_SESSION --cid=0; then
+					lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not remove session $OPEN_SESSION for tid $TID_TO_REMOVE !"
+					lvm_storage_lock release
+					return 1
+				else
+					lvm_storage_log lvm-storage-functions "lvm-iscsi removed session $OPEN_SESSION for tid $TID_TO_REMOVE !"
+				fi
+			fi
+			# remove lun
+			if ! ietadm --op delete --tid=$TID_TO_REMOVE --lun=$IMAGE_LUN; then
+				lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not remove lun $IMAGE_LUN for tid $TID_TO_REMOVE !"
+				lvm_storage_lock release
+				return 1
+			fi
+			# remove target dynamically
+			if ! ietadm --op delete --tid=$TID_TO_REMOVE; then
+				lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not remove target tid $TID_TO_REMOVE !"
+				lvm_storage_lock release
+				return 1
 			else
-				echo "ERROR: Coud not find the iscsi-target init script !" | logger
+				lvm_storage_log lvm-storage-functions "lvm-iscsi removed target tid $TID_TO_REMOVE !"
 			fi
 			;;
 		auth)
@@ -204,14 +240,18 @@ function manage_iscsi() {
 			IMAGE_AUTHNAME=`echo $LVM_IMAGE_ROOTDEVICE | cut -d'/' -f3`
 			sed -i -e "s#IncomingUser $IMAGE_AUTHNAME .*#IncomingUser $IMAGE_AUTHNAME $IMAGE_PASS#g" $IETDCONF
 			sed -i '/^$/d' $IETDCONF
-			if [ -x /etc/init.d/iscsi-target ]; then
-				/etc/init.d/iscsi-target stop
-				nohup /etc/init.d/iscsi-target start
-			elif [ -x /etc/init.d/iscsitarget ]; then
-				/etc/init.d/iscsitarget stop
-				nohup /etc/init.d/iscsitarget start
+			TID_TO_AUTH=`cat /proc/net/iet/volume | grep "name:$IMAGE_AUTHNAME" | cut -d':' -f2 | awk {' print $1 '}`
+			if [ "$TID_TO_AUTH" == "" ]; then
+				lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not find target $IMAGE_AUTHNAME to update the authentication !"
+				lvm_storage_lock release
+				return 1
+			fi
+			if ! ietadm --op new --tid=$TID_TO_AUTH --user --params IncomingUser=$IMAGE_AUTHNAME,Password=$IMAGE_PASS; then
+				lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not find target $IMAGE_AUTHNAME to update the authentication !"
+				lvm_storage_lock release
+				return 1
 			else
-				echo "ERROR: Coud not find the iscsi-target init script !" | logger
+				lvm_storage_log lvm-storage-functions "lvm-iscsi updated the authentication for target $IMAGE_AUTHNAME !"
 			fi
 			;;
 	esac

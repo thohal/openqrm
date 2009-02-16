@@ -12,6 +12,7 @@ ISCSI_MGMT_LOCK_RETRY=100
 ISCSI_MGMT_LOCK_TIMEOUT=500
 ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY="/target"
 ISCSI_TARGET_URL=http://iscsitarget.sourceforge.net/
+IMAGE_LUN=1
 
 ################ common iscsi-storage functions
 
@@ -87,18 +88,31 @@ function manage_iscsi() {
 				# create fs, currently static all ext3
 				mkfs.ext3 -F $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME
 			fi
-			IMAGE_LUN=1
 			echo "Target $ISCSI_IMAGE_NAME" >> $IETDCONF
 			echo "	IncomingUser $ISCSI_IMAGE_NAME $IMAGE_PASS" >> $IETDCONF
 			echo "	Lun $IMAGE_LUN Path=$ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME,Type=fileio" >> $IETDCONF
-			if [ -x /etc/init.d/iscsi-target ]; then
-				/etc/init.d/iscsi-target stop
-				nohup /etc/init.d/iscsi-target start
-			elif [ -x /etc/init.d/iscsitarget ]; then
-				/etc/init.d/iscsitarget stop
-				nohup /etc/init.d/iscsitarget start
+
+			LAST_TID=`grep tid: /proc/net/iet/volume | cut -d':' -f2 | awk {' print $1 '} | sort | tail -n1`
+			NEW_TID=$(( $LAST_TID + 1 ))
+			# dynamically add new target
+			if ! ietadm --op new --tid=$NEW_TID --params Name=$ISCSI_IMAGE_NAME; then
+				iscsi_storage_log iscsi-storage-functions "ERROR: iscsi-storage could not create new target !"
+				iscsi_storage_lock release
+				return 1
+			fi
+			# set path to iscsi device in the new target
+			if ! ietadm --op new --tid=$NEW_TID --lun=$IMAGE_LUN --params Path=$ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME; then
+				iscsi_storage_log iscsi-storage-functions "ERROR: iscsi-storage could not set path in new target !"
+				iscsi_storage_lock release
+				return 1
+			fi
+			# auth target
+			if ! ietadm --op new --tid=$NEW_TID --user --params IncomingUser=$ISCSI_IMAGE_NAME,Password=$IMAGE_PASS; then
+				iscsi_storage_log iscsi-storage-functions "ERROR: iscsi-storage could not set username/password in new target !"
+				iscsi_storage_lock release
+				return 1
 			else
-				echo "ERROR: Coud not find the iscsi-target init script !" | logger
+				iscsi_storage_log iscsi-storage-functions "iscsi-storage created new target $ISCSI_IMAGE_NAME !"
 			fi
 			;;
 		auth)
@@ -106,28 +120,50 @@ function manage_iscsi() {
 			IMAGE_AUTHNAME=`echo $ISCSI_IMAGE_ROOTDEVICE | cut -d'/' -f3`
 			sed -i -e "s#IncomingUser $IMAGE_AUTHNAME .*#IncomingUser $IMAGE_AUTHNAME $IMAGE_PASS#g" $IETDCONF
 			sed -i '/^$/d' $IETDCONF
-			if [ -x /etc/init.d/iscsi-target ]; then
-				/etc/init.d/iscsi-target stop
-				nohup /etc/init.d/iscsi-target start
-			elif [ -x /etc/init.d/iscsitarget ]; then
-				/etc/init.d/iscsitarget stop
-				nohup /etc/init.d/iscsitarget start
+			TID_TO_AUTH=`cat /proc/net/iet/volume | grep "name:$IMAGE_AUTHNAME" | cut -d':' -f2 | awk {' print $1 '}`
+			if [ "$TID_TO_AUTH" == "" ]; then
+				iscsi_storage_log iscsi-storage-functions "ERROR: iscsi-storage could not find target $IMAGE_AUTHNAME to update the authentication !"
+				iscsi_storage_lock release
+				return 1
+			fi
+			if ! ietadm --op new --tid=$TID_TO_AUTH --user --params IncomingUser=$IMAGE_AUTHNAME,Password=$IMAGE_PASS; then
+				iscsi_storage_log iscsi-storage-functions "ERROR: iscsi-storage could not find target $IMAGE_AUTHNAME to update the authentication !"
+				iscsi_storage_lock release
+				return 1
 			else
-				echo "ERROR: Coud not find the iscsi-target init script !" | logger
+				iscsi_storage_log iscsi-storage-functions "iscsi-storage updated the authentication for target $IMAGE_AUTHNAME !"
 			fi
 			;;
 		remove)
 			sed -i -e "s#.*$ISCSI_IMAGE_NAME.*##g" $IETDCONF
 			sed -i '/^$/d' $IETDCONF
-			if [ -x /etc/init.d/iscsi-target ]; then
-				/etc/init.d/iscsi-target stop
-				nohup /etc/init.d/iscsi-target start
-			elif [ -x /etc/init.d/iscsitarget ]; then
-				/etc/init.d/iscsitarget stop
-				nohup /etc/init.d/iscsitarget start
-			else
-				echo "ERROR: Coud not find the iscsi-target init script !" | logger
+			TID_TO_REMOVE=`cat /proc/net/iet/volume | grep "name:$ISCSI_IMAGE_NAME" | cut -d':' -f2 | awk {' print $1 '}`
+			OPEN_SESSION=`cat /proc/net/iet/session | grep -w ^tid:$TID_TO_REMOVE -A1 | grep sid: | cut -d':' -f2 | awk {' print $1 '}`
+			if [ "$OPEN_SESSION" != "" ]; then
+				# first remove active session (does not support multiple sessions yet)
+				if ! ietadm --op delete --tid=$TID_TO_REMOVE --sid=$OPEN_SESSION --cid=0; then
+					iscsi_storage_log iscsi-storage-functions "ERROR: iscsi-storage could not remove session $OPEN_SESSION for tid $TID_TO_REMOVE !"
+					iscsi_storage_lock release
+					return 1
+				else
+					iscsi_storage_log iscsi-storage-functions "iscsi-storage removed session $OPEN_SESSION for tid $TID_TO_REMOVE !"
+				fi
 			fi
+			# remove lun
+			if ! ietadm --op delete --tid=$TID_TO_REMOVE --lun=$IMAGE_LUN; then
+				iscsi_storage_log iscsi-storage-functions "ERROR: iscsi-storage could not remove lun $IMAGE_LUN for tid $TID_TO_REMOVE !"
+				iscsi_storage_lock release
+				return 1
+			fi
+			# remove target dynamically
+			if ! ietadm --op delete --tid=$TID_TO_REMOVE; then
+				iscsi_storage_log iscsi-storage-functions "ERROR: iscsi-storage could not remove target tid $TID_TO_REMOVE !"
+				iscsi_storage_lock release
+				return 1
+			else
+				iscsi_storage_log iscsi-storage-functions "iscsi-storage removed target tid $TID_TO_REMOVE !"
+			fi
+			# physical remove
 			rm -f $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME
 			;;
 	esac
