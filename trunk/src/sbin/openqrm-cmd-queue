@@ -7,20 +7,76 @@ if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
 fi
 export OPENQRM_SERVER_BASE_DIR
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+# get config for posting events
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+openqrm_server_get_config
+OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+resource_id=0
+resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+# more defines
 OPENQRM_COMMAND_QUEUE="$OPENQRM_SERVER_BASE_DIR/openqrm/var/spool/openqrm-queue"
+OPENQRM_COMMAND_QUEUE_SINGLE="$OPENQRM_SERVER_BASE_DIR/openqrm/var/spool/openqrm-queue.single"
+OPENQRM_COMMAND_QUEUE_FAILED="$OPENQRM_SERVER_BASE_DIR/openqrm/var/spool/openqrm-queue.failed"
 OPENQRM_QUEUEING_DELAY=1
-
+SEQ=1
+RETRY=5
+RETRY_DELAY=10
 
 while (true); do
 	if [ -f $OPENQRM_COMMAND_QUEUE ]; then
 		mv -f $OPENQRM_COMMAND_QUEUE $OPENQRM_COMMAND_QUEUE.run
-		TORUN=`cat $OPENQRM_COMMAND_QUEUE.run`
-			echo "openQRM-cmd-queu: Running : " | logger
-			echo "$TORUN" | logger
-			chmod +x $OPENQRM_COMMAND_QUEUE.run
-			$OPENQRM_COMMAND_QUEUE.run 2>&1 | logger
+		cat $OPENQRM_COMMAND_QUEUE.run | while read TORUN; do
+			echo "openQRM-cmd-queu: Running : $TORUN" | logger
+			echo "$TORUN" > $OPENQRM_COMMAND_QUEUE_SINGLE
+			chmod +x $OPENQRM_COMMAND_QUEUE_SINGLE
+			CMD_OUTPUT=$($OPENQRM_COMMAND_QUEUE_SINGLE 2>&1)
+			CMD_RES=$?
+			echo $CMD_OUTPUT | logger
+			if [ "$CMD_RES" != "0" ]; then
+				echo "1:$TORUN" >> $OPENQRM_COMMAND_QUEUE_FAILED
+				echo "openQRM-cmd-queu: ERROR : $TORUN" | logger
+			fi
+			rm -f $OPENQRM_COMMAND_QUEUE_SINGLE
+		done
 		rm -f $OPENQRM_COMMAND_QUEUE.run
+		sleep $OPENQRM_QUEUEING_DELAY
 	fi
+	SEQ=$(( SEQ + 1 ))
+
+	# check for failed commands
+	if [ "$SEQ" == "$RETRY_DELAY" ]; then
+		if [ -f $OPENQRM_COMMAND_QUEUE_FAILED ]; then
+			echo "openQRM-cmd-queu: Retrying failed commands in the queue" | logger
+
+			mv -f $OPENQRM_COMMAND_QUEUE_FAILED $OPENQRM_COMMAND_QUEUE_FAILED.run
+			cat $OPENQRM_COMMAND_QUEUE_FAILED.run | while read TORUN; do
+				CMD_RETRY_COUNT=`echo $TORUN | cut -d':' -f1`
+				RETRY_CMD=`echo $TORUN | cut -d':' -f2-`
+				if [ "$CMD_RETRY_COUNT" == "$RETRY" ]; then
+					echo "openQRM-cmd-queu: ERROR Failed after $RETRY tries : $RETRY_CMD" | logger
+					openqrm_post_event 0 "base-engine" 2 "openqrm-cmd-queue" "ERROR executing : $RETRY_CMD"
+				else
+					echo "openQRM-cmd-queu: Running $CMD_RETRY_COUNT retry : $RETRY_CMD" | logger
+					echo "$RETRY_CMD" > $OPENQRM_COMMAND_QUEUE_SINGLE
+					chmod +x $OPENQRM_COMMAND_QUEUE_SINGLE
+					CMD_OUTPUT=$($OPENQRM_COMMAND_QUEUE_SINGLE 2>&1)
+					CMD_RES=$?
+					echo $CMD_OUTPUT | logger
+					if [ "$CMD_RES" != "0" ]; then
+						CMD_RETRY_COUNT=$(( CMD_RETRY_COUNT + 1 ))
+						echo "$CMD_RETRY_COUNT:$RETRY_CMD" >> $OPENQRM_COMMAND_QUEUE_FAILED
+						echo "openQRM-cmd-queu: ERROR during $CMD_RETRY_COUNT retry : $RETRY_CMD" | logger
+					fi
+					rm -f $OPENQRM_COMMAND_QUEUE_SINGLE
+				fi
+			done
+			rm -f $OPENQRM_COMMAND_QUEUE_FAILED.run
+			sleep $OPENQRM_QUEUEING_DELAY
+		fi
+		SEQ=1
+	fi
+	
 	sleep $OPENQRM_QUEUEING_DELAY
 done
 

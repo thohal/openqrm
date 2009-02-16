@@ -13,6 +13,10 @@ if [ -f "$OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions" ]; t
 	# we are running on the server
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+	resource_id=0
+	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 else
 	# we are running on a managed resource
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
@@ -44,4 +48,12 @@ case "$@" in
 		;;
 esac
 
-$@ 2>&1 | logger
+CMD_OUTPUT=$($@ 2>&1)
+CMD_RESULT=$?
+echo $CMD_OUTPUT | logger
+if [ "$CMD_RESULT" != "0" ]; then
+	echo "ERROR: openqrm-cmd failed running : $@"
+	openqrm_post_event 0 "base-engine" 2 "openqrm-cmd" "ERROR on resource $resource_id while running : $@"
+	exit 1
+fi
+
