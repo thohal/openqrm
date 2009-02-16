@@ -70,7 +70,7 @@ function get_instance($id, $mac, $ip) {
 		$resource_array = $db->GetAll("select * from $RESOURCE_INFO_TABLE where resource_ip='$ip'");
 	} else {
 		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
-		exit(-1);
+		return;
 	}
 	foreach ($resource_array as $index => $resource) {
 		$this->id = $resource["resource_id"];

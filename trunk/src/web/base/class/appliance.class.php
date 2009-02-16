@@ -65,7 +65,7 @@ function get_instance($id, $name) {
 		$appliance_array = &$db->Execute("select * from $APPLIANCE_INFO_TABLE where appliance_name='$name'");
 	} else {
 		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
-		exit(-1);
+		return;
 	}
 	foreach ($appliance_array as $index => $appliance) {
 		$this->id = $appliance["appliance_id"];

@@ -123,7 +123,7 @@ var $_event;
 			$imageshelf_array = &$db->Execute("select * from $this->_db_table where imageshelf_name='$name'");
 		} else {
 			$this->_event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "imageshelf.class.php", "Could not create instance of imageshelf without data", "", "", 0, 0, 0);
-			exit(-1);
+			return;
 		}
 		foreach ($imageshelf_array as $index => $imageshelf) {
 			$this->id = $imageshelf["imageshelf_id"];

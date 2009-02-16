@@ -59,8 +59,13 @@ var $lastbill = '';
 function get_instance($id) {
 	global $CLOUD_REQUEST_TABLE;
 	global $event;
-	$db=openqrm_get_db_connection();
-	$cloudrequest_array = &$db->Execute("select * from $CLOUD_REQUEST_TABLE where cr_id=$id");
+	if ("$id" != "") {
+		$db=openqrm_get_db_connection();
+		$cloudrequest_array = &$db->Execute("select * from $CLOUD_REQUEST_TABLE where cr_id=$id");
+	} else {
+		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "cloudrequest.class.php", "Could not create instance of cloudrequest without data", "", "", 0, 0, 0);
+		return;
+	}
 
 	foreach ($cloudrequest_array as $index => $cloudrequest) {
 		$this->id = $cloudrequest["cr_id"];

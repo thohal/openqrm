@@ -47,8 +47,8 @@ function get_instance($id, $image_id) {
 	} else if ("$image_id" != "") {
 		$cloudimage_array = &$db->Execute("select * from $CLOUD_IMAGE_TABLE where ci_image_id=$image_id");
 	} else {
-		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "cloudimage.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
-		exit(-1);
+		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "cloudimage.class.php", "Could not create instance of cloudimage without data", "", "", 0, 0, 0);
+		return;
 	}
 
 	foreach ($cloudimage_array as $index => $cloudimage) {

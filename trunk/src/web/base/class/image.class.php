@@ -147,7 +147,7 @@ var $_event;
 			$image_array = &$db->Execute("select * from $this->_db_table where image_name='$name'");
 		} else {
 			$this->_event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "image.class.php", "Could not create instance of image without data", "", "", 0, 0, 0);
-			exit(-1);
+			return;
 		}
 		foreach ($image_array as $index => $image) {
 			$this->id = $image["image_id"];

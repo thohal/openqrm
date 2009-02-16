@@ -53,7 +53,7 @@ function get_instance($id, $appliance_id) {
 		$cloudappliance_array = &$db->Execute("select * from $CLOUD_APPLIANCE_TABLE where ca_appliance_id=$appliance_id");
 	} else {
 		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "cloudappliance.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
-		exit(-1);
+		return;
 	}
 
 	foreach ($cloudappliance_array as $index => $cloudappliance) {

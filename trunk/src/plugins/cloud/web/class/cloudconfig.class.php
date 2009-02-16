@@ -38,7 +38,7 @@ function get_instance($id, $name) {
 		$cloudconfig_array = &$db->Execute("select * from $CLOUD_CONFIG_TABLE where cc_key='$name'");
 	} else {
 		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "cloudconfig.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
-		exit(-1);
+		return;
 	}
 
 	foreach ($cloudconfig_array as $index => $cloudconfig) {

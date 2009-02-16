@@ -115,7 +115,7 @@ var $_event;
 			$deployment_array = &$db->Execute("select * from $this->_db_table where deployment_type='$type'");
 		} else {
 			$this->_event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "deployment.class.php", "Could not create instance of deployment without data", "", "", 0, 0, 0);
-			exit(-1);
+			return;
 		}
 		foreach ($deployment_array as $index => $deployment) {
 			$this->id = $deployment["deployment_id"];

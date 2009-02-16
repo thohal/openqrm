@@ -49,7 +49,7 @@ function get_instance($id, $name) {
 		$clouduser_array = &$db->Execute("select * from $CLOUD_USER_TABLE where cu_name='$name'");
 	} else {
 		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "coulduser.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
-		exit(-1);
+		return;
 	}
 
 	foreach ($clouduser_array as $index => $clouduser) {

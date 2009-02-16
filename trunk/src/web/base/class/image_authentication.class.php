@@ -49,7 +49,7 @@ function get_instance($id, $image_id) {
 		$image_authentication_array = &$db->Execute("select * from $IMAGE_AUTHENTICATION_TABLE where ia_image_id=$image_id");
 	} else {
 		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "image_authentication.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
-		exit(-1);
+		return;
 	}
 
 	foreach ($image_authentication_array as $index => $image_authentication) {

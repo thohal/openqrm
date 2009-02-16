@@ -113,7 +113,7 @@ var $_event;
 			$storage_array = &$db->Execute("select * from $this->_db_table where storage_name='$name'");
 		} else {
 			$this->_event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "storage.class.php", "Could not create instance of storage without data", "", "", 0, 0, 0);
-			exit(-1);
+			return;
 		}
 		foreach ($storage_array as $index => $storage) {
 			$this->id = $storage["storage_id"];

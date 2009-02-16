@@ -34,7 +34,7 @@ function get_instance($id, $name) {
 		$kernel_array = &$db->Execute("select * from $KERNEL_INFO_TABLE where kernel_name='$name'");
 	} else {
 		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "kernel.class.php", "Could not create instance of kernel without data", "", "", 0, 0, 0);
-		exit(-1);
+		return;
 	}
 	foreach ($kernel_array as $index => $kernel) {
 		$this->id = $kernel["kernel_id"];

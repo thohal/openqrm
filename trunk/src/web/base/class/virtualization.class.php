@@ -36,7 +36,7 @@ function get_instance($id, $name, $type) {
 		$virtualization_array = &$db->Execute("select * from $VIRTUALIZATION_INFO_TABLE where virtualization_type='$type'");
 	} else {
 		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "virtualization.class.php", "Could not create instance of virtualization without data", "", "", 0, 0, 0);
-		exit(-1);
+		return;
 	}
 	foreach ($virtualization_array as $index => $virtualization) {
 		$this->id = $virtualization["virtualization_id"];

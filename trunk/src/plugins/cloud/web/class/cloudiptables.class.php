@@ -46,7 +46,7 @@ function get_instance($id) {
 		$cloudiptables_array = &$db->Execute("select * from $CLOUD_IPTABLE where ip_id=$id");
 	} else {
 		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "cloudiptables.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
-		exit(-1);
+		return;
 	}
 
 	foreach ($cloudiptables_array as $index => $cloudiptables) {

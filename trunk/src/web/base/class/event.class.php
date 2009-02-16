@@ -139,7 +139,7 @@ var $_db_table;
 			$event_array = &$db->Execute("select * from $this->_db_table where event_name='$name'");
 		} else {
 			$this->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "event.class.php", "Could not create instance of event without data", "", "", 0, 0, 0);
-			exit(-1);
+			return;
 		}
 		foreach ($event_array as $index => $event) {
 			$this->id = $event["event_id"];
