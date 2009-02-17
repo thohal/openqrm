@@ -7,20 +7,75 @@ if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
 fi
 export OPENQRM_SERVER_BASE_DIR
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
-OPENQRM_COMMAND_QUEUE="$OPENQRM_SERVER_BASE_DIR/openqrm/var/spool/openqrm-queue"
+OPENQRM_COMMAND_QUEUE="$OPENQRM_SERVER_BASE_DIR/openqrm/var/spool/"
+# get config for posting events
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+openqrm_server_get_config
+OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+resource_id=0
+resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 OPENQRM_QUEUEING_DELAY=1
+SEQ=1
+RETRY=5
+RETRY_DELAY=20
 
 
+cd $OPENQRM_COMMAND_QUEUE
 while (true); do
-	if [ -f $OPENQRM_COMMAND_QUEUE ]; then
-		mv -f $OPENQRM_COMMAND_QUEUE $OPENQRM_COMMAND_QUEUE.run
-		TORUN=`cat $OPENQRM_COMMAND_QUEUE.run`
-			echo "openQRM-cmd-queu: Running : " | logger
-			echo "$TORUN" | logger
-			chmod +x $OPENQRM_COMMAND_QUEUE.run
-			$OPENQRM_COMMAND_QUEUE.run 2>&1 | logger
-		rm -f $OPENQRM_COMMAND_QUEUE.run
+	for OPENQRM_COMMAND_FILE in `ls -t openqrm-queue* 2>/dev/null`; do
+		chmod +x $OPENQRM_COMMAND_FILE
+		COMMAND_TOKEN=`echo $OPENQRM_COMMAND_FILE | cut -d'.' -f2`
+		OPENQRM_COMMAND=`cat $OPENQRM_COMMAND_FILE`
+		./$OPENQRM_COMMAND_FILE 2>ouput.$COMMAND_TOKEN
+		COMMAND_RES=$?
+		echo "openQRM-cmd-queu: Running command with token $COMMAND_TOKEN : $OPENQRM_COMMAND" | logger
+		if [ "$COMMAND_RES" != "0" ]; then
+			# put it in the failed queue
+			mv -f $OPENQRM_COMMAND_FILE failed-cmd.1.$COMMAND_TOKEN
+			OPENQRM_COMMAND_OUTPUT=`cat ouput.$COMMAND_TOKEN`
+			echo "openQRM-cmd-queu: ERROR while running command with token $FAILED_COMMAND_TOKEN : $OPENQRM_COMMAND  ----- $OPENQRM_COMMAND_OUTPUT" | logger
+		else
+			rm -f $OPENQRM_COMMAND_FILE
+		fi
+		rm -f ouput.$COMMAND_TOKEN
+	
+	done
+	SEQ=$(( SEQ + 1 ))
+
+	# check the failed queue
+	if [ "$SEQ" == "$RETRY_DELAY" ]; then
+
+		for FAILED_OPENQRM_COMMAND_FILE in `ls -t failed-cmd* 2>/dev/null`; do
+			chmod +x $FAILED_OPENQRM_COMMAND_FILE
+			FAILED_COMMAND_RETRY_COUNT=`echo $FAILED_OPENQRM_COMMAND_FILE | cut -d'.' -f2`
+			FAILED_COMMAND_TOKEN=`echo $FAILED_OPENQRM_COMMAND_FILE | cut -d'.' -f3`
+			FAILED_OPENQRM_COMMAND=`cat $FAILED_OPENQRM_COMMAND_FILE`
+
+			if [ "$FAILED_COMMAND_RETRY_COUNT" == "$RETRY" ]; then
+				echo "openQRM-cmd-queu: ERROR Command with token $FAILED_COMMAND_TOKEN failed after $RETRY. tries : $FAILED_OPENQRM_COMMAND" | logger
+				openqrm_post_event 0 "base-engine" 2 "openqrm-cmd-queue" "ERROR executing command with token $FAILED_COMMAND_TOKEN : $FAILED_OPENQRM_COMMAND"
+				rm -f $FAILED_OPENQRM_COMMAND_FILE
+			else
+				echo "openQRM-cmd-queu: Running Command with token $FAILED_COMMAND_TOKEN $FAILED_COMMAND_RETRY_COUNT. retry : $FAILED_OPENQRM_COMMAND" | logger
+				./$FAILED_OPENQRM_COMMAND_FILE 2>ouput.$FAILED_COMMAND_TOKEN
+				FAILED_COMMAND_RES=$?
+				if [ "$FAILED_COMMAND_RES" != "0" ]; then
+					# put it in the failed queue
+					FAILED_COMMAND_RETRY_COUNT=$(( FAILED_COMMAND_RETRY_COUNT + 1 ))
+					FAILED_OPENQRM_COMMAND_OUTPUT=`cat ouput.$FAILED_COMMAND_TOKEN`
+					mv -f $FAILED_OPENQRM_COMMAND_FILE failed-cmd.$FAILED_COMMAND_RETRY_COUNT.$FAILED_COMMAND_TOKEN
+					echo "openQRM-cmd-queu: ERROR executing command with token $FAILED_COMMAND_TOKEN $FAILED_COMMAND_RETRY_COUNT. retry : $FAILED_OPENQRM_COMMAND ----- $FAILED_OPENQRM_COMMAND_OUTPUT" | logger
+				else
+					rm -f $FAILED_OPENQRM_COMMAND_FILE
+				fi
+				rm -f ouput.$FAILED_COMMAND_TOKEN
+			fi
+		
+		done
+		SEQ=1
 	fi
+
 	sleep $OPENQRM_QUEUEING_DELAY
 done
 

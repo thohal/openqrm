@@ -514,7 +514,9 @@ function send_command($resource_ip, $resource_command) {
 	// check which execution layer to use
 	switch($OPENQRM_EXECUTION_LAYER) {
 		case 'dropbear':
-			$final_resource_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec -i $resource_ip -c \"$resource_command\"";
+			// generate a random token for the cmd
+			$cmd_token = md5(uniqid(rand(), true));
+			$final_resource_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec -i $resource_ip -t $cmd_token -c \"$resource_command\"";
 			$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Running : $final_resource_command", "", "", 0, 0, $resource->id);
 			shell_exec($final_resource_command);
 			break;

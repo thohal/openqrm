@@ -1,5 +1,5 @@
 #!/bin/bash
-#  openQRM-rexecd, a openQRM-daemon for remote exection of openQRM-commands
+#  openQRM-exec, an openQRM-util for remote exection of openQRM-commands
 
 if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
 	OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../..
@@ -7,8 +7,8 @@ if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
 fi
 export OPENQRM_SERVER_BASE_DIR
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
-DB_IDLE=5
-DB_TIMEOUT=5
+DB_IDLE=0
+DB_TIMEOUT=10
 OPENQRM_COMMAND_QUEUE="$OPENQRM_SERVER_BASE_DIR/openqrm/var/spool/openqrm-queue"
 WHOAMI=`whoami`
 
@@ -17,6 +17,10 @@ while [ $# -ne 0 ]; do
 	case "$1" in
 		-i)
 			RESOURCE_IP=$2
+			shift
+			;;
+		-t)
+			COMMAND_TOKEN=$2
 			shift
 			;;
 		-c)
@@ -28,8 +32,8 @@ while [ $# -ne 0 ]; do
 	shift
 done
 
-FULL_COMMAND="$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dbclient -I $DB_IDLE -K $DB_IDLE -y -i $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key -p $OPENQRM_EXEC_PORT root@$RESOURCE_IP \"$OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm-cmd $OPENQRM_COMMAND\""
+FULL_COMMAND="$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dbclient -I $DB_IDLE -K $DB_TIMEOUT -y -i $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key -p $OPENQRM_EXEC_PORT root@$RESOURCE_IP \"$OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm-cmd $OPENQRM_COMMAND\""
 # echo "openQRM engine (as $WHOAMI) queuing : $FULL_COMMAND" | logger
-echo "$FULL_COMMAND" >> $OPENQRM_COMMAND_QUEUE
+echo "$FULL_COMMAND" >> $OPENQRM_COMMAND_QUEUE.$COMMAND_TOKEN
 
 

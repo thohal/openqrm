@@ -917,6 +917,8 @@ function openqrm_cloud_monitor() {
 				$rmail_admin->send();
 
 				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Provisioning resource no. $cr_resource_number request ID $cr_id finished", "", "", 0, 0, 0);
+
+				sleep(10);
 			}
 	
 
