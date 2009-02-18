@@ -44,9 +44,10 @@ function openqrm_install_os_dependency() {
 	    fi
     elif [ -f /etc/redhat-release ]; then
     	if [ "$FORCE_INSTALL" == "true" ]; then
-	    	su - root -c "rpm -e --nodeps $PACKAGE"
+			su - root -c "yum -y install $PACKAGE"
+		else
+			su - root -c "yum install $PACKAGE"
 		fi
-		su - root -c "yum install $PACKAGE"
 
     elif [ -f /etc/SuSE-release ]; then
     	if [ "$FORCE_INSTALL" == "true" ]; then

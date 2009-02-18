@@ -30,3 +30,11 @@ svn update . | logger
 cd /etc/puppet
 svn update .
 cd $CUR
+
+# restart the puppetmasterd, we experienced that it is not robust refreshing its config
+/etc/init.d/puppetmaster stop
+# be sure it is stopped
+kill `ps ax | grep puppetmaster | grep -v grep | awk {' print $1 '}` 2>/dev/null
+sleep 2
+kill -9 `ps ax | grep puppetmaster | grep -v grep | awk {' print $1 '}` 2>/dev/null
+screen -dmS puppetmasterd /usr/sbin/puppetmasterd -v -d -l syslog

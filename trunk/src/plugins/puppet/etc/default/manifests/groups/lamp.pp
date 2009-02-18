@@ -3,7 +3,7 @@
 class lamp {
 	include server
 	include apache-server
-	include php::five
+	include php
 	include mysql-server
 }
 

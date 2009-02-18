@@ -11,7 +11,16 @@ class osupdate {
 				refreshonly => true,
 			}
 		}
-
+		CentOS: {
+			exec { "/usr/bin/yum -y update":
+				refreshonly => true,
+			}
+		}
+		Fedora: {
+			exec { "/usr/bin/yum -y update":
+				refreshonly => true,
+			}
+		}
 
 
 
