@@ -36,7 +36,6 @@ function openqrm_plugin_cloud_uninstall() {
 	# removing the cloud tables
 	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/cloud/cloud-action.php?cloud_command=uninstall"; then
 		cloud_manager_log uninstall "ERROR: Could not drop the cloud-plugin tables in the database!"
-		exit 1
 	fi
 	# remove netconf dir
 	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf
