@@ -106,6 +106,7 @@ $event = new event();
 						$event->log("plugin_monitor_hook", $_SERVER['REQUEST_TIME'], 5, "resource-monitor.php", "Found plugin $plugin_name handling monitor event.", "", "", 0, 0, $resource_id);
 						require_once "$plugin_monitor_hook";
 						$monitor_function="openqrm_"."$plugin_name"."_monitor";
+						$monitor_function=str_replace("-", "_", $monitor_function);
 						$monitor_function();
 					}
 				}
