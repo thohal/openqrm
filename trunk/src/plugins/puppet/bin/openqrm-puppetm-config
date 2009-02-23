@@ -28,13 +28,27 @@ svn update . | logger
 
 # here it updates the puppet configuration from the svn repo
 cd /etc/puppet
-svn update .
+CURRENT_REVISION=`svn up . | grep revision | awk {' print $3 '}`
 cd $CUR
 
-# restart the puppetmasterd, we experienced that it is not robust refreshing its config
-/etc/init.d/puppetmaster stop
-# be sure it is stopped
-kill `ps ax | grep puppetmaster | grep -v grep | awk {' print $1 '}` 2>/dev/null
-sleep 2
-kill -9 `ps ax | grep puppetmaster | grep -v grep | awk {' print $1 '}` 2>/dev/null
-screen -dmS puppetmasterd /usr/sbin/puppetmasterd -v -d -l syslog
+# check if we need to reload the puppetmaster
+if [ ! -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet-svn-version ]; then
+	LAST_REVISION=0
+else
+	LAST_REVISION=`cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet-svn-version`
+fi
+
+if [ "$CURRENT_REVISION" == "$LAST_REVISION" ]; then
+	echo "No changes in puppet-config repo" | logger
+else
+	# restart the puppetmasterd, we experienced that it is not robust refreshing its config
+	/etc/init.d/puppetmaster stop
+	# be sure it is stopped
+	kill `ps ax | grep puppetmaster | grep -v grep | awk {' print $1 '}` 2>/dev/null
+	sleep 2
+	kill -9 `ps ax | grep puppetmaster | grep -v grep | awk {' print $1 '}` 2>/dev/null
+	rm -f /var/run/puppet/puppetmasterd.pid
+	screen -dmS puppetmasterd /usr/sbin/puppetmasterd -v -d -l syslog
+	# update the revision file
+	echo "$CURRENT_REVISION" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet-svn-version
+fi
