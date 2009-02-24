@@ -256,10 +256,18 @@ function nfs_storage_display($nfs_storage_id) {
 				if (strstr($real_image_name, '<')) {
 					$firstws = strpos($real_image_name, '<');
 					$real_image_name = substr($real_image_name, 0, $firstws);
-				} else if (strstr($real_image_name, '(')) {
+				} 
+				if (strstr($real_image_name, '(')) {
 					$firstws = strpos($real_image_name, '(');
 					$real_image_name = substr($real_image_name, 0, $firstws);
 				}
+
+				$real_image_name = urlencode($real_image_name);
+				if (strstr($real_image_name, '%09')) {
+					$firstws = strpos($real_image_name, '%09');
+					$real_image_name = substr($real_image_name, 0, $firstws);
+				}
+
 				$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
 				$disp = $disp.$nfs;
 				$disp = $disp."</div>";
