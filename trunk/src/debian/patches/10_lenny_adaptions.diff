@@ -1,9 +1,11 @@
---- a/etc/openqrm-server.conf
-+++ b/etc/openqrm-server.conf
+Use proper package name on lenny
+
+--- a/etc/openqrm-server.conf	2009-02-24 03:34:59.000000000 +0100
++++ b/etc/openqrm-server.conf	2009-02-24 03:59:52.000000000 +0100
 @@ -80,7 +80,7 @@
  
  if [ -f /etc/debian_version ]; then
- 	OPENQRM_SERVER_DEPENDENCIES="apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client-5.0, syslinux"
+ 	OPENQRM_SERVER_DEPENDENCIES="apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client-5.0, syslinux, screen"
 -	OPENQRM_SERVER_BUILD_REQUIREMENTS="make, gcc, pciutils-dev, portmap, rsync, zlib1g-dev, wget, tar, bzip2"
 +	OPENQRM_SERVER_BUILD_REQUIREMENTS="make, gcc, libpci-dev, portmap, rsync, zlib1g-dev, wget, tar, bzip2"
  	OPENQRM_WEBSERVER_DOCUMENT_ROOT=/var/www
