@@ -222,7 +222,7 @@ function xen_display($appliance_id) {
 				$xen_name = trim($xen_name);
 				// skip Name and dom0 entry
 				$loop++;
-				if ($loop > 1 && strcmp($xen_name, "Dom0") {
+				if ($loop > 1 && strcmp($xen_name, "Dom0")) {
 					$active_vms[] = "$xen_name";
 					// check if on- or offline
 					if (strstr($xen, "---")) {
