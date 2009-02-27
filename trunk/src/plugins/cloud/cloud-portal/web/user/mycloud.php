@@ -241,12 +241,16 @@ if (htmlobject_request('action') != '') {
 		case 'create_request':
 			$request_user = new clouduser();
 			$request_user->get_instance_by_name("$auth_user");
-			if ($request_user->ccunits < 1) {
-				$strMsg .="You do not have any CloudComputing-Units left! Please buy some CC-Units before submitting a request.";
-				redirect($strMsg);
-				exit(0);
+			// check if billing is enabled
+			$cb_config = new cloudconfig();
+			$cloud_billing_enabled = $cb_config->get_value(16);	// 16 is cloud_billing_enabled
+			if ($cloud_billing_enabled == 'true') {
+				if ($request_user->ccunits < 1) {
+					$strMsg .="You do not have any CloudComputing-Units left! Please buy some CC-Units before submitting a request.";
+					redirect($strMsg);
+					exit(0);
+				}
 			}
-
 			// set user id
 			$request_user_id = $request_user->id;
 			$request_fields['cr_cu_id'] = $request_user_id;

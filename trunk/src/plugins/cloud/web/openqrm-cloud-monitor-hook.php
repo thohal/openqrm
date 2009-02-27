@@ -319,7 +319,7 @@ function openqrm_cloud_monitor() {
 				}
 				$users_appliance_count++;
 			}
-			$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "User $cr_cu_id has already $users_appliance_count appliance(s) running.", "", "", 0, 0, 0);
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "User $cr_cu_id has already $users_appliance_count appliance(s) running.", "", "", 0, 0, 0);
 
 			$cc_max_app = new cloudconfig();
 			$max_apps_per_user = $cc_max_app->get_value(13);  // 13 is max_apps_per_user
@@ -932,39 +932,46 @@ function openqrm_cloud_monitor() {
 
 		if ($cr_status == 3) {
 
-			$one_hour = 3600;
-
-			$now=$_SERVER['REQUEST_TIME'];
-			$cu_id = $cr->cu_id;
-			$cu = new clouduser();
-			$cu->get_instance_by_id($cu_id);
-			$cu_ccunits = $cu->ccunits;
-			// in case the user has no ccunits any more we set the status to deprovision
-			if ($cu_ccunits <= 0) {
-				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "User $cu->name does not have any CC-Untis left for request ID $cr_id, deprovisioning.", "", "", 0, 0, 0);
-				$cr->setstatus($cr_id, "deprovsion");
-				continue;
-			}
-
-			$cr_lastbill = $cr->lastbill;
-			if (!strlen($cr_lastbill)) {
-				// we set the last-bill time to now and bill
-				$cr->set_requests_lastbill($cr_id, $now);
-				$cr_costs = $cr->get_cost();
-				$cu_ccunits = $cu_ccunits-$cr_costs;
-				$cu->set_users_ccunits($cu_id, $cu_ccunits);
-				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Billing (first hour) user $cu->name for request ID $cr_id", "", "", 0, 0, 0);
+			$cb_config = new cloudconfig();
+			$cloud_billing_enabled = $cb_config->get_value(16);	// 16 is cloud_billing_enabled
+			if ($cloud_billing_enabled != 'true') {
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Cloud-billing is disabled. Not charging User $cu->name for request ID $cr_id", "", "", 0, 0, 0);
 			} else {
-				// we check if we need to bill according the last-bill var
-				$active_cr_time = $now - $cr_lastbill;
-				if ($active_cr_time >= $one_hour) {
-					// set lastbill to now
+	
+				$one_hour = 3600;
+	
+				$now=$_SERVER['REQUEST_TIME'];
+				$cu_id = $cr->cu_id;
+				$cu = new clouduser();
+				$cu->get_instance_by_id($cu_id);
+				$cu_ccunits = $cu->ccunits;
+				// in case the user has no ccunits any more we set the status to deprovision
+				if ($cu_ccunits <= 0) {
+					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "User $cu->name does not have any CC-Untis left for request ID $cr_id, deprovisioning.", "", "", 0, 0, 0);
+					$cr->setstatus($cr_id, "deprovsion");
+					continue;
+				}
+	
+				$cr_lastbill = $cr->lastbill;
+				if (!strlen($cr_lastbill)) {
+					// we set the last-bill time to now and bill
 					$cr->set_requests_lastbill($cr_id, $now);
-					// bill for an hour
 					$cr_costs = $cr->get_cost();
 					$cu_ccunits = $cu_ccunits-$cr_costs;
 					$cu->set_users_ccunits($cu_id, $cu_ccunits);
-					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Billing (an hour) user $cu->name for request ID $cr_id", "", "", 0, 0, 0);
+					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Billing (first hour) user $cu->name for request ID $cr_id", "", "", 0, 0, 0);
+				} else {
+					// we check if we need to bill according the last-bill var
+					$active_cr_time = $now - $cr_lastbill;
+					if ($active_cr_time >= $one_hour) {
+						// set lastbill to now
+						$cr->set_requests_lastbill($cr_id, $now);
+						// bill for an hour
+						$cr_costs = $cr->get_cost();
+						$cu_ccunits = $cu_ccunits-$cr_costs;
+						$cu->set_users_ccunits($cu_id, $cu_ccunits);
+						$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Billing (an hour) user $cu->name for request ID $cr_id", "", "", 0, 0, 0);
+					}
 				}
 			}
 		}

@@ -234,6 +234,8 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($create_default_cloud_config14);
 			$create_default_cloud_config15 = "insert into cloud_config(cc_id, cc_key, cc_value) values (15, 'cloud_enabled', 'true')";
 			$recordSet = &$db->Execute($create_default_cloud_config15);
+			$create_default_cloud_config16 = "insert into cloud_config(cc_id, cc_key, cc_value) values (16, 'cloud_billing_enabled', 'true')";
+			$recordSet = &$db->Execute($create_default_cloud_config16);
 
 		    $db->Close();
 			break;
@@ -307,11 +309,16 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$cr_cu_id = $request_fields['cr_cu_id'];
 			$cl_user = new clouduser();
 			$cl_user->get_instance_by_id($cr_cu_id);
-			if ($cl_user->ccunits < 1) {
-				echo "User does not have any ccunits ! Not adding the request<br>";
-				flush();
-				sleep(2);
-				break;
+			// check if billing is enabled
+			$cb_config = new cloudconfig();
+			$cloud_billing_enabled = $cb_config->get_value(16);	// 16 is cloud_billing_enabled
+			if ($cloud_billing_enabled == 'true') {
+				if ($cl_user->ccunits < 1) {
+					echo "User does not have any ccunits ! Not adding the request<br>";
+					flush();
+					sleep(2);
+					break;
+				}
 			}
 			// parse start date
 			$startt = $request_fields['cr_start'];
