@@ -1,5 +1,6 @@
 <?php
 
+$thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/include/openqrm-database-functions.php";
@@ -18,45 +19,100 @@ $surl = "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/cloud.wdsl";
 ini_set("soap.wsdl_cache_enabled", "0");
 
 // create the soap-client
-$client = new SoapClient($surl, array('soap_version' => SOAP_1_2,'trace' => 1, 'login'=> $openqrm_user, 'password' => $openqrm_password ));
+$client = new SoapClient($surl, array('soap_version' => SOAP_1_2, 'trace' => 1, 'login'=> $openqrm_user, 'password' => $openqrm_password ));
 
-echo "<h2>Examples for the openQRM SOAP-Service</h2>";
+// ######################### actions start ###############################
 
-// ######################### kernel methods examples ###############################
+$action = $_REQUEST['action'];
+// gather user parameter in array
+foreach ($_REQUEST as $key => $value) {
+	if (strncmp($key, "cr_", 3) == 0) {
+		$request_fields[$key] = $value;
+	}
+}
+switch ($action) {
 
-// make a select-box including all kernels
+	// ######################### cloud Provisioning example #################################
+	case 'provision':
 
+		$provision_parameters = $request_fields['cr_user'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",0,0,0,1,1,5,0,1,";
+		echo "provision params : $provision_parameters <br>";
+		$res = $client->CloudProvision($provision_parameters);
+		echo "provision : $res <br>";
+		break;
+
+	// ######################### cloud De-Provisioning example #################################
+	case 'deprovision':
+		// $res = $client->CloudDeProvision("1");
+		echo "deprovision : $res <br>";
+		break;
+
+}
+
+
+
+
+
+// ######################### actions end ###############################
+
+echo "<h2>Example for the openQRM SOAP-Service</h2>";
+
+// ######################### form provision start ###############################
+
+echo "<form action=$thisfile method=post>";
+
+// ######################### Cloud method example ###############################
+
+// a select-box including all cloud users
+$cloud_user_list = $client->CloudUserGetList();
+echo '<p>Users <select name="cr_user" size="1">';
+foreach($cloud_user_list as $cloud_user) {
+	echo "<option value=\"$cloud_user\">$cloud_user</option>";
+}
+echo '</select></p>';
+
+
+// ######################### kernel method examples ###############################
+
+// a select-box including all kernels
 $kernel_list = $client->KernelGetList();
-echo '<form><p>Kernels <select name="kernel" size="1">';
+echo '<p>Kernels <select name="cr_kernel" size="1">';
 foreach($kernel_list as $kernel) {
 	echo "<option value=\"$kernel\">$kernel</option>";
 }
-echo '</select></p></form>';
+echo '</select></p>';
 
 
-// ######################### image methods examples ###############################
+// ######################### image method examples ###############################
 
-// make a select-box including all images
-
+// a select-box including all images
 $image_list = $client->ImageGetList();
-echo '<form><p>Images <select name="image" size="1">';
+echo '<p>Images <select name="cr_image" size="1">';
 foreach($image_list as $image) {
 	echo "<option value=\"$image\">$image</option>";
 }
-echo '</select></p></form>';
+echo '</select></p>';
 
 
-// ######################### cloud methods examples #################################
 
 
-// provision("$username, $kernel_id, $image_id, $ram_req, $cpu_req, $disk_req, $network_req, $resource_quantity, $resource_type_req, $ha_req, $shared_req, $puppet_groups")
+// ######################### form provision end ###############################
+echo "<input type=hidden name='action' value='provision'>";
+echo "<input type=submit value='Deploy'>";
+echo "</form>";
+// ######################### form de-provision start ###############################
+echo "<form action=$thisfile method=post>";
 
-// $res = $client->CloudProvision("matt, 1, 2, 0, 0, 0, 1, 1, 5, 0, 1, ");
-// echo "provision : $res <br>";
+// ######################### Cloud method example ###############################
 
-// $res = $client->deprovision("testinput");
-// echo "deprovision : $res <br>";
+// get a list of all requests
 
 
+
+
+// ######################### form de-provision end ###############################
+echo "<input type=hidden name='action' value='deprovision'>";
+echo "<input type=submit value='Un-Deploy'>";
+echo "</form>";
 
 ?>

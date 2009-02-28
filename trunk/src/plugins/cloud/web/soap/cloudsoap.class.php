@@ -17,6 +17,7 @@ require_once "$RootDir/class/deployment.class.php";
 
 // special cloud classes
 require_once "$RootDir/plugins/cloud/class/clouduser.class.php";
+require_once "$RootDir/plugins/cloud/class/clouduserslimits.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudrequest.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
@@ -41,30 +42,17 @@ class cloudsoap {
 	var $id = '';
 	var $username = '';
 
-	var $limit_resource = '';
-	var $limit_disk = '';
-	var $limit_memory = '';
-	var $limit_cpu = '';
-
-
-	function getMac(){
-		$event = new event();
-		$event->log("getMirror", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Processing Cloud-soap-server request", "", "", 0, 0, 0);
-		$resource = new resource();
-		$resource->generate_mac();
-		$mac = $resource->mac;
-		return ($mac);
-	}
-
 
 // ######################### cloud methods ###########################################
 
+
+	// method to provision a cloud request
 	function CloudProvision($method_parameters) {
 
 		$parameter_array = explode(',', $method_parameters);
 		$username = $parameter_array[0];
-		$kernel_id = $parameter_array[1];
-		$image_id = $parameter_array[2];
+		$kernel_name = $parameter_array[1];
+		$image_name = $parameter_array[2];
 		$ram_req = $parameter_array[3];
 		$cpu_req = $parameter_array[4];
 		$disk_req = $parameter_array[5];
@@ -89,8 +77,6 @@ class cloudsoap {
 		$request_fields['cr_stop'] = "1999999999";
 		// fill the rest of the array
 		$request_fields['cr_lastbill'] = '';
-		$request_fields['cr_kernel_id'] = $kernel_id;
-		$request_fields['cr_image_id'] = $image_id;
 		$request_fields['cr_resource_quantity'] = $resource_quantity;
 		$request_fields['cr_resource_quantity'] = $resource_quantity;
 		$request_fields['cr_resource_type_req'] = $resource_type_req;
@@ -100,26 +86,53 @@ class cloudsoap {
 		$request_fields['cr_ram_req'] = $ram_req;
 		$request_fields['cr_cpu_req'] = $cpu_req;
 		$request_fields['cr_disk_req'] = $disk_req;
+		// translate kernel- and image-name to their ids
+		$kernel = new kernel();
+		$kernel->get_instance_by_name($kernel_name);
+		$kernel_id = $kernel->id;
+		$image = new image();
+		$image->get_instance_by_name($image_name);
+		$image_id = $image->id;
+		$request_fields['cr_kernel_id'] = $kernel_id;
+		$request_fields['cr_image_id'] = $image_id;
+
+		$event->log("cloudsoap->provision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", " !! got kernelname $kernel_name id $kernel_id and imagename $image_name id $image_id", "", "", 0, 0, 0);
+
 
 		// get next free id
 		$request_fields['cr_id'] = openqrm_db_get_free_id('cr_id', $CLOUD_REQUEST_TABLE);
-
 		// add request
 		$cr_request = new cloudrequest();
 		$cr_request->add($request_fields);
-
 		return "success";
 	}
 
 
-	function deprovision() {
+	// method to deprovision a cloud request
+	function CloudDeProvision($method_parameters) {
 		$event = new event();
-		$event->log("cloudsoap->deprovision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "De-provisioning appliance in the openQRM Cloud", "", "", 0, 0, 0);
+		$parameter_array = explode(',', $method_parameters);
+		$cr_id = $parameter_array[0];
+		// set request to deprovision
+		$cr_request = new cloudrequest();
+		$cr_request->setstatus($cr_id, "deprovsion");
+		$event->log("cloudsoap->deprovision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "De-provisioning Cloud request $cr_id", "", "", 0, 0, 0);
 		return "success";
 	}
 
 
-
+	// method providing a list of cloud users
+	function CloudUserGetList() {
+		$event = new event();
+		$event->log("cloudsoap->CloudUserGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available Cloud Users", "", "", 0, 0, 0);
+		$clouduser = new clouduser();
+		$clouduser_list = $clouduser->get_list();
+		$clouduser_name_list = array();
+		foreach($clouduser_list as $cloudusers) {
+			$clouduser_name_list[] = $cloudusers['label'];
+		}
+		return $clouduser_name_list;		
+	}
 
 
 

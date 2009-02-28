@@ -5,13 +5,6 @@
   xmlns:soap='http://schemas.xmlsoap.org/wsdl/soap/' 
   xmlns='http://schemas.xmlsoap.org/wsdl/'> 
 
-<message name='getMacRequest'> 
-  <part name='symbol' type='xsd:string'/> 
-</message> 
-<message name='getMacResponse'> 
-  <part name='Result' type='xsd:string'/> 
-</message> 
-
 <message name='CloudProvisionRequest'> 
   <part name='symbol' type='xsd:string'/> 
 </message> 
@@ -19,10 +12,17 @@
   <part name='Result' type='xsd:string'/> 
 </message> 
 
-<message name='deprovisionRequest'> 
+<message name='CloudDeProvisionRequest'> 
   <part name='symbol' type='xsd:string'/> 
 </message> 
-<message name='deprovisionResponse'> 
+<message name='CloudDeProvisionResponse'> 
+  <part name='Result' type='xsd:string'/> 
+</message> 
+
+<message name='CloudUserGetListRequest'> 
+  <part name='symbol' type='xsd:string'/> 
+</message> 
+<message name='CloudUserGetListResponse'> 
   <part name='Result' type='xsd:string'/> 
 </message> 
 
@@ -43,19 +43,20 @@
 
 
 <portType name='CloudPortType'> 
-  <operation name='getMac'>
-    <input message='tns:getMacRequest'/> 
-    <output message='tns:getMacResponse'/>   
-  </operation>    
 
   <operation name='CloudProvision'>
     <input message='tns:CloudProvisionRequest'/> 
     <output message='tns:CloudProvisionResponse'/>   
   </operation>    
 
-  <operation name='deprovision'>
-    <input message='tns:deprovisionRequest'/> 
-    <output message='tns:deprovisionResponse'/>   
+  <operation name='CloudDeProvision'>
+    <input message='tns:CloudDeProvisionRequest'/> 
+    <output message='tns:CloudDeProvisionResponse'/>   
+  </operation>    
+
+  <operation name='CloudUserGetList'>
+    <input message='tns:CloudUserGetListRequest'/> 
+    <output message='tns:CloudUserGetListResponse'/>   
   </operation>    
 
   <operation name='KernelGetList'>
@@ -77,18 +78,6 @@
   <soap:binding style='rpc' 
     transport='http://schemas.xmlsoap.org/soap/http'/> 
 
-  <operation name='getMac'> 
-    <soap:operation soapAction='urn:localhost-cloud#getMac'/> 
-    <input> 
-      <soap:body use='encoded' namespace='urn:localhost-cloud' 
-        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
-    </input> 
-    <output> 
-      <soap:body use='encoded' namespace='urn:localhost-cloud' 
-        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
-    </output> 
-  </operation>       
-
   <operation name='CloudProvision'> 
     <soap:operation soapAction='urn:localhost-cloud#CloudProvision'/> 
     <input> 
@@ -101,8 +90,20 @@
     </output> 
   </operation>       
 
-  <operation name='deprovision'> 
-    <soap:operation soapAction='urn:localhost-cloud#deprovision'/> 
+  <operation name='CloudDeProvision'> 
+    <soap:operation soapAction='urn:localhost-cloud#CloudDeProvision'/> 
+    <input> 
+      <soap:body use='encoded' namespace='urn:localhost-cloud' 
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
+    </input> 
+    <output> 
+      <soap:body use='encoded' namespace='urn:localhost-cloud' 
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
+    </output> 
+  </operation>       
+
+  <operation name='CloudUserGetList'> 
+    <soap:operation soapAction='urn:localhost-cloud#CloudUserGetList'/> 
     <input> 
       <soap:body use='encoded' namespace='urn:localhost-cloud' 
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
