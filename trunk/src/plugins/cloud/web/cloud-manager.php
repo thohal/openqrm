@@ -685,6 +685,9 @@ if(htmlobject_request('action') != '') {
 			$output[] = array('label' => 'Cloud Manager', 'value' => cloud_manager());
 			break;
 
+		default:
+			$output[] = array('label' => 'Cloud Manager', 'value' => cloud_manager());
+			break;
 	}
 
 } else {
