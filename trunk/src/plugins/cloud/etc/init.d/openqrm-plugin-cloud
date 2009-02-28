@@ -7,6 +7,8 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/include/openqrm-plugin-cloud-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/openqrm-plugin-cloud.conf
+openqrm_server_get_config
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 
 function openqrm_plugin_cloud_start() {
 	echo "Starting the openQRM cloud-plugin"
@@ -37,6 +39,9 @@ function openqrm_plugin_cloud_uninstall() {
 	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/cloud/cloud-action.php?cloud_command=uninstall"; then
 		cloud_manager_log uninstall "ERROR: Could not drop the cloud-plugin tables in the database!"
 	fi
+	# remove boot-service + soap-service
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-cloud.tgz
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/cloud.wdsl
 	# remove netconf dir
 	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf
 	# remove auth files
@@ -76,14 +81,16 @@ function openqrm_plugin_cloud_init() {
 	echo "Initializing the openQRM cloud-plugin"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/cloud
-	# link the boot-service
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/boot-service-cloud.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-cloud.tgz
-	
 	# creating the tables
 	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/cloud/cloud-action.php?cloud_command=init"; then
 		cloud_manager_log init "ERROR: Could not create the cloud-plugin tables in the database!"
 		exit 1
 	fi
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/boot-service-cloud.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-cloud.tgz
+	# setup the wdsl definition
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/soap/cloud.wdsl	| \
+		sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$OPENQRM_SERVER_IP_ADDRESS/g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/cloud.wdsl
 
 	# link the web portal to the documentroot
 	# create the virtualhost + auth for the cloud web portal

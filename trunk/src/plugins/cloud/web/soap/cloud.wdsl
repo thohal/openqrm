@@ -1,0 +1,150 @@
+<?xml version ='1.0' encoding ='UTF-8' ?>
+<definitions name='Cloud' 
+  targetNamespace='http://@@OPENQRM_SERVER_IP_ADDRESS@@/openqrm/boot-service/cloud.wdsl' 
+  xmlns:tns='http://@@OPENQRM_SERVER_IP_ADDRESS@@/openqrm/boot-service/cloud.wdsl' 
+  xmlns:soap='http://schemas.xmlsoap.org/wsdl/soap/' 
+  xmlns='http://schemas.xmlsoap.org/wsdl/'> 
+
+<message name='getMacRequest'> 
+  <part name='symbol' type='xsd:string'/> 
+</message> 
+<message name='getMacResponse'> 
+  <part name='Result' type='xsd:string'/> 
+</message> 
+
+<message name='CloudProvisionRequest'> 
+  <part name='symbol' type='xsd:string'/> 
+</message> 
+<message name='CloudProvisionResponse'> 
+  <part name='Result' type='xsd:string'/> 
+</message> 
+
+<message name='deprovisionRequest'> 
+  <part name='symbol' type='xsd:string'/> 
+</message> 
+<message name='deprovisionResponse'> 
+  <part name='Result' type='xsd:string'/> 
+</message> 
+
+<message name='KernelGetListRequest'> 
+  <part name='Result' type='xsd:string'/> 
+</message> 
+<message name='KernelGetListResponse'> 
+  <part name='Result' type='xsd:string'/> 
+</message> 
+
+<message name='ImageGetListRequest'> 
+  <part name='Result' type='xsd:string'/> 
+</message> 
+<message name='ImageGetListResponse'> 
+  <part name='Result' type='xsd:string'/> 
+</message> 
+
+
+
+<portType name='CloudPortType'> 
+  <operation name='getMac'>
+    <input message='tns:getMacRequest'/> 
+    <output message='tns:getMacResponse'/>   
+  </operation>    
+
+  <operation name='CloudProvision'>
+    <input message='tns:CloudProvisionRequest'/> 
+    <output message='tns:CloudProvisionResponse'/>   
+  </operation>    
+
+  <operation name='deprovision'>
+    <input message='tns:deprovisionRequest'/> 
+    <output message='tns:deprovisionResponse'/>   
+  </operation>    
+
+  <operation name='KernelGetList'>
+    <input message='tns:KernelGetListRequest'/> 
+    <output message='tns:KernelGetListResponse'/>   
+  </operation>    
+
+  <operation name='ImageGetList'>
+    <input message='tns:ImageGetListRequest'/> 
+    <output message='tns:ImageGetListResponse'/>   
+  </operation>    
+
+</portType> 
+
+
+
+
+<binding name='CloudBinding' type='tns:CloudPortType'> 
+  <soap:binding style='rpc' 
+    transport='http://schemas.xmlsoap.org/soap/http'/> 
+
+  <operation name='getMac'> 
+    <soap:operation soapAction='urn:localhost-cloud#getMac'/> 
+    <input> 
+      <soap:body use='encoded' namespace='urn:localhost-cloud' 
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
+    </input> 
+    <output> 
+      <soap:body use='encoded' namespace='urn:localhost-cloud' 
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
+    </output> 
+  </operation>       
+
+  <operation name='CloudProvision'> 
+    <soap:operation soapAction='urn:localhost-cloud#CloudProvision'/> 
+    <input> 
+      <soap:body use='encoded' namespace='urn:localhost-cloud' 
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
+    </input> 
+    <output> 
+      <soap:body use='encoded' namespace='urn:localhost-cloud' 
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
+    </output> 
+  </operation>       
+
+  <operation name='deprovision'> 
+    <soap:operation soapAction='urn:localhost-cloud#deprovision'/> 
+    <input> 
+      <soap:body use='encoded' namespace='urn:localhost-cloud' 
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
+    </input> 
+    <output> 
+      <soap:body use='encoded' namespace='urn:localhost-cloud' 
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
+    </output> 
+  </operation>       
+
+  <operation name='KernelGetList'> 
+    <soap:operation soapAction='urn:localhost-cloud#KernelGetList'/> 
+    <input> 
+      <soap:body use='encoded' namespace='urn:localhost-cloud' 
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
+    </input> 
+    <output> 
+      <soap:body use='encoded' namespace='urn:localhost-cloud' 
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
+    </output> 
+  </operation>       
+
+  <operation name='ImageGetList'> 
+    <soap:operation soapAction='urn:localhost-cloud#ImageGetList'/> 
+    <input> 
+      <soap:body use='encoded' namespace='urn:localhost-cloud' 
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
+    </input> 
+    <output> 
+      <soap:body use='encoded' namespace='urn:localhost-cloud' 
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
+    </output> 
+  </operation>       
+
+
+
+
+</binding> 
+
+<service name='CloudService'> 
+  <port name='CloudPort' binding='CloudBinding'> 
+    <soap:address location='http://@@OPENQRM_SERVER_IP_ADDRESS@@/openqrm/base/plugins/cloud/soap/cloud-soap-server.php'/> 
+  </port> 
+</service>
+</definitions> 
