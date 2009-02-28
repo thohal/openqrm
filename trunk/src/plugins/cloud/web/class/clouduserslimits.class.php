@@ -162,6 +162,27 @@ class clouduserlimits {
 	}
 	
 
+	// updates clouduserlimits for a cloud user
+	function update($cl_id, $cl_fields) {
+		global $CLOUD_USER_LIMITS_TABLE;
+		global $event;
+		if ($cl_id < 0 || ! is_array($cl_fields)) {
+			$this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "clouduserslimits.class.php", "Unable to update Cloud User limits $cl_id", "", "", 0, 0, 0);
+			return 1;
+		}
+		$db=openqrm_get_db_connection();
+		unset($cl_fields["cl_id"]);
+		$result = $db->AutoExecute($this->_db_table, $cl_fields, 'UPDATE', "cl_id = $cl_id");
+
+			$this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "clouduserslimits.class.php", "!!! updating $this->_db_table", "", "", 0, 0, 0);
+
+
+		if (! $result) {
+			$this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "clouduserslimits.class.php", "Failed updating Cloud User limits $cl_id", "", "", 0, 0, 0);
+		}
+	}
+
+
 	
 	
 	// returns the number of clouduserlimitss for an clouduserlimits type
