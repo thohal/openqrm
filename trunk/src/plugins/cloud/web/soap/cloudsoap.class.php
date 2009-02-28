@@ -192,10 +192,23 @@ class cloudsoap {
 		$virtualization = new virtualization();
 		$virtualization_list = $virtualization->get_list();
 		$virtualization_name_list = array();
+		$virtualization_return_list = array();
 		foreach($virtualization_list as $virtualizations) {
 			$virtualization_name_list[] = $virtualizations['label'];
 		}
-		return $virtualization_name_list;		
+		// check if to show physical system type
+		$cc_conf = new cloudconfig();
+		$cc_request_physical_systems = $cc_conf->get_value(4);	// request_physical_systems
+		if (!strcmp($cc_request_physical_systems, "false")) {
+			array_shift($virtualization_name_list);
+		}
+		// filter out the virtualization hosts
+		foreach ($virtualization_name_list as $virt) {
+			if (!strstr($virt, "Host")) {
+				$virtualization_return_list[] = $virt;
+			}
+		}
+		return $virtualization_return_list;		
 	}
 
 
