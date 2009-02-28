@@ -672,21 +672,17 @@ $output = array();
 
 if(htmlobject_request('action') != '') {
 	// display by default
-	$output[] = array('label' => 'Cloud Manager', 'value' => cloud_manager());
 	switch (htmlobject_request('action')) {
 		case 'create':
+			$output[] = array('label' => 'Cloud Manager', 'value' => cloud_manager());
 			$output[] = array('label' => 'Create Cloud Request', 'value' => cloud_create_request());
 			break;
 
 		case 'details':
 			foreach($_REQUEST['identifier'] as $id) {
-				$cr_request = new cloudrequest();
-				$cr_request->get_instance_by_id($id);
-
 				$output[] = array('label' => 'Request details', 'value' => cloud_request_details($id));
-
-
 			}
+			$output[] = array('label' => 'Cloud Manager', 'value' => cloud_manager());
 			break;
 
 	}
