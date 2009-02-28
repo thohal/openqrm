@@ -35,7 +35,7 @@ switch ($action) {
 	// ######################### cloud Provisioning example #################################
 	case 'provision':
 
-		$provision_parameters = $request_fields['cr_user'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",0,0,0,1,1,".$request_fields['cr_virtualization'].",0,1,";
+		$provision_parameters = $request_fields['cr_user'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",0,0,0,1,1,".$request_fields['cr_virtualization'].",0,1,".$request_fields['cr_puppet'];
 		echo "provision params : $provision_parameters <br>";
 		$res = $client->CloudProvision($provision_parameters);
 		echo "provision : $res <br>";
@@ -102,6 +102,16 @@ $virtualization_list = $client->VirtualizationGetList();
 echo ' Type <select name="cr_virtualization" size="1">';
 foreach($virtualization_list as $virtualization) {
 	echo "<option value=\"$virtualization\">$virtualization</option>";
+}
+echo '</select>';
+
+// ######################### puppet method examples ###############################
+
+// a select-box including all available puppet groups
+$puppet_list = $client->PuppetGetList();
+echo ' Puppet <select name="cr_puppet" size="1">';
+foreach($puppet_list as $puppet) {
+	echo "<option value=\"$puppet\">$puppet</option>";
 }
 echo '</select>';
 

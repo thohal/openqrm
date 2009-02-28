@@ -1,6 +1,6 @@
 <?php
 
-
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/include/openqrm-database-functions.php";
@@ -26,6 +26,12 @@ require_once "$RootDir/plugins/cloud/class/cloudiptables.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudvm.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
+
+// only if puppet is available
+if (file_exists("$RootDir/plugins/puppet/class/puppet.class.php")) {
+	require_once "$RootDir/plugins/puppet/class/puppet.class.php";
+}
+
 
 global $CLOUD_REQUEST_TABLE;
 global $event;
@@ -86,6 +92,7 @@ class cloudsoap {
 		$request_fields['cr_ram_req'] = $ram_req;
 		$request_fields['cr_cpu_req'] = $cpu_req;
 		$request_fields['cr_disk_req'] = $disk_req;
+		$request_fields['cr_puppet_groups'] = $puppet_groups;
 		// translate kernel- and image-name to their ids
 		$kernel = new kernel();
 		$kernel->get_instance_by_name($kernel_name);
@@ -199,6 +206,23 @@ class cloudsoap {
 
 
 // ######################### puppet methods ###########################################
+
+
+	function PuppetGetList() {
+		global $event;
+		$event->log("cloudsoap->PuppetGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available Puppet groups", "", "", 0, 0, 0);
+		$puppet = new puppet();
+		$puppet_list = $puppet->get_available_groups();
+		$puppet_name_list = array();
+		foreach($puppet_list as $puppet) {
+			$puppet_name_list[] = $puppet;
+		}
+		return $puppet_name_list;		
+	}
+
+
+
+// ###################################################################################
 
 
 
