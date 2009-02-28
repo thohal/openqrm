@@ -58,7 +58,7 @@ class cloudsoap {
 		$disk_req = $parameter_array[5];
 		$network_req = $parameter_array[6];
 		$resource_quantity = $parameter_array[7];
-		$resource_type_req = $parameter_array[8];
+		$virtualization_name = $parameter_array[8];
 		$ha_req = $parameter_array[9];
 		$shared_req = $parameter_array[10];
 		$puppet_groups = $parameter_array[11];
@@ -95,9 +95,11 @@ class cloudsoap {
 		$image_id = $image->id;
 		$request_fields['cr_kernel_id'] = $kernel_id;
 		$request_fields['cr_image_id'] = $image_id;
-
-		$event->log("cloudsoap->provision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", " !! got kernelname $kernel_name id $kernel_id and imagename $image_name id $image_id", "", "", 0, 0, 0);
-
+		// translate the virtualization type
+		$virtualization = new virtualization();
+		$virtualization->get_instance_by_name($virtualization_name);
+		$virtualization_id = $virtualization->id;
+		$request_fields['cr_resource_type_req'] = $virtualization_id;
 
 		// get next free id
 		$request_fields['cr_id'] = openqrm_db_get_free_id('cr_id', $CLOUD_REQUEST_TABLE);
@@ -175,6 +177,20 @@ class cloudsoap {
 
 // ######################### appliance methods ###########################################
 
+// ######################### virtualization methods ###########################################
+
+	function VirtualizationGetList() {
+		global $event;
+		$event->log("cloudsoap->ImageGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available virtualizations", "", "", 0, 0, 0);
+		$virtualization = new virtualization();
+		$virtualization_list = $virtualization->get_list();
+		$virtualization_name_list = array();
+		foreach($virtualization_list as $virtualizations) {
+			$virtualization_name_list[] = $virtualizations['label'];
+		}
+		return $virtualization_name_list;		
+	}
+
 
 // ######################### resource methods ###########################################
 
@@ -182,6 +198,7 @@ class cloudsoap {
 // ######################### storage methods ###########################################
 
 
+// ######################### puppet methods ###########################################
 
 
 

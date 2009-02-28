@@ -35,7 +35,7 @@ switch ($action) {
 	// ######################### cloud Provisioning example #################################
 	case 'provision':
 
-		$provision_parameters = $request_fields['cr_user'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",0,0,0,1,1,5,0,1,";
+		$provision_parameters = $request_fields['cr_user'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",0,0,0,1,1,".$request_fields['cr_virtualization'].",0,1,";
 		echo "provision params : $provision_parameters <br>";
 		$res = $client->CloudProvision($provision_parameters);
 		echo "provision : $res <br>";
@@ -59,39 +59,57 @@ echo "<h2>Example for the openQRM SOAP-Service</h2>";
 
 // ######################### form provision start ###############################
 
+echo "<hr>";
 echo "<form action=$thisfile method=post>";
+echo "<p>";
 
 // ######################### Cloud method example ###############################
 
 // a select-box including all cloud users
 $cloud_user_list = $client->CloudUserGetList();
-echo '<p>Users <select name="cr_user" size="1">';
+echo ' User <select name="cr_user" size="1">';
 foreach($cloud_user_list as $cloud_user) {
 	echo "<option value=\"$cloud_user\">$cloud_user</option>";
 }
-echo '</select></p>';
+echo '</select>';
 
 
 // ######################### kernel method examples ###############################
 
 // a select-box including all kernels
 $kernel_list = $client->KernelGetList();
-echo '<p>Kernels <select name="cr_kernel" size="1">';
+echo ' Kernel <select name="cr_kernel" size="1">';
 foreach($kernel_list as $kernel) {
 	echo "<option value=\"$kernel\">$kernel</option>";
 }
-echo '</select></p>';
+echo '</select>';
 
 
 // ######################### image method examples ###############################
 
 // a select-box including all images
 $image_list = $client->ImageGetList();
-echo '<p>Images <select name="cr_image" size="1">';
+echo ' Image <select name="cr_image" size="1">';
 foreach($image_list as $image) {
 	echo "<option value=\"$image\">$image</option>";
 }
-echo '</select></p>';
+echo '</select>';
+
+// ######################### virtualization method examples ###############################
+
+// a select-box including all virtualization types
+$virtualization_list = $client->VirtualizationGetList();
+echo ' Type <select name="cr_virtualization" size="1">';
+foreach($virtualization_list as $virtualization) {
+	echo "<option value=\"$virtualization\">$virtualization</option>";
+}
+echo '</select>';
+
+
+
+
+// ######################### static user input ###############################
+
 
 
 
@@ -99,8 +117,10 @@ echo '</select></p>';
 // ######################### form provision end ###############################
 echo "<input type=hidden name='action' value='provision'>";
 echo "<input type=submit value='Deploy'>";
+echo "</p>";
 echo "</form>";
 // ######################### form de-provision start ###############################
+echo "<hr>";
 echo "<form action=$thisfile method=post>";
 
 // ######################### Cloud method example ###############################
@@ -114,5 +134,6 @@ echo "<form action=$thisfile method=post>";
 echo "<input type=hidden name='action' value='deprovision'>";
 echo "<input type=submit value='Un-Deploy'>";
 echo "</form>";
+echo "<hr>";
 
 ?>

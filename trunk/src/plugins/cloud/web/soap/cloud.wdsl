@@ -40,6 +40,14 @@
   <part name='Result' type='xsd:string'/> 
 </message> 
 
+<message name='VirtualizationGetListRequest'> 
+  <part name='Result' type='xsd:string'/> 
+</message> 
+<message name='VirtualizationGetListResponse'> 
+  <part name='Result' type='xsd:string'/> 
+</message> 
+
+
 
 
 <portType name='CloudPortType'> 
@@ -67,6 +75,11 @@
   <operation name='ImageGetList'>
     <input message='tns:ImageGetListRequest'/> 
     <output message='tns:ImageGetListResponse'/>   
+  </operation>    
+
+  <operation name='VirtualizationGetList'>
+    <input message='tns:VirtualizationGetListRequest'/> 
+    <output message='tns:VirtualizationGetListResponse'/>   
   </operation>    
 
 </portType> 
@@ -138,6 +151,17 @@
     </output> 
   </operation>       
 
+  <operation name='VirtualizationGetList'> 
+    <soap:operation soapAction='urn:localhost-cloud#VirtualizationGetList'/> 
+    <input> 
+      <soap:body use='encoded' namespace='urn:localhost-cloud' 
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
+    </input> 
+    <output> 
+      <soap:body use='encoded' namespace='urn:localhost-cloud' 
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
+    </output> 
+  </operation>       
 
 
 
