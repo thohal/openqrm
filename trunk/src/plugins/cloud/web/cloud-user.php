@@ -72,6 +72,21 @@ if(htmlobject_request('action') != '') {
 			}
 			break;
 
+		case 'limit':
+			// gather user_limits parameter in array
+			foreach ($_REQUEST as $key => $value) {
+				if (strncmp($key, "cl_", 3) == 0) {
+					$user_limits_fields[$key] = $value;
+				}
+			}
+			$cloud_user_id = $_REQUEST['cl_cu_id'];
+			$cloud_user_limit = new clouduserlimits();
+			$cloud_user_limit->get_instance_by_cu_id($cloud_user_id);
+			$cl_id = $cloud_user_limit->id;
+			$cloud_user_limit->update($cl_id, $user_limits_fields);
+			echo "Updated limits for Cloud user $cloud_user_id<br>";
+			break;
+
 	}
 }
 
@@ -165,7 +180,7 @@ function cloud_user_manager() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('update', 'enable', 'disable', 'delete');
+		$table->bottom = array('update', 'enable', 'disable', 'limits', 'delete');
 		$table->identifier = 'cu_id';
 	}
 	$table->max = 100;
@@ -210,6 +225,52 @@ function cloud_create_user() {
 
 
 
+function cloud_set_user_limits($cloud_user_id) {
+
+	global $OPENQRM_USER;
+	global $thisfile;
+
+	$cloud_user = new clouduser();
+	$cloud_user->get_instance_by_id($cloud_user_id);
+
+	$cloud_user_limit = new clouduserlimits();
+	$cloud_user_limit->get_instance_by_cu_id($cloud_user_id);
+	$resource_limit = $cloud_user_limit->resource_limit;
+	$memory_limit = $cloud_user_limit->memory_limit;
+	$disk_limit = $cloud_user_limit->disk_limit;
+	$cpu_limit = $cloud_user_limit->cpu_limit;
+	$network_limit = $cloud_user_limit->network_limit;
+
+	$disp = "<h1>Set Cloud User Limits</h1>";
+	$disp = $disp."<br>";
+	$disp = $disp."Cloud Limits for User $cloud_user->name  (0 => infinite)";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."<form action=$thisfile method=post>";
+
+	$disp = $disp.htmlobject_input('cl_resource_limit', array("value" => $resource_limit, "label" => 'Max Resource'), 'text', 20);
+	$disp = $disp.htmlobject_input('cl_memory_limit', array("value" => $memory_limit, "label" => 'Max Memory'), 'text', 20);
+	$disp = $disp.htmlobject_input('cl_disk_limit', array("value" => $disk_limit, "label" => 'Max Disk Space'), 'text', 20);
+	$disp = $disp.htmlobject_input('cl_cpu_limit', array("value" => $cpu_limit, "label" => 'Max CPU'), 'text', 20);
+	$disp = $disp.htmlobject_input('cl_network_limit', array("value" => $network_limit, "label" => 'Max NIC'), 'text', 20);
+
+	$disp = $disp."<input type=hidden name='cl_cu_id' value=$cloud_user_id>";
+	$disp = $disp."<input type=hidden name='action' value='limit'>";
+	$disp = $disp."<br>";
+	$disp = $disp."<input type=submit value='Set-Limits'>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."</form>";
+
+	return $disp;
+}
+
+
+
+
+
+
+
 $output = array();
 
 
@@ -218,12 +279,18 @@ if(htmlobject_request('action') != '') {
 		case 'create':
 			$output[] = array('label' => 'Create Cloud User', 'value' => cloud_create_user());
 			break;
+		case 'limits':
+			foreach($_REQUEST['identifier'] as $id) {
+				$output[] = array('label' => 'Cloud User Limits', 'value' => cloud_set_user_limits($id));
+			}
+			$output[] = array('label' => 'Cloud User Manager', 'value' => cloud_user_manager());
+			break;
 		default:
-			$output[] = array('label' => 'Cloud Manager', 'value' => cloud_user_manager());
+			$output[] = array('label' => 'Cloud User Manager', 'value' => cloud_user_manager());
 			break;
 	}
 } else {
-	$output[] = array('label' => 'Cloud Manager', 'value' => cloud_user_manager());
+	$output[] = array('label' => 'Cloud User Manager', 'value' => cloud_user_manager());
 }
 echo htmlobject_tabmenu($output);
 ?>
