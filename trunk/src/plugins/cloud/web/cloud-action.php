@@ -1,31 +1,6 @@
 <?php
 $cloud_command = $_REQUEST["cloud_command"];
 
-switch ($cloud_command) {
-	case 'create_user':
-?>
-<html>
-<head>
-<title>openQRM Cloud actions</title>
-<meta http-equiv="refresh" content="0; URL=cloud-user.php?currenttab=tab0&strMsg=Processing <?php echo $cloud_command; ?>">
-</head>
-<body>
-<?php
-			break;
-	default:
-	// we forward to the cloud-manager
-?>
-<html>
-<head>
-<title>openQRM Cloud actions</title>
-<meta http-equiv="refresh" content="0; URL=cloud-manager.php?currenttab=tab0&strMsg=Processing <?php echo $cloud_command; ?>">
-</head>
-<body>
-<?php
-			break;
-}
-// end of fowarding switch
-
 // error_reporting(E_ALL);
 $thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
@@ -41,6 +16,7 @@ require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 // special cloud classes
 require_once "$RootDir/plugins/cloud/class/clouduser.class.php";
+require_once "$RootDir/plugins/cloud/class/clouduserslimits.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudrequest.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
@@ -99,6 +75,17 @@ function date_to_timestamp($date) {
 }
 
 
+
+function redirect($strMsg, $currenttab = 'tab0', $url = '') {
+	global $thisfile;
+	if($url == '') {
+		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
+	}
+	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
+	exit;
+}
+
+
 // main
 $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Processing cloud command $cloud_command", "", "", 0, 0, 0);
 
@@ -143,6 +130,15 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			// cu_token VARCHAR(100)
 			// cu_ccunits BIGINT(10)
 			// 
+			// -> clouduserslimits
+			// cl_id INT(5)
+			// cl_cu_id INT(5)
+			// cl_resource_limit INT(5)
+			// cl_memory_limit BIGINT(5)
+			// cl_disk_limit BIGINT(5)
+			// cl_cpu_limit INT(5)
+			// cl_network_limit INT(5)
+			//
 			// -> cloudconfig
 			// cc_id INT(5)
 			// cc_key VARCHAR(50)
@@ -189,6 +185,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 
 			$create_cloud_requests = "create table cloud_requests(cr_id INT(5), cr_cu_id INT(5), cr_status INT(5), cr_request_time VARCHAR(20), cr_start VARCHAR(20), cr_stop VARCHAR(20), cr_kernel_id INT(5), cr_image_id INT(5), cr_ram_req VARCHAR(20), cr_cpu_req VARCHAR(20), cr_disk_req VARCHAR(20), cr_network_req VARCHAR(255), cr_resource_quantity INT(5), cr_resource_type_req VARCHAR(20), cr_deployment_type_req VARCHAR(50), cr_ha_req VARCHAR(5), cr_shared_req VARCHAR(5), cr_appliance_id VARCHAR(255), cr_puppet_groups VARCHAR(255), cr_lastbill VARCHAR(20))";
 			$create_cloud_users = "create table cloud_users(cu_id INT(5), cu_name VARCHAR(20), cu_password VARCHAR(20), cu_forename VARCHAR(50), cu_lastname VARCHAR(50), cu_email VARCHAR(50), cu_street VARCHAR(100), cu_city VARCHAR(100), cu_country VARCHAR(100), cu_phone VARCHAR(100), cu_status INT(5), cu_token VARCHAR(100), cu_ccunits BIGINT(10))";
+			$create_cloud_users_limit = "create table cloud_users_limits(cl_id INT(5), cl_cu_id INT(5), cl_resource_limit INT(5), cl_memory_limit BIGINT(10), cl_disk_limit BIGINT(10), cl_cpu_limit INT(5), cl_network_limit INT(5))";
 			$create_cloud_config = "create table cloud_config(cc_id INT(5), cc_key VARCHAR(50), cc_value VARCHAR(50))";
 			$create_cloud_ipgroups = "create table cloud_ipgroups(ig_id INT(5), ig_name VARCHAR(50), ig_network VARCHAR(50), ig_subnet VARCHAR(50), ig_gateway VARCHAR(50), ig_dns1 VARCHAR(50), ig_dns2 VARCHAR(50), ig_domain VARCHAR(50), ig_activeips INT(5))";
 			$create_cloud_iptables = "create table cloud_iptables(ip_id INT(5), ip_ig_id INT(5), ip_appliance_id INT(5), ip_cr_id INT(5), ip_active INT(5), ip_address VARCHAR(50), ip_subnet VARCHAR(50), ip_gateway VARCHAR(50), ip_dns1 VARCHAR(50), ip_dns2 VARCHAR(50), ip_domain VARCHAR(50))";
@@ -197,6 +194,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($create_cloud_requests);
 			$recordSet = &$db->Execute($create_cloud_users);
+			$recordSet = &$db->Execute($create_cloud_users_limit);
 			$recordSet = &$db->Execute($create_cloud_config);
 			$recordSet = &$db->Execute($create_cloud_ipgroups);
 			$recordSet = &$db->Execute($create_cloud_iptables);
@@ -243,6 +241,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 		case 'uninstall':
 			$drop_cloud_requests = "drop table cloud_requests";
 			$drop_cloud_users = "drop table cloud_users";
+			$drop_cloud_users_limit = "drop table cloud_users_limits";
 			$drop_cloud_config = "drop table cloud_config";
 			$drop_cloud_ipgroups = "drop table cloud_ipgroups";
 			$drop_cloud_iptables = "drop table cloud_iptables";
@@ -251,6 +250,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($drop_cloud_requests);
 			$recordSet = &$db->Execute($drop_cloud_users);
+			$recordSet = &$db->Execute($drop_cloud_users_limit);
 			$recordSet = &$db->Execute($drop_cloud_config);
 			$recordSet = &$db->Execute($drop_cloud_ipgroups);
 			$recordSet = &$db->Execute($drop_cloud_iptables);
@@ -260,7 +260,6 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			break;
 
 		case 'create_user':
-			echo "creating user $user_name <br>";
 			$user_fields['cu_id'] = openqrm_db_get_free_id('cu_id', $CLOUD_USER_TABLE);
 			// enabled by default
 			$user_fields['cu_status'] = 1;
@@ -281,6 +280,17 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			}
 			$output = shell_exec($openqrm_server_command);
 
+			// set user permissions and limits, set to 0 (infinite) by default
+			$cloud_user_limit = new clouduserlimits();
+			$cloud_user_limits_fields['cl_id'] = openqrm_db_get_free_id('cl_id', $cloud_user_limit->_db_table);
+			$cloud_user_limits_fields['cl_cu_id'] = $user_fields['cu_id'];
+			$cloud_user_limits_fields['cl_resource_limit'] = 0;
+			$cloud_user_limits_fields['cl_memory_limit'] = 0;
+			$cloud_user_limits_fields['cl_disk_limit'] = 0;
+			$cloud_user_limits_fields['cl_cpu_limit'] = 0;
+			$cloud_user_limits_fields['cl_network_limit'] = 0;
+			$cloud_user_limit->add($cloud_user_limits_fields);
+
 			// send mail to user
 			// get admin email
 			$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
@@ -300,6 +310,10 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$arr = array('@@USER@@'=>"$username", '@@PASSWORD@@'=>"$password", '@@EXTERNALPORTALNAME@@'=>"$external_portal_name", '@@FORENAME@@'=>"$forename", '@@LASTNAME@@'=>"$lastname", '@@CLOUDADMIN@@'=>"$cc_admin_email");
 			$rmail->var_array = $arr;
 			$rmail->send();
+
+			$strMsg = "Added user $usecrname";
+			redirect($strMsg, 'tab0', "cloud-user.php");
+
 			break;
 
 
@@ -314,12 +328,34 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$cloud_billing_enabled = $cb_config->get_value(16);	// 16 is cloud_billing_enabled
 			if ($cloud_billing_enabled == 'true') {
 				if ($cl_user->ccunits < 1) {
-					echo "User does not have any ccunits ! Not adding the request<br>";
+					$strMsg = "User does not have any ccunits ! Not adding the request";
+					echo "$strMsg <br>";
 					flush();
-					sleep(2);
-					break;
+					sleep(4);
+					redirect($strMsg, 'tab0', "cloud-manager.php");
+					exit(0);
 				}
 			}
+
+			// check user limits
+			$cloud_user_limit = new clouduserlimits();
+			$cloud_user_limit->get_instance_by_cu_id($cr_cu_id);
+
+			$resource_quantity = $request_fields['cr_resource_quantity'];
+			$ram_req = $request_fields['cr_ram_req'];
+			$disk_req = $request_fields['cr_disk_req'];
+			$cpu_req = $request_fields['cr_cpu_req'];
+			$network_req = $request_fields['cr_network_req'];
+
+			if (!$cloud_user_limit->check_limits($resource_quantity, $ram_req, $disk_req, $cpu_req, $network_req)) {
+				$strMsg = "User exceeds its Cloud-Limits ! Not adding the request";
+				echo "$strMsg <br>";
+				flush();
+				sleep(4);
+				redirect($strMsg, 'tab0', "cloud-manager.php");
+				exit(0);
+			}
+
 			// parse start date
 			$startt = $request_fields['cr_start'];
 			$tstart = date_to_timestamp($startt);
@@ -365,6 +401,12 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$arr = array('@@USER@@'=>"$cu_name", '@@ID@@'=>"$cr_id", '@@OPENQRM_SERVER_IP_ADDRESS@@'=>"$OPENQRM_SERVER_IP_ADDRESS");
 			$rmail->var_array = $arr;
 			$rmail->send();
+
+			$strMsg = "Adding new Cloud request";
+			echo "$strMsg <br>";
+			flush();
+			sleep(4);
+			redirect($strMsg, 'tab0', "cloud-manager.php");
 
 			break;
 

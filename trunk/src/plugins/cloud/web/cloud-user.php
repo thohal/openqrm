@@ -18,6 +18,7 @@ require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 // special clouduser class
 require_once "$RootDir/plugins/cloud/class/clouduser.class.php";
+require_once "$RootDir/plugins/cloud/class/clouduserslimits.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 
 global $OPENQRM_SERVER_BASE_DIR;
@@ -38,6 +39,9 @@ if(htmlobject_request('action') != '') {
 				$username = $cl_user->name;
 				$openqrm_server_command="htpasswd -D $CloudDir/user/.htpasswd $username";
 				$output = shell_exec($openqrm_server_command);
+				// remove permissions and limits
+				$cloud_user_limit = new clouduserlimits();
+				$cloud_user_limit->remove_by_cu_id($id);
 				// remove from db
 				$cl_user->remove($id);
 			}
