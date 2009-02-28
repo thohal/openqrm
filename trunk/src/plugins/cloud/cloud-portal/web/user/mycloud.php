@@ -38,6 +38,7 @@ require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 // special cloud classes
 require_once "$RootDir/plugins/cloud/class/clouduser.class.php";
+require_once "$RootDir/plugins/cloud/class/clouduserslimits.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudrequest.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
@@ -241,6 +242,9 @@ if (htmlobject_request('action') != '') {
 		case 'create_request':
 			$request_user = new clouduser();
 			$request_user->get_instance_by_name("$auth_user");
+			// set user id
+			$request_user_id = $request_user->id;
+			$request_fields['cr_cu_id'] = $request_user_id;
 			// check if billing is enabled
 			$cb_config = new cloudconfig();
 			$cloud_billing_enabled = $cb_config->get_value(16);	// 16 is cloud_billing_enabled
@@ -251,9 +255,25 @@ if (htmlobject_request('action') != '') {
 					exit(0);
 				}
 			}
-			// set user id
-			$request_user_id = $request_user->id;
-			$request_fields['cr_cu_id'] = $request_user_id;
+
+			// check user limits
+			$cloud_user_limit = new clouduserlimits();
+			$cloud_user_limit->get_instance_by_cu_id($request_user->id);
+			$resource_quantity = $request_fields['cr_resource_quantity'];
+			$ram_req = $request_fields['cr_ram_req'];
+			$disk_req = $request_fields['cr_disk_req'];
+			$cpu_req = $request_fields['cr_cpu_req'];
+			$network_req = $request_fields['cr_network_req'];
+
+			if (!$cloud_user_limit->check_limits($resource_quantity, $ram_req, $disk_req, $cpu_req, $network_req)) {
+				$strMsg = "User exceeds its Cloud-Limits ! Not adding the request";
+				echo "$strMsg <br>";
+				flush();
+				sleep(4);
+				redirect($strMsg, 'tab0', "cloud-manager.php");
+				exit(0);
+			}
+
 			// parse start date
 			$startt = $request_fields['cr_start'];
 			$tstart = date_to_timestamp($startt);

@@ -340,7 +340,6 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			// check user limits
 			$cloud_user_limit = new clouduserlimits();
 			$cloud_user_limit->get_instance_by_cu_id($cr_cu_id);
-
 			$resource_quantity = $request_fields['cr_resource_quantity'];
 			$ram_req = $request_fields['cr_ram_req'];
 			$disk_req = $request_fields['cr_disk_req'];
