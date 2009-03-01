@@ -43,7 +43,9 @@ switch ($action) {
 
 	// ######################### cloud De-Provisioning example #################################
 	case 'deprovision':
-		// $res = $client->CloudDeProvision("1");
+
+		$cr_id = $request_fields['cr_id'];
+		$res = $client->CloudDeProvision($cr_id);
 		echo "deprovision : $res <br>";
 		break;
 
@@ -162,24 +164,28 @@ echo '</select>';
 // ######################### form provision end ###############################
 echo '<br>';
 echo "<input type=hidden name='action' value='provision'>";
-echo "<input type=submit value='Deploy'>";
+echo "<input type=submit value='Provision'>";
 echo "</p>";
 echo "</form>";
 // ######################### form de-provision start ###############################
 echo "<hr>";
-echo "<form action=$thisfile method=post>";
 
 // ######################### Cloud method example ###############################
 
-// get a list of all requests
+// get a list of all requests per user (or all if no username is given)
+$cloudrequest_list = $client->CloudRequestGetList("");
+ foreach($cloudrequest_list as $cr_id) {
+	echo "<form action=$thisfile method=post>";
+	echo "$cr_id ";
 
-
+	echo "<input type=hidden name='cr_id' value=\"$cr_id\">";
+	echo "<input type=hidden name='action' value='deprovision'>";
+	echo "<input type=submit value='De-Provision'>";
+	echo "</form>";
+ }
 
 
 // ######################### form de-provision end ###############################
-echo "<input type=hidden name='action' value='deprovision'>";
-echo "<input type=submit value='Un-Deploy'>";
-echo "</form>";
 echo "<hr>";
 
 ?>

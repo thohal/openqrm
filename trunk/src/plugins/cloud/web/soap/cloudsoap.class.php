@@ -49,7 +49,15 @@ class cloudsoap {
 // ######################### cloud methods ###########################################
 
 
-	// method to provision a cloud request
+	//--------------------------------------------------
+	/**
+	* Provision a system in the openQRM Cloud -> creates a Cloud-Request
+	* @access public
+	* @param string $method_parameters
+	*  -> user-name,kernel-name,image-name,memory,cpus,disk,network,resource-quantity,resource-type,ha,puppet-groups
+	* @return int cloudrequest_id
+	*/
+	//--------------------------------------------------
 	function CloudProvision($method_parameters) {
 
 		$parameter_array = explode(',', $method_parameters);
@@ -115,11 +123,19 @@ class cloudsoap {
 		// add request
 		$cr_request = new cloudrequest();
 		$cr_request->add($request_fields);
-		return "success";
+		return $request_fields['cr_id'];
 	}
 
 
-	// method to deprovision a cloud request
+	//--------------------------------------------------
+	/**
+	* De-Provision a system in the openQRM Cloud -> sets Cloud-Request to deprovision
+	* @access public
+	* @param string $method_parameters
+	*  -> cloud-request-id
+	* @return int 0 for success, 1 for failure
+	*/
+	//--------------------------------------------------
 	function CloudDeProvision($method_parameters) {
 		$event = new event();
 		$parameter_array = explode(',', $method_parameters);
@@ -128,11 +144,17 @@ class cloudsoap {
 		$cr_request = new cloudrequest();
 		$cr_request->setstatus($cr_id, "deprovsion");
 		$event->log("cloudsoap->deprovision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "De-provisioning Cloud request $cr_id", "", "", 0, 0, 0);
-		return "success";
+		return 0;
 	}
 
 
-	// method providing a list of cloud users
+	//--------------------------------------------------
+	/**
+	* Get a list of Cloud Users
+	* @access public
+	* @return array List of Cloud User names
+	*/
+	//--------------------------------------------------
 	function CloudUserGetList() {
 		$event = new event();
 		$event->log("cloudsoap->CloudUserGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available Cloud Users", "", "", 0, 0, 0);
@@ -146,11 +168,66 @@ class cloudsoap {
 	}
 
 
+	//--------------------------------------------------
+	/**
+	* Get a list of Cloud Reqeust ids per Cloud User
+	* @access public
+	* @param string $method_parameters
+	*  -> clouduser-name (can be empty for getting a list of all requests)
+	* @return array List of Cloud Request ids
+	*/
+	//--------------------------------------------------
+	// method providing a list of cloud requests ids per user (or all)
+	function CloudRequestGetList($method_parameters) {
+		$event = new event();
+		$parameter_array = explode(',', $method_parameters);
+		$clouduser_name = $parameter_array[0];
+		$cloudrequest_list = array();
+		if (!strlen($clouduser_name)) {
+			$event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of all Cloud-requests", "", "", 0, 0, 0);
+			$cloudrequest = new cloudrequest();
+			$cloudrequest_id_list = $cloudrequest->get_all_ids();
+			foreach($cloudrequest_id_list as $cr_id_list) {
+				foreach($cr_id_list as $cr_id) {
+					$cloudrequest_list[] = $cr_id;
+				}
+			}
+		} else {
+			$clouduser = new clouduser();
+			$clouduser->get_instance_by_name($clouduser_name);
+			$cu_id = $clouduser->id;
+			$event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of Cloud-requests for Cloud User $clouduser_name ($cu_id)", "", "", 0, 0, 0);
+			$cloudrequest = new cloudrequest();
+			$cloudrequest_id_list = $cloudrequest->get_all_ids();
+			foreach($cloudrequest_id_list as $cr_id_list) {
+				foreach($cr_id_list as $cr_id) {
+					$cr = new cloudrequest();
+					$cr->get_instance_by_id($cr_id);
+					if ($cr->cu_id == $cu_id) {
+						$cloudrequest_list[] = $cr_id;
+					}
+				}
+			}
+		}
+		return $cloudrequest_list;		
+	}
+
+
+
+
+
 
 
 
 // ######################### kernel methods ###########################################
 
+	//--------------------------------------------------
+	/**
+	* Get a list of available Kernels in the openQRM Cloud
+	* @access public
+	* @return array List of Kernel-names
+	*/
+	//--------------------------------------------------
 	function KernelGetList() {
 		global $event;
 		$event->log("cloudsoap->KernelGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available kernels", "", "", 0, 0, 0);
@@ -168,6 +245,13 @@ class cloudsoap {
 
 // ######################### image methods ###########################################
 
+	//--------------------------------------------------
+	/**
+	* Get a list of available Images in the openQRM Cloud
+	* @access public
+	* @return array List of Image-names
+	*/
+	//--------------------------------------------------
 	function ImageGetList() {
 		global $event;
 		$event->log("cloudsoap->ImageGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available images", "", "", 0, 0, 0);
@@ -188,6 +272,13 @@ class cloudsoap {
 
 // ######################### virtualization methods ###########################################
 
+	//--------------------------------------------------
+	/**
+	* Get a list of available virtualization types in the openQRM Cloud
+	* @access public
+	* @return array List of virtualization type names
+	*/
+	//--------------------------------------------------
 	function VirtualizationGetList() {
 		global $event;
 		$event->log("cloudsoap->ImageGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available virtualizations", "", "", 0, 0, 0);
@@ -223,6 +314,13 @@ class cloudsoap {
 // ######################### puppet methods ###########################################
 
 
+	//--------------------------------------------------
+	/**
+	* Get a list of available puppet groups in the openQRM Cloud
+	* @access public
+	* @return array List of puppet group names
+	*/
+	//--------------------------------------------------
 	function PuppetGetList() {
 		global $event;
 		if (!class_exists("puppet")) {
