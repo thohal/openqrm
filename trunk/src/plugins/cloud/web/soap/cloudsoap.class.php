@@ -45,9 +45,6 @@ if (!strstr($OPENQRM_USER->role, "administrator")) {
 
 class cloudsoap {
 
-	var $id = '';
-	var $username = '';
-
 
 // ######################### cloud methods ###########################################
 
@@ -66,8 +63,7 @@ class cloudsoap {
 		$resource_quantity = $parameter_array[7];
 		$virtualization_name = $parameter_array[8];
 		$ha_req = $parameter_array[9];
-		$shared_req = $parameter_array[10];
-		$puppet_groups = $parameter_array[11];
+		$puppet_groups = $parameter_array[10];
 	
 		global $CLOUD_REQUEST_TABLE;
 		$event = new event();
@@ -86,7 +82,6 @@ class cloudsoap {
 		$request_fields['cr_resource_quantity'] = $resource_quantity;
 		$request_fields['cr_resource_quantity'] = $resource_quantity;
 		$request_fields['cr_resource_type_req'] = $resource_type_req;
-		$request_fields['cr_shared_req'] = $shared_req;
 		$request_fields['cr_ha_req'] = $ha_req;
 		$request_fields['cr_network_req'] = $network_req;
 		$request_fields['cr_ram_req'] = $ram_req;
@@ -107,7 +102,14 @@ class cloudsoap {
 		$virtualization->get_instance_by_name($virtualization_name);
 		$virtualization_id = $virtualization->id;
 		$request_fields['cr_resource_type_req'] = $virtualization_id;
-
+		// check for clone-on-deploy
+		$cc_conf = new cloudconfig();
+		$cc_default_clone_on_deploy = $cc_conf->get_value(5);	// default_clone_on_deploy
+		if (!strcmp($cc_default_clone_on_deploy, "true")) {
+			$request_fields['cr_shared_req'] = 1;
+		} else {
+			$request_fields['cr_shared_req'] = 0;
+		}
 		// get next free id
 		$request_fields['cr_id'] = openqrm_db_get_free_id('cr_id', $CLOUD_REQUEST_TABLE);
 		// add request
@@ -223,14 +225,19 @@ class cloudsoap {
 
 	function PuppetGetList() {
 		global $event;
-		$event->log("cloudsoap->PuppetGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available Puppet groups", "", "", 0, 0, 0);
-		$puppet = new puppet();
-		$puppet_list = $puppet->get_available_groups();
-		$puppet_name_list = array();
-		foreach($puppet_list as $puppet) {
-			$puppet_name_list[] = $puppet;
+		if (!class_exists("puppet")) {
+			$event->log("cloudsoap->PuppetGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Puppet is not enabled in this Cloud", "", "", 0, 0, 0);
+			return;
+		} else {
+			$event->log("cloudsoap->PuppetGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available Puppet groups", "", "", 0, 0, 0);
+			$puppet = new puppet();
+			$puppet_list = $puppet->get_available_groups();
+			$puppet_name_list = array();
+			foreach($puppet_list as $puppet) {
+				$puppet_name_list[] = $puppet;
+			}
+			return $puppet_name_list;
 		}
-		return $puppet_name_list;		
 	}
 
 

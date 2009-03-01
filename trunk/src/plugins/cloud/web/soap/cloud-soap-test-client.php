@@ -35,7 +35,7 @@ switch ($action) {
 	// ######################### cloud Provisioning example #################################
 	case 'provision':
 
-		$provision_parameters = $request_fields['cr_user'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",0,0,0,1,1,".$request_fields['cr_virtualization'].",0,1,".$request_fields['cr_puppet'];
+		$provision_parameters = $request_fields['cr_user'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",".$request_fields['cr_ram_req'].",".$request_fields['cr_cpu_req'].",".$request_fields['cr_disk_req'].",".$request_fields['cr_network_req'].",".$request_fields['cr_resource_quantity'].",".$request_fields['cr_virtualization'].",".$request_fields['cr_ha_req'].",".$request_fields['cr_puppet'];
 		echo "provision params : $provision_parameters <br>";
 		$res = $client->CloudProvision($provision_parameters);
 		echo "provision : $res <br>";
@@ -115,16 +115,52 @@ foreach($puppet_list as $puppet) {
 }
 echo '</select>';
 
-
-
-
 // ######################### static user input ###############################
+echo '<br>';
 
+// select how many systems to deploy
+echo ' Quantity <select name="cr_resource_quantity" size="1">';
+echo "<option value=\"1\">1</option>";
+echo "<option value=\"2\">2</option>";
+echo "<option value=\"3\">3</option>";
+echo "<option value=\"4\">4</option>";
+echo '</select>';
 
+// select how much memory
+echo ' Memory <select name="cr_ram_req" size="1">';
+echo "<option value=\"512\">512 MB</option>";
+echo "<option value=\"1024\">1 GB</option>";
+echo "<option value=\"2048\">2 GB</option>";
+echo '</select>';
 
+// select how many cpus
+echo ' CPU <select name="cr_cpu_req" size="1">';
+echo "<option value=\"1\">1</option>";
+echo "<option value=\"2\">2</option>";
+echo '</select>';
 
+// select disk-size
+echo ' Disk <select name="cr_disk_req" size="1">';
+echo "<option value=\"5000\">5 GB</option>";
+echo "<option value=\"10000\">10 GB</option>";
+echo "<option value=\"20000\">20 GB</option>";
+echo "<option value=\"50000\">50 GB</option>";
+echo '</select>';
+
+// select how many network interfaces
+echo ' NIC <select name="cr_network_req" size="1">';
+echo "<option value=\"1\">1</option>";
+echo "<option value=\"2\">2</option>";
+echo '</select>';
+
+// highavailable ?
+echo ' HA <select name="cr_ha_req" size="1">';
+echo "<option value=\"0\">disabled</option>";
+echo "<option value=\"1\">enabled</option>";
+echo '</select>';
 
 // ######################### form provision end ###############################
+echo '<br>';
 echo "<input type=hidden name='action' value='provision'>";
 echo "<input type=submit value='Deploy'>";
 echo "</p>";
