@@ -1,16 +1,37 @@
 <?php
 /**
- * @package Htmlobjects
+ * @package htmlobjects
  */
 
-
+//----------------------------------------------------------------------------------------
 /**
- * @package Htmlobjects
+ * Http
+ *
+ * @package htmlobjects
  * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @copyright Copyright (c) 2009, Alexander Kuballa
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @version 1.0
- */
+*/
+//----------------------------------------------------------------------------------------
+
 class http
 {
+/**
+* regex pattern for httprequest (crosssitescripting)
+* <code>
+* $http = new http();
+* $http->http_request_replace = array(
+*    array ( 'pattern' => '~\r\n~', 'replace' => '\n'),
+*  );
+* </code>
+* @access public
+* @var array
+*/
+var $http_request_replace = array(
+		array ( 'pattern' => '~\r\n~', 'replace' => '\n'),
+	);
+
 
 	//---------------------------------------------------------------
 	/**
@@ -18,37 +39,41 @@ class http
 	* string is empty when request not set
 	* @access public
 	* @param  $path string
-	* @param  $filter bool
 	* @return string [empty if request not set]
 	*/
 	//---------------------------------------------------------------
-	function get_request($arg, $filter = true) 
+	function get_request($arg) 
 	{
 		if (isset($_REQUEST[$arg])) {
 			if(is_array($_REQUEST[$arg])) {
 				foreach($_REQUEST[$arg] as $key => $value) {
-					$value = stripslashes($value);
-					if($filter === true) {
-						$value = str_replace('&quot;', '"', $value);
-						$value = str_replace('&lt;', '<', $value);
-						$value = str_replace('\r\n', '\n', $value);
-					}
-					$arr[$key] = $value;
+					$arr[$key] =  $this->filter_request($value);
 				}
 				return $arr;
 			} else {
-				$value = $_REQUEST[$arg];
-				$value = stripslashes($value);
-				if($filter === true) {
-					$value = str_replace('&quot;', '"', $value);
-					$value = str_replace('&lt;', '<', $value);
-					$value = str_replace('\r\n', '\n', $value);
-				}
-				return $value;
+				return $this->filter_request($_REQUEST[$arg]);
 			}
 		} else {
 			return '';
 		}
+	}
+
+	//---------------------------------------------------------------
+	/**
+	* performes preg_replace
+	* @access public
+	* @param  $value string
+	* @return string
+	*/
+	//---------------------------------------------------------------
+	function filter_request($value) {
+		$value = stripslashes($value);
+		if(is_array($this->http_request_replace)) {
+			foreach ($this->http_request_replace as $reg) {
+				$value = preg_replace($reg['pattern'], $reg['replace'], $value);
+			}
+		}
+		return $value;
 	}
 
 	//---------------------------------------------------------------
