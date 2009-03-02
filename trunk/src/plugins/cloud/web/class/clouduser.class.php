@@ -32,6 +32,29 @@ var $status = '';
 var $ccunits = '';
 var $token = '';
 
+	//--------------------------------------------------
+	/**
+	* Constructor
+	*/
+	//--------------------------------------------------
+	function clouduser() {
+		$this->init();
+	}
+
+	//--------------------------------------------------
+	/**
+	* init storage environment
+	* @access public
+	*/
+	//--------------------------------------------------
+	function init() {
+		global $CLOUD_USER_TABLE, $OPENQRM_SERVER_BASE_DIR;
+		$this->_event = new event();
+		$this->_db_table = $CLOUD_USER_TABLE;
+		$this->_base_dir = $OPENQRM_SERVER_BASE_DIR;
+	}
+
+
 
 
 // ---------------------------------------------------------------------------------

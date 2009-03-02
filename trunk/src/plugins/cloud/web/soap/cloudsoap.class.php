@@ -1,6 +1,7 @@
 <?php
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
+$CloudDir = $_SERVER["DOCUMENT_ROOT"].'/cloud-portal/';
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/include/openqrm-database-functions.php";
@@ -166,6 +167,74 @@ class cloudsoap {
 		}
 		return $clouduser_name_list;		
 	}
+
+
+	//--------------------------------------------------
+	/**
+	* Creates a Cloud Users
+	* @access public
+	* @param string $method_parameters
+	*  -> user-name,user-password, user-email
+	* @return int id of the new Cloud User
+	*/
+	//--------------------------------------------------
+    function CloudUserCreate($method_parameters) {
+        global $CloudDir;
+		$event = new event();
+		$parameter_array = explode(',', $method_parameters);
+		$clouduser_name = $parameter_array[0];
+		$clouduser_password = $parameter_array[1];
+		$clouduser_email = $parameter_array[2];
+        $cl_user = new clouduser();
+        if (!$cl_user->is_name_free($clouduser_name)) {
+            $event->log("cloudsoap->CloudUserCreate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name already exists in the Cloud. Not adding !", "", "", 0, 0, 0);
+            return;
+        }
+        $event->log("cloudsoap->CloudUserCreate", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Creating new Cloud Users $clouduser_name", "", "", 0, 0, 0);
+        // create user_fields array
+        $user_fields['cu_name'] = $clouduser_name;
+        $user_fields['cu_password'] = $clouduser_password;
+        $user_fields['cu_email'] = $clouduser_email;
+        $user_fields['cu_lastname'] = $clouduser_name;
+        $user_fields['cu_forename'] = "Cloud-User";
+        $user_fields['cu_street'] = "na";
+        $user_fields['cu_city'] = "na";
+        $user_fields['cu_country'] = "na";
+        $user_fields['cu_phone'] = "0";
+        // enabled by default
+        $user_fields['cu_status'] = 1;
+        // check how many ccunits to give for a new user
+        $cc_conf = new cloudconfig();
+        $cc_auto_give_ccus = $cc_conf->get_value(12);  // 12 is auto_give_ccus
+        $user_fields['cu_ccunits'] = $cc_auto_give_ccus;
+        // get a new clouduser id
+        $user_fields['cu_id'] = openqrm_db_get_free_id('cu_id', $cl_user->_db_table);
+        $cl_user->add($user_fields);
+        // add user to htpasswd
+        $username = $user_fields['cu_name'];
+        $password = $user_fields['cu_password'];
+        $cloud_htpasswd = "$CloudDir/user/.htpasswd";
+        if (file_exists($cloud_htpasswd)) {
+            $openqrm_server_command="htpasswd -b $CloudDir/user/.htpasswd $username $password";
+        } else {
+            $openqrm_server_command="htpasswd -c -b $CloudDir/user/.htpasswd $username $password";
+        }
+        $output = shell_exec($openqrm_server_command);
+
+        // set user permissions and limits, set to 0 (infinite) by default
+        $cloud_user_limit = new clouduserlimits();
+        $cloud_user_limits_fields['cl_id'] = openqrm_db_get_free_id('cl_id', $cloud_user_limit->_db_table);
+        $cloud_user_limits_fields['cl_cu_id'] = $user_fields['cu_id'];
+        $cloud_user_limits_fields['cl_resource_limit'] = 0;
+        $cloud_user_limits_fields['cl_memory_limit'] = 0;
+        $cloud_user_limits_fields['cl_disk_limit'] = 0;
+        $cloud_user_limits_fields['cl_cpu_limit'] = 0;
+        $cloud_user_limits_fields['cl_network_limit'] = 0;
+        $cloud_user_limit->add($cloud_user_limits_fields);
+
+         return $user_fields['cu_id'];
+	}
+
 
 
 	//--------------------------------------------------

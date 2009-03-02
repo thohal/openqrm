@@ -49,6 +49,12 @@ switch ($action) {
 		echo "deprovision : $res <br>";
 		break;
 
+	// ######################### cloud Create User example #################################
+	case 'usercreate':
+        $create_user_parameters = $request_fields['cr_username'].",".$request_fields['cr_userpassword'].",".$request_fields['cr_useremail'];
+        $res = $client->CloudUserCreate($create_user_parameters);
+		echo "Created Cloud User ID : $res<br>";
+		break;
 }
 
 
@@ -62,6 +68,7 @@ echo "<h2>Example for the openQRM SOAP-Service</h2>";
 // ######################### form provision start ###############################
 
 echo "<hr>";
+echo "<h4>Provisioning</h4>";
 echo "<form action=$thisfile method=post>";
 echo "<p>";
 
@@ -169,6 +176,7 @@ echo "</p>";
 echo "</form>";
 // ######################### form de-provision start ###############################
 echo "<hr>";
+echo "<h4>De-Provisioning</h4>";
 
 // ######################### Cloud method example ###############################
 
@@ -186,6 +194,35 @@ $cloudrequest_list = $client->CloudRequestGetList("");
 
 
 // ######################### form de-provision end ###############################
+echo "<hr>";
+// ######################### form Cloud User start ###############################
+
+// ######################### Create Cloud User ###############################
+
+echo "<h4>Create Cloud User</h4>";
+echo "<form action=$thisfile method=post>";
+echo " Name  : <input type=text name='cr_username'>";
+echo " Pass  : <input type=text name='cr_userpassword'>";
+echo " Email : <input type=text name='cr_useremail'>";
+echo "<input type=hidden name='action' value='usercreate'>";
+echo "<input type=submit value='Create Cloud-User'>";
+echo "</form>";
+
+// ######################### Remove Cloud User ###############################
+
+echo "<hr>";
+
+echo "<h4>Remove Cloud User</h4>";
+echo "<form action=$thisfile method=post>";
+
+
+echo "<input type=hidden name='action' value='userremove'>";
+echo "<input type=submit value='Remove'>";
+echo "</form>";
+
+
+
+// ######################### form Cloud User end ###############################
 echo "<hr>";
 
 ?>

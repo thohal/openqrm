@@ -26,6 +26,13 @@
   <part name='Result' type='xsd:string'/> 
 </message> 
 
+<message name='CloudUserCreateRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudUserCreateResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
 <message name='CloudRequestGetListRequest'> 
   <part name='symbol' type='xsd:string'/> 
 </message> 
@@ -79,6 +86,11 @@
     <input message='tns:CloudUserGetListRequest'/> 
     <output message='tns:CloudUserGetListResponse'/>   
   </operation>    
+
+  <operation name='CloudUserCreate'>
+    <input message='tns:CloudUserCreateRequest'/>
+    <output message='tns:CloudUserCreateResponse'/>
+  </operation>
 
   <operation name='CloudRequestGetList'>
     <input message='tns:CloudRequestGetListRequest'/> 
@@ -149,6 +161,18 @@
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
     </output> 
   </operation>       
+
+  <operation name='CloudUserCreate'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudUserCreate'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
 
   <operation name='CloudRequestGetList'> 
     <soap:operation soapAction='urn:localhost-cloud#CloudRequestGetList'/> 
