@@ -76,7 +76,7 @@ class cloudsoap {
 	
 		global $CLOUD_REQUEST_TABLE;
 		$event = new event();
-		$event->log("cloudsoap->provision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Provisioning appliance in the openQRM Cloud for user $username", "", "", 0, 0, 0);
+		$event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Provisioning appliance in the openQRM Cloud for user $username", "", "", 0, 0, 0);
 
 		$cl_user = new clouduser();
 		$cl_user->get_instance_by_name($username);
@@ -142,9 +142,7 @@ class cloudsoap {
 		$parameter_array = explode(',', $method_parameters);
 		$cr_id = $parameter_array[0];
 		// set request to deprovision
-		$cr_request = new cloudrequest();
-		$cr_request->setstatus($cr_id, "deprovsion");
-		$event->log("cloudsoap->deprovision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "De-provisioning Cloud request $cr_id", "", "", 0, 0, 0);
+        $this->CloudRequestSetState("$cr_id,deprovsion");
 		return 0;
 	}
 
@@ -236,6 +234,31 @@ class cloudsoap {
 	}
 
 
+	//--------------------------------------------------
+	/**
+	* Removes a Cloud Users
+	* @access public
+	* @param string $method_parameters
+	*  -> user-name
+	* @return int 0 for success, 1 for error
+	*/
+	//--------------------------------------------------
+    function CloudUserRemove($method_parameters) {
+        global $CloudDir;
+		$event = new event();
+		$parameter_array = explode(',', $method_parameters);
+		$clouduser_name = $parameter_array[0];
+        $cl_user = new clouduser();
+        if ($cl_user->is_name_free($clouduser_name)) {
+            $event->log("cloudsoap->CloudUserRemove", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud !", "", "", 0, 0, 0);
+            return 1;
+        }
+        $event->log("cloudsoap->CloudUserRemove", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Removing Cloud Users $clouduser_name", "", "", 0, 0, 0);
+        $cl_user->remove_by_name($clouduser_name);
+        return 0;
+	}
+
+
 
 	//--------------------------------------------------
 	/**
@@ -282,6 +305,26 @@ class cloudsoap {
 	}
 
 
+	//--------------------------------------------------
+	/**
+	* De-Provision a system in the openQRM Cloud -> sets Cloud-Request to deprovision
+	* @access public
+	* @param string $method_parameters
+	*  -> cloud-request-id
+	* @return int 0 for success, 1 for failure
+	*/
+	//--------------------------------------------------
+	function CloudRequestSetState($method_parameters) {
+		$event = new event();
+		$parameter_array = explode(',', $method_parameters);
+		$cr_id = $parameter_array[0];
+		$cr_state = $parameter_array[1];
+		// set request to deprovision
+		$cr_request = new cloudrequest();
+		$cr_request->setstatus($cr_id, $cr_state);
+		$event->log("cloudsoap->CloudRequestSetState", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Set Cloud request $cr_id to state $cr_state", "", "", 0, 0, 0);
+		return 0;
+	}
 
 
 

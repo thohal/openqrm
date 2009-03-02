@@ -33,12 +33,26 @@
   <part name='Result' type='xsd:string'/>
 </message>
 
+<message name='CloudUserRemoveRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudUserRemoveResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
 <message name='CloudRequestGetListRequest'> 
   <part name='symbol' type='xsd:string'/> 
 </message> 
 <message name='CloudRequestGetListResponse'> 
   <part name='Result' type='xsd:string'/> 
 </message> 
+
+<message name='CloudRequestSetStateRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudRequestSetStateResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
 
 <message name='KernelGetListRequest'> 
   <part name='Result' type='xsd:string'/> 
@@ -92,10 +106,20 @@
     <output message='tns:CloudUserCreateResponse'/>
   </operation>
 
+  <operation name='CloudUserRemove'>
+    <input message='tns:CloudUserRemoveRequest'/>
+    <output message='tns:CloudUserRemoveResponse'/>
+  </operation>
+
   <operation name='CloudRequestGetList'>
     <input message='tns:CloudRequestGetListRequest'/> 
     <output message='tns:CloudRequestGetListResponse'/>   
   </operation>    
+
+  <operation name='CloudRequestSetState'>
+    <input message='tns:CloudRequestSetStateRequest'/>
+    <output message='tns:CloudRequestSetStateResponse'/>
+  </operation>
 
   <operation name='KernelGetList'>
     <input message='tns:KernelGetListRequest'/> 
@@ -174,6 +198,18 @@
     </output>
   </operation>
 
+  <operation name='CloudUserRemove'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudUserRemove'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
   <operation name='CloudRequestGetList'> 
     <soap:operation soapAction='urn:localhost-cloud#CloudRequestGetList'/> 
     <input> 
@@ -185,6 +221,18 @@
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/> 
     </output> 
   </operation>       
+
+  <operation name='CloudRequestSetState'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudRequestSetState'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
 
   <operation name='KernelGetList'> 
     <soap:operation soapAction='urn:localhost-cloud#KernelGetList'/> 

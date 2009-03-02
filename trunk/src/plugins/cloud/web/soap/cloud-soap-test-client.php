@@ -34,8 +34,7 @@ switch ($action) {
 
 	// ######################### cloud Provisioning example #################################
 	case 'provision':
-
-		$provision_parameters = $request_fields['cr_user'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",".$request_fields['cr_ram_req'].",".$request_fields['cr_cpu_req'].",".$request_fields['cr_disk_req'].",".$request_fields['cr_network_req'].",".$request_fields['cr_resource_quantity'].",".$request_fields['cr_virtualization'].",".$request_fields['cr_ha_req'].",".$request_fields['cr_puppet'];
+		$provision_parameters = $request_fields['cr_username'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",".$request_fields['cr_ram_req'].",".$request_fields['cr_cpu_req'].",".$request_fields['cr_disk_req'].",".$request_fields['cr_network_req'].",".$request_fields['cr_resource_quantity'].",".$request_fields['cr_virtualization'].",".$request_fields['cr_ha_req'].",".$request_fields['cr_puppet'];
 		echo "provision params : $provision_parameters <br>";
 		$res = $client->CloudProvision($provision_parameters);
 		echo "provision : $res <br>";
@@ -43,18 +42,48 @@ switch ($action) {
 
 	// ######################### cloud De-Provisioning example #################################
 	case 'deprovision':
-
 		$cr_id = $request_fields['cr_id'];
 		$res = $client->CloudDeProvision($cr_id);
-		echo "deprovision : $res <br>";
+		echo "deprovision request $cr_id : $res <br>";
 		break;
 
-	// ######################### cloud Create User example #################################
+	// ######################### cloud cancel request example #################################
+	case 'cancel':
+		$cr_id = $request_fields['cr_id'];
+		$res = $client->CloudRequestSetState("$cr_id,new");
+		echo "canceling request $cr_id : $res <br>";
+		break;
+
+	// ######################### cloud cancel request example #################################
+	case 'approve':
+		$cr_id = $request_fields['cr_id'];
+		$res = $client->CloudRequestSetState("$cr_id,approve");
+		echo "approving request $cr_id : $res <br>";
+		break;
+
+	// ######################### cloud cancel request example #################################
+	case 'deny':
+		$cr_id = $request_fields['cr_id'];
+		$res = $client->CloudRequestSetState("$cr_id,deny");
+		echo "denying request $cr_id : $res <br>";
+		break;
+
+// ######################### cloud Create User example #################################
 	case 'usercreate':
         $create_user_parameters = $request_fields['cr_username'].",".$request_fields['cr_userpassword'].",".$request_fields['cr_useremail'];
         $res = $client->CloudUserCreate($create_user_parameters);
 		echo "Created Cloud User ID : $res<br>";
 		break;
+
+	// ######################### cloud Create User example #################################
+	case 'userremove':
+        $remove_user_parameters = $request_fields['cr_username'];
+        $res = $client->CloudUserRemove($remove_user_parameters);
+		echo "Removed Cloud User $remove_user_parameters : $res<br>";
+		break;
+
+
+
 }
 
 
@@ -76,7 +105,7 @@ echo "<p>";
 
 // a select-box including all cloud users
 $cloud_user_list = $client->CloudUserGetList();
-echo ' User <select name="cr_user" size="1">';
+echo ' User <select name="cr_username" size="1">';
 foreach($cloud_user_list as $cloud_user) {
 	echo "<option value=\"$cloud_user\">$cloud_user</option>";
 }
@@ -183,13 +212,21 @@ echo "<h4>De-Provisioning</h4>";
 // get a list of all requests per user (or all if no username is given)
 $cloudrequest_list = $client->CloudRequestGetList("");
  foreach($cloudrequest_list as $cr_id) {
-	echo "<form action=$thisfile method=post>";
-	echo "$cr_id ";
 
+	echo "<nobr>";
+    // de-provision the request
+    echo "<form action=$thisfile method=post>";
+	echo "$cr_id ";
 	echo "<input type=hidden name='cr_id' value=\"$cr_id\">";
-	echo "<input type=hidden name='action' value='deprovision'>";
-	echo "<input type=submit value='De-Provision'>";
+	echo "<input type=submit name='action' value='approve'>";
+	echo "<input type=submit name='action' value='cancel'>";
+	echo "<input type=submit name='action' value='deny'>";
+	echo "<input type=submit name='action' value='deprovision'>";
 	echo "</form>";
+	echo "</nobr>";
+	echo "<br>";
+
+
  }
 
 
@@ -214,7 +251,13 @@ echo "<hr>";
 
 echo "<h4>Remove Cloud User</h4>";
 echo "<form action=$thisfile method=post>";
-
+// the select-box including all cloud users again
+$cloud_user_list = $client->CloudUserGetList();
+echo ' User <select name="cr_username" size="1">';
+foreach($cloud_user_list as $cloud_user) {
+	echo "<option value=\"$cloud_user\">$cloud_user</option>";
+}
+echo '</select>';
 
 echo "<input type=hidden name='action' value='userremove'>";
 echo "<input type=submit value='Remove'>";
