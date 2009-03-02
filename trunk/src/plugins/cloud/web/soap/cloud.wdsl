@@ -75,6 +75,13 @@
   <part name='Result' type='xsd:string'/>
 </message>
 
+<message name='CloudRequestGetDetailsRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudRequestGetDetailsResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
 <message name='KernelGetListRequest'> 
   <part name='Result' type='xsd:string'/> 
 </message> 
@@ -155,6 +162,11 @@
   <operation name='CloudRequestRemove'>
     <input message='tns:CloudRequestRemoveRequest'/>
     <output message='tns:CloudRequestRemoveResponse'/>
+  </operation>
+
+  <operation name='CloudRequestGetDetails'>
+    <input message='tns:CloudRequestGetDetailsRequest'/>
+    <output message='tns:CloudRequestGetDetailsResponse'/>
   </operation>
 
   <operation name='KernelGetList'>
@@ -296,6 +308,18 @@
 
   <operation name='CloudRequestRemove'>
     <soap:operation soapAction='urn:localhost-cloud#CloudRequestRemove'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='CloudRequestGetDetails'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudRequestGetDetails'/>
     <input>
       <soap:body use='encoded' namespace='urn:localhost-cloud'
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>

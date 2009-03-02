@@ -227,19 +227,21 @@ echo "<h4>De-Provisioning</h4>";
 // get a list of all requests per user (or all if no username is given)
 $cloudrequest_list = $client->CloudRequestGetList("");
  foreach($cloudrequest_list as $cr_id) {
-
-	echo "<nobr>";
-    // de-provision the request
+    // de-provision the request / set request status
     echo "<form action=$thisfile method=post>";
-	echo "$cr_id ";
-	echo "<input type=hidden name='cr_id' value=\"$cr_id\">";
+	echo "<nobr>";
+    $cloudrequest_array = $client->CloudRequestGetDetails($cr_id);
+    print_r($cloudrequest_array);
+	echo "</nobr>";
+	echo "<br>";
+    echo "<input type=hidden name='cr_id' value=\"$cr_id\">";
 	echo "<input type=submit name='action' value='approve'>";
 	echo "<input type=submit name='action' value='cancel'>";
 	echo "<input type=submit name='action' value='deny'>";
 	echo "<input type=submit name='action' value='deprovision'>";
 	echo "<input type=submit name='action' value='remove'>";
 	echo "</form>";
-	echo "</nobr>";
+	echo "<br>";
 	echo "<br>";
 
 

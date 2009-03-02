@@ -404,6 +404,90 @@ class cloudsoap {
 	}
 
 
+	//--------------------------------------------------
+	/**
+	* Gets details for a Cloud request
+	* @access public
+	* @param string $method_parameters
+	*  -> cloud-request-id
+	* @return array cloudrequest-parameters
+	*/
+	//--------------------------------------------------
+	function CloudRequestGetDetails($method_parameters) {
+		$event = new event();
+		$parameter_array = explode(',', $method_parameters);
+		$cr_id = $parameter_array[0];
+		$cr_request = new cloudrequest();
+        $cr_request->get_instance_by_id($cr_id);
+        $event->log("cloudsoap->CloudRequestRemove", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing details for Cloud request $cr_id", "", "", 0, 0, 0);
+        $cloudrequest_details = array();
+        // create the array to return
+        $cloudrequest_details['id'] = $cr_id;
+        // translate user_id to user_name
+        $cr_user = new clouduser();
+        $cr_user->get_instance_by_id($cr_request->cu_id);
+        $cloudrequest_details['cu_id'] = $cr_user->name;
+        // translate status
+        switch ($cr_request->status) {
+            case '1':
+                $cloudrequest_details['status'] = "new";
+                break;
+            case '2':
+                $cloudrequest_details['status'] = "approve";
+                break;
+            case '3':
+                $cloudrequest_details['status'] = "active";
+                break;
+            case '4':
+                $cloudrequest_details['status'] = "deny";
+                break;
+            case '5':
+                $cloudrequest_details['status'] = "deprovsion";
+                break;
+            case '6':
+                $cloudrequest_details['status'] = "done";
+                break;
+            case '7':
+                $cloudrequest_details['status'] = "no-res";
+                break;
+            default:
+                $cloudrequest_details['status'] = "new";
+                break;
+        }
+        $cloudrequest_details['request_time'] = date("d-m-Y H-i", $cr_request->request_time);
+        $cloudrequest_details['start'] = date("d-m-Y H-i", $cr_request->start);
+        $cloudrequest_details['stop'] = date("d-m-Y H-i", $cr_request->stop);
+        // translate kernel_id to kernel_name
+        $kernel_id = $cr_request->kernel_id;
+        $kernel = new kernel();
+        $kernel->get_instance_by_id($kernel_id);
+        $cloudrequest_details['kernel_name'] = $kernel->name;
+        // translate image_id to image_name
+        $image_id = $cr_request->image_id;
+        $image = new image();
+        $image->get_instance_by_id($image_id);
+        $cloudrequest_details['image_name'] = $image->name;
+        $cloudrequest_details['ram_req'] = $cr_request->ram_req;
+        $cloudrequest_details['cpu_req'] = $cr_request->cpu_req;
+        $cloudrequest_details['disk_req'] = $cr_request->disk_req;
+        $cloudrequest_details['network_req'] = $cr_request->network_req;
+        $cloudrequest_details['resource_quantity'] = $cr_request->resource_quantity;
+        // translate virtualization type
+        $virtualization_id = $cr_request->virtualization_id;
+        $virtualization = new virtualization();
+        $virtualization->get_instance_by_id($cr_request->resource_type_req);
+        $cloudrequest_details['resource_type_req'] = $virtualization->name;
+        $cloudrequest_details['deployment_type_req'] = $cr_request->deployment_type_req;
+        $cloudrequest_details['ha_req'] = $cr_request->ha_req;
+        $cloudrequest_details['shared_req'] = $cr_request->shared_req;
+        $cloudrequest_details['puppet_groups'] = $cr_request->puppet_groups;
+        $cloudrequest_details['appliance_id'] = $cr_request->appliance_id;
+        $cloudrequest_details['lastbill'] = $cr_request->lastbill;
+
+        return $cloudrequest_details;
+	}
+
+
 
 
 
