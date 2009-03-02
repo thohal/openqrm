@@ -141,8 +141,9 @@ function cloud_user_manager() {
 	$arBody = array();
 
 	// db select
+    $cl_user_count = 0;
 	$cl_user = new clouduser();
-	$user_array = $cl_user->display_overview(0, 100, 'cu_id', 'ASC');
+	$user_array = $cl_user->display_overview(0, 1000, 'cu_id', 'ASC');
 	foreach ($user_array as $index => $cu) {
 		$cu_status = $cu["cu_status"];
 		if ($cu_status == 1) {
@@ -168,6 +169,7 @@ function cloud_user_manager() {
 			'cu_ccunits' => $ccunits_input,
 			'cu_status' => $status_icon,
 		);
+        $cl_user_count++;
 	}
 
 	$table->id = 'Tabelle';
@@ -183,7 +185,7 @@ function cloud_user_manager() {
 		$table->bottom = array('update', 'enable', 'disable', 'limits', 'delete');
 		$table->identifier = 'cu_id';
 	}
-	$table->max = 100;
+	$table->max = $cl_user_count;
 	return $disp.$table->get_string();
 }
 
