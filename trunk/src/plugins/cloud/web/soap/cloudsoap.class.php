@@ -230,7 +230,7 @@ class cloudsoap {
         $cloud_user_limits_fields['cl_network_limit'] = 0;
         $cloud_user_limit->add($cloud_user_limits_fields);
 
-         return $user_fields['cu_id'];
+        return $user_fields['cu_id'];
 	}
 
 
@@ -254,8 +254,66 @@ class cloudsoap {
             return 1;
         }
         $event->log("cloudsoap->CloudUserRemove", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Removing Cloud Users $clouduser_name", "", "", 0, 0, 0);
+        // remove user from htpasswd
+        $openqrm_server_command="htpasswd -D $CloudDir/user/.htpasswd $clouduser_name";
+        $output = shell_exec($openqrm_server_command);
+        // remove permissions and limits
+        $cloud_user_limit = new clouduserlimits();
+        $cloud_user_limit->remove_by_cu_id($cl_user->id);
         $cl_user->remove_by_name($clouduser_name);
         return 0;
+	}
+
+
+	//--------------------------------------------------
+	/**
+	* Set the Cloud Users CCUs
+	* @access public
+	* @param string $method_parameters
+	*  -> user-name,ccunits
+	* @return int 0 for success, 1 for error
+	*/
+	//--------------------------------------------------
+    function CloudUserSetCCUs($method_parameters) {
+		$event = new event();
+		$parameter_array = explode(',', $method_parameters);
+		$clouduser_name = $parameter_array[0];
+		$clouduser_ccus = $parameter_array[1];
+        $cl_user = new clouduser();
+        if ($cl_user->is_name_free($clouduser_name)) {
+            $event->log("cloudsoap->CloudUserSetCCUs", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud !", "", "", 0, 0, 0);
+            return 1;
+        }
+        $event->log("cloudsoap->CloudUserSetCCUs", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Setting Cloud Users $clouduser_name CCUs to $clouduser_ccus", "", "", 0, 0, 0);
+        $cl_user->get_instance_by_name($clouduser_name);
+        $cu_id = $cl_user->id;
+        $cl_user->set_users_ccunits($cu_id, $clouduser_ccus);
+        return 0;
+	}
+
+
+	//--------------------------------------------------
+	/**
+	* Set the Cloud Users CCUs
+	* @access public
+	* @param string $method_parameters
+	*  -> user-name
+	* @return int ccunits
+	*/
+	//--------------------------------------------------
+    function CloudUserGetCCUs($method_parameters) {
+		$event = new event();
+		$parameter_array = explode(',', $method_parameters);
+		$clouduser_name = $parameter_array[0];
+        $cl_user = new clouduser();
+        if ($cl_user->is_name_free($clouduser_name)) {
+            $event->log("cloudsoap->CloudUserGetCCUs", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud !", "", "", 0, 0, 0);
+            return;
+        }
+        $cl_user->get_instance_by_name($clouduser_name);
+        $clouduser_ccus = $cl_user->ccunits;
+        $event->log("cloudsoap->CloudUserGetCCUs", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing Cloud Users $clouduser_name CCUs : $clouduser_ccus", "", "", 0, 0, 0);
+        return $clouduser_ccus;
 	}
 
 

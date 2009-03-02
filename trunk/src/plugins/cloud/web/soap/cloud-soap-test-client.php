@@ -89,6 +89,14 @@ switch ($action) {
 		echo "Removed Cloud User $remove_user_parameters : $res<br>";
 		break;
 
+	// ######################### cloud User setCCUs example #################################
+	case 'setCCUs':
+        $clouduser_name = $request_fields['cr_username'];
+        $clouduser_ccus = $request_fields['cr_ccunits'];
+        $setccus_parameters = "$clouduser_name,$clouduser_ccus";
+        $res = $client->CloudUserSetCCUs($setccus_parameters);
+		echo "Set Cloud User $clouduser_name CCUs to $clouduser_ccus : $res<br>";
+		break;
 
 
 }
@@ -249,8 +257,7 @@ echo "<form action=$thisfile method=post>";
 echo " Name  : <input type=text name='cr_username'>";
 echo " Pass  : <input type=text name='cr_userpassword'>";
 echo " Email : <input type=text name='cr_useremail'>";
-echo "<input type=hidden name='action' value='usercreate'>";
-echo "<input type=submit value='Create Cloud-User'>";
+echo "<input type=submit name='action' value='usercreate'>";
 echo "</form>";
 
 // ######################### Remove Cloud User ###############################
@@ -266,11 +273,26 @@ foreach($cloud_user_list as $cloud_user) {
 	echo "<option value=\"$cloud_user\">$cloud_user</option>";
 }
 echo '</select>';
+echo "<input type=submit name='action' value='userremove'>";
 
-echo "<input type=hidden name='action' value='userremove'>";
-echo "<input type=submit value='Remove'>";
+// ######################### Set Cloud Users CCUs ###############################
+
+echo ' CCUs <select name="cr_ccunits" size="1">';
+echo "<option value=0>0</option>";
+echo "<option value=10>10</option>";
+echo "<option value=20>20</option>";
+echo "<option value=30>30</option>";
+echo "<option value=40>40</option>";
+echo '</select>';
+echo "<input type=submit name='action' value='setCCUs'>";
 echo "</form>";
 
+// ######################### Get Cloud Users CCUs ###############################
+
+$cloud_user_ccunits = $client->CloudUserGetCCUs($cloud_user);
+echo "<br>";
+echo "Cloud User $cloud_user has $cloud_user_ccunits CCUs";
+echo "<br>";
 
 
 // ######################### form Cloud User end ###############################

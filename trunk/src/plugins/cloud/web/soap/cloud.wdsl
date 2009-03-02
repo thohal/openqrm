@@ -40,6 +40,20 @@
   <part name='Result' type='xsd:string'/>
 </message>
 
+<message name='CloudUserSetCCUsRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudUserSetCCUsResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
+<message name='CloudUserGetCCUsRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudUserGetCCUsResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
 <message name='CloudRequestGetListRequest'> 
   <part name='symbol' type='xsd:string'/> 
 </message> 
@@ -116,6 +130,16 @@
   <operation name='CloudUserRemove'>
     <input message='tns:CloudUserRemoveRequest'/>
     <output message='tns:CloudUserRemoveResponse'/>
+  </operation>
+
+  <operation name='CloudUserSetCCUs'>
+    <input message='tns:CloudUserSetCCUsRequest'/>
+    <output message='tns:CloudUserSetCCUsResponse'/>
+  </operation>
+
+  <operation name='CloudUserGetCCUs'>
+    <input message='tns:CloudUserGetCCUsRequest'/>
+    <output message='tns:CloudUserGetCCUsResponse'/>
   </operation>
 
   <operation name='CloudRequestGetList'>
@@ -212,6 +236,30 @@
 
   <operation name='CloudUserRemove'>
     <soap:operation soapAction='urn:localhost-cloud#CloudUserRemove'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='CloudUserSetCCUs'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudUserSetCCUs'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='CloudUserGetCCUs'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudUserGetCCUs'/>
     <input>
       <soap:body use='encoded' namespace='urn:localhost-cloud'
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
