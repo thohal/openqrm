@@ -78,10 +78,27 @@ class cloudsoap {
 	
 		global $CLOUD_REQUEST_TABLE;
 		$event = new event();
-		$event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Provisioning appliance in the openQRM Cloud for user $username", "", "", 0, 0, 0);
+		$cc_conf = new cloudconfig();
 		$cl_user = new clouduser();
 		$cl_user->get_instance_by_name($username);
-		// fill the array
+        // check if billing is enabled
+        $cloud_billing_enabled = $cc_conf->get_value(16);	// 16 is cloud_billing_enabled
+        if ($cloud_billing_enabled == 'true') {
+            if ($cl_user->ccunits < 1) {
+                $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Cloud for user $username does not have any CCUs! Not adding the request.", "", "", 0, 0, 0);
+                return;
+            }
+        }
+        // check user limits
+        $cloud_user_limit = new clouduserlimits();
+        $cloud_user_limit->get_instance_by_cu_id($cl_user->id);
+        $resource_quantity = $request_fields['cr_resource_quantity'];
+        if (!$cloud_user_limit->check_limits($resource_quantity, $ram_req, $disk_req, $cpu_req, $network_req)) {
+            $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Cloud User $username exceeds its Cloud-Limits ! Not adding the request.", "", "", 0, 0, 0);
+            return;
+        }
+        $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Provisioning appliance in the openQRM Cloud for user $username", "", "", 0, 0, 0);
+        // fill the array
         $request_fields['cr_cu_id'] = $cl_user->id;
 		$request_fields['cr_start'] = $this->date_to_timestamp($start);
 		$request_fields['cr_stop'] = $this->date_to_timestamp($stop);
@@ -110,7 +127,6 @@ class cloudsoap {
 		$virtualization_id = $virtualization->id;
 		$request_fields['cr_resource_type_req'] = $virtualization_id;
 		// check for clone-on-deploy
-		$cc_conf = new cloudconfig();
 		$cc_default_clone_on_deploy = $cc_conf->get_value(5);	// default_clone_on_deploy
 		if (!strcmp($cc_default_clone_on_deploy, "true")) {
 			$request_fields['cr_shared_req'] = 1;
