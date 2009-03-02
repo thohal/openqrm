@@ -307,10 +307,10 @@ class cloudsoap {
 
 	//--------------------------------------------------
 	/**
-	* De-Provision a system in the openQRM Cloud -> sets Cloud-Request to deprovision
+	* Sets the state of a Cloud request
 	* @access public
 	* @param string $method_parameters
-	*  -> cloud-request-id
+	*  -> cloud-request-id, cloud-request-state
 	* @return int 0 for success, 1 for failure
 	*/
 	//--------------------------------------------------
@@ -323,6 +323,25 @@ class cloudsoap {
 		$cr_request = new cloudrequest();
 		$cr_request->setstatus($cr_id, $cr_state);
 		$event->log("cloudsoap->CloudRequestSetState", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Set Cloud request $cr_id to state $cr_state", "", "", 0, 0, 0);
+		return 0;
+	}
+
+	//--------------------------------------------------
+	/**
+	* Removes a Cloud request
+	* @access public
+	* @param string $method_parameters
+	*  -> cloud-request-id
+	* @return int 0 for success, 1 for failure
+	*/
+	//--------------------------------------------------
+	function CloudRequestRemove($method_parameters) {
+		$event = new event();
+		$parameter_array = explode(',', $method_parameters);
+		$cr_id = $parameter_array[0];
+		$cr_request = new cloudrequest();
+		$cr_request->remove($cr_id);
+		$event->log("cloudsoap->CloudRequestRemove", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Removing Cloud request $cr_id", "", "", 0, 0, 0);
 		return 0;
 	}
 

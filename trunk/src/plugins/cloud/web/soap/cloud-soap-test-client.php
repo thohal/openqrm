@@ -54,18 +54,25 @@ switch ($action) {
 		echo "canceling request $cr_id : $res <br>";
 		break;
 
-	// ######################### cloud cancel request example #################################
+	// ######################### cloud approve request example #################################
 	case 'approve':
 		$cr_id = $request_fields['cr_id'];
 		$res = $client->CloudRequestSetState("$cr_id,approve");
 		echo "approving request $cr_id : $res <br>";
 		break;
 
-	// ######################### cloud cancel request example #################################
+	// ######################### cloud deny request example #################################
 	case 'deny':
 		$cr_id = $request_fields['cr_id'];
 		$res = $client->CloudRequestSetState("$cr_id,deny");
 		echo "denying request $cr_id : $res <br>";
+		break;
+
+	// ######################### cloud request remove example #################################
+	case 'remove':
+		$cr_id = $request_fields['cr_id'];
+		$res = $client->CloudRequestRemove($cr_id);
+		echo "removing request $cr_id : $res <br>";
 		break;
 
 // ######################### cloud Create User example #################################
@@ -222,6 +229,7 @@ $cloudrequest_list = $client->CloudRequestGetList("");
 	echo "<input type=submit name='action' value='cancel'>";
 	echo "<input type=submit name='action' value='deny'>";
 	echo "<input type=submit name='action' value='deprovision'>";
+	echo "<input type=submit name='action' value='remove'>";
 	echo "</form>";
 	echo "</nobr>";
 	echo "<br>";
