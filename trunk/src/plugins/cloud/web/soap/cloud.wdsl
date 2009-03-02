@@ -54,6 +54,20 @@
   <part name='Result' type='xsd:string'/>
 </message>
 
+<message name='CloudUserSetLimitsRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudUserSetLimitsResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
+<message name='CloudUserGetLimitsRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudUserGetLimitsResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
 <message name='CloudRequestGetListRequest'> 
   <part name='symbol' type='xsd:string'/> 
 </message> 
@@ -147,6 +161,16 @@
   <operation name='CloudUserGetCCUs'>
     <input message='tns:CloudUserGetCCUsRequest'/>
     <output message='tns:CloudUserGetCCUsResponse'/>
+  </operation>
+
+  <operation name='CloudUserSetLimits'>
+    <input message='tns:CloudUserSetLimitsRequest'/>
+    <output message='tns:CloudUserSetLimitsResponse'/>
+  </operation>
+
+  <operation name='CloudUserGetLimits'>
+    <input message='tns:CloudUserGetLimitsRequest'/>
+    <output message='tns:CloudUserGetLimitsResponse'/>
   </operation>
 
   <operation name='CloudRequestGetList'>
@@ -272,6 +296,30 @@
 
   <operation name='CloudUserGetCCUs'>
     <soap:operation soapAction='urn:localhost-cloud#CloudUserGetCCUs'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='CloudUserSetLimits'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudUserSetLimits'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='CloudUserGetLimits'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudUserGetLimits'/>
     <input>
       <soap:body use='encoded' namespace='urn:localhost-cloud'
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>

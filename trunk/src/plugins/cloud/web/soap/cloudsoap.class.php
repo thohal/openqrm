@@ -50,6 +50,8 @@ class cloudsoap {
 // ######################### cloud methods ###########################################
 
 
+// ######################### cloud provision method ###########################################
+
 	//--------------------------------------------------
 	/**
 	* Provision a system in the openQRM Cloud -> creates a Cloud-Request
@@ -142,6 +144,9 @@ class cloudsoap {
 	}
 
 
+// ######################### cloud de-provision method ###########################################
+
+
 	//--------------------------------------------------
 	/**
 	* De-Provision a system in the openQRM Cloud -> sets Cloud-Request to deprovision
@@ -159,6 +164,8 @@ class cloudsoap {
         $this->CloudRequestSetState("$cr_id,deprovsion");
 		return 0;
 	}
+
+// ######################### cloud user methods ###########################################
 
 
 	//--------------------------------------------------
@@ -330,6 +337,78 @@ class cloudsoap {
         return $clouduser_ccus;
 	}
 
+
+	//--------------------------------------------------
+	/**
+	* Set the Cloud Users Limits
+	* @access public
+	* @param string $method_parameters
+	*  -> user-name,resource_limit,memory_limit,disk_limit,cpu_limit,network_limit
+	* @return int 0 for success, 1 for error
+	*/
+	//--------------------------------------------------
+    function CloudUserSetLimits($method_parameters) {
+		$event = new event();
+		$parameter_array = explode(',', $method_parameters);
+		$clouduser_name = $parameter_array[0];
+        $cl_user = new clouduser();
+        if ($cl_user->is_name_free($clouduser_name)) {
+            $event->log("cloudsoap->CloudUserSetLimits", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud !", "", "", 0, 0, 0);
+            return 1;
+        }
+        $event->log("cloudsoap->CloudUserSetLimits", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Setting Cloud Limits for Cloud Users $clouduser_name", "", "", 0, 0, 0);
+        $cloud_user_limits_fields = array();
+        $cloud_user_limits_fields['cl_resource_limit'] = $parameter_array[1];
+        $cloud_user_limits_fields['cl_memory_limit'] = $parameter_array[2];
+        $cloud_user_limits_fields['cl_disk_limit'] = $parameter_array[3];
+        $cloud_user_limits_fields['cl_cpu_limit'] = $parameter_array[4];
+        $cloud_user_limits_fields['cl_network_limit'] = $parameter_array[5];
+        $cl_user->get_instance_by_name($clouduser_name);
+        $clouduser_limit = new clouduserlimits();
+        $clouduser_limit->get_instance_by_cu_id($cl_user->id);
+        $clouduser_limit->update($clouduser_limit->id, $cloud_user_limits_fields);
+        return 0;
+	}
+
+
+	//--------------------------------------------------
+	/**
+	* Set the Cloud Users CCUs
+	* @access public
+	* @param string $method_parameters
+	*  -> user-name
+	* @return array clouduser limits
+	*/
+	//--------------------------------------------------
+    function CloudUserGetLimits($method_parameters) {
+		$event = new event();
+		$parameter_array = explode(',', $method_parameters);
+		$clouduser_name = $parameter_array[0];
+        $cl_user = new clouduser();
+        if ($cl_user->is_name_free($clouduser_name)) {
+            $event->log("cloudsoap->CloudUserGetCCUs", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud !", "", "", 0, 0, 0);
+            return;
+        }
+        $event->log("cloudsoap->CloudUserGetCCUs", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing Cloud Limits for Cloud Users $clouduser_name", "", "", 0, 0, 0);
+        $cl_user->get_instance_by_name($clouduser_name);
+        $clouduser_limit = new clouduserlimits();
+        $clouduser_limit->get_instance_by_cu_id($cl_user->id);
+        $cloud_user_limits_array = array();
+        $cloud_user_limits_array['resource_limit'] = $clouduser_limit->resource_limit;
+        $cloud_user_limits_array['memory_limit'] = $clouduser_limit->memory_limit;
+        $cloud_user_limits_array['disk_limit'] = $clouduser_limit->disk_limit;
+        $cloud_user_limits_array['cpu_limit'] = $clouduser_limit->cpu_limit;
+        $cloud_user_limits_array['network_limit'] = $clouduser_limit->network_limit;
+        return $cloud_user_limits_array;
+	}
+
+
+
+
+
+
+
+// ######################### cloud request methods ###########################################
 
 
 	//--------------------------------------------------

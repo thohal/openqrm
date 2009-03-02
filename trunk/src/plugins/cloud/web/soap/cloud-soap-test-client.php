@@ -120,6 +120,13 @@ switch ($action) {
 		echo "Set Cloud User $clouduser_name CCUs to $clouduser_ccus : $res<br>";
 		break;
 
+	// ######################### cloud User setCCUs example #################################
+	case 'setlimits':
+        $setlimit_parameters = $request_fields['cr_username'].",".$request_fields['cr_resource_limit'].",".$request_fields['cr_memory_limit'].",".$request_fields['cr_disk_limit'].",".$request_fields['cr_cpu_limit'].",".$request_fields['cr_network_limit'];
+        $res = $client->CloudUserSetLimits($setlimit_parameters);
+		echo "Set Cloud Limits of User $clouduser_name : $res<br>";
+		break;
+
 
 }
 
@@ -129,6 +136,7 @@ switch ($action) {
 
 // ######################### actions end ###############################
 
+echo "<br>";
 echo "<h2>Examples for the openQRM SOAP-Service</h2>";
 
 // ######################### form provision start ###############################
@@ -331,8 +339,76 @@ echo "<br>";
 echo "Cloud User $cloud_user has $cloud_user_ccunits CCUs";
 echo "<br>";
 
+// ######################### Get Cloud Users limits ###############################
+
+
+
+echo "<hr>";
+
+echo "<h4>Cloud User Limits</h4>";
+$cloud_user_list = $client->CloudUserGetList();
+foreach($cloud_user_list as $cloud_user) {
+    $clouduser_details = $client->CloudUserGetLimits($cloud_user);
+    echo "Cloud Limits for User $cloud_user :";
+    echo "<pre>";
+    print_r($clouduser_details);
+    echo "</pre><br>";
+
+    echo "Set Cloud Limits for User $cloud_user";
+    echo "<form action=$thisfile method=post>";
+    echo "<input type=hidden name='cr_username' value=\"$cloud_user\">";
+    echo "<table border=1><tr><td>";
+
+    // limit resource quantity
+    echo 'Resource Quantity</td><td><select name="cr_resource_limit" size="1">';
+    echo "<option value=0>na</option>";
+    echo "<option value=1>1</option>";
+    echo "<option value=2>2</option>";
+    echo "<option value=3>3</option>";
+    echo "<option value=4>4</option>";
+    echo "<option value=5>5</option>";
+    echo "<option value=5>10</option>";
+    echo '</select></td></tr><tr><td>';
+
+    // limit memory
+    echo 'Memory</td><td><select name="cr_memory_limit" size="1">';
+    echo "<option value=\"0\">na</option>";
+    echo "<option value=\"512\">512 MB</option>";
+    echo "<option value=\"1024\">1 GB</option>";
+    echo "<option value=\"2048\">2 GB</option>";
+    echo '</select></td></tr><tr><td>';
+
+    // limit disk-size
+    echo 'Disk</td><td><select name="cr_disk_limit" size="1">';
+    echo "<option value=\"0\">na</option>";
+    echo "<option value=\"5000\">5 GB</option>";
+    echo "<option value=\"10000\">10 GB</option>";
+    echo "<option value=\"20000\">20 GB</option>";
+    echo "<option value=\"50000\">50 GB</option>";
+    echo '</select></td></tr><tr><td>';
+
+    // limit cpus
+    echo 'CPU</td><td><select name="cr_cpu_limit" size="1">';
+    echo "<option value=\"0\">na</option>";
+    echo "<option value=\"1\">1</option>";
+    echo "<option value=\"2\">2</option>";
+    echo '</select></td></tr><tr><td>';
+
+    // limit network interfaces
+    echo 'NIC</td><td><select name="cr_network_limit" size="1">';
+    echo "<option value=\"0\">na</option>";
+    echo "<option value=\"1\">1</option>";
+    echo "<option value=\"2\">2</option>";
+    echo '</select></td></tr><tr><td>';
+
+    echo "</td><td><input type=submit name='action' value='setlimits'>";
+
+    echo "</tr></table>";
+    echo "</form>";
+}
+
 
 // ######################### form Cloud User end ###############################
-echo "<hr>";
+echo "<hr><br><br><br><br>";
 
 ?>
