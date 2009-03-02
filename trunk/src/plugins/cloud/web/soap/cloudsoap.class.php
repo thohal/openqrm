@@ -63,30 +63,28 @@ class cloudsoap {
 
 		$parameter_array = explode(',', $method_parameters);
 		$username = $parameter_array[0];
-		$kernel_name = $parameter_array[1];
-		$image_name = $parameter_array[2];
-		$ram_req = $parameter_array[3];
-		$cpu_req = $parameter_array[4];
-		$disk_req = $parameter_array[5];
-		$network_req = $parameter_array[6];
-		$resource_quantity = $parameter_array[7];
-		$virtualization_name = $parameter_array[8];
-		$ha_req = $parameter_array[9];
-		$puppet_groups = $parameter_array[10];
+        $start = $parameter_array[1];
+        $stop = $parameter_array[2];
+        $kernel_name = $parameter_array[3];
+		$image_name = $parameter_array[4];
+		$ram_req = $parameter_array[5];
+		$cpu_req = $parameter_array[6];
+		$disk_req = $parameter_array[7];
+		$network_req = $parameter_array[8];
+		$resource_quantity = $parameter_array[9];
+		$virtualization_name = $parameter_array[10];
+		$ha_req = $parameter_array[11];
+		$puppet_groups = $parameter_array[12];
 	
 		global $CLOUD_REQUEST_TABLE;
 		$event = new event();
 		$event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Provisioning appliance in the openQRM Cloud for user $username", "", "", 0, 0, 0);
-
 		$cl_user = new clouduser();
 		$cl_user->get_instance_by_name($username);
-		$request_fields['cr_cu_id'] = $cl_user->id;
-		// set start date
-		$request_fields['cr_start'] = $_SERVER['REQUEST_TIME'];
-		// set stop date to infinite since we are going to 
-		// initiate the deprovisioning from external source
-		$request_fields['cr_stop'] = "1999999999";
-		// fill the rest of the array
+		// fill the array
+        $request_fields['cr_cu_id'] = $cl_user->id;
+		$request_fields['cr_start'] = $this->date_to_timestamp($start);
+		$request_fields['cr_stop'] = $this->date_to_timestamp($stop);
 		$request_fields['cr_lastbill'] = '';
 		$request_fields['cr_resource_quantity'] = $resource_quantity;
 		$request_fields['cr_resource_quantity'] = $resource_quantity;
@@ -541,7 +539,6 @@ class cloudsoap {
 	}
 
 
-// ######################### appliance methods ###########################################
 
 // ######################### virtualization methods ###########################################
 
@@ -578,11 +575,6 @@ class cloudsoap {
 	}
 
 
-// ######################### resource methods ###########################################
-
-
-// ######################### storage methods ###########################################
-
 
 // ######################### puppet methods ###########################################
 
@@ -615,7 +607,19 @@ class cloudsoap {
 
 // ###################################################################################
 
+    // converts a date to a timestamp
+    function date_to_timestamp($date) {
+        $day = substr($date, 0, 2);
+        $month = substr($date, 3, 2);
+        $year = substr($date, 6, 4);
+        $hour = substr($date, 11, 2);
+        $minute = substr($date, 14, 2);
+        $sec = 0;
+        $timestamp = mktime($hour, $minute, $sec, $month, $day, $year);
+        return $timestamp;
+    }
 
+// ###################################################################################
 
 }
 

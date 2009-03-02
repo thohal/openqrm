@@ -1,3 +1,25 @@
+<html>
+<head>
+<style type="text/css">
+  <!--
+   -->
+  </style>
+  <script type="text/javascript" language="javascript" src="../js/datetimepicker.js"></script>
+  <script language="JavaScript">
+	<!--
+		if (document.images)
+		{
+		calimg= new Image(16,16);
+		calimg.src="../img/cal.gif";
+		}
+	//-->
+</script>
+<link type="text/css" rel="stylesheet" href="../css/calendar.css">
+<link rel="stylesheet" type="text/css" href="../../../css/htmlobject.css" />
+</head>
+
+
+
 <?php
 
 $thisfile = basename($_SERVER['PHP_SELF']);
@@ -34,7 +56,7 @@ switch ($action) {
 
 	// ######################### cloud Provisioning example #################################
 	case 'provision':
-		$provision_parameters = $request_fields['cr_username'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",".$request_fields['cr_ram_req'].",".$request_fields['cr_cpu_req'].",".$request_fields['cr_disk_req'].",".$request_fields['cr_network_req'].",".$request_fields['cr_resource_quantity'].",".$request_fields['cr_virtualization'].",".$request_fields['cr_ha_req'].",".$request_fields['cr_puppet'];
+		$provision_parameters = $request_fields['cr_username'].",".$request_fields['cr_start'].",".$request_fields['cr_stop'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",".$request_fields['cr_ram_req'].",".$request_fields['cr_cpu_req'].",".$request_fields['cr_disk_req'].",".$request_fields['cr_network_req'].",".$request_fields['cr_resource_quantity'].",".$request_fields['cr_virtualization'].",".$request_fields['cr_ha_req'].",".$request_fields['cr_puppet'];
 		echo "provision params : $provision_parameters <br>";
 		$res = $client->CloudProvision($provision_parameters);
 		echo "provision : $res <br>";
@@ -107,7 +129,7 @@ switch ($action) {
 
 // ######################### actions end ###############################
 
-echo "<h2>Example for the openQRM SOAP-Service</h2>";
+echo "<h2>Examples for the openQRM SOAP-Service</h2>";
 
 // ######################### form provision start ###############################
 
@@ -115,137 +137,150 @@ echo "<hr>";
 echo "<h4>Provisioning</h4>";
 echo "<form action=$thisfile method=post>";
 echo "<p>";
+echo "<table border=1><tr><td>";
 
 // ######################### Cloud method example ###############################
 
 // a select-box including all cloud users
 $cloud_user_list = $client->CloudUserGetList();
-echo ' User <select name="cr_username" size="1">';
+echo 'User</td><td><select name="cr_username" size="1">';
 foreach($cloud_user_list as $cloud_user) {
 	echo "<option value=\"$cloud_user\">$cloud_user</option>";
 }
-echo '</select>';
+echo '</select></td></tr><tr><td>';
+
+// ######################### set start time ###############################
+
+echo "Start time</td><td><input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\">";
+echo "<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)\">";
+echo "<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+echo "</a></td></tr><tr><td>";
+
+// ######################### set stop time ###############################
+
+echo "Stop time</td><td><input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\">";
+echo "<a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
+echo "<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+echo "</a></td></tr><tr><td>";
 
 
 // ######################### kernel method examples ###############################
 
 // a select-box including all kernels
 $kernel_list = $client->KernelGetList();
-echo ' Kernel <select name="cr_kernel" size="1">';
+echo 'Kernel</td><td><select name="cr_kernel" size="1">';
 foreach($kernel_list as $kernel) {
 	echo "<option value=\"$kernel\">$kernel</option>";
 }
-echo '</select>';
+echo '</select></td></tr><tr><td>';
 
 
 // ######################### image method examples ###############################
 
 // a select-box including all images
 $image_list = $client->ImageGetList();
-echo ' Image <select name="cr_image" size="1">';
+echo 'Image</td><td><select name="cr_image" size="1">';
 foreach($image_list as $image) {
 	echo "<option value=\"$image\">$image</option>";
 }
-echo '</select>';
+echo '</select></td></tr><tr><td>';
 
 // ######################### virtualization method examples ###############################
 
 // a select-box including all virtualization types
 $virtualization_list = $client->VirtualizationGetList();
-echo ' Type <select name="cr_virtualization" size="1">';
+echo 'Type</td><td><select name="cr_virtualization" size="1">';
 foreach($virtualization_list as $virtualization) {
 	echo "<option value=\"$virtualization\">$virtualization</option>";
 }
-echo '</select>';
+echo '</select></td></tr><tr><td>';
 
 // ######################### puppet method examples ###############################
 
 // a select-box including all available puppet groups
 $puppet_list = $client->PuppetGetList();
-echo ' Puppet <select name="cr_puppet" size="1">';
+echo 'Puppet</td><td><select name="cr_puppet" size="1">';
 foreach($puppet_list as $puppet) {
 	echo "<option value=\"$puppet\">$puppet</option>";
 }
-echo '</select>';
+echo '</select></td></tr><tr><td>';
 
 // ######################### static user input ###############################
-echo '<br>';
 
 // select how many systems to deploy
-echo ' Quantity <select name="cr_resource_quantity" size="1">';
+echo 'Quantity</td><td><select name="cr_resource_quantity" size="1">';
 echo "<option value=\"1\">1</option>";
 echo "<option value=\"2\">2</option>";
 echo "<option value=\"3\">3</option>";
 echo "<option value=\"4\">4</option>";
-echo '</select>';
+echo '</select></td></tr><tr><td>';
 
 // select how much memory
-echo ' Memory <select name="cr_ram_req" size="1">';
+echo 'Memory</td><td><select name="cr_ram_req" size="1">';
 echo "<option value=\"512\">512 MB</option>";
 echo "<option value=\"1024\">1 GB</option>";
 echo "<option value=\"2048\">2 GB</option>";
-echo '</select>';
+echo '</select></td></tr><tr><td>';
 
 // select how many cpus
-echo ' CPU <select name="cr_cpu_req" size="1">';
+echo 'CPU</td><td><select name="cr_cpu_req" size="1">';
 echo "<option value=\"1\">1</option>";
 echo "<option value=\"2\">2</option>";
-echo '</select>';
+echo '</select></td></tr><tr><td>';
 
 // select disk-size
-echo ' Disk <select name="cr_disk_req" size="1">';
+echo 'Disk</td><td><select name="cr_disk_req" size="1">';
 echo "<option value=\"5000\">5 GB</option>";
 echo "<option value=\"10000\">10 GB</option>";
 echo "<option value=\"20000\">20 GB</option>";
 echo "<option value=\"50000\">50 GB</option>";
-echo '</select>';
+echo '</select></td></tr><tr><td>';
 
 // select how many network interfaces
-echo ' NIC <select name="cr_network_req" size="1">';
+echo 'NIC</td><td><select name="cr_network_req" size="1">';
 echo "<option value=\"1\">1</option>";
 echo "<option value=\"2\">2</option>";
-echo '</select>';
+echo '</select></td></tr><tr><td>';
 
 // highavailable ?
-echo ' HA <select name="cr_ha_req" size="1">';
+echo 'HA</td><td><select name="cr_ha_req" size="1">';
 echo "<option value=\"0\">disabled</option>";
 echo "<option value=\"1\">enabled</option>";
-echo '</select>';
+echo '</select></td></tr><tr><td>';
 
 // ######################### form provision end ###############################
-echo '<br>';
+echo '</td><td>';
 echo "<input type=hidden name='action' value='provision'>";
 echo "<input type=submit value='Provision'>";
 echo "</p>";
 echo "</form>";
+
+echo "</tr></table>";
+
 // ######################### form de-provision start ###############################
 echo "<hr>";
-echo "<h4>De-Provisioning</h4>";
+echo "<h4>De-Provisioning / Set Cloud Request Status</h4>";
 
 // ######################### Cloud method example ###############################
 
 // get a list of all requests per user (or all if no username is given)
 $cloudrequest_list = $client->CloudRequestGetList("");
- foreach($cloudrequest_list as $cr_id) {
-    // de-provision the request / set request status
-    echo "<form action=$thisfile method=post>";
-	echo "<nobr>";
-    $cloudrequest_array = $client->CloudRequestGetDetails($cr_id);
-    print_r($cloudrequest_array);
-	echo "</nobr>";
-	echo "<br>";
-    echo "<input type=hidden name='cr_id' value=\"$cr_id\">";
-	echo "<input type=submit name='action' value='approve'>";
-	echo "<input type=submit name='action' value='cancel'>";
-	echo "<input type=submit name='action' value='deny'>";
-	echo "<input type=submit name='action' value='deprovision'>";
-	echo "<input type=submit name='action' value='remove'>";
-	echo "</form>";
-	echo "<br>";
-	echo "<br>";
-
-
- }
+    foreach($cloudrequest_list as $cr_id) {
+        // de-provision the request / set request status
+        echo "<form action=$thisfile method=post>";
+        echo "<nobr><pre>";
+        $cloudrequest_array = $client->CloudRequestGetDetails($cr_id);
+        print_r($cloudrequest_array);
+        echo "</pre></nobr>";
+        echo "<input type=hidden name='cr_id' value=\"$cr_id\">";
+        echo "<input type=submit name='action' value='approve'>";
+        echo "<input type=submit name='action' value='cancel'>";
+        echo "<input type=submit name='action' value='deny'>";
+        echo "<input type=submit name='action' value='deprovision'>";
+        echo "<input type=submit name='action' value='remove'>";
+        echo "</form>";
+        echo "<br>";
+    }
 
 
 // ######################### form de-provision end ###############################
