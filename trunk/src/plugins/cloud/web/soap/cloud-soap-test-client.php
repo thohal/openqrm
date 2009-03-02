@@ -159,14 +159,16 @@ echo '</select></td></tr><tr><td>';
 
 // ######################### set start time ###############################
 
-echo "Start time</td><td><input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\">";
+$now = date("d-m-Y H:i", $_SERVER['REQUEST_TIME']);
+echo "Start time</td><td><input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\" value=\"$now\">";
 echo "<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)\">";
 echo "<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
 echo "</a></td></tr><tr><td>";
 
 // ######################### set stop time ###############################
 
-echo "Stop time</td><td><input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\">";
+$tomorrow = date("d-m-Y H:i", $_SERVER['REQUEST_TIME'] + 86400);
+echo "Stop time</td><td><input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\" value=\"$tomorrow\">";
 echo "<a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
 echo "<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
 echo "</a></td></tr><tr><td>";
