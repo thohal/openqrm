@@ -210,6 +210,7 @@ echo '</select></td></tr><tr><td>';
 // a select-box including all available puppet groups
 $puppet_list = $client->PuppetGetList();
 echo 'Puppet</td><td><select name="cr_puppet" size="1">';
+echo "<option value=\"\">none</option>";
 foreach($puppet_list as $puppet) {
 	echo "<option value=\"$puppet\">$puppet</option>";
 }
