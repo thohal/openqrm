@@ -94,7 +94,6 @@ class cloudsoap {
         // check user limits
         $cloud_user_limit = new clouduserlimits();
         $cloud_user_limit->get_instance_by_cu_id($cl_user->id);
-        $resource_quantity = $request_fields['cr_resource_quantity'];
         if (!$cloud_user_limit->check_limits($resource_quantity, $ram_req, $disk_req, $cpu_req, $network_req)) {
             $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Cloud User $username exceeds its Cloud-Limits ! Not adding the request.", "", "", 0, 0, 0);
             return;
@@ -105,7 +104,6 @@ class cloudsoap {
 		$request_fields['cr_start'] = $this->date_to_timestamp($start);
 		$request_fields['cr_stop'] = $this->date_to_timestamp($stop);
 		$request_fields['cr_lastbill'] = '';
-		$request_fields['cr_resource_quantity'] = $resource_quantity;
 		$request_fields['cr_resource_quantity'] = $resource_quantity;
 		$request_fields['cr_resource_type_req'] = $resource_type_req;
 		$request_fields['cr_ha_req'] = $ha_req;
