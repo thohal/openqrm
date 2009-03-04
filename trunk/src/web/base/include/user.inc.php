@@ -8,11 +8,12 @@ require_once ($RootDir.'/class/event.class.php');
 
 function set_env() {
 	$OPENQRM_USER = new user($_SERVER['PHP_AUTH_USER']);
-	$OPENQRM_USER->set_user();
-	$GLOBALS['OPENQRM_USER'] = $OPENQRM_USER;
-	
-	define('OPENQRM_USER_NAME', $OPENQRM_USER->name);
-	define('OPENQRM_USER_ROLE_NAME', $OPENQRM_USER->role);
+    if ($OPENQRM_USER->check_user_exists()) {
+        $OPENQRM_USER->set_user();
+        $GLOBALS['OPENQRM_USER'] = $OPENQRM_USER;
+        define('OPENQRM_USER_NAME', $OPENQRM_USER->name);
+        define('OPENQRM_USER_ROLE_NAME', $OPENQRM_USER->role);
+    }
 }
 
 set_env();
