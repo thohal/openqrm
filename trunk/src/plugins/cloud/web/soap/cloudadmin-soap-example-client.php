@@ -59,58 +59,90 @@ switch ($action) {
 
 	// ######################### cloud Provisioning example #################################
 	case 'provision':
-		$provision_parameters = $request_fields['cr_username'].",".$request_fields['cr_start'].",".$request_fields['cr_stop'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",".$request_fields['cr_ram_req'].",".$request_fields['cr_cpu_req'].",".$request_fields['cr_disk_req'].",".$request_fields['cr_network_req'].",".$request_fields['cr_resource_quantity'].",".$request_fields['cr_virtualization'].",".$request_fields['cr_ha_req'].",".$request_fields['cr_puppet'];
-		echo "provision params : $provision_parameters <br>";
-		$res = $client->CloudProvision($provision_parameters);
+        try {
+            $provision_parameters = $request_fields['cr_username'].",".$request_fields['cr_start'].",".$request_fields['cr_stop'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",".$request_fields['cr_ram_req'].",".$request_fields['cr_cpu_req'].",".$request_fields['cr_disk_req'].",".$request_fields['cr_network_req'].",".$request_fields['cr_resource_quantity'].",".$request_fields['cr_virtualization'].",".$request_fields['cr_ha_req'].",".$request_fields['cr_puppet'];
+            echo "provision params : $provision_parameters <br>";
+            $res = $client->CloudProvision($provision_parameters);
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
 		echo "provision : $res <br>";
 		break;
 
 	// ######################### cloud De-Provisioning example #################################
 	case 'deprovision':
 		$cr_id = $request_fields['cr_id'];
-		$res = $client->CloudDeProvision($cr_id);
+        try {
+    		$res = $client->CloudDeProvision($cr_id);
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
 		echo "deprovision request $cr_id : $res <br>";
 		break;
 
 	// ######################### cloud cancel request example #################################
 	case 'cancel':
 		$cr_id = $request_fields['cr_id'];
-		$res = $client->CloudRequestSetState("$cr_id,new");
+        try {
+    		$res = $client->CloudRequestSetState("$cr_id,new");
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
 		echo "canceling request $cr_id : $res <br>";
 		break;
 
 	// ######################### cloud approve request example #################################
 	case 'approve':
 		$cr_id = $request_fields['cr_id'];
-		$res = $client->CloudRequestSetState("$cr_id,approve");
+        try {
+    		$res = $client->CloudRequestSetState("$cr_id,approve");
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
 		echo "approving request $cr_id : $res <br>";
 		break;
 
 	// ######################### cloud deny request example #################################
 	case 'deny':
 		$cr_id = $request_fields['cr_id'];
-		$res = $client->CloudRequestSetState("$cr_id,deny");
+        try {
+    		$res = $client->CloudRequestSetState("$cr_id,deny");
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
 		echo "denying request $cr_id : $res <br>";
 		break;
 
 	// ######################### cloud request remove example #################################
 	case 'remove':
 		$cr_id = $request_fields['cr_id'];
-		$res = $client->CloudRequestRemove($cr_id);
+        try {
+    		$res = $client->CloudRequestRemove($cr_id);
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
 		echo "removing request $cr_id : $res <br>";
 		break;
 
 // ######################### cloud Create User example #################################
 	case 'usercreate':
         $create_user_parameters = $request_fields['cr_username'].",".$request_fields['cr_userpassword'].",".$request_fields['cr_useremail'];
-        $res = $client->CloudUserCreate($create_user_parameters);
+        try {
+            $res = $client->CloudUserCreate($create_user_parameters);
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
 		echo "Created Cloud User ID : $res<br>";
 		break;
 
 	// ######################### cloud Create User example #################################
 	case 'userremove':
         $remove_user_parameters = $request_fields['cr_username'];
-        $res = $client->CloudUserRemove($remove_user_parameters);
+        try {
+            $res = $client->CloudUserRemove($remove_user_parameters);
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
 		echo "Removed Cloud User $remove_user_parameters : $res<br>";
 		break;
 
@@ -119,14 +151,22 @@ switch ($action) {
         $clouduser_name = $request_fields['cr_username'];
         $clouduser_ccus = $request_fields['cr_ccunits'];
         $setccus_parameters = "$clouduser_name,$clouduser_ccus";
-        $res = $client->CloudUserSetCCUs($setccus_parameters);
+        try {
+            $res = $client->CloudUserSetCCUs($setccus_parameters);
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
 		echo "Set Cloud User $clouduser_name CCUs to $clouduser_ccus : $res<br>";
 		break;
 
 	// ######################### cloud User setCCUs example #################################
 	case 'setlimits':
         $setlimit_parameters = $request_fields['cr_username'].",".$request_fields['cr_resource_limit'].",".$request_fields['cr_memory_limit'].",".$request_fields['cr_disk_limit'].",".$request_fields['cr_cpu_limit'].",".$request_fields['cr_network_limit'];
-        $res = $client->CloudUserSetLimits($setlimit_parameters);
+        try {
+            $res = $client->CloudUserSetLimits($setlimit_parameters);
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
 		echo "Set Cloud Limits of User $clouduser_name : $res<br>";
 		break;
 
@@ -153,12 +193,16 @@ echo "<table border=1><tr><td>";
 // ######################### Cloud method example ###############################
 
 // a select-box including all cloud users
-$cloud_user_list = $client->CloudUserGetList();
-echo 'User</td><td><select name="cr_username" size="1">';
-foreach($cloud_user_list as $cloud_user) {
-	echo "<option value=\"$cloud_user\">$cloud_user</option>";
+try {
+    $cloud_user_list = $client->CloudUserGetList();
+    echo 'User</td><td><select name="cr_username" size="1">';
+    foreach($cloud_user_list as $cloud_user) {
+        echo "<option value=\"$cloud_user\">$cloud_user</option>";
+    }
+    echo '</select></td></tr><tr><td>';
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
-echo '</select></td></tr><tr><td>';
 
 // ######################### set start time ###############################
 
@@ -180,44 +224,60 @@ echo "</a></td></tr><tr><td>";
 // ######################### kernel method examples ###############################
 
 // a select-box including all kernels
-$kernel_list = $client->KernelGetList();
-echo 'Kernel</td><td><select name="cr_kernel" size="1">';
-foreach($kernel_list as $kernel) {
-	echo "<option value=\"$kernel\">$kernel</option>";
+try {
+    $kernel_list = $client->KernelGetList();
+    echo 'Kernel</td><td><select name="cr_kernel" size="1">';
+    foreach($kernel_list as $kernel) {
+        echo "<option value=\"$kernel\">$kernel</option>";
+    }
+    echo '</select></td></tr><tr><td>';
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
-echo '</select></td></tr><tr><td>';
 
 
 // ######################### image method examples ###############################
 
 // a select-box including all images
-$image_list = $client->ImageGetList();
-echo 'Image</td><td><select name="cr_image" size="1">';
-foreach($image_list as $image) {
-	echo "<option value=\"$image\">$image</option>";
+try {
+    $image_list = $client->ImageGetList();
+    echo 'Image</td><td><select name="cr_image" size="1">';
+    foreach($image_list as $image) {
+        echo "<option value=\"$image\">$image</option>";
+    }
+    echo '</select></td></tr><tr><td>';
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
-echo '</select></td></tr><tr><td>';
 
 // ######################### virtualization method examples ###############################
 
 // a select-box including all virtualization types
-$virtualization_list = $client->VirtualizationGetList();
-echo 'Type</td><td><select name="cr_virtualization" size="1">';
-foreach($virtualization_list as $virtualization) {
-	echo "<option value=\"$virtualization\">$virtualization</option>";
+try {
+    $virtualization_list = $client->VirtualizationGetList();
+    echo 'Type</td><td><select name="cr_virtualization" size="1">';
+    foreach($virtualization_list as $virtualization) {
+        echo "<option value=\"$virtualization\">$virtualization</option>";
+    }
+    echo '</select></td></tr><tr><td>';
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
-echo '</select></td></tr><tr><td>';
 
 // ######################### puppet method examples ###############################
 
 // a select-box including all available puppet groups
-$puppet_list = $client->PuppetGetList();
-echo 'Puppet</td><td><select name="cr_puppet" size="1">';
-echo "<option value=\"\">none</option>";
-foreach($puppet_list as $puppet) {
-	echo "<option value=\"$puppet\">$puppet</option>";
+try {
+    $puppet_list = $client->PuppetGetList();
+    echo 'Puppet</td><td><select name="cr_puppet" size="1">';
+    echo "<option value=\"\">none</option>";
+    foreach($puppet_list as $puppet) {
+        echo "<option value=\"$puppet\">$puppet</option>";
+    }
+    echo '</select></td></tr><tr><td>';
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
-echo '</select></td></tr><tr><td>';
 
 // ######################### static user input ###############################
 
@@ -278,23 +338,31 @@ echo "<h4>De-Provisioning / Set Cloud Request Status</h4>";
 // ######################### Cloud method example ###############################
 
 // get a list of all requests per user (or all if no username is given)
-$cloudrequest_list = $client->CloudRequestGetList("");
-    foreach($cloudrequest_list as $cr_id) {
-        // de-provision the request / set request status
-        echo "<form action=$thisfile method=post>";
-        echo "<nobr><pre>";
+try {
+    $cloudrequest_list = $client->CloudRequestGetList("");
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
+}
+foreach($cloudrequest_list as $cr_id) {
+    // de-provision the request / set request status
+    echo "<form action=$thisfile method=post>";
+    echo "<nobr><pre>";
+    try {
         $cloudrequest_array = $client->CloudRequestGetDetails($cr_id);
         print_r($cloudrequest_array);
-        echo "</pre></nobr>";
-        echo "<input type=hidden name='cr_id' value=\"$cr_id\">";
-        echo "<input type=submit name='action' value='approve'>";
-        echo "<input type=submit name='action' value='cancel'>";
-        echo "<input type=submit name='action' value='deny'>";
-        echo "<input type=submit name='action' value='deprovision'>";
-        echo "<input type=submit name='action' value='remove'>";
-        echo "</form>";
-        echo "<br>";
+    } catch (Exception $e) {
+        echo 'Caught exception: ',  $e->getMessage(), "<br>";
     }
+    echo "</pre></nobr>";
+    echo "<input type=hidden name='cr_id' value=\"$cr_id\">";
+    echo "<input type=submit name='action' value='approve'>";
+    echo "<input type=submit name='action' value='cancel'>";
+    echo "<input type=submit name='action' value='deny'>";
+    echo "<input type=submit name='action' value='deprovision'>";
+    echo "<input type=submit name='action' value='remove'>";
+    echo "</form>";
+    echo "<br>";
+}
 
 
 // ######################### form de-provision end ###############################
@@ -318,13 +386,17 @@ echo "<hr>";
 echo "<h4>Remove Cloud User</h4>";
 echo "<form action=$thisfile method=post>";
 // the select-box including all cloud users again
-$cloud_user_list = $client->CloudUserGetList();
-echo ' User <select name="cr_username" size="1">';
-foreach($cloud_user_list as $cloud_user) {
-	echo "<option value=\"$cloud_user\">$cloud_user</option>";
+try {
+    $cloud_user_list = $client->CloudUserGetList();
+    echo ' User <select name="cr_username" size="1">';
+    foreach($cloud_user_list as $cloud_user) {
+        echo "<option value=\"$cloud_user\">$cloud_user</option>";
+    }
+    echo '</select>';
+    echo "<input type=submit name='action' value='userremove'>";
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
-echo '</select>';
-echo "<input type=submit name='action' value='userremove'>";
 
 // ######################### Set Cloud Users CCUs ###############################
 
@@ -340,9 +412,14 @@ echo "</form>";
 
 // ######################### Get Cloud Users CCUs ###############################
 
-$cloud_user_ccunits = $client->CloudUserGetCCUs($cloud_user);
-echo "<br>";
-echo "Cloud User $cloud_user has $cloud_user_ccunits CCUs";
+try {
+    $cloud_user_ccunits = $client->CloudUserGetCCUs($cloud_user);
+    echo "<br>";
+    echo "Cloud User $cloud_user has $cloud_user_ccunits CCUs";
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
+}
+
 echo "<br>";
 
 // ######################### Get Cloud Users limits ###############################
@@ -352,13 +429,21 @@ echo "<br>";
 echo "<hr>";
 
 echo "<h4>Cloud User Limits</h4>";
-$cloud_user_list = $client->CloudUserGetList();
+try {
+    $cloud_user_list = $client->CloudUserGetList();
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
+}
 foreach($cloud_user_list as $cloud_user) {
-    $clouduser_details = $client->CloudUserGetLimits($cloud_user);
-    echo "Cloud Limits for User $cloud_user :";
-    echo "<pre>";
-    print_r($clouduser_details);
-    echo "</pre><br>";
+    try {
+        $clouduser_details = $client->CloudUserGetLimits($cloud_user);
+        echo "Cloud Limits for User $cloud_user :";
+        echo "<pre>";
+        print_r($clouduser_details);
+        echo "</pre><br>";
+    } catch (Exception $e) {
+        echo 'Caught exception: ',  $e->getMessage(), "<br>";
+    }
 
     echo "Set Cloud Limits for User $cloud_user";
     echo "<form action=$thisfile method=post>";
