@@ -41,7 +41,8 @@ function openqrm_plugin_cloud_uninstall() {
 	fi
 	# remove boot-service + soap-service
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-cloud.tgz
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/cloud.wdsl
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/cloudadmin.wdsl
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/clouduser.wdsl
 	# remove netconf dir
 	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/cloud-conf
 	# remove auth files
@@ -88,9 +89,11 @@ function openqrm_plugin_cloud_init() {
 	fi
 	# link the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/boot-service-cloud.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-cloud.tgz
-	# setup the wdsl definition
-	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/soap/cloud.wdsl	| \
-		sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$OPENQRM_SERVER_IP_ADDRESS/g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/cloud.wdsl
+	# setup the wdsl definitions
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/soap/cloudadmin.wdsl	| \
+		sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$OPENQRM_SERVER_IP_ADDRESS/g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/cloudadmin.wdsl
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap/clouduser.wdsl	| \
+		sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$OPENQRM_SERVER_IP_ADDRESS/g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/clouduser.wdsl
 
 	# link the web portal to the documentroot
 	# create the virtualhost + auth for the cloud web portal

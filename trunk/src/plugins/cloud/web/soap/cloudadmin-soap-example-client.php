@@ -34,14 +34,17 @@ $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 $openqrm_user = "openqrm";
 $openqrm_password = "openqrm";
 
-// url for the wdsl 
-$surl = "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/cloud.wdsl";
+// url for the wdsl
+$surl = "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/cloudadmin.wdsl";
 
 // turn off the WSDL cache
 ini_set("soap.wsdl_cache_enabled", "0");
 
 // create the soap-client
 $client = new SoapClient($surl, array('soap_version' => SOAP_1_2, 'trace' => 1, 'login'=> $openqrm_user, 'password' => $openqrm_password ));
+
+// var_dump($client->__getFunctions());
+
 
 // ######################### actions start ###############################
 
@@ -137,7 +140,7 @@ switch ($action) {
 // ######################### actions end ###############################
 
 echo "<br>";
-echo "<h2>Examples for the openQRM SOAP-Service</h2>";
+echo "<h2>Examples for the openQRM Admin SOAP-Service</h2>";
 
 // ######################### form provision start ###############################
 
