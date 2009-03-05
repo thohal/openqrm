@@ -6,18 +6,42 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/include/openqrm-plugin-sshterm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/etc/openqrm-plugin-sshterm.conf
+# for the post-event to work
+openqrm_server_get_config
+OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+resource_id=0
+resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+
 
 function openqrm_plugin_sshterm_start() {
 	echo "Starting the openQRM sshterm-plugin"
 	openqrm_plugin_sshterm_stop 1>/dev/null 2>&1
-	ajaxterm 1>/dev/null 2>&1 &
+    # start the ajaxterm
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	screen -dmS $SCREEN_NAME $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/ajaxterm/ajaxterm.py
+    sleep 1
+    # create the pound ssl cert
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+    screen -dmS $SCREEN_NAME $0 createcert
+    # start the reverse proxy which also provides secure https connections
+    create_pound_config
+    sleep 2
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+    screen -dmS $SCREEN_NAME $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/pound/pound
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sshterm/.running
 	return 0
 }
 
 function openqrm_plugin_sshterm_stop() {
 	echo "Stopping the openQRM sshterm-plugin"
-	killall  python /usr/share/ajaxterm/ajaxterm.py 1>/dev/null 2>&1
+    AJAXTERM_PID=`ps ax | grep ajaxterm | grep -v grep | awk {' print $1 '}`
+    for PID in $AJAXTERM_PID; do
+        kill $PID
+    done
+    POUND_PID=`ps ax | grep pound | grep -v grep | awk {' print $1 '}`
+    for PID in $POUND_PID; do
+        kill $PID
+    done
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sshterm/.running
 	return 0
 }
@@ -25,11 +49,14 @@ function openqrm_plugin_sshterm_stop() {
 
 function openqrm_plugin_sshterm_init() {
 	echo "Initializing the openQRM sshterm-plugin"
-	
-
+    # creating the openqrm user
+    if ! grep ^openqrm /etc/passwd 1>/dev/null; then
+        useradd -d /home/openqrm -s /bin/bash -m openqrm
+    fi
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sshterm
-
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/web/boot-service-sshterm.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-sshterm.tgz
 	return 0
 }
 
@@ -37,10 +64,26 @@ function openqrm_plugin_sshterm_init() {
 function openqrm_plugin_sshterm_uninstall() {
 	echo "Uninstalling the openQRM sshterm-plugin"
 	openqrm_plugin_sshterm_stop
-	# unlinking the web dir
+    # removing the openqrm user
+    if grep ^openqrm /etc/passwd 1>/dev/null; then
+        userdel openqrm
+    fi
+    # remove bootservice
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-sshterm.tgz
+    # unlinking the web dir
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sshterm
 }
 
+
+function openqrm_plugin_sshterm_createcert() {
+	echo "Creating certificate the openQRM sshterm-plugin"
+    # create the pound ssl cert
+    if ! create_pound_cert $COUNTRY $PROVINCE $CITY $ORGANIZATION $ORG_UNIT $COMMON_NAME_CLIENT $EMAIL_CLIENT $LIFETIME; then
+        openqrm_post_event 0 "openqrm_plugin_sshterm_start" 3 "openqrm-plugin-sshterm" "Failed to generate a ssl-certificate! Not starting sshterm plugin."
+        return 1
+    fi
+	return 0
+}
 
 
 case "$1" in
@@ -61,8 +104,11 @@ case "$1" in
 	uninstall)
 		openqrm_plugin_sshterm_uninstall
 		;;
+	createcert)
+		openqrm_plugin_sshterm_createcert
+		;;
 	*)
-		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		echo "Usage: $0 {start|stop|restart|init|uninstall|createcert}"
 		exit 1
 
 esac
