@@ -1,2 +1,56 @@
 #!/bin/bash
 # this is the functions file for the sshterm-plugin
+if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
+	echo "ERROR: Please export OPENQRM_SERVER_BASE_DIR before sourcing $0"
+	exit 1
+fi
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/etc/openqrm-plugin-sshterm.conf
+
+POUND_PEM_CERT="/etc/pound/ssl/openqrm.pem"
+POUND_CONFIG_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/etc/templates/pound.cfg"
+
+function create_pound_cert() {
+    COUNTRY=$1
+    PROVINCE=$2
+    CITY=$3
+    ORGANIZATION=$4
+    ORG_UNIT=$5
+    COMMON_NAME_CLIENT=$6
+    EMAIL_CLIENT=$7
+    LIFETIME=$8
+    rm -f $POUND_PEM_CERT
+    mkdir -p `dirname $POUND_PEM_CERT`
+    (echo $COUNTRY
+    echo $PROVINCE
+    echo $CITY
+    echo $ORGANIZATION
+    echo $ORG_UNIT
+    echo $COMMON_NAME_CLIENT
+    echo $EMAIL_CLIENT
+    ) | openssl req -x509 -newkey rsa:1024 -keyout $POUND_PEM_CERT -out $POUND_PEM_CERT -days $LIFETIME -nodes
+    if [ "$?" != "0" ]; then
+        return 1
+    else
+        return 0
+    fi
+}
+
+
+function create_pound_config() {
+    # we use a static defined config file location because
+    # pound does not provide any commandline parameters to configure
+    # which config file to use. This is a static compile options.
+    # -> the static compiled pound within the openqrm-plugin-sshterm-comptonents.tgz
+    #    have set the sysconfig directive to /usr/lib/openqrm/plugins/sshterm/etc/
+    POUND_CONFIG="/usr/lib/openqrm/plugins/sshterm/etc/pound.cfg"
+    cat $POUND_CONFIG_TEMPLATE |    \
+        sed -e "s#@@AJAXTERM_REVERSE_PROXY_PORT@@#$OPENQRM_PLUGIN_AJAXTERM_REVERSE_PROXY_PORT#g" |    \
+        sed -e "s#@@POUND_PEM_CERT@@#$POUND_PEM_CERT#g"  \
+        > $POUND_CONFIG
+
+}
+
+
+
+
+

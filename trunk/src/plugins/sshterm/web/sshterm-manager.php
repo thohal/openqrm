@@ -6,20 +6,35 @@ $thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/resource.class.php";
+require_once "$RootDir/class/openqrm_server.class.php";
+require_once "$RootDir/include/openqrm-server-config.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
+$openqrm_server = new openqrm_server();
+$OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
+global $OPENQRM_SERVER_IP_ADDRESS;
+global $OPENQRM_SERVER_BASE_DIR;
+
+// get the parameters from the plugin config file
+$OPENQRM_PLUGIN_CONFIG_FILE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/etc/openqrm-plugin-sshterm.conf";
+$store = openqrm_parse_conf($OPENQRM_PLUGIN_CONFIG_FILE);
+extract($store);
+
 function sshterm_login($id, $ip) {
-	$redirect_url="http://$ip/ajaxterm/";
+    global $OPENQRM_SERVER_IP_ADDRESS;
+    global $OPENQRM_PLUGIN_AJAXTERM_REVERSE_PROXY_PORT;
+	$redirect_url="https://$ip:$OPENQRM_PLUGIN_AJAXTERM_REVERSE_PROXY_PORT";
 	if ("$id" == 0) {
-		$redirect_url="http://localhost:8022";
+		$redirect_url="https://$OPENQRM_SERVER_IP_ADDRESS:$OPENQRM_PLUGIN_AJAXTERM_REVERSE_PROXY_PORT";
 	}
 	$left=50+($id*50);
 	$top=100+($id*50);
+
 ?>
 <script type="text/javascript">
 function open_sshterm (url) {
-  sshterm_window = window.open(url, "<?php echo $ip; ?>", "width=580,height=420,left=<?php echo $left; ?>,top=<?php echo $top; ?>");
-  open_sshterm.focus();
+    sshterm_window = window.open(url, "<?php echo $ip; ?>", "width=580,height=420,left=<?php echo $left; ?>,top=<?php echo $top; ?>");
+    open_sshterm.focus();
 }
 open_sshterm("<?php echo $redirect_url; ?>");
 </script>
@@ -122,14 +137,10 @@ if ($OPENQRM_USER->role == "administrator") {
 		switch (htmlobject_request('action')) {
 			case 'login':
 				foreach($_REQUEST['identifier'] as $id) {
-					if ("$id" != 0) {
-						$resource = new resource();
-						$resource->get_instance_by_id($id);
-						$ip = $resource->ip;
-						sshterm_login($id, $ip);
-					} else {
-						sshterm_login(0, localhost);
-					}
+                    $resource = new resource();
+                    $resource->get_instance_by_id($id);
+                    $ip = $resource->ip;
+                    sshterm_login($id, $ip);
 				}
 				break;
 		}

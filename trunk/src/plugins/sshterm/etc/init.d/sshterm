@@ -1,0 +1,121 @@
+#!/bin/bash
+# this is the boot-service init script for the sshterm resources
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+# for including the package functions
+export OPENQRM_SOURCE_DIR="$OPENQRM_SERVER_BASE_DIR/openqrm/"
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-package-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/include/openqrm-plugin-sshterm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/etc/openqrm-plugin-sshterm.conf
+. $OPENQRM_RESOURCE_PARAMETER_FILE
+
+# do not run on idle resources
+if [ "$resource_image" == "idle" ]; then
+	exit 0
+fi
+# also do not run before the real init of the rootfs
+# if we have this file /etc/initrd-devices.conf we are still in the initrd
+if [ -f /etc/initrd-devices.conf ]; then
+	exit 0
+fi
+
+
+function sshterm_start() {
+	echo "Starting the openQRM sshterm-plugin"
+	sshterm_stop 1>/dev/null 2>&1
+	export FORCE_INSTALL=true
+	openqrm_install_os_dependency screen
+	openqrm_install_os_dependency openssl
+
+    # create the openqrm if not existing yet
+    # this user starts the pound proxy and provides a user login because
+    # ajaxterm does not allow root-logins
+    if ! grep ^openqrm /etc/passwd 1>/dev/null; then
+        useradd -d /home/openqrm -s /bin/bash -m openqrm
+    fi
+	if wget -q -O /iauth.$image_id http://$resource_openqrmserver/openqrm/action/image-auth/iauth.$image_id 2>/iauth.log; then
+		cryptedpassword=`cat /iauth.$image_id`
+		rm -f /iauth.$image_id iauth.log
+		sed -i "s#^openqrm:[^:]*#openqrm:$cryptedpassword#" /etc/shadow
+	fi
+
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	screen -dmS $SCREEN_NAME $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/ajaxterm/ajaxterm.py
+    sleep 1
+    # create the pound ssl cert
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+    screen -dmS $SCREEN_NAME $0 createcert
+    # start the reverse proxy which also provides secure https connections
+    create_pound_config
+    sleep 2
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+    screen -dmS $SCREEN_NAME $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/pound/pound
+
+
+	return 0
+
+
+}
+
+
+function sshterm_stop() {
+	echo "Stopping the openQRM sshterm-plugin"
+    AJAXTERM_PID=`ps ax | grep ajaxterm | grep -v grep | awk {' print $1 '}`
+    for PID in $AJAXTERM_PID; do
+        kill $PID
+    done
+    POUND_PID=`ps ax | grep pound | grep -v grep | awk {' print $1 '}`
+    for PID in $POUND_PID; do
+        kill $PID
+    done
+}
+
+
+
+function sshterm_createcert() {
+	echo "Creating certificate the openQRM sshterm-plugin"
+    # create the pound ssl cert
+    if ! create_pound_cert $COUNTRY $PROVINCE $CITY $ORGANIZATION $ORG_UNIT $COMMON_NAME_CLIENT $EMAIL_CLIENT $LIFETIME; then
+        openqrm_post_event 0 "openqrm_plugin_sshterm_start" 3 "openqrm-plugin-sshterm" "Failed to generate a ssl-certificate! Not starting sshterm plugin."
+        return 1
+    fi
+	return 0
+}
+
+
+
+case "$1" in
+	start)
+		sshterm_start
+		;;
+	stop)
+		sshterm_stop
+		;;
+	restart)
+		sshterm_stop
+		sleep 1
+		sshterm_start
+		;;
+	createcert)
+		sshterm_createcert
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|createcert}"
+		exit 1
+
+esac
+exit $?
+
+
+
+
+
+
+
+
+
+
+
+
+
