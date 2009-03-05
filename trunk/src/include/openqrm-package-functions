@@ -37,6 +37,7 @@ function openqrm_install_os_dependency() {
     	if [ "$WHOAMI" != "root" ]; then
     		export SUDO="sudo"
     	fi
+        $SUDO apt-get update
     	if [ "$FORCE_INSTALL" == "true" ]; then
 	    	$SUDO apt-get -y install $PACKAGE
 	    else
