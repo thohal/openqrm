@@ -117,8 +117,13 @@ function cloud_about() {
 	$disp = $disp."</li>";
 	$disp = $disp."</ul>";
 	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 
+	$disp = $disp."<b>Cloud Admin SOAP-WebService</b>";
+	$disp = $disp."<br>";
+	$disp = $disp."To easily integrate with third-party provsion environments the openQRM Cloud provides a SOAP-WebService";
+	$disp = $disp." for the <nobreak><a href=\"soap/index.html\">Cloud Administrator</a></nobreak> and the Cloud Users.";
+	$disp = $disp."<br>";
+    $disp = $disp."<br>";
 
 
 	$disp = $disp."<br>";

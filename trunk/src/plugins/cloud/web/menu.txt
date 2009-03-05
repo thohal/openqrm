@@ -9,3 +9,9 @@
 ..|Cloud Requests|plugins/cloud/cloud-manager.php
 ..|Cloud Config|plugins/cloud/cloud-config.php
 ..|Cloud IpGroups|plugins/cloud/cloud-ipgroup-manager.php
+..|Cloud WebService
+...|Main|plugins/cloud/soap/index.html
+...|Admin WebService|plugins/cloud/soap/soap-admin.html
+...|Admin Demo|plugins/cloud/soap/cloudadmin-soap-example-client.php
+...|User WebService|plugins/cloud/soap/soap-user.html
+...|User Demo|/cloud-portal/user/soap/clouduser-soap-example-client.php

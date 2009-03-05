@@ -1,7 +1,7 @@
 <?xml version ='1.0' encoding ='UTF-8' ?>
 <definitions name='Cloud'
-  targetNamespace='http://@@OPENQRM_SERVER_IP_ADDRESS@@/openqrm/boot-service/cloudadmin.wdsl'
-  xmlns:tns='http://@@OPENQRM_SERVER_IP_ADDRESS@@/openqrm/boot-service/cloudadmin.wdsl'
+  targetNamespace='http://@@OPENQRM_SERVER_IP_ADDRESS@@/openqrm/boot-service/clouduser.wdsl'
+  xmlns:tns='http://@@OPENQRM_SERVER_IP_ADDRESS@@/openqrm/boot-service/clouduser.wdsl'
   xmlns:soap='http://schemas.xmlsoap.org/wsdl/soap/'
   xmlns='http://schemas.xmlsoap.org/wsdl/'>
 
