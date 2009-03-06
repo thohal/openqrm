@@ -927,6 +927,13 @@ function mycloud_account() {
 
 
 
+function mycloud_documentation() {
+    global $DocRoot;
+    $disp = file_get_contents("$DocRoot/cloud-portal/user/soap/index.html");
+    return $disp;
+}
+
+
 
 // ################### main output section ###############
 $output = array();
@@ -961,6 +968,7 @@ if ($cloudu->status == 1) {
 	$output[] = array('label' => 'Create Cloud Request', 'value' => my_cloud_create_request());
 	$output[] = array('label' => 'My Cloud Appliances', 'value' => my_cloud_appliances());
 	$output[] = array('label' => 'My Cloud Account', 'value' => mycloud_account());
+	$output[] = array('label' => 'Documentation', 'value' => mycloud_documentation());
 	$output[] = array('label' => 'Logout', 'value' => back_to_home());
 } else {
 	$output[] = array('label' => 'Your account has been disabled', 'value' => my_cloud_account_disabled());
