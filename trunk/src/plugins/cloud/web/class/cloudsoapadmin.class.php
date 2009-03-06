@@ -62,7 +62,7 @@ class cloudsoapadmin extends cloudsoap {
 	*/
 	//--------------------------------------------------
 	function CloudUserGetList() {
-		$event = new event();
+		global $event;
 		$event->log("cloudsoap->CloudUserGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available Cloud Users", "", "", 0, 0, 0);
 		$clouduser = new clouduser();
 		$clouduser_list = $clouduser->get_list();
@@ -85,7 +85,7 @@ class cloudsoapadmin extends cloudsoap {
 	//--------------------------------------------------
     function CloudUserCreate($method_parameters) {
         global $CloudDir;
-		$event = new event();
+		global $event;
 		$parameter_array = explode(',', $method_parameters);
 		$clouduser_name = $parameter_array[0];
 		$clouduser_password = $parameter_array[1];
@@ -165,7 +165,7 @@ class cloudsoapadmin extends cloudsoap {
 	//--------------------------------------------------
     function CloudUserRemove($method_parameters) {
         global $CloudDir;
-		$event = new event();
+		global $event;
 		$parameter_array = explode(',', $method_parameters);
 		$clouduser_name = $parameter_array[0];
         // check all user input
@@ -206,7 +206,7 @@ class cloudsoapadmin extends cloudsoap {
 	*/
 	//--------------------------------------------------
     function CloudUserSetCCUs($method_parameters) {
-		$event = new event();
+		global $event;
 		$parameter_array = explode(',', $method_parameters);
 		$clouduser_name = $parameter_array[0];
 		$clouduser_ccus = $parameter_array[1];
@@ -247,7 +247,7 @@ class cloudsoapadmin extends cloudsoap {
 	*/
 	//--------------------------------------------------
     function CloudUserSetLimits($method_parameters) {
-		$event = new event();
+		global $event;
 		$parameter_array = explode(',', $method_parameters);
         // check all user input
         for ($i = 0; $i <= 5; $i++) {
@@ -291,66 +291,6 @@ class cloudsoapadmin extends cloudsoap {
 
 	//--------------------------------------------------
 	/**
-	* Get a list of Cloud Reqeust ids per Cloud User
-	* @access public
-	* @param string $method_parameters
-	*  -> clouduser-name (can be empty for getting a list of all requests)
-	* @return array List of Cloud Request ids
-	*/
-	//--------------------------------------------------
-	// method providing a list of cloud requests ids per user (or all)
-	function CloudRequestGetList($method_parameters) {
-		$event = new event();
-		$parameter_array = explode(',', $method_parameters);
-		$clouduser_name = $parameter_array[0];
-        // check all user input
-        if(!$this->check_param($parameter_array[0])) {
-            $event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[0]", "", "", 0, 0, 0);
-            return;
-        }
-        // check parameter count
-        $parameter_count = count($parameter_array);
-        if ($parameter_count != 1) {
-            $event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
-            return;
-        }
-		$cloudrequest_list = array();
-		if (!strlen($clouduser_name)) {
-			$event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of all Cloud-requests", "", "", 0, 0, 0);
-			$cloudrequest = new cloudrequest();
-			$cloudrequest_id_list = $cloudrequest->get_all_ids();
-			foreach($cloudrequest_id_list as $cr_id_list) {
-				foreach($cr_id_list as $cr_id) {
-					$cloudrequest_list[] = $cr_id;
-				}
-			}
-		} else {
-			$clouduser = new clouduser();
-            if ($cl_user->is_name_free($clouduser_name)) {
-                $event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud. Not adding the request !", "", "", 0, 0, 0);
-                return;
-            }
-			$clouduser->get_instance_by_name($clouduser_name);
-			$cu_id = $clouduser->id;
-			$event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of Cloud-requests for Cloud User $clouduser_name ($cu_id)", "", "", 0, 0, 0);
-			$cloudrequest = new cloudrequest();
-			$cloudrequest_id_list = $cloudrequest->get_all_ids();
-			foreach($cloudrequest_id_list as $cr_id_list) {
-				foreach($cr_id_list as $cr_id) {
-					$cr = new cloudrequest();
-					$cr->get_instance_by_id($cr_id);
-					if ($cr->cu_id == $cu_id) {
-						$cloudrequest_list[] = $cr_id;
-					}
-				}
-			}
-		}
-		return $cloudrequest_list;
-	}
-
-
-	//--------------------------------------------------
-	/**
 	* Sets the state of a Cloud request
 	* @access public
 	* @param string $method_parameters
@@ -359,7 +299,7 @@ class cloudsoapadmin extends cloudsoap {
 	*/
 	//--------------------------------------------------
 	function CloudRequestSetState($method_parameters) {
-		$event = new event();
+		global $event;
 		$parameter_array = explode(',', $method_parameters);
 		$cr_id = $parameter_array[0];
 		$cr_state = $parameter_array[1];
@@ -412,102 +352,6 @@ class cloudsoapadmin extends cloudsoap {
 		$event->log("cloudsoap->CloudRequestRemove", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Removing Cloud request $cr_id", "", "", 0, 0, 0);
 		return 0;
 	}
-
-
-	//--------------------------------------------------
-	/**
-	* Gets details for a Cloud request
-	* @access public
-	* @param string $method_parameters
-	*  -> cloud-request-id
-	* @return array cloudrequest-parameters
-	*/
-	//--------------------------------------------------
-	function CloudRequestGetDetails($method_parameters) {
-		$event = new event();
-		$parameter_array = explode(',', $method_parameters);
-		$cr_id = $parameter_array[0];
-        // check all user input
-        if(!$this->check_param($parameter_array[0])) {
-            $event->log("cloudsoap->CloudRequestGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[0]", "", "", 0, 0, 0);
-            return;
-        }
-        // check parameter count
-        $parameter_count = count($parameter_array);
-        if ($parameter_count != 1) {
-            $event->log("cloudsoap->CloudRequestGetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
-            return;
-        }
-		$cr_request = new cloudrequest();
-        $cr_request->get_instance_by_id($cr_id);
-        $event->log("cloudsoap->CloudRequestRemove", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing details for Cloud request $cr_id", "", "", 0, 0, 0);
-        $cloudrequest_details = array();
-        // create the array to return
-        $cloudrequest_details['id'] = $cr_id;
-        // translate user_id to user_name
-        $cr_user = new clouduser();
-        $cr_user->get_instance_by_id($cr_request->cu_id);
-        $cloudrequest_details['cu_id'] = $cr_user->name;
-        // translate status
-        switch ($cr_request->status) {
-            case '1':
-                $cloudrequest_details['status'] = "new";
-                break;
-            case '2':
-                $cloudrequest_details['status'] = "approve";
-                break;
-            case '3':
-                $cloudrequest_details['status'] = "active";
-                break;
-            case '4':
-                $cloudrequest_details['status'] = "deny";
-                break;
-            case '5':
-                $cloudrequest_details['status'] = "deprovsion";
-                break;
-            case '6':
-                $cloudrequest_details['status'] = "done";
-                break;
-            case '7':
-                $cloudrequest_details['status'] = "no-res";
-                break;
-            default:
-                $cloudrequest_details['status'] = "new";
-                break;
-        }
-        $cloudrequest_details['request_time'] = date("d-m-Y H-i", $cr_request->request_time);
-        $cloudrequest_details['start'] = date("d-m-Y H-i", $cr_request->start);
-        $cloudrequest_details['stop'] = date("d-m-Y H-i", $cr_request->stop);
-        // translate kernel_id to kernel_name
-        $kernel_id = $cr_request->kernel_id;
-        $kernel = new kernel();
-        $kernel->get_instance_by_id($kernel_id);
-        $cloudrequest_details['kernel_name'] = $kernel->name;
-        // translate image_id to image_name
-        $image_id = $cr_request->image_id;
-        $image = new image();
-        $image->get_instance_by_id($image_id);
-        $cloudrequest_details['image_name'] = $image->name;
-        $cloudrequest_details['ram_req'] = $cr_request->ram_req;
-        $cloudrequest_details['cpu_req'] = $cr_request->cpu_req;
-        $cloudrequest_details['disk_req'] = $cr_request->disk_req;
-        $cloudrequest_details['network_req'] = $cr_request->network_req;
-        $cloudrequest_details['resource_quantity'] = $cr_request->resource_quantity;
-        // translate virtualization type
-        $virtualization_id = $cr_request->virtualization_id;
-        $virtualization = new virtualization();
-        $virtualization->get_instance_by_id($cr_request->resource_type_req);
-        $cloudrequest_details['resource_type_req'] = $virtualization->name;
-        $cloudrequest_details['deployment_type_req'] = $cr_request->deployment_type_req;
-        $cloudrequest_details['ha_req'] = $cr_request->ha_req;
-        $cloudrequest_details['shared_req'] = $cr_request->shared_req;
-        $cloudrequest_details['puppet_groups'] = $cr_request->puppet_groups;
-        $cloudrequest_details['appliance_id'] = $cr_request->appliance_id;
-        $cloudrequest_details['lastbill'] = $cr_request->lastbill;
-
-        return $cloudrequest_details;
-	}
-
 
 
 

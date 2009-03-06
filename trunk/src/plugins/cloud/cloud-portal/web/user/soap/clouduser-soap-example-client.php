@@ -59,7 +59,7 @@ switch ($action) {
 	// ######################### cloud Provisioning example #################################
 	case 'provision':
         try {
-            $provision_parameters = $request_fields['cr_username'].",".$request_fields['cr_start'].",".$request_fields['cr_stop'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",".$request_fields['cr_ram_req'].",".$request_fields['cr_cpu_req'].",".$request_fields['cr_disk_req'].",".$request_fields['cr_network_req'].",".$request_fields['cr_resource_quantity'].",".$request_fields['cr_virtualization'].",".$request_fields['cr_ha_req'].",".$request_fields['cr_puppet'];
+            $provision_parameters = "user,".$cloud_user.",".$cloud_password.",".$request_fields['cr_username'].",".$request_fields['cr_start'].",".$request_fields['cr_stop'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",".$request_fields['cr_ram_req'].",".$request_fields['cr_cpu_req'].",".$request_fields['cr_disk_req'].",".$request_fields['cr_network_req'].",".$request_fields['cr_resource_quantity'].",".$request_fields['cr_virtualization'].",".$request_fields['cr_ha_req'].",".$request_fields['cr_puppet'];
             echo "provision params : $provision_parameters <br>";
             $res = $client->CloudProvision($provision_parameters);
         } catch (Exception $e) {
@@ -70,9 +70,11 @@ switch ($action) {
 
 	// ######################### cloud De-Provisioning example #################################
 	case 'deprovision':
-		$cr_id = $request_fields['cr_id'];
+        $deprovision_parameters = "user,".$cloud_user.",".$cloud_password.",".$request_fields['cr_id'];
+        $cr_id = $request_fields['cr_id'];
+        echo "deprovision params : $deprovision_parameters <br>";
         try {
-    		$res = $client->CloudDeProvision($cr_id);
+    		$res = $client->CloudDeProvision($deprovision_parameters);
         } catch (Exception $e) {
             $res = $e->getMessage();
         }
@@ -124,7 +126,8 @@ echo "</a></td></tr><tr><td>";
 
 // a select-box including all kernels
 try {
-    $kernel_list = $client->KernelGetList();
+    $kernelgetlist_parameter = "user,$cloud_user,$cloud_password";
+    $kernel_list = $client->KernelGetList($kernelgetlist_parameter);
     echo 'Kernel</td><td><select name="cr_kernel" size="1">';
     foreach($kernel_list as $kernel) {
         echo "<option value=\"$kernel\">$kernel</option>";
@@ -139,7 +142,8 @@ try {
 
 // a select-box including all images
 try {
-    $image_list = $client->ImageGetList();
+    $imagegetlist_parameter = "user,$cloud_user,$cloud_password";
+    $image_list = $client->ImageGetList($imagegetlist_parameter);
     echo 'Image</td><td><select name="cr_image" size="1">';
     foreach($image_list as $image) {
         echo "<option value=\"$image\">$image</option>";
@@ -153,7 +157,8 @@ try {
 
 // a select-box including all virtualization types
 try {
-    $virtualization_list = $client->VirtualizationGetList();
+    $virtualizationgetlist_parameter = "user,$cloud_user,$cloud_password";
+    $virtualization_list = $client->VirtualizationGetList($virtualizationgetlist_parameter);
     echo 'Type</td><td><select name="cr_virtualization" size="1">';
     foreach($virtualization_list as $virtualization) {
         echo "<option value=\"$virtualization\">$virtualization</option>";
@@ -167,7 +172,8 @@ try {
 
 // a select-box including all available puppet groups
 try {
-    $puppet_list = $client->PuppetGetList();
+    $puppetgetlist_parameter = "user,$cloud_user,$cloud_password";
+    $puppet_list = $client->PuppetGetList($puppetgetlist_parameter);
     echo 'Puppet</td><td><select name="cr_puppet" size="1">';
     echo "<option value=\"\">none</option>";
     foreach($puppet_list as $puppet) {
@@ -237,8 +243,9 @@ echo "<h4>De-Provisioning / Set Cloud Request Status</h4>";
 // ######################### Cloud method example ###############################
 
 // get a list of all requests per user (or all if no username is given)
+$cloudrequestgetlist_parameter = "user,$cloud_user,$cloud_password,$cloud_user";
 try {
-    $cloudrequest_list = $client->CloudRequestGetMyList($cloud_user);
+    $cloudrequest_list = $client->CloudRequestGetList($cloudrequestgetlist_parameter);
 } catch (Exception $e) {
     echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
@@ -246,8 +253,9 @@ foreach($cloudrequest_list as $cr_id) {
     // de-provision the request / set request status
     echo "<form action=$thisfile method=post>";
     echo "<nobr><pre>";
+    $cloudrequestgetlist_parameter = "user,$cloud_user,$cloud_password,$cr_id";
     try {
-        $cloudrequest_array = $client->CloudRequestGetMyDetails($cr_id);
+        $cloudrequest_array = $client->CloudRequestGetDetails($cloudrequestgetlist_parameter);
         print_r($cloudrequest_array);
     } catch (Exception $e) {
         echo 'Caught exception: ',  $e->getMessage(), "<br>";
@@ -264,9 +272,9 @@ foreach($cloudrequest_list as $cr_id) {
 echo "<hr>";
 
 // ######################### Get Cloud Users CCUs ###############################
-
+$cloudusergetccus_parameter = "user,$cloud_user,$cloud_password,$cloud_user";
 try {
-    $cloud_user_ccunits = $client->CloudUserGetCCUs($cloud_user);
+    $cloud_user_ccunits = $client->CloudUserGetCCUs($cloudusergetccus_parameter);
     echo "<br>";
     echo "Cloud User $cloud_user has $cloud_user_ccunits CCUs";
 } catch (Exception $e) {
@@ -282,8 +290,9 @@ echo "<br>";
 echo "<hr>";
 
 echo "<h4>Cloud User Limits</h4>";
+$cloudusergetlimits_parameter = "user,$cloud_user,$cloud_password,$cloud_user";
 try {
-    $clouduser_details = $client->CloudUserGetLimits($cloud_user);
+    $clouduser_details = $client->CloudUserGetLimits($cloudusergetlimits_parameter);
     echo "Cloud Limits for User $cloud_user :";
     echo "<pre>";
     print_r($clouduser_details);

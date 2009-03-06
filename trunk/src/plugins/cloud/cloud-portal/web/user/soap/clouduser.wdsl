@@ -33,17 +33,17 @@
   <part name='Result' type='xsd:string'/>
 </message>
 
-<message name='CloudRequestGetMyListRequest'>
+<message name='CloudRequestGetListRequest'>
   <part name='symbol' type='xsd:string'/>
 </message>
-<message name='CloudRequestGetMyListResponse'>
+<message name='CloudRequestGetListResponse'>
   <part name='Result' type='xsd:string'/>
 </message>
 
-<message name='CloudRequestGetMyDetailsRequest'>
+<message name='CloudRequestGetDetailsRequest'>
   <part name='symbol' type='xsd:string'/>
 </message>
-<message name='CloudRequestGetMyDetailsResponse'>
+<message name='CloudRequestGetDetailsResponse'>
   <part name='Result' type='xsd:string'/>
 </message>
 
@@ -99,14 +99,14 @@
     <output message='tns:CloudUserGetLimitsResponse'/>
   </operation>
 
-  <operation name='CloudRequestGetMyList'>
-    <input message='tns:CloudRequestGetMyListRequest'/>
-    <output message='tns:CloudRequestGetMyListResponse'/>
+  <operation name='CloudRequestGetList'>
+    <input message='tns:CloudRequestGetListRequest'/>
+    <output message='tns:CloudRequestGetListResponse'/>
   </operation>
 
-  <operation name='CloudRequestGetMyDetails'>
-    <input message='tns:CloudRequestGetMyDetailsRequest'/>
-    <output message='tns:CloudRequestGetMyDetailsResponse'/>
+  <operation name='CloudRequestGetDetails'>
+    <input message='tns:CloudRequestGetDetailsRequest'/>
+    <output message='tns:CloudRequestGetDetailsResponse'/>
   </operation>
 
   <operation name='KernelGetList'>
@@ -186,8 +186,8 @@
     </output>
   </operation>
 
-  <operation name='CloudRequestGetMyList'>
-    <soap:operation soapAction='urn:localhost-cloud#CloudRequestGetMyList'/>
+  <operation name='CloudRequestGetList'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudRequestGetList'/>
     <input>
       <soap:body use='encoded' namespace='urn:localhost-cloud'
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
@@ -198,8 +198,8 @@
     </output>
   </operation>
 
-  <operation name='CloudRequestGetMyDetails'>
-    <soap:operation soapAction='urn:localhost-cloud#CloudRequestGetMyDetails'/>
+  <operation name='CloudRequestGetDetails'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudRequestGetDetails'/>
     <input>
       <soap:body use='encoded' namespace='urn:localhost-cloud'
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>

@@ -54,23 +54,26 @@ class cloudsoap {
 	//--------------------------------------------------
 	function CloudProvision($method_parameters) {
 		global $CLOUD_REQUEST_TABLE;
-		$event = new event();
+		global $event;
 		$parameter_array = explode(',', $method_parameters);
-        $username = $parameter_array[0];
-        $start = $parameter_array[1];
-        $stop = $parameter_array[2];
-        $kernel_name = $parameter_array[3];
-		$image_name = $parameter_array[4];
-		$ram_req = $parameter_array[5];
-		$cpu_req = $parameter_array[6];
-		$disk_req = $parameter_array[7];
-		$network_req = $parameter_array[8];
-		$resource_quantity = $parameter_array[9];
-		$virtualization_name = $parameter_array[10];
-		$ha_req = $parameter_array[11];
-		$puppet_groups = $parameter_array[12];
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+        $cloud_username = $parameter_array[3];
+        $start = $parameter_array[4];
+        $stop = $parameter_array[5];
+        $kernel_name = $parameter_array[6];
+		$image_name = $parameter_array[7];
+		$ram_req = $parameter_array[8];
+		$cpu_req = $parameter_array[9];
+		$disk_req = $parameter_array[10];
+		$network_req = $parameter_array[11];
+		$resource_quantity = $parameter_array[12];
+		$virtualization_name = $parameter_array[13];
+		$ha_req = $parameter_array[14];
+		$puppet_groups = $parameter_array[15];
         // check all user input
-        for ($i = 0; $i <= 12; $i++) {
+        for ($i = 0; $i <= 15; $i++) {
             if(!$this->check_param($parameter_array[$i])) {
                 $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
                 return;
@@ -78,24 +81,38 @@ class cloudsoap {
         }
         // check parameter count
         $parameter_count = count($parameter_array);
-        if ($parameter_count != 13) {
+        if ($parameter_count != 16) {
                 $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
                 return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
         }
 
         $cc_conf = new cloudconfig();
 		$cl_user = new clouduser();
-        // check that the user exists
-        if ($cl_user->is_name_free($username)) {
-            $event->log("cloudsoap->CloudUserCreate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $username does not exists in the Cloud. Not adding the request !", "", "", 0, 0, 0);
+        // check that the user exists in the Cloud
+        if ($cl_user->is_name_free($cloud_username)) {
+            $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $cloud_username does not exists in the Cloud. Not adding the request !", "", "", 0, 0, 0);
             return;
         }
-		$cl_user->get_instance_by_name($username);
+        // check that in user mode the username is the same as the cloud_username
+        switch ($mode) {
+            case 'user':
+                if (strcmp($username, $cloud_username)) {
+                    $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to submit a Provsion request as Cloud User $cloud_username  !", "", "", 0, 0, 0);
+                    return;
+                }
+                break;
+        }
         // check if billing is enabled
+		$cl_user->get_instance_by_name($cloud_username);
         $cloud_billing_enabled = $cc_conf->get_value(16);	// 16 is cloud_billing_enabled
         if ($cloud_billing_enabled == 'true') {
             if ($cl_user->ccunits < 1) {
-                $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Cloud for user $username does not have any CCUs! Not adding the request.", "", "", 0, 0, 0);
+                $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Cloud for user $cloud_username does not have any CCUs! Not adding the request.", "", "", 0, 0, 0);
                 return;
             }
         }
@@ -103,10 +120,10 @@ class cloudsoap {
         $cloud_user_limit = new clouduserlimits();
         $cloud_user_limit->get_instance_by_cu_id($cl_user->id);
         if (!$cloud_user_limit->check_limits($resource_quantity, $ram_req, $disk_req, $cpu_req, $network_req)) {
-            $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Cloud User $username exceeds its Cloud-Limits ! Not adding the request.", "", "", 0, 0, 0);
+            $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Cloud User $cloud_username exceeds its Cloud-Limits ! Not adding the request.", "", "", 0, 0, 0);
             return;
         }
-        $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Provisioning appliance in the openQRM Cloud for user $username", "", "", 0, 0, 0);
+        $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Provisioning appliance in the openQRM Cloud for user $cloud_username", "", "", 0, 0, 0);
         // fill the array
         $request_fields['cr_cu_id'] = $cl_user->id;
 		$request_fields['cr_start'] = $this->date_to_timestamp($start);
@@ -163,22 +180,44 @@ class cloudsoap {
 	*/
 	//--------------------------------------------------
 	function CloudDeProvision($method_parameters) {
-		$event = new event();
+		global $event;
 		$parameter_array = explode(',', $method_parameters);
-		$cr_id = $parameter_array[0];
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$cr_id = $parameter_array[3];
         // check all user input
-        if(!$this->check_param($parameter_array[0])) {
-            $event->log("cloudsoap->CloudDeProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[0]", "", "", 0, 0, 0);
-            return;
+        for ($i = 0; $i <= 3; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudDeProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
         }
         // check parameter count
         $parameter_count = count($parameter_array);
-        if ($parameter_count != 1) {
+        if ($parameter_count != 4) {
             $event->log("cloudsoap->CloudDeProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
             return;
         }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudDeProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        // check that the cr is from username
+		$cr_request = new cloudrequest();
+        $cr_request->get_instance_by_id($cr_id);
+        $cl_user = new clouduser();
+        $cl_user->get_instance_by_id($cr_request->cu_id);
+        switch ($mode) {
+            case 'user':
+                if (strcmp($username, $cl_user->name)) {
+                    $event->log("cloudsoap->CloudDeProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to De-Provsion a request from Cloud User $cl_user->name!", "", "", 0, 0, 0);
+                    return;
+                }
+                break;
+        }
         // set request to deprovision
-		// set request
 		$cr_request = new cloudrequest();
 		$cr_request->setstatus($cr_id, "deprovsion");
 		$event->log("cloudsoap->CloudDeProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Set Cloud request $cr_id to state deprovision", "", "", 0, 0, 0);
@@ -190,7 +229,7 @@ class cloudsoap {
 
 	//--------------------------------------------------
 	/**
-	* Set the Cloud Users CCUs
+	* Get the Cloud Users CCUs
 	* @access public
 	* @param string $method_parameters
 	*  -> user-name
@@ -198,18 +237,28 @@ class cloudsoap {
 	*/
 	//--------------------------------------------------
     function CloudUserGetCCUs($method_parameters) {
-		$event = new event();
+		global $event;
 		$parameter_array = explode(',', $method_parameters);
-		$clouduser_name = $parameter_array[0];
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$clouduser_name = $parameter_array[3];
         // check all user input
-        if(!$this->check_param($parameter_array[0])) {
-            $event->log("cloudsoap->CloudUserGetCCUs", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[0]", "", "", 0, 0, 0);
-            return;
+        for ($i = 0; $i <= 3; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudUserGetCCUs", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
         }
         // check parameter count
         $parameter_count = count($parameter_array);
-        if ($parameter_count != 1) {
+        if ($parameter_count != 4) {
             $event->log("cloudsoap->CloudUserGetCCUs", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudUserGetCCUs", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
             return;
         }
         $cl_user = new clouduser();
@@ -217,6 +266,16 @@ class cloudsoap {
             $event->log("cloudsoap->CloudUserGetCCUs", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud !", "", "", 0, 0, 0);
             return;
         }
+       // check that in user mode the username is the same as the cloud_username
+        switch ($mode) {
+            case 'user':
+                if (strcmp($username, $clouduser_name)) {
+                    $event->log("cloudsoap->CloudUserGetCCUs", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to gather the CCUs count of Cloud User $clouduser_name  !", "", "", 0, 0, 0);
+                    return;
+                }
+                break;
+        }
+        // return cloud users ccus
         $cl_user->get_instance_by_name($clouduser_name);
         $clouduser_ccus = $cl_user->ccunits;
         $event->log("cloudsoap->CloudUserGetCCUs", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing Cloud Users $clouduser_name CCUs : $clouduser_ccus", "", "", 0, 0, 0);
@@ -234,18 +293,28 @@ class cloudsoap {
 	*/
 	//--------------------------------------------------
     function CloudUserGetLimits($method_parameters) {
-		$event = new event();
+		global $event;
 		$parameter_array = explode(',', $method_parameters);
-		$clouduser_name = $parameter_array[0];
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$clouduser_name = $parameter_array[3];
         // check all user input
-        if(!$this->check_param($parameter_array[0])) {
-            $event->log("cloudsoap->CloudUserGetLimits", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[0]", "", "", 0, 0, 0);
-            return;
+        for ($i = 0; $i <= 3; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudUserGetLimits", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
         }
         // check parameter count
         $parameter_count = count($parameter_array);
-        if ($parameter_count != 1) {
+        if ($parameter_count != 4) {
             $event->log("cloudsoap->CloudUserGetLimits", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudUserGetLimits", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
             return;
         }
         $cl_user = new clouduser();
@@ -253,6 +322,16 @@ class cloudsoap {
             $event->log("cloudsoap->CloudUserGetLimits", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud !", "", "", 0, 0, 0);
             return;
         }
+       // check that in user mode the username is the same as the cloud_username
+        switch ($mode) {
+            case 'user':
+                if (strcmp($username, $clouduser_name)) {
+                    $event->log("cloudsoap->CloudUserGetLimits", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to gather the Limits informations of Cloud User $clouduser_name  !", "", "", 0, 0, 0);
+                    return;
+                }
+                break;
+        }
+        // return the user limits
         $event->log("cloudsoap->CloudUserGetLimits", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing Cloud Limits for Cloud Users $clouduser_name", "", "", 0, 0, 0);
         $cl_user->get_instance_by_name($clouduser_name);
         $clouduser_limit = new clouduserlimits();
@@ -270,7 +349,7 @@ class cloudsoap {
 
 	//--------------------------------------------------
 	/**
-	* Get a list of Cloud Reqeust ids per Cloud User
+	* Get a list of Cloud Reqeust ids per Cloud User (or all)
 	* @access public
 	* @param string $method_parameters
 	*  -> clouduser-name
@@ -278,34 +357,70 @@ class cloudsoap {
 	*/
 	//--------------------------------------------------
 	// method providing a list of cloud requests ids per user
-	function CloudRequestGetMyList($method_parameters) {
-		$event = new event();
+	function CloudRequestGetList($method_parameters) {
+		global $event;
 		$parameter_array = explode(',', $method_parameters);
-		$clouduser_name = $parameter_array[0];
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$clouduser_name = $parameter_array[3];
         // check all user input
-        if(!$this->check_param($parameter_array[0])) {
-            $event->log("cloudsoap->CloudRequestGetMyList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[0]", "", "", 0, 0, 0);
-            return;
+        for ($i = 0; $i <= 3; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
         }
         // check parameter count
         $parameter_count = count($parameter_array);
-        if ($parameter_count != 1) {
-            $event->log("cloudsoap->CloudRequestGetMyList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+        if ($parameter_count != 4) {
+            $event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
             return;
         }
-		$cloudrequest_list = array();
-		if (!strlen($clouduser_name)) {
-			$event->log("cloudsoap->CloudRequestGetMyList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Empty Cloud User name ! Exiting.", "", "", 0, 0, 0);
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
             return;
         }
         $clouduser = new clouduser();
-        if ($clouduser->is_name_free($clouduser_name)) {
-            $event->log("cloudsoap->CloudRequestGetMyList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud. Not adding the request !", "", "", 0, 0, 0);
-            return;
+       // check that in user mode the username is the same as the cloud_username
+        switch ($mode) {
+            case 'user':
+                if ($clouduser->is_name_free($clouduser_name)) {
+                    $event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud. Not adding the request !", "", "", 0, 0, 0);
+                    return;
+                }
+                if (strcmp($username, $clouduser_name)) {
+                    $event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to gather the request list of Cloud User $clouduser_name  !", "", "", 0, 0, 0);
+                    return;
+                }
+                break;
+
+            case 'admin':
+                if (!strlen($clouduser_name)) {
+                    $event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of all Cloud-requests", "", "", 0, 0, 0);
+                    $cloudrequest_list = array();
+                    $cloudrequest = new cloudrequest();
+                    $cloudrequest_id_list = $cloudrequest->get_all_ids();
+                    foreach($cloudrequest_id_list as $cr_id_list) {
+                        foreach($cr_id_list as $cr_id) {
+                            $cloudrequest_list[] = $cr_id;
+                        }
+                    }
+            		return $cloudrequest_list;
+                } else {
+                    if ($clouduser->is_name_free($clouduser_name)) {
+                        $event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud. Not adding the request !", "", "", 0, 0, 0);
+                        return;
+                    }
+                }
+                break;
         }
+
+        $cloudrequest_list = array();
         $clouduser->get_instance_by_name($clouduser_name);
         $cu_id = $clouduser->id;
-        $event->log("cloudsoap->CloudRequestGetMyList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of Cloud-requests for Cloud User $clouduser_name ($cu_id)", "", "", 0, 0, 0);
+        $event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of Cloud-requests for Cloud User $clouduser_name ($cu_id)", "", "", 0, 0, 0);
         $cloudrequest = new cloudrequest();
         $cloudrequest_id_list = $cloudrequest->get_all_ids();
         foreach($cloudrequest_id_list as $cr_id_list) {
@@ -330,31 +445,50 @@ class cloudsoap {
 	* @return array cloudrequest-parameters
 	*/
 	//--------------------------------------------------
-	function CloudRequestGetMyDetails($method_parameters) {
-		$event = new event();
+	function CloudRequestGetDetails($method_parameters) {
+		global $event;
 		$parameter_array = explode(',', $method_parameters);
-		$cr_id = $parameter_array[0];
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$cr_id = $parameter_array[3];
         // check all user input
-        if(!$this->check_param($parameter_array[0])) {
-            $event->log("cloudsoap->CloudRequestGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[0]", "", "", 0, 0, 0);
-            return;
+        for ($i = 0; $i <= 3; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudRequestGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
         }
         // check parameter count
         $parameter_count = count($parameter_array);
-        if ($parameter_count != 1) {
+        if ($parameter_count != 4) {
             $event->log("cloudsoap->CloudRequestGetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudRequestGetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
             return;
         }
 		$cr_request = new cloudrequest();
         $cr_request->get_instance_by_id($cr_id);
-        $event->log("cloudsoap->CloudRequestRemove", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing details for Cloud request $cr_id", "", "", 0, 0, 0);
+        $cl_user = new clouduser();
+        $cl_user->get_instance_by_id($cr_request->cu_id);
+        switch ($mode) {
+            case 'user':
+                if (strcmp($username, $cl_user->name)) {
+                    $event->log("cloudsoap->CloudRequestGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to get Details of Cloud User $cl_user->name!", "", "", 0, 0, 0);
+                    return;
+                }
+                break;
+        }
+
+        $event->log("cloudsoap->CloudRequestGetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing details for Cloud request $cr_id", "", "", 0, 0, 0);
         $cloudrequest_details = array();
         // create the array to return
         $cloudrequest_details['id'] = $cr_id;
         // translate user_id to user_name
-        $cr_user = new clouduser();
-        $cr_user->get_instance_by_id($cr_request->cu_id);
-        $cloudrequest_details['cu_id'] = $cr_user->name;
+        $cloudrequest_details['cu_id'] = $cl_user->name;
         // translate status
         switch ($cr_request->status) {
             case '1':
@@ -428,9 +562,31 @@ class cloudsoap {
 	* @return array List of Kernel-names
 	*/
 	//--------------------------------------------------
-	function KernelGetList() {
+	function KernelGetList($method_parameters) {
 		global $event;
-		$event->log("cloudsoap->KernelGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available kernels", "", "", 0, 0, 0);
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+        // check all user input
+        for ($i = 0; $i <= 2; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->KernelGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 3) {
+            $event->log("cloudsoap->KernelGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->KernelGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        $event->log("cloudsoap->KernelGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available kernels", "", "", 0, 0, 0);
 		$kernel = new kernel();
 		$kernel_list = $kernel->get_list();
 		$kernel_name_list = array();
@@ -452,8 +608,30 @@ class cloudsoap {
 	* @return array List of Image-names
 	*/
 	//--------------------------------------------------
-	function ImageGetList() {
+	function ImageGetList($method_parameters) {
 		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+        // check all user input
+        for ($i = 0; $i <= 2; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->ImageGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 3) {
+            $event->log("cloudsoap->ImageGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->ImageGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
 		$event->log("cloudsoap->ImageGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available images", "", "", 0, 0, 0);
 		$image = new image();
 		$image_list = $image->get_list();
@@ -478,9 +656,31 @@ class cloudsoap {
 	* @return array List of virtualization type names
 	*/
 	//--------------------------------------------------
-	function VirtualizationGetList() {
+	function VirtualizationGetList($method_parameters) {
 		global $event;
-		$event->log("cloudsoap->ImageGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available virtualizations", "", "", 0, 0, 0);
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+        // check all user input
+        for ($i = 0; $i <= 2; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->VirtualizationGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 3) {
+            $event->log("cloudsoap->VirtualizationGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->VirtualizationGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+		$event->log("cloudsoap->VirtualizationGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available virtualizations", "", "", 0, 0, 0);
 		$virtualization = new virtualization();
 		$virtualization_list = $virtualization->get_list();
 		$virtualization_name_list = array();
@@ -515,8 +715,30 @@ class cloudsoap {
 	* @return array List of puppet group names
 	*/
 	//--------------------------------------------------
-	function PuppetGetList() {
+	function PuppetGetList($method_parameters) {
 		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+        // check all user input
+        for ($i = 0; $i <= 2; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->PuppetGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 3) {
+            $event->log("cloudsoap->PuppetGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->PuppetGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
 		if (!class_exists("puppet")) {
 			$event->log("cloudsoap->PuppetGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Puppet is not enabled in this Cloud", "", "", 0, 0, 0);
 			return;
@@ -586,6 +808,50 @@ class cloudsoap {
         }
     }
 
+
+
+    // checks user authentication
+    function check_user($mode, $username, $password) {
+		global $event;
+        switch ($mode) {
+            case 'admin':
+                $OPENQRM_USER = new user($username);
+                if ($OPENQRM_USER->check_user_exists()) {
+                    $OPENQRM_USER->set_user();
+                    if (!strcmp($OPENQRM_USER->password, $password)) {
+                        return true;
+                    } else {
+                        $event->log("cloudsoap->check_user", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Got a wrong password from openQRM User name $username!", "", "", 0, 0, 0);
+                        return false;
+                    }
+                } else {
+                    $event->log("cloudsoap->check_user", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User name $username does not exists in openQRM !", "", "", 0, 0, 0);
+                    return false;
+                }
+                break;
+
+            case 'user':
+                $cl_user = new clouduser();
+                // check that the user exists
+                if ($cl_user->is_name_free($username)) {
+                    $event->log("cloudsoap->check_user", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $username does not exists in the Cloud!", "", "", 0, 0, 0);
+                    return false;
+                }
+                // check users password
+                $cl_user->get_instance_by_name($username);
+                if (strcmp($cl_user->password, $password)) {
+                    $event->log("cloudsoap->check_user", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Got a wrong password from Cloud User name $username!", "", "", 0, 0, 0);
+                    return false;
+                }
+                return true;
+                break;
+
+            default:
+                return false;
+                break;
+        }
+
+    }
 
 // ###################################################################################
 
