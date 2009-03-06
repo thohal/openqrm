@@ -82,12 +82,12 @@ class cloudsoap {
         // check parameter count
         $parameter_count = count($parameter_array);
         if ($parameter_count != 16) {
-                $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+                $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
                 return;
         }
         // check authentication
         if (!$this->check_user($mode, $username, $password)) {
-            $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
             return;
         }
 
@@ -112,7 +112,7 @@ class cloudsoap {
         $cloud_billing_enabled = $cc_conf->get_value(16);	// 16 is cloud_billing_enabled
         if ($cloud_billing_enabled == 'true') {
             if ($cl_user->ccunits < 1) {
-                $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Cloud for user $cloud_username does not have any CCUs! Not adding the request.", "", "", 0, 0, 0);
+                $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud for user $cloud_username does not have any CCUs! Not adding the request.", "", "", 0, 0, 0);
                 return;
             }
         }
@@ -120,7 +120,7 @@ class cloudsoap {
         $cloud_user_limit = new clouduserlimits();
         $cloud_user_limit->get_instance_by_cu_id($cl_user->id);
         if (!$cloud_user_limit->check_limits($resource_quantity, $ram_req, $disk_req, $cpu_req, $network_req)) {
-            $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Cloud User $cloud_username exceeds its Cloud-Limits ! Not adding the request.", "", "", 0, 0, 0);
+            $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $cloud_username exceeds its Cloud-Limits ! Not adding the request.", "", "", 0, 0, 0);
             return;
         }
         $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Provisioning appliance in the openQRM Cloud for user $cloud_username", "", "", 0, 0, 0);
@@ -196,12 +196,12 @@ class cloudsoap {
         // check parameter count
         $parameter_count = count($parameter_array);
         if ($parameter_count != 4) {
-            $event->log("cloudsoap->CloudDeProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            $event->log("cloudsoap->CloudDeProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
             return;
         }
         // check authentication
         if (!$this->check_user($mode, $username, $password)) {
-            $event->log("cloudsoap->CloudDeProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            $event->log("cloudsoap->CloudDeProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
             return;
         }
         // check that the cr is from username
@@ -253,12 +253,12 @@ class cloudsoap {
         // check parameter count
         $parameter_count = count($parameter_array);
         if ($parameter_count != 4) {
-            $event->log("cloudsoap->CloudUserGetCCUs", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            $event->log("cloudsoap->CloudUserGetCCUs", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
             return;
         }
         // check authentication
         if (!$this->check_user($mode, $username, $password)) {
-            $event->log("cloudsoap->CloudUserGetCCUs", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            $event->log("cloudsoap->CloudUserGetCCUs", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
             return;
         }
         $cl_user = new clouduser();
@@ -309,12 +309,12 @@ class cloudsoap {
         // check parameter count
         $parameter_count = count($parameter_array);
         if ($parameter_count != 4) {
-            $event->log("cloudsoap->CloudUserGetLimits", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            $event->log("cloudsoap->CloudUserGetLimits", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
             return;
         }
         // check authentication
         if (!$this->check_user($mode, $username, $password)) {
-            $event->log("cloudsoap->CloudUserGetLimits", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            $event->log("cloudsoap->CloudUserGetLimits", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
             return;
         }
         $cl_user = new clouduser();
@@ -374,12 +374,12 @@ class cloudsoap {
         // check parameter count
         $parameter_count = count($parameter_array);
         if ($parameter_count != 4) {
-            $event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            $event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
             return;
         }
         // check authentication
         if (!$this->check_user($mode, $username, $password)) {
-            $event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            $event->log("cloudsoap->CloudRequestGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
             return;
         }
         $clouduser = new clouduser();
@@ -462,15 +462,15 @@ class cloudsoap {
         // check parameter count
         $parameter_count = count($parameter_array);
         if ($parameter_count != 4) {
-            $event->log("cloudsoap->CloudRequestGetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            $event->log("cloudsoap->CloudRequestGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
             return;
         }
         // check authentication
         if (!$this->check_user($mode, $username, $password)) {
-            $event->log("cloudsoap->CloudRequestGetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            $event->log("cloudsoap->CloudRequestGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
             return;
         }
-		$cr_request = new cloudrequest();
+        $cr_request = new cloudrequest();
         $cr_request->get_instance_by_id($cr_id);
         $cl_user = new clouduser();
         $cl_user->get_instance_by_id($cr_request->cu_id);
@@ -488,7 +488,7 @@ class cloudsoap {
         // create the array to return
         $cloudrequest_details['id'] = $cr_id;
         // translate user_id to user_name
-        $cloudrequest_details['cu_id'] = $cl_user->name;
+        $cloudrequest_details['cu_id'] = $cl_user->id;
         // translate status
         switch ($cr_request->status) {
             case '1':
@@ -578,12 +578,12 @@ class cloudsoap {
         // check parameter count
         $parameter_count = count($parameter_array);
         if ($parameter_count != 3) {
-            $event->log("cloudsoap->KernelGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            $event->log("cloudsoap->KernelGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
             return;
         }
         // check authentication
         if (!$this->check_user($mode, $username, $password)) {
-            $event->log("cloudsoap->KernelGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            $event->log("cloudsoap->KernelGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
             return;
         }
         $event->log("cloudsoap->KernelGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available kernels", "", "", 0, 0, 0);
@@ -624,12 +624,12 @@ class cloudsoap {
         // check parameter count
         $parameter_count = count($parameter_array);
         if ($parameter_count != 3) {
-            $event->log("cloudsoap->ImageGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            $event->log("cloudsoap->ImageGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
             return;
         }
         // check authentication
         if (!$this->check_user($mode, $username, $password)) {
-            $event->log("cloudsoap->ImageGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            $event->log("cloudsoap->ImageGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
             return;
         }
 		$event->log("cloudsoap->ImageGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available images", "", "", 0, 0, 0);
@@ -672,12 +672,12 @@ class cloudsoap {
         // check parameter count
         $parameter_count = count($parameter_array);
         if ($parameter_count != 3) {
-            $event->log("cloudsoap->VirtualizationGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            $event->log("cloudsoap->VirtualizationGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
             return;
         }
         // check authentication
         if (!$this->check_user($mode, $username, $password)) {
-            $event->log("cloudsoap->VirtualizationGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            $event->log("cloudsoap->VirtualizationGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
             return;
         }
 		$event->log("cloudsoap->VirtualizationGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available virtualizations", "", "", 0, 0, 0);
@@ -731,16 +731,16 @@ class cloudsoap {
         // check parameter count
         $parameter_count = count($parameter_array);
         if ($parameter_count != 3) {
-            $event->log("cloudsoap->PuppetGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            $event->log("cloudsoap->PuppetGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
             return;
         }
         // check authentication
         if (!$this->check_user($mode, $username, $password)) {
-            $event->log("cloudsoap->PuppetGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            $event->log("cloudsoap->PuppetGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
             return;
         }
 		if (!class_exists("puppet")) {
-			$event->log("cloudsoap->PuppetGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Puppet is not enabled in this Cloud", "", "", 0, 0, 0);
+			$event->log("cloudsoap->PuppetGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Puppet is not enabled in this Cloud", "", "", 0, 0, 0);
 			return;
 		} else {
 			$event->log("cloudsoap->PuppetGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available Puppet groups", "", "", 0, 0, 0);

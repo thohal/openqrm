@@ -4,18 +4,18 @@
   <!--
    -->
   </style>
-  <script type="text/javascript" language="javascript" src="../js/datetimepicker.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/datetimepicker.js"></script>
   <script language="JavaScript">
 	<!--
 		if (document.images)
 		{
 		calimg= new Image(16,16);
-		calimg.src="../img/cal.gif";
+		calimg.src="../../img/cal.gif";
 		}
 	//-->
 </script>
-<link type="text/css" rel="stylesheet" href="../css/calendar.css">
-<link rel="stylesheet" type="text/css" href="../../../css/htmlobject.css" />
+<link type="text/css" rel="stylesheet" href="../../css/calendar.css">
+<link rel="stylesheet" type="text/css" href="../../../../css/htmlobject.css" />
 </head>
 
 
@@ -110,7 +110,7 @@ echo "<input type=hidden name='cr_username' value=\"$cloud_user\">";
 $now = date("d-m-Y H:i", $_SERVER['REQUEST_TIME']);
 echo "Start time</td><td><input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\" value=\"$now\">";
 echo "<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)\">";
-echo "<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+echo "<img src=\"../../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
 echo "</a></td></tr><tr><td>";
 
 // ######################### set stop time ###############################
@@ -118,7 +118,7 @@ echo "</a></td></tr><tr><td>";
 $tomorrow = date("d-m-Y H:i", $_SERVER['REQUEST_TIME'] + 86400);
 echo "Stop time</td><td><input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\" value=\"$tomorrow\">";
 echo "<a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
-echo "<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+echo "<img src=\"../../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
 echo "</a></td></tr><tr><td>";
 
 

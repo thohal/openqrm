@@ -84,9 +84,10 @@ switch ($action) {
 
 	// ######################### cloud cancel request example #################################
 	case 'cancel':
+        $cancel_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_id'].",new";
 		$cr_id = $request_fields['cr_id'];
         try {
-    		$res = $client->CloudRequestSetState("$cr_id,new");
+    		$res = $client->CloudRequestSetState($cancel_parameters);
         } catch (Exception $e) {
             $res = $e->getMessage();
         }
@@ -95,9 +96,10 @@ switch ($action) {
 
 	// ######################### cloud approve request example #################################
 	case 'approve':
+        $approve_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_id'].",approve";
 		$cr_id = $request_fields['cr_id'];
         try {
-    		$res = $client->CloudRequestSetState("$cr_id,approve");
+    		$res = $client->CloudRequestSetState($approve_parameters);
         } catch (Exception $e) {
             $res = $e->getMessage();
         }
@@ -106,9 +108,10 @@ switch ($action) {
 
 	// ######################### cloud deny request example #################################
 	case 'deny':
+        $deny_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_id'].",deny";
 		$cr_id = $request_fields['cr_id'];
         try {
-    		$res = $client->CloudRequestSetState("$cr_id,deny");
+    		$res = $client->CloudRequestSetState($deny_parameters);
         } catch (Exception $e) {
             $res = $e->getMessage();
         }
@@ -117,9 +120,10 @@ switch ($action) {
 
 	// ######################### cloud request remove example #################################
 	case 'remove':
+        $remove_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_id'];
 		$cr_id = $request_fields['cr_id'];
         try {
-    		$res = $client->CloudRequestRemove($cr_id);
+    		$res = $client->CloudRequestRemove($remove_parameters);
         } catch (Exception $e) {
             $res = $e->getMessage();
         }
@@ -128,7 +132,7 @@ switch ($action) {
 
 // ######################### cloud Create User example #################################
 	case 'usercreate':
-        $create_user_parameters = $request_fields['cr_username'].",".$request_fields['cr_userpassword'].",".$request_fields['cr_useremail'];
+        $create_user_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_username'].",".$request_fields['cr_userpassword'].",".$request_fields['cr_useremail'];
         try {
             $res = $client->CloudUserCreate($create_user_parameters);
         } catch (Exception $e) {
@@ -139,7 +143,7 @@ switch ($action) {
 
 	// ######################### cloud Create User example #################################
 	case 'userremove':
-        $remove_user_parameters = $request_fields['cr_username'];
+        $remove_user_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_username'];
         try {
             $res = $client->CloudUserRemove($remove_user_parameters);
         } catch (Exception $e) {
@@ -152,7 +156,7 @@ switch ($action) {
 	case 'setCCUs':
         $clouduser_name = $request_fields['cr_username'];
         $clouduser_ccus = $request_fields['cr_ccunits'];
-        $setccus_parameters = "$clouduser_name,$clouduser_ccus";
+        $setccus_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$clouduser_name.",".$clouduser_ccus;
         try {
             $res = $client->CloudUserSetCCUs($setccus_parameters);
         } catch (Exception $e) {
@@ -163,7 +167,7 @@ switch ($action) {
 
 	// ######################### cloud User setCCUs example #################################
 	case 'setlimits':
-        $setlimit_parameters = $request_fields['cr_username'].",".$request_fields['cr_resource_limit'].",".$request_fields['cr_memory_limit'].",".$request_fields['cr_disk_limit'].",".$request_fields['cr_cpu_limit'].",".$request_fields['cr_network_limit'];
+        $setlimit_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_username'].",".$request_fields['cr_resource_limit'].",".$request_fields['cr_memory_limit'].",".$request_fields['cr_disk_limit'].",".$request_fields['cr_cpu_limit'].",".$request_fields['cr_network_limit'];
         try {
             $res = $client->CloudUserSetLimits($setlimit_parameters);
         } catch (Exception $e) {
@@ -195,8 +199,9 @@ echo "<table border=1><tr><td>";
 // ######################### Cloud method example ###############################
 
 // a select-box including all cloud users
+$usergetlist_parameter = "admin,$openqrm_user,$openqrm_password";
 try {
-    $cloud_user_list = $client->CloudUserGetList();
+    $cloud_user_list = $client->CloudUserGetList($usergetlist_parameter);
     echo 'User</td><td><select name="cr_username" size="1">';
     foreach($cloud_user_list as $cloud_user) {
         echo "<option value=\"$cloud_user\">$cloud_user</option>";
@@ -226,8 +231,8 @@ echo "</a></td></tr><tr><td>";
 // ######################### kernel method examples ###############################
 
 // a select-box including all kernels
+$kernelgetlist_parameter = "admin,$openqrm_user,$openqrm_password";
 try {
-    $kernelgetlist_parameter = "admin,$openqrm_user,$openqrm_password";
     $kernel_list = $client->KernelGetList($kernelgetlist_parameter);
     echo 'Kernel</td><td><select name="cr_kernel" size="1">';
     foreach($kernel_list as $kernel) {
@@ -242,8 +247,8 @@ try {
 // ######################### image method examples ###############################
 
 // a select-box including all images
+$imagegetlist_parameter = "admin,$openqrm_user,$openqrm_password";
 try {
-    $imagegetlist_parameter = "admin,$openqrm_user,$openqrm_password";
     $image_list = $client->ImageGetList($imagegetlist_parameter);
     echo 'Image</td><td><select name="cr_image" size="1">';
     foreach($image_list as $image) {
@@ -257,8 +262,8 @@ try {
 // ######################### virtualization method examples ###############################
 
 // a select-box including all virtualization types
+$virtualizationgetlist_parameter = "admin,$openqrm_user,$openqrm_password";
 try {
-    $virtualizationgetlist_parameter = "admin,$openqrm_user,$openqrm_password";
     $virtualization_list = $client->VirtualizationGetList($virtualizationgetlist_parameter);
     echo 'Type</td><td><select name="cr_virtualization" size="1">';
     foreach($virtualization_list as $virtualization) {
@@ -272,8 +277,8 @@ try {
 // ######################### puppet method examples ###############################
 
 // a select-box including all available puppet groups
+$puppetgetlist_parameter = "admin,$openqrm_user,$openqrm_password";
 try {
-    $puppetgetlist_parameter = "admin,$openqrm_user,$openqrm_password";
     $puppet_list = $client->PuppetGetList($puppetgetlist_parameter);
     echo 'Puppet</td><td><select name="cr_puppet" size="1">';
     echo "<option value=\"\">none</option>";
@@ -354,7 +359,7 @@ foreach($cloudrequest_list as $cr_id) {
     // de-provision the request / set request status
     echo "<form action=$thisfile method=post>";
     echo "<nobr><pre>";
-    $cloudrequestgetdetails_parameter = "admin,$openqrm_user,$openqrm_password,$cr_id)";
+    $cloudrequestgetdetails_parameter = "admin,$openqrm_user,$openqrm_password,$cr_id";
     try {
         $cloudrequest_array = $client->CloudRequestGetDetails($cloudrequestgetdetails_parameter);
         print_r($cloudrequest_array);
@@ -394,8 +399,9 @@ echo "<hr>";
 echo "<h4>Remove Cloud User</h4>";
 echo "<form action=$thisfile method=post>";
 // the select-box including all cloud users again
+$usergetlist_parameter = "admin,$openqrm_user,$openqrm_password";
 try {
-    $cloud_user_list = $client->CloudUserGetList();
+    $cloud_user_list = $client->CloudUserGetList($usergetlist_parameter);
     echo ' User <select name="cr_username" size="1">';
     foreach($cloud_user_list as $cloud_user) {
         echo "<option value=\"$cloud_user\">$cloud_user</option>";
@@ -439,7 +445,8 @@ echo "<hr>";
 
 echo "<h4>Cloud User Limits</h4>";
 try {
-    $cloud_user_list = $client->CloudUserGetList();
+    $cloudusergetlist_parameter = "admin,$openqrm_user,$openqrm_password";
+    $cloud_user_list = $client->CloudUserGetList($cloudusergetlist_parameter);
 } catch (Exception $e) {
     echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }

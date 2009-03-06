@@ -61,8 +61,35 @@ class cloudsoapadmin extends cloudsoap {
 	* @return array List of Cloud User names
 	*/
 	//--------------------------------------------------
-	function CloudUserGetList() {
+	function CloudUserGetList($method_parameters) {
 		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+        // check all user input
+        for ($i = 0; $i <= 2; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudUserGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 3) {
+            $event->log("cloudsoap->CloudUserGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudUserGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        // check for admin
+        if (strcmp($mode, "admin")) {
+            $event->log("cloudsoap->CloudUserGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud method only available in admin mode", "", "", 0, 0, 0);
+            return;
+        }
 		$event->log("cloudsoap->CloudUserGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available Cloud Users", "", "", 0, 0, 0);
 		$clouduser = new clouduser();
 		$clouduser_list = $clouduser->get_list();
@@ -87,11 +114,14 @@ class cloudsoapadmin extends cloudsoap {
         global $CloudDir;
 		global $event;
 		$parameter_array = explode(',', $method_parameters);
-		$clouduser_name = $parameter_array[0];
-		$clouduser_password = $parameter_array[1];
-		$clouduser_email = $parameter_array[2];
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$clouduser_name = $parameter_array[3];
+		$clouduser_password = $parameter_array[4];
+		$clouduser_email = $parameter_array[5];
         // check all user input
-        for ($i = 0; $i <= 2; $i++) {
+        for ($i = 0; $i <= 5; $i++) {
             if(!$this->check_param($parameter_array[$i])) {
                 $event->log("cloudsoap->CloudUserCreate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
                 return;
@@ -99,9 +129,19 @@ class cloudsoapadmin extends cloudsoap {
         }
         // check parameter count
         $parameter_count = count($parameter_array);
-        if ($parameter_count != 3) {
-                $event->log("cloudsoap->CloudUserCreate", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+        if ($parameter_count != 6) {
+                $event->log("cloudsoap->CloudUserCreate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
                 return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudUserCreate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        // check for admin
+        if (strcmp($mode, "admin")) {
+            $event->log("cloudsoap->CloudUserCreate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud method only available in admin mode", "", "", 0, 0, 0);
+            return;
         }
         $cl_user = new clouduser();
         if (!$cl_user->is_name_free($clouduser_name)) {
@@ -167,16 +207,31 @@ class cloudsoapadmin extends cloudsoap {
         global $CloudDir;
 		global $event;
 		$parameter_array = explode(',', $method_parameters);
-		$clouduser_name = $parameter_array[0];
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$clouduser_name = $parameter_array[3];
         // check all user input
-        if(!$this->check_param($parameter_array[0])) {
-            $event->log("cloudsoap->CloudUserRemove", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[0]", "", "", 0, 0, 0);
-            return;
+        for ($i = 0; $i <= 3; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudUserRemove", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
         }
         // check parameter count
         $parameter_count = count($parameter_array);
-        if ($parameter_count != 1) {
-            $event->log("cloudsoap->CloudUserRemove", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+        if ($parameter_count != 4) {
+            $event->log("cloudsoap->CloudUserRemove", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudUserRemove", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        // check for admin
+        if (strcmp($mode, "admin")) {
+            $event->log("cloudsoap->CloudUserRemove", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud method only available in admin mode", "", "", 0, 0, 0);
             return;
         }
         $cl_user = new clouduser();
@@ -208,10 +263,13 @@ class cloudsoapadmin extends cloudsoap {
     function CloudUserSetCCUs($method_parameters) {
 		global $event;
 		$parameter_array = explode(',', $method_parameters);
-		$clouduser_name = $parameter_array[0];
-		$clouduser_ccus = $parameter_array[1];
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$clouduser_name = $parameter_array[3];
+		$clouduser_ccus = $parameter_array[4];
         // check all user input
-        for ($i = 0; $i <= 1; $i++) {
+        for ($i = 0; $i <= 4; $i++) {
             if(!$this->check_param($parameter_array[$i])) {
                 $event->log("cloudsoap->CloudUserSetCCUs", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
                 return;
@@ -219,9 +277,19 @@ class cloudsoapadmin extends cloudsoap {
         }
         // check parameter count
         $parameter_count = count($parameter_array);
-        if ($parameter_count != 2) {
-                $event->log("cloudsoap->CloudUserSetCCUs", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+        if ($parameter_count != 5) {
+                $event->log("cloudsoap->CloudUserSetCCUs", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
                 return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudUserSetCCUs", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        // check for admin
+        if (strcmp($mode, "admin")) {
+            $event->log("cloudsoap->CloudUserSetCCUs", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud method only available in admin mode", "", "", 0, 0, 0);
+            return;
         }
         $cl_user = new clouduser();
         if ($cl_user->is_name_free($clouduser_name)) {
@@ -249,8 +317,18 @@ class cloudsoapadmin extends cloudsoap {
     function CloudUserSetLimits($method_parameters) {
 		global $event;
 		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$clouduser_name = $parameter_array[3];
+        $resource_limit = $parameter_array[4];
+        $memory_limit = $parameter_array[5];
+        $disk_limit = $parameter_array[6];
+        $cpu_limit = $parameter_array[7];
+        $network_limit = $parameter_array[8];
+        $cloud_user_limits_fields['cl_network_limit'] = $parameter_array[5];
         // check all user input
-        for ($i = 0; $i <= 5; $i++) {
+        for ($i = 0; $i <= 8; $i++) {
             if(!$this->check_param($parameter_array[$i])) {
                 $event->log("cloudsoap->CloudUserSetLimits", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
                 return;
@@ -258,23 +336,32 @@ class cloudsoapadmin extends cloudsoap {
         }
         // check parameter count
         $parameter_count = count($parameter_array);
-        if ($parameter_count != 6) {
-                $event->log("cloudsoap->CloudUserSetLimits", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+        if ($parameter_count != 9) {
+                $event->log("cloudsoap->CloudUserSetLimits", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
                 return;
         }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudUserSetLimits", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        // check for admin
+        if (strcmp($mode, "admin")) {
+            $event->log("cloudsoap->CloudUserSetLimits", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud method only available in admin mode", "", "", 0, 0, 0);
+            return;
+        }
         $cl_user = new clouduser();
-		$clouduser_name = $parameter_array[0];
         if ($cl_user->is_name_free($clouduser_name)) {
             $event->log("cloudsoap->CloudUserSetLimits", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud !", "", "", 0, 0, 0);
             return 1;
         }
         $event->log("cloudsoap->CloudUserSetLimits", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Setting Cloud Limits for Cloud Users $clouduser_name", "", "", 0, 0, 0);
         $cloud_user_limits_fields = array();
-        $cloud_user_limits_fields['cl_resource_limit'] = $parameter_array[1];
-        $cloud_user_limits_fields['cl_memory_limit'] = $parameter_array[2];
-        $cloud_user_limits_fields['cl_disk_limit'] = $parameter_array[3];
-        $cloud_user_limits_fields['cl_cpu_limit'] = $parameter_array[4];
-        $cloud_user_limits_fields['cl_network_limit'] = $parameter_array[5];
+        $cloud_user_limits_fields['cl_resource_limit'] = $resource_limit;
+        $cloud_user_limits_fields['cl_memory_limit'] = $memory_limit;
+        $cloud_user_limits_fields['cl_disk_limit'] = $disk_limit;
+        $cloud_user_limits_fields['cl_cpu_limit'] = $cpu_limit;
+        $cloud_user_limits_fields['cl_network_limit'] = $network_limit;
         $cl_user->get_instance_by_name($clouduser_name);
         $clouduser_limit = new clouduserlimits();
         $clouduser_limit->get_instance_by_cu_id($cl_user->id);
@@ -301,10 +388,13 @@ class cloudsoapadmin extends cloudsoap {
 	function CloudRequestSetState($method_parameters) {
 		global $event;
 		$parameter_array = explode(',', $method_parameters);
-		$cr_id = $parameter_array[0];
-		$cr_state = $parameter_array[1];
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$cr_id = $parameter_array[3];
+		$cr_state = $parameter_array[4];
         // check all user input
-        for ($i = 0; $i <= 1; $i++) {
+        for ($i = 0; $i <= 4; $i++) {
             if(!$this->check_param($parameter_array[$i])) {
                 $event->log("cloudsoap->CloudRequestSetState", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
                 return;
@@ -312,9 +402,19 @@ class cloudsoapadmin extends cloudsoap {
         }
         // check parameter count
         $parameter_count = count($parameter_array);
-        if ($parameter_count != 2) {
-                $event->log("cloudsoap->CloudRequestSetState", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+        if ($parameter_count != 5) {
+                $event->log("cloudsoap->CloudRequestSetState", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
                 return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudRequestSetState", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        // check for admin
+        if (strcmp($mode, "admin")) {
+            $event->log("cloudsoap->CloudRequestSetState", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud method only available in admin mode", "", "", 0, 0, 0);
+            return;
         }
 		// set request
 		$cr_request = new cloudrequest();
@@ -335,16 +435,31 @@ class cloudsoapadmin extends cloudsoap {
 	function CloudRequestRemove($method_parameters) {
 		$event = new event();
 		$parameter_array = explode(',', $method_parameters);
-		$cr_id = $parameter_array[0];
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$cr_id = $parameter_array[3];
         // check all user input
-        if(!$this->check_param($parameter_array[0])) {
-            $event->log("cloudsoap->CloudRequestRemove", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[0]", "", "", 0, 0, 0);
-            return;
+        for ($i = 0; $i <= 3; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudRequestRemove", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
         }
         // check parameter count
         $parameter_count = count($parameter_array);
-        if ($parameter_count != 1) {
-            $event->log("cloudsoap->CloudRequestRemove", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+        if ($parameter_count != 4) {
+            $event->log("cloudsoap->CloudRequestRemove", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudRequestSetState", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        // check for admin
+        if (strcmp($mode, "admin")) {
+            $event->log("cloudsoap->CloudRequestSetState", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud method only available in admin mode", "", "", 0, 0, 0);
             return;
         }
 		$cr_request = new cloudrequest();
