@@ -45,7 +45,7 @@ $client = new SoapClient($surl, array('soap_version' => SOAP_1_2, 'trace' => 1, 
 
 // var_dump($client->__getFunctions());
 
-// ######################### actions start ###############################
+// ######################### actions start #####################################
 
 $action = $_REQUEST['action'];
 // gather user parameter in array
@@ -56,7 +56,7 @@ foreach ($_REQUEST as $key => $value) {
 }
 switch ($action) {
 
-	// ######################### cloud Provisioning example #################################
+	// ######################### cloud Provisioning example ####################
 	case 'provision':
         try {
             $provision_parameters = "user,".$cloud_user.",".$cloud_password.",".$request_fields['cr_username'].",".$request_fields['cr_start'].",".$request_fields['cr_stop'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",".$request_fields['cr_ram_req'].",".$request_fields['cr_cpu_req'].",".$request_fields['cr_disk_req'].",".$request_fields['cr_network_req'].",".$request_fields['cr_resource_quantity'].",".$request_fields['cr_virtualization'].",".$request_fields['cr_ha_req'].",".$request_fields['cr_puppet'];
@@ -68,7 +68,7 @@ switch ($action) {
 		echo "provision : $res <br>";
 		break;
 
-	// ######################### cloud De-Provisioning example #################################
+	// ######################### cloud De-Provisioning example #################
 	case 'deprovision':
         $deprovision_parameters = "user,".$cloud_user.",".$cloud_password.",".$request_fields['cr_id'];
         $cr_id = $request_fields['cr_id'];
@@ -87,12 +87,12 @@ switch ($action) {
 
 
 
-// ######################### actions end ###############################
+// ######################### actions end #######################################
 
 echo "<br>";
 echo "<h2>Examples for the openQRM User SOAP-Service</h2>";
 
-// ######################### form provision start ###############################
+// ######################### form provision start ##############################
 
 echo "<hr>";
 echo "<h4>Provisioning</h4>";
@@ -100,12 +100,12 @@ echo "<form action=$thisfile method=post>";
 echo "<p>";
 echo "<table border=1><tr><td>";
 
-// ######################### Cloud method example ###############################
+// ######################### Cloud method example ##############################
 
 // set the cloud user name
 echo "<input type=hidden name='cr_username' value=\"$cloud_user\">";
 
-// ######################### set start time ###############################
+// ######################### set start time ####################################
 
 $now = date("d-m-Y H:i", $_SERVER['REQUEST_TIME']);
 echo "Start time</td><td><input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\" value=\"$now\">";
@@ -113,7 +113,7 @@ echo "<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)
 echo "<img src=\"../../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
 echo "</a></td></tr><tr><td>";
 
-// ######################### set stop time ###############################
+// ######################### set stop time #####################################
 
 $tomorrow = date("d-m-Y H:i", $_SERVER['REQUEST_TIME'] + 86400);
 echo "Stop time</td><td><input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\" value=\"$tomorrow\">";
@@ -122,7 +122,7 @@ echo "<img src=\"../../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt
 echo "</a></td></tr><tr><td>";
 
 
-// ######################### kernel method examples ###############################
+// ######################### kernel method examples ############################
 
 // a select-box including all kernels
 try {
@@ -138,7 +138,7 @@ try {
 }
 
 
-// ######################### image method examples ###############################
+// ######################### image method examples #############################
 
 // a select-box including all images
 try {
@@ -153,7 +153,7 @@ try {
     echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
 
-// ######################### virtualization method examples ###############################
+// ######################### virtualization method examples ####################
 
 // a select-box including all virtualization types
 try {
@@ -168,7 +168,7 @@ try {
     echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
 
-// ######################### puppet method examples ###############################
+// ######################### puppet method examples ############################
 
 // a select-box including all available puppet groups
 try {
@@ -184,7 +184,7 @@ try {
     echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
 
-// ######################### static user input ###############################
+// ######################### static user input #################################
 
 // select how many systems to deploy
 echo 'Quantity</td><td><select name="cr_resource_quantity" size="1">';
@@ -227,7 +227,7 @@ echo "<option value=\"0\">disabled</option>";
 echo "<option value=\"1\">enabled</option>";
 echo '</select></td></tr><tr><td>';
 
-// ######################### form provision end ###############################
+// ######################### form provision end ################################
 echo '</td><td>';
 echo "<input type=hidden name='action' value='provision'>";
 echo "<input type=submit value='Provision'>";
@@ -236,11 +236,11 @@ echo "</form>";
 
 echo "</tr></table>";
 
-// ######################### form de-provision start ###############################
+// ######################### form de-provision start ###########################
 echo "<hr>";
 echo "<h4>De-Provisioning / Set Cloud Request Status</h4>";
 
-// ######################### Cloud method example ###############################
+// ######################### Cloud method example ##############################
 
 // get a list of all requests per user (or all if no username is given)
 $cloudrequestgetlist_parameter = "user,$cloud_user,$cloud_password,$cloud_user";
@@ -268,10 +268,10 @@ foreach($cloudrequest_list as $cr_id) {
 }
 
 
-// ######################### form de-provision end ###############################
+// ######################### form de-provision end #############################
 echo "<hr>";
 
-// ######################### Get Cloud Users CCUs ###############################
+// ######################### Get Cloud Users CCUs ##############################
 $cloudusergetccus_parameter = "user,$cloud_user,$cloud_password,$cloud_user";
 try {
     $cloud_user_ccunits = $client->CloudUserGetCCUs($cloudusergetccus_parameter);
@@ -283,7 +283,7 @@ try {
 
 echo "<br>";
 
-// ######################### Get Cloud Users limits ###############################
+// ######################### Get Cloud Users limits ############################
 
 
 

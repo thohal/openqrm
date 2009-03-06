@@ -46,7 +46,7 @@ $client = new SoapClient($surl, array('soap_version' => SOAP_1_2, 'trace' => 1, 
 // var_dump($client->__getFunctions());
 
 
-// ######################### actions start ###############################
+// ######################### actions start #####################################
 
 $action = $_REQUEST['action'];
 // gather user parameter in array
@@ -57,7 +57,7 @@ foreach ($_REQUEST as $key => $value) {
 }
 switch ($action) {
 
-	// ######################### cloud Provisioning example #################################
+	// ######################### cloud Provisioning example ####################
 	case 'provision':
         $provision_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_username'].",".$request_fields['cr_start'].",".$request_fields['cr_stop'].",".$request_fields['cr_kernel'].",".$request_fields['cr_image'].",".$request_fields['cr_ram_req'].",".$request_fields['cr_cpu_req'].",".$request_fields['cr_disk_req'].",".$request_fields['cr_network_req'].",".$request_fields['cr_resource_quantity'].",".$request_fields['cr_virtualization'].",".$request_fields['cr_ha_req'].",".$request_fields['cr_puppet'];
         echo "provision params : $provision_parameters <br>";
@@ -69,7 +69,7 @@ switch ($action) {
 		echo "provision : $res <br>";
 		break;
 
-	// ######################### cloud De-Provisioning example #################################
+	// ######################### cloud De-Provisioning example #################
 	case 'deprovision':
         $deprovision_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_id'];
         $cr_id = $request_fields['cr_id'];
@@ -82,7 +82,7 @@ switch ($action) {
 		echo "deprovision request $cr_id : $res <br>";
 		break;
 
-	// ######################### cloud cancel request example #################################
+	// ######################### cloud cancel request example ##################
 	case 'cancel':
         $cancel_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_id'].",new";
 		$cr_id = $request_fields['cr_id'];
@@ -94,7 +94,7 @@ switch ($action) {
 		echo "canceling request $cr_id : $res <br>";
 		break;
 
-	// ######################### cloud approve request example #################################
+	// ######################### cloud approve request example #################
 	case 'approve':
         $approve_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_id'].",approve";
 		$cr_id = $request_fields['cr_id'];
@@ -106,7 +106,7 @@ switch ($action) {
 		echo "approving request $cr_id : $res <br>";
 		break;
 
-	// ######################### cloud deny request example #################################
+	// ######################### cloud deny request example ####################
 	case 'deny':
         $deny_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_id'].",deny";
 		$cr_id = $request_fields['cr_id'];
@@ -118,7 +118,7 @@ switch ($action) {
 		echo "denying request $cr_id : $res <br>";
 		break;
 
-	// ######################### cloud request remove example #################################
+	// ######################### cloud request remove example ##################
 	case 'remove':
         $remove_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_id'];
 		$cr_id = $request_fields['cr_id'];
@@ -130,7 +130,7 @@ switch ($action) {
 		echo "removing request $cr_id : $res <br>";
 		break;
 
-// ######################### cloud Create User example #################################
+// ######################### cloud Create User example #########################
 	case 'usercreate':
         $create_user_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_username'].",".$request_fields['cr_userpassword'].",".$request_fields['cr_useremail'];
         try {
@@ -141,7 +141,7 @@ switch ($action) {
 		echo "Created Cloud User ID : $res<br>";
 		break;
 
-	// ######################### cloud Create User example #################################
+	// ######################### cloud Create User example #####################
 	case 'userremove':
         $remove_user_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_username'];
         try {
@@ -152,7 +152,7 @@ switch ($action) {
 		echo "Removed Cloud User $remove_user_parameters : $res<br>";
 		break;
 
-	// ######################### cloud User setCCUs example #################################
+	// ######################### cloud User setCCUs example ####################
 	case 'setCCUs':
         $clouduser_name = $request_fields['cr_username'];
         $clouduser_ccus = $request_fields['cr_ccunits'];
@@ -165,7 +165,7 @@ switch ($action) {
 		echo "Set Cloud User $clouduser_name CCUs to $clouduser_ccus : $res<br>";
 		break;
 
-	// ######################### cloud User setCCUs example #################################
+	// ######################### cloud User setCCUs example ####################
 	case 'setlimits':
         $setlimit_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_username'].",".$request_fields['cr_resource_limit'].",".$request_fields['cr_memory_limit'].",".$request_fields['cr_disk_limit'].",".$request_fields['cr_cpu_limit'].",".$request_fields['cr_network_limit'];
         try {
@@ -183,12 +183,12 @@ switch ($action) {
 
 
 
-// ######################### actions end ###############################
+// ######################### actions end #######################################
 
 echo "<br>";
 echo "<h2>Examples for the openQRM Admin SOAP-Service</h2>";
 
-// ######################### form provision start ###############################
+// ######################### form provision start ##############################
 
 echo "<hr>";
 echo "<h4>Provisioning</h4>";
@@ -196,7 +196,7 @@ echo "<form action=$thisfile method=post>";
 echo "<p>";
 echo "<table border=1><tr><td>";
 
-// ######################### Cloud method example ###############################
+// ######################### Cloud method example ##############################
 
 // a select-box including all cloud users
 $usergetlist_parameter = "admin,$openqrm_user,$openqrm_password";
@@ -211,7 +211,7 @@ try {
     echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
 
-// ######################### set start time ###############################
+// ######################### set start time ####################################
 
 $now = date("d-m-Y H:i", $_SERVER['REQUEST_TIME']);
 echo "Start time</td><td><input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\" value=\"$now\">";
@@ -219,7 +219,7 @@ echo "<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)
 echo "<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
 echo "</a></td></tr><tr><td>";
 
-// ######################### set stop time ###############################
+// ######################### set stop time #####################################
 
 $tomorrow = date("d-m-Y H:i", $_SERVER['REQUEST_TIME'] + 86400);
 echo "Stop time</td><td><input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\" value=\"$tomorrow\">";
@@ -228,7 +228,7 @@ echo "<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"
 echo "</a></td></tr><tr><td>";
 
 
-// ######################### kernel method examples ###############################
+// ######################### kernel method examples ############################
 
 // a select-box including all kernels
 $kernelgetlist_parameter = "admin,$openqrm_user,$openqrm_password";
@@ -244,7 +244,7 @@ try {
 }
 
 
-// ######################### image method examples ###############################
+// ######################### image method examples #############################
 
 // a select-box including all images
 $imagegetlist_parameter = "admin,$openqrm_user,$openqrm_password";
@@ -259,7 +259,7 @@ try {
     echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
 
-// ######################### virtualization method examples ###############################
+// ######################### virtualization method examples ####################
 
 // a select-box including all virtualization types
 $virtualizationgetlist_parameter = "admin,$openqrm_user,$openqrm_password";
@@ -274,7 +274,7 @@ try {
     echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
 
-// ######################### puppet method examples ###############################
+// ######################### puppet method examples ############################
 
 // a select-box including all available puppet groups
 $puppetgetlist_parameter = "admin,$openqrm_user,$openqrm_password";
@@ -290,7 +290,7 @@ try {
     echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
 
-// ######################### static user input ###############################
+// ######################### static user input #################################
 
 // select how many systems to deploy
 echo 'Quantity</td><td><select name="cr_resource_quantity" size="1">';
@@ -333,7 +333,7 @@ echo "<option value=\"0\">disabled</option>";
 echo "<option value=\"1\">enabled</option>";
 echo '</select></td></tr><tr><td>';
 
-// ######################### form provision end ###############################
+// ######################### form provision end ################################
 echo '</td><td>';
 echo "<input type=hidden name='action' value='provision'>";
 echo "<input type=submit value='Provision'>";
@@ -342,11 +342,11 @@ echo "</form>";
 
 echo "</tr></table>";
 
-// ######################### form de-provision start ###############################
+// ######################### form de-provision start ###########################
 echo "<hr>";
 echo "<h4>De-Provisioning / Set Cloud Request Status</h4>";
 
-// ######################### Cloud method example ###############################
+// ######################### Cloud method example ##############################
 
 // get a list of all requests per user (or all if no username is given)
 $cloudrequestgetlist_parameter = "admin,$openqrm_user,$openqrm_password,";
@@ -378,11 +378,11 @@ foreach($cloudrequest_list as $cr_id) {
 }
 
 
-// ######################### form de-provision end ###############################
+// ######################### form de-provision end #############################
 echo "<hr>";
-// ######################### form Cloud User start ###############################
+// ######################### form Cloud User start #############################
 
-// ######################### Create Cloud User ###############################
+// ######################### Create Cloud User #################################
 
 echo "<h4>Create Cloud User</h4>";
 echo "<form action=$thisfile method=post>";
@@ -392,7 +392,7 @@ echo " Email : <input type=text name='cr_useremail'>";
 echo "<input type=submit name='action' value='usercreate'>";
 echo "</form>";
 
-// ######################### Remove Cloud User ###############################
+// ######################### Remove Cloud User #################################
 
 echo "<hr>";
 
@@ -412,7 +412,7 @@ try {
     echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
 
-// ######################### Set Cloud Users CCUs ###############################
+// ######################### Set Cloud Users CCUs ##############################
 
 echo ' CCUs <select name="cr_ccunits" size="1">';
 echo "<option value=0>0</option>";
@@ -424,7 +424,7 @@ echo '</select>';
 echo "<input type=submit name='action' value='setCCUs'>";
 echo "</form>";
 
-// ######################### Get Cloud Users CCUs ###############################
+// ######################### Get Cloud Users CCUs ##############################
 
 $cloudusergetccus_parameter = "admin,$openqrm_user,$openqrm_password,$cloud_user";
 try {
@@ -437,7 +437,7 @@ try {
 
 echo "<br>";
 
-// ######################### Get Cloud Users limits ###############################
+// ######################### Get Cloud Users limits ############################
 
 
 

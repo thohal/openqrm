@@ -49,15 +49,17 @@ if (!strstr($OPENQRM_USER->role, "administrator")) {
 class cloudsoapadmin extends cloudsoap {
 
 
-// ######################### cloud methods ###########################################
+// ######################### cloud methods #####################################
 
-// ######################### cloud user methods ###########################################
+// ######################### cloud user methods ################################
 
 
 	//--------------------------------------------------
 	/**
 	* Get a list of Cloud Users
 	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password
 	* @return array List of Cloud User names
 	*/
 	//--------------------------------------------------
@@ -106,7 +108,7 @@ class cloudsoapadmin extends cloudsoap {
 	* Creates a Cloud Users
 	* @access public
 	* @param string $method_parameters
-	*  -> user-name,user-password, user-email
+	*  -> mode,user-name,user-password,cloud-user-name,cloud-user-password, user-email
 	* @return int id of the new Cloud User
 	*/
 	//--------------------------------------------------
@@ -199,7 +201,7 @@ class cloudsoapadmin extends cloudsoap {
 	* Removes a Cloud Users
 	* @access public
 	* @param string $method_parameters
-	*  -> user-name
+	*  -> mode,user-name,user-password,cloud-user-name
 	* @return int 0 for success, 1 for error
 	*/
 	//--------------------------------------------------
@@ -256,7 +258,7 @@ class cloudsoapadmin extends cloudsoap {
 	* Set the Cloud Users CCUs
 	* @access public
 	* @param string $method_parameters
-	*  -> user-name,ccunits
+	*  -> mode,user-name,user-password,cloud-user-name,ccunits
 	* @return int 0 for success, 1 for error
 	*/
 	//--------------------------------------------------
@@ -310,7 +312,7 @@ class cloudsoapadmin extends cloudsoap {
 	* Set the Cloud Users Limits
 	* @access public
 	* @param string $method_parameters
-	*  -> user-name,resource_limit,memory_limit,disk_limit,cpu_limit,network_limit
+	*  -> mode,user-name,user-password,cloud-user-name,resource_limit,memory_limit,disk_limit,cpu_limit,network_limit
 	* @return int 0 for success, 1 for error
 	*/
 	//--------------------------------------------------
@@ -373,7 +375,7 @@ class cloudsoapadmin extends cloudsoap {
 
 
 
-// ######################### cloud request methods ###########################################
+// ######################### cloud request methods #############################
 
 
 	//--------------------------------------------------
@@ -381,7 +383,7 @@ class cloudsoapadmin extends cloudsoap {
 	* Sets the state of a Cloud request
 	* @access public
 	* @param string $method_parameters
-	*  -> cloud-request-id, cloud-request-state
+	*  -> mode,user-name,user-password,cloud-request-id, cloud-request-state
 	* @return int 0 for success, 1 for failure
 	*/
 	//--------------------------------------------------
@@ -428,7 +430,7 @@ class cloudsoapadmin extends cloudsoap {
 	* Removes a Cloud request
 	* @access public
 	* @param string $method_parameters
-	*  -> cloud-request-id
+	*  -> mode,user-name,user-password,cloud-request-id
 	* @return int 0 for success, 1 for failure
 	*/
 	//--------------------------------------------------
@@ -472,7 +474,7 @@ class cloudsoapadmin extends cloudsoap {
 
 
 
-// ###################################################################################
+// #############################################################################
 
 }
 

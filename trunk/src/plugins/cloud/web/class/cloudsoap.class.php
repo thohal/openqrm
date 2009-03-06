@@ -41,14 +41,14 @@ global $event;
 class cloudsoap {
 
 
-// ######################### cloud provision method ###########################################
+// ######################### cloud provision method ############################
 
 	//--------------------------------------------------
 	/**
 	* Provision a system in the openQRM Cloud -> creates a Cloud-Request
 	* @access public
 	* @param string $method_parameters
-	*  -> user-name,kernel-name,image-name,memory,cpus,disk,network,resource-quantity,resource-type,ha,puppet-groups
+	*  -> mode,user-name,user-password,cloud-user-name,kernel-name,image-name,memory,cpus,disk,network,resource-quantity,resource-type,ha,puppet-groups
 	* @return int cloudrequest_id
 	*/
 	//--------------------------------------------------
@@ -167,7 +167,7 @@ class cloudsoap {
 	}
 
 
-// ######################### cloud de-provision method ###########################################
+// ######################### cloud de-provision method #########################
 
 
 	//--------------------------------------------------
@@ -175,7 +175,7 @@ class cloudsoap {
 	* De-Provision a system in the openQRM Cloud -> sets Cloud-Request to deprovision
 	* @access public
 	* @param string $method_parameters
-	*  -> cloud-request-id
+	*  -> mode,user-name,user-password,cloud-request-id
 	* @return int 0 for success, 1 for failure
 	*/
 	//--------------------------------------------------
@@ -225,14 +225,14 @@ class cloudsoap {
 	}
 
 
-// ######################### cloud user methods ###########################################
+// ######################### cloud user methods ################################
 
 	//--------------------------------------------------
 	/**
 	* Get the Cloud Users CCUs
 	* @access public
 	* @param string $method_parameters
-	*  -> user-name
+	*  -> mode,user-name,user-password,cloud-user-name
 	* @return int ccunits
 	*/
 	//--------------------------------------------------
@@ -288,7 +288,7 @@ class cloudsoap {
 	* Set the Cloud Users CCUs
 	* @access public
 	* @param string $method_parameters
-	*  -> user-name
+	*  -> mode,user-name,user-password,cloud-user-name
 	* @return array clouduser limits
 	*/
 	//--------------------------------------------------
@@ -345,14 +345,14 @@ class cloudsoap {
         return $cloud_user_limits_array;
 	}
 
-// ######################### cloud request methods ###########################################
+// ######################### cloud request methods #############################
 
 	//--------------------------------------------------
 	/**
 	* Get a list of Cloud Reqeust ids per Cloud User (or all)
 	* @access public
 	* @param string $method_parameters
-	*  -> clouduser-name
+	*  -> mode,user-name,user-password,clouduser-name
 	* @return array List of Cloud Request ids
 	*/
 	//--------------------------------------------------
@@ -441,7 +441,7 @@ class cloudsoap {
 	* Gets details for a Cloud request
 	* @access public
 	* @param string $method_parameters
-	*  -> cloud-request-id
+	*  -> mode,user-name,user-password,cloud-request-id
 	* @return array cloudrequest-parameters
 	*/
 	//--------------------------------------------------
@@ -553,12 +553,14 @@ class cloudsoap {
 
 
 
-// ######################### kernel methods ###########################################
+// ######################### kernel methods ####################################
 
 	//--------------------------------------------------
 	/**
 	* Get a list of available Kernels in the openQRM Cloud
 	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password
 	* @return array List of Kernel-names
 	*/
 	//--------------------------------------------------
@@ -599,12 +601,14 @@ class cloudsoap {
 	}
 
 
-// ######################### image methods ###########################################
+// ######################### image methods #####################################
 
 	//--------------------------------------------------
 	/**
 	* Get a list of available Images in the openQRM Cloud
 	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password
 	* @return array List of Image-names
 	*/
 	//--------------------------------------------------
@@ -647,12 +651,14 @@ class cloudsoap {
 
 
 
-// ######################### virtualization methods ###########################################
+// ######################### virtualization methods ############################
 
 	//--------------------------------------------------
 	/**
 	* Get a list of available virtualization types in the openQRM Cloud
 	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password
 	* @return array List of virtualization type names
 	*/
 	//--------------------------------------------------
@@ -705,13 +711,15 @@ class cloudsoap {
 
 
 
-// ######################### puppet methods ###########################################
+// ######################### puppet methods ####################################
 
 
 	//--------------------------------------------------
 	/**
 	* Get a list of available puppet groups in the openQRM Cloud
 	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password
 	* @return array List of puppet group names
 	*/
 	//--------------------------------------------------
@@ -757,9 +765,15 @@ class cloudsoap {
 
 
 
-// ###################################################################################
+// ############################ helper methods #################################
 
-    // converts a date to a timestamp
+	//--------------------------------------------------
+	/**
+	* converts a date to a timestamp
+	* @access public
+	* @param string $date
+	* @return string unix-timestamp
+	*/
     function date_to_timestamp($date) {
         $day = substr($date, 0, 2);
         $month = substr($date, 3, 2);
@@ -772,7 +786,13 @@ class cloudsoap {
     }
 
 
-    // helper function to check user input
+	//--------------------------------------------------
+	/**
+	* Checks user input
+	* @access public
+	* @param string $text
+	* @return true if $text does not contain any special characters, otherwise false
+	*/
     function is_allowed($text) {
         for ($i = 0; $i<strlen($text); $i++) {
             if (!ctype_alpha($text[$i])) {
@@ -787,7 +807,13 @@ class cloudsoap {
     }
 
 
-    // checks user input
+	//--------------------------------------------------
+	/**
+	* Checks user input parameter, allows some specific special characters
+	* @access public
+	* @param string $text
+	* @return true if $text does not contain any special characters, otherwise false
+	*/
     function check_param($param) {
         // remove whitespaces
         $param = preg_replace('/\s\s+/', ' ', trim($param));
@@ -853,7 +879,7 @@ class cloudsoap {
 
     }
 
-// ###################################################################################
+// #############################################################################
 
 }
 
