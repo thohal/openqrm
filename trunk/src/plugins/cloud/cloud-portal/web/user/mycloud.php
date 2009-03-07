@@ -929,7 +929,7 @@ function mycloud_account() {
 
 function mycloud_documentation() {
     global $DocRoot;
-    $disp = file_get_contents("$DocRoot/cloud-portal/user/soap/index.html");
+    $disp = file_get_contents("$DocRoot/cloud-portal/user/soap/index.php");
     return $disp;
 }
 

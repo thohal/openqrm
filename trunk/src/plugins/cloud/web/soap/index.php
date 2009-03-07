@@ -1,7 +1,3 @@
-<!--
-To change this template, choose Tools | Templates
-and open the template in the editor.
--->
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
   <head>
@@ -9,6 +5,8 @@ and open the template in the editor.
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   </head>
   <body>
+<link rel="stylesheet" type="text/css" href="../../../css/htmlobject.css" />
+<link rel="stylesheet" type="text/css" href="css/cloud.css" />
 
 <table border="0" width="700" cellspacing="2" cellpadding="2">
     <thead>
@@ -38,6 +36,7 @@ The openQRM Cloud SOAP-Server works in WDSL mode and provides the (automatic) pr
  The functions (methods) handled by the SOAP-Server are combined into two separated PHP-Class for Administrators and Cloud Users.
  The Classes also including methods to provide openQRM data (informations about objects in the openQRM Cloud) to a partner application.
 <br>
+<br>
 The Classes are organized in the following way :
 <br>
 <br>
@@ -55,13 +54,16 @@ The Classes are organized in the following way :
 - Puppet Methods
 <br>
 <br>
+<br>
 
 
 <b>Authentication / Security</b>
 <br>
 <br>
 Since the openQRM WebService exposes administrative actions its (SOAP-) Clients needs to be authenticated.
- The SOAP-Client will need to provide a valid openQRM user name and password of an openQRM user belonging to the administrator role.
+ The SOAP-Client will need to provide either a valid openQRM user name and password of an openQRM user belonging to the administrator role
+ (in case the "Administrator part of the Cloud WebService is used) or a valid Cloud-Username plus password (in case the "User" part of the Cloud WebService is used).
+<br>
 <br>
 <br>
 
@@ -72,7 +74,7 @@ Since the openQRM WebService exposes administrative actions its (SOAP-) Clients 
             <td></td>
             <td>
 
-<b>Cloud Administrator</b>
+<b>Documentation</b>
 <br>
 <br>
 <a href="soap-admin.html"><b>SOAP-WebService for the Cloud Administrator</b></a>
@@ -81,20 +83,20 @@ Since the openQRM WebService exposes administrative actions its (SOAP-) Clients 
 <a href="cloudadmin-soap-example-client.php"><b>SOAP-WebService Demo for the Cloud Administrator</b></a>
 <br>
 <br>
-<b>Cloud User</b>
-<br>
-<br>
 <a href="soap-user.html"><b>SOAP-WebService for the Cloud User</b></a>
 <br>
 <br>
 <a href="/cloud-portal/user/soap/clouduser-soap-example-client.php"><b>SOAP-WebService Demo for the Cloud Administrator</b></a>
 <br>
 <br>
+<a href="http://www.openqrm-ng.net/downloads/plugins/cloud/openqrm-soap-api/" target="_BLANK"><b>API Documentation</b></a>
+<br>
+<br>
 <br>
 
             </td>
             <td></td>
- 
+
    </tbody>
 </table>
 

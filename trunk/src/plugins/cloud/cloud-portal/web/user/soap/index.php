@@ -1,8 +1,3 @@
-<!--
-To change this template, choose Tools | Templates
-and open the template in the editor.
--->
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
   <head>
     <title>openQRM Cloud SOAP-WebService</title>
@@ -26,7 +21,7 @@ and open the template in the editor.
                 <a href="http://www.openqrm.com/?q=node/139" target="_BLANK"><b>openQRM Cloud HowTo</b></a>
                 <br>
                 <br>
-                <a href="soap/soap-user.html" target="_BLANK"><b>SOAP-WebService for the Cloud User</b></a>
+                <a href="soap/soap-user.php" target="_BLANK"><b>SOAP-WebService for the Cloud User</b></a>
                 <br>
                 <br>
                 <a href="soap/openqrm-soap-api/index.html" target="_BLANK"><b>API for the Cloud SOAP-WebService</b></a>

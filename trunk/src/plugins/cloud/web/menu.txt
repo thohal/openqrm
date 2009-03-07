@@ -10,9 +10,9 @@
 ..|Cloud Config|plugins/cloud/cloud-config.php
 ..|Cloud IpGroups|plugins/cloud/cloud-ipgroup-manager.php
 ..|Cloud WebService
-...|Main|plugins/cloud/soap/index.html
-...|Admin WebService|plugins/cloud/soap/soap-admin.html
+...|Main|plugins/cloud/soap/index.php
+...|Admin WebService|plugins/cloud/soap/soap-admin.php
 ...|Admin Demo|plugins/cloud/soap/cloudadmin-soap-example-client.php
-...|User WebService|plugins/cloud/soap/soap-user.html
+...|User WebService|plugins/cloud/soap/soap-user.php
 ...|User Demo|/cloud-portal/user/soap/clouduser-soap-example-client.php
 ...|API|plugins/cloud/soap/openqrm-soap-api/index.html|||_BLANK

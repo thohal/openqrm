@@ -32,7 +32,6 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/soap
 	. $(OPENQRM_SERVER_CONF) && cp web/soap/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/soap/
 	. $(OPENQRM_SERVER_CONF) && cp web/soap/*.wdsl $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/soap/
-	. $(OPENQRM_SERVER_CONF) && cp web/soap/*.html $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/soap/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/css
 	. $(OPENQRM_SERVER_CONF) && cp web/css/*.css $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/css/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/js
@@ -55,9 +54,8 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap
 	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/user/soap/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap/
 	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/user/soap/*.wdsl $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap/
-	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/user/soap/*.html $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap/
 	. $(OPENQRM_SERVER_CONF) && . etc/build.conf/openqrm-cloud-soap-api.conf && if ! tar -C $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/soap/ -xzf $$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-cloud-soap-api/openqrm-cloud-soap-api-$$OPENQRM_SOURCE_VERSION.tgz 2>/dev/null; then tar -C $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/soap/ -xzf ../../$$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-cloud-soap-api/openqrm-cloud-soap-api-$$OPENQRM_SOURCE_VERSION.tgz; fi
-	. $(OPENQRM_SERVER_CONF) && cp web/soap/soap-user.html $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap/
+	. $(OPENQRM_SERVER_CONF) && cp web/soap/soap-user.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap/
 	. $(OPENQRM_SERVER_CONF) && . etc/build.conf/openqrm-cloud-soap-api.conf && if ! tar -C $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap/ -xzf $$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-cloud-soap-api/openqrm-cloud-soap-api-$$OPENQRM_SOURCE_VERSION.tgz 2>/dev/null; then tar -C $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap/ -xzf ../../$$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-cloud-soap-api/openqrm-cloud-soap-api-$$OPENQRM_SOURCE_VERSION.tgz; fi
 
 
