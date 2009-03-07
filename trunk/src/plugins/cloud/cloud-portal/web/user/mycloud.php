@@ -961,6 +961,7 @@ if ((htmlobject_request('action') != '') && (isset($_REQUEST['identifier']))) {
 }
 
 
+
 $cloudu = new clouduser();
 $cloudu->get_instance_by_name($auth_user);
 if ($cloudu->status == 1) {

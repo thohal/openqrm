@@ -193,9 +193,80 @@ if ((htmlobject_request('action') != '') && (isset($_REQUEST['identifier']))) {
 			}
 			break;
 
+		case 'login':
+            // check if to show sshterm-login
+            $cc_conf = new cloudconfig();
+            $show_sshterm_login = $cc_conf->get_value(17);	// show_sshterm_login
+            if (!strcmp($show_sshterm_login, "true")) {
+                // is sshterm plugin enabled + started ?
+                if (file_exists("$RootDir/plugins/sshterm/.running")) {
 
 
+                    // get the parameters from the plugin config file
+                    $OPENQRM_PLUGIN_SSHTERM_CONFIG_FILE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/etc/openqrm-plugin-sshterm.conf";
+                    $store = openqrm_parse_conf($OPENQRM_PLUGIN_SSHTERM_CONFIG_FILE);
+                    extract($store);
 
+                    foreach($_REQUEST['identifier'] as $id) {
+                        // only allow our appliance to be restarted
+                        $clouduser = new clouduser();
+                        $clouduser->get_instance_by_name($auth_user);
+
+                        $cloudreq_array = array();
+                        $cloudreq = new cloudrequest();
+                        $cloudreq_array = $cloudreq->get_all_ids();
+                        $my_appliances = array();
+                        // build an array of our appliance id's
+                        foreach ($cloudreq_array as $cr) {
+                            $cl_tmp_req = new cloudrequest();
+                            $cr_id = $cr['cr_id'];
+                            $cl_tmp_req->get_instance_by_id($cr_id);
+                            if ($cl_tmp_req->cu_id == $clouduser->id) {
+                                // we have found one of our own request, check if we have an appliance-id != 0
+                                if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
+                                    $one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
+                                    foreach ($one_app_id_arr as $aid) {
+                                        $my_appliances[] .= $aid;
+                                    }
+                                }
+                            }
+                        }
+                        // is it ours ?
+                        if (!in_array($id, $my_appliances)) {
+                            continue;
+                        }
+
+                        $cloud_appliance_login = new cloudappliance();
+                        $cloud_appliance_login->get_instance_by_appliance_id($id);
+                        // check that state is active
+                        if ($cloud_appliance_login->state == 1) {
+                            $sshterm_login_ip_arr = htmlobject_request('sshterm_login_ip');
+                            $sshterm_login_ip = $sshterm_login_ip_arr["$id"];
+                            $strMsg = "Login into Cloud appliance $id ($sshterm_login_ip)<br>";
+
+                            $redirect_url="https://$sshterm_login_ip:$OPENQRM_PLUGIN_AJAXTERM_REVERSE_PROXY_PORT";
+                            $left=50+($id*50);
+                            $top=100+($id*50);
+            // add the javascript function to open an sshterm
+            ?>
+                        <script type="text/javascript">
+                        function open_sshterm (url) {
+                            sshterm_window = window.open(url, "<?php echo $sshterm_login_ip; ?>", "width=580,height=420,left=<?php echo $left; ?>,top=<?php echo $top; ?>");
+                            open_sshterm.focus();
+                        }
+                        open_sshterm("<?php echo $redirect_url; ?>");
+                        </script>
+            <?php
+
+                        } else {
+                            $strMsg = "Can only login to Cloud appliance $id if it is in active state<br>";
+                            redirect($strMsg, tab0);
+                            continue;
+                        }
+                    }
+                }
+            }
+			break;
 	}
 }
 
@@ -206,6 +277,18 @@ function my_cloud_appliances() {
 
 	global $thisfile;
 	global $auth_user;
+    global $RootDir;
+    $sshterm_enabled = false;
+
+    // check if to show sshterm-login
+    $cc_conf = new cloudconfig();
+    $show_sshterm_login = $cc_conf->get_value(17);	// show_sshterm_login
+    if (!strcmp($show_sshterm_login, "true")) {
+        // is sshterm plugin enabled + started ?
+        if (file_exists("$RootDir/plugins/sshterm/.running")) {
+            $sshterm_enabled = true;
+        }
+    }
 
 	$appliance_tmp = new appliance();
 	$table = new htmlobject_db_table('appliance_id');
@@ -246,10 +329,13 @@ function my_cloud_appliances() {
 	$arHead['appliance_cloud_state'] = array();
 	$arHead['appliance_cloud_state']['title'] ='State';
 
+	$arHead['appliance_cloud_action'] = array();
+	$arHead['appliance_cloud_action']['title'] ='Actions';
+
 	$arBody = array();
 	$appliance_array = $appliance_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 
-	// we need to find only the appliance from the user
+    // we need to find only the appliance from the user
 	$clouduser = new clouduser();
 	$clouduser->get_instance_by_name($auth_user);
 
@@ -281,6 +367,8 @@ function my_cloud_appliances() {
 		if (!in_array($appliance->id, $my_appliances)) {
 			continue;
 		}
+        $sshterm_login = false;
+        $res_ip_loop = 0;
 		$resource = new resource();
 		$appliance_resources=$appliance_db["appliance_resources"];
 		if ($appliance_resources >=0) {
@@ -288,18 +376,30 @@ function my_cloud_appliances() {
 			// get its ips from the iptables table
 			$cloud_iptable = new cloudiptables();
 			$app_ips = $cloud_iptable->get_ip_list_by_appliance($appliance->id);
-			if (is_array($app_ips)) {
+            $app_ips_len = count($app_ips);
+            if ((is_array($app_ips)) && ($app_ips_len > 0)) {
 				foreach ($app_ips as $index => $app_ip_arr) {
+                    $res_ip_loop++;
 					$appliance_ip = $app_ip_arr['ip_address'];
-					$appliance_resources_str .= "$appliance_ip<br>";			
+					$appliance_resources_str .= "$appliance_ip<br>";
+                    // we keep the first ip for the ssh-login
+                    if ($res_ip_loop == 1) {
+                        $sshterm_login = true;
+                        $sshterm_login_ip = $appliance_ip;
+                    }
 				}
-			} else { 
-				$appliance_resources_str .= " - ";
+			} else {
+                // in case no external ip was given to the appliance we show the internal ip
+                $resource->get_instance_by_id($appliance->resources);
+				$appliance_resources_str = $resource->ip;
+                $sshterm_login_ip =  $resource->ip;
+                $sshterm_login = true;
 			}
 
 		} else {
 			// an appliance with resource auto-select enabled
 			$appliance_resources_str = "auto-select";
+            $sshterm_login = false;
 		}
 
 		// active or inactive
@@ -310,6 +410,7 @@ function my_cloud_appliances() {
 			$state_icon=$active_state_icon;
 		} else {
 			$state_icon=$inactive_state_icon;
+            $sshterm_login = false;
 		}
 
 		// state
@@ -318,9 +419,12 @@ function my_cloud_appliances() {
 		switch ($cloud_appliance->state) {
 			case 0:
 				$cloudappliance_state = "paused";
+                $sshterm_login = false;
+                $show_pause_button = false;
 				break;
 			case 1:
 				$cloudappliance_state = "active";
+                $show_pause_button = true;
 				break;
 		}
 
@@ -331,6 +435,22 @@ function my_cloud_appliances() {
 		$virtualization = new virtualization();
 		$virtualization->get_instance_by_id($appliance_db["appliance_virtualization"]);
 		$appliance_virtualization_type=$virtualization->name;
+
+        // prepare actions
+        $cloudappliance_action = "";
+        if ($sshterm_enabled) {
+            if ($sshterm_login) {
+                $cloudappliance_action .= "<input type=hidden name=\"sshterm_login_ip[$appliance->id]\" value=\"$sshterm_login_ip\">";
+                $cloudappliance_action .= "<input type=\"image\" name=\"action\" value=\"login\" src=\"../img/login.png\" alt=\"login\">";
+            }
+        }
+        // regular actions
+        if ($show_pause_button) {
+            $cloudappliance_action .= "<input type=\"image\" name=\"action\" value=\"pause\" src=\"../img/pause.png\" alt=\"Pause\">";
+            $cloudappliance_action .= "<input type=\"image\" name=\"action\" value=\"restart\" src=\"../img/restart.png\" alt=\"Restart\">";
+        } else {
+            $cloudappliance_action .= "<input type=\"image\" name=\"action\" value=\"unpause\" src=\"../img/unpause.png\" alt=\"Un-Pause\">";
+        }
 
 		$arBody[] = array(
 			'appliance_state' => "<img src=$state_icon>",
@@ -343,6 +463,7 @@ function my_cloud_appliances() {
 			'appliance_type' => $appliance_virtualization_type,
 			'appliance_comment' => $appliance_db["appliance_comment"],
 			'appliance_cloud_state' => $cloudappliance_state,
+			'appliance_cloud_action' => $cloudappliance_action,
 		);
 
 	}
@@ -355,7 +476,11 @@ function my_cloud_appliances() {
 	$table->form_action = $thisfile;
 	$table->head = $arHead;
 	$table->body = $arBody;
-	$table->bottom = array('pause', 'unpause', 'restart');
+    if ($sshterm_enabled) {
+    	$table->bottom = array('login', 'pause', 'unpause', 'restart');
+    } else {
+        $table->bottom = array('pause', 'unpause', 'restart');
+    }
 	$table->identifier = 'appliance_id';
 	$table->max = $appliance_tmp->get_count();
 	#$table->limit = 10;
