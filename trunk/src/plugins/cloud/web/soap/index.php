@@ -77,13 +77,13 @@ Since the openQRM WebService exposes administrative actions its (SOAP-) Clients 
 <b>Documentation</b>
 <br>
 <br>
-<a href="soap-admin.html"><b>SOAP-WebService for the Cloud Administrator</b></a>
+<a href="soap-admin.php"><b>SOAP-WebService for the Cloud Administrator</b></a>
 <br>
 <br>
 <a href="cloudadmin-soap-example-client.php"><b>SOAP-WebService Demo for the Cloud Administrator</b></a>
 <br>
 <br>
-<a href="soap-user.html"><b>SOAP-WebService for the Cloud User</b></a>
+<a href="soap-user.php"><b>SOAP-WebService for the Cloud User</b></a>
 <br>
 <br>
 <a href="/cloud-portal/user/soap/clouduser-soap-example-client.php"><b>SOAP-WebService Demo for the Cloud Administrator</b></a>
