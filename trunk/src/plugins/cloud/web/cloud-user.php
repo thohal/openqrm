@@ -143,7 +143,7 @@ function cloud_user_manager() {
 	// db select
     $cl_user_count = 0;
 	$cl_user = new clouduser();
-	$user_array = $cl_user->display_overview(0, $table->limit, 'cu_id', 'ASC');
+	$user_array = $cl_user->display_overview($table->offset, $table->limit, 'cu_id', 'ASC');
 	foreach ($user_array as $index => $cu) {
 		$cu_status = $cu["cu_status"];
 		if ($cu_status == 1) {
@@ -185,7 +185,7 @@ function cloud_user_manager() {
 		$table->bottom = array('update', 'enable', 'disable', 'limits', 'delete');
 		$table->identifier = 'cu_id';
 	}
-	$table->max = $cl_user_count;
+	$table->max = 1000;
 	return $disp.$table->get_string();
 }
 

@@ -251,7 +251,7 @@ function cloud_manager() {
 	// db select
     $request_count=0;
 	$cl_request = new cloudrequest();
-	$request_array = $cl_request->display_overview(0, $table->limit, 'cr_id', 'ASC');
+	$request_array = $cl_request->display_overview($table->offset, $table->limit, 'cr_id', 'ASC');
 	foreach ($request_array as $index => $cr) {
         $request_count++;
 		// user name
@@ -319,7 +319,7 @@ function cloud_manager() {
 		$table->bottom = array('reload', 'details', 'approve', 'cancel', 'deny', 'delete', 'deprovision');
 		$table->identifier = 'cr_id';
 	}
-    $table->max = $cl_request->get_count();
+    $table->max = 1000;
 	return $disp.$table->get_string();
 }
 
@@ -665,7 +665,7 @@ function cloud_request_details($cloud_request_id) {
 	$table->form_action = $thisfile;
 	$table->head = $arHead;
 	$table->body = $arBody;
-    $table->max = $cr_request->get_count();
+    $table->max = 1000;
 	return $disp.$table->get_string();
 
 }

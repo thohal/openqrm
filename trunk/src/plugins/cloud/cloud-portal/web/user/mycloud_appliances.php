@@ -246,7 +246,7 @@ function my_cloud_appliances() {
         $table->bottom = array('pause', 'unpause', 'restart');
     }
 	$table->identifier = 'appliance_id';
-	$table->max = $appliance_tmp->get_count();
+	$table->max = 1000;
 	#$table->limit = 10;
 	
 	return $disp.$table->get_string();

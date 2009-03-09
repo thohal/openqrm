@@ -70,7 +70,7 @@ function my_cloud_manager() {
 	// db select
     $request_count=0;
 	$cl_request = new cloudrequest();
-	$request_array = $cl_request->display_overview(0, $table->limit, 'cr_id', 'ASC');
+	$request_array = $cl_request->display_overview($table->offset, $table->limit, 'cr_id', 'ASC');
 	foreach ($request_array as $index => $cr) {
 		// user name
 		$cu_tmp = new clouduser();
@@ -143,7 +143,7 @@ function my_cloud_manager() {
 	$table->body = $arBody;
 	$table->bottom = array('reload', 'deprovision', 'extend');
 	$table->identifier = 'cr_id';
-    $table->max = $cl_request->get_count();
+    $table->max = 1000;
 	return $disp.$table->get_string();
 }
 
@@ -267,7 +267,7 @@ function my_cloud_extend_request($cr_id) {
 	$table->body = $arBody;
 	$table->bottom = array('update');
 	$table->identifier = 'cr_id';
-    $table->max = $cl_request->get_count();
+    $table->max = 1000;
 	return $disp.$table->get_string();
 }
 
@@ -528,7 +528,7 @@ function mycloud_account() {
 
 	// db select
 	$cl_user = new clouduser();
-	$user_array = $cl_user->display_overview(0, $table->limit, 'cu_id', 'ASC');
+	$user_array = $cl_user->display_overview($table->offset, $table->limit, 'cu_id', 'ASC');
 	foreach ($user_array as $index => $cu) {
 
 		// only display our user record
@@ -571,7 +571,7 @@ function mycloud_account() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	$table->identifier = 'cu_id';
-    $table->max = $cl_user->get_count();
+    $table->max = 1000;
 	return $disp.$table->get_string();
 }
 
