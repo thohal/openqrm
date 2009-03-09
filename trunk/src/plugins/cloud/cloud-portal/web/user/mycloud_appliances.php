@@ -1,9 +1,3 @@
-
-<link type="text/css" rel="stylesheet" href="../css/calendar.css">
-<link rel="stylesheet" type="text/css" href="../css/mycloud.css" />
-
-</head>
-
 <?php
 
 // error_reporting(E_ALL);
@@ -39,236 +33,6 @@ global $CLOUD_REQUEST_TABLE;
 // who are you ?
 $auth_user = $_SERVER['PHP_AUTH_USER'];
 global $auth_user;
-
-
-function redirect($strMsg, $currenttab = 'tab0', $url = '') {
-	global $thisfile;
-	if($url == '') {
-		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
-	}
-	//	using meta refresh here because the appliance and resourc class pre-sending header output
-	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
-}
-
-
-
-// check if we got some actions to do
-if ((htmlobject_request('action') != '') && (isset($_REQUEST['identifier']))) {
-	switch (htmlobject_request('action')) {
-
-		case 'restart':
-			foreach($_REQUEST['identifier'] as $id) {
-				// only allow our appliance to be restarted
-				$clouduser = new clouduser();
-				$clouduser->get_instance_by_name($auth_user);
-
-				$cloudreq_array = array();
-				$cloudreq = new cloudrequest();
-				$cloudreq_array = $cloudreq->get_all_ids();
-				$my_appliances = array();
-				// build an array of our appliance id's
-				foreach ($cloudreq_array as $cr) {
-					$cl_tmp_req = new cloudrequest();
-					$cr_id = $cr['cr_id'];
-					$cl_tmp_req->get_instance_by_id($cr_id);
-					if ($cl_tmp_req->cu_id == $clouduser->id) {
-						// we have found one of our own request, check if we have an appliance-id != 0
-						if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
-							$one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
-							foreach ($one_app_id_arr as $aid) {
-								$my_appliances[] .= $aid;
-							}
-						}
-					}
-				}
-				// is it ours ?
-				if (!in_array($id, $my_appliances)) {
-					continue;
-				}
-				
-				$cloud_appliance_restart = new cloudappliance();
-				$cloud_appliance_restart->get_instance_by_appliance_id($id);
-				// check that state is active
-				if ($cloud_appliance_restart->state == 1) {
-					$cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "restart");
-					$strMsg = "Registered Cloud appliance $id for restart<br>";
-					redirect($strMsg, tab0);
-				} else {
-					$strMsg = "Can only restart Cloud appliance $id if it is in active state<br>";
-					redirect($strMsg, tab0);
-					continue;
-				}
-			}
-			break;
-
-		case 'pause':
-			foreach($_REQUEST['identifier'] as $id) {
-				// only allow our appliance to be restarted
-				$clouduser = new clouduser();
-				$clouduser->get_instance_by_name($auth_user);
-
-				$cloudreq_array = array();
-				$cloudreq = new cloudrequest();
-				$cloudreq_array = $cloudreq->get_all_ids();
-				$my_appliances = array();
-				// build an array of our appliance id's
-				foreach ($cloudreq_array as $cr) {
-					$cl_tmp_req = new cloudrequest();
-					$cr_id = $cr['cr_id'];
-					$cl_tmp_req->get_instance_by_id($cr_id);
-					if ($cl_tmp_req->cu_id == $clouduser->id) {
-						// we have found one of our own request, check if we have an appliance-id != 0
-						if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
-							$one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
-							foreach ($one_app_id_arr as $aid) {
-								$my_appliances[] .= $aid;
-							}
-						}
-					}
-				}
-				// is it ours ?
-				if (!in_array($id, $my_appliances)) {
-					continue;
-				}
-				
-				$cloud_appliance_restart = new cloudappliance();
-				$cloud_appliance_restart->get_instance_by_appliance_id($id);
-				// check that state is active
-				if ($cloud_appliance_restart->state == 1) {
-					$cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "stop");
-					$cloud_appliance_restart->set_state($cloud_appliance_restart->id, "paused");
-					$strMsg = "Registered Cloud appliance $id to stop (pause)<br>";
-					redirect($strMsg, tab0);
-				} else {
-					$strMsg = "Can only pause Cloud appliance $id if it is in active state<br>";
-					redirect($strMsg, tab0);
-					continue;
-				}
-			}
-			break;
-
-		case 'unpause':
-			foreach($_REQUEST['identifier'] as $id) {
-				// only allow our appliance to be restarted
-				$clouduser = new clouduser();
-				$clouduser->get_instance_by_name($auth_user);
-
-				$cloudreq_array = array();
-				$cloudreq = new cloudrequest();
-				$cloudreq_array = $cloudreq->get_all_ids();
-				$my_appliances = array();
-				// build an array of our appliance id's
-				foreach ($cloudreq_array as $cr) {
-					$cl_tmp_req = new cloudrequest();
-					$cr_id = $cr['cr_id'];
-					$cl_tmp_req->get_instance_by_id($cr_id);
-					if ($cl_tmp_req->cu_id == $clouduser->id) {
-						// we have found one of our own request, check if we have an appliance-id != 0
-						if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
-							$one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
-							foreach ($one_app_id_arr as $aid) {
-								$my_appliances[] .= $aid;
-							}
-						}
-					}
-				}
-				// is it ours ?
-				if (!in_array($id, $my_appliances)) {
-					continue;
-				}
-				
-				$cloud_appliance_restart = new cloudappliance();
-				$cloud_appliance_restart->get_instance_by_appliance_id($id);
-				// check if it is in state paused
-				if ($cloud_appliance_restart->state == 0) {
-					$cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "start");
-					$cloud_appliance_restart->set_state($cloud_appliance_restart->id, "active");
-					$strMsg = "Registered Cloud appliance $id to start (unpause)<br>";
-					redirect($strMsg, tab0);
-				} else {
-					$strMsg = "Can only unpause Cloud appliance $id if it is in paused state<br>";
-					redirect($strMsg, tab0);
-					continue;
-				}
-			}
-			break;
-
-		case 'login':
-            // check if to show sshterm-login
-            $cc_conf = new cloudconfig();
-            $show_sshterm_login = $cc_conf->get_value(17);	// show_sshterm_login
-            if (!strcmp($show_sshterm_login, "true")) {
-                // is sshterm plugin enabled + started ?
-                if (file_exists("$RootDir/plugins/sshterm/.running")) {
-
-
-                    // get the parameters from the plugin config file
-                    $OPENQRM_PLUGIN_SSHTERM_CONFIG_FILE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/etc/openqrm-plugin-sshterm.conf";
-                    $store = openqrm_parse_conf($OPENQRM_PLUGIN_SSHTERM_CONFIG_FILE);
-                    extract($store);
-
-                    foreach($_REQUEST['identifier'] as $id) {
-                        // only allow our appliance to be restarted
-                        $clouduser = new clouduser();
-                        $clouduser->get_instance_by_name($auth_user);
-
-                        $cloudreq_array = array();
-                        $cloudreq = new cloudrequest();
-                        $cloudreq_array = $cloudreq->get_all_ids();
-                        $my_appliances = array();
-                        // build an array of our appliance id's
-                        foreach ($cloudreq_array as $cr) {
-                            $cl_tmp_req = new cloudrequest();
-                            $cr_id = $cr['cr_id'];
-                            $cl_tmp_req->get_instance_by_id($cr_id);
-                            if ($cl_tmp_req->cu_id == $clouduser->id) {
-                                // we have found one of our own request, check if we have an appliance-id != 0
-                                if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
-                                    $one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
-                                    foreach ($one_app_id_arr as $aid) {
-                                        $my_appliances[] .= $aid;
-                                    }
-                                }
-                            }
-                        }
-                        // is it ours ?
-                        if (!in_array($id, $my_appliances)) {
-                            continue;
-                        }
-
-                        $cloud_appliance_login = new cloudappliance();
-                        $cloud_appliance_login->get_instance_by_appliance_id($id);
-                        // check that state is active
-                        if ($cloud_appliance_login->state == 1) {
-                            $sshterm_login_ip_arr = htmlobject_request('sshterm_login_ip');
-                            $sshterm_login_ip = $sshterm_login_ip_arr["$id"];
-                            $strMsg = "Login into Cloud appliance $id ($sshterm_login_ip)<br>";
-
-                            $redirect_url="https://$sshterm_login_ip:$OPENQRM_PLUGIN_AJAXTERM_REVERSE_PROXY_PORT";
-                            $left=50+($id*50);
-                            $top=100+($id*50);
-            // add the javascript function to open an sshterm
-            ?>
-                        <script type="text/javascript">
-                        function open_sshterm (url) {
-                            sshterm_window = window.open(url, "<?php echo $sshterm_login_ip; ?>", "width=580,height=420,left=<?php echo $left; ?>,top=<?php echo $top; ?>");
-                            open_sshterm.focus();
-                        }
-                        open_sshterm("<?php echo $redirect_url; ?>");
-                        </script>
-            <?php
-
-                        } else {
-                            $strMsg = "Can only login to Cloud appliance $id if it is in active state<br>";
-                            redirect($strMsg, tab0);
-                            continue;
-                        }
-                    }
-                }
-            }
-			break;
-	}
-}
 
 
 
@@ -333,7 +97,7 @@ function my_cloud_appliances() {
 	$arHead['appliance_cloud_action']['title'] ='Actions';
 
 	$arBody = array();
-	$appliance_array = $appliance_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
+	$appliance_array = $appliance_tmp->display_overview($table->offset, $table->limit, "appliance_id", $table->order);
 
     // we need to find only the appliance from the user
 	$clouduser = new clouduser();
@@ -454,7 +218,7 @@ function my_cloud_appliances() {
 
 		$arBody[] = array(
 			'appliance_state' => "<img src=$state_icon>",
-			'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+			'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default><input type=hidden name=\"currenttab\" value=\"tab2\">",
 			'appliance_id' => $appliance_db["appliance_id"],
 			'appliance_name' => $appliance_db["appliance_name"],
 			'appliance_kernelid' => $kernel->name,
@@ -489,41 +253,5 @@ function my_cloud_appliances() {
 }
 
 
-
-
-function back_to_cloud_requests() {
-
-	$disp = "<a href=\"/cloud-portal/user/mycloud.php\"><img src='../img/backwards.gif' width='36' height='32' border='0' alt='' align='left'>";
-	$disp = $disp."<h1>Click here go back to the request-overview</h1></a>";
-	$disp = $disp."<br>";
-
-	return $disp;
-}
-
-
-$output = array();
-// is the cloud enabled ?
-$cc_config = new cloudconfig();
-$cloud_enabled = $cc_config->get_value(15);	// 15 is cloud_enabled
-
-if ($cloud_enabled != 'true') {	
-	$strMsg = "The openQRM cloud is currently in maintenance mode !<br>Please try again later";
-	redirect($strMsg, "tab0", "/cloud-portal?strMsg=$strMsg");
-	exit(0);
-}
-
-// include header
-include "$DocRoot/cloud-portal/mycloud-head.php";
-
-$output[] = array('label' => 'My Cloud Appliances', 'value' => my_cloud_appliances());
-$output[] = array('label' => 'Back to Cloud requests', 'value' => back_to_cloud_requests());
-
-echo htmlobject_tabmenu($output);
-
-// include footer
-include "$DocRoot/cloud-portal/mycloud-bottom.php";
-
 ?>
-
-</html>
 

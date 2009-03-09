@@ -249,9 +249,11 @@ function cloud_manager() {
 	$arBody = array();
 
 	// db select
+    $request_count=0;
 	$cl_request = new cloudrequest();
-	$request_array = $cl_request->display_overview(0, 100, 'cr_id', 'ASC');
+	$request_array = $cl_request->display_overview(0, $table->limit, 'cr_id', 'ASC');
 	foreach ($request_array as $index => $cr) {
+        $request_count++;
 		// user name
 		$cu_tmp = new clouduser();
 		$cu_tmp_id = $cr["cr_cu_id"];
@@ -317,7 +319,7 @@ function cloud_manager() {
 		$table->bottom = array('reload', 'details', 'approve', 'cancel', 'deny', 'delete', 'deprovision');
 		$table->identifier = 'cr_id';
 	}
-	$table->max = 100;
+	$table->max = $request_count;
 	return $disp.$table->get_string();
 }
 
@@ -427,12 +429,14 @@ function cloud_create_request() {
 		$subtitle = "<b>Please create <a href='/openqrm/base/server/image/image-new.php?currenttab=tab1'>Sever-Images</a> first!";
 	}
 
-	$start_request = $start_request."Start time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\">";
+	$now = date("d-m-Y H:i", $_SERVER['REQUEST_TIME']);
+    $start_request = $start_request."Start time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\" value=\"$now\">";
 	$start_request = $start_request."<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)\">";
 	$start_request = $start_request."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
 	$start_request = $start_request."</a>";
 
-	$stop_request = $stop_request."Stop time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\">";
+    $tomorrow = date("d-m-Y H:i", $_SERVER['REQUEST_TIME'] + 86400);
+	$stop_request = $stop_request."Stop time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\" value=\"$tomorrow\">";
 	$stop_request = $stop_request."<a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
 	$stop_request = $stop_request."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
 	$stop_request = $stop_request."</a>";

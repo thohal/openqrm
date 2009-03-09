@@ -406,7 +406,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$strMsg = "Adding new Cloud request";
 			echo "$strMsg <br>";
 			flush();
-			sleep(4);
+			sleep(1);
 			redirect($strMsg, 'tab0', "cloud-manager.php");
 
 			break;
