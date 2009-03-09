@@ -285,6 +285,37 @@ function openqrm_create_default_initrd_template() {
 	openqrm_cache_or_download kudzu-knoppix
 	export OPENQRM_MAKE_TARGET=libkudzu.a
 	openqrm_compile_from_source kudzu-knoppix
+
+    # check if we have to patch
+    . $OPENQRM_SOURCE_DIR/etc/build.conf/kudzu-knoppix.conf
+    if [ ! -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/kudzu-knoppix/kudzu-knoppix-$OPENQRM_SOURCE_VERSION/libkudzu.a ]; then
+        LOCAL_KERNEL_VERSION=`uname -r | sed -e "s/[a-z]//g" | sed -e "s/[A-Z]//g" | sed -e "s/\.//g" | cut -d'-' -f1`
+        KUDZU_MAX_KERNEL_VERSION="2626"
+        if [ "$LOCAL_KERNEL_VERSION" != "" ]; then
+            if [ "$LOCAL_KERNEL_VERSION" -gt "$KUDZU_MAX_KERNEL_VERSION" ]; then
+                echo "!! Trying to patch kudzu-knoppix for newer kernel-versions ...."
+                OPENQRM_PRE_MAKE="cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/kudzu-knoppix/kudzu-knoppix-$OPENQRM_SOURCE_VERSION/ddcprobe/; patch -p0 -i $OPENQRM_SOURCE_DIR/etc/build.conf/kudzu-knoppix-lrmi.patch; cd -"
+                export OPENQRM_MAKE_TARGET=libkudzu.a
+            	openqrm_compile_from_source kudzu-knoppix
+            else
+                echo "ERROR: It seems libkudzu.a could not be compiled correctly !"
+                echo "ERROR: It seems libkudzu.a could not be compiled correctly !" > /dev/stderr
+                echo "ERROR: Please capture the error messages and post it to the openQRM maillinglist."
+                echo "ERROR: Please capture the error messages and post it to the openQRM maillinglist." > /dev/stderr
+                sleep 10
+            fi
+        fi
+        if [ ! -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/kudzu-knoppix/kudzu-knoppix-$OPENQRM_SOURCE_VERSION/libkudzu.a ]; then
+                echo "ERROR: It seems libkudzu.a could not be compiled correctly !"
+                echo "ERROR: It seems libkudzu.a could not be compiled correctly !" > /dev/stderr
+                echo "ERROR: Please capture the error messages and post it to the openQRM maillinglist."
+                echo "ERROR: Please capture the error messages and post it to the openQRM maillinglist." > /dev/stderr
+                sleep 10
+        fi
+    else
+        echo "-> successfully build libkudzu.a"
+    fi
+
 	# hwsetup
 	openqrm_cache_or_download hwsetup
 	# we need some more includes/libs as provided in the hwsetup Makefile

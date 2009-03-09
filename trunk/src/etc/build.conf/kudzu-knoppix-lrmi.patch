@@ -1,0 +1,53 @@
+*** lrmi.c.org	2009-03-07 22:56:40.000000000 +0100
+--- lrmi.c	2009-03-09 18:03:31.000000000 +0100
+***************
+*** 305,311 ****
+  	context.vm.regs.edx = r->edx;
+  	context.vm.regs.ecx = r->ecx;
+  	context.vm.regs.eax = r->eax;
+! 	context.vm.regs.eflags = DEFAULT_VM86_FLAGS;
+  	context.vm.regs.es = r->es;
+  	context.vm.regs.ds = r->ds;
+  	context.vm.regs.fs = r->fs;
+--- 305,311 ----
+  	context.vm.regs.edx = r->edx;
+  	context.vm.regs.ecx = r->ecx;
+  	context.vm.regs.eax = r->eax;
+! 	//context.vm.regs.eflags = DEFAULT_VM86_FLAGS;
+  	context.vm.regs.es = r->es;
+  	context.vm.regs.ds = r->ds;
+  	context.vm.regs.fs = r->fs;
+***************
+*** 816,822 ****
+
+  			context.vm.regs.cs = get_int_seg(v);
+  			context.vm.regs.eip = get_int_off(v);
+! 			context.vm.regs.eflags &= ~(VIF_MASK | TF_MASK);
+
+  			continue;
+  			}
+--- 816,822 ----
+
+  			context.vm.regs.cs = get_int_seg(v);
+  			context.vm.regs.eip = get_int_off(v);
+! 			//context.vm.regs.eflags &= ~(VIF_MASK | TF_MASK);
+
+  			continue;
+  			}
+***************
+*** 908,914 ****
+  		context.vm.regs.esp = r->sp;
+  		}
+
+! 	pushw(DEFAULT_VM86_FLAGS);
+  	pushw(context.ret_seg);
+  	pushw(context.ret_off);
+
+--- 908,914 ----
+  		context.vm.regs.esp = r->sp;
+  		}
+
+! 	//pushw(DEFAULT_VM86_FLAGS);
+  	pushw(context.ret_seg);
+  	pushw(context.ret_off);
+
