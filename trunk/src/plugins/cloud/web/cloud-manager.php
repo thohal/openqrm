@@ -319,7 +319,7 @@ function cloud_manager() {
 		$table->bottom = array('reload', 'details', 'approve', 'cancel', 'deny', 'delete', 'deprovision');
 		$table->identifier = 'cr_id';
 	}
-	$table->max = $request_count;
+    $table->max = $cl_request->get_count();
 	return $disp.$table->get_string();
 }
 
@@ -665,7 +665,7 @@ function cloud_request_details($cloud_request_id) {
 	$table->form_action = $thisfile;
 	$table->head = $arHead;
 	$table->body = $arBody;
-	$table->max = 100;
+    $table->max = $cr_request->get_count();
 	return $disp.$table->get_string();
 
 }

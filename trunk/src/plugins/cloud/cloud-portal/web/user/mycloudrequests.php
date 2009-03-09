@@ -143,7 +143,7 @@ function my_cloud_manager() {
 	$table->body = $arBody;
 	$table->bottom = array('reload', 'deprovision', 'extend');
 	$table->identifier = 'cr_id';
-	$table->max = $request_count;
+    $table->max = $cl_request->get_count();
 	return $disp.$table->get_string();
 }
 
@@ -267,7 +267,7 @@ function my_cloud_extend_request($cr_id) {
 	$table->body = $arBody;
 	$table->bottom = array('update');
 	$table->identifier = 'cr_id';
-	$table->max = 100;
+    $table->max = $cl_request->get_count();
 	return $disp.$table->get_string();
 }
 
@@ -571,7 +571,7 @@ function mycloud_account() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	$table->identifier = 'cu_id';
-	$table->max = 100;
+    $table->max = $cl_user->get_count();
 	return $disp.$table->get_string();
 }
 
