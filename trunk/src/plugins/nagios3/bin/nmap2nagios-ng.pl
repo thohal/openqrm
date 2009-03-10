@@ -128,9 +128,11 @@ sub process_results {
   foreach my $nmap_host_ref (@ { $results_ref->{'host'} }) {
     next if ($nmap_host_ref->{'status'}->{'state'} ne 'up');
     # broadcast, netz und macaddressen verwerfen
-    next if ($nmap_host_ref->{'address'}->{'addr'} =~ /\.0$/);
-    next if ($nmap_host_ref->{'address'}->{'addr'} =~ /\.255$/);
-    next if ($nmap_host_ref->{'address'}->{'addr'} =~ /^([0-9A-F]{2}([:-]|$)){6}$/i);
+# -> the next 3 lines giving errors and causes the config not being generated
+# simply commenting them out solved the issue, Matt 10.03.2009
+#    next if ($nmap_host_ref->{'address'}->{'addr'} =~ /\.0$/);
+#    next if ($nmap_host_ref->{'address'}->{'addr'} =~ /\.255$/);
+#    next if ($nmap_host_ref->{'address'}->{'addr'} =~ /^([0-9A-F]{2}([:-]|$)){6}$/i);
 
     my $host_ref = {};
     if (ref($nmap_host_ref->{'address'}) ne 'ARRAY')

@@ -32,6 +32,18 @@ $strMsg = '';
 			$strMsg .= "Now scanning the openQRM network to automatically (re-) create the Nagios configuration. This will take some time ....";
 			redirect($strMsg);
 			break;
+		case 'enable_automap':
+			$openqrm->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/bin/openqrm-nagios-manager automap on");
+			$strMsg .= "Enabled automatic mapping of the openQRM Network";
+            sleep(4);
+			redirect($strMsg);
+			break;
+		case 'disable_automap':
+			$openqrm->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/bin/openqrm-nagios-manager automap off");
+			$strMsg .= "Disabled automatic mapping of the openQRM Network";
+            sleep(4);
+			redirect($strMsg);
+			break;
 	}
 
 }
@@ -62,6 +74,18 @@ function nagios_display() {
 	$disp .= "<input type='hidden' name='action' value='map'>";
 	$disp .= "<input type='submit' value='Map openQRM Network'>";
 	$disp .= '<br>';
+	$disp .= '<br>';
+	$disp .= '<br>';
+	$disp .= '<br>';
+    if (file_exists(".automap")) {
+        $disp .= "<input type=\"image\" name=\"action\" value=\"disable_automap\" src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" alt=\"disable_automap\"> Disable automatic mapping of the openQRM Network";
+    } else {
+        $disp .= "<input type=\"image\" name=\"action\" value=\"enable_automap\" src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" alt=\"enable_automap\"> Enable automatic mapping of the openQRM Network";
+    }
+	$disp .= '<br>';
+	$disp .= '<br>';
+	$disp .= '<br>';
+	$disp .= '<br>';
 	$disp .= '</form>';
 
 	return $disp;
@@ -69,7 +93,7 @@ function nagios_display() {
 
 
 $output = array();
-$output[] = array('label' => 'Nagios-List', 'value' => nagios_display());
+$output[] = array('label' => 'Nagios-Configuration', 'value' => nagios_display());
 
 ?>
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />

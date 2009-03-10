@@ -15,13 +15,19 @@ fi
 function openqrm_plugin_nagios3_start() {
 	echo "Starting the openQRM nagios3-plugin"
 	openqrm_plugin_nagios3_stop 1>/dev/null 2>&1
+    # for debian/ubuntu we starting also ndoutils
+    if [ -f /etc/debian_version ]; then
+    	if [ -x /etc/init.d/ndoutils ]; then
+            /etc/init.d/ndoutils start
+        fi
+    fi
 	if [ -x /etc/init.d/nagios3 ]; then
 		/etc/init.d/nagios3 start 1>/dev/null 2>&1
 	elif [ -x /etc/init.d/nagios ]; then
 		/etc/init.d/nagios start 1>/dev/null 2>&1
 	else
 		nagios_manager_lock release
-		openqrm_post_event 0 "get" 3 "openqrm-nagios-manager" "Could not start Nagios. Init script not found !."
+		openqrm_post_event 0 "openqrm_plugin_nagios3_start" 3 "openqrm-plugin-nagios3" "Could not start Nagios. Init script not found !."
 		exit 1
 	fi
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios3/.running
@@ -31,13 +37,19 @@ function openqrm_plugin_nagios3_start() {
 
 function openqrm_plugin_nagios3_stop() {
 	echo "Stopping the openQRM nagios3-plugin"
+    # for debian/ubuntu we stopping also ndoutils
+    if [ -f /etc/debian_version ]; then
+    	if [ -x /etc/init.d/ndoutils ]; then
+            /etc/init.d/ndoutils stop
+        fi
+    fi
 	if [ -x /etc/init.d/nagios3 ]; then
 		/etc/init.d/nagios3 stop 1>/dev/null 2>&1
 	elif [ -x /etc/init.d/nagios ]; then
 		/etc/init.d/nagios stop 1>/dev/null 2>&1
 	else
 		nagios_manager_lock release
-		openqrm_post_event 0 "get" 3 "openqrm-nagios-manager" "Could not stop Nagios. Init script not found !."
+		openqrm_post_event 0 "openqrm_plugin_nagios3_stop" 3 "openqrm-plugin-nagios3" "Could not stop Nagios. Init script not found !."
 		exit 1
 	fi
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios3/.running
@@ -47,34 +59,11 @@ function openqrm_plugin_nagios3_stop() {
 
 function openqrm_plugin_nagios3_init() {
 	echo "Initializing the openQRM nagios3-plugin"
-	CURRENT_DIR=`pwd`
-	# linking the web dir
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios3
-	# link the boot-service
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web/boot-service-nagios3.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-nagios3.tgz
-	# Nagios Single-Sign-On
-	# First backup original nagios.password
-    mv $NAGIOS_ETC_DIRECTORY/htpasswd.users $NAGIOS_ETC_DIRECTORY/htpasswd.users.bkp
-    # link openqrm .htaccess to nagios
-    ln -s $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd $NAGIOS_ETC_DIRECTORY/htpasswd.users
-	# First backup original nagios cgi.cfg
-	cp $NAGIOS_ETC_DIRECTORY/cgi.cfg $NAGIOS_ETC_DIRECTORY/cgi.cfg.bkp
-    # change nagiosadmin 2 openqrm for accessing nagios-gui
-    sed -i -e 's/nagiosadmin/openqrm/' $NAGIOS_ETC_DIRECTORY/cgi.cfg 
-    # 	
-	# Add openqrm to nagios-contacts - not perfect, but working first :)
-	# sed -i "s/root/openqrm/g" $NAGIOS_ETC_DIRECTORY/conf.d/contacts_nagios3.cfg
-	# theme nagios
-	. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/etc/build.conf/nuvola.conf
-	mkdir -p $OPENQRM_TEMP_DIR/nuvola_inst/
-	tar -C $OPENQRM_TEMP_DIR/nuvola_inst/ -zxf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/theme/nagios-nuvola-$OPENQRM_SOURCE_VERSION.tar.gz
-	cp -r $OPENQRM_TEMP_DIR/nuvola_inst/html/* /usr/share/nagios3/htdocs/
-	rm -rf $OPENQRM_TEMP_DIR/nuvola_inst/
-	# First backup original config.js
-	cp /usr/share/nagios3/htdocs/config.js /usr/share/nagios3/htdocs/config.js.bkp
- 	# Fix WebGUI for Debian
- 	sed -i "s/nagios\/cgi-bin/nagios3\/cgi-bin/g"  /usr/share/nagios3/htdocs/config.js
- 	cd $CURRENT_DIR
+    if ! $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/bin/openqrm-nagios-manager init; then
+		nagios_manager_lock release
+		openqrm_post_event 0 "openqrm_plugin_nagios3_stop" 3 "openqrm-plugin-nagios3" "Could not init the  Nagios3 plugin !."
+        return 1
+    fi
 	return 0
 }
 
@@ -84,14 +73,15 @@ function openqrm_plugin_nagios3_uninstall() {
 	openqrm_plugin_nagios3_stop
 	# unlinking the web dir
 	
-	rm -arf $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios3
+	rm -rf $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios3
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-nagios3.tgz
 	# restore old nagios htpasswd
-	mv $NAGIOS_ETC_DIRECTORY/htpasswd.users.bkp $NAGIOS_ETC_DIRECTORY/htpasswd.users
+    rm -f $NAGIOS_ETC_DIRECTORY/htpasswd.users
+	cp -f $NAGIOS_ETC_DIRECTORY/htpasswd.users.bkp $NAGIOS_ETC_DIRECTORY/htpasswd.users
 	# restore old nagios config.js
-	mv /usr/share/nagios3/htdocs/config.js.bkp /usr/share/nagios3/htdocs/config.js
+	cp -f /usr/share/nagios3/htdocs/config.js.bkp /usr/share/nagios3/htdocs/config.js
 	# restore old nagios cgi.cfg
-	mv $NAGIOS_ETC_DIRECTORY/cgi.cfg.bkp $NAGIOS_ETC_DIRECTORY/cgi.cfg
+	cp -f $NAGIOS_ETC_DIRECTORY/cgi.cfg.bkp $NAGIOS_ETC_DIRECTORY/cgi.cfg
 }
 
 

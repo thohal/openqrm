@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# add path when running from cron
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:$PATH
 OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
@@ -11,9 +13,6 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PW
 NAGIOS_CONF_DIR=$NAGIOS_ETC_DIRECTORY/conf.d
 NAGIOS_GENERATED_CONF="$NAGIOS_CONF_DIR/openqrm-network.cfg"
 NAGIOS_CHECK_CMD=$1
-RESOURCE_ID=$2
-RESOURCE_IP=$3
-HOSTNAME="resource$RESOURCE_ID"
 SUBNETFILE="/tmp/subnet.xml"
 CURRENTDIR=`pwd`
 export LANG=C
@@ -51,17 +50,22 @@ case "$NAGIOS_CHECK_CMD" in
 		# for now quite simple gathering of which network to map
 		OPENQRM_NETWORK=`echo $OPENQRM_SERVER_IP_ADDRESS | cut -d'.' -f1-3`".*"
 		nagios_manager_lock aquire
-		openqrm_post_event 0 "get" 5 "openqrm-nagios-manager" "Starting to map the openQRM network!"
+		openqrm_post_event 0 "map" 5 "openqrm-nagios-manager" "Starting to map the openQRM network!"
 		if ! nmap -sS -O -oX $SUBNETFILE $OPENQRM_NETWORK; then
 			nagios3_log openqrm-nagios-manager "ERROR while running nmap !"
 			nagios_manager_lock release
-			openqrm_post_event 0 "get" 3 "openqrm-nagios-manager" "Mapping the openQRM network failed!"
+			openqrm_post_event 0 "map" 3 "openqrm-nagios-manager" "Mapping the openQRM network failed!"
 			exit 1
 		fi
-		openqrm_post_event 0 "get" 5 "openqrm-nagios-manager" "Mapping finished, generating the Nagios configuration!"
+		openqrm_post_event 0 "map" 5 "openqrm-nagios-manager" "Mapping finished, generating the Nagios configuration!"
 		cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/bin
 		./nmap2nagios-ng.pl -i -d -r $SUBNETFILE -o $NAGIOS_GENERATED_CONF
+        # fix check_ping in generated config
+        sed -i -e "s#check_ping#check_ping!100.0,20%!500.0,60%#" $NAGIOS_GENERATED_CONF
+        # fix check_dig in generated config
+        sed -i -e "s#check_dig#check_dig!google.com#" $NAGIOS_GENERATED_CONF
 		cd $CURRENTDIR
+
 
 		if nagios3 -v $NAGIOS_ETC_DIRECTORY/nagios.cfg; then
 			if [ -x /etc/init.d/nagios3 ]; then
@@ -70,21 +74,102 @@ case "$NAGIOS_CHECK_CMD" in
 				/etc/init.d/nagios restart
 			else
 				nagios_manager_lock release
-				openqrm_post_event 0 "get" 3 "openqrm-nagios-manager" "Could not restart Nagios. Init script not found !."
+				openqrm_post_event 0 "map" 3 "openqrm-nagios-manager" "Could not restart Nagios. Init script not found !."
 				exit 1
 			fi
 			nagios_manager_lock release
-			openqrm_post_event 0 "get" 5 "openqrm-nagios-manager" "Automatic Nagios configuration finished successfully"
+			openqrm_post_event 0 "map" 5 "openqrm-nagios-manager" "Automatic Nagios configuration finished successfully"
 		else
 			rm -f $NAGIOS_GENERATED_CONF
 			nagios3_log openqrm-nagios-manager "ERROR: Generated nagios-configuration contains errors!"
 			nagios_manager_lock release
-			openqrm_post_event 0 "get" 3 "openqrm-nagios-manager" "The generated nagios-configuration contains errors! Please check manually."
+			openqrm_post_event 0 "map" 3 "openqrm-nagios-manager" "The generated nagios-configuration contains errors! Please check manually."
 			exit 1
 		fi
 		;;
+	init)
+		echo "openqrm-nagios-manager->init"
+
+        # here we define the addtional nagios3 dependencies because especially for Debian/Ubuntu
+        # for some versions only nagios2 packages are available, for other only nagios3
+        if [ -f /etc/debian_version ]; then
+            NAGIOS3_PACKAGE_DEPENDENCIES="nagios3 nagios3-common ndoutils-common ndoutils-nagios3-mysql nagvis"
+            if ! apt-cache search nagios3 1>/dev/null; then
+    			openqrm_post_event 0 "init" 3 "openqrm-nagios-manager" "Nagios3 is not available for this distribution, skipping..."
+                exit 1
+            fi
+            if ! apt-get install -y $NAGIOS3_PACKAGE_DEPENDENCIES; then
+    			openqrm_post_event 0 "init" 3 "openqrm-nagios-manager" "Failed to install the required Nagios packages : $NAGIOS3_PACKAGE_DEPENDENCIES. Please install manual and try again."
+                exit 1
+            fi
+            if ! grep ^broker_module.*ndomod /etc/nagios3/nagios.cfg 1>/dev/null; then
+                echo "broker_module=/usr/lib/ndoutils/ndomod-mysql-3x.o config_file=/etc/nagios3/ndomod.cfg" >> /etc/nagios3/nagios.cfg
+            fi
+            # enable ndoutils in default-sysconfig
+            sed -i -e "s/ENABLE_NDOUTILS=.*/ENABLE_NDOUTILS=1/g" /etc/default/ndoutils
+            # patch ndoutils table  -> known bug
+            mysql ndoutils -e 'ALTER TABLE `nagios_configfilevariables` DROP INDEX `instance_id` , ADD INDEX `instance_id` ( `instance_id` , `configfile_id` );'
+
+
+
+        elif [ -f /etc/redhat-release ]; then
+            NAGIOS3_PACKAGE_DEPENDENCIES=""
+			openqrm_post_event 0 "init" 3 "openqrm-nagios-manager" "Auto-setup of ndoutils is not supported for SUSE based distributions, skipping..."
+        elif [ -f /etc/SuSE-release ]; then
+            NAGIOS3_PACKAGE_DEPENDENCIES=""
+			openqrm_post_event 0 "init" 3 "openqrm-nagios-manager" "Auto-setup of ndoutils is not supported for SUSE based distributions, skipping..."
+        fi
+
+        # linking the web dir
+        ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios3
+        # link the boot-service
+        ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web/boot-service-nagios3.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-nagios3.tgz
+        # Nagios Single-Sign-On
+        # First backup original nagios.password
+        mv $NAGIOS_ETC_DIRECTORY/htpasswd.users $NAGIOS_ETC_DIRECTORY/htpasswd.users.bkp
+        # link openqrm .htaccess to nagios
+        ln -s $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd $NAGIOS_ETC_DIRECTORY/htpasswd.users
+        # First backup original nagios cgi.cfg
+        if [ ! -f $NAGIOS_ETC_DIRECTORY/cgi.cfg.bkp ]; then
+            cp -f $NAGIOS_ETC_DIRECTORY/cgi.cfg $NAGIOS_ETC_DIRECTORY/cgi.cfg.bkp
+        fi
+        # change nagiosadmin 2 openqrm for accessing nagios-gui
+        sed -i -e 's/nagiosadmin/openqrm/' $NAGIOS_ETC_DIRECTORY/cgi.cfg
+        # First backup original config.js
+        if [ ! -f /usr/share/nagios3/htdocs/config.js.bkp ]; then
+            cp -f /usr/share/nagios3/htdocs/config.js /usr/share/nagios3/htdocs/config.js.bkp
+        fi
+        # Fix WebGUI for Debian
+        sed -i "s/nagios\/cgi-bin/nagios3\/cgi-bin/g"  /usr/share/nagios3/htdocs/config.js
+        exit 0
+        ;;
+
+	automap)
+		echo "openqrm-nagios-manager->automap"
+        NAGIOS_AUTOMAP_TOGGLE=$2
+        case "$NAGIOS_AUTOMAP_TOGGLE" in
+            on)
+                # for the web-status
+                touch $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web/.automap
+                # create cron job which will update the svn repo with files which were added by the web gui
+                cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/etc/cron.d/openqrm-nagios3-automap.cron | \
+                    sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > /etc/cron.d/openqrm-nagios3-automap
+                /etc/init.d/cron reload
+    			openqrm_post_event 0 "automap" 5 "openqrm-nagios-manager" "Enabling auto-mapping of the openQRM-network"
+                ;;
+
+            off)
+                rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/web/.automap
+                rm -f /etc/cron.d/openqrm-nagios3-automap
+                /etc/init.d/cron reload
+                openqrm_post_event 0 "automap" 5 "openqrm-nagios-manager" "Disabling auto-mapping of the openQRM-network"
+                ;;
+        esac
+        exit 0
+        ;;
 	*)
-		echo "Usage: $0 [map]"
+		echo "Usage: $0 [map|init]"
+		echo "       $0 automap [on|off]"
 		exit 1
 		;;
 esac
