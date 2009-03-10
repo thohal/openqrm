@@ -108,7 +108,11 @@ case "$NAGIOS_CHECK_CMD" in
             # enable ndoutils in default-sysconfig
             sed -i -e "s/ENABLE_NDOUTILS=.*/ENABLE_NDOUTILS=1/g" /etc/default/ndoutils
             # patch ndoutils table  -> known bug
-            mysql ndoutils -e 'ALTER TABLE `nagios_configfilevariables` DROP INDEX `instance_id` , ADD INDEX `instance_id` ( `instance_id` , `configfile_id` );'
+            # bug in debian/ubuntu, manually creating the database + tables
+            if [ "$OPENQRM_DATABASE_PASSWWORD" != "" ]; then
+                ADDTIONAL_CMD_ARG="-p$OPENQRM_DATABASE_PASSWWORD "
+            fi
+            mysql ndoutils -u $OPENQRM_DATABASE_USER $ADDTIONAL_CMD_ARG -e 'ALTER TABLE `nagios_configfilevariables` DROP INDEX `instance_id` , ADD INDEX `instance_id` ( `instance_id` , `configfile_id` );'
 
 
 
