@@ -8,7 +8,7 @@ svn co https://openqrm.svn.sourceforge.net/svnroot/openqrm openqrm-4.3
 
 2. create source archive
 
-tar czf openqrm-4.3.tgz
+tar czf openqrm-4.3.tgz openqrm-4.3
 
 
 3. prepare rpmbuild environment:
