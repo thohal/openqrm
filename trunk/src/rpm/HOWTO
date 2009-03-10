@@ -1,0 +1,59 @@
+
+HOWTO create openqrm RPM packages from SVN:
+
+1. check out via svn
+
+svn co https://openqrm.svn.sourceforge.net/svnroot/openqrm openqrm-4.3
+
+
+2. create source archive
+
+tar czf openqrm-4.3.tgz
+
+
+3. prepare rpmbuild environment:
+
+3.a SuSE
+
+cp openqrm-4.3.tgz /usr/src/packages/SOURCES/
+
+cp rpm/openqrm-suse.spec /usr/src/packages/SPECS/
+
+3.b. RedHat/Centos
+
+cp openqrm-4.3.tgz /usr/src/redhat/SOURCES/
+
+cp rpm/openqrm-rh.spec /usr/src/redhat/SPECS/
+
+
+4. build package
+
+4.a SuSE
+
+cd /usr/src/packages
+
+rpmbuild -ba SPECS/openqrm-suse.spec
+
+4.b RedHat/CentOS
+
+cd /usr/src/redhat
+
+rpmbuild -ba SPECS/openqrm-rh.spec
+
+
+5. Finished.
+
+You now have source and binary packages.
+
+Source RPM packag is located in SRPMS directory.
+Binary packages are located in RPMS/<$arch/
+
+
+Hint: you will need an internet connection during make process!
+OpenQRM still wants to download some other packages.
+
+
+Martin Alfke
+<tuxmea@users.sourceforge.net>
+
+

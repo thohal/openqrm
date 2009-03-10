@@ -2,19 +2,14 @@
 This directory holds a work-in-progress spec file for transiting 
 the current make packages solution into a single spec file.
 
-DO NOT USE THIS SPEC FILE TO BUILD RPM PACKAGES !
-
-This spec file will not work at the moment.
-
-
 ----
 
 Hint:
 
 for name in `ls ../plugins | grep -v Makefile`;  do \
-	echo "%package: "$name; \
-	echo "%files"; \
+	echo "%package "$name; \
+	echo "%files "$name; \
 	echo "%defattr(-,root,root)"; \
-	echo "\$RPM_BUILD_ROOT/usr/lib/openqrm/"$name; \
+	echo "/usr/lib/openqrm/"$name; \
 	echo ""; \
 done
