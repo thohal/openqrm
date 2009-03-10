@@ -15,6 +15,12 @@ fi
 function openqrm_plugin_nagios2_start() {
 	echo "Starting the openQRM nagios2-plugin"
 	openqrm_plugin_nagios2_stop 1>/dev/null 2>&1
+    # for debian/ubuntu we starting also ndoutils
+    if [ -f /etc/debian_version ]; then
+    	if [ -x /etc/init.d/ndoutils ]; then
+            /etc/init.d/ndoutils start
+        fi
+    fi
 	if [ -x /etc/init.d/nagios2 ]; then
 		/etc/init.d/nagios2 start 1>/dev/null 2>&1
 	elif [ -x /etc/init.d/nagios ]; then
@@ -31,6 +37,12 @@ function openqrm_plugin_nagios2_start() {
 
 function openqrm_plugin_nagios2_stop() {
 	echo "Stopping the openQRM nagios2-plugin"
+    # for debian/ubuntu we stopping also ndoutils
+    if [ -f /etc/debian_version ]; then
+    	if [ -x /etc/init.d/ndoutils ]; then
+            /etc/init.d/ndoutils stop
+        fi
+    fi
 	if [ -x /etc/init.d/nagios2 ]; then
 		/etc/init.d/nagios2 stop 1>/dev/null 2>&1
 	elif [ -x /etc/init.d/nagios ]; then
@@ -47,30 +59,13 @@ function openqrm_plugin_nagios2_stop() {
 
 function openqrm_plugin_nagios2_init() {
 	echo "Initializing the openQRM nagios2-plugin"
-	CURRENT_DIR=`pwd`
-	# linking the web dir
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nagios2
-	# link the boot-service
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/web/boot-service-nagios2.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-nagios2.tgz
-	# Nagios Single-Sign-On
-	# First backup original nagios.password
-    mv $NAGIOS_ETC_DIRECTORY/htpasswd.users $NAGIOS_ETC_DIRECTORY/htpasswd.users.bkp
-    # link openqrm .htaccess to nagios
-    ln -s $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd $NAGIOS_ETC_DIRECTORY/htpasswd.users
-    # change nagiosadmin 2 openqrm for accessing nagios-gui
-    sed -i -e 's/nagiosadmin/openqrm/' $NAGIOS_ETC_DIRECTORY/cgi.cfg 
-    # 	
-	# Add openqrm to nagios-contacts - not perfect, but working first :)
-	# sed -i "s/root/openqrm/g" $NAGIOS_ETC_DIRECTORY/conf.d/contacts_nagios2.cfg
-	# theme nagios
-	. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/etc/build.conf/nuvola.conf
-	mkdir -p $OPENQRM_TEMP_DIR/nuvola_inst/
-	tar -C $OPENQRM_TEMP_DIR/nuvola_inst/ -zxf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/theme/nagios-nuvola-$OPENQRM_SOURCE_VERSION.tar.gz
-	cp -r $OPENQRM_TEMP_DIR/nuvola_inst/html/* /usr/share/nagios2/htdocs/
-	rm -rf $OPENQRM_TEMP_DIR/nuvola_inst/
- 	# Fix WebGUI for Debian
- 	sed -i "s/nagios\/cgi-bin/nagios2\/cgi-bin/g"  /usr/share/nagios2/htdocs/config.js
- 	cd $CURRENT_DIR
+    if ! $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios2/bin/openqrm-nagios-manager init; then
+		nagios_manager_lock release
+		openqrm_post_event 0 "openqrm_plugin_nagios2_stop" 3 "openqrm-plugin-nagios2" "Could not init the  Nagios2 plugin !."
+        return 1
+    fi
+
+
 	return 0
 }
 
