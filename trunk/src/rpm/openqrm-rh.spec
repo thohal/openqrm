@@ -285,7 +285,7 @@ openQRM is the next generation data-center management platform.
 ln -s /usr/lib/openqrm/plugins/nagios2/etc/init.d/openqrm-plugin-nagios2 /etc/init.d/openqrm-plugin/nagios2
 mkdir -p /var/www/openqrm/base/plugins/nagios2
 
-%preun plugin/nagios2
+%preun plugin-nagios2
 /etc/init.d/openqrm-plugin-nagios2 stop
 rm /etc/init.d/openqrm-plugin-nagios2
 rm -fr /var/www/openqrm/base/plugins/nagios2
@@ -303,7 +303,7 @@ openQRM is the next generation data-center management platform.
 ln -s /usr/lib/openqrm/plugins/nagios3/etc/init.d/openqrm-plugin-nagios3 /etc/init.d/openqrm-plugin/nagios3
 mkdir -p /var/www/openqrm/base/plugins/nagios3
 
-%preun plugin/nagios3
+%preun plugin-nagios3
 /etc/init.d/openqrm-plugin-nagios3 stop
 rm /etc/init.d/openqrm-plugin-nagios3
 rm -fr /var/www/openqrm/base/plugins/nagios3
