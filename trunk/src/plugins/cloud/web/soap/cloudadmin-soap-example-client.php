@@ -176,6 +176,12 @@ switch ($action) {
 		echo "Set Cloud Limits of User $clouduser_name : $res<br>";
 		break;
 
+	// ######################### cloud sshterm example ####################
+	case 'login':
+        $cloudappliance_ip = $request_fields['cr_cloudappliance_ip'];
+        sshterm_login($cloudappliance_ip);
+        break;
+
 
 }
 
@@ -514,6 +520,73 @@ foreach($cloud_user_list as $cloud_user) {
     echo "</tr></table>";
     echo "</form>";
 }
+
+
+
+
+
+
+// ######################### Cloud appliance method example ####################
+
+echo "<hr>";
+
+echo "<h4>Cloud Appliances</h4>";
+
+// get a list of all appliances per user (or all if no username is given)
+$cloudappliancegetlist_parameter = "admin,$openqrm_user,$openqrm_password,";
+try {
+    $cloudappliance_list = $client->CloudApplianceGetList($cloudappliancegetlist_parameter);
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
+}
+
+echo "<form action=$thisfile method=post>";
+foreach($cloudappliance_list as $ca_id) {
+    // de-provision the appliance / set appliance status
+    echo "<nobr><pre>";
+    $cloudappliancegetdetails_parameter = "admin,$openqrm_user,$openqrm_password,$ca_id";
+    try {
+        $cloudappliance_array = $client->CloudApplianceGetDetails($cloudappliancegetdetails_parameter);
+        print_r($cloudappliance_array);
+
+// ######################### Cloud sshterm example ##############################
+        $cloudappliance_ip = $cloudappliance_array['cloud_appliance_ip'];
+        echo "<input type=hidden name='cr_cloudappliance_ip' value=\"$cloudappliance_ip\">";
+        echo "ssh-login exmaple <input type=submit name='action' value='login'>";
+// ######################### Cloud sshterm example ##############################
+
+    } catch (Exception $e) {
+        echo 'Caught exception: ',  $e->getMessage(), "<br>";
+    }
+    echo "</pre></nobr>";
+    echo "<br>";
+}
+
+echo "</form>";
+
+
+
+// ######################### Cloud sshterm helper function start ###############
+function sshterm_login($ip) {
+    $OPENQRM_PLUGIN_AJAXTERM_REVERSE_PROXY_PORT=44322;
+	$redirect_url="https://$ip:$OPENQRM_PLUGIN_AJAXTERM_REVERSE_PROXY_PORT";
+	$left=50+($id*50);
+	$top=100+($id*50);
+?>
+<script type="text/javascript">
+function open_sshterm (url) {
+    sshterm_window = window.open(url, "<?php echo $ip; ?>", "width=580,height=420,left=<?php echo $left; ?>,top=<?php echo $top; ?>");
+    open_sshterm.focus();
+}
+open_sshterm("<?php echo $redirect_url; ?>");
+</script>
+<?php
+
+}
+// ######################### Cloud sshterm helper function end #################
+
+
+
 
 
 // ######################### form Cloud User end ###############################

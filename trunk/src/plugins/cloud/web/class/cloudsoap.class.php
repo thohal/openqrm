@@ -551,6 +551,222 @@ class cloudsoap {
 
 
 
+// ######################### cloud appliance methods #############################
+
+	//--------------------------------------------------
+	/**
+	* Get a list of Cloud appliance ids per Cloud User (or all)
+	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password,clouduser-name
+	* @return array List of Cloud appliance ids
+	*/
+	//--------------------------------------------------
+	// method providing a list of cloud appliance ids per user
+	function CloudApplianceGetList($method_parameters) {
+		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$clouduser_name = $parameter_array[3];
+        // check all user input
+        for ($i = 0; $i <= 3; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudApplianceGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 4) {
+            $event->log("cloudsoap->CloudApplianceGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudApplianceGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        $clouduser = new clouduser();
+       // check that in user mode the username is the same as the cloud_username
+        switch ($mode) {
+            case 'user':
+                if ($clouduser->is_name_free($clouduser_name)) {
+                    $event->log("cloudsoap->CloudApplianceGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud!", "", "", 0, 0, 0);
+                    return;
+                }
+                if (strcmp($username, $clouduser_name)) {
+                    $event->log("cloudsoap->CloudApplianceGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to gather the appliance list of Cloud User $clouduser_name  !", "", "", 0, 0, 0);
+                    return;
+                }
+                break;
+
+            case 'admin':
+                if (!strlen($clouduser_name)) {
+                    $event->log("cloudsoap->CloudApplianceGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of all Cloud-appliances", "", "", 0, 0, 0);
+                    $cloudappliance_list = array();
+                    $cloudappliance = new cloudappliance();
+                    $cloudappliance_id_list = $cloudappliance->get_all_ids();
+                    foreach($cloudappliance_id_list as $cr_id_list) {
+                        foreach($cr_id_list as $cr_id) {
+                            $cloudappliance_list[] = $cr_id;
+                        }
+                    }
+            		return $cloudappliance_list;
+                } else {
+                    if ($clouduser->is_name_free($clouduser_name)) {
+                        $event->log("cloudsoap->CloudApplianceGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud.", "", "", 0, 0, 0);
+                        return;
+                    }
+                }
+                break;
+        }
+
+        $cloudappliance_list = array();
+        $clouduser->get_instance_by_name($clouduser_name);
+        $cu_id = $clouduser->id;
+        $event->log("cloudsoap->CloudApplianceGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of Cloud-appliances for Cloud User $clouduser_name ($cu_id)", "", "", 0, 0, 0);
+        $cloudappliance = new cloudappliance();
+        $cloudappliance_id_list = $cloudappliance->get_all_ids();
+        foreach($cloudappliance_id_list as $ca_id_list) {
+            foreach($ca_id_list as $ca_id) {
+                $ca = new cloudappliance();
+                $ca->get_instance_by_id($ca_id);
+                // get the request to check for the user
+                $cr = new cloudrequest();
+                $cr->get_instance_by_id($ca->cr_id);
+                if ($cr->cu_id == $cu_id) {
+                    $cloudappliance_list[] = $ca_id;
+                }
+            }
+        }
+		return $cloudappliance_list;
+	}
+
+
+	//--------------------------------------------------
+	/**
+	* Gets details for a Cloud appliance
+	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password,cloud-appliance-id
+	* @return array cloudappliance-parameters
+	*/
+	//--------------------------------------------------
+	function CloudApplianceGetDetails($method_parameters) {
+		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$ca_id = $parameter_array[3];
+        // check all user input
+        for ($i = 0; $i <= 3; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudApplianceGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 4) {
+            $event->log("cloudsoap->CloudApplianceGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudApplianceGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        $cr_appliance = new cloudappliance();
+        $cr_appliance->get_instance_by_id($ca_id);
+        // get the request to check for the user
+        $cr = new cloudrequest();
+        $cr->get_instance_by_id($cr_appliance->cr_id);
+        $cl_user = new clouduser();
+        $cl_user->get_instance_by_id($cr->cu_id);
+        switch ($mode) {
+            case 'user':
+                if (strcmp($username, $cl_user->name)) {
+                    $event->log("cloudsoap->CloudApplianceGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to get Details of Cloud User $cl_user->name!", "", "", 0, 0, 0);
+                    return;
+                }
+                break;
+        }
+
+        $event->log("cloudsoap->CloudApplianceGetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing details for Cloud appliance $cr_id", "", "", 0, 0, 0);
+        $cloudappliance_details = array();
+        // create the array to return
+        $cloudappliance_details['id'] = $ca_id;
+        // appliance details
+        $appliance = new appliance();
+        $appliance->get_instance_by_id($cr_appliance->appliance_id);
+        $cloudappliance_details['appliance_name'] = $appliance->name;
+        $cloudappliance_details['appliance_state'] = $appliance->state;
+        $cloudappliance_details['appliance_comment'] = $appliance->comment;
+
+        // resource details
+        $resource = new resource();
+        $resource->get_instance_by_id($appliance->resources);
+        $cloudappliance_details['resource_id'] = $resource->id;
+        $cloudappliance_details['resource_type'] = $resource->capabilities;
+        $cloudappliance_details['resource_int_ip'] = $resource->ip;
+        $cloudappliance_details['resource_uptime'] = $resource->uptime;
+
+        $cloudappliance_details['resource_cpumodel'] = $resource->cpumodel;
+        $cloudappliance_details['resource_cpunumber'] = $resource->cpunumber;
+        $cloudappliance_details['resource_cpuspeed'] = $resource->cpuspeed;
+        $cloudappliance_details['resource_load'] = $resource->load;
+        $cloudappliance_details['resource_memtotal'] = $resource->memtotal;
+        $cloudappliance_details['resource_memused'] = $resource->memused;
+        $cloudappliance_details['resource_swaptotal'] = $resource->swaptotal;
+        $cloudappliance_details['resource_swapused'] = $resource->swapused;
+
+        // image details
+        $image = new image();
+        $image->get_instance_by_id($appliance->imageid);
+        $cloudappliance_details['image_name'] = $image->name;
+        // kernel details
+        $kernel = new kernel();
+        $kernel->get_instance_by_id($appliance->kernelid);
+        $cloudappliance_details['kernel_name'] = $kernel->name;
+        // cloud-appliance details
+        $cloudappliance_details['cloud_appliance_state'] = $cr_appliance->state;
+        $cloudappliance_details['cloud_appliance_cr_id'] = $cr_appliance->cr_id;
+        // finding the external ip
+        $appliance_resources=$appliance->resources;
+		if ($appliance_resources >=0) {
+			// an appliance with a pre-selected resource
+			// get its ips from the iptables table
+			$cloud_iptable = new cloudiptables();
+			$app_ips = $cloud_iptable->get_ip_list_by_appliance($appliance->id);
+            $app_ips_len = count($app_ips);
+            if ((is_array($app_ips)) && ($app_ips_len > 0)) {
+				foreach ($app_ips as $index => $app_ip_arr) {
+                    $res_ip_loop++;
+                    // we keep the first ip for the ssh-login
+                    if ($res_ip_loop == 1) {
+    					$appliance_ip = $app_ip_arr['ip_address'];
+                    }
+				}
+			} else {
+                // in case no external ip was given to the appliance we show the internal ip
+                $resource->get_instance_by_id($appliance->resources);
+				$appliance_ip = $resource->ip;
+			}
+
+		} else {
+			// an appliance with resource auto-select enabled
+			$appliance_ip = "auto-select";
+		}
+        $cloudappliance_details['cloud_appliance_ip'] = $appliance_ip;
+
+
+        return $cloudappliance_details;
+	}
+
+
 
 
 // ######################### kernel methods ####################################

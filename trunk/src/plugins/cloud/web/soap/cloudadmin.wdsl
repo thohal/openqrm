@@ -96,6 +96,20 @@
   <part name='Result' type='xsd:string'/>
 </message>
 
+<message name='CloudApplianceGetListRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudApplianceGetListResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
+<message name='CloudApplianceGetDetailsRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudApplianceGetDetailsResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
 <message name='KernelGetListRequest'>
   <part name='Result' type='xsd:string'/>
 </message>
@@ -191,6 +205,16 @@
   <operation name='CloudRequestGetDetails'>
     <input message='tns:CloudRequestGetDetailsRequest'/>
     <output message='tns:CloudRequestGetDetailsResponse'/>
+  </operation>
+
+  <operation name='CloudApplianceGetList'>
+    <input message='tns:CloudApplianceGetListRequest'/>
+    <output message='tns:CloudApplianceGetListResponse'/>
+  </operation>
+
+  <operation name='CloudApplianceGetDetails'>
+    <input message='tns:CloudApplianceGetDetailsRequest'/>
+    <output message='tns:CloudApplianceGetDetailsResponse'/>
   </operation>
 
   <operation name='KernelGetList'>
@@ -368,6 +392,30 @@
 
   <operation name='CloudRequestGetDetails'>
     <soap:operation soapAction='urn:localhost-cloud#CloudRequestGetDetails'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='CloudApplianceGetList'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudApplianceGetList'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='CloudApplianceGetDetails'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudApplianceGetDetails'/>
     <input>
       <soap:body use='encoded' namespace='urn:localhost-cloud'
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
