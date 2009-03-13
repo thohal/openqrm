@@ -42,6 +42,7 @@ make install DESTINATION_DIR=$RPM_BUILD_ROOT
 %package plugin-aoe-storage
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-aoe-storage
 openQRM is the next generation data-center management platform.
 %files plugin-aoe-storage
@@ -60,6 +61,7 @@ rm -fr /var/www/openqrm/base/plugins/aoe-storage
 %package plugin-citrix
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-citrix
 openQRM is the next generation data-center management platform.
 %files plugin-citrix
@@ -78,6 +80,7 @@ rm -fr /var/www/openqrm/base/plugins/citrix
 %package plugin-cloud
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm, screen
 %description plugin-cloud
 openQRM is the next generation data-center management platform.
 %files plugin-cloud
@@ -96,6 +99,7 @@ rm -fr /var/www/openqrm/base/plugins/cloud
 %package plugin-dhcpd
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm, dhcp
 %description plugin-dhcpd
 openQRM is the next generation data-center management platform.
 %files plugin-dhcpd
@@ -114,6 +118,7 @@ rm -fr /var/www/openqrm/base/plugins/dhcpd
 %package plugin-dns
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-dns
 openQRM is the next generation data-center management platform.
 %files plugin-dns
@@ -131,6 +136,7 @@ rm -fr /var/www/openqrm/base/plugins/dns
 %package plugin-highavailability
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-highavailability
 openQRM is the next generation data-center management platform.
 %files plugin-highavailability
@@ -149,6 +155,7 @@ rm -fr /var/www/openqrm/base/plugins/highavailability
 %package plugin-image-shelf
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-image-shelf
 openQRM is the next generation data-center management platform.
 %files plugin-image-shelf
@@ -167,6 +174,7 @@ rm -fr /var/www/openqrm/plugins/image/shelf
 %package plugin-iscsi-storage
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-iscsi-storage
 openQRM is the next generation data-center management platform.
 %files plugin-iscsi-storage
@@ -185,6 +193,7 @@ rm -fr /var/www/openqrm/base/plugins/iscsi-storage
 %package plugin-kvm
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-kvm
 openQRM is the next generation data-center management platform.
 %files plugin-kvm
@@ -203,6 +212,7 @@ rm -fr /var/www/openqrm/base/plugins/kvm
 %package plugin-linux-vserver
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-linux-vserver
 openQRM is the next generation data-center management platform.
 %files plugin-linux-vserver
@@ -221,6 +231,7 @@ rm -fr /var/www/openqrm/base/plugins/linux-vserver
 %package plugin-local-server
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-local-server
 openQRM is the next generation data-center management platform.
 %files plugin-local-server
@@ -239,6 +250,7 @@ rm -fr /var/www/openqrm/base/plugins/local-server
 %package plugin-local-storage
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-local-storage
 openQRM is the next generation data-center management platform.
 %files plugin-local-storage
@@ -257,6 +269,7 @@ rm -fr /var/www/openqrm/base/plugins/local-storage
 %package plugin-lvm-storage
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-lvm-storage
 openQRM is the next generation data-center management platform.
 %files plugin-lvm-storage
@@ -275,6 +288,7 @@ rm -fr /var/www/openqrm/base/plugins/lvm-storage
 %package plugin-nagios2
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-nagios2
 openQRM is the next generation data-center management platform.
 %files plugin-nagios2
@@ -293,6 +307,7 @@ rm -fr /var/www/openqrm/base/plugins/nagios2
 %package plugin-nagios3
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-nagios3
 openQRM is the next generation data-center management platform.
 %files plugin-nagios3
@@ -311,6 +326,7 @@ rm -fr /var/www/openqrm/base/plugins/nagios3
 %package plugin-netapp-storage
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-netapp-storage
 openQRM is the next generation data-center management platform.
 %files plugin-netapp-storage
@@ -329,6 +345,7 @@ rm -fr /var/www/openqrm/base/plugins/netapp-storage
 %package plugin-nfs-storage
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-nfs-storage
 openQRM is the next generation data-center management platform.
 %files plugin-nfs-storage
@@ -347,6 +364,7 @@ rm -fr /var/www/openqrm/base/plugins/nfs-storage
 %package plugin-puppet
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-puppet
 openQRM is the next generation data-center management platform.
 %files plugin-puppet
@@ -365,6 +383,7 @@ rm -fr /var/www/openqrm/base/plugins/puppet
 %package plugin-sshterm
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-sshterm
 openQRM is the next generation data-center management platform.
 %files plugin-sshterm
@@ -383,6 +402,7 @@ rm -fr /var/www/openqrm/base/plugins/sshterm
 %package plugin-tftpd
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-tftpd
 openQRM is the next generation data-center management platform.
 %files plugin-tftpd
@@ -401,6 +421,7 @@ rm -fr /var/www/openqrm/base/plugins/tftpd
 %package plugin-vmware-esx
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-vmware-esx
 openQRM is the next generation data-center management platform.
 %files plugin-vmware-esx
@@ -419,6 +440,7 @@ rm -fr /var/www/openqrm/base/plugins/vmware-esx
 %package plugin-vmware-server
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-vmware-server
 openQRM is the next generation data-center management platform.
 %files plugin-vmware-server
@@ -437,6 +459,7 @@ rm -fr /var/www/openqrm/base/plugins/vmware-server
 %package plugin-vmware-server2
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-vmware-server2
 openQRM is the next generation data-center management platform.
 %files plugin-vmware-server2
@@ -455,6 +478,7 @@ rm -fr /var/www/openqrm/base/plugins/vmware-server2
 %package plugin-windows
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-windows
 openQRM is the next generation data-center management platform.
 %files plugin-windows
@@ -473,6 +497,7 @@ rm -fr /var/www/openqrm/base/plugins/windows
 %package plugin-xen
 Summary: next generation data-center management platform.
 Group: Networking/Admin
+Requires: openqrm
 %description plugin-xen
 openQRM is the next generation data-center management platform.
 %files  plugin-xen
