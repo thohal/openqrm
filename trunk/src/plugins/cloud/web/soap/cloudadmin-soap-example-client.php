@@ -177,9 +177,43 @@ switch ($action) {
 		break;
 
 	// ######################### cloud sshterm example ####################
-	case 'login':
+	case 'appliance_login':
         $cloudappliance_ip = $request_fields['cr_cloudappliance_ip'];
         sshterm_login($cloudappliance_ip);
+        break;
+
+	// ######################### cloud appliance command example ####################
+	case 'appliance_pause':
+        $appliance_pause_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_cloudappliance_id'].",stop";
+        try {
+            $res = $client->CloudApplianceCommand($appliance_pause_parameters);
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
+        $cloudappliance_id = $request_fields['cr_cloudappliance_id'];
+		echo "Registered Cloud appliance command  pause/stop on appliance id $cloudappliance_id : $res<br>";
+        break;
+
+	case 'appliance_unpause':
+        $appliance_unpause_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_cloudappliance_id'].",start";
+        try {
+            $res = $client->CloudApplianceCommand($appliance_unpause_parameters);
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
+        $cloudappliance_id = $request_fields['cr_cloudappliance_id'];
+		echo "Registered Cloud appliance command  unpause/start on appliance id $cloudappliance_id : $res<br>";
+        break;
+
+	case 'appliance_restart':
+        $appliance_restart_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_cloudappliance_id'].",restart";
+        try {
+            $res = $client->CloudApplianceCommand($appliance_restart_parameters);
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
+        $cloudappliance_id = $request_fields['cr_cloudappliance_id'];
+		echo "Registered Cloud appliance command  restart on appliance id $cloudappliance_id : $res<br>";
         break;
 
 
@@ -552,8 +586,23 @@ foreach($cloudappliance_list as $ca_id) {
 // ######################### Cloud sshterm example ##############################
         $cloudappliance_ip = $cloudappliance_array['cloud_appliance_ip'];
         echo "<input type=hidden name='cr_cloudappliance_ip' value=\"$cloudappliance_ip\">";
-        echo "ssh-login exmaple <input type=submit name='action' value='login'>";
+        echo "ssh-login exmaple <input type=submit name='action' value='appliance_login'>";
 // ######################### Cloud sshterm example ##############################
+        echo "<br>";
+// ######################### Cloud appliance command example ##############################
+        $cloudappliance_id = $cloudappliance_array['id'];
+        echo "<input type=hidden name='cr_cloudappliance_id' value=\"$cloudappliance_id\">";
+        echo "pause exmaple <input type=submit name='action' value='appliance_pause'>";
+        echo "<br>";
+        echo "pause exmaple <input type=submit name='action' value='appliance_unpause'>";
+        echo "<br>";
+        echo "pause exmaple <input type=submit name='action' value='appliance_restart'>";
+        echo "<br>";
+
+
+// ######################### Cloud appliance command example ##############################
+        echo "<br>";
+
 
     } catch (Exception $e) {
         echo 'Caught exception: ',  $e->getMessage(), "<br>";

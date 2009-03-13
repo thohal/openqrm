@@ -695,7 +695,7 @@ class cloudsoap {
                 break;
         }
 
-        $event->log("cloudsoap->CloudApplianceGetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing details for Cloud appliance $cr_id", "", "", 0, 0, 0);
+        $event->log("cloudsoap->CloudApplianceGetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing details for Cloud appliance $ca_id", "", "", 0, 0, 0);
         $cloudappliance_details = array();
         // create the array to return
         $cloudappliance_details['id'] = $ca_id;
@@ -765,6 +765,92 @@ class cloudsoap {
 
         return $cloudappliance_details;
 	}
+
+
+
+	//--------------------------------------------------
+	/**
+	* executes Cloud appliance command
+	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password,cloud-appliance-id
+	* @return int 0 for success, 1 for failure
+	*/
+	//--------------------------------------------------
+	function CloudApplianceCommand($method_parameters) {
+		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$ca_id = $parameter_array[3];
+		$ca_cmd = $parameter_array[4];
+        // check all user input
+        for ($i = 0; $i <= 4; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudApplianceCommand", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return 1;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 5) {
+            $event->log("cloudsoap->CloudApplianceCommand", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return 1;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudApplianceCommand", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return 1;
+        }
+        $cr_appliance = new cloudappliance();
+        $cr_appliance->get_instance_by_id($ca_id);
+        // get the request to check for the user
+        $cr = new cloudrequest();
+        $cr->get_instance_by_id($cr_appliance->cr_id);
+        $cl_user = new clouduser();
+        $cl_user->get_instance_by_id($cr->cu_id);
+        switch ($mode) {
+            case 'user':
+                if (strcmp($username, $cl_user->name)) {
+                    $event->log("cloudsoap->CloudApplianceCommand", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to execute a Cloud-command on behalf of Cloud User $cl_user->name!", "", "", 0, 0, 0);
+                    return 1;
+                }
+                break;
+        }
+        // valid command ?
+        switch ($ca_cmd) {
+            case "noop":
+                break;
+            case "start":
+                if ($cr_appliance->state != 0) {
+                    $event->log("cloudsoap->CloudApplianceCommand", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Can only unpause Cloud appliance $ca_id if it is in paused state!", "", "", 0, 0, 0);
+                    return 1;
+                }
+                break;
+            case "stop":
+                if ($cr_appliance->state != 1) {
+                    $event->log("cloudsoap->CloudApplianceCommand", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Can only pause Cloud appliance $ca_id if it is in active state!", "", "", 0, 0, 0);
+                    return 1;
+                }
+                break;
+            case "restart":
+                if ($cr_appliance->state != 1) {
+                    $event->log("cloudsoap->CloudApplianceCommand", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Can only restart Cloud appliance $ca_id if it is in active state!", "", "", 0, 0, 0);
+                    return 1;
+                }
+                break;
+            default:
+                $event->log("cloudsoap->CloudApplianceCommand", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Unsupported Cloud command $ca_cmd !", "", "", 0, 0, 0);
+                return 1;
+                break;
+        }
+
+        $event->log("cloudsoap->CloudApplianceCommand", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Executing Cloud command $ca_cmd on Cloud appliance $ca_id", "", "", 0, 0, 0);
+        $cr_appliance->set_cmd($ca_id, $ca_cmd);
+        return 0;
+	}
+
 
 
 
