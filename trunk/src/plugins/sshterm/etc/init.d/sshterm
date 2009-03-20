@@ -24,10 +24,14 @@ fi
 function sshterm_start() {
 	echo "Starting the openQRM sshterm-plugin"
 	sshterm_stop 1>/dev/null 2>&1
-	export FORCE_INSTALL=true
-	openqrm_install_os_dependency screen
-	openqrm_install_os_dependency openssl
-
+    if ! which screen 1>/dev/null; then
+    	export FORCE_INSTALL=true
+    	openqrm_install_os_dependency screen
+    fi
+    if ! which openssl 1>/dev/null; then
+    	export FORCE_INSTALL=true
+    	openqrm_install_os_dependency openssl
+    fi
     # create the openqrm if not existing yet
     # this user starts the pound proxy and provides a user login because
     # ajaxterm does not allow root-logins
