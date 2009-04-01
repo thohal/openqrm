@@ -21,6 +21,7 @@ require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudiptables.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudnat.class.php";
 
 global $OPENQRM_SERVER_BASE_DIR;
 $refresh_delay=5;
@@ -159,6 +160,17 @@ function my_cloud_appliances() {
                 $sshterm_login_ip =  $resource->ip;
                 $sshterm_login = true;
 			}
+
+            // check if we need to NAT the ip address
+            $cn_conf = new cloudconfig();
+            $cn_nat_enabled = $cn_conf->get_value(18);  // 18 is cloud_nat
+            if (!strcmp($cn_nat_enabled, "true")) {
+                $cn = new cloudnat();
+                $appliance_resources_str = $cn->translate($appliance_resources_str);
+                $sshterm_login_ip = $cn->translate($sshterm_login_ip);
+            }
+
+
 
 		} else {
 			// an appliance with resource auto-select enabled

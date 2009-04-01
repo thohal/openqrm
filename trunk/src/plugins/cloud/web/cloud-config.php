@@ -99,6 +99,7 @@ function cloud_config_manager() {
 			case '15':
 			case '16':
 			case '17':
+			case '18':
 				$ar = array();
 				$ar[] = array('value'=> 'true', 'label'=> 'true');
 				$ar[] = array('value'=> 'false', 'label'=> 'false'); 

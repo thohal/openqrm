@@ -11,6 +11,8 @@ require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/class/plugin.class.php";
 require_once "$RootDir/class/event.class.php";
+// special cloud classes
+require_once "$RootDir/plugins/cloud/class/cloudnat.class.php";
 
 $event = new event();
 global $event;
@@ -50,7 +52,23 @@ function send() {
 	if (file_exists($this->template)) {
 		$this->message = file_get_contents($this->template);
 	}
+
+    // check if we have to cloudnat the ip address
+    $cn_conf = new cloudconfig();
+    $cn_nat_enabled = $cn_conf->get_value(18);  // 18 is cloud_nat
+    if (!strcmp($cn_nat_enabled, "true")) {
+        $cloudnat = true;
+    } else {
+        $cloudnat = false;
+    }
+    // replace in template
 	foreach ($this->var_array as $key => $value) {
+        if ($cloudnat) {
+            if (!strcmp($key, "@@IP@@")) {
+                $cn = new cloudnat();
+                $value = $cn->translate($value);
+            }
+        }
 		$this->message = str_replace($key, $value, $this->message);
 	}
 	$this->message = wordwrap($this->message, 70);
