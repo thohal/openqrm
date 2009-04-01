@@ -35,8 +35,10 @@ fi
 function puppet_start() {
 	echo "Starting the openQRM puppet-plugin"
 	puppet_stop 1>/dev/null 2>&1
-	export FORCE_INSTALL=true
-	openqrm_install_os_dependency puppet
+    if ! which puppet 1>/dev/null; then
+    	export FORCE_INSTALL=true
+    	openqrm_install_os_dependency puppet
+    fi
 	# clean up eventual left-overs, be sure we get signed
 	rm -rf /etc/puppet/ssl/* /var/lib/puppet/ssl/* /var/lib/puppet/state/*
 	openqrm_chkconfig del puppet
