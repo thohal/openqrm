@@ -301,11 +301,17 @@ function kvm_server_display($appliance_id) {
 	$arHead1['kvm_vm_state'] = array();
 	$arHead1['kvm_vm_state']['title'] ='State';
 
-	$arHead1['kvm_vm_icon'] = array();
-	$arHead1['kvm_vm_icon']['title'] ='Type';
+	$arHead1['kvm_vm_res'] = array();
+	$arHead1['kvm_vm_res']['title'] ='Res.';
 
 	$arHead1['kvm_vm_name'] = array();
 	$arHead1['kvm_vm_name']['title'] ='Name';
+
+	$arHead1['kvm_vm_ip'] = array();
+	$arHead1['kvm_vm_ip']['title'] ='IP';
+
+	$arHead1['kvm_vm_mac'] = array();
+	$arHead1['kvm_vm_mac']['title'] ='MAC';
 
 	$arHead1['kvm_vm_actions'] = array();
 	$arHead1['kvm_vm_actions']['title'] ='Actions';
@@ -322,8 +328,15 @@ function kvm_server_display($appliance_id) {
 				// vms
 				$kvm_short_name=basename($kvm_server_name);
                 // check if active
-                $kvm_vm_state = trim(substr($kvm_short_name, strlen($kvm_short_name)-2, strlen($kvm_short_name)));
-                $kvm_short_name = trim(substr($kvm_short_name, 0, strlen($kvm_short_name)-2));
+                $kvm_vm_state = trim(substr($kvm_short_name, strlen($kvm_short_name)-2, 2));
+                $kvm_vm_mac = trim(substr($kvm_short_name, strlen($kvm_short_name)-21, 18));
+                $kvm_short_name = trim(substr($kvm_short_name, 0, strlen($kvm_short_name)-21));
+                // get ip
+                $kvm_resource = new resource();
+                $kvm_resource->get_instance_by_mac($kvm_vm_mac);
+                $kvm_vm_ip = $kvm_resource->ip;
+                $kvm_vm_id = $kvm_resource->id;
+
                 // fill the actions and set state icon
                 $vm_actions = "";
                 if (!strcmp($kvm_vm_state, "1")) {
@@ -341,9 +354,11 @@ function kvm_server_display($appliance_id) {
                 $kvm_vm_count++;
 
                 $arBody1[] = array(
-                    'kvm_vm_state' => "<img src=$state_icon>",
-                    'kvm_vm_icon' => "<img width=24 height=24 src='img/plugin.png'><input type='hidden' name='kvm_server_id' value=$appliance_id>",
+                    'kvm_vm_state' => "<img src=$state_icon><input type='hidden' name='kvm_server_id' value=$appliance_id>",
+                    'kvm_vm_id' => $kvm_vm_id,
                     'kvm_vm_name' => $kvm_short_name,
+                    'kvm_vm_ip' => $kvm_vm_ip,
+                    'kvm_vm_mac' => $kvm_vm_mac,
                     'kvm_vm_actions' => $vm_actions,
                 );
 
@@ -363,7 +378,7 @@ function kvm_server_display($appliance_id) {
 	$table1->head = $arHead1;
 	$table1->body = $arBody1;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table1->bottom = array('start', 'stop', 'restart', 'remove');
+		$table1->bottom = array('start', 'stop', 'restart', 'delete');
 		$table1->identifier = 'kvm_vm_name';
 	}
 	$table1->max = $kvm_vm_count;
@@ -380,18 +395,22 @@ function kvm_server_display($appliance_id) {
 $output = array();
 $kvm_server_id = $_REQUEST["kvm_server_id"];
 if(htmlobject_request('action') != '') {
-	switch (htmlobject_request('action')) {
-		case 'select':
-			foreach($_REQUEST['identifier'] as $id) {
-				$output[] = array('label' => 'Kvm-Server Admin', 'value' => kvm_server_display($id));
-			}
-			break;
-		case 'refresh':
-			foreach($_REQUEST['identifier'] as $id) {
-				$output[] = array('label' => 'Kvm-Server Admin', 'value' => kvm_server_display($id));
-			}
-			break;
-	}
+    if (isset($_REQUEST['identifier'])) {
+        switch (htmlobject_request('action')) {
+            case 'select':
+                foreach($_REQUEST['identifier'] as $id) {
+                    $output[] = array('label' => 'Kvm-Server Admin', 'value' => kvm_server_display($id));
+                }
+                break;
+            case 'refresh':
+                foreach($_REQUEST['identifier'] as $id) {
+                    $output[] = array('label' => 'Kvm-Server Admin', 'value' => kvm_server_display($id));
+                }
+                break;
+        }
+    } else {
+    	$output[] = array('label' => 'Kvm-Server Admin', 'value' => kvm_server_select());
+    }
 } else if (strlen($kvm_server_id)) {
 	$output[] = array('label' => 'Kvm-Server Admin', 'value' => kvm_server_display($kvm_server_id));
 } else  {
