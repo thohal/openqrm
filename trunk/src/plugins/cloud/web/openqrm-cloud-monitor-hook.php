@@ -28,6 +28,9 @@ require_once "$RootDir/plugins/cloud/class/cloudvm.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
 
+// custom billing hook, please fill in your custom-billing function 
+require_once "$RootDir/plugins/cloud/openqrm-cloud-billing-hook.php";
+
 global $CLOUD_USER_TABLE;
 global $CLOUD_REQUEST_TABLE;
 global $CLOUD_IMAGE_TABLE;
@@ -44,6 +47,8 @@ $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
 global $event;
+
+
 
 // request status
 // 1 = new
@@ -957,9 +962,14 @@ function openqrm_cloud_monitor() {
 					// we set the last-bill time to now and bill
 					$cr->set_requests_lastbill($cr_id, $now);
 					$cr_costs = $cr->get_cost();
-					$cu_ccunits = $cu_ccunits-$cr_costs;
-					$cu->set_users_ccunits($cu_id, $cu_ccunits);
+
+                    // custom billing
+                    $cu_ccunits = openqrm_custom_cloud_billing($cr_id, $cu_id, $cr_costs, $cu_ccunits);
+
+                    $cu->set_users_ccunits($cu_id, $cu_ccunits);
 					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Billing (first hour) user $cu->name for request ID $cr_id", "", "", 0, 0, 0);
+
+
 				} else {
 					// we check if we need to bill according the last-bill var
 					$active_cr_time = $now - $cr_lastbill;
@@ -968,8 +978,11 @@ function openqrm_cloud_monitor() {
 						$cr->set_requests_lastbill($cr_id, $now);
 						// bill for an hour
 						$cr_costs = $cr->get_cost();
-						$cu_ccunits = $cu_ccunits-$cr_costs;
-						$cu->set_users_ccunits($cu_id, $cu_ccunits);
+
+                        // custom billing
+                        $cu_ccunits = openqrm_custom_cloud_billing($cr_id, $cu_id, $cr_costs, $cu_ccunits);
+
+                        $cu->set_users_ccunits($cu_id, $cu_ccunits);
 						$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Billing (an hour) user $cu->name for request ID $cr_id", "", "", 0, 0, 0);
 					}
 				}
