@@ -50,6 +50,7 @@ global $event;
 		global $OPENQRM_EXEC_PORT;
 		global $IMAGE_AUTHENTICATION_TABLE;
 		global $openqrm_server;
+        global $RootDir;
 	
 		$appliance = new appliance();
 		$appliance->get_instance_by_id($appliance_id);
@@ -74,7 +75,33 @@ global $event;
 		$resource->get_instance_by_id($appliance->resources);
 		$resource_mac=$resource->mac;
 		$resource_ip=$resource->ip;
-	
+
+        // this is a hook for the cloud-plugin to be able
+        // to translate the internal to the external ip address
+        // for the nfs-mount authentication
+        if (file_exists("$RootDir/plugins/cloud/.running")) {
+            $event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-nfs-deployment-auth-hook.php", "Found Cloud enabled and running. Checking for CloudNAT", "", "", 0, 0, $appliance_id);
+            // special clouduser class
+            require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
+            require_once "$RootDir/plugins/cloud/class/cloudnat.class.php";
+            // check if we have to cloudnat the ip address
+            $cn_conf = new cloudconfig();
+            $cn_nat_enabled = $cn_conf->get_value(18);  // 18 is cloud_nat
+            if (!strcmp($cn_nat_enabled, "true")) {
+                $cn = new cloudnat();
+                $internal_resource_ip=$resource_ip;
+                $resource_ip = $cn->translate($resource_ip);
+                $event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-nfs-deployment-auth-hook.php", "Found CloudNAT enabled, translated $internal_resource_ip to $resource_ip", "", "", 0, 0, $appliance_id);
+            } else {
+                $event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-nfs-deployment-auth-hook.php", "Cloudnat is disabled, keeping $resource_ip", "", "", 0, 0, $appliance_id);
+            }
+
+        } else {
+			$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-lvm-nfs-deployment-auth-hook.php", "Cloud is not enabled/running. Not checking for CloudNAT", "", "", 0, 0, $appliance_id);
+
+        }
+
+
 		switch($cmd) {
 			case "start":
 				// authenticate the rootfs
