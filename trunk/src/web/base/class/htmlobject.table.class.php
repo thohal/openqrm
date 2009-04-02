@@ -150,7 +150,7 @@ var $_init_tr;
 				$_strReturn .= $td;
 			}
 			else {
-				$_strReturn .= 'td type not defined';
+				$_strReturn .= '';
 			}
 		}
 		$_strReturn .= "</tr>\n";

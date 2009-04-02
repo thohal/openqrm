@@ -66,42 +66,6 @@ unset($kvm_server_fields["kvm_server_command"]);
 			$kvm_server->send_command($kvm_server->ip, $resource_command);
 			break;
 
-		case 'start':
-			$kvm_appliance = new appliance();
-			$kvm_appliance->get_instance_by_id($kvm_server_id);
-			$kvm_server = new resource();
-			$kvm_server->get_instance_by_id($kvm_appliance->resources);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm start -n $kvm_server_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$kvm_server->send_command($kvm_server->ip, $resource_command);
-			break;
-
-		case 'stop':
-			$kvm_appliance = new appliance();
-			$kvm_appliance->get_instance_by_id($kvm_server_id);
-			$kvm_server = new resource();
-			$kvm_server->get_instance_by_id($kvm_appliance->resources);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm stop -n $kvm_server_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$kvm_server->send_command($kvm_server->ip, $resource_command);
-			break;
-
-		case 'reboot':
-			$kvm_appliance = new appliance();
-			$kvm_appliance->get_instance_by_id($kvm_server_id);
-			$kvm_server = new resource();
-			$kvm_server->get_instance_by_id($kvm_appliance->resources);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm reboot -n $kvm_server_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$kvm_server->send_command($kvm_server->ip, $resource_command);
-			break;
-
-		case 'delete':
-			$kvm_appliance = new appliance();
-			$kvm_appliance->get_instance_by_id($kvm_server_id);
-			$kvm_server = new resource();
-			$kvm_server->get_instance_by_id($kvm_appliance->resources);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm delete -n $kvm_server_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$kvm_server->send_command($kvm_server->ip, $resource_command);
-			break;
-
 		// get the incoming vm list
 		case 'get_kvm_server':
 			if (!file_exists($KvmDir)) {

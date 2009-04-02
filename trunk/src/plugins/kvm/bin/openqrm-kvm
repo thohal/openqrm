@@ -246,7 +246,20 @@ case "$KVM_COMMAND" in
 		kvm_lock aquire
 		echo "Posting vm list to the openQRM-server"
 		VM_LIST_TMP=$resource_id.vm_list
-		ls $OPENQRM_VM_DIR/ > $VM_LIST_TMP
+        > $VM_LIST_TMP
+		for kvmvm in `ls $OPENQRM_VM_DIR/`; do
+            # check if active
+            if ps ax | grep "/$kvmvm/" | grep -v grep | grep -i screen 1>/dev/null; then
+                echo "$kvmvm"" 1" >> $VM_LIST_TMP
+            else
+                echo "$kvmvm"" 0" >> $VM_LIST_TMP
+            fi
+
+            
+
+        done
+
+
 		if ! wget -q -O /dev/null --http-user=$KVM_OPENQRM_USERNAME --http-password=$KVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/kvm/kvm-action.php?kvm_server_command=get_kvm_server; then
 			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!"
 			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
