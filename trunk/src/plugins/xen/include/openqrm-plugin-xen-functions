@@ -15,9 +15,6 @@ XEN_LOCK_DELAY=5
 XEN_LOCK_RETRY=100
 XEN_LOCK_TIMEOUT=500
 
-OPENQRM_DEFAULT_VM_BRIDGE="eth0"
-OPENQRM_VM_BRIDGE_CONFIG="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/openqrm-vm-bridge.conf"
-
 ################ common xen functions
 
 # logs for xen

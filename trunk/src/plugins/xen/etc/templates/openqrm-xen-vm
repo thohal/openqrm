@@ -1,13 +1,1 @@
-kernel = '@@HVM_LOADER@@'
-builder = 'hvm'
-memory = '@@OPENQRM_RESOURCE_RAM@@'
-device_model='@@QEMU_DM@@'
-name = '@@XEN_VM_NAME@@'
-# Networking
-vif = ['mac=@@OPENQRM_RESOURCE_MAC@@, type=ioemu, bridge=@@OPENQRM_VM_BRIDGE@@']
-# Behaviour
-boot='n'
-vnc=1
-vncviewer=1
-sdl=0
-
+# not needed any more since configuration is generated dynamically

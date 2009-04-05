@@ -13,15 +13,16 @@ function xen_kernel_hook() {
 	echo "xen-plugin: Running xen_kernel_hook $KERNEL_NAME $KERNEL_VERSION $KERNEL_LOCATION $KERNEL_TYPE" | logger
 	echo "xen-plugin: basedir = $OPENQRM_SERVER_BASE_DIR" | logger
 
-	if ls $KERNEL_LOCATION/boot/xen*.gz* 1>/dev/null 2>&1; then
-		echo "xen-plugin: Found Xen-hypervisor at $KERNEL_LOCATION/boot/"
-		echo "xen-plugin: Copying Xen-hypervisor to $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/"
-		for XENFILE in `ls $KERNEL_LOCATION/boot/xen*.gz*`; do
-			if [ ! -h $XENFILE ]; then
-				cp -f $XENFILE $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/xen-$KERNEL_NAME.gz
-			fi
-		done
+    if echo $KERNEL_NAME | grep xen 1>/dev/null; then
+        if ls $KERNEL_LOCATION/boot/xen*.gz* 1>/dev/null 2>&1; then
+            echo "xen-plugin: Found Xen-hypervisor at $KERNEL_LOCATION/boot/"
+            echo "xen-plugin: Copying Xen-hypervisor to $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/"
+            for XENFILE in `ls $KERNEL_LOCATION/boot/xen*.gz*`; do
+                if [ ! -h $XENFILE ]; then
+                    cp -f $XENFILE $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/xen-$KERNEL_NAME.gz
+                fi
+            done
+        fi
 	fi
-	
 	
 }

@@ -4,19 +4,21 @@
 OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/include/openqrm-plugin-xen-functions
-if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
-	. $OPENQRM_RESOURCE_PARAMETER_FILE
-	OPENQRM_SERVER_IP=$resource_openqrmserver
-	OPENQRM_INTERFACE=`ifconfig | grep -i $resource_mac | grep :oq | cut -d':' -f1`
-elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 	openqrm_server_get_config
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	OPENQRM_INTERFACE=$OPENQRM_SERVER_INTERFACE
-	resource_kernel=xen
+	resource_id=0
+	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+
+elif [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+	OPENQRM_INTERFACE=`ifconfig | grep -i $resource_mac | grep :oq | cut -d':' -f1`
+
 fi
-LOCALBOOT=false
 
 # only run on xen hosts
 grep -q "control_d" /proc/xen/capabilities 2>/dev/null || exit 0
@@ -34,26 +36,6 @@ fi
 function xen_start() {
 	DIR_CURRENT=`pwd`
 	echo "Starting the openQRM xen-plugin"
-	xen_stop 1>/dev/null 2>&1
-
-	# backup original Xen-config
-	if [ ! -f /etc/xen/xend-config.sxp.before-openqrm ]; then
-		/bin/cp -f /etc/xen/xend-config.sxp /etc/xen/xend-config.sxp.before-openqrm
-	fi
-	# adjust Xen-config	and enable migration
-	if [ -f /etc/xen/xend-config.sxp ]; then
-		cat /etc/xen/xend-config.sxp |	\
-			sed -e "s/^(xend-relocation-hosts-allow/#(xend-relocation-hosts-allow/g" |	\
-			sed -e "s/^#(xend-relocation-hosts-allow '')/(xend-relocation-hosts-allow '')/g" |	\
-			sed -e "s/^#(xend-relocation-port 8002)/(xend-relocation-port 8002)/g" |	\
-			sed -e "s/^#(xend-relocation-address '')/(xend-relocation-address '')/g" > /tmp/xend-config.sxp.openqrm
-		mv -f /tmp/xend-config.sxp.openqrm /etc/xen/xend-config.sxp
-	fi
-	# restart xen
-	if [ -x /etc/init.d/xend ]; then
-		/etc/init.d/xend stop
-		/etc/init.d/xend start
-	fi
 }
 
 

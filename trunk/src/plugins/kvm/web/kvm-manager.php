@@ -126,9 +126,7 @@ function kvm_server_select() {
 
 	$disp = "<h1>Select kvm-Host</h1>";
 	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 	$disp = $disp."Please select a kvm-Host from the list below";
-	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 
 	$arHead = array();
