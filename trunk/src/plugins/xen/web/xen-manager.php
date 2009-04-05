@@ -254,7 +254,7 @@ function xen_select() {
                 $resource_icon_default=$xen_icon;
             }
             $arBody[] = array(
-                'xen_state' => "<img src=$state_icon>",
+                'xen_state' => "<img width=16 height=16 src=$state_icon>",
                 'xen_icon' => "<img width=24 height=24 src=$resource_icon_default>",
                 'xen_id' => $xen_db["appliance_id"],
                 'xen_name' => $xen_resource->hostname,
@@ -329,11 +329,11 @@ function xen_display($appliance_id) {
                 if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$xen_icon)) {
                     $resource_icon_default=$xen_icon;
                 }
-                $xen_create_button="<a href=\"xen-create.php?xen_id=$xen_appliance->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> VM</b></a>";
+                $xen_create_button="<a href=\"xen-create.php?xen_id=$xen_appliance->id\" style=\"text-decoration: none\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> VM</b></a>";
                 // here we take the resource id as the identifier because
                 // we need to run commands on the resource ip
                 $arBody[] = array(
-                    'xen_state' => "<img src=$state_icon>",
+                    'xen_state' => "<img width=16 height=16 src=$state_icon>",
                     'xen_icon' => "<img width=24 height=24 src=$resource_icon_default>",
                     'xen_id' => $xen_appliance->id,
                     'xen_name' => $xen->hostname,
@@ -487,6 +487,7 @@ function xen_display($appliance_id) {
                 $xen_vm_actions = "";
                 $xen_vm_actions = $xen_vm_actions."<a href=\"$thisfile?identifier_table2[]=$xen_name&action_table2=add&xen_id=$xen_appliance->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"></a>&nbsp;";
                 $xen_vm_actions = $xen_vm_actions."<a href=\"$thisfile?identifier_table2[]=$xen_name&action_table2=delete&xen_id=$xen_appliance->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"></a>&nbsp;";
+                $xen_vm_actions = $xen_vm_actions."<a href=\"xen-vm-config.php?xen_name=$xen_name&xen_id=$xen_appliance->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/plugin.png\" border=\"0\"></a>&nbsp;";
                 $xen_vm_migrate_actions = "";
 
                 // add to table2
