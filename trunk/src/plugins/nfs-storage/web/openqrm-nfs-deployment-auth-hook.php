@@ -78,7 +78,7 @@ global $event;
         // this is a hook for the cloud-plugin to be able
         // to translate the internal to the external ip address
         // for the nfs-mount authentication
-        if (file_exists("$RootDir/plugins/cloud/.running")) {
+  /*      if (file_exists("$RootDir/plugins/cloud/.running")) {
             $event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-nfs-deployment-auth-hook.php", "Found Cloud enabled and running. Checking for CloudNAT", "", "", 0, 0, $appliance_id);
             // special clouduser class
             require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
@@ -99,7 +99,7 @@ global $event;
 			$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-nfs-deployment-auth-hook.php", "Cloud is not enabled/running. Not checking for CloudNAT", "", "", 0, 0, $appliance_id);
 
         }
-
+*/
 
         switch($cmd) {
 			case "start":
