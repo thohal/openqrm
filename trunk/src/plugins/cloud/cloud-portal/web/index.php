@@ -371,7 +371,7 @@ function portal_home() {
 	$disp = $disp."<br>";
 	$disp = $disp."<a href=\"/cloud-portal/user/mycloud.php\"><img src='img/forward.gif' width='36' height='32' border='0' alt='' align='left'>";
 	$disp = $disp."<h1><b>Click here to login to the openQRM Cloud</b></h1></a>";
-	$disp = $disp."Please find a detailed Howto about this Demo Cloud <a href=\"$cloud_portal_howto\" target=\"_BLANK\">here</a>.";
+	$disp = $disp."Please find a detailed Howto about this Cloud <a href=\"$cloud_portal_howto\" target=\"_BLANK\">here</a>.";
 
 	return $disp;
 }
