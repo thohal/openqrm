@@ -1214,6 +1214,8 @@ function openqrm_cloud_monitor() {
 		switch ($ca_cmd) {
 			case 1:
 				// start
+    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! sleeping for appliance start", "", "", 0, 0, 0);
+                sleep(60);
 				// prepare array to update appliance, be sure to set to auto-select resource
 				$ar_update = array(
 					'appliance_resources' => "-1",
