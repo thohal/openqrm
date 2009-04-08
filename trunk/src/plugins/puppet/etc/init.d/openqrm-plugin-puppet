@@ -47,7 +47,13 @@ function openqrm_plugin_puppet_uninstall() {
 
 	# remove from cron
 	rm -f /etc/cron.d/openqrm-puppetm-config
-	/etc/init.d/cron reload
+	if [ -x /etc/init.d/cron ]; then
+        /etc/init.d/cron reload
+	elif [ -x /etc/init.d/crond ]; then
+        /etc/init.d/crond reload
+    else
+    	echo "Could not find cron init script in /etc/init.d/. Please reload cron manually!"
+    fi
 
 	# removing the puppet tables
 	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/puppet/puppet-action.php?puppet_command=uninstall"; then
@@ -132,7 +138,13 @@ function openqrm_plugin_puppet_init() {
 	# create cron job which will update the svn repo with files which were added by the web gui
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/cron.d/openqrm-puppetm-config.cron | \
 		sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > /etc/cron.d/openqrm-puppetm-config
-	/etc/init.d/cron reload
+	if [ -x /etc/init.d/cron ]; then
+        /etc/init.d/cron reload
+	elif [ -x /etc/init.d/crond ]; then
+        /etc/init.d/crond reload
+    else
+    	echo "Could not find cron init script in /etc/init.d/. Please reload cron manually!"
+    fi
 	# create svn post-commit hook to immediately update the puppet configuration
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/svn-hook/post-commit.tmpl | \
 		sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/hooks/post-commit
