@@ -417,6 +417,12 @@ if (htmlobject_request('action') != '') {
 
                     $cloud_appliance_restart = new cloudappliance();
                     $cloud_appliance_restart->get_instance_by_appliance_id($id);
+                    // check if no other command is currently running
+                    if ($cloud_appliance_restart->cmd != 0) {
+                        $strMsg = "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
+                        redirect($strMsg, tab2);
+                        continue;
+                    }
                     // check that state is active
                     if ($cloud_appliance_restart->state == 1) {
                         $cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "restart");
@@ -464,6 +470,12 @@ if (htmlobject_request('action') != '') {
 
                     $cloud_appliance_restart = new cloudappliance();
                     $cloud_appliance_restart->get_instance_by_appliance_id($id);
+                    // check if no other command is currently running
+                    if ($cloud_appliance_restart->cmd != 0) {
+                        $strMsg = "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
+                        redirect($strMsg, tab2);
+                        continue;
+                    }
                     // check that state is active
                     if ($cloud_appliance_restart->state == 1) {
                         $cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "stop");
@@ -512,6 +524,12 @@ if (htmlobject_request('action') != '') {
 
                     $cloud_appliance_restart = new cloudappliance();
                     $cloud_appliance_restart->get_instance_by_appliance_id($id);
+                    // check if no other command is currently running
+                    if ($cloud_appliance_restart->cmd != 0) {
+                        $strMsg = "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
+                        redirect($strMsg, tab2);
+                        continue;
+                    }
                     // check if it is in state paused
                     if ($cloud_appliance_restart->state == 0) {
                         $cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "start");
