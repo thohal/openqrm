@@ -70,7 +70,7 @@ function my_cloud_manager() {
 	// db select
     $request_count=0;
 	$cl_request = new cloudrequest();
-	$request_array = $cl_request->display_overview($table->offset, $table->limit, 'cr_id', 'ASC');
+	$request_array = $cl_request->display_overview($table->offset, 1000, 'cr_id', 'ASC');
 	foreach ($request_array as $index => $cr) {
 		// user name
 		$cu_tmp = new clouduser();
@@ -192,7 +192,7 @@ function my_cloud_extend_request($cr_id) {
 
 	// db select
 	$cl_request = new cloudrequest();
-	$request_array = $cl_request->display_overview(0, $table->limit, 'cr_id', 'ASC');
+	$request_array = $cl_request->display_overview(0, 1000, 'cr_id', 'ASC');
 	foreach ($request_array as $index => $cr) {
 
 		// only display one request
@@ -528,7 +528,7 @@ function mycloud_account() {
 
 	// db select
 	$cl_user = new clouduser();
-	$user_array = $cl_user->display_overview($table->offset, $table->limit, 'cu_id', 'ASC');
+	$user_array = $cl_user->display_overview($table->offset, 1000, 'cu_id', 'ASC');
 	foreach ($user_array as $index => $cu) {
 
 		// only display our user record

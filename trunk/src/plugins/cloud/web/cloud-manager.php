@@ -251,7 +251,7 @@ function cloud_manager() {
 	// db select
     $request_count=0;
 	$cl_request = new cloudrequest();
-	$request_array = $cl_request->display_overview($table->offset, $table->limit, 'cr_id', 'DESC');
+	$request_array = $cl_request->display_overview($table->offset, 1000, 'cr_id', 'DESC');
 	foreach ($request_array as $index => $cr) {
         $request_count++;
 		// user name
