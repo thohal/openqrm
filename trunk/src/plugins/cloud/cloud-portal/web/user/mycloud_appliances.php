@@ -59,6 +59,11 @@ function my_cloud_appliances() {
 	$table = new htmlobject_db_table('appliance_id');
 
 	$disp = '<h1>My Cloud Appliances</h1>';
+	$disp .= "Please use the username 'openqrm' instead of 'root' when login in";
+	$disp .= " via the Web-SSH-Login !";
+	$disp .= '<br>';
+	$disp .= "(then run 'su' or 'sudo' to grant full permissions)";
+	$disp .= '<br>';
 	$disp .= '<br>';
 
 	$arHead = array();
