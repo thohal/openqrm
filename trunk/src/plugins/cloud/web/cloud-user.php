@@ -143,7 +143,7 @@ function cloud_user_manager() {
 	// db select
     $cl_user_count = 0;
 	$cl_user = new clouduser();
-	$user_array = $cl_user->display_overview($table->offset, 1000, 'cu_id', 'DESC');
+	$user_array = $cl_user->display_overview($table->offset, $table->limit, 'cu_id', 'DESC');
 	foreach ($user_array as $index => $cu) {
 		$cu_status = $cu["cu_status"];
 		if ($cu_status == 1) {
