@@ -1214,9 +1214,25 @@ function openqrm_cloud_monitor() {
 		switch ($ca_cmd) {
 			case 1:
 				// start
-    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! sleeping for appliance start", "", "", 0, 0, 0);
-                sleep(60);
-				// prepare array to update appliance, be sure to set to auto-select resource
+    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Appliance start (ca $ca_id / app $ca_appliance_id / cr $ca_cr_id)", "", "", 0, 0, 0);
+                $tappliance = new appliance();
+                $tappliance->get_instance_by_id($ca_appliance_id);
+                $cloud_image_start = new cloudimage();
+                $cloud_image_start->get_instance_by_image_id($tappliance->imageid);
+
+                // resource active (idle) again ?
+                $ca_resource = new resource();
+                $ca_resource->get_instance_by_id($cloud_image_start->resource_id);
+                $tcaid = $cloud_image_start->resource_id;
+                if (strcmp($ca_resource->state, "active")) {
+                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Appliance start (ca $ca_id / app $ca_appliance_id / cr $ca_cr_id) : resource $tcaid Not yet active again", "", "", 0, 0, 0);
+                    // not yet active again
+                    continue;
+                } else {
+                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Appliance start (ca $ca_id / app $ca_appliance_id / cr $ca_cr_id) : resource $tcaid Active again -> running start", "", "", 0, 0, 0);
+                }
+
+                // prepare array to update appliance, be sure to set to auto-select resource
 				$ar_update = array(
 					'appliance_resources' => "-1",
 				);
@@ -1331,6 +1347,9 @@ function openqrm_cloud_monitor() {
 					}
 				}
 				fclose($fp);
+
+                // update the cloud-image with new resource
+                $cloud_image_start->set_resource($cloud_image_start->id, $resource->id);
 
 				// reset the cmd field
 				$ca->set_cmd($ca_id, "noop");

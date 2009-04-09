@@ -147,6 +147,18 @@ function set_state($cloudimage_id, $state_str) {
 }
 
 
+// sets the resource of a cloudimage
+function set_resource($cloudimage_id, $resource_id) {
+	global $CLOUD_IMAGE_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$cloudimage_set = &$db->Execute("update $CLOUD_IMAGE_TABLE set ci_resource_id=$resource_id where ci_id=$cloudimage_id");
+	if (!$cloudimage_set) {
+		$event->log("get_name", $_SERVER['REQUEST_TIME'], 2, "cloudimage.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	}
+}
+
+
 // returns the number of cloudimages for an cloudimage type
 function get_count() {
 	global $CLOUD_IMAGE_TABLE;
