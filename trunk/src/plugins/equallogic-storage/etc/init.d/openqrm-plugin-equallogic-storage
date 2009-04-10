@@ -1,0 +1,126 @@
+#!/bin/bash
+# init script for the openQRM equallogic-storage-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/include/openqrm-plugin-equallogic-storage-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/etc/openqrm-plugin-equallogic-storage.conf
+
+
+
+function openqrm_plugin_equallogic_storage_start() {
+	openqrm_plugin_equallogic_storage_stop 1>/dev/null 2>&1
+	echo "Starting the openQRM equallogic-storage-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/equallogic-storage/.running
+}
+
+
+function openqrm_plugin_equallogic_storage_stop() {
+	echo "Stopping the openQRM equallogic-storage-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/equallogic-storage/.running
+}
+
+function openqrm_plugin_equallogic_storage_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "equallogic-storage: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "equallogic-storage: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM equallogic-storage-plugin"
+	openqrm_plugin_equallogic_storage_stop
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD equallogic-deployment
+	# removing the eq-server table
+	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/equallogic-storage/equallogic-storage-action.php?equallogic_storage_command=uninstall"; then
+		equallogic_storage_storage_log uninstall "ERROR: Could not drop the cloud-plugin tables in the database!"
+	fi
+
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/equallogic-storage
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.equallogic-deployment
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.equallogic-deployment.php
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-equallogic-storage.tgz
+
+	# remove only if lvm-storage is not enabled
+	if ! ls $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins | grep lvm-storage 1>/dev/null 2>&1; then
+		if ! ls $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins | grep netapp-storage 1>/dev/null 2>&1; then
+			rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsid
+			rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsiadm
+		fi
+	fi
+}
+
+function openqrm_plugin_equallogic_storage_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "equallogic-storage: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "equallogic-storage: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Initializing the openQRM equallogic-storage-plugin"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD equallogic-deployment equallogic-deployment "EqualLogic-root deployment" equallogic-storage "EqualLogic Storage"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/equallogic-storage
+	# linking the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/boot-service-equallogic-storage.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-equallogic-storage.tgz
+	# linking the root mount hook
+	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/root-mount.equallogic-deployment
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/root-mount.equallogic-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.equallogic-deployment
+	# linking the default image-parameters
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/image.equallogic-deployment.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.equallogic-deployment.php
+	# copying iscsid to boot-service dir
+	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsid ]; then
+		cp -f `which iscsid` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
+	fi
+	# copying iscsiadm to boot-service dir
+	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsiadm ]; then
+		cp -f `which iscsiadm` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
+	fi
+	# creating the tables
+	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/equallogic-storage/equallogic-storage-action.php?equallogic_storage_command=init"; then
+		equallogic_storage_storage_log uninstall "ERROR: Could not initialyze the EqualLogic-Storage-plugin tables in the database!"
+        exit 1
+	fi
+	
+}
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_equallogic_storage_start
+		;;
+	stop)
+		openqrm_plugin_equallogic_storage_stop
+		;;
+	restart)
+		openqrm_plugin_equallogic_storage_stop
+		sleep 1
+		openqrm_plugin_equallogic_storage_start
+		;;
+	init)
+		openqrm_plugin_equallogic_storage_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_equallogic_storage_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+

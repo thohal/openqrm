@@ -1,0 +1,3 @@
+#!/bin/bash
+# this is the openqrm-plugin-equallogic-storage preremove script
+`dirname $0`/openqrm-plugin-equallogic-storage stop

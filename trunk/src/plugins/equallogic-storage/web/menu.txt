@@ -1,0 +1,8 @@
+#	Title
+#	Href
+#	Alt
+#	IMG
+#	Target
+.|EqalLogic-Storage
+..|About|plugins/equallogic-storage/equallogic-storage-about.php
+..|Luns|plugins/equallogic-storage/equallogic-storage-manager.php

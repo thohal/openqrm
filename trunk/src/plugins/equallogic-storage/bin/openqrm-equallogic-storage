@@ -1,0 +1,227 @@
+#!/bin/bash
+
+# this script automatically manages equallogic
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/include/openqrm-plugin-equallogic-storage-functions
+OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+OPENQRM_SERVER_IP=localhost
+resource_id=0
+resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+export LANG=C
+
+
+function equallogic_storage_usage() {
+	echo "Usage : $0 add/remove/snap/list <-n image-name> <-i image-password> <-u eq-username> <-p eq-password> <-e eq-server-ip>"
+	echo "             [-m size in MB]"
+	echo "             [-s image-snapshot-name]"
+	echo "        $0 auth <-r image-rootdevice> <-i image-password> <-u eq-username> <-p eq-password> <-e eq-server-ip>"
+	echo "        $0 post_luns <-u eq-username> <-p eq-password> <-e eq-server-ip>"
+	echo "        $0 post_identifier <-u eq-username> <-p eq-password> <-e eq-server-ip>"
+	exit 1
+}
+
+
+function equallogic_parse_cmd_output() {
+    OUTPUT_FILE=$1
+    OUTPUT_START=0
+    OUTPUT_END=0
+    OLD_IFS=$IFS
+IFS='
+'
+    for LINE in `cat $TMPLISTFILE`; do
+        if [ "$OUTPUT_START" == "0" ]; then
+            if echo $LINE | grep ">" 1>/dev/null; then
+                OUTPUT_START=1
+                continue
+            fi
+        elif [ "$OUTPUT_START" == "1" ]; then
+            if echo $LINE | grep ">" 1>/dev/null; then
+                OUTPUT_END=1
+                continue
+            fi
+        fi
+        if [ "$OUTPUT_START" == "1" ] && [ "$OUTPUT_END" == "0" ]; then
+            if echo $LINE | grep Name 1>/dev/null; then
+                continue
+            fi
+            if echo $LINE | grep "\-\-\-\-\-" 1>/dev/null; then
+                continue
+            fi
+            echo $LINE
+        fi
+    done
+    IFS=$OLD_IFS
+
+
+}
+
+
+
+
+equallogic_storage_storage_log openqrm-equallogic-storge "Running : $0 $@" | logger
+
+EQUALLOGIC_COMMAND=$1
+shift
+
+while [ $# -ne 0 ]; do
+	case "$1" in
+		-n)
+			EQUALLOGIC_IMAGE_NAME=$2
+			shift
+			;;
+		-s)
+			EQUALLOGIC_IMAGE_SNAPSHOT_NAME=$2
+			shift
+			;;
+		-m)
+			EQUALLOGIC_IMAGE_SIZE=$2
+			shift
+			;;
+		-i)
+			EQUALLOGIC_IMAGE_PASSWORD=$2
+			shift
+			;;
+		-r)
+			EQUALLOGIC_IMAGE_ROOTDEVICE=$2
+			shift
+			;;
+		-u)
+			EQUALLOGIC_USERNAME=$2
+			shift
+			;;
+		-p)
+			EQUALLOGIC_PASSWORD=$2
+			shift
+			;;
+		-e)
+			EQUALLOGIC_SERVER_IP=$2
+			shift
+			;;
+		*)
+			echo "ERROR: Free commandline arguments are not allowed"
+			equallogic_storage_usage
+			exit 6
+			;;
+	esac
+	shift
+done
+
+
+
+
+# main
+if [ "$EQUALLOGIC_COMMAND" == "" ]; then
+	equallogic_storage_usage
+fi
+if [ "$EQUALLOGIC_PASSWORD" == "" ]; then
+    equallogic_storage_usage
+fi
+if [ "$EQUALLOGIC_USERNAME" == "" ]; then
+    equallogic_storage_usage
+fi
+if [ "$EQUALLOGIC_SERVER_IP" == "" ]; then
+    equallogic_storage_usage
+fi
+
+
+if [ "$EQUALLOGIC_COMMAND" == "post_luns" ] || [ "$EQUALLOGIC_COMMAND" == "post_identifier" ]; then
+    :
+else
+	if [ "$EQUALLOGIC_COMMAND" != "list" ] && [ "$EQUALLOGIC_COMMAND" != "auth" ]; then
+		if [ "$EQUALLOGIC_IMAGE_NAME" == "" ]; then
+			equallogic_storage_usage
+		fi
+	fi
+fi
+
+
+
+case "$EQUALLOGIC_COMMAND" in
+
+	add)
+		if [ "$EQUALLOGIC_IMAGE_SIZE" == "" ]; then
+			EQUALLOGIC_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
+			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
+		fi
+		export EQUALLOGIC_IMAGE_SIZE
+		echo -n "Creating EQUALLOGIC Lun for image $EQUALLOGIC_IMAGE_NAME"
+		equallogic_storage_lock aquire
+        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume create $EQUALLOGIC_IMAGE_NAME $EQUALLOGIC_IMAGE_SIZE"
+		equallogic_storage_lock release
+		$0 post_luns -u $EQUALLOGIC_USERNAME -p $EQUALLOGIC_PASSWORD -e $EQUALLOGIC_SERVER_IP
+		;;
+	remove)
+		echo -n "Removing EQUALLOGIC export for image $EQUALLOGIC_IMAGE_NAME"
+		equallogic_storage_lock aquire
+        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-volume-remove $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume delete $EQUALLOGIC_IMAGE_NAME"
+		equallogic_storage_lock release
+		$0 post_luns -u $EQUALLOGIC_USERNAME -p $EQUALLOGIC_PASSWORD -e $EQUALLOGIC_SERVER_IP
+		;;
+
+	snap)
+		if [ "$EQUALLOGIC_IMAGE_SNAPSHOT_NAME" == "" ]; then
+			echo "ERROR: Please give a name for the snapshot using the -s cmdline parmeter"
+			echo
+			equallogic_storage_usage
+		fi
+		
+		# check that source fs-images exist
+		if [ ! -f $EQUALLOGIC_STORAGE_SERVER_IMAGE_DIRECTORY/$EQUALLOGIC_IMAGE_NAME ]; then
+			echo "ERROR: Could not find source image $EQUALLOGIC_STORAGE_SERVER_IMAGE_DIRECTORY/$EQUALLOGIC_IMAGE_NAME on the storage-server"
+			exit 1
+		fi
+		echo -n "Creating snapshot from image $EQUALLOGIC_IMAGE_NAME -> $EQUALLOGIC_IMAGE_SNAPSHOT_NAME"
+		equallogic_storage_lock aquire
+
+		equallogic_storage_lock release
+		$0 post_luns -u $EQUALLOGIC_USERNAME -p $EQUALLOGIC_PASSWORD -e $EQUALLOGIC_SERVER_IP
+		;;
+
+	auth)
+		echo -n "Authenticating EQUALLOGIC Lun for image rootdevice $EQUALLOGIC_IMAGE_ROOTDEVICE"
+		equallogic_storage_lock aquire
+
+		equallogic_storage_lock release
+		;;
+
+	list)
+		equallogic_storage_lock aquire
+        TMPLISTFILE=`mktemp /tmp/eq-list.XXXXXXXXXX`
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume show" > $TMPLISTFILE
+        equallogic_parse_cmd_output $TMPLISTFILE
+        /bin/rm -f TMPLISTFILE
+		equallogic_storage_lock release
+		;;
+	post_luns)
+		# echo "Posting current equallogic-luns to the openQRM-server"
+		equallogic_storage_lock aquire
+        if [ ! -d $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage ]; then
+            mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage
+        fi
+		STORAGE_STATUS_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage/$EQUALLOGIC_SERVER_IP.equallogic.stat"
+        TMPLISTFILE=`mktemp /tmp/eq-list.XXXXXXXXXX`
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume show" > $TMPLISTFILE
+        equallogic_parse_cmd_output $TMPLISTFILE > $STORAGE_STATUS_TMP
+        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
+        chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage
+        /bin/rm -f TMPLISTFILE
+		equallogic_storage_lock release
+		;;
+	post_identifier)
+		echo "Posting current equallogic-identifier to the openQRM-server"
+		STORAGE_STATUS_TMP=$resource_id.equallogic.ident
+		> $STORAGE_STATUS_TMP
+
+
+
+		rm -f $STORAGE_STATUS_TMP
+		;;
+	*)
+		equallogic_storage_usage
+		;;
+
+
+esac
+

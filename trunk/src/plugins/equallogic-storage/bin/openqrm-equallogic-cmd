@@ -1,0 +1,64 @@
+#!/usr/bin/expect -f
+#
+# this is an expect script to automatically run commands on a equallogic-filer
+#
+
+if {[llength $argv]<2} {
+        send_user "usage: $argv0 <equallogic-ip> <equallogic-user> <equallogic-password> <command>\n"
+        exit
+}
+
+set EQUALLOGIC_IP [lindex $argv 0]
+set EQUALLOGIC_USER [lindex $argv 1]
+set EQUALLOGIC_PASSWORD [lindex $argv 2]
+set EQUALLOGIC_CMD [lindex $argv 3]
+
+send_user "Running command $EQUALLOGIC_CMD on $EQUALLOGIC_IP as $EQUALLOGIC_USER\n"
+
+set force_conservative 0  ;# set to 1 to force conservative mode even if
+                          ;# script wasn't run conservatively originally
+if {$force_conservative} {
+        set send_slow {1 .1}
+        proc send {ignore arg} {
+                sleep .1
+                exp_send -s -- $arg
+        }
+}
+
+set timeout 30
+spawn /bin/bash
+match_max 100000
+send -- "ssh $EQUALLOGIC_USER@$EQUALLOGIC_IP\r"
+
+expect {
+    "yes/no)?" {
+                send "yes\r"
+                set timeout -1
+    } timeout {
+                exit
+    } -re . {
+                exp_continue
+    } eof {
+                exit
+    }
+ }
+
+expect -exact "$EQUALLOGIC_USER@$EQUALLOGIC_IP"
+send -- "\r"
+expect -exact "\r
+$EQUALLOGIC_USER@$EQUALLOGIC_IP's password: "
+send -- "$EQUALLOGIC_PASSWORD\r"
+expect -exact ">"
+
+send -- "$EQUALLOGIC_CMD\r"
+
+expect -exact ">"
+send -- "logout\r"
+send -- "\r"
+expect -exact "t\r
+Do you really want to logout? (y/n) \[n\]"
+send -- "y\r"
+
+
+
+

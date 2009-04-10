@@ -1,0 +1,68 @@
+#!/bin/bash
+# this is the functions file for the equallogic-storage-plugin
+
+
+# some definitions
+DEFAULT_IMAGE_SIZE=5000
+EQUALLOGIC_STORAGE_MGMT_LOCK_FILE=/tmp/equallogic-storage-plugin.lock
+EQUALLOGIC_STORAGE_MGMT_LOCK_DELAY=5
+EQUALLOGIC_STORAGE_MGMT_LOCK_RETRY=100
+EQUALLOGIC_STORAGE_MGMT_LOCK_TIMEOUT=500
+IMAGE_LUN=1
+
+################ common equallogic-storage functions
+
+# logs for equallogic_storage_storage
+function equallogic_storage_storage_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "equallogic-storage plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function equallogic_storage_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $EQUALLOGIC_STORAGE_MGMT_LOCK_FILE` ]; then
+		mkdir -p `dirname $EQUALLOGIC_STORAGE_MGMT_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $EQUALLOGIC_STORAGE_MGMT_LOCK_DELAY -r $EQUALLOGIC_STORAGE_MGMT_LOCK_RETRY -l $EQUALLOGIC_STORAGE_MGMT_LOCK_TIMEOUT $EQUALLOGIC_STORAGE_MGMT_LOCK_FILE
+				RET=$?
+				equallogic_storage_storage_log equallogic_storage_storage_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $EQUALLOGIC_STORAGE_MGMT_LOCK_FILE
+				RET=$?
+				equallogic_storage_storage_log equallogic_storage_storage_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			equallogic_storage_storage_log equallogic_storage_storage_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ equallogic-storage functions
+
+
+
+
+
+
+
+
+
+
+
+
+
+
