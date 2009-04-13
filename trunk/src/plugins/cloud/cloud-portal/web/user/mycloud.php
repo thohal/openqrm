@@ -313,8 +313,8 @@ if (htmlobject_request('action') != '') {
 
 			// check disk param
 			check_is_number("Disk", $request_fields['cr_disk_req']);
-			if ($request_fields['cr_disk_req'] <= 0) {
-				$strMsg .="Disk parameter must be > 0 <br>";
+			if ($request_fields['cr_disk_req'] <= 500) {
+				$strMsg .="Disk parameter must be > 500 <br>";
 				redirect($strMsg, "tab1");
 				exit(0);
 			}
