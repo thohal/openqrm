@@ -427,6 +427,39 @@ function my_cloud_create_request() {
 		}
 	}
 
+    // global limits
+    $max_resources_per_cr = $cc_conf->get_value(6);
+    $max_disk_size = $cc_conf->get_value(8);
+    $max_network_interfaces = $cc_conf->get_value(9);
+    $max_apps_per_user = $cc_conf->get_value(13);
+    $cloud_global_limits = "<ul type=\"disc\">";
+	$cloud_global_limits = $cloud_global_limits."<li>Max Resources per CR : $max_resources_per_cr</li>";
+	$cloud_global_limits = $cloud_global_limits."<li>Max Disk Size : $max_disk_size MB</li>";
+	$cloud_global_limits = $cloud_global_limits."<li>Max Network Interfaces : $max_network_interfaces</li>";
+	$cloud_global_limits = $cloud_global_limits."<li>Max Appliance per User : $max_apps_per_user</li>";
+	$cloud_global_limits = $cloud_global_limits."</ul>";
+	$cloud_global_limits = $cloud_global_limits."<br><br>";
+
+    // user limits
+    $cloud_user = new clouduser();
+    $cloud_user->get_instance_by_name("$auth_user");
+    $cloud_userlimit = new clouduserlimits();
+    $cloud_userlimit->get_instance_by_cu_id($cloud_user->id);
+    $cloud_user_resource_limit = $cloud_userlimit->resource_limit;
+    $cloud_user_memory_limit = $cloud_userlimit->memory_limit;
+    $cloud_user_disk_limit = $cloud_userlimit->disk_limit;
+    $cloud_user_cpu_limit = $cloud_userlimit->cpu_limit;
+    $cloud_user_network_limit = $cloud_userlimit->network_limit;
+    $cloud_user_limits = "<ul type=\"disc\">";
+	$cloud_user_limits = $cloud_user_limits."<li>Max Resources : $cloud_user_resource_limit</li>";
+	$cloud_user_limits = $cloud_user_limits."<li>Max Disk Size : $cloud_user_disk_limit MB</li>";
+	$cloud_user_limits = $cloud_user_limits."<li>Max Network Interfaces : $cloud_user_network_limit</li>";
+	$cloud_user_limits = $cloud_user_limits."<li>Max Memory : $cloud_user_memory_limit</li>";
+	$cloud_user_limits = $cloud_user_limits."<li>Max CPU's : $cloud_user_cpu_limit</li>";
+	$cloud_user_limits = $cloud_user_limits."</ul>";
+	$cloud_user_limits = $cloud_user_limits."<br><br>";
+
+
 	//------------------------------------------------------------ set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
@@ -450,6 +483,8 @@ function my_cloud_create_request() {
 		'cloud_ha' => $show_ha,
 		'cloud_clone_on_deploy' => $clone_on_deploy,
 		'cloud_show_puppet' => $show_puppet,
+		'cloud_global_limits' => $cloud_global_limits,
+		'cloud_user_limits' => $cloud_user_limits,
 		'submit_save' => htmlobject_input('Create', array("value" => 'Create', "label" => 'Create'), 'submit'),
 	));
 	$disp =  $t->parse('out', 'tplfile');

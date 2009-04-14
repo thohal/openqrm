@@ -37,12 +37,41 @@
 
 	<div style="float:right;">
 		<div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
+		<b><u>Global Cloud Limits</u></b>
+        <br>
+        <small>(set by the Cloud-Administrator)</small>
+        <br>
+		{cloud_global_limits}
+		</div>
+        <br>
+		<div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
+		<b><u>Cloud User Limits</u></b>
+        <br>
+        <small>(0 = no limit set)</small>
+        <br>
+		{cloud_user_limits}
+		</div>
+
+    </div>
+
+	<div style="float:right;">
+		<div style="padding: 10px 10px 0 10px;">
+		&nbsp;&nbsp;&nbsp;
+		</div>
+	</div>
+
+	<div style="float:right;">
+		<div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
+        <b><u>Applications</u></b>
+        <br>
 		{cloud_show_puppet}
 		</div>
 	</div>
 
-	<div style="clear:both;line-height:0px;">&#160;</div>
+
+
+<div style="clear:both;line-height:0px;">&#160;</div>
 </div>
-<div style="text-align:right;">{submit_save}</div>
+<div style="text-align:center;">{submit_save}</div>
 
 </form>
