@@ -1,3 +1,36 @@
+<SCRIPT LANGUAGE="JavaScript">
+<!-- Original:  ataxx@visto.com -->
+
+function getRandomNum(lbound, ubound) {
+	return (Math.floor(Math.random() * (ubound - lbound)) + lbound);
+}
+
+function getRandomChar(number, lower, upper, other, extra) {
+	var numberChars = "0123456789";
+	var lowerChars = "abcdefghijklmnopqrstuvwxyz";
+	var upperChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	var otherChars = "`~!@#$%^&*()-_=+[{]}\\|;:'\",<.>/? ";
+	var charSet = extra;
+	if (number == true)
+		charSet += numberChars;
+	if (lower == true)
+		charSet += lowerChars;
+	if (upper == true)
+		charSet += upperChars;
+	if (other == true)
+		charSet += otherChars;
+	return charSet.charAt(getRandomNum(0, charSet.length));
+}
+function getPassword(length, extraChars, firstNumber, firstLower, firstUpper, firstOther, latterNumber, latterLower, latterUpper, latterOther) {
+	var rc = "";
+	if (length > 0)
+		rc = rc + getRandomChar(firstNumber, firstLower, firstUpper, firstOther, extraChars);
+	for (var idx = 1; idx < length; ++idx) {
+		rc = rc + getRandomChar(latterNumber, latterLower, latterUpper, latterOther, extraChars);
+	}
+	return rc;
+}
+</script>
 
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
 
@@ -203,7 +236,11 @@ function cloud_create_user() {
 	$disp = $disp."<br>";
 	$disp = $disp."<form action='cloud-action.php' method=post>";
 	$disp = $disp.htmlobject_input('cu_name', array("value" => '', "label" => 'User name'), 'text', 20);
-	$disp = $disp.htmlobject_input('cu_password', array("value" => '', "label" => 'Password'), 'text', 20);
+    // root password input plus generate password button
+    $generate_pass = "Password&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input name=\"cu_password\" type=\"text\" id=\"cu_password\" value=\"\" size=\"10\" maxlength=\"10\">";
+    $generate_pass .= "<input type=\"button\" name=\"gen\" value=\"generate\" onclick=\"this.form.cu_password.value=getPassword(10, false, true, true, true, false, true, true, true, false);\"><br>";
+    // without generate pass button : $disp = $disp.htmlobject_input('cu_password', array("value" => '', "label" => 'Password'), 'text', 20);
+    $disp = $disp.$generate_pass;
 	$disp = $disp.htmlobject_input('cu_forename', array("value" => '', "label" => 'Fore name'), 'text', 50);
 	$disp = $disp.htmlobject_input('cu_lastname', array("value" => '', "label" => 'Last name'), 'text', 50);
 	$disp = $disp.htmlobject_input('cu_email', array("value" => '', "label" => 'Email'), 'text', 50);
