@@ -206,6 +206,7 @@ if (htmlobject_request('action') != '') {
 					// get admin email
 					$cc_conf = new cloudconfig();
 					$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
+                    // send mail to user
 					$rmail = new cloudmailer();
 					$rmail->to = "$cu_email";
 					$rmail->from = "$cc_admin_email";
@@ -214,7 +215,17 @@ if (htmlobject_request('action') != '') {
 					$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$now");
 					$rmail->var_array = $arr;
 					$rmail->send();
-					$cr_request->setstatus($id, 'deprovsion');
+                    // send mail to cloud-admin
+					$armail = new cloudmailer();
+					$armail->to = "$cc_admin_email";
+					$armail->from = "$cc_admin_email";
+					$armail->subject = "openQRM Cloud: Your request $id is going to be deprovisioned now !";
+					$armail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/deprovision_cloud_request.mail.tmpl";
+					$aarr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"", '@@LASTNAME@@'=>"CloudAdmin", '@@START@@'=>"$start", '@@STOP@@'=>"$now");
+					$armail->var_array = $aarr;
+					$armail->send();
+                    // set cr status
+                    $cr_request->setstatus($id, 'deprovsion');
 	
 					$strMsg .="Set Cloud request $id to deprovision <br>";
 				}
@@ -481,6 +492,16 @@ if (htmlobject_request('action') != '') {
                         $cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "stop");
                         $cloud_appliance_restart->set_state($cloud_appliance_restart->id, "paused");
                         $strMsg = "Registered Cloud appliance $id to stop (pause)<br>";
+                        // send mail to cloud-admin
+                        $armail = new cloudmailer();
+                        $armail->to = "$cc_admin_email";
+                        $armail->from = "$cc_admin_email";
+                        $armail->subject = "openQRM Cloud: Cloud Appliance $id registered for stop (pause)";
+                        $armail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/paused_cloud_appliance.mail.tmpl";
+                        $arr = array('@@USER@@'=>"$clouduser->name", '@@CLOUD_APPLIANCE_ID@@'=>"$id");
+                        $armail->var_array = $arr;
+                        $armail->send();
+
                         redirect($strMsg, tab2);
                     } else {
                         $strMsg = "Can only pause Cloud appliance $id if it is in active state<br>";
@@ -534,6 +555,17 @@ if (htmlobject_request('action') != '') {
                     if ($cloud_appliance_restart->state == 0) {
                         $cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "start");
                         $cloud_appliance_restart->set_state($cloud_appliance_restart->id, "active");
+
+                        // send mail to cloud-admin
+                        $armail = new cloudmailer();
+                        $armail->to = "$cc_admin_email";
+                        $armail->from = "$cc_admin_email";
+                        $armail->subject = "openQRM Cloud: Cloud Appliance $id registered for start (unpause)";
+                        $armail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/unpaused_cloud_appliance.mail.tmpl";
+                        $arr = array('@@USER@@'=>"$clouduser->name", '@@CLOUD_APPLIANCE_ID@@'=>"$id");
+                        $armail->var_array = $arr;
+                        $armail->send();
+
                         $strMsg = "Registered Cloud appliance $id to start (unpause)<br>";
                         redirect($strMsg, tab2);
                     } else {
