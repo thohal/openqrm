@@ -63,7 +63,7 @@ class equallogic_storage {
 		if ("$id" != "") {
 			$equallogic_storage_array = &$db->Execute("select * from $EQUALLOGIC_STORAGE_SERVER_TABLE where eq_id=$id");
 		} else if ("$eq_storage_id" != "") {
-			$equallogic_storage_array = &$db->Execute("select * from $EQUALLOGIC_STORAGE_SERVER_TABLE where eq_storage_id='$eq_storage_id'");
+            $equallogic_storage_array = &$db->Execute("select * from $EQUALLOGIC_STORAGE_SERVER_TABLE where eq_storage_id=$eq_storage_id");
 		} else {
 			$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "coulduser.class.php", "Could not create instance of equalogic_storage without data", "", "", 0, 0, 0);
 			return;

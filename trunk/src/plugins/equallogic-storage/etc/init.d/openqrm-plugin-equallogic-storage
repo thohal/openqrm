@@ -35,15 +35,15 @@ function openqrm_plugin_equallogic_storage_uninstall() {
 	fi
 	echo "Uninstalling the openQRM equallogic-storage-plugin"
 	openqrm_plugin_equallogic_storage_stop
-	openqrm_server_remove_deployment_type $USERNAME $PASSWORD equallogic-deployment
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD equallogic
 	# removing the eq-server table
 	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/equallogic-storage/equallogic-storage-action.php?equallogic_storage_command=uninstall"; then
 		equallogic_storage_storage_log uninstall "ERROR: Could not drop the cloud-plugin tables in the database!"
 	fi
 
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/equallogic-storage
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.equallogic-deployment
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.equallogic-deployment.php
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.equallogic
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.equallogic.php
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-equallogic-storage.tgz
 
 	# remove only if lvm-storage is not enabled
@@ -67,16 +67,16 @@ function openqrm_plugin_equallogic_storage_init() {
 		echo
 	fi
 	echo "Initializing the openQRM equallogic-storage-plugin"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD equallogic-deployment equallogic-deployment "EqualLogic-root deployment" equallogic-storage "EqualLogic Storage"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD equallogic equallogic "EqualLogic-root deployment" equallogic-storage "EqualLogic Storage"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/equallogic-storage
 	# linking the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/boot-service-equallogic-storage.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-equallogic-storage.tgz
 	# linking the root mount hook
-	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/root-mount.equallogic-deployment
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/root-mount.equallogic-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.equallogic-deployment
+	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/root-mount.equallogic
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/root-mount.equallogic $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.equallogic
 	# linking the default image-parameters
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/image.equallogic-deployment.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.equallogic-deployment.php
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/image.equallogic.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.equallogic.php
 	# copying iscsid to boot-service dir
 	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsid ]; then
 		cp -f `which iscsid` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/

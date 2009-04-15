@@ -180,9 +180,9 @@ case "$EQUALLOGIC_COMMAND" in
 		;;
 
 	auth)
-		echo -n "Authenticating EQUALLOGIC Lun for image rootdevice $EQUALLOGIC_IMAGE_ROOTDEVICE"
+		echo -n "Authenticating EQUALLOGIC Lun for image $EQUALLOGIC_IMAGE_NAME"
 		equallogic_storage_lock aquire
-
+        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-volume-auth $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD $EQUALLOGIC_IMAGE_NAME $EQUALLOGIC_IMAGE_NAME $EQUALLOGIC_IMAGE_PASSWORD
 		equallogic_storage_lock release
 		;;
 
@@ -210,13 +210,20 @@ case "$EQUALLOGIC_COMMAND" in
 		equallogic_storage_lock release
 		;;
 	post_identifier)
-		echo "Posting current equallogic-identifier to the openQRM-server"
-		STORAGE_STATUS_TMP=$resource_id.equallogic.ident
+		#echo "Posting current equallogic-identifier to the openQRM-server"
+		equallogic_storage_lock aquire
+        if [ ! -d $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage ]; then
+            mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage
+        fi
+        STORAGE_STATUS_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage/$EQUALLOGIC_SERVER_IP.equallogic.ident"
 		> $STORAGE_STATUS_TMP
-
-
-
-		rm -f $STORAGE_STATUS_TMP
+        TMPLISTFILE=`mktemp /tmp/eq-list.XXXXXXXXXX`
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume show" > $TMPLISTFILE
+        equallogic_parse_cmd_output $TMPLISTFILE > $STORAGE_STATUS_TMP
+        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
+        chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage
+        /bin/rm -f TMPLISTFILE
+		equallogic_storage_lock release
 		;;
 	*)
 		equallogic_storage_usage

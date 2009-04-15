@@ -15,6 +15,8 @@ require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/openqrm-server-config.php";
+// special equallogic-storage classes
+require_once "$RootDir/plugins/equallogic-storage/class/equallogic-storage-server.class.php";
 
 /**
  * @package openQRM
@@ -26,6 +28,8 @@ require_once "$RootDir/include/openqrm-server-config.php";
 global $OPENQRM_SERVER_BASE_DIR;
 global $OPENQRM_EXEC_PORT;
 global $IMAGE_AUTHENTICATION_TABLE;
+$EQUALLOGIC_STORAGE_SERVER_TABLE="equallogic_storage_servers";
+global $EQUALLOGIC_STORAGE_SERVER_TABLE;
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
@@ -50,6 +54,7 @@ global $event;
 		global $OPENQRM_SERVER_IP_ADDRESS;
 		global $OPENQRM_EXEC_PORT;
 		global $IMAGE_AUTHENTICATION_TABLE;
+        global $EQUALLOGIC_STORAGE_SERVER_TABLE;
 		global $openqrm_server;
 	
 		$appliance = new appliance();
@@ -75,18 +80,28 @@ global $event;
 		$resource->get_instance_by_id($appliance->resources);
 		$resource_mac=$resource->mac;
 		$resource_ip=$resource->ip;
-	
+
+        $eq_storage = new equallogic_storage();
+        $eq_storage->get_instance_by_storage_id($storage->id);
+        $eq_storage_ip = $storage_ip;
+        $eq_user = $eq_storage->storage_user;
+        $eq_password = $eq_storage->storage_password;
+
+
 		switch($cmd) {
 			case "start":
 					// generate a password for the image
 				$image_password = $image->generatePassword(12);
 				$image_deployment_parameter = $image->deployment_parameter;
 				$image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
-				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice to resource $resource_mac with password $image_password", "", "", 0, 0, $appliance_id);
-				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $image_password";
-				$resource->send_command($storage_ip, $auth_start_cmd);
-	
-		 			// authenticate the install-from-nfs export
+				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice to resource $resource_mac with password $image_password", "", "", 0, 0, $appliance_id);
+				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -n $image_name -r $image_rootdevice -i $image_password -u $eq_user -p $eq_password -e $eq_storage_ip";
+                $output = shell_exec($auth_start_cmd);
+
+				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-deployment-auth-hook.php", "!! START hook Running : $auth_start_cmd", "", "", 0, 0, $appliance_id);
+
+
+                // authenticate the install-from-nfs export
 				$run_disable_deployment_export=0;
 				$install_from_nfs_param = trim($image->get_deployment_parameter("IMAGE_INSTALL_FROM_NFS"));
 				if (strlen($install_from_nfs_param)) {
@@ -107,7 +122,7 @@ global $event;
 					$ip_deployment_type = $ip_deployment->type;
 					$ip_deployment_plugin_name = $ip_deployment->storagetype;
 	
-					$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-deployment-auth-hook.php", "Install-from-NFS: Authenticating $resource_ip on storage id $ip_storage_id:$ip_storage_ip:$ip_image_rootdevice", "", "", 0, 0, $appliance_id);
+					$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-deployment-auth-hook.php", "Install-from-NFS: Authenticating $resource_ip on storage id $ip_storage_id:$ip_storage_ip:$ip_image_rootdevice", "", "", 0, 0, $appliance_id);
 					$auth_install_from_nfs_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$ip_deployment_plugin_name/bin/openqrm-$ip_deployment_plugin_name auth -r $ip_image_rootdevice -i $resource_ip -t $ip_deployment_type";
 					$resource->send_command($ip_storage_ip, $auth_install_from_nfs_start_cmd);
 	
@@ -133,7 +148,7 @@ global $event;
 					$tp_deployment_type = $tp_deployment->type;
 					$tp_deployment_plugin_name = $tp_deployment->storagetype;
 	
-					$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-deployment-auth-hook.php", "Transfer-to-NFS: Authenticating $resource_ip on storage id $tp_storage_id:$tp_storage_ip:$tp_image_rootdevice", "", "", 0, 0, $appliance_id);
+					$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-deployment-auth-hook.php", "Transfer-to-NFS: Authenticating $resource_ip on storage id $tp_storage_id:$tp_storage_ip:$tp_image_rootdevice", "", "", 0, 0, $appliance_id);
 					$auth_install_from_nfs_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$tp_deployment_plugin_name/bin/openqrm-$tp_deployment_plugin_name auth -r $tp_image_rootdevice -i $resource_ip -t $tp_deployment_type";
 					$resource->send_command($tp_storage_ip, $auth_install_from_nfs_start_cmd);
 	
@@ -151,7 +166,7 @@ global $event;
 						'ia_auth_type' => 1,
 					);
 					$image_authentication->add($image_auth_ar);
-					$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-deployment-auth-hook.php", "Registered image $appliance->imageid for de-authentication the deployment exports when resource $appliance->resources is fully up.", "", "", 0, 0, $appliance_id);
+					$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-deployment-auth-hook.php", "Registered image $appliance->imageid for de-authentication the deployment exports when resource $appliance->resources is fully up.", "", "", 0, 0, $appliance_id);
 				}
 				
 				break;
@@ -166,7 +181,7 @@ global $event;
 					'ia_auth_type' => 0,
 				);
 				$image_authentication->add($image_auth_ar);
-				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-deployment-auth-hook.php", "Registered image $appliance->imageid for de-authentication the root-fs exports when resource $appliance->resources is idle again.", "", "", 0, 0, $appliance_id);
+				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-deployment-auth-hook.php", "Registered image $appliance->imageid for de-authentication the root-fs exports when resource $appliance->resources is idle again.", "", "", 0, 0, $appliance_id);
 				break;
 			
 		}
@@ -191,6 +206,7 @@ global $event;
 		global $OPENQRM_SERVER_BASE_DIR;
 		global $OPENQRM_SERVER_IP_ADDRESS;
 		global $OPENQRM_EXEC_PORT;
+        global $EQUALLOGIC_STORAGE_SERVER_TABLE;
 	
 		$image = new image();
 		$image->get_instance_by_id($image_id);
@@ -210,12 +226,21 @@ global $event;
 		$deployment->get_instance_by_type($image->type);
 		$deployment_type = $deployment->type;
 		$deployment_plugin_name = $deployment->storagetype;
-	
-		$event->log("storage_auth_stop_in_background", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice with password $image_password", "", "", 0, 0, $appliance_id);
-		$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_rootdevice -i $image_password";
-		$resource = new resource();
-		$resource->send_command($storage_ip, $auth_stop_cmd);
-		// and update the image params
+
+        $eq_storage = new equallogic_storage();
+        $eq_storage->get_instance_by_storage_id($storage->id);
+        $eq_storage_ip = $storage_ip;
+        $eq_user = $eq_storage->storage_user;
+        $eq_password = $eq_storage->storage_password;
+
+
+		$event->log("storage_auth_stop_in_background", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice with password $image_password", "", "", 0, 0, $appliance_id);
+		$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -n $image_name -r $image_rootdevice -i $image_password -u $eq_user -p $eq_password -e $eq_storage_ip";
+        $output = shell_exec($auth_stop_cmd);
+
+    	$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-deployment-auth-hook.php", "!! STOP hook Running : $auth_stop_cmd", "", "", 0, 0, $appliance_id);
+
+        // and update the image params
 		$image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
 	
 	}
@@ -237,6 +262,7 @@ global $event;
 		global $OPENQRM_SERVER_BASE_DIR;
 		global $OPENQRM_SERVER_IP_ADDRESS;
 		global $OPENQRM_EXEC_PORT;
+        global $EQUALLOGIC_STORAGE_SERVER_TABLE;
 	
 		$image = new image();
 		$image->get_instance_by_id($image_id);
@@ -276,7 +302,7 @@ global $event;
 			$ip_deployment_type = $ip_deployment->type;
 			$ip_deployment_plugin_name = $ip_deployment->storagetype;
 	
-			$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-deployment-auth-hook.php", "Install-from-NFS: Authenticating $resource_ip on storage id $ip_storage_id:$ip_storage_ip:$ip_image_rootdevice", "", "", 0, 0, $appliance_id);
+			$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-deployment-auth-hook.php", "Install-from-NFS: Authenticating $resource_ip on storage id $ip_storage_id:$ip_storage_ip:$ip_image_rootdevice", "", "", 0, 0, $appliance_id);
 			$auth_install_from_nfs_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$ip_deployment_plugin_name/bin/openqrm-$ip_deployment_plugin_name auth -r $ip_image_rootdevice -i $OPENQRM_SERVER_IP_ADDRESS -t $ip_deployment_type";
 			$resource->send_command($ip_storage_ip, $auth_install_from_nfs_start_cmd);
 		}
@@ -300,7 +326,7 @@ global $event;
 			$tp_deployment_type = $tp_deployment->type;
 			$tp_deployment_plugin_name = $tp_deployment->storagetype;
 	
-			$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-deployment-auth-hook.php", "Install-from-NFS: Authenticating $resource_ip on storage id $tp_storage_id:$tp_storage_ip:$tp_image_rootdevice", "", "", 0, 0, $appliance_id);
+			$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-deployment-auth-hook.php", "Install-from-NFS: Authenticating $resource_ip on storage id $tp_storage_id:$tp_storage_ip:$tp_image_rootdevice", "", "", 0, 0, $appliance_id);
 			$auth_install_from_nfs_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$tp_deployment_plugin_name/bin/openqrm-$tp_deployment_plugin_name auth -r $tp_image_rootdevice -i $OPENQRM_SERVER_IP_ADDRESS -t $tp_deployment_type";
 			$resource->send_command($tp_storage_ip, $auth_install_from_nfs_start_cmd);
 		}
