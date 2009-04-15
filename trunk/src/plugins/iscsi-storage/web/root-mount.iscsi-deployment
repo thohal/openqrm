@@ -138,6 +138,38 @@ EOF
 	# let udev settle
 	sleep 4
 
+    # check that udev found the new device
+    # if not find the block device name in /sys
+    if [ ! -f $IMAGE_ROOT_DEVICE ]; then
+
+        FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block | head -n1`
+        if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
+            FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block:s* | head -n1`
+            if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
+                echo "ERROR: Udev did not detect the new device"
+                echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
+                # give a shell for the admin
+                /bin/bash
+            fi
+        fi
+        # check for different sysfs styles
+        if [ -h $FIND_ISCSI_BLOCK_DEVICE ]; then
+            ISCSI_BLOCK_DEVICE_NAME=`readlink $FIND_ISCSI_BLOCK_DEVICE`
+            ISCSI_BLOCK_DEVICE_NAME=`basename $ISCSI_BLOCK_DEVICE_NAME`
+            echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as symlink)"
+            ln -sf /dev/$ISCSI_BLOCK_DEVICE_NAME $IMAGE_ROOT_DEVICE
+        elif [ -d $FIND_ISCSI_BLOCK_DEVICE ]; then
+            ISCSI_BLOCK_DEVICE_NAME=`ls $FIND_ISCSI_BLOCK_DEVICE`
+            echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as dir)"
+            ln -sf /dev/$ISCSI_BLOCK_DEVICE_NAME $IMAGE_ROOT_DEVICE
+        else
+            echo "ERROR: Udev did not detect the new device"
+            echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
+            # give a shell for the admin
+            /bin/bash
+        fi
+    fi
+
 	# finallly mount
 	if ! mount -t $image_rootfstype $IMAGE_ROOT_DEVICE /mnt; then
 		echo "ERROR: Could not mount $IMAGE_ROOT_DEVICE via iscsi"
