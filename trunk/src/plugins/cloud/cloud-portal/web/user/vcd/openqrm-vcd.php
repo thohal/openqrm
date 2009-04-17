@@ -94,12 +94,12 @@ if (htmlobject_request('action') != '') {
                     $application1 =$_GET["application1"];
                     $application2 =$_GET["application2"];
                     $application3 =$_GET["application3"];
+                    $application4 =$_GET["application4"];
                     $cr_start = $_GET['cr_start'];
                     $cr_stop = $_GET['cr_stop'];
                     $highavailable = $_GET['ha'];
 
                     $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! parameters : systemtype $systemtype kernel $kernel serverimage $serverimage cpus $cpus memory $memory disk $disk network $network quantity $quantity application0 $application0 application1 $application1 application2 $application2 application3 $application3 cr_start $cr_start cr_stop $cr_stop", "", "", 0, 0, 0);
-
                     $request_user = new clouduser();
                     $request_user->get_instance_by_name("$auth_user");
                     // set user id
@@ -198,6 +198,9 @@ if (htmlobject_request('action') != '') {
                     if (!check_param("Application3", $application3, false)) {
                             exit(false);
                     }
+                    if (!check_param("Application4", $application4, false)) {
+                            exit(false);
+                    }
 //                    $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! auth_user $auth_user cloud-user id $request_user_id passed addtional checks", "", "", 0, 0, 0);
 
                     // set the eventual selected puppet groups
@@ -213,6 +216,9 @@ if (htmlobject_request('action') != '') {
                     }
                     if (strlen($application3)) {
                         $puppet_groups .= $application3.",";
+                    }
+                    if (strlen($application4)) {
+                        $puppet_groups .= $application4.",";
                     }
                     $puppet_groups = rtrim($puppet_groups, ",");
  //                   $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! auth_user $auth_user cloud-user id $request_user_id puppetgroups $puppet_groups", "", "", 0, 0, 0);

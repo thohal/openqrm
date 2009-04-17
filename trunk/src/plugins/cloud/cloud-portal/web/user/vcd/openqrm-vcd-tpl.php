@@ -231,7 +231,6 @@ function submitrequest(s)
              //if process.php returned 1/true (send mail success)
              if (html==1) {
                  alert('Your request was successfully submitted to the Cloud.\nPlease check your mailbox for login-details.')
-             //if process.php returned 0/false (send mail failed)
              } else {
                  alert('Sorry, unexpected error. Please try again later.');
              }
