@@ -540,6 +540,34 @@ function openqrm_install_api_docu() {
 }
 
 
+# function to get the jquery bundle
+# -> this is for "make " phase
+function openqrm_get_jquery_bundle() {
+    # TODO gather version from build.conf file
+    JQUERY_VERSION="1.3.2"
+	CURRENT_DIR=`pwd`
+	openqrm_cache_or_download jquery
+	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/jquery/
+	tar -xzf jquery-$JQUERY_VERSION.tgz
+	cd $CURRENT_DIR
+}
+
+# function to install the jquery-bundle
+# -> this is for "make install" phase
+function openqrm_install_jquery_bundle() {
+    JQUERY_VERSION="1.3.2"
+	mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/js/jquery
+	mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/css/jquery
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/jquery/jquery-$JQUERY_VERSION/* $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/js/jquery/
+    rm -rf $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/js/jquery/css
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/jquery/jquery-$JQUERY_VERSION/css/* $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/css/jquery/
+    # also install it for the cloud plugin
+	mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/js
+	mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/css
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/jquery/jquery-$JQUERY_VERSION/* $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/js/
+    rm -rf $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/js/css
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/jquery/jquery-$JQUERY_VERSION/css/* $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/css/
+}
 
 
 
