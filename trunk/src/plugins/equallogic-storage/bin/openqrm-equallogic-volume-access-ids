@@ -11,9 +11,9 @@ if {[llength $argv]<2} {
 set EQUALLOGIC_IP [lindex $argv 0]
 set EQUALLOGIC_USER [lindex $argv 1]
 set EQUALLOGIC_PASSWORD [lindex $argv 2]
-set EQUALLOGIC_CMD [lindex $argv 3]
+set EQUALLOGIC_VOLUME [lindex $argv 3]
 
-send_user "Running command $EQUALLOGIC_CMD on $EQUALLOGIC_IP as $EQUALLOGIC_USER\n"
+# send_user "Listing accesses to $EQUALLOGIC_VOLUME on $EQUALLOGIC_IP\n"
 
 set force_conservative 0  ;# set to 1 to force conservative mode even if
                           ;# script wasn't run conservatively originally
@@ -47,7 +47,12 @@ expect -exact "$EQUALLOGIC_USER@$EQUALLOGIC_IP's password: "
 send -- "$EQUALLOGIC_PASSWORD\r"
 expect -exact ">"
 
-send -- "$EQUALLOGIC_CMD\r"
+# get access to volume
+send -- "volume select $EQUALLOGIC_VOLUME\r"
+expect -exact ">"
+send -- "access show\r"
+expect -exact ">"
+send -- "exit\r"
 
 expect -exact ">"
 send -- "logout\r"

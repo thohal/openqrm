@@ -45,15 +45,18 @@ expect {
     }
  }
 
-expect -exact "$EQUALLOGIC_USER@$EQUALLOGIC_IP"
-send -- "\r"
-expect -exact "\r
-$EQUALLOGIC_USER@$EQUALLOGIC_IP's password: "
+expect -exact "$EQUALLOGIC_USER@$EQUALLOGIC_IP's password: "
 send -- "$EQUALLOGIC_PASSWORD\r"
 expect -exact ">"
 
+# remove first to be sure it is not in there double
+send -- "chapuser delete $EQUALLOGIC_VOLUME_USER\r"
+send -- "y\r"
+expect -exact ">"
+# create chapuser
 send -- "chapuser create $EQUALLOGIC_VOLUME_USER password $EQUALLOGIC_VOLUME_PASS\r"
 expect -exact ">"
+# create access to volume
 send -- "volume select $EQUALLOGIC_VOLUME\r"
 expect -exact ">"
 send -- "access create username $EQUALLOGIC_VOLUME_USER\r"

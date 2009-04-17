@@ -43,10 +43,7 @@ expect {
     }
  }
 
-expect -exact "$EQUALLOGIC_USER@$EQUALLOGIC_IP"
-send -- "\r"
-expect -exact "\r
-$EQUALLOGIC_USER@$EQUALLOGIC_IP's password: "
+expect -exact "$EQUALLOGIC_USER@$EQUALLOGIC_IP's password: "
 send -- "$EQUALLOGIC_PASSWORD\r"
 expect -exact ">"
 

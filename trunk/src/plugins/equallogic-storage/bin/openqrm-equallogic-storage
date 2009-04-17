@@ -182,6 +182,16 @@ case "$EQUALLOGIC_COMMAND" in
 	auth)
 		echo -n "Authenticating EQUALLOGIC Lun for image $EQUALLOGIC_IMAGE_NAME"
 		equallogic_storage_lock aquire
+
+        # we first have to check if there is an existing access control
+        # for the volume already, if yes we remove and re-create it
+        # if no we just create a new one
+        TMPLISTFILE=`mktemp /tmp/eq-list.XXXXXXXXXX`
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-volume-access-ids $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD $EQUALLOGIC_IMAGE_NAME > $TMPLISTFILE
+        for access_id in `grep "$EQUALLOGIC_IMAGE_NAME " $TMPLISTFILE | awk {' print $1 '}`; do
+    		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-volume-access-remove $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD $EQUALLOGIC_IMAGE_NAME $access_id
+        done
+       /bin/rm -f TMPLISTFILE
         $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-volume-auth $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD $EQUALLOGIC_IMAGE_NAME $EQUALLOGIC_IMAGE_NAME $EQUALLOGIC_IMAGE_PASSWORD
 		equallogic_storage_lock release
 		;;

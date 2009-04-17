@@ -132,11 +132,53 @@ EOF
 	echo "equallogic-storage: Discoverying Iscsi-target $image_storage_server_ip:3260"
 	iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260
 
+    # get targetname
+	IMAGE_TARGET=`iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260 | grep $image_name | awk {' print $2 '}`
+    if [ "$IMAGE_TARGET" == "" ]; then
+		echo "ERROR: Could not find the iscsi-target name in discovery results"
+		# give a shell for the admin
+		/bin/bash
+    else
+        echo "NOTICE: Found target $IMAGE_TARGET"
+    fi
+
 	# login
 	iscsiadm -m node -T $IMAGE_TARGET -p $image_storage_server_ip:3260 --login
 
 	# let udev settle
 	sleep 4
+
+    # check that udev found the new device
+    # if not find the block device name in /sys
+    if [ ! -f $IMAGE_ROOT_DEVICE ]; then
+
+        FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block | head -n1`
+        if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
+            FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block:s* | head -n1`
+            if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
+                echo "ERROR: Udev did not detect the new device"
+                echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
+                # give a shell for the admin
+                /bin/bash
+            fi
+        fi
+        # check for different sysfs styles
+        if [ -h $FIND_ISCSI_BLOCK_DEVICE ]; then
+            ISCSI_BLOCK_DEVICE_NAME=`readlink $FIND_ISCSI_BLOCK_DEVICE`
+            ISCSI_BLOCK_DEVICE_NAME=`basename $ISCSI_BLOCK_DEVICE_NAME`
+            echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as symlink)"
+            ln -sf /dev/$ISCSI_BLOCK_DEVICE_NAME $IMAGE_ROOT_DEVICE
+        elif [ -d $FIND_ISCSI_BLOCK_DEVICE ]; then
+            ISCSI_BLOCK_DEVICE_NAME=`ls $FIND_ISCSI_BLOCK_DEVICE`
+            echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as dir)"
+            ln -sf /dev/$ISCSI_BLOCK_DEVICE_NAME $IMAGE_ROOT_DEVICE
+        else
+            echo "ERROR: Udev did not detect the new device"
+            echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
+            # give a shell for the admin
+            /bin/bash
+        fi
+    fi
 
 	# finallly mount
 	if ! mount -t $image_rootfstype $IMAGE_ROOT_DEVICE /mnt; then
