@@ -133,6 +133,21 @@ function serialize(s)
 };
 
 
+function check_exists_uniq(s, needle) {
+    var found = 0;
+    var temp = new Array();
+    temp = s.split('&');
+    for ( var i in temp )
+    {
+        var matchPos1 = temp[i].search(needle);
+        if(matchPos1 != -1) {
+            found++;
+        }
+    }
+    return found;
+}
+
+
 function submitrequest(s)
 {
 
@@ -146,54 +161,69 @@ function submitrequest(s)
     });
 
     var o = str.join(delimiter);
-    // check for systemtype
 
-    var myRegExp = /systemtype/;
-    var matchPos1 = o.search(myRegExp);
-    if(matchPos1 == -1) {
+    // check for systemtype
+    var v = check_exists_uniq(o, "systemtype");
+    if (v <= 0) {
         alert("Please  select a Virtualization Type");
         exit(1);
+    } else if (v > 1) {
+        alert("Please  select exact one Virtualization Type.\nYou have selected " + v);
+        exit(1);
     }
+
     // check for image
-    var myRegExp = /serverimage/;
-    var matchPos1 = o.search(myRegExp);
-    if(matchPos1 == -1) {
+    var v = check_exists_uniq(o, "serverimage");
+    if (v <= 0) {
         alert("Please select a Server-Template");
+        exit(1);
+    } else if (v > 1) {
+        alert("Please  select exact one Server-Template.\nYou have selected " + v);
         exit(1);
     }
     // check for kernel
-    var myRegExp = /kernel/;
-    var matchPos1 = o.search(myRegExp);
-    if(matchPos1 == -1) {
-        alert("Please select an Operation System");
+    var v = check_exists_uniq(o, "kernel");
+    if (v <= 0) {
+        alert("Please select an Operating System");
+        exit(1);
+    } else if (v > 1) {
+        alert("Please  select exact one Operating System.\nYou have selected " + v);
         exit(1);
     }
     // check for cpus
-    var myRegExp = /cpus/;
-    var matchPos1 = o.search(myRegExp);
-    if(matchPos1 == -1) {
+    var v = check_exists_uniq(o, "cpus");
+    if (v <= 0) {
         alert("Please select a CPU");
+        exit(1);
+    } else if (v > 1) {
+        alert("Please  select exact one CPU.\nYou have selected " + v);
         exit(1);
     }
     // check for memory
-    var myRegExp = /memory/;
-    var matchPos1 = o.search(myRegExp);
-    if(matchPos1 == -1) {
+    var v = check_exists_uniq(o, "memory");
+    if (v <= 0) {
         alert("Please a Memory-Size");
+        exit(1);
+    } else if (v > 1) {
+        alert("Please  select exact one Memory-Size.\nYou have selected " + v);
         exit(1);
     }
     // check for disk
-    var myRegExp = /disk/;
-    var matchPos1 = o.search(myRegExp);
-    if(matchPos1 == -1) {
+    var v = check_exists_uniq(o, "disk");
+    if (v <= 0) {
         alert("Please select a Disk-Size");
+        exit(1);
+    } else if (v > 1) {
+        alert("Please  select exact one Disk-Size.\nYou have selected " + v);
         exit(1);
     }
     // check for network
-    var myRegExp = /network/;
-    var matchPos1 = o.search(myRegExp);
-    if(matchPos1 == -1) {
+    var v = check_exists_uniq(o, "network");
+    if (v <= 0) {
         alert("Please select a Network-Card");
+        exit(1);
+    } else if (v > 1) {
+        alert("Please  select exact one Network-Card.\nYou have selected " + v);
         exit(1);
     }
 
@@ -232,7 +262,7 @@ function submitrequest(s)
              if (html==1) {
                  alert('Your request was successfully submitted to the Cloud.\nPlease check your mailbox for login-details.')
              } else {
-                 alert('Sorry, unexpected error. Please try again later.');
+                 alert('Sorry, an unexpected error appeared.\nPlease check your Cloud Limits or again later.');
              }
          }
      });
