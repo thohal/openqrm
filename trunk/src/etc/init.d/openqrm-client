@@ -67,6 +67,12 @@ function openqrm_client_start() {
 	umount /initrd/boot 1>/dev/null 2>&1
 	umount /initrd/ 1>/dev/null 2>&1
 	grep -q "/initrd" /proc/mounts && umount /initrd
+    chmod 666 /dev/null
+    if [ ! -f /dev/tty ]; then
+        cd /dev
+        ln -sf tty0 tty
+        cd
+    fi
 
 	case "$openqrm_execution_layer" in
 		dropbear)
