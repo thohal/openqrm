@@ -6,7 +6,7 @@
     <script type="text/javascript" src="../js/js/jquery-1.3.2.min.js"></script>
     <script type="text/javascript" src="../js/js/jquery-ui-1.7.1.custom.min.js"></script>
     <link type="text/css" href="../../css/jquery.css" rel="stylesheet" />
-    <link type="text/css" href="openqrm-vcd.css" rel="stylesheet" />
+    <link type="text/css" href="./openqrm-vcd.css" rel="stylesheet" />
     <style type="text/css">
 	</style>
 
