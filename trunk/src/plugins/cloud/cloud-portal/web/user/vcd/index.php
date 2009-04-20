@@ -1,5 +1,5 @@
 <?php
 
-include "openqrm-vcd.php";
+include "vcd.php";
 
 ?>
