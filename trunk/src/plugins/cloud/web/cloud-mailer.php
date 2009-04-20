@@ -108,7 +108,7 @@ if(htmlobject_request('action') != '') {
 
             } else {
 
-                echo "... sending to user $selected_user <br>";
+                // echo "... sending to user $selected_user <br>";
                 $mail_user = new clouduser();
                 $mail_user->get_instance_by_name($selected_user);
                 $mail_user_forename = $mail_user->forename;
@@ -189,8 +189,8 @@ function cloud_user_mailer() {
     $disp = $disp."<textarea name=\"mailbody\" rows=\"10\" cols=\"50\">$mailbody</textarea>";
     $disp = $disp."<input type=\"hidden\" name=\"action\" value=\"send\" />";
 	$disp = $disp."<br>";
-    $disp = $disp."html<input type=\"radio\" name=\"mailtype\" value=\"html\" checked=\"checked\" />";
-    $disp = $disp."text<input type=\"radio\" name=\"mailtype\" value=\"text\" />";
+//    $disp = $disp."html<input type=\"radio\" name=\"mailtype\" value=\"html\" checked=\"checked\" />";
+    $disp = $disp."text<input type=\"radio\" name=\"mailtype\" value=\"text\" checked=\"checked\"/>";
     $disp = $disp."&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Send\" name=\"submit\" />";
 	$disp = $disp."<br>";
 	$disp = $disp."</form>";

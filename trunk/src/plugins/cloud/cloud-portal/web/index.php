@@ -1,5 +1,9 @@
 <link rel="stylesheet" type="text/css" href="css/mycloud.css" />
-
+<style>
+.htmlobject_tab_box {
+	width:600px;
+}
+</style>
 
 <?php
 
@@ -73,7 +77,7 @@ function check_param($param, $value) {
 	if (!strlen($value)) {
 		$strMsg = "$param is empty <br>";
 		$c_error = 1;
-		redirect($strMsg, tab1);
+		redirect($strMsg, tab0);
 		exit(0);
 	}
 	// remove whitespaces
@@ -89,7 +93,7 @@ function check_param($param, $value) {
 	if(!is_allowed($value)){
 		$strMsg = "$param contains special characters <br>";
 		$c_error = 1;
-		redirect($strMsg, tab1);
+		redirect($strMsg, tab0);
 		exit(0);
 	}
 }
@@ -214,7 +218,7 @@ if(htmlobject_request('action') != '') {
 				$event->log("cloud-portal", $_SERVER['REQUEST_TIME'], 2, "index.php", "User $cu_id already activated!", "", "", 0, 0, 0);
 				$strMsg .= "User already actiavted ... <br>";
 				$u_error = 1;
-				redirect($strMsg, tab2);
+				redirect($strMsg, tab0);
 				exit(0);
 			}
 
@@ -223,7 +227,7 @@ if(htmlobject_request('action') != '') {
 				$event->log("cloud-portal", $_SERVER['REQUEST_TIME'], 2, "index.php", "Got emtpy token for user activation!", "", "", 0, 0, 0);
 				$strMsg .= "No token found. Aborting ... <br>";
 				$u_error = 1;
-				redirect($strMsg, tab2);
+				redirect($strMsg, tab0);
 				exit(0);
 			}
 			// verify the token
@@ -231,7 +235,7 @@ if(htmlobject_request('action') != '') {
 				$event->log("cloud-portal", $_SERVER['REQUEST_TIME'], 2, "index.php", "Got invalid token for user activation!", "", "", 0, 0, 0);
 				$strMsg .= "Warning, invalid token. Aborting ... $cu_token_db -- $cu_token_post <br>";
 				$u_error = 1;
-				redirect($strMsg, tab2);
+				redirect($strMsg, tab0);
 				exit(0);
 			}
 
@@ -354,11 +358,11 @@ function portal_home() {
 	$disp = $disp."Here how it works :";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."- First register yourself to the openQRM Cloud portal";
+	$disp = $disp."- First <a href=\"$thisfile?currenttab=tab1\">register</a> yourself to the openQRM Cloud portal";
 	$disp = $disp."<br>";
-	$disp = $disp."- You will receive a mail how to activate your account";
+	$disp = $disp."- You will receive a mail how to activate</a> your account";
 	$disp = $disp."<br>";
-	$disp = $disp."- Activate your account";
+	$disp = $disp."- <a href=\"$thisfile?activate=yes\">Activate</a> your account";
 	$disp = $disp."<br>";
 	$disp = $disp."- Get some Cloud Computing Units (CCU's), the virtual currency in the Cloud";
 	$disp = $disp."<br>";
@@ -368,10 +372,8 @@ function portal_home() {
 	$disp = $disp."Enjoy !";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<a href=\"/cloud-portal/user/mycloud.php\"><img src='img/forward.gif' width='36' height='32' border='0' alt='' align='left'>";
-	$disp = $disp."<h1><b>Click here to login to the openQRM Cloud</b></h1></a>";
 	$disp = $disp."Please find a detailed Howto about this Cloud <a href=\"$cloud_portal_howto\" target=\"_BLANK\">here</a>.";
+	$disp = $disp."<br>";
 
 	return $disp;
 }
@@ -394,7 +396,7 @@ function register_user() {
 		$disp = $disp.htmlobject_input('cu_name', array("value" => '[Username]', "label" => 'User name'), 'text', 20);
 		$disp = $disp.htmlobject_input('cu_password', array("value" => '', "label" => 'Password'), 'password', 20);
 		$disp = $disp.htmlobject_input('cu_password_check', array("value" => '', "label" => '(retype)'), 'password', 20);
-		$disp = $disp.htmlobject_input('cu_forename', array("value" => '[Forename]', "label" => 'Fore name'), 'text', 50);
+		$disp = $disp.htmlobject_input('cu_forename', array("value" => '[Firstname]', "label" => 'First name'), 'text', 50);
 		$disp = $disp.htmlobject_input('cu_lastname', array("value" => '[Lastname]', "label" => 'Last name'), 'text', 50);
 		$disp = $disp.htmlobject_input('cu_email', array("value" => '[Email]', "label" => 'Email'), 'text', 50);
 		$disp = $disp.htmlobject_input('cu_street', array("value" => '[Street]', "label" => 'Street+number'), 'text', 100);
@@ -492,11 +494,14 @@ if ($cloud_enabled != 'true') {
 	include "$DocRoot/cloud-portal/mycloud-disabled.php";
 }
 
-$output[] = array('label' => 'Welcome to the openQRM Cloud', 'value' => portal_home());
-$output[] = array('label' => 'Register to the openQRM Cloud', 'value' => register_user());
-$output[] = array('label' => 'Activate your Account', 'value' => activate_user());
-$output[] = array('label' => 'Login with existing account', 'value' => login_user());
-
+$activate = htmlobject_request('activate');
+if (!strcmp($activate, "yes")) {
+    $output[] = array('label' => "<a href=\"$thisfile?currenttab=tab0\">Activate your Account</a>", 'value' => activate_user());
+} else {
+    $output[] = array('label' => "<a href=\"$thisfile?currenttab=tab0\">Welcome to the openQRM Cloud</a>", 'value' => portal_home());
+    $output[] = array('label' => "<a href=\"$thisfile?currenttab=tab1\">Register</a>", 'value' => register_user());
+    $output[] = array('label' => "<a href=\"/cloud-portal/user/mycloud.php\">Login</a>", 'value' => login_user());
+}
 echo htmlobject_tabmenu($output);
 
 // include footer

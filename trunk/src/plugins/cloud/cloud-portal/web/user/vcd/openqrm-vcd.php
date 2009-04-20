@@ -494,10 +494,14 @@ function my_cloud_create_request() {
 
     // prepare an array for the disk-sizes
     $disk_size_mb = 1000;
-    $disk_size = "\"1000\"";
-    $disk_multiplyer=10;
+    $disk_size = 1000;
+    if ($max_disk_size < 10000) {
+        $disk_multiplyer=1;
+    } else {
+        $disk_multiplyer=10;
+    }
     $cloud_disk_req = "1";
-    for ($sd=1; $disk_size < $max_disk_size; $sd++) {
+    for ($sd=2; $disk_size < $max_disk_size; $sd++) {
         $mp = $sd * $disk_multiplyer;
         $disk_size = $mp * $disk_size_mb;
         if ($disk_size < $max_disk_size) {
@@ -512,6 +516,8 @@ function my_cloud_create_request() {
             }
         }
     }
+    $max_disk_size_gb = $max_disk_size/1000;
+    $cloud_disk_req = $cloud_disk_req." ,\"$max_disk_size_gb\"";
 
     // prepare an array for the memory-sizes
     $cloud_memory_loop=1;

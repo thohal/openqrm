@@ -700,17 +700,16 @@ if ((htmlobject_request('action') != '') && (isset($_REQUEST['identifier']))) {
 $cloudu = new clouduser();
 $cloudu->get_instance_by_name($auth_user);
 if ($cloudu->status == 1) {
-	$output[] = array('label' => 'My Cloud Manager', 'value' => my_cloud_manager());
-	$output[] = array('label' => 'Create Cloud Request', 'value' => my_cloud_create_request());
-	$output[] = array('label' => 'My Cloud Appliances', 'value' => my_cloud_appliances());
-	$output[] = array('label' => 'My Cloud Account', 'value' => mycloud_account());
-	$output[] = array('label' => 'Documentation', 'value' => mycloud_documentation());
-	$output[] = array('label' => 'Logout', 'value' => back_to_home());
+	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab0\">Cloud Manager</a>", 'value' => my_cloud_manager());
+	$output[] = array('label' => "<a href=\"#\" onClick=\"javascript:window.open('vcd/','','location=0,status=0,scrollbars=1,width=910,height=740');\">Visual Cloud Designer <small><i>beta</i></small></a>", 'value' => '');
+	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab2\">Cloud Request</a>", 'value' => my_cloud_create_request());
+	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab3\">Cloud Appliances</a>", 'value' => my_cloud_appliances());
+	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab4\">My Account</a>", 'value' => mycloud_account());
+	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab5\">Help</a>", 'value' => mycloud_documentation());
+	$output[] = array('label' => "<a href=\"/cloud-portal/\">Logout</a>", 'value' => "");
 } else {
 	$output[] = array('label' => 'Your account has been disabled', 'value' => my_cloud_account_disabled());
 }
-
-
 
 
 echo htmlobject_tabmenu($output);

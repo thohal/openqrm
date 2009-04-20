@@ -1,0 +1,210 @@
+/* 
+    Document   : openqrm-vcd
+    Created on : Apr 19, 2009, 3:15:33 PM
+    Author     : matt
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+
+
+body {
+    background-color: rgb(211,211,211);
+}
+
+.column {
+    width: 180px;
+    float: left;
+    padding: 5px;
+}
+.portlet {
+    margin: 0 0 0 0;
+}
+.portlet-header {
+    margin: 0.3em;
+    padding-bottom: 1px;
+    padding-left: 0.2em;
+}
+.portlet-header .ui-icon {
+    float: right;
+}
+.portlet-content {
+    padding-left: 0.2em;
+}
+.ui-sortable-placeholder {
+    border: 1px dotted black;
+    visibility: visible !important; height: 25px !important;
+}
+.ui-sortable-placeholder * {
+    visibility: hidden;
+}
+
+#titleheader {
+    position: absolute;
+    left: 10px;
+    top: 25px;
+    width: 220px;
+    height: 70px;
+}
+
+#docu {
+    position: absolute;
+    left: 250px;
+    top: 35px;
+    width: 440px;
+    height: 70px;
+}
+
+#logo {
+    position: absolute;
+    left: 730px;
+    top: 10px;
+    width: 150px;
+    height: 50px;
+    background-image: url(img/logo.gif);
+    background-repeat: no-repeat;
+
+}
+
+#components {
+    position: absolute;
+    left: 10px;
+    top: 100px;
+    width: 200px;
+    height: 600px;
+    padding: 10px;
+    padding-top: 10px;
+
+    border: solid 1px #808080;
+}
+
+#datacenter {
+    position: absolute;
+    left: 240px;
+    top: 100px;
+    width: 450px;
+    height: 600px;
+    padding: 10px;
+    border: solid 1px #808080;
+}
+
+#cloudactions {
+    position: absolute;
+    left: 720px;
+    top: 100px;
+    width: 150px;
+    height: 170px;
+    padding: 10px;
+    border: solid 1px #808080;
+}
+
+#myaccount {
+    position: absolute;
+    left: 720px;
+    top: 300px;
+    width: 150px;
+    height: 60px;
+    padding: 10px;
+    border: solid 1px #808080;
+}
+
+#globallimits {
+    position: absolute;
+    left: 720px;
+    top: 390px;
+    width: 150px;
+    height: 100px;
+    padding: 10px;
+    border: solid 1px #808080;
+}
+
+#userlimits {
+    position: absolute;
+    left: 720px;
+    top: 520px;
+    width: 150px;
+    height: 110px;
+    padding: 10px;
+    border: solid 1px #808080;
+}
+
+#adplace {
+    position: absolute;
+    left: 720px;
+    top: 660px;
+    width: 170px;
+    height: 60px;
+    border: solid 1px #808080;
+}
+
+#server {
+    position: absolute;
+    left: 160px;
+    top: 100px;
+    width: 120px;
+    height: 430px;
+    padding: 10px;
+    background-image: url(../../img/cloudappliance.gif);
+    background-repeat: no-repeat;
+}
+
+#builder {
+    position: absolute;
+    left: 8px;
+    top: 150px;
+    width: 100px;
+    height: 260px;
+    padding: 10px;
+    overflow:auto;
+}
+
+
+#content-slider {
+  position: absolute;
+  left: 25px;
+  top: 135px;
+  width: 180px;
+  height: 6px;
+  margin: 5px;
+  background: #BBBBBB;
+}
+
+.content-slider-handle {
+  background: #478AFF;
+  border: solid 1px black;
+}
+
+#content-scroll {
+  position: relative;
+  top: 30px;
+  width: 200px;
+  height: 545px;
+  margin: 0 0 0 0;
+  overflow: hidden;
+  border: solid 1px black;
+}
+
+#content-holder {
+  width: 200px;
+  height: 270px;
+  padding-top: 0px;
+}
+
+
+.content-item {
+  width: 200px;
+  height: 270px;
+  margin: 0 0 0 0;
+  float: top;
+  }
+
+
+#testedwith {
+    position: absolute;
+    left: 10px;
+    top: 725px;
+    width: 880px;
+    height: 10px;
+}
+
+
