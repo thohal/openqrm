@@ -213,7 +213,7 @@ function submitrequest(s)
     //start the ajax
     $.ajax({
          //this is the php file that processes the data and send mail
-         url: "openqrm-vcd.php?action=newvcd&" + str.join(delimiter),
+         url: "vcd.php?action=newvcd&" + str.join(delimiter),
          //GET method is used
          type: "GET",
          //Do not cache the page
