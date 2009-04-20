@@ -10,6 +10,7 @@
 ..|Cloud Config|plugins/cloud/cloud-config.php
 ..|Cloud IpGroups|plugins/cloud/cloud-ipgroup-manager.php
 ..|Cloud NAT|plugins/cloud/cloud-nat-manager.php
+..|Cloud Mail|plugins/cloud/cloud-mailer.php
 ..|Cloud WebService
 ...|Main|plugins/cloud/soap/index.php
 ...|Admin WebService|plugins/cloud/soap/soap-admin.php
