@@ -215,7 +215,7 @@ function get_cost() {
 		// check state, only bill if active
 		if ($cloud_app->state == 1) {
 			// basic cost
-			$cr_costs = 1;
+			$cr_costs = 0;
 			// + per cpu
 			$cr_costs = $cr_costs + $this->cpu_req;
 			// + per nic
