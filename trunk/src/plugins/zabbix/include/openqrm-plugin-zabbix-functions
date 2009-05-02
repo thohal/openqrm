@@ -1,0 +1,49 @@
+#!/bin/bash
+# this is the functions file for the zabbix-plugin
+
+
+# some definitions
+DEFAULT_IMAGE_SIZE=5000
+ZABBIX_MANAGER_LOCK_FILE=/var/run/zabbix/openqrm-zabbix-manager.lock
+ZABBIX_MANAGER_LOCK_DELAY=5
+ZABBIX_MANAGER_LOCK_RETRY=100
+ZABBIX_MANAGER_LOCK_TIMEOUT=500
+
+
+# logs for zabbix
+function zabbix_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "zabbix plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function zabbix_manager_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $ZABBIX_MANAGER_LOCK_FILE` ]; then
+		mkdir -p `dirname $ZABBIX_MANAGER_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $ZABBIX_MANAGER_LOCK_DELAY -r $ZABBIX_MANAGER_LOCK_RETRY -l $ZABBIX_MANAGER_LOCK_TIMEOUT $ZABBIX_MANAGER_LOCK_FILE
+				RET=$?
+				zabbix_log zabbix_manager_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $ZABBIX_MANAGER_LOCK_FILE
+				RET=$?
+				zabbix_log zabbix_manager_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			zabbix_log zabbix_manager_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+

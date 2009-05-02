@@ -1,0 +1,8 @@
+#	Title
+#	Href
+#	Alt
+#	IMG
+#	Target
+.|Zabbix
+..|About|plugins/zabbix/zabbix-about.php
+..|Main|plugins/zabbix/zabbix-redir.php

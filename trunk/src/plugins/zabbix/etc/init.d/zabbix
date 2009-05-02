@@ -1,0 +1,82 @@
+#!/bin/bash
+
+export `eval cat /proc/cmdline`	
+. /var/openqrm/openqrm-resource.conf
+export OPENQRM_SERVER_BASE_DIR=$resource_basedir
+. $resource_basedir/openqrm/include/openqrm-functions
+# for including the package functions
+export OPENQRM_SOURCE_DIR="$resource_basedir/openqrm/"
+. $resource_basedir/openqrm/include/openqrm-package-functions
+
+# do not run on idle resources
+if [ "$resource_image" == "idle" ]; then
+	exit 0
+fi
+
+# do not start on the intitrd
+if [ -f /etc/initrd-devices.conf ]; then
+	exit 0
+fi
+
+function zabbix_start() {
+	echo "Starting the openQRM zabbix-plugin"
+	zabbix_stop 1>/dev/null 2>&1
+    # make sure we have the zabbix agent
+    if [ -f /etc/debian_version ]; then
+        apt-get update
+    fi
+   	export FORCE_INSTALL=true
+   	openqrm_install_os_dependency zabbix-agent
+    # set config
+    if [ -f /etc/zabbix/zabbix_agentd.conf ]; then
+    	echo "Setting configuration for the Zabbix-agent -> Zabbix-server $resource_openqrmserver"
+        sed -i -e "s/Server=.*/Server=$resource_openqrmserver/g" /etc/zabbix/zabbix_agentd.conf
+        # set hostname in agent conf
+        zabbix_client_hostname=`hostname`
+        sed -i -e "s/Hostname=.*/Hostname=$zabbix_client_hostname/g" /etc/zabbix/zabbix_agentd.conf
+    else
+    	echo "ERROR: Cloud find the Zabbix-agent configuration file!"
+    fi
+
+    # start agent
+	if [ -x /etc/init.d/zabbix-agent ]; then
+		/etc/init.d/zabbix-agent start
+	else
+    	echo "ERROR: Cloud not start the Zabbix-agent !"
+	fi
+	return 0
+}
+
+
+function zabbix_stop() {
+	echo "Stopping the openQRM zabbix plugin"
+    # start agent
+	if [ -x /etc/init.d/zabbix-agent ]; then
+		/etc/init.d/zabbix-agent stop
+	else
+    	echo "ERROR: Cloud not stop the Zabbix-agent !"
+	fi
+	return 0
+}
+
+
+
+case "$1" in
+	start)
+		zabbix_start
+		;;
+	stop)
+		zabbix_stop
+		;;
+	restart)
+		zabbix_stop
+		sleep 1
+		zabbix_start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+
+esac
+exit $?
+
