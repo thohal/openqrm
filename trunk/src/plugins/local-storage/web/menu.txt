@@ -3,5 +3,5 @@
 #	Alt
 #	IMG
 #	Target
-.|Local-Storage
-..|About|plugins/local-storage/local-storage-about.php
+..|Local-Storage
+...|About|plugins/local-storage/local-storage-about.php

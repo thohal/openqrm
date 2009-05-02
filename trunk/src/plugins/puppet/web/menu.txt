@@ -3,7 +3,7 @@
 #	Alt
 #	IMG
 #	Target
-.|Puppet
-..|About|plugins/puppet/puppet-about.php
-..|Puppet Config|plugins/puppet/puppet-config.php
-..|Puppet manager|plugins/puppet/puppet-manager.php
+..|Puppet
+...|About|plugins/puppet/puppet-about.php
+...|Puppet Config|plugins/puppet/puppet-config.php
+...|Puppet manager|plugins/puppet/puppet-manager.php

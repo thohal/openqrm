@@ -3,5 +3,5 @@
 #	Alt
 #	IMG
 #	Target
-.|Tftpd
-..|About|plugins/tftpd/tftpd-about.php
+..|Tftpd
+...|About|plugins/tftpd/tftpd-about.php

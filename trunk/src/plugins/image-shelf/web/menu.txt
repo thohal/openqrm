@@ -3,6 +3,6 @@
 #	Alt
 #	IMG
 #	Target
-.|Image-shelf
-..|About|plugins/image-shelf/image-shelf-about.php
-..|Image-shelf|plugins/image-shelf/image-shelf-manager.php
+..|Image-shelf
+...|About|plugins/image-shelf/image-shelf-about.php
+...|Image-shelf|plugins/image-shelf/image-shelf-manager.php

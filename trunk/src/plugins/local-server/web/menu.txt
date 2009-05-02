@@ -3,5 +3,5 @@
 #	Alt
 #	IMG
 #	Target
-.|Local-server
-..|About|plugins/local-server/local-server-about.php
+..|Local-server
+...|About|plugins/local-server/local-server-about.php

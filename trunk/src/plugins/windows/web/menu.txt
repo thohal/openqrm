@@ -3,6 +3,6 @@
 #	Alt
 #	IMG
 #	Target
-.|Citrix
-..|About|plugins/windows/windows-about.php
-..|Citrix Manager|plugins/windows/windows-manager.php
+..|Windows
+...|About|plugins/windows/windows-about.php
+...|Windows Manager|plugins/windows/windows-manager.php

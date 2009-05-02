@@ -3,6 +3,6 @@
 #	Alt
 #	IMG
 #	Target
-.|Iscsi-Storage
-..|About|plugins/iscsi-storage/iscsi-storage-about.php
-..|Luns|plugins/iscsi-storage/iscsi-storage-manager.php
+..|Iscsi-Storage
+...|About|plugins/iscsi-storage/iscsi-storage-about.php
+...|Luns|plugins/iscsi-storage/iscsi-storage-manager.php

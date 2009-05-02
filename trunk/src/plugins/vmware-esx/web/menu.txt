@@ -3,6 +3,6 @@
 #	Alt
 #	IMG
 #	Target
-.|VMware-ESX
-..|About|plugins/vmware-esx/vmware-esx-about.php
-..|ESX Manager|plugins/vmware-esx/vmware-esx-manager.php
+..|VMware-ESX
+...|About|plugins/vmware-esx/vmware-esx-about.php
+...|ESX Manager|plugins/vmware-esx/vmware-esx-manager.php

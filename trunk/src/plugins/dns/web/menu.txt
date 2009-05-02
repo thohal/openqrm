@@ -3,5 +3,5 @@
 #	Alt
 #	IMG
 #	Target
-.|DNS
-..|About|plugins/dns/dns-about.php
+..|DNS
+...|About|plugins/dns/dns-about.php

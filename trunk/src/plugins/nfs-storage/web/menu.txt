@@ -3,6 +3,6 @@
 #	Alt
 #	IMG
 #	Target
-.|Nfs-Storage
-..|About|plugins/nfs-storage/nfs-storage-about.php
-..|Exports|plugins/nfs-storage/nfs-storage-manager.php
+..|Nfs-Storage
+...|About|plugins/nfs-storage/nfs-storage-about.php
+...|Exports|plugins/nfs-storage/nfs-storage-manager.php

@@ -3,6 +3,6 @@
 #	Alt
 #	IMG
 #	Target
-.|Linux-VServer
-..|About|plugins/linux-vserver/linux-vserver-about.php
-..|VM Manager|plugins/linux-vserver/linux-vserver-manager.php
+..|Linux-VServer
+...|About|plugins/linux-vserver/linux-vserver-about.php
+...|VM Manager|plugins/linux-vserver/linux-vserver-manager.php

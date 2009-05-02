@@ -3,6 +3,6 @@
 #	Alt
 #	IMG
 #	Target
-.|Aoe-Storage
-..|About|plugins/aoe-storage/aoe-storage-about.php
-..|Shelfs|plugins/aoe-storage/aoe-storage-manager.php
+..|Aoe-Storage
+...|About|plugins/aoe-storage/aoe-storage-about.php
+...|Shelfs|plugins/aoe-storage/aoe-storage-manager.php

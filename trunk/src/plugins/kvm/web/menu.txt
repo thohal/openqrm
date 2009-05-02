@@ -3,6 +3,6 @@
 #	Alt
 #	IMG
 #	Target
-.|KVM
-..|About|plugins/kvm/kvm-about.php
-..|KVM Manager|plugins/kvm/kvm-manager.php
+..|KVM
+...|About|plugins/kvm/kvm-about.php
+...|KVM Manager|plugins/kvm/kvm-manager.php

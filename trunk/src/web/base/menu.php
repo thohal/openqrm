@@ -11,6 +11,8 @@ require_once($ClassDir.'folder.class.php');
 require_once($ClassDir.'PHPLIB.php');
 $thisfile = basename($_SERVER['PHP_SELF']);
 
+require_once "$RootDir/include/openqrm-server-config.php";
+global $OPENQRM_SERVER_BASE_DIR;
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -71,15 +73,43 @@ $mid2->iconwww = $WebDir.'img/menu/';
 
 $strMenuStructure = '';
 
-$plugins = new Folder();
-$plugins->getFolders($PluginsDir);
-
-foreach ($plugins->folders as $plug) {
-	$filename = $PluginsDir.$plug.'/menu.txt';
-	if(file_exists($filename)) {
-		$strMenuStructure .= implode('', file($filename));
-	}
+function parse_subsection($menuname, $name) {
+    global $OPENQRM_SERVER_BASE_DIR;
+    global $PluginsDir;
+    global $strMenuStructure;
+    $plugins = new Folder();
+    $plugins->getFolders($PluginsDir);
+    $strMenuStructure .= ".|$menuname\n";
+    foreach ($plugins->folders as $plug) {
+        $filename = $PluginsDir.$plug.'/menu.txt';
+        $plugin_config = $OPENQRM_SERVER_BASE_DIR.'/openqrm/plugins/'.$plug.'/etc/openqrm-plugin-'.$plug.'.conf';
+        if(file_exists($plugin_config)) {
+            $store = "";
+            $store = openqrm_parse_conf($plugin_config);
+            extract($store);
+            if (!strcmp($store['OPENQRM_PLUGIN_TYPE'], $name)) {
+                if(file_exists($filename)) {
+                    $strMenuStructure .= implode('', file($filename));
+                }
+            }
+        }
+    }
 }
+
+
+// define the plugin manager menu item
+$strMenuStructure .= implode('', file($PluginsDir.'aa_plugins/menu.txt'));
+
+// define the base plugin sections
+parse_subsection("Cloud", "cloud");
+parse_subsection("Deployment", "deployment");
+parse_subsection("Highavailability", "HA");
+parse_subsection("Management", "management");
+parse_subsection("Monitoring", "monitoring");
+parse_subsection("Network", "network");
+parse_subsection("Storage", "storage");
+parse_subsection("Virtualization", "virtualization");
+parse_subsection("Misc", "misc");
 
 if($strMenuStructure != '') {
 	$mid2->setMenuStructureString($strMenuStructure);

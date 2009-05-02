@@ -3,13 +3,13 @@
 #	Alt
 #	IMG
 #	Target
-.|LinuxCOE
-..|Create|plugins/linuxcoe/linuxcoe-manager.php?page=create
-..|Apply|plugins/linuxcoe/linuxcoe-manager.php?page=apply
-..|Main
-...|About|plugins/linuxcoe/linuxcoe-manager.php?page=about
-...|LinuxCOE|plugins/linuxcoe/linuxcoe-manager.php?page=main
+..|LinuxCOE
 ...|Create|plugins/linuxcoe/linuxcoe-manager.php?page=create
-...|Profiles|plugins/linuxcoe/linuxcoe-manager.php?page=profile
-...|Retrofit|plugins/linuxcoe/linuxcoe-manager.php?page=retrofit
-...|Setup|plugins/linuxcoe/linuxcoe-manager.php?page=setup
+...|Apply|plugins/linuxcoe/linuxcoe-manager.php?page=apply
+...|Main
+....|About|plugins/linuxcoe/linuxcoe-manager.php?page=about
+....|LinuxCOE|plugins/linuxcoe/linuxcoe-manager.php?page=main
+....|Create|plugins/linuxcoe/linuxcoe-manager.php?page=create
+....|Profiles|plugins/linuxcoe/linuxcoe-manager.php?page=profile
+....|Retrofit|plugins/linuxcoe/linuxcoe-manager.php?page=retrofit
+....|Setup|plugins/linuxcoe/linuxcoe-manager.php?page=setup

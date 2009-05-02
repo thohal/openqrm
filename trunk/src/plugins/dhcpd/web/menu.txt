@@ -3,5 +3,5 @@
 #	Alt
 #	IMG
 #	Target
-.|Dhcpd
-..|About|plugins/dhcpd/dhcpd-about.php
+..|Dhcpd
+...|About|plugins/dhcpd/dhcpd-about.php

@@ -3,7 +3,7 @@
 #	Alt
 #	IMG
 #	Target
-.|SSH-Terminal
-..|About|plugins/sshterm/sshterm-about.php
-..|openQRM|plugins/sshterm/sshterm-manager.php?action=login&identifier[]=0
-..|SSH-Manager|plugins/sshterm/sshterm-manager.php
+..|SSH-Terminal
+...|About|plugins/sshterm/sshterm-about.php
+...|openQRM|plugins/sshterm/sshterm-manager.php?action=login&identifier[]=0
+...|SSH-Manager|plugins/sshterm/sshterm-manager.php

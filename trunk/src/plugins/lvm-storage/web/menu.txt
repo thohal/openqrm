@@ -3,6 +3,6 @@
 #	Alt
 #	IMG
 #	Target
-.|Lvm-storage
-..|About|plugins/lvm-storage/lvm-storage-about.php
-..|Volume Groups|plugins/lvm-storage/lvm-storage-manager.php
+..|Lvm-storage
+...|About|plugins/lvm-storage/lvm-storage-about.php
+...|Volume Groups|plugins/lvm-storage/lvm-storage-manager.php

@@ -3,42 +3,42 @@
 #	Alt
 #	IMG
 #	Target
-.|Nagios3
-..|About|plugins/nagios3/nagios3-about.php
-..|Config|plugins/nagios3/nagios3-overview.php
-..|Overview|plugins/nagios3/nagios3-redir.php?re=cgi-bin/tac.cgi'
-..|Services|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?host=all'
-..|Hosts|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=hostdetail'
-..|Host-Group
-...|Host-Group|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=overview'
-...|Host-Group Summary|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=summary'
-...|Host-Group Grid|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=grid'
-..|Service-Group
-...|Service-Group|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?servicegroup=all&style=overviewall'
-...|Service-Group Summary|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?servicegroup=all&style=summary'
-...|Service-Group Grid|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?servicegroup=all&style=grid'
-..|Status-Map|plugins/nagios3/nagios3-redir.php?re='cgi-bin/statusmap.cgi?host=all'
-..|Problems
-...|Problems Service|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?host=all&servicestatustypes=28up=al'
-...|Problems Host|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12'
-...|Problems Network|plugins/nagios3/nagios3-redir.php?re='cgi-bin/outages.cgi'
-..|Comments
-...|Comments|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=3'
-...|Downtime|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=6'
-...|Comments|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=3'
-..|Reporting
-...|Reporting Trends|plugins/nagios3/nagios3-redir.php?re='cgi-bin/trends.cgi'
-...|Reporting Availability|plugins/nagios3/nagios3-redir.php?re='cgi-bin/avail.cgi'
-...|Reporting Alerts
-...|Reporting Alerts Histogram|plugins/nagios3/nagios3-redir.php?re='cgi-bin/histogram.cgi'
-...|Reporting Alerts History|plugins/nagios3/nagios3-redir.php?re='cgi-bin/history.cgi?host=allram.'
-...|Reporting Alerts Summary|plugins/nagios3/nagios3-redir.php?re='cgi-bin/summary.cgi'
-...|Reporting Notifications|plugins/nagios3/nagios3-redir.php?re='cgi-bin/notifications.cgi?contact=all'
-...|Reporting Event-Log|plugins/nagios3/nagios3-redir.php?re='cgi-bin/showlog.cgi'
-..|Configuration
-...|Configuration Process|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=0'
-...|Configuration Performance|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=4'
-...|Configuration Scheduling|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=7'
-...|Configuration Scheduling|plugins/nagios3/nagios3-redir.php?re='cgi-bin/config.cgi'
-..|Nagvis
-...|Maps|plugins/nagios3/nagios3-redir.php?re=nagvis/index.php'
+..|Nagios3
+...|About|plugins/nagios3/nagios3-about.php
+...|Config|plugins/nagios3/nagios3-overview.php
+...|Overview|plugins/nagios3/nagios3-redir.php?re=cgi-bin/tac.cgi'
+...|Services|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?host=all'
+...|Hosts|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=hostdetail'
+...|Host-Group
+....|Host-Group|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=overview'
+....|Host-Group Summary|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=summary'
+....|Host-Group Grid|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=grid'
+...|Service-Group
+....|Service-Group|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?servicegroup=all&style=overviewall'
+....|Service-Group Summary|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?servicegroup=all&style=summary'
+....|Service-Group Grid|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?servicegroup=all&style=grid'
+...|Status-Map|plugins/nagios3/nagios3-redir.php?re='cgi-bin/statusmap.cgi?host=all'
+...|Problems
+....|Problems Service|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?host=all&servicestatustypes=28up=al'
+....|Problems Host|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12'
+....|Problems Network|plugins/nagios3/nagios3-redir.php?re='cgi-bin/outages.cgi'
+...|Comments
+....|Comments|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=3'
+....|Downtime|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=6'
+....|Comments|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=3'
+...|Reporting
+....|Reporting Trends|plugins/nagios3/nagios3-redir.php?re='cgi-bin/trends.cgi'
+....|Reporting Availability|plugins/nagios3/nagios3-redir.php?re='cgi-bin/avail.cgi'
+....|Reporting Alerts
+....|Reporting Alerts Histogram|plugins/nagios3/nagios3-redir.php?re='cgi-bin/histogram.cgi'
+....|Reporting Alerts History|plugins/nagios3/nagios3-redir.php?re='cgi-bin/history.cgi?host=allram.'
+....|Reporting Alerts Summary|plugins/nagios3/nagios3-redir.php?re='cgi-bin/summary.cgi'
+....|Reporting Notifications|plugins/nagios3/nagios3-redir.php?re='cgi-bin/notifications.cgi?contact=all'
+....|Reporting Event-Log|plugins/nagios3/nagios3-redir.php?re='cgi-bin/showlog.cgi'
+...|Configuration
+....|Configuration Process|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=0'
+....|Configuration Performance|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=4'
+....|Configuration Scheduling|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=7'
+....|Configuration Scheduling|plugins/nagios3/nagios3-redir.php?re='cgi-bin/config.cgi'
+...|Nagvis
+....|Maps|plugins/nagios3/nagios3-redir.php?re=nagvis/index.php'

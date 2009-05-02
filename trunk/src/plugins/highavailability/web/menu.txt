@@ -3,6 +3,6 @@
 #	Alt
 #	IMG
 #	Target
-.|Highavailability
-..|About|plugins/highavailability/highavailability-about.php
-..|HA-Manager|plugins/highavailability/highavailability-manager.php
+..|Highavailability
+...|About|plugins/highavailability/highavailability-about.php
+...|HA-Manager|plugins/highavailability/highavailability-manager.php

@@ -3,6 +3,6 @@
 #	Alt
 #	IMG
 #	Target
-.|VMware-server
-..|About|plugins/vmware-server/vmware-server-about.php
-..|VMware Manager|plugins/vmware-server/vmware-server-manager.php
+..|VMware-server
+...|About|plugins/vmware-server/vmware-server-about.php
+...|VMware Manager|plugins/vmware-server/vmware-server-manager.php
