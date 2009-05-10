@@ -22,7 +22,7 @@ global $thisfile;
 	}
 	sleep(1);
 	//header("Location: $url");
-	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
+	echo "<meta http-equiv=\"refresh\" content=\"2; URL=$url\">";
 	exit;
 }
 
