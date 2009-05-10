@@ -523,15 +523,17 @@ function my_cloud_create_request() {
     $cloud_memory_loop=1;
     foreach ($available_memtotal_uniq as $cloud_memory) {
         if (strlen($cloud_memory)) {
-            if ($cloud_user_memory_limit != 0) {
+            if ($cloud_user_memory_limit == 0) {
                 if ($cloud_memory_loop == 1) {
                     $cloud_memory_req = $cloud_memory_req."\"$cloud_memory\"";
+                    $cloud_memory_loop++;
                 } else {
                     $cloud_memory_req = $cloud_memory_req.", \"$cloud_memory\"";
                 }
-            } else if ($cloud_user_memory_limit <= $cloud_memory) {
+            } else if ($cloud_user_memory_limit >= $cloud_memory) {
                 if ($cloud_memory_loop == 1) {
                     $cloud_memory_req = $cloud_memory_req."\"$cloud_memory\"";
+                    $cloud_memory_loop++;
                 } else {
                     $cloud_memory_req = $cloud_memory_req.", \"$cloud_memory\"";
                 }
@@ -543,15 +545,17 @@ function my_cloud_create_request() {
     $cloud_cpu_loop=1;
     foreach ($available_cpunumber_uniq as $cloud_cpu) {
         if (strlen($cloud_cpu)) {
-            if ($cloud_user_cpu_limit != 0) {
+            if ($cloud_user_cpu_limit == 0) {
                 if ($cloud_cpu_loop == 1) {
                     $cloud_cpu_req = $cloud_cpu_req."\"$cloud_cpu\"";
+                    $cloud_cpu_loop++;
                 } else {
                     $cloud_cpu_req = $cloud_cpu_req.", \"$cloud_cpu\"";
                 }
-            } else if ($cloud_user_cpu_limit <= $cloud_cpu) {
+            } else if ($cloud_user_cpu_limit >= $cloud_cpu) {
                 if ($cloud_cpu_loop == 1) {
                     $cloud_cpu_req = $cloud_cpu_req."\"$cloud_cpu\"";
+                    $cloud_cpu_loop++;
                 } else {
                     $cloud_cpu_req = $cloud_cpu_req.", \"$cloud_cpu\"";
                 }
