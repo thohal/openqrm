@@ -11,7 +11,7 @@
 <style type="text/css">
 
 .ui-progressbar-value {
-    background-image: url(img/progress.gif);
+    background-image: url(/openqrm/base/img/progress.gif);
 }
 
 #progressbar {
