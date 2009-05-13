@@ -19,6 +19,8 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 fi
 export LANG=C
+LINEBR='
+'
 
 # using the resource_id as the shelf-id
 AOE_SHELF=$resource_id
@@ -187,7 +189,7 @@ case "$LVM_COMMAND" in
 
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
-			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP
+			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP -t $LVM_IMAGE_TYPE
 		fi
 
 		;;
@@ -224,7 +226,7 @@ case "$LVM_COMMAND" in
 
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
-			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP
+			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP -t $LVM_IMAGE_TYPE
 		fi
 
 		;;
@@ -272,7 +274,7 @@ case "$LVM_COMMAND" in
 
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
-			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP
+			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP -t $LVM_IMAGE_TYPE
 		fi
 		;;
 
@@ -300,7 +302,8 @@ case "$LVM_COMMAND" in
 	post_vg)
 		echo "Posting current volume group status to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.vg.stat
-		vgdisplay > $STORAGE_STATUS_TMP
+		vgs | grep -v VFree | sed -e "s/ \{1,\}//" > $STORAGE_STATUS_TMP
+        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
 		if ! wget -q -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/lvm-storage/lvm-storage-action.php?lvm_storage_command=get_storage; then
 			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!" | logger
@@ -312,32 +315,28 @@ case "$LVM_COMMAND" in
 		echo "Posting current $LVM_IMAGE_TYPE logic volume status to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.$LVM_STORAGE_SERVER_VOLUME_GROUP.lv.stat
 		> $STORAGE_STATUS_TMP
-
-		for LVOL in `lvdisplay | grep "LV Name" | awk {' print $3 '}`; do
-			LVOL_SHORT=`basename $LVOL`
+        for LVOL in `lvs $LVM_STORAGE_SERVER_VOLUME_GROUP | grep -v LSize | sed -e "s/ \{1,\}//" | awk {' print $1 '}`; do
 			case $LVM_IMAGE_TYPE in
 				lvm-nfs-deployment)
-					exportfs -v | awk {' print $1 '} | grep -v "<.*>" > /tmp/$STORAGE_STATUS_TMP
-					if grep $LVOL_SHORT /tmp/$STORAGE_STATUS_TMP 1>/dev/null; then
-						lvdisplay $LVOL >> $STORAGE_STATUS_TMP
+					if grep $LVOL /etc/exports 1>/dev/null; then
+						lvs $LVM_STORAGE_SERVER_VOLUME_GROUP/$LVOL | grep -v LSize | sed -e "s/ \{1,\}//" >> $STORAGE_STATUS_TMP
 					fi
-					rm -f /tmp/$STORAGE_STATUS_TMP
 					;;
 
 				lvm-iscsi-deployment)
-					if grep $LVOL_SHORT $IETDCONF 1>/dev/null; then
-						lvdisplay $LVOL >> $STORAGE_STATUS_TMP
+					if grep $LVOL $IETDCONF 1>/dev/null; then
+						lvs $LVM_STORAGE_SERVER_VOLUME_GROUP/$LVOL | grep -v LSize | sed -e "s/ \{1,\}//" >> $STORAGE_STATUS_TMP
 					fi					
 					;;
 
 				lvm-aoe-deployment)
-					if grep $LVOL_SHORT $VBLADECONF 1>/dev/null; then
-						lvdisplay $LVOL >> $STORAGE_STATUS_TMP
+					if grep $LVOL $VBLADECONF 1>/dev/null; then
+						lvs $LVM_STORAGE_SERVER_VOLUME_GROUP/$LVOL | grep -v LSize | sed -e "s/ \{1,\}//" >> $STORAGE_STATUS_TMP
 					fi
 					;;
 			esac
 		done
-
+        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
 		if ! wget -q -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/lvm-storage/lvm-storage-action.php?lvm_storage_command=get_storage; then
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!" | logger
