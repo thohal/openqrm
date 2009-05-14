@@ -5,3 +5,5 @@
 #	Target
 ..|Local-Storage
 ...|About|plugins/local-storage/local-storage-about.php
+...|Storage-Manager|plugins/local-storage/local-storage-manager.php
+...|Grab|plugins/local-storage/local-storage-grab.php

@@ -51,6 +51,7 @@
 OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
 . $OPENQRM_RESOURCE_PARAMETER_FILE
 eval $image_deployment_parameter
+eval $resource_capabilities
 export OPENQRM_SERVER_BASE_DIR=$resource_basedir
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 
@@ -58,83 +59,93 @@ export OPENQRM_SERVER_BASE_DIR=$resource_basedir
 if [ "$IMAGE_NFS_MOUNT_OPTIONS" != "" ]; then
 	IMAGE_NFS_MOUNT_OPTIONS=",$IMAGE_NFS_MOUNT_OPTIONS"
 fi
-# default to ext3
-if [ "$IMAGE_INSTALL_FROM_LOCAL_FS_TYPE" == "" ]; then
-	IMAGE_INSTALL_FROM_LOCAL_FS_TYPE="ext3"
-fi
-if [ "$IMAGE_TRANSFER_TO_LOCAL_FS_TYPE" == "" ]; then
-	IMAGE_TRANSFER_TO_LOCAL_FS_TYPE="ext3"
-fi
 
 #######################################################################
 # required functions ##################################################
 #######################################################################
 
 function mount_rootfs() {
+	modprobe sunrpc 1>/dev/null 2>&1
+	modprobe lockd 1>/dev/null 2>&1
+	modprobe nfs 1>/dev/null 2>&1
 	modprobe ext3 1>/dev/null 2>&1
+	rm -rf /dev/null
+	mknod -m 666 /dev/null c 1 3
+	openqrm_portmap_start
 
-	if  [ "$IMAGE_GRAB_TO" != "" ]; then
-		grab_rootfs
-	else
-		echo "local-storage: Skipping grab phase"
-	fi
-	if  [ "$IMAGE_INSTALL_FROM" != "" ]; then
-		install_rootfs
-	else
-		echo "local-storage: Skipping install phase"
-	fi
-
-	if ! mount -t $image_rootfstype -o rw $image_rootdevice /mnt; then
-		echo "ERROR: Could not mount $image_rootdevice / $image_rootfstype"
+	if ! mount -t nfs -o rw,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$image_rootdevice /mnt; then
+		echo "ERROR: Could not mount $image_storage_server_ip:$image_rootdevice by nfs"
 		# give a shell for the admin
 		/bin/bash
 	else
-		echo "local-storage: Mounted $image_rootdevice rw"
+		echo "local-storage: Mounted $image_storage_server_ip:$image_rootdevice rw"
 	fi
+    echo "local-storage: Getting partimage util"
+    cd /
+    if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/partimage-ng.tgz; then
+		echo "local-storage: Error downloading partimage-ng.tgz package"
+        /bin/bash
+    fi
+    tar -xzf partimage-ng.tgz
+    rm -f partimage-ng.tgz
 
-	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
-		install_rootfs_from_nfs
-	else
-		echo "local-storage: Skipping install phase"
-	fi
-	if  [ "$IMAGE_TRANSFER_TO_NFS" != "" ]; then
-		transfer_rootfs_to_nfs
-	else
-		echo "local-storage: Skipping transfer-to-nfs phase"
-	fi
-	if  [ "$IMAGE_INSTALL_FROM_LOCAL" != "" ]; then
-		install_rootfs_from_local
-	else
-		echo "local-storage: Skipping install from local phase"
-	fi
-	if  [ "$IMAGE_TRANSFER_TO_LOCAL" != "" ]; then
-		transfer_rootfs_to_local
-	else
-		echo "local-storage: Skipping transform to local phase"
-	fi
+    # grab or restore ?
+    if [ "$LOCAL_STORAGE_GRAB" != "" ]; then
+        # grab
+        echo "local-storage: Starting grab-phase. Transfering disk-content to $image_name"
+        # grab all disks
+        for HARD_DISK in `cat /proc/partitions | grep -v major | sed -e '/^$/d' | awk {' print $4 '} | grep -v [0-9]`; do
+            echo "local-storage: Processing device /dev/$HARD_DISK"
+            INAME="/mnt/"$image_name"_x_"$HARD_DISK"_ping.img"
+            BSNAME="/mnt/"$image_name"_x_"$HARD_DISK"_bs.img"
+            partimage-ng -b 32 save /dev/$HARD_DISK $INAME
+            echo "local-storage: Saving the MBR of /dev/$HARD_DISK"
+            dd if=/dev/$HARD_DISK of=$BSNAME bs=512 count=1
+        done
+        echo "local-storage: Umounting image-store"
+        umount /mnt
+
+        # send token to the openQRM server to stop the grab-appliance
+        # TODO
+
+
+    else
+        # restore -> active deployment
+
+        # send token to the openQRM server to stop the grab-appliance
+        # TODO
+
+
+        echo "local-storage: Starting restore of $image_name"
+        for PING_IMAGE in `ls /mnt/$image_name_x_*_ping.img`; do
+            FP_INAME=$image_name"_x_"
+            LP_INAME="_ping.img"
+            PING_DEV=`echo $PING_IMAGE | sed -e "s/.*$FP_INAME//g" | sed -e "s/$LP_INAME//g"`
+            echo "local-storage: Restoring $PING_IMAGE to /dev/$PING_DEV"
+            partimage-ng restore $PING_IMAGE /dev/$PING_DEV
+            BSNAME=`echo $PING_IMAGE | sed -e "s/_ping/_bs/g"`
+            echo "local-storage: Restoring bootsector $BSNAME to /dev/$PING_DEV"
+            dd if=$BSNAME of=/dev/$PING_DEV bs=512 count=1
+        done
+        echo "local-storage: Umounting image-store"
+        umount /mnt
+
+        # reboot
+
+    fi
+
+    /bin/bash
 
 }
 
 
 function remount_rootfs() {
-
-	# remont /mnt ro
-	while ! mount -t $image_rootfstype -o ro,remount $image_rootdevice /mnt; do
-		echo -n "."
-		sleep 1
-		REMOUNT_LOOP=$[ REMOUNT_LOOP + 1 ]
-		if [ "$REMOUNT_LOOP" == "10" ]; then
-			echo "ERROR: local-storage could not remount /mnt "
-			/bin/bash
-		fi
-	done
-	echo "local-storage: Re-mounted $image_rootdevice ro"
+    :
 }
 
 
 function create_fstab() {
-	rm -f $IMAGE_FSTAB
-	echo "$image_rootdevice   /   local  defaults   0 0" >> $IMAGE_FSTAB
+    :
 }
 
 
@@ -146,16 +157,6 @@ function create_fstab() {
 # using partimage from grabbing
 function grab_rootfs() {
 	echo "local-storage: Grabbing $resource_image from $image_rootdevice to image_storage_server_ip:$IMAGE_GRAB_TO"
-	# getting partimage
-	if [ ! -x /sbin/partimage ]; then
-		cd /sbin
-		echo "local-storage: Getting partimage util"
-		if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/partimage; then
-			/bin/bash
-		fi
-		chmod +x partimage
-		cd /
-	fi
 	# mounting target location
 	modprobe sunrpc 1>/dev/null 2>&1
 	modprobe lockd 1>/dev/null 2>&1
@@ -229,89 +230,5 @@ function install_rootfs() {
 	openqrm_portmap_stop
 		
 }
-
-
-
-function install_rootfs_from_nfs() {
-	modprobe sunrpc 1>/dev/null 2>&1
-	modprobe lockd 1>/dev/null 2>&1
-	modprobe nfs 1>/dev/null 2>&1
-	rm -rf /dev/null
-	mknod -m 666 /dev/null c 1 3
-	openqrm_portmap_start
-	STORAGE_ID=`echo $IMAGE_INSTALL_FROM_NFS | cut -d':' -f1`
-	IMAGE_INSTALL_FROM_NFS=`echo $IMAGE_INSTALL_FROM_NFS | cut -d':' -f2-`
-	echo "local-storage: Installing $resource_image from $IMAGE_INSTALL_FROM_NFS ($STORAGE_ID)"
-	mkdir -p /mnt2
-	if ! mount -t nfs -o ro$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_INSTALL_FROM_NFS /mnt2; then
-		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM_NFS by nfs"
-		# give a shell for the admin
-		/bin/bash
-	fi
-	echo "local-storage: Starting install-from-nfs phase. This can take a while ...."
-	rsync -aq /mnt2/* /mnt/
-	echo "local-storage: Install-from-nfs phase finished. Continuing boot-up"
-	umount /mnt2
-	rmdir /mnt2
-	openqrm_portmap_stop
-}
-
-
-function transfer_rootfs_to_nfs() {
-	modprobe sunrpc 1>/dev/null 2>&1
-	modprobe lockd 1>/dev/null 2>&1
-	modprobe nfs 1>/dev/null 2>&1
-	rm -rf /dev/null
-	mknod -m 666 /dev/null c 1 3
-	openqrm_portmap_start
-	STORAGE_ID=`echo $IMAGE_TRANSFER_TO_NFS | cut -d':' -f1`
-	IMAGE_TRANSFER_TO_NFS=`echo $IMAGE_TRANSFER_TO_NFS | cut -d':' -f2-`
-	echo "local-storage: Transfering $resource_image to $IMAGE_TRANSFER_TO_NFS ($STORAGE_ID)"
-	mkdir -p /mnt2
-	if ! mount -t nfs -o rw$IMAGE_NFS_MOUNT_OPTIONS $IMAGE_TRANSFER_TO_NFS /mnt2; then
-		echo "ERROR: Could not mount $IMAGE_TRANSFER_TO_NFS by nfs"
-		# give a shell for the admin
-		/bin/bash
-	fi
-	echo "local-storage: Starting transfer-to-nfs phase. This can take a while ...."
-	rsync -aq /mnt/* /mnt2/
-	echo "local-storage: Transfer-to-nfs phase finished. Continuing boot-up"
-	umount /mnt2
-	rmdir /mnt2
-	openqrm_portmap_stop
-}
-
-
-function install_rootfs_from_local() {
-	modprobe ext3 1>/dev/null 2>&1
-	mkdir -p /mnt2
-	if ! mount -t $IMAGE_INSTALL_FROM_LOCAL_FS_TYPE -o ro $IMAGE_INSTALL_FROM_LOCAL /mnt2; then
-		echo "ERROR: Could not mount $IMAGE_INSTALL_FROM_LOCAL / $IMAGE_INSTALL_FROM_LOCAL_FS_TYPE"
-		# give a shell for the admin
-		/bin/bash
-	fi
-	echo "local-storage: Starting install-to-local phase. This can take a while ...."
-	rsync -aq /mnt2/* /mnt/
-	echo "local-storage: Install-to-local phase finished. Continuing boot-up"
-	umount /mnt2
-	rmdir /mnt2
-}
-
-
-function transfer_rootfs_to_local() {
-	modprobe ext3 1>/dev/null 2>&1
-	mkdir -p /mnt2
-	if ! mount -t $IMAGE_TRANSFER_TO_LOCAL_FS_TYPE -o rw $IMAGE_TRANSFER_TO_LOCAL /mnt2; then
-		echo "ERROR: Could not mount $IMAGE_TRANSFER_TO_LOCAL / $IMAGE_TRANSFER_TO_LOCAL_FS_TYPE"
-		# give a shell for the admin
-		/bin/bash
-	fi
-	echo "local-storage: Starting transfer-to-local phase. This can take a while ...."
-	rsync -aq /mnt/* /mnt2/
-	echo "local-storage: Transfer-to-local phase finished. Continuing boot-up"
-	umount /mnt2
-	rmdir /mnt2
-}
-
 
 

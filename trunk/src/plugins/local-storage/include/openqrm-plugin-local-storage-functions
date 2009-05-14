@@ -1,3 +1,147 @@
 #!/bin/bash
 # this is the functions file for the local-storage-plugin
 
+# some definitions
+DEFAULT_IMAGE_SIZE=5000
+LOCAL_MGMT_LOCK_FILE=/var/run/local-storage/local-storage-plugin.lock
+LOCAL_MGMT_LOCK_DELAY=5
+LOCAL_MGMT_LOCK_RETRY=100
+LOCAL_MGMT_LOCK_TIMEOUT=500
+MAX_UMOUNT_LOOP=5
+LV_SIZE_DEFAULT=5000
+
+################ common local-storage functions
+
+# logs for local_storage
+function local_storage_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "local-storage plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function local_storage_lock() {
+	local COMMAND=$1
+	local RET=1
+
+	if [ ! -d `dirname $LOCAL_MGMT_LOCK_FILE` ]; then
+		mkdir -p `dirname $LOCAL_MGMT_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $LOCAL_MGMT_LOCK_DELAY -r $LOCAL_MGMT_LOCK_RETRY -l $LOCAL_MGMT_LOCK_TIMEOUT $LOCAL_MGMT_LOCK_FILE
+				RET=$?
+				local_storage_log local_storage_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $LOCAL_MGMT_LOCK_FILE
+				RET=$?
+				local_storage_log local_storage_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			local_storage_log local_storage_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;
+	esac
+}
+
+
+
+################ local-storage functions
+
+################ local-nfs ###################################
+
+
+function manage_fstab() {
+	case "$1" in
+		add)
+			echo "/dev/$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME    /$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME      ext3    defaults        1 1" >> /etc/fstab
+			;;
+		remove)
+			sed -i -e "s#^/dev/$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME.*##g" /etc/fstab
+			;;
+	esac
+}
+
+
+function manage_nfs() {
+	case "$1" in
+		add)
+			OPENQRM_SERVER=$3
+			if [ "$2" != "snap" ]; then
+				local_storage_log manage_nfs "NOTICE: creating ext3 filesytem on /dev/$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME"
+				if ! mkfs.ext3 -F /dev/$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME; then
+					local_storage_log local-storage-functions "ERROR: Could not create ext3 filesytem on /dev/$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME"
+					manage_fstab remove
+					local_storage_lock release
+					return 1
+				fi
+			fi
+			mkdir -p /$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME
+			if ! `mount /dev/$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME /$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME`; then
+				local_storage_log local-storage-functions "ERROR: Could not mount /dev/$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME at /$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME"
+				manage_fstab remove
+				local_storage_lock release
+				return 1
+			fi
+			echo "/$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME	$OPENQRM_SERVER(rw,insecure,no_root_squash,async)" >> /etc/exports
+            # mark it as local-storage location
+            touch /$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME/local-storage
+			if [ -x /etc/init.d/nfs ]; then
+				/etc/init.d/nfs reload
+			elif [ -x /etc/init.d/nfs-kernel-server ]; then
+				/etc/init.d/nfs-kernel-server reload
+			else
+				local_storage_log local-storage-functions "WARNING: Could not find nfs-server init script !"
+				local_storage_lock release
+				return 1
+			fi
+			;;
+		remove)
+			sed -i -e "s#^/$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME.*##g" /etc/exports
+			if [ -x /etc/init.d/nfs ]; then
+				/etc/init.d/nfs reload
+			elif [ -x /etc/init.d/nfs-kernel-server ]; then
+				/etc/init.d/nfs-kernel-server reload
+			else
+				local_storage_log local-storage-functions "WARNING: Could not find nfs-server init script !"
+				local_storage_lock release
+				return 1
+			fi
+			while ! `umount /$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME`; do
+				echo "ERROR: Could not umount /$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME, trying again ..."
+				local_storage_log local-storage-functions "ERROR: Could not umount /$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME, trying again ..."
+				if [ "$UMOUNT_LOOP" = "$MAX_UMOUNT_LOOP" ]; then
+					echo "ERROR: Could not umount /$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME. Giving up !!!" 2>1
+					local_storage_log local-storage-functions "ERROR: Could not umount /$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME. Giving up !!!"
+					manage_fstab remove
+					local_storage_lock release
+					return 20
+				fi
+				UMOUNT_LOOP=$(( UMOUNT_LOOP + 1 ))
+				sleep 2
+			done
+			rmdir /$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME
+			;;
+		auth)
+			AUTH_IP=$2
+			sed -i -e "s#^$LOCAL_IMAGE_ROOTDEVICE.*#$LOCAL_IMAGE_ROOTDEVICE	$AUTH_IP(rw,insecure,no_root_squash,async)#g" /etc/exports
+			sed -i '/^$/d' /etc/exports
+			if [ -x /etc/init.d/nfs ]; then
+				/etc/init.d/nfs reload
+			elif [ -x /etc/init.d/nfs-kernel-server ]; then
+				/etc/init.d/nfs-kernel-server reload
+			else
+				local_storage_log local-storage-functions "WARNING: Could not find nfs-server init script !"
+				local_storage_lock release
+				return 1
+			fi
+			;;
+	esac
+}
+
+

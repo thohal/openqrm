@@ -1,0 +1,294 @@
+#!/bin/bash
+
+# this script automatically manages nfs and iscsi on local
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/include/openqrm-plugin-local-storage-functions
+OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
+if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+	OPENQRM_EXEC_PORT=$resource_execdport
+elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+	resource_id=0
+	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+fi
+export LANG=C
+LINEBR='
+'
+
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+
+function local_storage_usage() {
+	echo "Usage : $0 add/remove/snap/list <-n image-name> <-v volume-group>"
+	echo "             [-m size in MB]"
+	echo "             [-s image-snapshot-name]"
+	echo "        $0 auth <-r image-rootdevice> <-i authidentifier>"
+	echo "        $0 post_vg <-u username> <-p password>"
+	echo "        $0 post_lv <-u username> <-p password> <-v volume-group>"
+	echo "        $0 post_identifier <-u username> <-p password>"
+	exit 1
+}
+
+
+
+LOCAL_COMMAND=$1
+shift
+
+while [ $# -ne 0 ]; do
+	case "$1" in
+		-n)
+			LOCAL_IMAGE_NAME=$2
+			shift
+			;;
+		-m)
+			LOCAL_IMAGE_SIZE=$2
+			shift
+			;;
+		-s)
+			LOCAL_IMAGE_SNAPSHOT_NAME=$2
+			shift
+			;;
+		-i)
+			LOCAL_IMAGE_AUTH=$2
+			shift
+			;;
+		-r)
+			LOCAL_IMAGE_ROOTDEVICE=$2
+			shift
+			;;
+		-u)
+			LOCAL_OPENQRM_USERNAME=$2
+			shift
+			;;
+		-p)
+			LOCAL_OPENQRM_PASSWORD=$2
+			shift
+			;;
+		-v)
+			LOCAL_STORAGE_SERVER_VOLUME_GROUP=$2
+			shift
+			;;
+		*)
+			echo "ERROR: Free commandline arguments are not allowed"
+			local_storage_usage
+			exit 6
+			;;
+	esac
+	shift
+done
+
+
+
+
+# main
+if [ "$LOCAL_COMMAND" == "" ]; then
+	local_storage_usage
+fi
+
+if [ "$LOCAL_COMMAND" == "post_lv" ] || [ "$LOCAL_COMMAND" == "post_vg" ] || [ "$LOCAL_COMMAND" == "post_identifier" ]; then
+		if [ "$LOCAL_OPENQRM_USERNAME" == "" ]; then
+			local_storage_usage
+		fi
+		if [ "$LOCAL_OPENQRM_PASSWORD" == "" ]; then
+			local_storage_usage
+		fi
+		if [ "$LOCAL_COMMAND" == "post_lv" ]; then
+			if [ "$LOCAL_STORAGE_SERVER_VOLUME_GROUP" == "" ]; then
+				local_storage_usage
+			fi
+		fi
+
+else
+
+	if [ "$LOCAL_COMMAND" != "list" ] && [ "$LOCAL_COMMAND" != "auth" ]; then
+		if [ "$LOCAL_IMAGE_NAME" == "" ]; then
+			local_storage_usage
+		fi
+		if [ "$LOCAL_STORAGE_SERVER_VOLUME_GROUP" == "" ]; then
+			local_storage_usage
+		fi
+	fi
+fi
+# load required local modules if needed
+if ! grep dm_mod /proc/modules 1>/dev/null; then
+	modprobe dm-mod 1>/dev/null
+	modprobe dm-snapshot 1>/dev/null
+	# give time to settle
+	sleep 2
+fi
+
+if [ "$LOCAL_COMMAND" != "list" ] && [ "$LOCAL_COMMAND" != "post_vg" ] && [ "$LOCAL_COMMAND" != "post_identifier" ] && [ "$LOCAL_COMMAND" != "auth" ]; then
+	# check if volume group exists
+	if ! `vgdisplay | grep $LOCAL_STORAGE_SERVER_VOLUME_GROUP 1>/dev/null`; then
+		echo "ERROR: Could not find volume-group $LOCAL_STORAGE_SERVER_VOLUME_GROUP on the storage-server"
+		exit 1
+	fi
+fi
+
+case "$LOCAL_COMMAND" in
+
+	add)
+
+		if [ "$LOCAL_IMAGE_SIZE" == "" ]; then
+			LOCAL_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
+			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
+		fi
+		export LOCAL_IMAGE_SIZE
+		echo -n "Creating logical volume $LOCAL_IMAGE_NAME size $LOCAL_IMAGE_SIZE MB using volume group $LOCAL_STORAGE_SERVER_VOLUME_GROUP"
+		lvcreate -L$LOCAL_IMAGE_SIZE -n$LOCAL_IMAGE_NAME $LOCAL_STORAGE_SERVER_VOLUME_GROUP
+
+        # we mount them and add to exports
+        echo "Detected NFS-image. Mounting and adding $LOCAL_IMAGE_NAME to /etc/fstab + /etc/exports"
+        local_storage_lock aquire
+        manage_fstab add
+        manage_nfs add regular $OPENQRM_SERVER_IP
+        local_storage_lock release
+
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$LOCAL_OPENQRM_USERNAME" != "" ] && [ "$LOCAL_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_lv -u $LOCAL_OPENQRM_USERNAME -p $LOCAL_OPENQRM_PASSWORD -v $LOCAL_STORAGE_SERVER_VOLUME_GROUP
+		fi
+
+		;;
+
+	remove)
+
+		echo -n "Removing logical volume $LOCAL_IMAGE_NAME on volume group $LOCAL_STORAGE_SERVER_VOLUME_GROUP"
+
+        echo "Detected NFS-image. Removing from /etc/exports"
+        local_storage_lock aquire
+        manage_nfs remove
+        manage_fstab remove
+        local_storage_lock release
+		# give time to settle
+		sync
+		sleep 2
+		lvchange -a n /dev/$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME
+		lvremove -f /dev/$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME
+
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$LOCAL_OPENQRM_USERNAME" != "" ] && [ "$LOCAL_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_lv -u $LOCAL_OPENQRM_USERNAME -p $LOCAL_OPENQRM_PASSWORD -v $LOCAL_STORAGE_SERVER_VOLUME_GROUP
+		fi
+
+		;;
+
+	snap)
+		if [ "$LOCAL_IMAGE_SNAPSHOT_NAME" == "" ]; then
+			echo "ERROR: Please give a name for the snapshot using the -s cmdline parmeter"
+			echo
+			local_storage_usage
+		fi
+		if [ "$LOCAL_IMAGE_SIZE" == "" ]; then
+			LOCAL_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
+			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
+		fi
+		export LOCAL_IMAGE_SIZE
+
+		# check that source fs-images exist
+		if ! `lvdisplay /dev/$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME 1>/dev/null`; then
+			echo "ERROR: Could not find /dev/$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME on the storage-server"
+			exit 1
+		fi
+		echo -n "Creating snapshot size $LOCAL_IMAGE_SIZE from logical volume $LOCAL_IMAGE_NAME -> $LOCAL_IMAGE_SNAPSHOT_NAME"
+		lvcreate --size $LOCAL_IMAGE_SIZE""m --snapshot --name $LOCAL_IMAGE_SNAPSHOT_NAME /dev/$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LOCAL_IMAGE_NAME
+		export LOCAL_IMAGE_NAME=$LOCAL_IMAGE_SNAPSHOT_NAME
+
+        echo "Detected NFS-image. Mounting and adding $IMAGE_NAME to /etc/fstab + /etc/exports"
+        local_storage_lock aquire
+        manage_fstab add
+        manage_nfs add snap $OPENQRM_SERVER_IP
+        local_storage_lock release
+
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$LOCAL_OPENQRM_USERNAME" != "" ] && [ "$LOCAL_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_lv -u $LOCAL_OPENQRM_USERNAME -p $LOCAL_OPENQRM_PASSWORD -v $LOCAL_STORAGE_SERVER_VOLUME_GROUP
+		fi
+		;;
+
+	auth)
+		echo "Authenticating $LOCAL_IMAGE_TYPE image $LOCAL_IMAGE_ROOTDEVICE to $LOCAL_IMAGE_AUTH"
+        local_storage_lock aquire
+        manage_nfs auth $LOCAL_IMAGE_AUTH
+        local_storage_lock release
+		;;
+
+	list)
+		lvs
+		;;
+	post_vg)
+		echo "Posting current volume group status to the openQRM-server"
+		STORAGE_STATUS_TMP=$resource_id.vg.stat
+		vgs | grep -v VFree | sed -e "s/ \{1,\}//" > $STORAGE_STATUS_TMP
+        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
+		if ! wget -q -O /dev/null --http-user=$LOCAL_OPENQRM_USERNAME --http-password=$LOCAL_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/local-storage/local-storage-action.php?local_storage_command=get_storage; then
+			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!"
+			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!" | logger
+		fi
+		rm -f $STORAGE_STATUS_TMP
+		rm -f $STORAGE_STATUS_TMP.post
+		;;
+	post_lv)
+		echo "Posting current $LOCAL_IMAGE_TYPE logic volume status to the openQRM-server"
+		STORAGE_STATUS_TMP=$resource_id.$LOCAL_STORAGE_SERVER_VOLUME_GROUP.lv.stat
+		> $STORAGE_STATUS_TMP
+        for LVOL in `lvs $LOCAL_STORAGE_SERVER_VOLUME_GROUP | grep -v LSize | sed -e "s/ \{1,\}//" | awk {' print $1 '}`; do
+            if grep $LVOL /etc/exports 1>/dev/null; then
+                # is this a local-storage location ?
+                if [ -f /$LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LVOL/local-storage ]; then
+                    lvs $LOCAL_STORAGE_SERVER_VOLUME_GROUP/$LVOL | grep -v LSize | sed -e "s/ \{1,\}//" >> $STORAGE_STATUS_TMP
+                fi
+            fi
+		done
+        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
+		if ! wget -q -O /dev/null --http-user=$LOCAL_OPENQRM_USERNAME --http-password=$LOCAL_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/local-storage/local-storage-action.php?local_storage_command=get_storage; then
+			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!"
+			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!" | logger
+		fi
+		rm -f $STORAGE_STATUS_TMP
+		rm -f $STORAGE_STATUS_TMP.post
+		;;
+	post_identifier)
+		echo "Posting current $LOCAL_IMAGE_TYPE logical volume identifier to the openQRM-server"
+		STORAGE_STATUS_TMP=$resource_id.lv.local-storage.ident
+		> $STORAGE_STATUS_TMP
+
+		for LVOL in `lvdisplay | grep "LV Name" | awk {' print $3 '}`; do
+			LVOL_SHORT=`basename $LVOL`
+            exportfs -v | awk {' print $1 '} | grep -v "<.*>" > /tmp/$STORAGE_STATUS_TMP
+            if grep $LVOL_SHORT /tmp/$STORAGE_STATUS_TMP 1>/dev/null; then
+                EXPORT_PATH=`echo $LVOL | sed -e "s#^/dev##g"`
+                # is this a local-storage location ?
+                if [ -f $EXPORT_PATH/local-storage ]; then
+                    echo "$LVOL,$EXPORT_PATH"
+                    echo "$LVOL,$EXPORT_PATH" >> $STORAGE_STATUS_TMP
+                fi
+            fi
+            rm -f /tmp/$STORAGE_STATUS_TMP
+		done
+
+		if ! wget -q -O /dev/null --http-user=$LOCAL_OPENQRM_USERNAME --http-password=$LOCAL_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/local-storage/local-storage-action.php?local_storage_command=get_ident; then
+			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!"
+			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!" | logger
+		fi
+		rm -f $STORAGE_STATUS_TMP
+		rm -f $STORAGE_STATUS_TMP.post
+		;;
+	*)
+		local_storage_usage
+		;;
+
+
+esac
+
