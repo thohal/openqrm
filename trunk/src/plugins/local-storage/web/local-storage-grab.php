@@ -46,7 +46,8 @@ require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
-
+// special local-storage classes
+require_once "$RootDir/plugins/local-storage/class/localstoragestate.class.php";
 
 $resource_id = htmlobject_request('resource_id');
 $action=htmlobject_request('action');
@@ -74,22 +75,13 @@ function redirect_image($strMsg, $resource_id, $image_id) {
 }
 
 // function to set the resource capabilities
-function set_capabilities($res_id, $cmd, $key, $value) {
+function set_res_capabilities($res_id, $cmd, $key, $value) {
     $resource = new resource();
     $resource->get_instance_by_id($res_id);
 
     switch ($cmd) {
         case 'set':
             $resource_fields["resource_capabilities"] = "$resource->capabilities $key='$value'";
-            break;
-        case 'del':
-            $olds = str_replace("$key='", '', $value);
-            $nspos = strpos($olds, "'");
-            $oldt = substr($olds, 0, $nspos);
-            $oldstr = "$key='$oldt'";
-            $newstr = "";
-            $new_resource_caps = str_replace($oldstr, $newstr, $value);
-            $resource_fields["resource_capabilities"] = "$new_resource_caps";
             break;
     }
     $resource->update_info($res_id, $resource_fields);
@@ -142,7 +134,7 @@ if(htmlobject_request('redirect') != 'yes') {
                         $resource->get_instance_by_id($resource_id);
                         // create a token for the grab
                         $grab_token = $image->generatePassword(10);
-                        set_capabilities($resource_id, "set", "LOCAL_STORAGE_GRAB", $grab_token);
+                        set_res_capabilities($resource_id, "set", "LOCAL_STORAGE_GRAB", $grab_token);
                         // create a new grab appliance
                         $appliance_name = "grab-".$resource_id."-".$id."-x";
                         $appliance_id = openqrm_db_get_free_id('appliance_id', $APPLIANCE_INFO_TABLE);
@@ -168,6 +160,18 @@ if(htmlobject_request('redirect') != 'yes') {
                         // wait for appliance being added
                         sleep(1);
                         $appliance->get_instance_by_id($appliance_id);
+                        // add apppliance + token to db
+                        $local_storage_state = new localstoragestate();
+                        $local_storage_state_id = openqrm_db_get_free_id('ls_id', $local_storage_state->_db_table);
+                        // prepare array to add appliance
+                        $ar_ls_state = array(
+                            'ls_id' => $local_storage_state_id,
+                            'ls_appliance_id' => $appliance->id,
+                            'ls_token' => $grab_token,
+                            'ls_state' => 0,
+                        );
+                        $local_storage_state->add($ar_ls_state);
+                        // finally start the appliance + grab phase
                         $appliance->start();
                         $redir_msg="Created temporary grab-appliance $appliance_name. Starting the grab-phase ...";
                         redirect_image($redir_msg, $resource_id, $id);

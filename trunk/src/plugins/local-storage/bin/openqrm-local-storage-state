@@ -1,0 +1,13 @@
+#!/bin/bash
+# This function re-writes a resources pxe config to localboot
+
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+
+OPENQRM_RESOURCE_ID=$1
+OPENQRM_RESOURCE_MAC=$2
+OPENQRM_RESOURCE_IP=$3
+echo "local-storage-state: Setting resource $OPENQRM_RESOURCE_ID to localboot" | logger
+openqrm_server_set_boot local $OPENQRM_RESOURCE_ID $OPENQRM_RESOURCE_MAC $OPENQRM_RESOURCE_IP
+
+

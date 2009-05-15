@@ -8,7 +8,7 @@ $source_tab=$_REQUEST["source_tab"];
 
 <html>
 <head>
-<title>openQRM Lvm-storage actions</title>
+<title>openQRM Local-storage actions</title>
 <meta http-equiv="refresh" content="0; URL=local-storage-manager.php?currenttab=<?php echo $source_tab; ?>&local_storage_id=<?php echo $local_storage_id; ?>&local_volume_group=<?php echo $local_volume_group; ?>&strMsg=Processing <?php echo $local_storage_command; ?> on storage <?php echo $local_storage_id; ?>">
 </head>
 <body>
@@ -80,6 +80,26 @@ unset($local_storage_fields["local_storage_command"]);
 			fwrite($fout, $filedata);
 			fclose($fout);
 			break;
+
+		case 'init':
+            // create local_storage_state
+            // -> local_storage_state
+            // ls_id INT(5)
+            // ls_appliance_id INT(5)
+            // ls_token VARCHAR(50)
+            // ls_state INT(5)
+            $create_local_storage_state = "create table local_storage_state(ls_id INT(5), ls_appliance_id INT(5), ls_token VARCHAR(50), ls_state INT(5))";
+			$db=openqrm_get_db_connection();
+			$recordSet = &$db->Execute($create_local_storage_state);
+            break;
+
+		case 'uninstall':
+            // remove local_storage_state
+            $remove_local_storage_state = "drop table local_storage_state;";
+			$db=openqrm_get_db_connection();
+			$recordSet = &$db->Execute($remove_local_storage_state);
+            break;
+
 
 		default:
 			$event->log("$local_storage_command", $_SERVER['REQUEST_TIME'], 3, "local-storage-action", "No such local-storage command ($local_storage_command)", "", "", 0, 0, 0);

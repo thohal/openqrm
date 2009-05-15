@@ -1,0 +1,72 @@
+#!/bin/bash
+
+export `eval cat /proc/cmdline`
+. /var/openqrm/openqrm-resource.conf
+eval $resource_capabilities
+export OPENQRM_SERVER_BASE_DIR=$resource_basedir
+. $resource_basedir/openqrm/include/openqrm-functions
+# for including the package functions
+export OPENQRM_SOURCE_DIR="$resource_basedir/openqrm/"
+. $resource_basedir/openqrm/include/openqrm-package-functions
+
+
+function local_storage_start() {
+	local_storage_stop 1>/dev/null 2>&1
+
+    # are we still on the initrd ?
+    # do not run on idle resources
+    if [ "$resource_image" == "idle" ] && [ -f /etc/initrd-devices.conf ]; then
+    	echo "Starting the openQRM local_storage-plugin (initrd)"
+        # check if we are at the end of a grab phase
+        if [ "$LOCAL_STORAGE_GRAB" != "" ]; then
+        	echo "local-storage: Detected 'after-grab' phase"
+            # send token to the openQRM server to remove the grab-appliance + resource capability
+            echo "local-storage: Sending 'after-grab' to the openQRM server"
+            if ! wget -q "http://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=after-grab&token=$LOCAL_STORAGE_GRAB"; then
+                echo "local-storage: Error sending 'after-grab' to the openQRM server"
+                /bin/bash
+            fi
+
+        elif [ "$LOCAL_STORAGE_DEPLOYMENT" != "" ]; then
+        	echo "local-storage: Detected 'after-deployment' phase"
+
+
+
+
+        fi
+
+    else
+        # we are in the reglar init phase
+        # nothing much to do yet
+    	echo "Starting the openQRM local_storage-plugin (regular init)"
+    fi
+	return 0
+}
+
+
+function local_storage_stop() {
+	echo "Stopping the openQRM local_storage plugin"
+	return 0
+}
+
+
+
+case "$1" in
+	start)
+		local_storage_start
+		;;
+	stop)
+		local_storage_stop
+		;;
+	restart)
+		local_storage_stop
+		sleep 1
+		local_storage_start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+
+esac
+exit $?
+

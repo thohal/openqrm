@@ -3,50 +3,10 @@
 # which proivdes function to mount/remount the remote
 # local-rootfs according to the image_deployment_parameters at /mnt
 #
-# local-storage INSTALL
-# ------------------------------------------------------------------------------
-# Required defines in the image_deploy_paramters
-# IMAGE_INSTALL_FROM		- set to the server-location (path) of the local-storage image
-#							  which should be installed (restored) on the local device.
-#							  syntax is : /path_to_target_image
-#
-# local-storage GRAB
-# ------------------------------------------------------------------------------
-# Required defines in the image_deploy_paramters
-# IMAGE_GRAB_TO				- set to the (nfs) server-location (ip:path) the local-storage image should
-#						  	  be transfered to. syntax is : ip-address:/path_to_target_image
-#
-#
 # Optional parameters 
-#
-# IMAGE_INSTALL_FROM_NFS			- can be set to an (nfs) location from
-#									  which the image will be installed at
-#									  deployment time
-#									  syntax is : storage_id:ip_of_nfs-server:path_to_target_image
-#
-# IMAGE_TRANSFER_TO_NFS				- can be set to an (nfs) location from
-#									  which the image will be transfered to at
-#									  deployment time
-#									  syntax is : storage_id:ip_of_nfs-server:path_to_target_image
-#
-# IMAGE_INSTALL_FROM_LOCAL			- set to a local harddisk device (e.g. /dev/hda1) this
-#									  option will install the local-storage image on 
-#									  boot-time from the local-device
-#
-# IMAGE_TRANSFER_TO_LOCAL			- set to a local harddisk device (e.g. /dev/hda1) this option will transfrom
-#									  the local-storage image on boot-time to the local-device
-#
-#
-#
-# IMAGE_INSTALL_FROM_LOCAL_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
-#
-# IMAGE_TRANSFER_TO_LOCAL_FS_TYPE	- set to a local harddisk device fs-type (e.g. ext3)
 #
 # IMAGE_NFS_MOUNT_OPTIONS			- can be e.g. set to proto=tcp for the install/transform phase
 #
-
-
-
 # get the deployment parameters from openqrm.conf
 OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
 . $OPENQRM_RESOURCE_PARAMETER_FILE
@@ -98,6 +58,7 @@ function mount_rootfs() {
             echo "local-storage: Processing device /dev/$HARD_DISK"
             INAME="/mnt/"$image_name"_x_"$HARD_DISK"_ping.img"
             BSNAME="/mnt/"$image_name"_x_"$HARD_DISK"_bs.img"
+            rm -f $INAME $BSNAME
             partimage-ng -b 32 save /dev/$HARD_DISK $INAME
             echo "local-storage: Saving the MBR of /dev/$HARD_DISK"
             dd if=/dev/$HARD_DISK of=$BSNAME bs=512 count=1
@@ -106,16 +67,17 @@ function mount_rootfs() {
         umount /mnt
 
         # send token to the openQRM server to stop the grab-appliance
-        # TODO
+        echo "local-storage: Sending 'grab-complete' to the openQRM server"
+        if ! wget -q "http://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=grab-complete&token=$LOCAL_STORAGE_GRAB"; then
+            echo "local-storage: Error sending 'grab-complete' to the openQRM server"
+            /bin/bash
+        fi
+        # wait for reboot
+        echo "local-storage: Preparing system restart. Please stand by ..."
+        /bin/bash
 
-
-    else
+    elif [ "$LOCAL_STORAGE_DEPLOYMENT" != "" ]; then
         # restore -> active deployment
-
-        # send token to the openQRM server to stop the grab-appliance
-        # TODO
-
-
         echo "local-storage: Starting restore of $image_name"
         for PING_IMAGE in `ls /mnt/$image_name_x_*_ping.img`; do
             FP_INAME=$image_name"_x_"
@@ -130,11 +92,18 @@ function mount_rootfs() {
         echo "local-storage: Umounting image-store"
         umount /mnt
 
+        # send token to the openQRM server to set appliance to localboot
+        echo "local-storage: Sending 'deployment-complete' to the openQRM server"
+        if ! wget -q "http://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=deployment-complete&token=$LOCAL_STORAGE_DEPLOYMENT"; then
+            echo "local-storage: Error sending 'deployment-complete' to the openQRM server"
+            /bin/bash
+        fi
+        # wait a bit until the pxe-config is re-written
+        echo "local-storage: Preparing local-boot. Please stand by ..."
+        sleep 10
         # reboot
-
+        reboot
     fi
-
-    /bin/bash
 
 }
 

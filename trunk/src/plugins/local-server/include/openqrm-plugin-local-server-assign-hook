@@ -20,7 +20,7 @@ function local_server_assign_hook() {
 		# get more infos about the resource
 		openqrm_get_resource_parameter $OPENQRM_RESOURCE_MAC
 		if [ "$resource_capabilities" == "local-server" ]; then
-			openqrm_server_set_boot local $resource_id $resource_mac $resource_id		
+			openqrm_server_set_boot local $resource_id $resource_mac $resource_ip
 		fi
 	fi
 
