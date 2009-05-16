@@ -110,15 +110,14 @@ function openqrm_client_start() {
 			;;
 	esac
 
-	# start openqrm-monitord
-	$resource_basedir/openqrm/sbin/openqrm-monitord &
-
 	if [ ! -f /linuxrc ]; then
 		# start boot-services from enabled plugins
 		for boot_service in $openqrm_boot_services; do
 			openqrm_boot_service $boot_service start
 		done
 	fi
+	# start openqrm-monitord
+	$resource_basedir/openqrm/sbin/openqrm-monitord &
 	openqrm_post_event $resource_id "openqrm-client" 5 openqrm_client_start "Resource $resource_id fully started"
 	touch ${LOCKFILE}
 }
