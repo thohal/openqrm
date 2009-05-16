@@ -100,9 +100,8 @@ function mount_rootfs() {
         fi
         # wait a bit until the pxe-config is re-written
         echo "local-storage: Preparing local-boot. Please stand by ..."
-        sleep 10
-        # reboot
-        reboot
+        /bin/bash
+
     fi
 
 }

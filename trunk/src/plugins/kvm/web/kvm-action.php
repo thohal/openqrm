@@ -35,89 +35,62 @@ if ($OPENQRM_USER->role != "administrator") {
 	exit();
 }
 
-$kvm_server_name = $_REQUEST["kvm_server_name"];
-$kvm_server_mac = $_REQUEST["kvm_server_mac"];
-$kvm_server_ip = $_REQUEST["kvm_server_ip"];
-$kvm_server_ram = $_REQUEST["kvm_server_ram"];
-$kvm_server_disk = $_REQUEST["kvm_server_disk"];
 
-$kvm_server_fields = array();
-foreach ($_REQUEST as $key => $value) {
-	if (strncmp($key, "kvm_server_", 14) == 0) {
-		$kvm_server_fields[$key] = $value;
-	}
+$event->log("$kvm_server_command", $_SERVER['REQUEST_TIME'], 5, "kvm-action", "Processing command $kvm_server_command", "", "", 0, 0, 0);
+switch ($kvm_server_command) {
+
+    // get the incoming vm list
+    case 'get_kvm_server':
+        if (!file_exists($KvmDir)) {
+            mkdir($KvmDir);
+        }
+        $filename = $KvmDir."/".$_POST['filename'];
+        $filedata = base64_decode($_POST['filedata']);
+        echo "<h1>$filename</h1>";
+        $fout = fopen($filename,"wb");
+        fwrite($fout, $filedata);
+        fclose($fout);
+        break;
+
+    // send command to send the vm list
+    case 'refresh_vm_list':
+        $kvm_appliance = new appliance();
+        $kvm_appliance->get_instance_by_id($kvm_server_id);
+        $kvm_server = new resource();
+        $kvm_server->get_instance_by_id($kvm_appliance->resources);
+        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+        $kvm_server->send_command($kvm_server->ip, $resource_command);
+        break;
+
+    // get the incoming vm config
+    case 'get_kvm_config':
+        if (!file_exists($KvmDir)) {
+            mkdir($KvmDir);
+        }
+        $filename = $KvmDir."/".$_POST['filename'];
+        $filedata = base64_decode($_POST['filedata']);
+        echo "<h1>$filename</h1>";
+        $fout = fopen($filename,"wb");
+        fwrite($fout, $filedata);
+        fclose($fout);
+        break;
+
+    // send command to send the vm config
+    case 'refresh_vm_config':
+        $kvm_appliance = new appliance();
+        $kvm_appliance->get_instance_by_id($kvm_server_id);
+        $kvm_server = new resource();
+        $kvm_server->get_instance_by_id($kvm_appliance->resources);
+        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm post_vm_config -n $kvm_server_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+        $kvm_server->send_command($kvm_server->ip, $resource_command);
+        break;
+
+    default:
+        $event->log("$kvm_server_command", $_SERVER['REQUEST_TIME'], 3, "kvm-action", "No such kvm command ($kvm_server_command)", "", "", 0, 0, 0);
+        break;
+
+
 }
-unset($kvm_server_fields["kvm_server_command"]);
-
-	$event->log("$kvm_server_command", $_SERVER['REQUEST_TIME'], 5, "kvm-action", "Processing command $kvm_server_command", "", "", 0, 0, 0);
-	switch ($kvm_server_command) {
-
-		case 'new':
-			// send command to kvm_server-host to create the new vm
-			$kvm_appliance = new appliance();
-			$kvm_appliance->get_instance_by_id($kvm_server_id);
-			$kvm_server = new resource();
-			$kvm_server->get_instance_by_id($kvm_appliance->resources);
-			if (strlen($kvm_server_disk)) {
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm create -n $kvm_server_name -m $kvm_server_mac -r $kvm_server_ram -d $kvm_server_disk -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			} else {
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm create -n $kvm_server_name -m $kvm_server_mac -r $kvm_server_ram -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			}
-			$kvm_server->send_command($kvm_server->ip, $resource_command);
-			break;
-
-		// get the incoming vm list
-		case 'get_kvm_server':
-			if (!file_exists($KvmDir)) {
-				mkdir($KvmDir);
-			}
-			$filename = $KvmDir."/".$_POST['filename'];
-			$filedata = base64_decode($_POST['filedata']);
-			echo "<h1>$filename</h1>";
-			$fout = fopen($filename,"wb");
-			fwrite($fout, $filedata);
-			fclose($fout);
-			break;
-
-		// send command to send the vm list
-		case 'refresh_vm_list':
-			$kvm_appliance = new appliance();
-			$kvm_appliance->get_instance_by_id($kvm_server_id);
-			$kvm_server = new resource();
-			$kvm_server->get_instance_by_id($kvm_appliance->resources);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$kvm_server->send_command($kvm_server->ip, $resource_command);
-			break;
-
-		// get the incoming vm config
-		case 'get_kvm_config':
-			if (!file_exists($KvmDir)) {
-				mkdir($KvmDir);
-			}
-			$filename = $KvmDir."/".$_POST['filename'];
-			$filedata = base64_decode($_POST['filedata']);
-			echo "<h1>$filename</h1>";
-			$fout = fopen($filename,"wb");
-			fwrite($fout, $filedata);
-			fclose($fout);
-			break;
-
-		// send command to send the vm config
-		case 'refresh_vm_config':
-			$kvm_appliance = new appliance();
-			$kvm_appliance->get_instance_by_id($kvm_server_id);
-			$kvm_server = new resource();
-			$kvm_server->get_instance_by_id($kvm_appliance->resources);
-			$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm post_vm_config -n $kvm_server_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-			$kvm_server->send_command($kvm_server->ip, $resource_command);
-			break;
-
-		default:
-			$event->log("$kvm_server_command", $_SERVER['REQUEST_TIME'], 3, "kvm-action", "No such kvm command ($kvm_server_command)", "", "", 0, 0, 0);
-			break;
-
-
-	}
 ?>
 
 </body>

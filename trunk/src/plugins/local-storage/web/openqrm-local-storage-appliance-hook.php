@@ -76,8 +76,47 @@ function openqrm_local_storage_appliance($cmd, $appliance_fields) {
                 	$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-local_storage-appliance-hook.php", "Detected grab-phase for appliance $appliance_id", "", "", 0, 0, $appliance_id);
                 }
             }
-
 			break;
+
+
+		case "stop":
+            $appliance = new appliance();
+            $appliance->get_instance_by_id($appliance_id);
+            $image = new image();
+            $image->get_instance_by_id($appliance->imageid);
+            if (!strcmp($image->type, "local-storage")) {
+            	$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-local_storage-appliance-hook.php", "Detected local-storage deployment for appliance $appliance_id", "", "", 0, 0, $appliance_id);
+                $resource = new resource();
+                $resource->get_instance_by_id($appliance->resources);
+                // only if we are not in grab mode
+                if (strstr($resource->capabilities, "LOCAL_STORAGE_DEPLOYMENT")) {
+                    $event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-local_storage-appliance-hook.php", "Detected deployment-complete phase after stopping appliance $appliance_id", "", "", 0, 0, $appliance_id);
+                    // after deployment-complete mode + stopping appliance
+                    // we need to check if the resource of the appliance is virtual
+                    // if yes we need to re-set its boot-device from local to net and restart it
+                    if ($resource->vtype != "0") {
+                        $virtualization = new virtualization();
+                        $virtualization->get_instance_by_id($resource->vtype);
+                        $virtualization_plugin_name = str_replace("-vm", "", $virtualization->type);
+                        $vlboot_cmd = $OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." setboot -m ".$resource->mac." -b net";
+                        // get the virtualization hosts resource
+                        $virtualization_host = new resource();
+                        $virtualization_host->get_instance_by_id($resource->vhostid);
+                        $event->log("local-storage", $_SERVER['REQUEST_TIME'], 5, "local-storage-state.php", "Resource $resource->id is a vm on $resource->vhostid -> sending command to set it to netboot", "", "", 0, 0, 0);
+                        // TODO
+                        // not the best way yet to wait a bit until setting the bootdevice to netboot
+                        sleep(10);
+                        $virtualization_host->send_command($virtualization_host->ip, $vlboot_cmd);
+                    } else {
+                        // its a physical host, we have to send a regular reboot
+                        $event->log("local-storage", $_SERVER['REQUEST_TIME'], 5, "local-storage-state.php", "Resource $resource->id is a physical system. No need to re-set boot-device", "", "", 0, 0, 0);
+                    }
+                } else {
+                	$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-local_storage-appliance-hook.php", "Appliance $appliance_id is not in deployment-complete phase", "", "", 0, 0, $appliance_id);
+                }
+            }
+			break;
+
 
 	}
 }

@@ -30,6 +30,7 @@ fi
 
 function kvm_usage() {
 	echo "Usage : $0 start/stop/reboot/delete/list <-n vm-name>"
+	echo "Usage : $0 setboot <-m mac-address> <-b local/net>"
 	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ]"
 	echo "        $0 post_vm_list <-u username> <-p password>"
 	echo "        $0 post_vm_config <-n vm-name> <-u username> <-p password>"
@@ -75,6 +76,10 @@ while [ $# -ne 0 ]; do
 			KVM_OPENQRM_PASSWORD=$2
 			shift
 			;;
+		-b)
+			KVM_VM_BOOT=$2
+			shift
+			;;
 		*)
 			echo "ERROR: Free commandline arguments are not allowed"
 			kvm_usage
@@ -101,7 +106,7 @@ if [ "$KVM_COMMAND" == "post_vm_list" ] || [ "$KVM_COMMAND" == "post_vm_config" 
 		fi
 else
 
-	if [ "$KVM_COMMAND" != "list" ]; then
+	if [ "$KVM_COMMAND" != "list" ] && [ "$KVM_COMMAND" != "setboot" ]; then
 		if [ "$KVM_VM_NAME" == "" ]; then
 			kvm_usage
 		fi
@@ -160,6 +165,8 @@ case "$KVM_COMMAND" in
 		echo "KVM_VM_DISK_SIZE_3=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/disk3
 		echo "KVM_VM_DISK_4=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk4
 		echo "KVM_VM_DISK_SIZE_4=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/disk4
+        # boot from network
+        echo "KVM_VM_BOOT=\"-boot n\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/boot
 
 		# vnc : check on which vnc display which can run it
 		ALREADY_USED_VNC_IDS=""
@@ -256,12 +263,7 @@ case "$KVM_COMMAND" in
             else
                 echo "$kvmvm"" $KVM_VM_MAC_1"" 0" >> $VM_LIST_TMP
             fi
-
-            
-
         done
-
-
 		if ! wget -q -O /dev/null --http-user=$KVM_OPENQRM_USERNAME --http-password=$KVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/kvm/kvm-action.php?kvm_server_command=get_kvm_server; then
 			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!"
 			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
@@ -287,6 +289,7 @@ case "$KVM_COMMAND" in
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/disk3
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/disk4
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/vnc
+		. $OPENQRM_VM_DIR/$KVM_VM_NAME/vnc
 		echo "OPENQRM_KVM_VM_RAM=\"$KVM_VM_RAM\"" > $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_NET_1=\"$KVM_VM_NET_1\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_MAC_1=\"$KVM_VM_MAC_1\"" >> $VM_CONFIG_TMP
@@ -305,6 +308,7 @@ case "$KVM_COMMAND" in
 		echo "OPENQRM_KVM_VM_DISK_4=\"$KVM_VM_DISK_4\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_DISK_SIZE_4=\"$KVM_VM_DISK_SIZE_4\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_VNC=\"$KVM_VM_VNC\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_BOOT=\"$KVM_VM_BOOT\"" >> $VM_CONFIG_TMP
 		if ! wget -q -O /dev/null --http-user=$KVM_OPENQRM_USERNAME --http-password=$KVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_CONFIG_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/kvm/kvm-action.php?kvm_server_command=get_kvm_config; then
 			echo "ERROR: Could not post vm config to the openQRM-server at $OPENQRM_SERVER_IP!"
 			echo "ERROR: Could not post vm config to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
@@ -394,6 +398,51 @@ case "$KVM_COMMAND" in
 		sed -i -e s"#KVM_VM_DISK_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_DISK_$KVM_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/disk""$KVM_VM_COMPONENT_NUMBER
 		sed -i -e s"#KVM_VM_DISK_SIZE_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_DISK_SIZE_$KVM_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/disk""$KVM_VM_COMPONENT_NUMBER
 		rm -f $OPENQRM_VM_DIR/$KVM_VM_NAME/disk0$KVM_VM_COMPONENT_NUMBER.img
+		kvm_lock release
+		;;
+	setboot)
+        unset KVM_VM_NAME
+		if [ "$KVM_VM_MAC" == "" ]; then
+			kvm_usage
+		fi
+		if [ "$KVM_VM_BOOT" == "" ]; then
+			kvm_usage
+		fi
+		kvm_lock aquire
+		echo "Setting vm with mac $KVM_VM_MAC to boot from $KVM_VM_BOOT"
+        # this command is is running from the openQRM engine which does
+        # not know about the kvm-name
+        for KVM_VM_NET_CONF in `find /var/lib/kvm/openqrm/ -name net1`; do
+            . $KVM_VM_NET_CONF
+            if [ "$KVM_VM_MAC_1" == "$KVM_VM_MAC" ]; then
+                KVM_VM_NAME=`dirname $KVM_VM_NET_CONF`
+                KVM_VM_NAME=`basename $KVM_VM_NAME`
+                break
+            fi
+        done
+        if [ "$KVM_VM_NAME" == "" ]; then
+    		echo "Cloud not find KVM vm with mac $KVM_VM_MAC on this host"
+            exit 1
+        fi
+        case "$KVM_VM_BOOT" in
+            local)
+                echo "KVM_VM_BOOT=\"-boot c\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/boot
+                ;;
+            net)
+                echo "KVM_VM_BOOT=\"-boot n\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/boot
+                ;;
+        esac
+		# hard restart it to apply its configuration
+        # we do it here because the openQRM server engine does not
+        # know anything about the vm name to restart it later
+		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
+		VM_PID=`ps ax | grep $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
+		if [ "$VM_PID" != "" ]; then
+			kill $VM_PID
+			kill -9 $VM_PID 1>/dev/null 2>&1
+		fi
+		sleep 2
+		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
 		kvm_lock release
 		;;
 	*)

@@ -29,10 +29,56 @@ function local_storage_start() {
 
         elif [ "$LOCAL_STORAGE_DEPLOYMENT" != "" ]; then
         	echo "local-storage: Detected 'after-deployment' phase"
+            if [ "$LOCAL_STORAGE_INAME" == "" ]; then
+                echo "local-storage: Could not find image-name. Exiting .."
+                exit 1
+            fi
+            # saving back the disk content
+            modprobe sunrpc 1>/dev/null 2>&1
+            modprobe lockd 1>/dev/null 2>&1
+            modprobe nfs 1>/dev/null 2>&1
+            modprobe ext3 1>/dev/null 2>&1
+            rm -rf /dev/null
+            mknod -m 666 /dev/null c 1 3
+            openqrm_portmap_start
 
+            mkdir -p /mnt
+            if ! mount -t nfs -o rw,nolock $LOCAL_STORAGE_RESTORE /mnt; then
+                echo "ERROR: Could not mount $LOCAL_STORAGE_RESTORE by nfs"
+                # give a shell for the admin
+                /bin/bash
+            else
+                echo "local-storage: Mounted $LOCAL_STORAGE_RESTORE rw"
+            fi
+            echo "local-storage: Getting partimage util"
+            cd /
+            if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/partimage-ng.tgz; then
+                echo "local-storage: Error downloading partimage-ng.tgz package"
+                /bin/bash
+            fi
+            tar -xzf partimage-ng.tgz
+            rm -f partimage-ng.tgz
 
+            # grab
+            echo "local-storage: Starting grab-phase. Transfering disk-content to $LOCAL_STORAGE_INAME"
+            # grab all disks
+            for HARD_DISK in `cat /proc/partitions | grep -v major | sed -e '/^$/d' | awk {' print $4 '} | grep -v [0-9]`; do
+                echo "local-storage: Processing device /dev/$HARD_DISK"
+                INAME="/mnt/"$LOCAL_STORAGE_INAME"_x_"$HARD_DISK"_ping.img"
+                BSNAME="/mnt/"$LOCAL_STORAGE_INAME"_x_"$HARD_DISK"_bs.img"
+                rm -f $INAME $BSNAME
+                partimage-ng -b 32 save /dev/$HARD_DISK $INAME
+                echo "local-storage: Saving the MBR of /dev/$HARD_DISK"
+                dd if=/dev/$HARD_DISK of=$BSNAME bs=512 count=1
+            done
+            echo "local-storage: Umounting image-store"
+            umount /mnt
 
-
+            echo "local-storage: Sending 'finished-restore' to the openQRM server"
+            if ! wget -q "http://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=finished-restore&token=$LOCAL_STORAGE_DEPLOYMENT"; then
+                echo "local-storage: Error sending 'finished-restore' to the openQRM server"
+                /bin/bash
+            fi
         fi
 
     else

@@ -14,23 +14,20 @@ require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/deployment.class.php";
+require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
+
+$event = new event();
+global $event;
+$openqrm_server = new openqrm_server();
+$OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
+global $OPENQRM_SERVER_IP_ADDRESS;
 global $OPENQRM_SERVER_BASE_DIR;
 $refresh_delay=4;
 
 // get the kvm_server_id if set
 $kvm_server_id = $_REQUEST["kvm_server_id"];
-
-
-function kvm_server_htmlobject_select($name, $value, $title = '', $selected = '') {
-		$html = new htmlobject_select();
-		$html->name = $name;
-		$html->title = $title;
-		$html->selected = $selected;
-		$html->text_index = array("value" => "value", "text" => "label");
-		$html->text = $value;
-		return $html->get_string();
-}
+$kvm_vm_mac = $_REQUEST["kvm_vm_mac"];
 
 
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
@@ -97,13 +94,18 @@ if(htmlobject_request('action') != '') {
 		case 'delete':
 			if (isset($_REQUEST['identifier'])) {
 				foreach($_REQUEST['identifier'] as $kvm_server_name) {
-					$strMsg .="Removing $kvm_server_name <br>";
                     $kvm_appliance = new appliance();
                     $kvm_appliance->get_instance_by_id($kvm_server_id);
                     $kvm_server = new resource();
                     $kvm_server->get_instance_by_id($kvm_appliance->resources);
                     $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm delete -n $kvm_server_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
                     $kvm_server->send_command($kvm_server->ip, $resource_command);
+                    // we should remove the resource of the vm !
+                    $kvm_resource = new resource();
+                    $kvm_resource->get_instance_by_mac($kvm_vm_mac);
+                    $kvm_vm_id=$kvm_resource->id;
+                    $kvm_resource->remove($kvm_vm_id, $kvm_vm_mac);
+					$strMsg .="Removing KVM VM $kvm_server_name and its resource $kvm_vm_id<br>";
 				}
 				redirect($strMsg, "tab0");
             }
@@ -345,14 +347,14 @@ function kvm_server_display($appliance_id) {
                     $state_icon="/openqrm/base/img/off.png";
     				$vm_actions = $vm_actions."<a href=\"$thisfile?identifier[]=$kvm_short_name&action=start&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>&nbsp;&nbsp;&nbsp;&nbsp;";
     				$vm_actions = $vm_actions."<a href=\"kvm-vm-config.php?kvm_server_name=$kvm_short_name&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/plugin.png\" border=\"0\"> Config</a>&nbsp;&nbsp;&nbsp;&nbsp;";
-    				$vm_actions = $vm_actions."<a href=\"$thisfile?identifier[]=$kvm_short_name&action=delete&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Delete</a>&nbsp;&nbsp;";
+    				$vm_actions = $vm_actions."<a href=\"$thisfile?identifier[]=$kvm_short_name&action=delete&kvm_server_id=$kvm_server_tmp->id&kvm_vm_mac=$kvm_vm_mac\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Delete</a>&nbsp;&nbsp;";
                 }
 
 				$kvm_vm_registered[] = $kvm_short_name;
                 $kvm_vm_count++;
 
                 $arBody1[] = array(
-                    'kvm_vm_state' => "<img src=$state_icon><input type='hidden' name='kvm_server_id' value=$appliance_id>",
+                    'kvm_vm_state' => "<img src=$state_icon><input type='hidden' name='kvm_server_id' value=$appliance_id><input type='hidden' name='kvm_vm_mac' value=$kvm_vm_mac>",
                     'kvm_vm_id' => $kvm_vm_id,
                     'kvm_vm_name' => $kvm_short_name,
                     'kvm_vm_ip' => $kvm_vm_ip,
