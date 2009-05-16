@@ -24,6 +24,8 @@ create table resource_info(
 	resource_swaptotal int8,
 	resource_swapused int8,
 	resource_hostname varchar(60),
+	resource_vtype int8,
+	resource_vhostid int8,
 	resource_load decimal(4,2),
 	resource_execdport int8,
 	resource_senddelay int8,

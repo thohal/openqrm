@@ -25,6 +25,8 @@ create table resource_info(				\
 	resource_swaptotal bigint,			\
 	resource_swapused bigint,			\
 	resource_hostname varchar(60),			\
+	resource_vtype bigint,			\
+	resource_vhostid bigint,			\
 	resource_load decimal(4,2),			\
 	resource_execdport bigint,			\
 	resource_senddelay bigint,			\
