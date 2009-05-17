@@ -55,7 +55,7 @@ global $resource_id;
 global $APPLIANCE_INFO_TABLE;
 
 $refresh_delay=1;
-$refresh_loop_max=10;
+$refresh_loop_max=20;
 
 
 function redirect_resource($strMsg, $resource_id) {
@@ -99,7 +99,7 @@ function show_progressbar() {
 			value: 100
 		});
         var options = {};
-        $("#progressbar").effect("shake",options,1000,null);
+        $("#progressbar").effect("shake",options,2000,null);
 	</script>
 <?php
         flush();

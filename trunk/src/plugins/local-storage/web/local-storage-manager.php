@@ -59,7 +59,7 @@ global $local_lun_name;
 global $local_lun_snap_name;
 
 $refresh_delay=1;
-$refresh_loop_max=10;
+$refresh_loop_max=20;
 
 
 function redirect_vg($strMsg, $local_storage_id) {
@@ -109,7 +109,7 @@ function show_progressbar() {
 			value: 100
 		});
         var options = {};
-        $("#progressbar").effect("shake",options,1000,null);
+        $("#progressbar").effect("shake",options,2000,null);
 	</script>
 <?php
         flush();

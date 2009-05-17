@@ -1,6 +1,28 @@
-
-<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-<link rel="stylesheet" type="text/css" href="kvm.css" />
+<!doctype html>
+<html lang="en">
+<head>
+	<title>LVM Storage manager</title>
+    <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+    <link rel="stylesheet" type="text/css" href="kvm.css" />
+    <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
+<style type="text/css">
+.ui-progressbar-value {
+    background-image: url(/openqrm/base/img/progress.gif);
+}
+#progressbar {
+    position: absolute;
+    left: 150px;
+    top: 250px;
+    width: 400px;
+    height: 20px;
+}
+</style>
+</head>
+<body>
+<div id="progressbar">
+</div>
 
 <?php
 
@@ -17,17 +39,21 @@ require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
+$kvm_server_id = htmlobject_request('kvm_server_id');
+$kvm_vm_mac = htmlobject_request('kvm_vm_mac');
+$action=htmlobject_request('action');
+global $kvm_server_id;
+global $kvm_vm_mac;
+$refresh_delay=1;
+$refresh_loop_max=20;
+
 $event = new event();
 global $event;
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
 global $OPENQRM_SERVER_BASE_DIR;
-$refresh_delay=4;
 
-// get the kvm_server_id if set
-$kvm_server_id = $_REQUEST["kvm_server_id"];
-$kvm_vm_mac = $_REQUEST["kvm_vm_mac"];
 
 
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
@@ -40,21 +66,116 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	exit;
 }
 
+function wait_for_statfile($sfile) {
+    global $refresh_delay;
+    global $refresh_loop_max;
+    $refresh_loop=0;
+    while (!file_exists($sfile)) {
+        sleep($refresh_delay);
+        $refresh_loop++;
+        flush();
+        if ($refresh_loop > $refresh_loop_max)  {
+            return false;
+        }
+    }
+    return true;
+}
+
+function show_progressbar() {
+?>
+    <script type="text/javascript">
+        $("#progressbar").progressbar({
+			value: 100
+		});
+        var options = {};
+        $("#progressbar").effect("shake",options,2000,null);
+	</script>
+<?php
+        flush();
+}
+
+
 // check if we got some actions to do
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
-		case 'start':
+		case 'select':
+			if (isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $kvm_server_id) {
+                    show_progressbar();
+                    $kvm_appliance = new appliance();
+                    $kvm_appliance->get_instance_by_id($kvm_server_id);
+                    $kvm_server = new resource();
+                    $kvm_server->get_instance_by_id($kvm_appliance->resources);
+                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                    // remove current stat file
+                    $kvm_server_resource_id = $kvm_server->id;
+                    $statfile="kvm-stat/".$kvm_server_resource_id.".vm_list";
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
+                    $kvm_server->send_command($kvm_server->ip, $resource_command);
+                    // and wait for the resulting statfile
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error during refreshing vm list ! Please check the Event-Log<br>";
+                    } else {
+                        $strMsg .="Refreshing vm list<br>";
+                    }
+                    $rurl = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&identifier[]='.$kvm_server_id;
+                    redirect($strMsg, "tab0");
+                    exit(0);
+                }
+            }
+            break;
+
+		case 'refresh':
+            show_progressbar();
+            $kvm_appliance = new appliance();
+            $kvm_appliance->get_instance_by_id($kvm_server_id);
+            $kvm_server = new resource();
+            $kvm_server->get_instance_by_id($kvm_appliance->resources);
+            $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+            // remove current stat file
+            $kvm_server_resource_id = $kvm_server->id;
+            $statfile="kvm-stat/".$kvm_server_resource_id.".vm_list";
+            if (file_exists($statfile)) {
+                unlink($statfile);
+            }
+            // send command
+            $kvm_server->send_command($kvm_server->ip, $resource_command);
+            // and wait for the resulting statfile
+            if (!wait_for_statfile($statfile)) {
+                $strMsg .= "Error during refreshing vm list ! Please check the Event-Log<br>";
+            } else {
+                $strMsg .="Refreshing vm list<br>";
+            }
+            redirect($strMsg, "tab0");
+            break;
+
+
+        case 'start':
 			if (isset($_REQUEST['identifier'])) {
 				foreach($_REQUEST['identifier'] as $kvm_server_name) {
-
-					$strMsg .="Starting $kvm_server_name <br>";
+                    show_progressbar();
                     $kvm_appliance = new appliance();
                     $kvm_appliance->get_instance_by_id($kvm_server_id);
                     $kvm_server = new resource();
                     $kvm_server->get_instance_by_id($kvm_appliance->resources);
                     $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm start -n $kvm_server_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                    // remove current stat file
+                    $kvm_server_resource_id = $kvm_server->id;
+                    $statfile="kvm-stat/".$kvm_server_resource_id.".vm_list";
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
                     $kvm_server->send_command($kvm_server->ip, $resource_command);
-
+                    // and wait for the resulting statfile
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error during starting $kvm_server_name ! Please check the Event-Log<br>";
+                    } else {
+    					$strMsg .="Starting $kvm_server_name <br>";
+                    }
 				}
 				redirect($strMsg, "tab0");
             }
@@ -64,13 +185,26 @@ if(htmlobject_request('action') != '') {
 		case 'stop':
 			if (isset($_REQUEST['identifier'])) {
 				foreach($_REQUEST['identifier'] as $kvm_server_name) {
-					$strMsg .="Stopping $kvm_server_name <br>";
+                    show_progressbar();
                     $kvm_appliance = new appliance();
                     $kvm_appliance->get_instance_by_id($kvm_server_id);
                     $kvm_server = new resource();
                     $kvm_server->get_instance_by_id($kvm_appliance->resources);
                     $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm stop -n $kvm_server_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                    // remove current stat file
+                    $kvm_server_resource_id = $kvm_server->id;
+                    $statfile="kvm-stat/".$kvm_server_resource_id.".vm_list";
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
                     $kvm_server->send_command($kvm_server->ip, $resource_command);
+                    // and wait for the resulting statfile
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error during stopping $kvm_server_name ! Please check the Event-Log<br>";
+                    } else {
+    					$strMsg .="Stopping $kvm_server_name <br>";
+                    }
 				}
 				redirect($strMsg, "tab0");
             }
@@ -79,13 +213,26 @@ if(htmlobject_request('action') != '') {
 		case 'reboot':
 			if (isset($_REQUEST['identifier'])) {
 				foreach($_REQUEST['identifier'] as $kvm_server_name) {
-					$strMsg .="Rebooting $kvm_server_name <br>";
+                    show_progressbar();
                     $kvm_appliance = new appliance();
                     $kvm_appliance->get_instance_by_id($kvm_server_id);
                     $kvm_server = new resource();
                     $kvm_server->get_instance_by_id($kvm_appliance->resources);
                     $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm reboot -n $kvm_server_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                    // remove current stat file
+                    $kvm_server_resource_id = $kvm_server->id;
+                    $statfile="kvm-stat/".$kvm_server_resource_id.".vm_list";
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
                     $kvm_server->send_command($kvm_server->ip, $resource_command);
+                    // and wait for the resulting statfile
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error during restarting $kvm_server_name ! Please check the Event-Log<br>";
+                    } else {
+    					$strMsg .="Restarting $kvm_server_name <br>";
+                    }
 				}
 				redirect($strMsg, "tab0");
             }
@@ -94,18 +241,31 @@ if(htmlobject_request('action') != '') {
 		case 'delete':
 			if (isset($_REQUEST['identifier'])) {
 				foreach($_REQUEST['identifier'] as $kvm_server_name) {
+                    show_progressbar();
                     $kvm_appliance = new appliance();
                     $kvm_appliance->get_instance_by_id($kvm_server_id);
                     $kvm_server = new resource();
                     $kvm_server->get_instance_by_id($kvm_appliance->resources);
                     $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm delete -n $kvm_server_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                    // remove current stat file
+                    $kvm_server_resource_id = $kvm_server->id;
+                    $statfile="kvm-stat/".$kvm_server_resource_id.".vm_list";
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
                     $kvm_server->send_command($kvm_server->ip, $resource_command);
                     // we should remove the resource of the vm !
                     $kvm_resource = new resource();
                     $kvm_resource->get_instance_by_mac($kvm_vm_mac);
                     $kvm_vm_id=$kvm_resource->id;
                     $kvm_resource->remove($kvm_vm_id, $kvm_vm_mac);
-					$strMsg .="Removing KVM VM $kvm_server_name and its resource $kvm_vm_id<br>";
+                    // and wait for the resulting statfile
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error during removing $kvm_server_name ! Please check the Event-Log<br>";
+                    } else {
+    					$strMsg .="Removed $kvm_server_name and its resource $kvm_vm_id<br><br>";
+                    }
 				}
 				redirect($strMsg, "tab0");
             }
@@ -210,16 +370,6 @@ function kvm_server_display($appliance_id) {
 	global $OPENQRM_USER;
 	global $thisfile;
 	global $OPENQRM_SERVER_BASE_DIR;
-	global $refresh_delay;
-
-	// refresh
-	$kvm_appliance = new appliance();
-	$kvm_appliance->get_instance_by_id($appliance_id);
-	$kvm_server = new resource();
-	$kvm_server->get_instance_by_id($kvm_appliance->resources);
-	$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-	$kvm_server->send_command($kvm_server->ip, $resource_command);
-	sleep($refresh_delay);
 
 	$table = new htmlobject_table_identifiers_checked('kvm_server_id');
 
@@ -270,7 +420,7 @@ function kvm_server_display($appliance_id) {
 	// we need to run commands on the resource ip
 	$arBody[] = array(
 		'kvm_server_state' => "<img src=$state_icon>",
-		'kvm_server_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+		'kvm_server_icon' => "<img width=24 height=24 src=$resource_icon_default><input type='hidden' name='kvm_server_id' value=$appliance_id>",
 		'kvm_server_id' => $kvm_server_tmp->id,
 		'kvm_server_name' => $kvm_server_tmp->name,
 		'kvm_server_resource_id' => $kvm_server_resource->id,

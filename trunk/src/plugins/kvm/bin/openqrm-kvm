@@ -42,6 +42,24 @@ function kvm_usage() {
 	exit 1
 }
 
+function get_disk_name() {
+    local component=$1
+    case "$component" in
+        1)
+            echo "hda"
+            ;;
+        2)
+            echo "hdb"
+            ;;
+        3)
+            echo "hdc"
+            ;;
+        4)
+            echo "hdd"
+            ;;
+    esac
+}
+
 
 KVM_COMMAND=$1
 shift
@@ -146,13 +164,13 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_VM_DISK" != "" ]; then
 			echo "-> Creating disk"
 			KVM_DISK_1="$OPENQRM_VM_DIR/$KVM_VM_NAME/disk01.img"
-			if ! qemu-img create $KVM_DISK_1 $KVM_VM_DISK""M; then
+			if ! dd if=/dev/zero of=$KVM_DISK_1 bs=1M seek=$KVM_VM_DISK count=1; then
 				echo "ERROR: Could not create $KVM_DISK_1 for KVM vm $KVM_VM_NAME" | logger
 				kvm_lock release
 				exit 1
 			fi
 			# add the disk to the config file
-			echo "KVM_VM_DISK_1=\"-drive file=$KVM_DISK_1,if=scsi\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk1
+			echo "KVM_VM_DISK_1=\"-hda $KVM_DISK_1\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk1
 			echo "KVM_VM_DISK_SIZE_1=\"$KVM_VM_DISK\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/disk1
 		else
 			# add empty disk disk parameter
@@ -196,12 +214,20 @@ case "$KVM_COMMAND" in
 		# start
 		chmod +x $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
 		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
+		fi
 		kvm_lock release
 		;;
 	start)
 		kvm_lock aquire
 		echo "Starting Kvm vm $KVM_VM_NAME"
 		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
+		fi
 		kvm_lock release
 		;;
 	stop)
@@ -214,6 +240,10 @@ case "$KVM_COMMAND" in
 		else
 			kill $VM_PID
 			kill -9 $VM_PID 1>/dev/null 2>&1
+		fi
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
 		fi
 		kvm_lock release
 		;;
@@ -230,6 +260,10 @@ case "$KVM_COMMAND" in
 		fi
 		sleep 2
 		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
+		fi
 		kvm_lock release
 		;;
 	delete)
@@ -243,6 +277,10 @@ case "$KVM_COMMAND" in
 			kill -9 $VM_PID 1>/dev/null 2>&1
 		fi
 		rm -rf $OPENQRM_VM_DIR/$KVM_VM_NAME
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
+		fi
 		kvm_lock release
 		;;
 	list)
@@ -250,7 +288,6 @@ case "$KVM_COMMAND" in
 		ls $OPENQRM_VM_DIR/
 		;;
 	post_vm_list)
-		kvm_lock aquire
 		echo "Posting vm list to the openQRM-server"
 		VM_LIST_TMP=$resource_id.vm_list
         > $VM_LIST_TMP
@@ -270,13 +307,11 @@ case "$KVM_COMMAND" in
 		fi
 		rm -f $VM_LIST_TMP
 		rm -f $VM_LIST_TMP.post
-		kvm_lock release
 		;;
 	post_vm_config)
 		if [ "$KVM_VM_NAME" == "" ]; then
 			kvm_usage
 		fi
-		kvm_lock aquire
 		echo "Posting vm config for $KVM_VM_NAME to the openQRM-server"
 		VM_CONFIG_TMP=$resource_id.$KVM_VM_NAME.vm_config
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/ram
@@ -315,7 +350,6 @@ case "$KVM_COMMAND" in
 		fi
 		rm -f $VM_CONFIG_TMP
 		rm -f $VM_CONFIG_TMP.post
-		kvm_lock release
 		;;
 
 	update_vm_ram)
@@ -328,6 +362,10 @@ case "$KVM_COMMAND" in
 		kvm_lock aquire
 		echo "Updating KVM vm $KVM_VM_NAME with $KVM_VM_RAM Memory"
 		sed -i -e s"#KVM_VM_RAM=.*#KVM_VM_RAM=\"$KVM_VM_RAM\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/ram
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $KVM_VM_NAME -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
+		fi
 		kvm_lock release
 		;;
 
@@ -346,6 +384,10 @@ case "$KVM_COMMAND" in
 		echo "Adding nic $KVM_VM_COMPONENT_NUMBER size $KVM_VM_DISK to KVM vm $KVM_VM_NAME"
 		sed -i -e s"#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=\"-net nic,macaddr=$KVM_VM_MAC,model=rtl8139\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/net""$KVM_VM_COMPONENT_NUMBER
 		sed -i -e s"#KVM_VM_MAC_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_MAC_$KVM_VM_COMPONENT_NUMBER=\"$KVM_VM_MAC\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/net""$KVM_VM_COMPONENT_NUMBER
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $KVM_VM_NAME -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
+		fi
 		kvm_lock release
 		;;
 	remove_vm_nic)
@@ -359,10 +401,12 @@ case "$KVM_COMMAND" in
 		echo "Removing nic $KVM_VM_COMPONENT_NUMBER from KVM vm $KVM_VM_NAME"
 		sed -i -e s"#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/net""$KVM_VM_COMPONENT_NUMBER
 		sed -i -e s"#KVM_VM_MAC_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_MAC_$KVM_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/net""$KVM_VM_COMPONENT_NUMBER
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $KVM_VM_NAME -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
+		fi
 		kvm_lock release
 		;;
-
-
 
 	add_vm_disk)
 		if [ "$KVM_VM_NAME" == "" ]; then
@@ -375,14 +419,19 @@ case "$KVM_COMMAND" in
 			kvm_usage
 		fi
 		kvm_lock aquire
-		echo "Adding disk $KVM_VM_COMPONENT_NUMBER size $KVM_VM_DISK to KVM vm $KVM_VM_NAME"
-		sed -i -e s"#KVM_VM_DISK_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_DISK_$KVM_VM_COMPONENT_NUMBER=\"-drive file=$OPENQRM_VM_DIR/$KVM_VM_NAME/disk0$KVM_VM_COMPONENT_NUMBER.img,if=scsi\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/disk""$KVM_VM_COMPONENT_NUMBER
+        DISK_NAME=`get_disk_name $KVM_VM_COMPONENT_NUMBER`
+		echo "Adding disk $KVM_VM_COMPONENT_NUMBER ($DISK_NAME) size $KVM_VM_DISK to KVM vm $KVM_VM_NAME"
+		sed -i -e s"#KVM_VM_DISK_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_DISK_$KVM_VM_COMPONENT_NUMBER=\"-$DISK_NAME $OPENQRM_VM_DIR/$KVM_VM_NAME/disk0$KVM_VM_COMPONENT_NUMBER.img\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/disk""$KVM_VM_COMPONENT_NUMBER
 		sed -i -e s"#KVM_VM_DISK_SIZE_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_DISK_SIZE_$KVM_VM_COMPONENT_NUMBER=\"$KVM_VM_DISK\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/disk""$KVM_VM_COMPONENT_NUMBER
 		KVM_DISK_FILE="$OPENQRM_VM_DIR/$KVM_VM_NAME/disk0$KVM_VM_COMPONENT_NUMBER.img"
-		if ! qemu-img create $KVM_DISK_FILE $KVM_VM_DISK""M; then
+        if ! dd if=/dev/zero of=$KVM_DISK_FILE bs=1M seek=$KVM_VM_DISK count=1; then
 			echo "ERROR: Could not create $KVM_DISK_FILE for KVM vm $KVM_VM_NAME" | logger
 			kvm_lock release
 			exit 1
+		fi
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $KVM_VM_NAME -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
 		fi
 		kvm_lock release
 		;;
@@ -398,6 +447,10 @@ case "$KVM_COMMAND" in
 		sed -i -e s"#KVM_VM_DISK_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_DISK_$KVM_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/disk""$KVM_VM_COMPONENT_NUMBER
 		sed -i -e s"#KVM_VM_DISK_SIZE_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_DISK_SIZE_$KVM_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/disk""$KVM_VM_COMPONENT_NUMBER
 		rm -f $OPENQRM_VM_DIR/$KVM_VM_NAME/disk0$KVM_VM_COMPONENT_NUMBER.img
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $KVM_VM_NAME -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
+		fi
 		kvm_lock release
 		;;
 	setboot)

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Select ZFS Storage</title>
+	<title>LVM Storage manager</title>
     <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
     <link rel="stylesheet" type="text/css" href="lvm-storage.css" />
     <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
@@ -60,7 +60,7 @@ global $lvm_lun_name;
 global $lvm_lun_snap_name;
 
 $refresh_delay=1;
-$refresh_loop_max=10;
+$refresh_loop_max=20;
 
 
 function redirect_vg($strMsg, $lvm_storage_id) {
@@ -110,7 +110,7 @@ function show_progressbar() {
 			value: 100
 		});
         var options = {};
-        $("#progressbar").effect("shake",options,1000,null);
+        $("#progressbar").effect("shake",options,2000,null);
 	</script>
 <?php
         flush();

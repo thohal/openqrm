@@ -25,12 +25,6 @@
 </div>
 
 <?php
-$action = $_REQUEST["action"];
-$kvm_server_id = $_REQUEST["kvm_server_id"];
-$kvm_server_name = $_REQUEST["kvm_server_name"];
-$kvm_server_mac = $_REQUEST["kvm_server_mac"];
-$kvm_server_ram = $_REQUEST["kvm_server_ram"];
-$kvm_server_disk = $_REQUEST["kvm_server_disk"];
 
 // error_reporting(E_ALL);
 $thisfile = basename($_SERVER['PHP_SELF']);
@@ -51,8 +45,18 @@ global $RESOURCE_INFO_TABLE;
 
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
-
 global $OPENQRM_SERVER_IP_ADDRESS;
+$refresh_delay=1;
+$refresh_loop_max=20;
+
+// get the post parmater
+$action = htmlobject_request('action');
+$kvm_server_id = htmlobject_request('kvm_server_id');
+$kvm_server_name = htmlobject_request('kvm_server_name');
+$kvm_server_mac = htmlobject_request('kvm_server_mac');
+$kvm_server_ram = htmlobject_request('kvm_server_ram');
+$kvm_server_disk = htmlobject_request('kvm_server_disk');
+
 
 function redirect_mgmt($strMsg, $file, $kvm_server_id) {
     global $thisfile;
@@ -62,6 +66,20 @@ function redirect_mgmt($strMsg, $file, $kvm_server_id) {
     exit;
 }
 
+function wait_for_statfile($sfile) {
+    global $refresh_delay;
+    global $refresh_loop_max;
+    $refresh_loop=0;
+    while (!file_exists($sfile)) {
+        sleep($refresh_delay);
+        $refresh_loop++;
+        flush();
+        if ($refresh_loop > $refresh_loop_max)  {
+            return false;
+        }
+    }
+    return true;
+}
 
 function show_progressbar() {
 ?>
@@ -70,7 +88,7 @@ function show_progressbar() {
 			value: 100
 		});
         var options = {};
-        $("#progressbar").effect("shake",options,1000,null);
+        $("#progressbar").effect("shake",options,2000,null);
 	</script>
 <?php
         flush();
@@ -103,6 +121,13 @@ if(htmlobject_request('action') != '') {
             } else {
                 $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm create -n $kvm_server_name -m $kvm_server_mac -r $kvm_server_ram -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
             }
+            // remove current stat file
+            $kvm_server_resource_id = $kvm_server->id;
+            $statfile="kvm-stat/".$kvm_server_resource_id.".vm_list";
+            if (file_exists($statfile)) {
+                unlink($statfile);
+            }
+            // send command
             $kvm_server->send_command($kvm_server->ip, $resource_command);
             // add resource + type + vhostid
             $resource = new resource();
@@ -120,8 +145,12 @@ if(htmlobject_request('action') != '') {
             $resource_fields["resource_vtype"]=$virtualization->id;
             $resource_fields["resource_vhostid"]=$kvm_server->id;
             $resource->add($resource_fields);
-            // + redirect to the kvm manager
-            $strMsg="Created new KVM vm resource $resource_id";
+            // and wait for the resulting statfile
+            if (!wait_for_statfile($statfile)) {
+                $strMsg .= "Error during creating new KVM vm ! Please check the Event-Log<br>";
+            } else {
+                $strMsg .="Created new KVM vm resource $resource_id<br>";
+            }
             redirect_mgmt($strMsg, "kvm-manager.php", $kvm_server_id);
             break;
 
