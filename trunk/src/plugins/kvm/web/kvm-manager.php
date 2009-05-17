@@ -285,12 +285,6 @@ function kvm_server_select() {
 	global $thisfile;
 	$table = new htmlobject_db_table('kvm_server_id');
 
-
-	$disp = "<h1>Select kvm-Host</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."Please select a kvm-Host from the list below";
-	$disp = $disp."<br>";
-
 	$arHead = array();
 	$arHead['kvm_server_state'] = array();
 	$arHead['kvm_server_state']['title'] ='';
@@ -359,7 +353,16 @@ function kvm_server_select() {
 		$table->identifier = 'kvm_server_id';
 	}
 	$table->max = $kvm_server_count;
-	return $disp.$table->get_string();
+    // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'kvm-select.tpl.php');
+	$t->setVar(array(
+		'formaction' => $thisfile,
+        'kvm_server_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
 }
 
 
@@ -372,8 +375,6 @@ function kvm_server_display($appliance_id) {
 	global $OPENQRM_SERVER_BASE_DIR;
 
 	$table = new htmlobject_table_identifiers_checked('kvm_server_id');
-
-	$disp = "<h1>Kvm-Server-Admin</h1>";
 
 	$arHead = array();
 	$arHead['kvm_server_state'] = array();
@@ -442,10 +443,8 @@ function kvm_server_display($appliance_id) {
 		$table->identifier = 'kvm_server_id';
 	}
 	$table->max = $kvm_server_count;
-	$disp = $disp.$table->get_string();
 
-	$disp = $disp."<h1>VMs on resource $kvm_server_resource->id/$kvm_server_resource->hostname</h1>";
-
+    // table 1
     $table1 = new htmlobject_db_table('kvm_vm_name');
 	$arHead1 = array();
 	$arHead1['kvm_vm_state'] = array();
@@ -515,8 +514,6 @@ function kvm_server_display($appliance_id) {
 			}
 		}
 	}
-
-
 	$table1->id = 'Tabelle';
 	$table1->css = 'htmlobject_table';
 	$table1->border = 1;
@@ -532,10 +529,19 @@ function kvm_server_display($appliance_id) {
 		$table1->identifier = 'kvm_vm_name';
 	}
 	$table1->max = $kvm_vm_count;
-	$disp = $disp.$table1->get_string();
 
-	$disp = $disp."<br>";
-	$disp = $disp."<hr>";
+    // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'kvm-vms.tpl.php');
+	$t->setVar(array(
+		'formaction' => $thisfile,
+        'kvm_server_table' => $table->get_string(),
+        'kvm_server_id' => $kvm_server_resource->id,
+        'kvm_server_name' => $kvm_server_resource->hostname,
+        'kvm_vm_table' => $table1->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
 

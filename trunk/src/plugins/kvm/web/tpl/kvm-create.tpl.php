@@ -5,9 +5,8 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1>Kvm-server Create VM</h1>
+<h1>KVM-server Create VM</h1>
 
-<form action="{formaction}" method="GET">
 Add new VM to KVM Host id {kvm_server_id}
 <br>
 <br>
