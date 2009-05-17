@@ -319,7 +319,10 @@ case "$LVM_COMMAND" in
 			case $LVM_IMAGE_TYPE in
 				lvm-nfs-deployment)
 					if grep $LVOL /etc/exports 1>/dev/null; then
-						lvs $LVM_STORAGE_SERVER_VOLUME_GROUP/$LVOL | grep -v LSize | sed -e "s/ \{1,\}//" >> $STORAGE_STATUS_TMP
+                        # is this a local-storage location ?
+                        if [ ! -f /$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVOL/local-storage ]; then
+                            lvs $LVM_STORAGE_SERVER_VOLUME_GROUP/$LVOL | grep -v LSize | sed -e "s/ \{1,\}//" >> $STORAGE_STATUS_TMP
+                        fi
 					fi
 					;;
 
@@ -356,8 +359,11 @@ case "$LVM_COMMAND" in
 					exportfs -v | awk {' print $1 '} | grep -v "<.*>" > /tmp/$STORAGE_STATUS_TMP
 					if grep $LVOL_SHORT /tmp/$STORAGE_STATUS_TMP 1>/dev/null; then
 						EXPORT_PATH=`echo $LVOL | sed -e "s#^/dev##g"`
-						echo "$LVOL,$EXPORT_PATH"
-						echo "$LVOL,$EXPORT_PATH" >> $STORAGE_STATUS_TMP
+                        # is this a local-storage location ?
+                        if [ ! -f $EXPORT_PATH/local-storage ]; then
+                            echo "$LVOL,$EXPORT_PATH"
+                            echo "$LVOL,$EXPORT_PATH" >> $STORAGE_STATUS_TMP
+                        fi
 					fi
 					rm -f /tmp/$STORAGE_STATUS_TMP
 					;;
