@@ -45,6 +45,8 @@ var $memused = '';
 var $swaptotal = '';
 var $swapused = '';
 var $hostname = '';
+var $vtype = '';
+var $vhostid = '';
 var $load = '';
 var $execdport = '';
 var $senddelay = '';
@@ -96,6 +98,8 @@ function get_instance($id, $mac, $ip) {
 		$this->swaptotal = $resource["resource_swaptotal"];
 		$this->swapused = $resource["resource_swapused"];
 		$this->hostname = $resource["resource_hostname"];
+		$this->vtype = $resource["resource_vtype"];
+		$this->vhostid = $resource["resource_vhostid"];
 		$this->load = $resource["resource_load"];
 		$this->execdport = $resource["resource_execdport"];
 		$this->senddelay = $resource["resource_senddelay"];
@@ -446,6 +450,8 @@ function get_fields($which) {
 	$resource_fields["resource_swaptotal"] = $resource->swaptotal;
 	$resource_fields["resource_swapused"] = $resource->swapused;
 	$resource_fields["resource_hostname"] = $resource->hostname;
+	$resource_fields["resource_vtype"] = $resource->vtype;
+	$resource_fields["resource_vhostid"] = $resource->vhostid;
 	$resource_fields["resource_load"] = $resource->load;
 	$resource_fields["resource_execdport"] = $resource->execdport;
 	$resource_fields["resource_senddelay"] = $resource->senddelay;

@@ -260,6 +260,7 @@ function start() {
 			$event->log("start", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found plugin $plugin_name handling start-appliance event.", "", "", 0, 0, $resource->id);
 			require_once "$plugin_start_appliance_hook";
 			$appliance_function="openqrm_"."$plugin_name"."_appliance";
+            $appliance_function=str_replace("-", "_", $appliance_function);
 			$appliance_function("start", $appliance_fields);
 		}
 	}
@@ -319,6 +320,7 @@ function stop() {
 			$event->log("stop", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found plugin $plugin_name handling stop-appliance event.", "", "", 0, 0, $resource->id);
 			require_once "$plugin_stop_appliance_hook";
 			$appliance_function="openqrm_"."$plugin_name"."_appliance";
+            $appliance_function=str_replace("-", "_", $appliance_function);
 			$appliance_function("stop", $appliance_fields);
 		}
 	}
