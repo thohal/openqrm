@@ -77,6 +77,22 @@ function mount_rootfs() {
 	wget -q -O /sbin/aoe-mkshelf http://$resource_openqrmserver/openqrm/boot-service/aoe-mkshelf
 	chmod +x /sbin/aoe*
 
+    # insert udev rule
+    mkdir -p /etc/udev
+    cat >> /etc/udev/rules.d/60-aoe.rules << EOF
+# aoe char devices
+SUBSYSTEM=="aoe", KERNEL=="discover", NAME="etherd/%k", GROUP="disk",
+MODE="0220"
+SUBSYSTEM=="aoe", KERNEL=="err", NAME="etherd/%k", GROUP="disk", MODE="0440"
+SUBSYSTEM=="aoe", KERNEL=="interfaces", NAME="etherd/%k", GROUP="disk",
+MODE="0220"
+SUBSYSTEM=="aoe", KERNEL=="revalidate", NAME="etherd/%k", GROUP="disk",
+MODE="0220"
+# aoe block devices
+KERNEL=="etherd*", NAME="%k", GROUP="disk"
+
+EOF
+
 	# load aoe related modules
 	mkdir /dev/etherd
 	modprobe aoe

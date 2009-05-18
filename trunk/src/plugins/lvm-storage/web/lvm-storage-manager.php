@@ -372,13 +372,6 @@ function lvm_select_storage() {
 
 	$table = new htmlobject_db_table('storage_id');
 
-	$disp = "<h1>Select Lvm-storage</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."Please select a Lvm-storage server from the list below";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-
 	$arHead = array();
 	$arHead['storage_state'] = array();
 	$arHead['storage_state']['title'] ='';
@@ -460,7 +453,17 @@ function lvm_select_storage() {
 		$table->identifier = 'storage_id';
 	}
 	$table->max = $storage_count;
-	return $disp.$table->get_string();
+
+   // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'lvm-storage-select.tpl.php');
+	$t->setVar(array(
+		'formaction' => $thisfile,
+		'storage_server_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
 }
 
 
