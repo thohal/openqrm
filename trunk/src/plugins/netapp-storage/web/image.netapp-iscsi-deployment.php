@@ -61,6 +61,7 @@ function get_image_rootdevice_identifier($netapp_iscsi_storage_id) {
 	$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"lun show -v\" \"$NETAPP_PASSWORD\" | grep '/lun' | awk {' print $1 '} > $StorageDir/$netapp_storage_id.iscsi.ident";
 	$output = shell_exec($openqrm_server_command);
     if (!wait_for_identfile($ident_file)) {
+        $event->log("get_image_rootdevice_identifier", $_SERVER['REQUEST_TIME'], 2, "image.netapp-iscsi-deployment", "Timeout while requesting image identifier from storage id $storage->id", "", "", 0, 0, 0);
         return;
     }
 	$loop=1;

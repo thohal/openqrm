@@ -58,6 +58,7 @@ function get_image_rootdevice_identifier($lvm_aoe_storage_id) {
 	$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage post_identifier -t lvm-aoe-deployment -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 	$storage_resource->send_command($storage_resource->ip, $resource_command);
     if (!wait_for_identfile($ident_file)) {
+        $event->log("get_image_rootdevice_identifier", $_SERVER['REQUEST_TIME'], 2, "image.lvm-aoe-deployment", "Timeout while requesting image identifier from storage id $storage->id", "", "", 0, 0, 0);
         return;
     }
     $fcontent = file($ident_file);

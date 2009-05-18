@@ -59,6 +59,7 @@ function get_image_rootdevice_identifier($netapp_nfs_storage_id) {
 	$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"exportfs\" \"$NETAPP_PASSWORD\" | grep \",rw,\" | awk {' print $1 '} > $StorageDir/$netapp_nfs_storage_id.nfs.ident";
 	$output = shell_exec($openqrm_server_command);
     if (!wait_for_identfile($ident_file)) {
+        $event->log("get_image_rootdevice_identifier", $_SERVER['REQUEST_TIME'], 2, "image.netapp-nfs-deployment", "Timeout while requesting image identifier from storage id $storage->id", "", "", 0, 0, 0);
         return;
     }
     $fcontent = file($ident_file);

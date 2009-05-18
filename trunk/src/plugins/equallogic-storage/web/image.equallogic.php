@@ -64,6 +64,7 @@ function get_image_rootdevice_identifier($equallogic_storage_id) {
     $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage post_identifier -u $eq_user -p $eq_password -e $eq_storage_ip";
     $output = shell_exec($openqrm_server_command);
     if (!wait_for_identfile($ident_file)) {
+        $event->log("get_image_rootdevice_identifier", $_SERVER['REQUEST_TIME'], 2, "image.equallogic-deployment", "Timeout while requesting image identifier from storage id $storage->id", "", "", 0, 0, 0);
         return;
     }
     $lun_loop=1;
