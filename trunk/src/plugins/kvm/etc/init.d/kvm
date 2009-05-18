@@ -54,24 +54,24 @@ function kvm_start() {
 		exit 1
 	fi
 	# does bridge already exist ?
-	if ! brctl show | grep $OPENQRM_KVM_BRIDGE 1>/dev/null; then
-		kvm_log kvm_start "NOTICE: Kvm network-bridge $OPENQRM_KVM_BRIDGE not active yet. Activating now ..."
-		BRIDGE_INTERFACE=`ifconfig -a | grep -A1 $resource_mac | grep -B1 $resource_ip | head -n1 | awk {' print $1 '}`
-		if [ "$BRIDGE_INTERFACE" == "" ]; then
-			kvm_log kvm_start "ERROR: Could not find openQRM-interface to create the kvm network-bridge on!"
-			exit 1
-		fi
-		# create the bridge
-		brctl addbr $OPENQRM_KVM_BRIDGE
-		brctl setfd $OPENQRM_KVM_BRIDGE 0
-		brctl sethello $OPENQRM_KVM_BRIDGE 2
-		brctl setmaxage $OPENQRM_KVM_BRIDGE 12
-		brctl stp $OPENQRM_KVM_BRIDGE off
-		brctl addif $OPENQRM_KVM_BRIDGE $BRIDGE_INTERFACE
-		ifconfig $OPENQRM_KVM_BRIDGE $resource_ip up
-		ifconfig $BRIDGE_INTERFACE 0.0.0.0 up
-		kvm_log kvm_start "NOTICE: Kvm network-bridge $OPENQRM_KVM_BRIDGE now active."
-	fi
+#	if ! brctl show | grep $OPENQRM_KVM_BRIDGE 1>/dev/null; then
+#		kvm_log kvm_start "NOTICE: Kvm network-bridge $OPENQRM_KVM_BRIDGE not active yet. Activating now ..."
+#		BRIDGE_INTERFACE=`ifconfig -a | grep -A1 $resource_mac | grep -B1 $resource_ip | head -n1 | awk {' print $1 '}`
+#		if [ "$BRIDGE_INTERFACE" == "" ]; then
+#			kvm_log kvm_start "ERROR: Could not find openQRM-interface to create the kvm network-bridge on!"
+#			exit 1
+#		fi
+#		# create the bridge
+#		brctl addbr $OPENQRM_KVM_BRIDGE
+#		brctl setfd $OPENQRM_KVM_BRIDGE 0
+#		brctl sethello $OPENQRM_KVM_BRIDGE 2
+#		brctl setmaxage $OPENQRM_KVM_BRIDGE 12
+#		brctl stp $OPENQRM_KVM_BRIDGE off
+#		brctl addif $OPENQRM_KVM_BRIDGE $BRIDGE_INTERFACE
+#		ifconfig $OPENQRM_KVM_BRIDGE $resource_ip up
+#		ifconfig $BRIDGE_INTERFACE 0.0.0.0 up
+#		kvm_log kvm_start "NOTICE: Kvm network-bridge $OPENQRM_KVM_BRIDGE now active."
+#	fi
 
 
 }
