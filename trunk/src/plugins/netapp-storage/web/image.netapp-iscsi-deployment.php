@@ -16,11 +16,27 @@ global $OPENQRM_SERVER_BASE_DIR;
 $event = new event();
 global $event;
 
+
+function wait_for_identfile($sfile) {
+    $refresh_delay=1;
+    $refresh_loop_max=20;
+    $refresh_loop=0;
+    while (!file_exists($sfile)) {
+        sleep($refresh_delay);
+        $refresh_loop++;
+        flush();
+        if ($refresh_loop > $refresh_loop_max)  {
+            return false;
+        }
+    }
+    return true;
+}
+
+
 function get_image_rootdevice_identifier($netapp_iscsi_storage_id) {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
 	global $event;
-	$refresh_delay=5;
 
 	// place for the storage stat files
 	$StorageDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/iscsi-storage/storage';
@@ -29,7 +45,6 @@ function get_image_rootdevice_identifier($netapp_iscsi_storage_id) {
 	$storage->get_instance_by_id($netapp_iscsi_storage_id);
 	$storage_resource = new resource();
 	$storage_resource->get_instance_by_id($storage->resource_id);
-
 	# get netapp password
 	$cap_array = explode(" ", $storage->capabilities);
 	foreach ($cap_array as $index => $capabilities) {
@@ -38,21 +53,23 @@ function get_image_rootdevice_identifier($netapp_iscsi_storage_id) {
 			$NETAPP_PASSWORD=str_replace("\"", "", $NETAPP_PASSWORD);
 		}
 	}
-	
+	$ident_file = "$StorageDir/$netapp_storage_id.iscsi.ident";
+    if (file_exists($ident_file)) {
+        unlink($ident_file);
+    }
+    // send command
 	$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"lun show -v\" \"$NETAPP_PASSWORD\" | grep '/lun' | awk {' print $1 '} > $StorageDir/$netapp_storage_id.iscsi.ident";
 	$output = shell_exec($openqrm_server_command);
-	sleep($refresh_delay);
-	
+    if (!wait_for_identfile($ident_file)) {
+        return;
+    }
 	$loop=1;
-	$ident_file = "$StorageDir/$netapp_storage_id.iscsi.ident";
-	if (file_exists($ident_file)) {
-		$fcontent = file($ident_file);
-		foreach($fcontent as $lun_info) {
-			$image_name = trim($lun_info);
-			$troot_device = trim("/dev/netapp/$loop");
-			$rootdevice_identifier_array[] = array("value" => "$troot_device", "label" => "$image_name");
-			$loop++;
-		}
+    $fcontent = file($ident_file);
+    foreach($fcontent as $lun_info) {
+        $image_name = trim($lun_info);
+        $troot_device = trim("/dev/netapp/$loop");
+        $rootdevice_identifier_array[] = array("value" => "$troot_device", "label" => "$image_name");
+        $loop++;
 	}
 	return $rootdevice_identifier_array;
 

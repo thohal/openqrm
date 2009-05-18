@@ -20,12 +20,28 @@ global $EQUALLOGIC_STORAGE_SERVER_TABLE;
 $event = new event();
 global $event;
 
+
+function wait_for_identfile($sfile) {
+    $refresh_delay=1;
+    $refresh_loop_max=20;
+    $refresh_loop=0;
+    while (!file_exists($sfile)) {
+        sleep($refresh_delay);
+        $refresh_loop++;
+        flush();
+        if ($refresh_loop > $refresh_loop_max)  {
+            return false;
+        }
+    }
+    return true;
+}
+
+
 function get_image_rootdevice_identifier($equallogic_storage_id) {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
     global $EQUALLOGIC_STORAGE_SERVER_TABLE;
 	global $event;
-	$refresh_delay=5;
 
 	// place for the storage stat files
 	$StorageDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/equallogic-storage/storage';
@@ -40,23 +56,26 @@ function get_image_rootdevice_identifier($equallogic_storage_id) {
     $eq_storage_ip = $storage_resource->ip;
     $eq_user = $eq_storage->storage_user;
     $eq_password = $eq_storage->storage_password;
-	$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage post_identifier -u $eq_user -p $eq_password -e $eq_storage_ip";
-    $output = shell_exec($openqrm_server_command);
-
-    sleep($refresh_delay);
 	$ident_file = "$StorageDir/$eq_storage_ip.equallogic.ident";
+    if (file_exists($ident_file)) {
+        unlink($ident_file);
+    }
+    // send command
+    $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage post_identifier -u $eq_user -p $eq_password -e $eq_storage_ip";
+    $output = shell_exec($openqrm_server_command);
+    if (!wait_for_identfile($ident_file)) {
+        return;
+    }
     $lun_loop=1;
-	if (file_exists($ident_file)) {
-		$fcontent = file($ident_file);
-		foreach($fcontent as $lun_info) {
-            $equallogic_output = trim($lun_info);
-            $first_at_pos = strpos($equallogic_output, "@");
-            $first_at_pos++;
-            $eq_name = trim(substr($equallogic_output, 0, $first_at_pos-1));
-			$rootdevice_identifier_array[] = array("value" => "/dev/$eq_storage_ip/$lun_loop", "label" => "$eq_name");
-            $lun_loop++;
-		}
-	}
+    $fcontent = file($ident_file);
+    foreach($fcontent as $lun_info) {
+        $equallogic_output = trim($lun_info);
+        $first_at_pos = strpos($equallogic_output, "@");
+        $first_at_pos++;
+        $eq_name = trim(substr($equallogic_output, 0, $first_at_pos-1));
+        $rootdevice_identifier_array[] = array("value" => "/dev/$eq_storage_ip/$lun_loop", "label" => "$eq_name");
+        $lun_loop++;
+    }
 	return $rootdevice_identifier_array;
 
 }
