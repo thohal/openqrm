@@ -47,7 +47,7 @@ $aoe_storage_id = htmlobject_request('aoe_storage_id');
 $aoe_storage_name = htmlobject_request('aoe_storage_id');
 $aoe_lun_size = htmlobject_request('aoe_lun_size');
 $aoe_lun_name = htmlobject_request('aoe_lun_name');
-$aoe_lun_snapshot_name = htmlobject_request('aoe_lun_snapshot_name');
+$aoe_lun_snap_name = htmlobject_request('aoe_lun_snap_name');
 $aoe_storage_fields = array();
 foreach ($_REQUEST as $key => $value) {
 	if (strncmp($key, "aoe_storage_", 11) == 0) {
@@ -58,7 +58,7 @@ global $aoe_storage_id;
 global $aoe_storage_name;
 global $aoe_lun_size;
 global $aoe_lun_name;
-global $aoe_lun_snapshot_name;
+global $aoe_lun_snap_name;
 
 $refresh_delay=1;
 $refresh_loop_max=20;
@@ -198,36 +198,79 @@ if(htmlobject_request('redirect') != 'yes') {
                     $storage_resource->send_command($storage_resource->ip, $resource_command);
                     // and wait for the resulting statfile
                     if (!wait_for_statfile($statfile)) {
-                        $redir_msg = "Error during adding AOE volume $aoe_lun_name ! Please check the Event-Log";
+                        $redir_msg .= "Error during adding AOE volume $aoe_lun_name ! Please check the Event-Log<br>";
                     } else {
-                        $redir_msg = "Added AOE volume $aoe_lun_name to storage id $aoe_storage_id";
+                        $redir_msg .= "Added AOE volume $aoe_lun_name to storage id $aoe_storage_id<br>";
                     }
                     redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
                 }
                 break;
 
             case 'remove':
-                $storage = new storage();
-                $storage->get_instance_by_id($aoe_storage_id);
-                $storage_resource = new resource();
-                $storage_resource->get_instance_by_id($storage->resource_id);
-                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/bin/openqrm-aoe-storage remove -n $aoe_storage_image_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                $storage_resource->send_command($storage_resource->ip, $resource_command);
-                sleep($refresh_delay);
+                if (strlen($aoe_storage_id)) {
+                    show_progressbar();
+                    if (isset($_REQUEST['identifier'])) {
+                        $storage = new storage();
+                        $storage->get_instance_by_id($aoe_storage_id);
+                        $storage_resource = new resource();
+                        $storage_resource->get_instance_by_id($storage->resource_id);
+                        // remove current stat file
+                        $storage_resource_id = $storage_resource->id;
+                        $statfile="storage/".$storage_resource_id.".aoe.stat";
+                        if (file_exists($statfile)) {
+                            unlink($statfile);
+                        }
+                        // send command
+                        foreach($_REQUEST['identifier'] as $aoe_lun_name) {
+                            $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/bin/openqrm-aoe-storage remove -n $aoe_lun_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                            $storage_resource->send_command($storage_resource->ip, $resource_command);
+                            $redir_msg .= "Removed AOE volume $aoe_lun_name from storage id $aoe_storage_id<br>";
+                            sleep(2);
+                        }
+                        // and wait for the resulting statfile
+                        if (!wait_for_statfile($statfile)) {
+                            $redir_msg = "Error during removing AOE volume ! Please check the Event-Log<br>";
+                        }
+                        redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
+                    }
+                }
                 break;
 
             case 'snap':
-                $storage = new storage();
-                $storage->get_instance_by_id($aoe_storage_id);
-                $storage_resource = new resource();
-                $storage_resource->get_instance_by_id($storage->resource_id);
-                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/bin/openqrm-aoe-storage snap -n $aoe_storage_image_name -s $aoe_storage_image_snapshot_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                $storage_resource->send_command($storage_resource->ip, $resource_command);
-                sleep($refresh_delay);
+                if (strlen($aoe_storage_id)) {
+                    show_progressbar();
+                    if (!strlen($aoe_lun_name)) {
+                        $redir_msg = "Got emtpy AOE volume name. Not adding ...";
+                        redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
+                        exit(0);
+                    }
+                    if (!strlen($aoe_lun_snap_name)) {
+                        $redir_msg = "Got emtpy AOE volume snapshot name. Not adding ...";
+                        redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
+                        exit(0);
+                    }
+                    $storage = new storage();
+                    $storage->get_instance_by_id($aoe_storage_id);
+                    $storage_resource = new resource();
+                    $storage_resource->get_instance_by_id($storage->resource_id);
+                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aoe-storage/bin/openqrm-aoe-storage snap -n $aoe_lun_name -s $aoe_lun_snap_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                    // remove current stat file
+                    $storage_resource_id = $storage_resource->id;
+                    $statfile="storage/".$storage_resource_id.".aoe.stat";
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
+                    $storage_resource->send_command($storage_resource->ip, $resource_command);
+                    // and wait for the resulting statfile
+                    if (!wait_for_statfile($statfile)) {
+                        $redir_msg .= "Error during snapshotting AOE volume $aoe_lun_name ! Please check the Event-Log<br>";
+                    } else {
+                        $redir_msg .= "Cloned AOE volume $aoe_lun_name on storage id $aoe_storage_id<br>";
+                    }
+                    redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
+                }
                 break;
-
-
-
         }
     }
 }
@@ -370,7 +413,7 @@ function aoe_storage_display($aoe_storage_id) {
 	$arHead['aoe_lun_auth']['title'] ='Auth';
 
 	$arHead['aoe_lun_snap'] = array();
-	$arHead['aoe_lun_snap']['title'] ='Clone (name + size)';
+	$arHead['aoe_lun_snap']['title'] ='Clone (name)';
 
 
 	$arBody = array();
@@ -408,14 +451,13 @@ function aoe_storage_display($aoe_storage_id) {
                 $aoe_lun_nic = trim(substr($aoe_line, 0, $first_at_pos-1));
                 $aoe_lun = trim(substr($aoe_line_first_at_removed, 0, $second_at_pos-1));
                 $aoe_lun_no = trim(substr($aoe_line_second_at_removed, 0, $third_at_pos-1));
-                $aoe_lun_name = trim(substr($aoe_line_third_at_removed, 0, $fourth_at_pos-1));
+                $aoe_lun_name = basename(trim(substr($aoe_line_third_at_removed, 0, $fourth_at_pos-1)));
                 $aoe_lun_auth = trim(substr($aoe_line_fourth_at_removed, 0, $fivth_at_pos-1));
                 // build the snap-shot input
                 $aoe_lun_snap = "<form action=\"$thisfile\" method=\"GET\">";
                 $aoe_lun_snap .= "<input type='hidden' name='aoe_storage_id' value=$aoe_storage_id>";
                 $aoe_lun_snap .= "<input type='hidden' name='aoe_lun_name' value=$aoe_lun_name>";
                 $aoe_lun_snap .= "<input type='text' name='aoe_lun_snap_name' value='' size='10' maxlength='20'>";
-                $aoe_lun_snap .= "<input type='text' name='aoe_lun_snap_size' value='' size='5' maxlength='10'> MB ";
                 $aoe_lun_snap .= "<input type='submit' name='action' value='snap'>";
                 $aoe_lun_snap .= "</form>";
 
@@ -445,7 +487,7 @@ function aoe_storage_display($aoe_storage_id) {
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('reload', 'remove');
-		$table->identifier = 'aoe_name';
+		$table->identifier = 'aoe_lun_name';
 	}
 	$table->max = $aoe_count;
 
@@ -492,6 +534,22 @@ if(htmlobject_request('action') != '') {
 			break;
 
         case 'add':
+            if (strlen($aoe_storage_id)) {
+                $output[] = array('label' => 'Aoe Storage Admin', 'value' => aoe_storage_display($aoe_storage_id));
+            } else {
+            	$output[] = array('label' => 'Select', 'value' => aoe_select_storage());
+            }
+			break;
+
+        case 'remove':
+            if (strlen($aoe_storage_id)) {
+                $output[] = array('label' => 'Aoe Storage Admin', 'value' => aoe_storage_display($aoe_storage_id));
+            } else {
+            	$output[] = array('label' => 'Select', 'value' => aoe_select_storage());
+            }
+			break;
+
+        case 'snap':
             if (strlen($aoe_storage_id)) {
                 $output[] = array('label' => 'Aoe Storage Admin', 'value' => aoe_storage_display($aoe_storage_id));
             } else {

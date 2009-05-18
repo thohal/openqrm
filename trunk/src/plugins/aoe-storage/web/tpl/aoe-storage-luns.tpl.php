@@ -10,6 +10,8 @@
 
 <form action="{formaction}" method="GET">
 Add new AOE Volume group
+<br>
+<br>
 <div style="float:left;">
 {aoe_lun_name}
 {aoe_lun_size}

@@ -16,11 +16,27 @@ global $OPENQRM_SERVER_BASE_DIR;
 $event = new event();
 global $event;
 
+
+function wait_for_identfile($sfile) {
+    $refresh_delay=1;
+    $refresh_loop_max=20;
+    $refresh_loop=0;
+    while (!file_exists($sfile)) {
+        sleep($refresh_delay);
+        $refresh_loop++;
+        flush();
+        if ($refresh_loop > $refresh_loop_max)  {
+            return false;
+        }
+    }
+    return true;
+}
+
+
 function get_image_rootdevice_identifier($lvm_aoe_storage_id) {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
 	global $event;
-	$refresh_delay=5;
 
 	if (!strlen($OPENQRM_USER->name)) {
 		$OPENQRM_USER = new user("openqrm");
@@ -33,22 +49,25 @@ function get_image_rootdevice_identifier($lvm_aoe_storage_id) {
 	$storage->get_instance_by_id($lvm_aoe_storage_id);
 	$storage_resource = new resource();
 	$storage_resource->get_instance_by_id($storage->resource_id);
-	$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage post_identifier -t lvm-aoe-deployment -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-	$storage_resource->send_command($storage_resource->ip, $resource_command);
-	sleep($refresh_delay);
 	$storage_resource_id = $storage_resource->id;
 	$ident_file = "$StorageDir/$storage_resource_id.lv.lvm-aoe-deployment.ident";
-	if (file_exists($ident_file)) {
-		$fcontent = file($ident_file);
-		foreach($fcontent as $lun_info) {
-			$tpos = strpos($lun_info, ",");
-			$timage_name = trim(substr($lun_info, 0, $tpos));
-			$troot_device = trim(substr($lun_info, $tpos+1));
-			$rootdevice_identifier_array[] = array("value" => "$troot_device", "label" => "$timage_name");
-		}
-	}
+    if (file_exists($ident_file)) {
+        unlink($ident_file);
+    }
+    // send command
+	$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage post_identifier -t lvm-aoe-deployment -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+	$storage_resource->send_command($storage_resource->ip, $resource_command);
+    if (!wait_for_identfile($ident_file)) {
+        return;
+    }
+    $fcontent = file($ident_file);
+    foreach($fcontent as $lun_info) {
+        $tpos = strpos($lun_info, ",");
+        $timage_name = trim(substr($lun_info, 0, $tpos));
+        $troot_device = trim(substr($lun_info, $tpos+1));
+        $rootdevice_identifier_array[] = array("value" => "$troot_device", "label" => "$timage_name");
+    }
 	return $rootdevice_identifier_array;
-
 }
 
 
