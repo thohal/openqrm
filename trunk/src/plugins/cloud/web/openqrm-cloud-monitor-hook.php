@@ -225,6 +225,14 @@ function openqrm_cloud_monitor() {
 			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
 			$resource->send_command($resource_ip, $image_remove_clone_cmd);
 
+		// zfs-storage
+		} else if (!strcmp($image_type, "zfs-deployment")) {
+			$zfs_zpool_name=dirname($image_rootdevice);
+			$zfs_zpool_lun_name=basename($image_rootdevice);
+			$image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zfs-storage/bin/openqrm-zfs-storage remove -n $zfs_zpool_lun_name -z $zfs_zpool_name";
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+			$resource->send_command($resource_ip, $image_remove_clone_cmd);
+
 
 		} else {
 			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to remove clone from image type $image_type.", "", "", 0, 0, 0);
@@ -755,7 +763,21 @@ function openqrm_cloud_monitor() {
 						);
 						$image->update($image_id, $ar_image_update);
 	
-	
+                    // zfs-storage
+					} else if (!strcmp($image_type, "zfs-deployment")) {
+						// generate a new image password for the clone
+						$image->get_instance_by_id($image_id);
+						$image_password = $image->generatePassword(14);
+						$image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
+                        $zfs_zpool_name=dirname($image_rootdevice);
+                        $zfs_zpool_lun_name=basename($image_rootdevice);
+                        $image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zfs-storage/bin/openqrm-zfs-storage snap -n $zfs_zpool_lun_name -i $image_password -z $zfs_zpool_name -s $image_clone_name";
+						$resource->send_command($resource_ip, $image_clone_cmd);
+						// update the image rootdevice parameter
+						$ar_image_update = array(
+							'image_rootdevice' => $zfs_zpool_name."/".$image_clone_name,
+						);
+						$image->update($image_id, $ar_image_update);
 	
 	
 					} else {
