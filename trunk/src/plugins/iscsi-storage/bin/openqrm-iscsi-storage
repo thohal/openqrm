@@ -172,7 +172,8 @@ case "$ISCSI_COMMAND" in
 	post_luns)
 		echo "Posting current iscsi-luns to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.iscsi.stat
-		cat $IETDCONF | grep -v '#' | sed '/^$/d' > $STORAGE_STATUS_TMP
+		cat $IETDCONF | grep -v '#' | grep Lun | cut -d',' -f1 | awk {' print $2" "$3 '} | sed -e "s/Path=//g" > $STORAGE_STATUS_TMP
+        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
 		if ! wget -q -O /dev/null --http-user=$ISCSI_OPENQRM_USERNAME --http-password=$ISCSI_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/iscsi-storage/iscsi-storage-action.php?iscsi_storage_command=get_storage; then
 			echo "ERROR: Could not post the iscsi-export status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the iscsi-export status to the openQRM-server at $resource_openqrmserver!" | logger

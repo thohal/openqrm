@@ -418,7 +418,7 @@ function aoe_storage_display($aoe_storage_id) {
 
 	$arBody = array();
 	$aoe_count=1;
-	$aoe_icon="/openqrm/base/plugins/aoe-storage/img/storage.png";
+	$storage_icon="/openqrm/base/plugins/aoe-storage/img/storage.png";
 
 	$storage_export_list="storage/$storage_resource->id.aoe.stat";
 	if (file_exists($storage_export_list)) {
