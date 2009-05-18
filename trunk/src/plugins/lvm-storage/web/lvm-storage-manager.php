@@ -21,14 +21,9 @@
     width: 400px;
     height: 20px;
 }
-
-
-
 </style>
-
 </head>
 <body>
-
 <div id="progressbar">
 </div>
 
