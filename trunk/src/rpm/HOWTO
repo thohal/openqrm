@@ -10,6 +10,10 @@ svn co https://openqrm.svn.sourceforge.net/svnroot/openqrm openqrm-4.3
 
 tar czf openqrm-4.3.tgz openqrm-4.3
 
+2.b create specfile:
+
+cd rpm; sh ./create_spec_file.sh > openqrm.spec
+cd ..
 
 3. prepare rpmbuild environment:
 
@@ -17,13 +21,13 @@ tar czf openqrm-4.3.tgz openqrm-4.3
 
 cp openqrm-4.3.tgz /usr/src/packages/SOURCES/
 
-cp rpm/openqrm-suse.spec /usr/src/packages/SPECS/
+cp rpm/openqrm.spec /usr/src/packages/SPECS/
 
 3.b. RedHat/Centos
 
 cp openqrm-4.3.tgz /usr/src/redhat/SOURCES/
 
-cp rpm/openqrm-rh.spec /usr/src/redhat/SPECS/
+cp rpm/openqrm.spec /usr/src/redhat/SPECS/
 
 
 4. build package
@@ -32,13 +36,13 @@ cp rpm/openqrm-rh.spec /usr/src/redhat/SPECS/
 
 cd /usr/src/packages
 
-rpmbuild -ba SPECS/openqrm-suse.spec
+rpmbuild -ba SPECS/openqrm.spec
 
 4.b RedHat/CentOS
 
 cd /usr/src/redhat
 
-rpmbuild -ba SPECS/openqrm-rh.spec
+rpmbuild -ba SPECS/openqrm.spec
 
 
 5. Finished.

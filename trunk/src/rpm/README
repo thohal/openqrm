@@ -3,13 +3,3 @@ This directory holds a work-in-progress spec file for transiting
 the current make packages solution into a single spec file.
 
 ----
-
-Hint:
-
-for name in `ls ../plugins | grep -v Makefile`;  do \
-	echo "%package "$name; \
-	echo "%files "$name; \
-	echo "%defattr(-,root,root)"; \
-	echo "/usr/lib/openqrm/"$name; \
-	echo ""; \
-done
