@@ -45,11 +45,13 @@ echo "#make clean"; \
 echo "#rm -rf $RPM_BUILD_ROOT"; \
 echo ""; \
 for name in `ls ../plugins | grep -v Makefile`;  do \
+	source ../plugins/$name/etc/openqrm-plugin-$name.conf
 	echo "%package "$name; \
 	echo "Summary: next generation data-center management platform."; \
 	echo "Group: Networking/Admin"; \
-	echo "Requires: openqrm"; \
+	echo "Requires: $OPENQRM_PLUGIN_DEPENDENCIES"; \
 	echo "%description plugin-$name"; \
+	echo "$OPENQRM_PLUGIN_DESCRIPTION"; \
 	echo "%files "$name; \
 	echo "%defattr(-,root,root)"; \
 	echo "/usr/lib/openqrm/"$name; \
