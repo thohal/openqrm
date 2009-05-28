@@ -12,7 +12,7 @@ tar czf openqrm-4.3.tgz openqrm-4.3
 
 2.b create specfile:
 
-cd rpm; sh ./create_spec_file.sh > openqrm.spec
+cd rpm; sh ./create_specfile.sh > openqrm.spec
 cd ..
 
 3. prepare rpmbuild environment:
