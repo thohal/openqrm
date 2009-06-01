@@ -182,7 +182,7 @@ case "$AOE_COMMAND" in
 	post_luns)
 		echo "Posting current aoe-luns to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.aoe.stat
-		cat $VBLADECONF | grep -v '#' > $STORAGE_STATUS_TMP
+		cat $VBLADECONF | grep -v '#' | grep $AOE_STORAGE_SERVER_IMAGE_DIRECTORY > $STORAGE_STATUS_TMP
         sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
 		if ! wget -q -O /dev/null --http-user=$AOE_OPENQRM_USERNAME --http-password=$AOE_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/aoe-storage/aoe-storage-action.php?aoe_storage_command=get_storage; then
 			echo "ERROR: Could not post the aoe-export status to the openQRM-server at $resource_openqrmserver!"
@@ -198,7 +198,7 @@ case "$AOE_COMMAND" in
 		OLD_IFS=$IFS
 IFS='
 '
-		for SHELF_STR in `cat $VBLADECONF | grep -v '#' | sed '/^$/d'`; do
+		for SHELF_STR in `cat $VBLADECONF | grep -v '#' | grep $AOE_STORAGE_SERVER_IMAGE_DIRECTORY | sed '/^$/d'`; do
 			INTERFACE=`echo $SHELF_STR | awk {'print $1	'}`
 			V_SHELF=`echo $SHELF_STR | awk {' print $2 '}`
 			V_SLOT=`echo $SHELF_STR | awk {' print $3 '}`

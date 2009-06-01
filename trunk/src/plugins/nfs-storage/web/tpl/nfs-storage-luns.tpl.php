@@ -9,6 +9,8 @@
 {lun_table}
 
 <form action="{formaction}" method="GET">
+<br>
+<br>
 Add new NFS export
 
 <br>

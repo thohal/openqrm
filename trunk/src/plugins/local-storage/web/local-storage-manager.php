@@ -218,43 +218,47 @@ if(htmlobject_request('redirect') != 'yes') {
 
             case 'add':
                 $local_lun_name = htmlobject_request('local_lun_name');
-                if (strlen($local_lun_name)) {
-                    show_progressbar();
-                    $local_lun_size = htmlobject_request('local_lun_size');
-                    if (!strlen($local_lun_size)) {
-                        $local_lun_size=2000;
-                    }
-                    $storage = new storage();
-                    $storage->get_instance_by_id($local_storage_id);
-                    $storage_resource = new resource();
-                    $storage_resource->get_instance_by_id($storage->resource_id);
-                    $storage_deployment = new deployment();
-                    $storage_deployment->get_instance_by_id($storage->type);
-                    // in case of local-iscsi we have to send a password when adding a lun
-                    if (!strcmp($storage_deployment->type, "local-iscsi-deployment")) {
-                        $image = new image();
-                        // generate a password for the image
-                        $image_password = $image->generatePassword(12);
-                        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage add -n $local_lun_name -v $local_volume_group -m $local_lun_size -i $image_password -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                    } else {
-                        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage add -n $local_lun_name -v $local_volume_group -m $local_lun_size -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                    }
-                    // remove current stat file
-                    $storage_resource_id = $storage_resource->id;
-                    $statfile="storage/".$storage_resource_id.".".$local_volume_group.".lv.stat";
-                    if (file_exists($statfile)) {
-                        unlink($statfile);
-                    }
-                    // send command
-                    $storage_resource->send_command($storage_resource->ip, $resource_command);
-                    // and wait for the resulting statfile
-                    if (!wait_for_statfile($statfile)) {
-                        $redir_msg = "Error during adding logical volume $local_lun_name to Volume group $local_volume_group ! Please check the Event-Log";
-                    } else {
-                        $redir_msg = "Added volume $local_lun_name to Volume group $local_volume_group";
-                    }
+                show_progressbar();
+                if (!strlen($local_lun_name)) {
+                    $redir_msg = "Got emtpy logical volume name. Not adding ...";
                     redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+                    exit(0);
                 }
+
+                $local_lun_size = htmlobject_request('local_lun_size');
+                if (!strlen($local_lun_size)) {
+                    $local_lun_size=2000;
+                }
+                $storage = new storage();
+                $storage->get_instance_by_id($local_storage_id);
+                $storage_resource = new resource();
+                $storage_resource->get_instance_by_id($storage->resource_id);
+                $storage_deployment = new deployment();
+                $storage_deployment->get_instance_by_id($storage->type);
+                // in case of local-iscsi we have to send a password when adding a lun
+                if (!strcmp($storage_deployment->type, "local-iscsi-deployment")) {
+                    $image = new image();
+                    // generate a password for the image
+                    $image_password = $image->generatePassword(12);
+                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage add -n $local_lun_name -v $local_volume_group -m $local_lun_size -i $image_password -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                } else {
+                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/openqrm-local-storage add -n $local_lun_name -v $local_volume_group -m $local_lun_size -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                }
+                // remove current stat file
+                $storage_resource_id = $storage_resource->id;
+                $statfile="storage/".$storage_resource_id.".".$local_volume_group.".lv.stat";
+                if (file_exists($statfile)) {
+                    unlink($statfile);
+                }
+                // send command
+                $storage_resource->send_command($storage_resource->ip, $resource_command);
+                // and wait for the resulting statfile
+                if (!wait_for_statfile($statfile)) {
+                    $redir_msg = "Error during adding logical volume $local_lun_name to Volume group $local_volume_group ! Please check the Event-Log";
+                } else {
+                    $redir_msg = "Added volume $local_lun_name to Volume group $local_volume_group";
+                }
+                redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
                 break;
 
             case 'remove':

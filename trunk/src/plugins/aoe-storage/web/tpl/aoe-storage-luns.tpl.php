@@ -9,8 +9,9 @@
 {lun_table}
 
 <form action="{formaction}" method="GET">
-Add new AOE Volume group
 <br>
+<br>
+Add new AOE Volume group
 <br>
 <div style="float:left;">
 {aoe_lun_name}

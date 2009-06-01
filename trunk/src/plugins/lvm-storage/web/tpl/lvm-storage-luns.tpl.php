@@ -9,7 +9,10 @@
 
 
 <form action="{formaction}" method="GET">
-Add new Lun to Volume group {lvm_volume_group}
+<br>
+<br>
+Add new logical volume to Volume group {lvm_volume_group}
+<br>
 <div style="float:left;">
 {lvm_lun_name}
 {lvm_lun_size}
