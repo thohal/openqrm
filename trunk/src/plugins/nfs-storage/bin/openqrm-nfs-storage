@@ -180,7 +180,8 @@ case "$NFS_COMMAND" in
 	post_exports)
 		echo "Posting current nfs-exports to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.nfs.stat
-		exportfs -v > $STORAGE_STATUS_TMP
+        # take care to only post "our" exports, e.g. not the ones from an lvm-nfs-storage
+        cat /var/lib/nfs/etab | grep ^$NFS_STORAGE_SERVER_IMAGE_DIRECTORY | awk {' print $1"@"$2 '} | sed -e "s/<.*>//g" | sed -e "s/(.*)//g" > $STORAGE_STATUS_TMP
 		if ! wget -q -O /dev/null --http-user=$NFS_OPENQRM_USERNAME --http-password=$NFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/nfs-storage/nfs-storage-action.php?nfs_storage_command=get_storage; then
 			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!" | logger
@@ -192,9 +193,8 @@ case "$NFS_COMMAND" in
 		echo "Posting current nfs-identifier to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.nfs.ident
 		> $STORAGE_STATUS_TMP
-		for EXPORT_STR in `exportfs -v | awk {' print $1 '} | grep -v "<.*>" | grep -v "(.*)"`; do
-			IMAGE_NAME=$EXPORT_STR
-			echo "$IMAGE_NAME,$EXPORT_STR" >> $STORAGE_STATUS_TMP
+		for IMAGE_NAME in `cat /var/lib/nfs/etab | grep ^$NFS_STORAGE_SERVER_IMAGE_DIRECTORY | awk {' print $1 '} | sed -e "s/<.*>//g" | sed -e "s/(.*)//g"`; do
+			echo "$IMAGE_NAME,$IMAGE_NAME" >> $STORAGE_STATUS_TMP
 		done
 		if ! wget -q -O /dev/null --http-user=$NFS_OPENQRM_USERNAME --http-password=$NFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/nfs-storage/nfs-storage-action.php?nfs_storage_command=get_ident; then
 			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!"
