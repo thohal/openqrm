@@ -33,12 +33,13 @@ function openqrm_plugin_netapp_storage_uninstall() {
 	echo "Uninstalling the openQRM netapp-storage-plugin"
 	openqrm_plugin_netapp_storage_stop
 	openqrm_server_remove_deployment_type $USERNAME $PASSWORD netapp-iscsi-deployment
-	openqrm_server_remove_deployment_type $USERNAME $PASSWORD netapp-nfs-deployment
+	# removing the na-server table
+	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/netapp-storage/netapp-storage-action.php?netapp_storage_command=uninstall"; then
+		netapp_storage_log uninstall "ERROR: Could not drop the netapp-plugin tables in the database!"
+	fi
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.netapp-iscsi-deployment 
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.netapp-nfs-deployment
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.netapp-iscsi-deployment
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.netapp-nfs-deployment.php
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storage.netapp-storage
 
 	# remove only if nfs/iscsi/aoe is not enabled
@@ -63,17 +64,14 @@ function openqrm_plugin_netapp_storage_init() {
 	fi
 	echo "Initializing the openQRM netapp-storage-plugin"
 	openqrm_server_add_deployment_type $USERNAME $PASSWORD netapp-iscsi-deployment netapp-iscsi-deployment "NetApp Iscsi-root deployment" netapp-storage "NetApp Filer (Iscsi)"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD netapp-nfs-deployment netapp-nfs-deployment "NetApp Nfs-root deployment" netapp-storage "NetApp Filer (NFS)"
 
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp-storage
 
 	# linking the root mount hooks
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/root-mount.netapp-iscsi-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.netapp-iscsi-deployment
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/root-mount.netapp-nfs-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.netapp-nfs-deployment
 	# linking the image deployment parameters menu
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/image.netapp-iscsi-deployment.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.netapp-iscsi-deployment.php
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/image.netapp-nfs-deployment.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.netapp-nfs-deployment.php
 	# linking the storage capabilities default parameters
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage.netapp-storage $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/storage.netapp-storage
 
@@ -84,6 +82,11 @@ function openqrm_plugin_netapp_storage_init() {
 	# copying iscsiadm to boot-service dir
 	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsiadm ]; then
 		cp -f `which iscsiadm` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
+	fi
+	# creating the tables
+	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/netapp-storage/netapp-storage-action.php?netapp_storage_command=init"; then
+		netapp_storage_log uninstall "ERROR: Could not initialyze the NetApp-Storage plugin tables in the database!"
+        exit 1
 	fi
 
 	

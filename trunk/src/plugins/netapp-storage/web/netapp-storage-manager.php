@@ -1,12 +1,5 @@
-
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
 <link rel="stylesheet" type="text/css" href="netapp-storage.css" />
-
-<style>
-.htmlobject_tab_box {
-	width:700px;
-}
-</style>
 
 <?php
 
@@ -50,34 +43,9 @@ if(htmlobject_request('action') != '') {
 						$NETAPP_PASSWORD=str_replace("\"", "", $NETAPP_PASSWORD);
 					}
 				}
-				// which component ?
-				$component=$_REQUEST['netapp_component'];
-				switch ($component) {
-					case 'volumes':
-						$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"vol status\" \"$NETAPP_PASSWORD\" > $StorageDir/$id.vol.lst";
-						break;
-
-					case 'aggregates':
-						$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"aggr status -v\" \"$NETAPP_PASSWORD\" > $StorageDir/$id.aggr.lst";
-					    break;
-
-					case 'filesystem':
-						$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"df -h\" \"$NETAPP_PASSWORD\" > $StorageDir/$id.fs.lst";
-					    break;
-
-					case 'nfs':
-						$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"exportfs\" \"$NETAPP_PASSWORD\" > $StorageDir/$id.nfs.lst";
-					    break;
-
-					case 'iscsi':
-						$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"lun show -v\" \"$NETAPP_PASSWORD\" > $StorageDir/$id.iscsi.lst";
-					    break;
-				}
-				$cmd_output = shell_exec($openqrm_server_command);
+                $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"lun show -v\" \"$NETAPP_PASSWORD\" > $StorageDir/$id.iscsi.lst";
+//				$cmd_output = shell_exec($openqrm_server_command);
 				sleep($refresh_delay);
-
-
-
 
 			}
 			break;
@@ -85,17 +53,12 @@ if(htmlobject_request('action') != '') {
 }
 
 
-function netapp_select_storage($component) {
+
+
+function netapp_select_storage() {
 	global $OPENQRM_USER;
 	global $thisfile;
 	$table = new htmlobject_db_table('storage_id');
-
-	$disp = "<h1>Select NetApp-storage</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."Please select a NetApp-storage server from the list below";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 
 	$arHead = array();
 	$arHead['storage_state'] = array();
@@ -122,9 +85,6 @@ function netapp_select_storage($component) {
 	$arHead['storage_comment'] = array();
 	$arHead['storage_comment']['title'] ='Comment';
 
-	$arHead['storage_capabilities'] = array();
-	$arHead['storage_capabilities']['title'] ='Capabilities';
-
 	$storage_count=0;
 	$arBody = array();
 	$storage_tmp = new storage();
@@ -148,27 +108,7 @@ function netapp_select_storage($component) {
 			if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
 				$resource_icon_default=$storage_icon;
 			}
-			// transfer which tab should be active
-			switch ($component) {
-				case 'volumes':
-					$source_tab=tab0;
-					break;
-				case 'aggregates':
-					$source_tab=tab1;
-				    break;
-				case 'filesystem':
-					$source_tab=tab2;
-				    break;
-				case 'nfs':
-					$source_tab=tab3;
-				    break;
-				case 'iscsi':
-					$source_tab=tab4;
-				    break;
-				case 'admin':
-					$source_tab=tab5;
-				    break;
-			}
+
 			$arBody[] = array(
 				'storage_state' => "<img src=$state_icon><input type=hidden name=currenttab value=$source_tab>",
 				'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
@@ -178,7 +118,6 @@ function netapp_select_storage($component) {
 				'storage_resource_ip' => $storage_resource->ip,
 				'storage_type' => "$deployment->storagedescription",
 				'storage_comment' => $storage_resource->comment,
-				'storage_capabilities' => $storage_resource->capabilities,
 			);
 		}
 	}
@@ -189,6 +128,7 @@ function netapp_select_storage($component) {
 	$table->cellspacing = 0;
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
+    $table->identifier_type = "radio";
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -196,12 +136,23 @@ function netapp_select_storage($component) {
 		$table->identifier = 'storage_id';
 	}
 	$table->max = $storage_count;
-	return $disp.$table->get_string();
+
+    // set template
+    $t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'netapp-storage-select.tpl.php');
+	$t->setVar(array(
+		'formaction' => $thisfile,
+		'storage_server_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
 }
 
 
 
-function netapp_display($netapp_storage_id, $component) {
+
+function netapp_display($netapp_storage_id) {
 	global $OPENQRM_USER;
 	global $thisfile;
 	$storage = new storage();
@@ -242,8 +193,8 @@ function netapp_display($netapp_storage_id, $component) {
 	$arHead['storage_comment'] = array();
 	$arHead['storage_comment']['title'] ='Comment';
 
-	$arHead['storage_capabilities'] = array();
-	$arHead['storage_capabilities']['title'] ='Capabilities';
+	$arHead['storage_configure'] = array();
+	$arHead['storage_configure']['title'] ='Config';
 
 	$arBody = array();
 	$storage_count=1;
@@ -256,29 +207,10 @@ function netapp_display($netapp_storage_id, $component) {
 	if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
 		$resource_icon_default=$storage_icon;
 	}
-	// transfer which tab should be active
-	switch ($component) {
-		case 'volumes':
-			$source_tab=tab0;
-			break;
-		case 'aggregates':
-			$source_tab=tab1;
-		    break;
-		case 'filesystem':
-			$source_tab=tab2;
-		    break;
-		case 'nfs':
-			$source_tab=tab3;
-		    break;
-		case 'iscsi':
-			$source_tab=tab4;
-		    break;
-		case 'admin':
-			$source_tab=tab5;
-		    break;
-	}
+    // na config
+    $storage_configuration="<a href=\"netapp-storage-config.php?storage_id=$netapp_storage_id\">config</a>";
 
-	$arBody[] = array(
+    $arBody[] = array(
 		'storage_state' => "<img src=$state_icon><input type=hidden name=netapp_component value=$component><input type=hidden name=currenttab value=$source_tab>",
 		'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 		'storage_id' => $storage->id,
@@ -287,7 +219,7 @@ function netapp_display($netapp_storage_id, $component) {
 		'storage_resource_ip' => $storage_resource->ip,
 		'storage_type' => "$deployment->storagedescription",
 		'storage_comment' => $storage_resource->comment,
-		'storage_capabilities' => $storage_resource->capabilities,
+		'storage_configure' => $storage_configuration,
 	);
 
 	$table->id = 'Tabelle';
@@ -306,185 +238,38 @@ function netapp_display($netapp_storage_id, $component) {
 	$table->max = $storage_count;
 	$disp = $disp.$table->get_string();
 	$disp = $disp."<br>";
-
-	switch ($component) {
-
-		case 'volumes':
-			$disp = $disp."<div id=\"vol_add\" nowrap=\"true\">";
-			$disp = $disp."<form action='netapp-storage-action.php' method=post>";
-			$disp = $disp."<input type=hidden name=netapp_storage_id value=$storage->id>";
-			$disp = $disp."<input type=hidden name=netapp_storage_command value='add_volume'>";
-			$disp = $disp."<input type=hidden name=currenttab value='tab0'>";
-			$disp = $disp."Create new volume";
-			$disp = $disp."<br>";
-			$disp = $disp."Name : ";
-			$disp = $disp.htmlobject_input('netapp_storage_volume_name', array("value" => '', "label" => ''), 'text', 20);
-			$disp = $disp."Size ";
-			$disp = $disp.htmlobject_input('netapp_storage_volume_size', array("value" => '1000M', "label" => ''), 'text', 10);
-			$disp = $disp."on Aggregate ";
-			$disp = $disp.htmlobject_input('netapp_storage_volume_aggr', array("value" => 'aggrX', "label" => ''), 'text', 10);
-			$disp = $disp."<input type=submit value='Create'>";
-			$disp = $disp."</form>";
-			$disp = $disp."</div>";
-			$disp = $disp."<br>";
-
-			$storage_vg_list="storage/$storage->id.vol.lst";
-			$loop=0;
-			if (file_exists($storage_vg_list)) {
-				$storage_vg_content=file($storage_vg_list);
-				$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
-				foreach ($storage_vg_content as $index => $volume) {
-					if ($loop > 3) {
-						$disp = $disp.$volume;
-						if (strstr($volume, "raid")) {
-							$volume=trim($volume);
-							$volume_name_end=strpos($volume, " ");
-							$netapp_storage_volume_name=substr($volume, 0, $volume_name_end);
-							$disp = $disp."<b><a href=\"netapp-storage-action.php?currenttab=tab0&netapp_storage_command=remove_volume&netapp_storage_id=$storage->id&netapp_storage_volume_name=$netapp_storage_volume_name\">";
-							$disp = $disp."<img src=\"../../img/error.png\" border=none><font color=#ffffff> Remove</font></a></b>";
-						}
-						$disp = $disp."<br>";
-					}
-					$loop++;
-				}
-				$disp = $disp."</div>";
-			} else {
-				$disp = $disp."<br> no view available<br> $storage_vg_list";
-			}
-			break;
-
-
-		case 'aggregates':
-			$storage_vg_list="storage/$storage->id.aggr.lst";
-			$loop=0;
-			if (file_exists($storage_vg_list)) {
-				$storage_vg_content=file($storage_vg_list);
-				$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
-				foreach ($storage_vg_content as $index => $aggr) {
-					if ($loop > 3) {
-						$disp = $disp.$aggr;
-						$disp = $disp."<br>";
-					}
-					$loop++;
-				}
-				$disp = $disp."</div>";
-			} else {
-				$disp = $disp."<br> no view available<br> $storage_vg_list";
-			}
-		    break;
-
-		case 'filesystem':
-			$storage_vg_list="storage/$storage->id.fs.lst";
-			$loop=0;
-			if (file_exists($storage_vg_list)) {
-				$storage_vg_content=file($storage_vg_list);
-				$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
-				foreach ($storage_vg_content as $index => $volume) {
-					if ($loop > 3) {
-						$disp = $disp.$volume;
-						$disp = $disp."<br>";
-					}
-					$loop++;
-				}
-				$disp = $disp."</div>";
-			} else {
-				$disp = $disp."<br> no view available<br> $storage_vg_list";
-			}
-		    break;
-
-		case 'nfs':
-			$storage_vg_list="storage/$storage->id.nfs.lst";
-			$loop=0;
-			if (file_exists($storage_vg_list)) {
-				$storage_vg_content=file($storage_vg_list);
-				$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
-				foreach ($storage_vg_content as $index => $volume) {
-					if ($loop > 3) {
-						$disp = $disp.$volume;
-						$disp = $disp."<br>";
-					}
-					$loop++;
-				}
-				$disp = $disp."</div>";
-			} else {
-				$disp = $disp."<br> no view available<br> $storage_vg_list";
-			}
-		    break;
-
-		case 'iscsi':
-			$storage_vg_list="storage/$storage->id.iscsi.lst";
-			$loop=0;
-			if (file_exists($storage_vg_list)) {
-				$storage_vg_content=file($storage_vg_list);
-				$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
-				foreach ($storage_vg_content as $index => $volume) {
-					if ($loop > 3) {
-						$disp = $disp.$volume;
-						$disp = $disp."<br>";
-					}
-					$loop++;
-				}
-				$disp = $disp."</div>";
-			} else {
-				$disp = $disp."<br> no view available<br> $storage_vg_list";
-			}
-		    break;
-
-		case 'admin':
-			$disp = $disp."<div id=\"storage\" nowrap=\"true\">";
-			$disp = $disp."<b>Access the NetApp Filer Administration console ";
-			$disp = $disp."<a href=\"http://$storage_resource->ip/na_admin/\">";
-			$disp = $disp."FilerView";
-			$disp = $disp."</a></b>";
-			$disp = $disp."</div>";
-		    break;
-
-	}
-
 	return $disp;
 }
+
+
+
 
 
 $output = array();
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 		case 'select':
-			foreach($_REQUEST['identifier'] as $id) {
-				$output[] = array('label' => 'Volumes', 'value' => netapp_display($id, 'volumes'));
-				$output[] = array('label' => 'Aggregates', 'value' => netapp_display($id, 'aggregates'));
-				$output[] = array('label' => 'Filesystem', 'value' => netapp_display($id, 'filesystem'));
-				$output[] = array('label' => 'Nfs', 'value' => netapp_display($id, 'nfs'));
-				$output[] = array('label' => 'Iscsi', 'value' => netapp_display($id, 'iscsi'));
-				$output[] = array('label' => 'Admin', 'value' => netapp_display($id, 'admin'));
-			}
+			if (isset($_REQUEST['identifier'])) {
+                foreach($_REQUEST['identifier'] as $id) {
+                    $output[] = array('label' => 'NetApp Storage Admin', 'value' => netapp_display($id));
+                }
+            } else {
+            	$output[] = array('label' => 'Select', 'value' => netapp_select_storage());
+            }
 			break;
 		case 'refresh':
-			foreach($_REQUEST['identifier'] as $id) {
-				$output[] = array('label' => 'Volumes', 'value' => netapp_display($id, 'volumes'));
-				$output[] = array('label' => 'Aggregates', 'value' => netapp_display($id, 'aggregates'));
-				$output[] = array('label' => 'Filesystem', 'value' => netapp_display($id, 'filesystem'));
-				$output[] = array('label' => 'Nfs', 'value' => netapp_display($id, 'nfs'));
-				$output[] = array('label' => 'Iscsi', 'value' => netapp_display($id, 'iscsi'));
-				$output[] = array('label' => 'Admin', 'value' => netapp_display($id, 'admin'));
-			}
+			if (isset($_REQUEST['identifier'])) {
+                foreach($_REQUEST['identifier'] as $id) {
+                    $output[] = array('label' => 'NetApp Storage Admin', 'value' => netapp_display($id));
+                }
+            }
 			break;
 	}
 } else if (strlen($netapp_storage_id)) {
-	$output[] = array('label' => 'Volumes', 'value' => netapp_display($netapp_storage_id, 'volumes'));
-	$output[] = array('label' => 'Aggregates', 'value' => netapp_display($netapp_storage_id, 'aggregates'));
-	$output[] = array('label' => 'Filesystem', 'value' => netapp_display($netapp_storage_id, 'filesystem'));
-	$output[] = array('label' => 'Nfs', 'value' => netapp_display($netapp_storage_id, 'nfs'));
-	$output[] = array('label' => 'Iscsi', 'value' => netapp_display($netapp_storage_id, 'iscsi'));
-	$output[] = array('label' => 'Admin', 'value' => netapp_display($netapp_storage_id, 'admin'));
+	$output[] = array('label' => 'NetApp Storage Admin', 'value' => netapp_display($netapp_storage_id));
 } else  {
-	$output[] = array('label' => 'Select', 'value' => netapp_select_storage('volumes'));
-	$output[] = array('label' => 'Select', 'value' => netapp_select_storage('aggregates'));
-	$output[] = array('label' => 'Select', 'value' => netapp_select_storage('filesystem'));
-	$output[] = array('label' => 'Select', 'value' => netapp_select_storage('nfs'));
-	$output[] = array('label' => 'Select', 'value' => netapp_select_storage('iscsi'));
-	$output[] = array('label' => 'Select', 'value' => netapp_select_storage('admin'));
+	$output[] = array('label' => 'Select', 'value' => netapp_select_storage());
 }
-
 
 echo htmlobject_tabmenu($output);
 

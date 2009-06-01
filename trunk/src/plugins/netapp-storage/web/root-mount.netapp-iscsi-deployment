@@ -58,7 +58,7 @@ fi
 # here we gather the target name + lun from the image_rootdevice
 IMAGE_LUN=`echo $image_rootdevice | cut -d'/' -f4`
 IMAGE_ROOT_DEVICE="/dev/iscsi_$IMAGE_LUN"
-
+NETAPP_ISCSI_BASE_IQN="iqn.1986-00.com.oq:02:e00000000000"
 #######################################################################
 # required functions ##################################################
 #######################################################################
@@ -103,11 +103,15 @@ node.session.iscsi.FirstBurstLength = 262144
 node.session.iscsi.MaxBurstLength = 16776192
 node.conn[0].iscsi.MaxRecvDataSegmentLength = 65536
 
+node.session.auth.authmethod = CHAP
+node.session.auth.username = $NETAPP_ISCSI_CHAP_USER
+node.session.auth.password = $IMAGE_ISCSI_AUTH
+
 EOF
 
 	# create /etc/iscsi/initiatorname.iscsi
 	cat >> /etc/iscsi/initiatorname.iscsi << EOF
-InitiatorName=iqn.1993-08.org.debian:01:31721e7e6b8f
+InitiatorName=$NETAPP_ISCSI_BASE_IQN.$NETAPP_ISCSI_CHAP_USER
 EOF
 	# also create /etc/initiatorname.iscsi, some open-iscsi version looking for that
 	cp /etc/iscsi/initiatorname.iscsi /etc/initiatorname.iscsi
@@ -122,6 +126,7 @@ EOF
 
 	# discover
 	echo "netapp-iscsi-storage: Discoverying Iscsi-target $image_storage_server_ip:3260"
+    iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260
 	IMAGE_TARGET=`iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260 | head -n 1 | awk {' print $2 '}`
 
 	# login
@@ -129,6 +134,38 @@ EOF
 
 	# let udev settle
 	sleep 4
+
+    # check that udev found the new device
+    # if not find the block device name in /sys
+    if [ ! -f $IMAGE_ROOT_DEVICE ]; then
+
+        FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block | head -n1`
+        if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
+            FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block:s* | head -n1`
+            if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
+                echo "ERROR: Udev did not detect the new device"
+                echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
+                # give a shell for the admin
+                /bin/bash
+            fi
+        fi
+        # check for different sysfs styles
+        if [ -h $FIND_ISCSI_BLOCK_DEVICE ]; then
+            ISCSI_BLOCK_DEVICE_NAME=`readlink $FIND_ISCSI_BLOCK_DEVICE`
+            ISCSI_BLOCK_DEVICE_NAME=`basename $ISCSI_BLOCK_DEVICE_NAME`
+            echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as symlink)"
+            ln -sf /dev/$ISCSI_BLOCK_DEVICE_NAME $IMAGE_ROOT_DEVICE
+        elif [ -d $FIND_ISCSI_BLOCK_DEVICE ]; then
+            ISCSI_BLOCK_DEVICE_NAME=`ls $FIND_ISCSI_BLOCK_DEVICE`
+            echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as dir)"
+            ln -sf /dev/$ISCSI_BLOCK_DEVICE_NAME $IMAGE_ROOT_DEVICE
+        else
+            echo "ERROR: Udev did not detect the new device"
+            echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
+            # give a shell for the admin
+            /bin/bash
+        fi
+    fi
 
 	# finallly mount
 	if ! mount -t $image_rootfstype $IMAGE_ROOT_DEVICE /mnt; then
@@ -267,7 +304,7 @@ function transfer_rootfs_to_local() {
 	fi
 	echo "netapp-iscsi-storage: Starting transfer-to-local phase. This can take a while ...."
 	rsync -aq /mnt/* /mnt2/
-	echo "iscsi-storage: Transfer-to-local phase finished. Continuing boot-up"
+	echo "netapp-iscsi-storage: Transfer-to-local phase finished. Continuing boot-up"
 	umount /mnt2
 	rmdir /mnt2
 }
