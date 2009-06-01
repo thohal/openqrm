@@ -9,7 +9,7 @@
 {lun_table}
 
 <form action="{formaction}" method="GET">
-Add new AOE Volume group
+Add new iSCSI Volume group
 <br>
 <br>
 <div style="float:left;">
