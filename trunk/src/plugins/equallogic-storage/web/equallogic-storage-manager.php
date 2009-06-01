@@ -1,6 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Equallogic Storage manager</title>
+    <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+    <link rel="stylesheet" type="text/css" href="equallogic-storage.css" />
+    <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
 
-<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-<link rel="stylesheet" type="text/css" href="equallogic-storage.css" />
+<style type="text/css">
+
+.ui-progressbar-value {
+    background-image: url(/openqrm/base/img/progress.gif);
+}
+
+#progressbar {
+    position: absolute;
+    left: 150px;
+    top: 250px;
+    width: 400px;
+    height: 20px;
+}
+</style>
+</head>
+<body>
+<div id="progressbar">
+</div>
+
 
 <?php
 
@@ -38,136 +64,174 @@ function redirect($strMsg, $currenttab = 'tab0', $eq_id) {
 	exit;
 }
 
-// running the actions
-if(htmlobject_request('action') != '') {
-	switch (htmlobject_request('action')) {
-		case 'refresh':
-			if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    // check if configuration already exists
-                    $eq_storage = new equallogic_storage();
-                    $eq_storage->get_instance_by_storage_id($id);
-                    if (!strlen($eq_storage->storage_id)) {
-        				$strMsg = "EqualLogic Storage server $id not configured yet<br>";
-                    } else {
-                        $storage = new storage();
-                        $storage->get_instance_by_id($eq_storage->storage_id);
-                        $resource = new resource();
-                        $resource->get_instance_by_id($storage->resource_id);
-                        $eq_storage_ip = $resource->ip;
-                        $eq_user = $eq_storage->storage_user;
-                        $eq_password = $eq_storage->storage_password;
-                        $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage  post_luns  -u $eq_user -p $eq_password -e $eq_storage_ip";
-                        $output = shell_exec($openqrm_server_command);
-                        $strMsg = "Refreshing Luns on EqualLogic Storage server $id<br>";
-                    }
-    				redirect($strMsg, 'tab0', $id);
-                }
-            }
-			break;
 
-		case 'select':
-			if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    // check if configuration already exists
-                    $eq_storage = new equallogic_storage();
-                    $eq_storage->get_instance_by_storage_id($id);
-                    if (!strlen($eq_storage->storage_id)) {
-        				$strMsg = "EqualLogic Storage server $id not configured yet<br>";
-                    } else {
-                        $storage = new storage();
-                        $storage->get_instance_by_id($eq_storage->storage_id);
-                        $resource = new resource();
-                        $resource->get_instance_by_id($storage->resource_id);
-                        $eq_storage_ip = $resource->ip;
-                        $eq_user = $eq_storage->storage_user;
-                        $eq_password = $eq_storage->storage_password;
-                        $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage  post_luns  -u $eq_user -p $eq_password -e $eq_storage_ip";
-                        $output = shell_exec($openqrm_server_command);
-                        $strMsg = "Refreshing Luns on EqualLogic Storage server $id<br>";
-                    }
-    				redirect($strMsg, 'tab0', $id);
-                }
-            }
-			break;
-
-
-		case 'add':
-			if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    // check if configuration already exists
-                    $eq_storage = new equallogic_storage();
-                    $eq_storage->get_instance_by_storage_id($id);
-                    if (!strlen($eq_storage->storage_id)) {
-        				$strMsg = "EqualLogic Storage server $id not configured yet<br>";
-                    } else {
-                        $storage = new storage();
-                        $storage->get_instance_by_id($eq_storage->storage_id);
-                        $resource = new resource();
-                        $resource->get_instance_by_id($storage->resource_id);
-                        $eq_storage_ip = $resource->ip;
-                        $eq_user = $eq_storage->storage_user;
-                        $eq_password = $eq_storage->storage_password;
-
-                        // size + name
-                        $eq_image_name = $equallogic_storage_fields['equallogic_storage_image_name'];
-                        $eq_image_size = $equallogic_storage_fields['equallogic_storage_image_size'];
-                        if (!strlen($eq_image_name)) {
-                            $strMsg = "Please provide a name for the new Lun<br>";
-            				redirect($strMsg, 'tab0', $id);
-                            exit(0);
-                        }
-                        if (!strlen($eq_image_size)) {
-                            $strMsg = "Please provide a size for the new Lun<br>";
-            				redirect($strMsg, 'tab0', $id);
-                            exit(0);
-                        }
-
-                        $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage  add -n $eq_image_name -m $eq_image_size -u $eq_user -p $eq_password -e $eq_storage_ip";
-                        $output = shell_exec($openqrm_server_command);
-                        $strMsg = "Adding Lun $eq_image_name ($eq_image_size MB) to the EqualLogic Storage server $id<br>";
-                    }
-    				redirect($strMsg, 'tab0', $id);
-                }
-            }
-			break;
-
-		case 'remove':
-			if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $lun_name) {
-                    // check if configuration already exists
-                    $eq_storage = new equallogic_storage();
-                    $eq_storage->get_instance_by_storage_id($equallogic_storage_id);
-                    if (!strlen($eq_storage->storage_id)) {
-        				$strMsg = "EqualLogic Storage server $id not configured yet<br>";
-                    } else {
-                        $storage = new storage();
-                        $storage->get_instance_by_id($eq_storage->storage_id);
-                        $resource = new resource();
-                        $resource->get_instance_by_id($storage->resource_id);
-                        $eq_storage_ip = $resource->ip;
-                        $eq_user = $eq_storage->storage_user;
-                        $eq_password = $eq_storage->storage_password;
-                        $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage  remove -n $lun_name -u $eq_user -p $eq_password -e $eq_storage_ip";
-                        $output = shell_exec($openqrm_server_command);
-                        $strMsg = "Removing Lun $lun_name from the EqualLogic Storage server $equallogic_storage_id<br>";
-                    }
-    				redirect($strMsg, 'tab0', $equallogic_storage_id);
-                }
-            }
-			break;
-
-		case 'snap_lun':
-			sleep($refresh_delay);
-			break;
-		default:
-			$event->log("$equallogic_storage_command", $_SERVER['REQUEST_TIME'], 3, "equallogic-storage-action", "No such equallogic-storage command ($equallogic_storage_command)", "", "", 0, 0, 0);
-			break;
-
-
-	}
+function wait_for_statfile($sfile) {
+    global $refresh_delay;
+    global $refresh_loop_max;
+    $refresh_loop=0;
+    while (!file_exists($sfile)) {
+        sleep($refresh_delay);
+        $refresh_loop++;
+        flush();
+        if ($refresh_loop > $refresh_loop_max)  {
+            return false;
+        }
+    }
+    return true;
 }
 
+
+function show_progressbar() {
+?>
+    <script type="text/javascript">
+        $("#progressbar").progressbar({
+			value: 100
+		});
+        var options = {};
+        $("#progressbar").effect("shake",options,2000,null);
+	</script>
+<?php
+        flush();
+}
+
+
+// running the actions
+if(htmlobject_request('redirect') != 'yes') {
+    if(htmlobject_request('action') != '') {
+        switch (htmlobject_request('action')) {
+            case 'refresh':
+                if (isset($_REQUEST['identifier'])) {
+                    foreach($_REQUEST['identifier'] as $id) {
+                        // check if configuration already exists
+                        $eq_storage = new equallogic_storage();
+                        $eq_storage->get_instance_by_storage_id($id);
+                        if (!strlen($eq_storage->storage_id)) {
+                            $strMsg = "EqualLogic Storage server $id not configured yet<br>";
+                        } else {
+                            show_progressbar();
+                            $storage = new storage();
+                            $storage->get_instance_by_id($eq_storage->storage_id);
+                            $resource = new resource();
+                            $resource->get_instance_by_id($storage->resource_id);
+                            $eq_storage_ip = $resource->ip;
+                            $eq_user = $eq_storage->storage_user;
+                            $eq_password = $eq_storage->storage_password;
+                            $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage  post_luns  -u $eq_user -p $eq_password -e $eq_storage_ip";
+                            $output = shell_exec($openqrm_server_command);
+                            $strMsg = "Refreshing Luns on EqualLogic Storage server $id<br>";
+                        }
+                        redirect($strMsg, 'tab0', $id);
+                    }
+                }
+                break;
+
+            case 'select':
+                if (isset($_REQUEST['identifier'])) {
+                    foreach($_REQUEST['identifier'] as $id) {
+                        // check if configuration already exists
+                        $eq_storage = new equallogic_storage();
+                        $eq_storage->get_instance_by_storage_id($id);
+                        if (!strlen($eq_storage->storage_id)) {
+                            $strMsg = "EqualLogic Storage server $id not configured yet<br>";
+                        } else {
+                            show_progressbar();
+                            $storage = new storage();
+                            $storage->get_instance_by_id($eq_storage->storage_id);
+                            $resource = new resource();
+                            $resource->get_instance_by_id($storage->resource_id);
+                            $eq_storage_ip = $resource->ip;
+                            $eq_user = $eq_storage->storage_user;
+                            $eq_password = $eq_storage->storage_password;
+                            $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage  post_luns  -u $eq_user -p $eq_password -e $eq_storage_ip";
+                            $output = shell_exec($openqrm_server_command);
+                            $strMsg = "Refreshing Luns on EqualLogic Storage server $id<br>";
+                        }
+                        redirect($strMsg, 'tab0', $id);
+                    }
+                }
+                break;
+
+
+            case 'add':
+                if (isset($_REQUEST['identifier'])) {
+                    foreach($_REQUEST['identifier'] as $id) {
+                        // check if configuration already exists
+                        $eq_storage = new equallogic_storage();
+                        $eq_storage->get_instance_by_storage_id($id);
+                        if (!strlen($eq_storage->storage_id)) {
+                            $strMsg = "EqualLogic Storage server $id not configured yet<br>";
+                        } else {
+                            show_progressbar();
+                            $storage = new storage();
+                            $storage->get_instance_by_id($eq_storage->storage_id);
+                            $resource = new resource();
+                            $resource->get_instance_by_id($storage->resource_id);
+                            $eq_storage_ip = $resource->ip;
+                            $eq_user = $eq_storage->storage_user;
+                            $eq_password = $eq_storage->storage_password;
+
+                            // size + name
+                            $eq_image_name = $equallogic_storage_fields['equallogic_storage_image_name'];
+                            $eq_image_size = $equallogic_storage_fields['equallogic_storage_image_size'];
+                            if (!strlen($eq_image_name)) {
+                                $strMsg = "Please provide a name for the new Lun<br>";
+                                redirect($strMsg, 'tab0', $id);
+                                exit(0);
+                            }
+                            if (!strlen($eq_image_size)) {
+                                $strMsg = "Please provide a size for the new Lun<br>";
+                                redirect($strMsg, 'tab0', $id);
+                                exit(0);
+                            }
+
+                            $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage  add -n $eq_image_name -m $eq_image_size -u $eq_user -p $eq_password -e $eq_storage_ip";
+                            $output = shell_exec($openqrm_server_command);
+                            $strMsg = "Adding Lun $eq_image_name ($eq_image_size MB) to the EqualLogic Storage server $id<br>";
+                        }
+                        redirect($strMsg, 'tab0', $id);
+                    }
+                }
+                break;
+
+            case 'remove':
+                if (isset($_REQUEST['identifier'])) {
+                    foreach($_REQUEST['identifier'] as $lun_name) {
+                        // check if configuration already exists
+                        $eq_storage = new equallogic_storage();
+                        $eq_storage->get_instance_by_storage_id($equallogic_storage_id);
+                        if (!strlen($eq_storage->storage_id)) {
+                            $strMsg = "EqualLogic Storage server $id not configured yet<br>";
+                        } else {
+                            show_progressbar();
+                            $storage = new storage();
+                            $storage->get_instance_by_id($eq_storage->storage_id);
+                            $resource = new resource();
+                            $resource->get_instance_by_id($storage->resource_id);
+                            $eq_storage_ip = $resource->ip;
+                            $eq_user = $eq_storage->storage_user;
+                            $eq_password = $eq_storage->storage_password;
+                            $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage  remove -n $lun_name -u $eq_user -p $eq_password -e $eq_storage_ip";
+                            $output = shell_exec($openqrm_server_command);
+                            $strMsg = "Removing Lun $lun_name from the EqualLogic Storage server $equallogic_storage_id<br>";
+                        }
+                        redirect($strMsg, 'tab0', $equallogic_storage_id);
+                    }
+                }
+                break;
+
+            case 'snap_lun':
+                show_progressbar();
+                $strMsg = "Snapshotting is not supported yet !";
+                redirect($strMsg, 'tab0', $equallogic_storage_id);
+                break;
+            default:
+                $event->log("$equallogic_storage_command", $_SERVER['REQUEST_TIME'], 3, "equallogic-storage-action", "No such equallogic-storage command ($equallogic_storage_command)", "", "", 0, 0, 0);
+                break;
+
+
+        }
+    }
+}
 
 
 
@@ -176,13 +240,6 @@ function equallogic_select_storage() {
 	global $OPENQRM_USER;
 	global $thisfile;
 	$table = new htmlobject_db_table('storage_id');
-
-	$disp = "<h1>Select Equallogic-storage</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."Please select a Equallogic-Storage Server from the list below";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 
 	$arHead = array();
 	$arHead['storage_state'] = array();
@@ -250,6 +307,7 @@ function equallogic_select_storage() {
 	$table->cellspacing = 0;
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
+    $table->identifier_type = "radio";
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -257,7 +315,18 @@ function equallogic_select_storage() {
 		$table->identifier = 'storage_id';
 	}
 	$table->max = $storage_count;
-	return $disp.$table->get_string();
+
+    // set template
+    $t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'equallogic-storage-select.tpl.php');
+	$t->setVar(array(
+		'formaction' => $thisfile,
+		'storage_server_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
+
 }
 
 
@@ -274,10 +343,6 @@ function equallogic_storage_display($equallogic_storage_id) {
 	$deployment->get_instance_by_id($storage->type);
 
 	$table = new htmlobject_table_identifiers_checked('storage_id');
-
-	$disp = "<h1>Equallogic-Storage $storage->name</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 
 	$arHead = array();
 	$arHead['storage_state'] = array();
@@ -346,20 +411,6 @@ function equallogic_storage_display($equallogic_storage_id) {
 		$table->identifier = 'storage_id';
 	}
 	$table->max = $storage_count;
-	$disp = $disp.$table->get_string();
-
-	$disp = $disp."Add Equallogic Lun :";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<div id=\"storage\" nowrap=\"true\">";
-	$disp = $disp."<form action=$thisfile method=post>";
-	$disp = $disp.htmlobject_input('equallogic_storage_image_name', array("value" => '', "label" => 'Name'), 'text', 20);
-	$disp = $disp.htmlobject_input('equallogic_storage_image_size', array("value" => '1000', "label" => 'Size'), 'text', 20);
-	$disp = $disp."<input type=hidden name=identifier[] value=$storage->id>";
-	$disp = $disp."<input type=hidden name=action value='add'>";
-	$disp = $disp."<input type=hidden name=source_tab value='tab0'>";
-	$disp = $disp."<input type=submit value='Add'>";
-	$disp = $disp."</form>";
 
 
 	$table1 = new htmlobject_db_table('lun_name');
@@ -456,9 +507,24 @@ function equallogic_storage_display($equallogic_storage_id) {
 		$table1->identifier = 'lun_name';
 	}
 	$table1->max = $lun_count;
-	$disp = $disp.$table1->get_string();
 
+     // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'equallogic-storage-luns.tpl.php');
+	$t->setVar(array(
+		'formaction' => $thisfile,
+		'storage_name' => $storage->name,
+		'storage_table' => $table->get_string(),
+		'lun_table' => $table1->get_string(),
+		'equallogic_lun_name' => htmlobject_input('equallogic_storage_image_name', array("value" => '', "label" => 'Name'), 'text', 20),
+		'equallogic_lun_size' => htmlobject_input('equallogic_storage_image_size', array("value" => '1000', "label" => 'Lun Size (MB)'), 'text', 20),
+    	'hidden_equallogic_storage_id' => "<input type=hidden name=identifier[] value=$storage->id>",
+		'submit' => htmlobject_input('action', array("value" => 'add', "label" => 'Add'), 'submit'),
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
+
 }
 
 

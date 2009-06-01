@@ -86,12 +86,6 @@ function equallogic_storage_configuration($equallogic_storage_id) {
 	$deployment->get_instance_by_id($storage->type);
 
 	$table = new htmlobject_table_identifiers_checked('storage_id');
-
-	$disp = "<h1>Equallogic-Storage $storage->name</h1>";
-	$disp = $disp."<a href=\"equallogic-storage-manager.php?identifier[]=$equallogic_storage_id&action=refresh\">back</a>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-
 	$arHead = array();
 	$arHead['storage_state'] = array();
 	$arHead['storage_state']['title'] ='';
@@ -158,9 +152,21 @@ function equallogic_storage_configuration($equallogic_storage_id) {
 		$table->identifier = 'storage_id';
 	}
 	$table->max = $storage_count;
-	$disp = $disp.$table->get_string();
+	$backlink = "<a href=\"equallogic-storage-manager.php?identifier[]=$equallogic_storage_id&action=refresh\">back</a>";
 
+   // set template
+    $t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'equallogic-storage-config.tpl.php');
+	$t->setVar(array(
+		'formaction' => $thisfile,
+		'config_table' => $table->get_string(),
+		'backlink' => $backlink,
+		'storage_name' => $storage->name,
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
+
 }
 
 
@@ -170,7 +176,7 @@ function equallogic_storage_configuration($equallogic_storage_id) {
 $output = array();
 $equallogic_id = htmlobject_request('equallogic_id');
 if (strlen($equallogic_storage_id)) {
-	$output[] = array('label' => 'Equallogic Storage Admin', 'value' => equallogic_storage_configuration($equallogic_storage_id));
+	$output[] = array('label' => 'Equallogic Storage Configuration', 'value' => equallogic_storage_configuration($equallogic_storage_id));
 }
 echo htmlobject_tabmenu($output);
 
