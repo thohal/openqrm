@@ -283,6 +283,9 @@ if(htmlobject_request('redirect') != 'yes') {
                         }
                         redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
                     }
+                } else {
+                    $redir_msg = "No LVM location selected. Skipping removal !";
+                    redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
                 }
                 break;
 
@@ -355,6 +358,9 @@ if(htmlobject_request('redirect') != 'yes') {
                         $redir_msg = "Created snapshot of volume $lvm_lun_name -> $lvm_lun_snap_name on Volume Group $lvm_volume_group";
                     }
                     redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
+                } else {
+                    $redir_msg = "Got empty snapshot name. Skipping clone procedure !";
+                    redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
                 }
                 break;
 
@@ -395,9 +401,6 @@ function lvm_select_storage() {
 	$arHead['storage_comment'] = array();
 	$arHead['storage_comment']['title'] ='Comment';
 
-	$arHead['storage_capabilities'] = array();
-	$arHead['storage_capabilities']['title'] ='Capabilities';
-
 	$storage_count=0;
 	$arBody = array();
 	$storage_tmp = new storage();
@@ -430,7 +433,6 @@ function lvm_select_storage() {
 				'storage_resource_ip' => $storage_resource->ip,
 				'storage_type' => "$deployment->storagedescription",
 				'storage_comment' => $storage_resource->comment,
-				'storage_capabilities' => $storage_resource->capabilities,
 			);
 		}
 	}

@@ -1,10 +1,3 @@
-<style>
-.htmlobject_tab_box {
-	width:700px;
-}
-</style>
-
-
 <h1><img border=0 src="/openqrm/base/plugins/nfs-storage/img/plugin.png"> Nfs-storage plugin</h1>
 <br>
 The Nfs-storage plugin integrates Nfs Storage-servers into openQRM.

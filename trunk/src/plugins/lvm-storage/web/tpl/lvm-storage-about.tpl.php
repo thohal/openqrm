@@ -1,10 +1,3 @@
-<style>
-.htmlobject_tab_box {
-	width:700px;
-}
-</style>
-
-
 <h1><img border=0 src="/openqrm/base/plugins/lvm-storage/img/plugin.png"> Lvm-storage plugin</h1>
 <br>
 The 'lvm-storage' plugin transforms a standard Linux-box into a rapid-fast-cloning storage-server

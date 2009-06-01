@@ -1,9 +1,3 @@
-<style>
-.htmlobject_tab_box {
-	width:700px;
-}
-</style>
-
 <h1><img border=0 src="/openqrm/base/plugins/aoe-storage/img/plugin.png"> Aoe-storage plugin</h1>
 <br>
 The Aoe-storage plugin integrates Aoe/Coraid Storage into openQRM.

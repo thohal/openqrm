@@ -224,6 +224,9 @@ if(htmlobject_request('redirect') != 'yes') {
                             $redir_msg = "Error during removing NFS volume ! Please check the Event-Log<br>";
                         }
                         redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
+                    } else {
+                        $redir_msg = "No NFS volume selected. Skipping removal !";
+                        redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
                     }
                 }
                 break;
@@ -299,9 +302,6 @@ function nfs_select_storage() {
 	$arHead['storage_comment'] = array();
 	$arHead['storage_comment']['title'] ='Comment';
 
-	$arHead['storage_capabilities'] = array();
-	$arHead['storage_capabilities']['title'] ='Capabilities';
-
 	$storage_count=0;
 	$arBody = array();
 	$storage_tmp = new storage();
@@ -334,7 +334,6 @@ function nfs_select_storage() {
 				'storage_resource_ip' => $storage_resource->ip,
 				'storage_type' => "$deployment->storagedescription",
 				'storage_comment' => $storage_resource->comment,
-				'storage_capabilities' => $storage_resource->capabilities,
 			);
 		}
 	}
@@ -345,6 +344,7 @@ function nfs_select_storage() {
 	$table->cellspacing = 0;
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
+    $table->identifier_type = "radio";
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {

@@ -1,11 +1,3 @@
-<style>
-.htmlobject_tab_box {
-	width:700px;
-}
-</style>
-
-
-
 <h1><img border=0 src="/openqrm/base/plugins/local-storage/img/plugin.png"> Local-storage plugin</h1>
 <br>
 The Local-storage plugin adds support to deploy server-images to local-harddisk on the resources to openQRM.

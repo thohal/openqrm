@@ -1,10 +1,3 @@
-<style>
-.htmlobject_tab_box {
-	width:700px;
-}
-</style>
-
-
 <h1><img border=0 src="/openqrm/base/plugins/iscsi-storage/img/plugin.png"> Iscsi-storage plugin</h1>
 <br>
 The Iscsi-storage plugin integrates Iscsi-Target Storage into openQRM.

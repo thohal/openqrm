@@ -3,6 +3,7 @@
 <head>
 	<title>Select ZFS Storage</title>
     <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+    <link rel="stylesheet" type="text/css" href="local-storage.css" />
     <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
     <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
     <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
@@ -288,6 +289,9 @@ if(htmlobject_request('redirect') != 'yes') {
                         }
                         redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
                     }
+                } else {
+                    $redir_msg = "No Local Storage location selected. Skipping removal !";
+                    redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
                 }
                 break;
 
@@ -360,6 +364,9 @@ if(htmlobject_request('redirect') != 'yes') {
                         $redir_msg = "Created snapshot of volume $local_lun_name -> $local_lun_snap_name on Volume Group $local_volume_group";
                     }
                     redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+                } else {
+                    $redir_msg = "Got empty snapshot name. Skipping clone procedure !";
+                    redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
                 }
                 break;
 
@@ -374,13 +381,6 @@ function local_select_storage() {
 	global $thisfile;
 
 	$table = new htmlobject_db_table('storage_id');
-
-	$disp = "<h1>Select Lvm-storage</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."Please select a Lvm-storage server from the list below";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 
 	$arHead = array();
 	$arHead['storage_state'] = array();
@@ -406,9 +406,6 @@ function local_select_storage() {
 
 	$arHead['storage_comment'] = array();
 	$arHead['storage_comment']['title'] ='Comment';
-
-	$arHead['storage_capabilities'] = array();
-	$arHead['storage_capabilities']['title'] ='Capabilities';
 
 	$storage_count=0;
 	$arBody = array();
@@ -442,12 +439,9 @@ function local_select_storage() {
 				'storage_resource_ip' => $storage_resource->ip,
 				'storage_type' => "$deployment->storagedescription",
 				'storage_comment' => $storage_resource->comment,
-				'storage_capabilities' => $storage_resource->capabilities,
 			);
 		}
 	}
-
-
 
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
@@ -456,6 +450,7 @@ function local_select_storage() {
 	$table->cellpadding = 3;
     $table->identifier_type = "radio";
 	$table->form_action = $thisfile;
+    $table->identifier_type = "radio";
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -463,8 +458,21 @@ function local_select_storage() {
 		$table->identifier = 'storage_id';
 	}
 	$table->max = $storage_count;
-	return $disp.$table->get_string();
+
+   // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'local-storage-select.tpl.php');
+	$t->setVar(array(
+		'formaction' => $thisfile,
+		'storage_server_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
 }
+
+
+
 
 
 function local_storage_display($local_storage_id) {
@@ -797,7 +805,7 @@ if(htmlobject_request('action') != '') {
 		case 'select':
             if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
-                    $output[] = array('label' => 'Lvm Storage Admin', 'value' => local_storage_display($id));
+                    $output[] = array('label' => 'Local Storage Admin', 'value' => local_storage_display($id));
                 }
             } else {
             	$output[] = array('label' => 'Select', 'value' => local_select_storage());
@@ -806,7 +814,7 @@ if(htmlobject_request('action') != '') {
 		case 'refresh':
             if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
-                    $output[] = array('label' => 'Lvm Storage Admin', 'value' => local_storage_display($id));
+                    $output[] = array('label' => 'Local Storage Admin', 'value' => local_storage_display($id));
                 }
 			}
 			break;
@@ -817,7 +825,7 @@ if(htmlobject_request('action') != '') {
                     $output[] = array('label' => $local_volume_group, 'value' => local_storage_lv_display($local_storage_id, $local_volume_group));
                 }
             } else {
-                $output[] = array('label' => 'Lvm Storage Admin', 'value' => local_storage_display($local_storage_id));
+                $output[] = array('label' => 'Local Storage Admin', 'value' => local_storage_display($local_storage_id));
             }
 			break;
 
