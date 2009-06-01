@@ -38,7 +38,7 @@ function openqrm_plugin_equallogic_storage_uninstall() {
 	openqrm_server_remove_deployment_type $USERNAME $PASSWORD equallogic
 	# removing the eq-server table
 	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/equallogic-storage/equallogic-storage-action.php?equallogic_storage_command=uninstall"; then
-		equallogic_storage_storage_log uninstall "ERROR: Could not drop the cloud-plugin tables in the database!"
+		equallogic_storage_storage_log uninstall "ERROR: Could not drop the Equallogig-Storage plugin tables in the database!"
 	fi
 
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/equallogic-storage
