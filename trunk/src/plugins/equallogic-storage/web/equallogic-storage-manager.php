@@ -43,6 +43,8 @@ require_once "$RootDir/include/htmlobject.inc.php";
 // special equallogic-storage classes
 require_once "$RootDir/plugins/equallogic-storage/class/equallogic-storage-server.class.php";
 $refresh_delay=1;
+$refresh_loop_max=20;
+
 
 // place for the storage stat files
 $StorageDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/equallogic-storage/storage';
