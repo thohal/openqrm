@@ -3,7 +3,7 @@
 #
 
 if {[llength $argv]<2} {
-        send_user "usage: $argv0 <netapp-ip> <command> \[password\]\n"
+        send_user "usage: $argv0 <netapp-ip> <command> \[na-root-password\]\n"
         exit
 }
 
