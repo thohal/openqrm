@@ -1,7 +1,8 @@
 #!/bin/bash
 # this is the functions file for the netapp-storage-plugin
-
-NETAPP_STORAGE_LOCK_FILE=/var/run/netapp-storage/netapp-storage-plugin.lock
+# have the lock file in tmp because this lock is being used
+# directly from the www user
+NETAPP_STORAGE_LOCK_FILE=/tmp/run/netapp-storage/netapp-storage-plugin.lock
 NETAPP_STORAGE_LOCK_DELAY=5
 NETAPP_STORAGE_LOCK_RETRY=100
 NETAPP_STORAGE_LOCK_TIMEOUT=500

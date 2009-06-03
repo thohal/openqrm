@@ -185,10 +185,12 @@ if(htmlobject_request('redirect') != 'yes') {
                                 redirect($strMsg, 'tab0', $id);
                                 exit(0);
                             }
-
-                            $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage  add -n $netapp_storage_image_name -m $netapp_storage_image_size -p $na_password -e $na_storage_ip";
+                            // generate an image password
+                            $image = new image();
+                            $netapp_storage_image_password = $image->generatePassword(14);
+                            $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage  add -n $netapp_storage_image_name -m $netapp_storage_image_size -i $netapp_storage_image_password -p $na_password -e $na_storage_ip";
                             $output = shell_exec($openqrm_server_command);
-                            $strMsg = "Adding Lun $na_image_name ($na_image_size MB) to the NetApp Storage server $id<br>";
+                            $strMsg = "Adding Lun $na_image_name ($netapp_storage_image_size MB) to the NetApp Storage server $id<br>";
                         }
                         redirect($strMsg, 'tab0', $id);
                     }

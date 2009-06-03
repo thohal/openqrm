@@ -10,7 +10,11 @@ require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
+// special netapp-storage classes
+require_once "$RootDir/plugins/netapp-storage/class/netapp-storage-server.class.php";
 global $OPENQRM_SERVER_BASE_DIR;
+$NETAPP_STORAGE_SERVER_TABLE="netapp_storage_servers";
+global $NETAPP_STORAGE_SERVER_TABLE;
 
 // global event for logging
 $event = new event();
@@ -37,40 +41,39 @@ function get_image_rootdevice_identifier($netapp_iscsi_storage_id) {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
 	global $event;
+    global $NETAPP_STORAGE_SERVER_TABLE;
 
 	// place for the storage stat files
-	$StorageDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/iscsi-storage/storage';
+	$StorageDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/netapp-storage/storage';
 	$rootdevice_identifier_array = array();
 	$storage = new storage();
 	$storage->get_instance_by_id($netapp_iscsi_storage_id);
 	$storage_resource = new resource();
 	$storage_resource->get_instance_by_id($storage->resource_id);
-	# get netapp password
-	$cap_array = explode(" ", $storage->capabilities);
-	foreach ($cap_array as $index => $capabilities) {
-		if (strstr($capabilities, "STORAGE_PASSWORD")) {
-			$NETAPP_PASSWORD=str_replace("STORAGE_PASSWORD=\"", "", $capabilities);
-			$NETAPP_PASSWORD=str_replace("\"", "", $NETAPP_PASSWORD);
-		}
-	}
-	$ident_file = "$StorageDir/$netapp_storage_id.iscsi.ident";
+    // get the password for the netapp-filer
+    $na_storage = new netapp_storage();
+    $na_storage->get_instance_by_storage_id($netapp_iscsi_storage_id);
+    if (!strlen($na_storage->storage_id)) {
+        $rootdevice_identifier_array[] = array("value" => "", "label" => "NetApp Storage server $netapp_iscsi_storage_id not configured yet");
+    	return $rootdevice_identifier_array;
+    }
+    // remove ident file
+    $ident_file = "$StorageDir/$storage_resource->ip.netapp.ident";
     if (file_exists($ident_file)) {
         unlink($ident_file);
     }
     // send command
-	$openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  \"$storage_resource->ip\" \"lun show -v\" \"$NETAPP_PASSWORD\" | grep '/lun' | awk {' print $1 '} > $StorageDir/$netapp_storage_id.iscsi.ident";
-	$output = shell_exec($openqrm_server_command);
+    $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage post_identifier -p \"$na_storage->storage_password\" -e \"$storage_resource->ip\"";
+    $cmd_output = shell_exec($openqrm_server_command);
+    // wait for command + fresh ident file
     if (!wait_for_identfile($ident_file)) {
         $event->log("get_image_rootdevice_identifier", $_SERVER['REQUEST_TIME'], 2, "image.netapp-iscsi-deployment", "Timeout while requesting image identifier from storage id $storage->id", "", "", 0, 0, 0);
         return;
     }
-	$loop=1;
     $fcontent = file($ident_file);
     foreach($fcontent as $lun_info) {
-        $image_name = trim($lun_info);
-        $troot_device = trim("/dev/netapp/$loop");
-        $rootdevice_identifier_array[] = array("value" => "$troot_device", "label" => "$image_name");
-        $loop++;
+        $image_name = dirname(trim($lun_info));
+        $rootdevice_identifier_array[] = array("value" => "$image_name", "label" => "$image_name");
 	}
 	return $rootdevice_identifier_array;
 

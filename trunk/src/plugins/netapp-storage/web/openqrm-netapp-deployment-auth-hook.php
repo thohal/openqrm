@@ -81,11 +81,11 @@ global $event;
 		$resource_mac=$resource->mac;
 		$resource_ip=$resource->ip;
 
-        $eq_storage = new netapp_storage();
-        $eq_storage->get_instance_by_storage_id($storage->id);
-        $eq_storage_ip = $storage_ip;
-        $eq_user = $eq_storage->storage_user;
-        $eq_password = $eq_storage->storage_password;
+        $na_storage = new netapp_storage();
+        $na_storage->get_instance_by_storage_id($storage->id);
+        $na_storage_ip = $storage_ip;
+        $na_user = $na_storage->storage_user;
+        $na_password = $na_storage->storage_password;
 
 
 		switch($cmd) {
@@ -95,7 +95,7 @@ global $event;
 				$image_deployment_parameter = $image->deployment_parameter;
 				$image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
 				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-netapp-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice to resource $resource_mac with password $image_password", "", "", 0, 0, $appliance_id);
-				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -n $image_name -r $image_rootdevice -i $image_password -u $eq_user -p $eq_password -e $eq_storage_ip";
+				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -n $image_name -r $image_rootdevice -i $image_password -p $na_password -e $na_storage_ip";
                 $output = shell_exec($auth_start_cmd);
 
 				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-netapp-deployment-auth-hook.php", "!! START hook Running : $auth_start_cmd", "", "", 0, 0, $appliance_id);
@@ -227,15 +227,15 @@ global $event;
 		$deployment_type = $deployment->type;
 		$deployment_plugin_name = $deployment->storagetype;
 
-        $eq_storage = new netapp_storage();
-        $eq_storage->get_instance_by_storage_id($storage->id);
-        $eq_storage_ip = $storage_ip;
-        $eq_user = $eq_storage->storage_user;
-        $eq_password = $eq_storage->storage_password;
+        $na_storage = new netapp_storage();
+        $na_storage->get_instance_by_storage_id($storage->id);
+        $na_storage_ip = $storage_ip;
+        $na_user = $na_storage->storage_user;
+        $na_password = $na_storage->storage_password;
 
 
 		$event->log("storage_auth_stop_in_background", $_SERVER['REQUEST_TIME'], 5, "openqrm-netapp-deployment-auth-hook.php", "Authenticating $image_name / $image_rootdevice with password $image_password", "", "", 0, 0, $appliance_id);
-		$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -n $image_name -r $image_rootdevice -i $image_password -u $eq_user -p $eq_password -e $eq_storage_ip";
+		$auth_stop_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -n $image_name -r $image_rootdevice -i $image_password -p $na_password -e $na_storage_ip";
         $output = shell_exec($auth_stop_cmd);
 
     	$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-netapp-deployment-auth-hook.php", "!! STOP hook Running : $auth_stop_cmd", "", "", 0, 0, $appliance_id);

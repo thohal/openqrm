@@ -69,7 +69,7 @@ class netapp_storage {
 		} else if ("$na_storage_id" != "") {
             $netapp_storage_array = &$db->Execute("select * from $NETAPP_STORAGE_SERVER_TABLE where na_storage_id=$na_storage_id");
 		} else {
-			$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "coulduser.class.php", "Could not create instance of equalogic_storage without data", "", "", 0, 0, 0);
+			$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "netapp-storage.class.php", "Could not create instance of netapp_storage without data", "", "", 0, 0, 0);
 			return;
 		}
 

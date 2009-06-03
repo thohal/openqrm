@@ -56,9 +56,10 @@ fi
 
 
 # here we gather the target name + lun from the image_rootdevice
-IMAGE_LUN=`echo $image_rootdevice | cut -d'/' -f4`
+IMAGE_LUN=1
 IMAGE_ROOT_DEVICE="/dev/iscsi_$IMAGE_LUN"
-NETAPP_ISCSI_BASE_IQN="iqn.1986-00.com.oq:02:e00000000000"
+NETAPP_ISCSI_BASE_IQN="iqn.1993-08.org.debian:01"
+NETAPP_ISCSI_CHAP_USER=`basename $image_rootdevice`
 #######################################################################
 # required functions ##################################################
 #######################################################################
@@ -74,6 +75,7 @@ function mount_rootfs() {
 	# perstistance iscsi device names
 	echo "BUS==\"scsi\", SYSFS{vendor}==\"IET\", SYSFS{model}==\"VIRTUAL-DISK\", KERNEL==\"sd*\", NAME=\"%k\", PROGRAM=\"/lib/udev/getlun.sh \$id\", SYMLINK+=\"iscsi_%c%n\"" >>/etc/udev/rules.d/10_persistant_scsi.rules
 	mkdir -p /tmp
+    rm -f /lib/udev/getlun.sh
 	cat <<! >> /lib/udev/getlun.sh
 #!/bin/bash
 echo \$1 | awk -F":" '{print $NF}' | cut -d':' -f4
@@ -90,6 +92,7 @@ echo \$1 | awk -F":" '{print $NF}' | cut -d':' -f4
 
 	# create config /etc/iscsi/iscsid.conf
 	mkdir -p /etc/iscsi/
+    rm -f /etc/iscsi/iscsid.conf
 	cat >> /etc/iscsi/iscsid.conf << EOF
 node.startup = manual
 node.session.timeo.replacement_timeout = 120
@@ -107,11 +110,16 @@ node.session.auth.authmethod = CHAP
 node.session.auth.username = $NETAPP_ISCSI_CHAP_USER
 node.session.auth.password = $IMAGE_ISCSI_AUTH
 
+discovery.sendtargets.auth.username = $NETAPP_ISCSI_CHAP_USER
+discovery.sendtargets.auth.password = $IMAGE_ISCSI_AUTH
+
+
 EOF
 
 	# create /etc/iscsi/initiatorname.iscsi
+    rm -f /etc/iscsi/initiatorname.iscsi
 	cat >> /etc/iscsi/initiatorname.iscsi << EOF
-InitiatorName=$NETAPP_ISCSI_BASE_IQN.$NETAPP_ISCSI_CHAP_USER
+InitiatorName=$NETAPP_ISCSI_BASE_IQN:$NETAPP_ISCSI_CHAP_USER
 EOF
 	# also create /etc/initiatorname.iscsi, some open-iscsi version looking for that
 	cp /etc/iscsi/initiatorname.iscsi /etc/initiatorname.iscsi
