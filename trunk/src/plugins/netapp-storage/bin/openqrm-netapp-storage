@@ -157,17 +157,28 @@ case "$NETAPP_COMMAND" in
 			echo
 			netapp_storage_usage
 		fi
-
-		# check that source fs-images exist
-		if [ ! -f $NETAPP_STORAGE_SERVER_IMAGE_DIRECTORY/$NETAPP_IMAGE_NAME ]; then
-			echo "ERROR: Could not find source image $NETAPP_STORAGE_SERVER_IMAGE_DIRECTORY/$NETAPP_IMAGE_NAME on the storage-server"
-			exit 1
+		if [ "$NETAPP_IMAGE_PASSWORD" == "" ]; then
+			echo "No image password was given. Exiting ..."
+			echo
+			netapp_storage_usage
 		fi
 		echo -n "Creating snapshot from image $NETAPP_IMAGE_NAME -> $NETAPP_IMAGE_SNAPSHOT_NAME"
 		netapp_storage_lock aquire
-
+        # clone
+        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "vol clone create $NETAPP_IMAGE_SNAPSHOT_NAME -b $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
+        # unmap
+        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "lun unmap $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_SNAPSHOT_NAME/lun $NETAPP_IMAGE_NAME" $NETAPP_PASSWORD
+        # create igroup
+        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "igroup create -i -t linux $NETAPP_IMAGE_SNAPSHOT_NAME" $NETAPP_PASSWORD
+        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "igroup add $NETAPP_IMAGE_SNAPSHOT_NAME $NETAPP_BASE_IQN:$NETAPP_IMAGE_SNAPSHOT_NAME" $NETAPP_PASSWORD
+        # iscsi security add -i <iSCSI node name> -s CHAP -p <password> -n <username>
+        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "iscsi security add -i $NETAPP_BASE_IQN:$NETAPP_IMAGE_SNAPSHOT_NAME -s CHAP -p $NETAPP_IMAGE_PASSWORD -n $NETAPP_IMAGE_SNAPSHOT_NAME" $NETAPP_PASSWORD
+        # lun map <full path to LUN> <igroup name> <LUN ID>
+        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "lun map $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_SNAPSHOT_NAME/lun $NETAPP_IMAGE_SNAPSHOT_NAME 1" $NETAPP_PASSWORD
+        # bring lun online
+        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd  $NETAPP_SERVER_IP "lun online $NETAPP_DEFAULT_VOL/$NETAPP_IMAGE_SNAPSHOT_NAME/lun" $NETAPP_PASSWORD
 		netapp_storage_lock release
-		$0 post_luns -u $NETAPP_USERNAME -p $NETAPP_PASSWORD -e $NETAPP_SERVER_IP
+		$0 post_luns -p $NETAPP_PASSWORD -e $NETAPP_SERVER_IP
 		;;
 
 	auth)

@@ -48,6 +48,7 @@ $refresh_loop_max=20;
 
 $netapp_storage_image_name = htmlobject_request('netapp_storage_image_name');
 $netapp_storage_image_size = htmlobject_request('netapp_storage_image_size');
+$netapp_storage_image_clone_name = htmlobject_request('netapp_storage_image_clone_name');
 $netapp_storage_id = htmlobject_request('netapp_storage_id');
 global $netapp_storage_id;
 
@@ -125,8 +126,19 @@ if(htmlobject_request('redirect') != 'yes') {
                         } else {
                             show_progressbar();
                             $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage post_luns -p \"$na_storage->storage_password\" -e \"$storage_resource->ip\"";
+                            // remove current stat file
+                            $storage_resource_id = $storage_resource->id;
+                            $statfile="storage/$storage_resource->ip.netapp_luns.stat";
+                            if (file_exists($statfile)) {
+                                unlink($statfile);
+                            }
                             $cmd_output = shell_exec($openqrm_server_command);
-                            $strMsg = "Refreshing Luns on NetApp Storage server $id<br>";
+                            // and wait for the resulting statfile
+                            if (!wait_for_statfile($statfile)) {
+                                $strMsg = "Failed refreshing Luns on NetApp Storage server $id<br>";
+                            } else {
+                                $strMsg = "Refreshing Luns on NetApp Storage server $id<br>";
+                            }
                         }
                         redirect($strMsg, 'tab0', $id);
                     }
@@ -149,8 +161,19 @@ if(htmlobject_request('redirect') != 'yes') {
                         } else {
                             show_progressbar();
                             $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage post_luns -p \"$na_storage->storage_password\" -e \"$storage_resource->ip\"";
+                            // remove current stat file
+                            $storage_resource_id = $storage_resource->id;
+                            $statfile="storage/$storage_resource->ip.netapp_luns.stat";
+                            if (file_exists($statfile)) {
+                                unlink($statfile);
+                            }
                             $cmd_output = shell_exec($openqrm_server_command);
-                            $strMsg = "Refreshing Luns on NetApp Storage server $id<br>";
+                            // and wait for the resulting statfile
+                            if (!wait_for_statfile($statfile)) {
+                                $strMsg = "Failed refreshing Luns on NetApp Storage server $id<br>";
+                            } else {
+                                $strMsg = "Refreshing Luns on NetApp Storage server $id<br>";
+                            }
                         }
                         redirect($strMsg, 'tab0', $id);
                     }
@@ -189,8 +212,18 @@ if(htmlobject_request('redirect') != 'yes') {
                             $image = new image();
                             $netapp_storage_image_password = $image->generatePassword(14);
                             $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage  add -n $netapp_storage_image_name -m $netapp_storage_image_size -i $netapp_storage_image_password -p $na_password -e $na_storage_ip";
+                            // remove current stat file
+                            $statfile="storage/$resource->ip.netapp_luns.stat";
+                            if (file_exists($statfile)) {
+                                unlink($statfile);
+                            }
                             $output = shell_exec($openqrm_server_command);
-                            $strMsg = "Adding Lun $na_image_name ($netapp_storage_image_size MB) to the NetApp Storage server $id<br>";
+                            // and wait for the resulting statfile
+                            if (!wait_for_statfile($statfile)) {
+                                $strMsg = "Failed adding Lun $na_image_name ($netapp_storage_image_size MB) to the NetApp Storage server $id<br>";
+                            } else {
+                                $strMsg = "Adding Lun $na_image_name ($netapp_storage_image_size MB) to the NetApp Storage server $id<br>";
+                            }
                         }
                         redirect($strMsg, 'tab0', $id);
                     }
@@ -216,8 +249,18 @@ if(htmlobject_request('redirect') != 'yes') {
                             $na_password = $na_storage->storage_password;
                             $lun_name = basename($lun_name);
                             $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage  remove -n $lun_name -p $na_password -e $na_storage_ip";
+                            // remove current stat file
+                            $statfile="storage/$resource->ip.netapp_luns.stat";
+                            if (file_exists($statfile)) {
+                                unlink($statfile);
+                            }
                             $output = shell_exec($openqrm_server_command);
-                            $strMsg .= "Removing Lun $lun_name from the NetApp Storage server $netapp_storage_id<br>";
+                            // and wait for the resulting statfile
+                            if (!wait_for_statfile($statfile)) {
+                                $strMsg .= "Failed to remove Lun $lun_name from the NetApp Storage server $netapp_storage_id<br>";
+                            } else {
+                                $strMsg .= "Removing Lun $lun_name from the NetApp Storage server $netapp_storage_id<br>";
+                            }
                         }
                     }
                     redirect($strMsg, 'tab0', $netapp_storage_id);
@@ -227,6 +270,48 @@ if(htmlobject_request('redirect') != 'yes') {
                 }
                 break;
 
+            case 'clone':
+                if (strlen($netapp_storage_image_clone_name)) {
+                    $na_storage = new NetApp_storage();
+                    $na_storage->get_instance_by_storage_id($netapp_storage_id);
+                    if (!strlen($na_storage->storage_id)) {
+                        $strMsg = "NetApp Storage server $id not configured yet<br>";
+                        redirect($strMsg, 'tab0', $netapp_storage_id);
+                    } else {
+                        show_progressbar();
+                        // generate a new password
+                        $image = new image();
+                        $netapp_chap_password = $image->generatePassword(14);
+                        $netapp_storage_image_name = basename($netapp_storage_image_name);
+                        // snap
+                        $storage = new storage();
+                        $storage->get_instance_by_id($netapp_storage_id);
+                        $storage_resource = new resource();
+                        $storage_resource->get_instance_by_id($storage->resource_id);
+                        $na_storage_ip = $storage_resource->ip;
+                        $na_password = $na_storage->storage_password;
+                        $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage snap -n $netapp_storage_image_name -s $netapp_storage_image_clone_name -i $netapp_chap_password -p $na_password -e $na_storage_ip";
+                        // remove current stat file
+                        $storage_resource_id = $storage_resource->id;
+                        $statfile="storage/$storage_resource->ip.netapp_luns.stat";
+                        if (file_exists($statfile)) {
+                            unlink($statfile);
+                        }
+                        // send command
+                        $output = shell_exec($openqrm_server_command);
+                        // and wait for the resulting statfile
+                        if (!wait_for_statfile($statfile)) {
+                            $strMsg = "Error during snapshotting volume $netapp_storage_image_name -> $netapp_storage_image_clone_name ! Please check the Event-Log";
+                        } else {
+                            $strMsg = "Created snapshot of volume $netapp_storage_image_name -> $netapp_storage_image_clone_name";
+                        }
+                        redirect($strMsg, 'tab0', $netapp_storage_id);
+                    }
+                } else {
+                    $strMsg = "Got emtpy volume snapshot name. Not starting cloning procedure ...";
+                    redirect($strMsg, 'tab0', $netapp_storage_id);
+                }
+                break;
 
 
 
@@ -445,6 +530,9 @@ function netapp_display($netapp_storage_id) {
     $arHead1['lun_permissions'] = array();
 	$arHead1['lun_permissions']['title'] ='Permission';
 
+    $arHead1['lun_action'] = array();
+	$arHead1['lun_action']['title'] ='Action';
+
     $arBody1 = array();
 	$lun_count=0;
 
@@ -484,6 +572,13 @@ function netapp_display($netapp_storage_id) {
             // trim permissions
             $na_permissions = str_replace('(', '', $na_permissions);
             $na_permissions = str_replace(',', '', $na_permissions);
+            // build the snap-shot input
+            $na_lun_snap = "<form action=\"$thisfile\" method=\"GET\">";
+            $na_lun_snap .= "<input type='hidden' name='netapp_storage_id' value=$netapp_storage_id>";
+            $na_lun_snap .= "<input type='hidden' name='netapp_storage_image_name' value=$na_name>";
+            $na_lun_snap .= "<input type='text' name='netapp_storage_image_clone_name' value='' size='10' maxlength='20'>";
+            $na_lun_snap .= "<input type='submit' name='action' value='clone'>";
+            $na_lun_snap .= "</form>";
 
 
             $arBody1[] = array(
@@ -492,6 +587,7 @@ function netapp_display($netapp_storage_id) {
                 'lun_size' => $na_size,
                 'lun_status' => $na_status,
                 'lun_permissions' => $na_permissions,
+                'lun_action' => $na_lun_snap,
             );
             $lun_count++;
 		}

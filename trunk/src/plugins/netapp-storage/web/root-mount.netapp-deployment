@@ -177,9 +177,23 @@ EOF
 
 	# finallly mount
 	if ! mount -t $image_rootfstype $IMAGE_ROOT_DEVICE /mnt; then
-		echo "ERROR: Could not mount $IMAGE_ROOT_DEVICE via iscsi"
-		# give a shell for the admin
-		/bin/bash
+        # in case we install from nfs we create a fs since this should be a new lun
+    	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
+            echo "NOTICE: Found install-from-nfs enabled but failed mounting the rootdevice"
+            echo "NOTICE: Assuming a new (unformatted) Lun -> creating $image_rootfstype filesystem on $IMAGE_ROOT_DEVICE"
+            mke2fs -F -j $IMAGE_ROOT_DEVICE
+            if ! mount -t $image_rootfstype $IMAGE_ROOT_DEVICE /mnt; then
+                echo "ERROR: Could not mount $IMAGE_ROOT_DEVICE via iscsi"
+                # give a shell for the admin
+                /bin/bash
+            else
+        		echo "netapp-iscsi-storage: Mounted $IMAGE_ROOT_DEVICE rw"
+            fi
+        else
+            echo "ERROR: Could not mount $IMAGE_ROOT_DEVICE via iscsi"
+            # give a shell for the admin
+            /bin/bash
+        fi
 	else
 		echo "netapp-iscsi-storage: Mounted $IMAGE_ROOT_DEVICE rw"
 	fi
