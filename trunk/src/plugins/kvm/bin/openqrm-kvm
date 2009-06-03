@@ -295,7 +295,7 @@ case "$KVM_COMMAND" in
             # get mac address
             . $OPENQRM_VM_DIR/$kvmvm/net1
             # check if active
-            if ps ax | grep "/$kvmvm/" | grep -v grep | grep -i screen 1>/dev/null; then
+            if ps ax | grep "$KVM_VM_MAC_1" | grep -v grep | grep -i screen 1>/dev/null; then
                 echo "$kvmvm"" $KVM_VM_MAC_1"" 1" >> $VM_LIST_TMP
             else
                 echo "$kvmvm"" $KVM_VM_MAC_1"" 0" >> $VM_LIST_TMP
