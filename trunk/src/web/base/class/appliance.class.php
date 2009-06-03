@@ -210,7 +210,9 @@ function start() {
 		$event->log("start", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found deployment type $deployment_type handling the start auth hook.", "", "", 0, 0, $resource->id);
 		require_once "$storage_auth_hook";
 		storage_auth_function("start", $this->id);
-	}
+	} else {
+		$event->log("start", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "No storage-auth hook ($storage_auth_hook) available for deployment type $deployment_type for start auth hook.", "", "", 0, 0, $resource->id);
+    }
 	
 	// assign + reboot resource
 	$resource->assign($resource->id, $kernel->id, $kernel->name, $image->id, $image->name);
