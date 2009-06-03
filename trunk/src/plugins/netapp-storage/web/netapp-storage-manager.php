@@ -49,6 +49,7 @@ $refresh_loop_max=20;
 $netapp_storage_image_name = htmlobject_request('netapp_storage_image_name');
 $netapp_storage_image_size = htmlobject_request('netapp_storage_image_size');
 $netapp_storage_image_clone_name = htmlobject_request('netapp_storage_image_clone_name');
+$netapp_aggregate = htmlobject_request('netapp_aggregate');
 $netapp_storage_id = htmlobject_request('netapp_storage_id');
 global $netapp_storage_id;
 
@@ -99,11 +100,6 @@ function show_progressbar() {
 <?php
         flush();
 }
-
-
-
-// TODO
-// waitfor statfile
 
 
 // run the actions
@@ -208,10 +204,15 @@ if(htmlobject_request('redirect') != 'yes') {
                                 redirect($strMsg, 'tab0', $id);
                                 exit(0);
                             }
+                            if (!strlen($netapp_aggregate)) {
+                                $strMsg = "Please provide an aggregate to add the Lun to<br>";
+                                redirect($strMsg, 'tab0', $id);
+                                exit(0);
+                            }
                             // generate an image password
                             $image = new image();
                             $netapp_storage_image_password = $image->generatePassword(14);
-                            $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage  add -n $netapp_storage_image_name -m $netapp_storage_image_size -i $netapp_storage_image_password -p $na_password -e $na_storage_ip";
+                            $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage  add -n $netapp_storage_image_name -a $netapp_aggregate -m $netapp_storage_image_size -i $netapp_storage_image_password -p $na_password -e $na_storage_ip";
                             // remove current stat file
                             $statfile="storage/$resource->ip.netapp_luns.stat";
                             if (file_exists($statfile)) {
@@ -580,7 +581,6 @@ function netapp_display($netapp_storage_id) {
             $na_lun_snap .= "<input type='submit' name='action' value='clone'>";
             $na_lun_snap .= "</form>";
 
-
             $arBody1[] = array(
         		'lun_icon' => "<img width=24 height=24 src=$resource_icon_default><input type='hidden' name='netapp_storage_id' value=$netapp_storage_id>",
                 'lun_name' => $na_name,
@@ -609,6 +609,19 @@ function netapp_display($netapp_storage_id) {
 	}
 	$table1->max = $lun_count;
 
+    // check for the aggr stat file to get the list of available aggregates on the netapp
+	$storage_aggr_list="storage/$storage_resource->ip.netapp_aggr.stat";
+	if (file_exists($storage_aggr_list)) {
+		$storage_aggr_content=file($storage_aggr_list);
+        foreach ($storage_aggr_content as $index => $aggr) {
+            $aggr_arr[] = array("value" => "$aggr", "label" => "$aggr");
+        }
+        $na_aggr_select = htmlobject_select('netapp_aggregate', $aggr_arr, 'Aggregate');
+    } else {
+        $na_aggr_select = "<b>Error during getting list of aggregates !</b>";
+    }
+
+
      // set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
@@ -621,6 +634,7 @@ function netapp_display($netapp_storage_id) {
 		'netapp_lun_name' => htmlobject_input('netapp_storage_image_name', array("value" => '', "label" => 'Name'), 'text', 20),
 		'netapp_lun_size' => htmlobject_input('netapp_storage_image_size', array("value" => '1000', "label" => 'Lun Size (MB)'), 'text', 20),
     	'hidden_netapp_storage_id' => "<input type=hidden name=identifier[] value=$storage->id>",
+		'netapp_aggr_select' => $na_aggr_select,
 		'submit' => htmlobject_input('action', array("value" => 'add', "label" => 'Add'), 'submit'),
 	));
 	$disp =  $t->parse('out', 'tplfile');

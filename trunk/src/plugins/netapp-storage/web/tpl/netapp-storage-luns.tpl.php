@@ -10,7 +10,12 @@
 {netapp_lun_name}
 {netapp_lun_size}
 </div>
+<div style="float:right;">
+    {submit}
+</div>
 {hidden_netapp_storage_id}
-<div style="text-align:center;">{submit}</div>
+<div style="text-align:center;">
+    {netapp_aggr_select}
+</div>
 </form>
 

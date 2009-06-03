@@ -16,12 +16,8 @@ NETAPP_BASE_IQN="iqn.1993-08.org.debian:01"
 DEFAULT_IMAGE_SIZE="1000"
 
 
-# TODO
-NETAPP_AGGREGATE="aggr1"
-
-
 function netapp_storage_usage() {
-	echo "Usage : $0 add/remove/snap/list <-n image-name> <-i image-password> <-p na-password> <-e na-server-ip>"
+	echo "Usage : $0 add/remove/snap/list <-n image-name> <-i image-password> <-a aggregate> <-p na-password> <-e na-server-ip>"
 	echo "             [-m size in MB]"
 	echo "             [-s image-snapshot-name]"
 	echo "        $0 auth <-r image-rootdevice> <-i image-password> <-p na-password> <-e na-server-ip>"
@@ -50,6 +46,10 @@ while [ $# -ne 0 ]; do
 			;;
 		-m)
 			NETAPP_IMAGE_SIZE=$2
+			shift
+			;;
+		-a)
+			NETAPP_AGGREGATE=$2
 			shift
 			;;
 		-i)
@@ -109,6 +109,10 @@ case "$NETAPP_COMMAND" in
 	add)
 		if [ "$NETAPP_IMAGE_PASSWORD" == "" ]; then
 			echo "No image password was given. Exiting ..."
+            exit 1
+		fi
+		if [ "$NETAPP_AGGREGATE" == "" ]; then
+			echo "No aggregate name was given. Exiting ..."
             exit 1
 		fi
 		if [ "$NETAPP_IMAGE_SIZE" == "" ]; then
@@ -207,6 +211,10 @@ case "$NETAPP_COMMAND" in
         if [ ! -d $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage ]; then
             mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage
         fi
+        # and also post the aggregates
+		STORAGE_AGGR_STATUS_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage/$NETAPP_SERVER_IP.netapp_aggr.stat"
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd $NETAPP_SERVER_IP "aggr status" $NETAPP_PASSWORD | grep online | awk {' print $1 '} > $STORAGE_AGGR_STATUS_TMP
+        # now post the luns
 		STORAGE_STATUS_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage/$NETAPP_SERVER_IP.netapp_luns.stat"
 		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-cmd $NETAPP_SERVER_IP "lun show" $NETAPP_PASSWORD | grep /vol | awk {' print $1" "$2" "$3" "$4" "$5'} > $STORAGE_STATUS_TMP
         sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
