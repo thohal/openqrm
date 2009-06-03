@@ -136,7 +136,7 @@ function netapp_storage_configuration($netapp_storage_id) {
 		'storage_id' => $storage->id,
 		'storage_name' => "$storage->name<input type=\"hidden\" name=\"storage_name\" value=\"$storage->name\">",
 		'storage_user' => "root<input type=\"hidden\" name=\"storage_user\" value=\"root\">",
-		'storage_password' => "<input type=\"text\" name=\"storage_password\" value=\"$na_storage_password\" size=\"10\" maxlength=\"20\">",
+		'storage_password' => "<input type=\"password\" name=\"storage_password\" value=\"$na_storage_password\" size=\"10\" maxlength=\"20\">",
 		'storage_comment' => "<input type=\"text\" name=\"storage_comment\" value=\"$na_storage_comment\" size=\"10\" maxlength=\"50\">",
 	);
 

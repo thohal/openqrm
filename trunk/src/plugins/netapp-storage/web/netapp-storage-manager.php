@@ -466,11 +466,12 @@ function netapp_display($netapp_storage_id) {
 	$arHead['storage_type'] = array();
 	$arHead['storage_type']['title'] ='Type';
 
-	$arHead['storage_comment'] = array();
-	$arHead['storage_comment']['title'] ='Comment';
-
 	$arHead['storage_configure'] = array();
 	$arHead['storage_configure']['title'] ='Config';
+
+	$arHead['storage_admin'] = array();
+	$arHead['storage_admin']['title'] ='Admin';
+
 
 	$arBody = array();
 	$storage_count=1;
@@ -484,7 +485,9 @@ function netapp_display($netapp_storage_id) {
 		$resource_icon_default=$storage_icon;
 	}
     // na config
-    $storage_configuration="<a href=\"netapp-storage-config.php?storage_id=$netapp_storage_id\">config</a>";
+    $storage_configuration="<a href=\"netapp-storage-config.php?storage_id=$netapp_storage_id\"><img src=\"/openqrm/base/img/storage.png\" width=\"24\" height=\"24\" border=\"0\" alt=\"configuration\"/></a>";
+    // na admin
+    $storage_admin = "<a href=\"http://$storage_resource->ip/na_admin/\"><img src=\"/openqrm/base/img/user.gif\" width=\"24\" height=\"24\" border=\"0\" alt=\"administration\"/></a>";
 
     $arBody[] = array(
 		'storage_state' => "<img src=$state_icon>",
@@ -494,8 +497,8 @@ function netapp_display($netapp_storage_id) {
 		'storage_resource_id' => $storage->resource_id,
 		'storage_resource_ip' => $storage_resource->ip,
 		'storage_type' => "$deployment->storagedescription",
-		'storage_comment' => $storage_resource->comment,
 		'storage_configure' => $storage_configuration,
+		'storage_admin' => $storage_admin,
 	);
 
 	$table->id = 'Tabelle';
