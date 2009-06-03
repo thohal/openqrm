@@ -31,6 +31,9 @@ require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
 // custom billing hook, please fill in your custom-billing function 
 require_once "$RootDir/plugins/cloud/openqrm-cloud-billing-hook.php";
 
+// special netapp-storage classes
+require_once "$RootDir/plugins/netapp-storage/class/netapp-storage-server.class.php";
+
 global $CLOUD_USER_TABLE;
 global $CLOUD_REQUEST_TABLE;
 global $CLOUD_IMAGE_TABLE;
@@ -159,6 +162,8 @@ function openqrm_cloud_monitor() {
 // iscsi-deployment
 // lvm-aoe-deployment
 // aoe-deployment
+// zfs-storage
+// netapp-storage
 	
 		// lvm-iscsi-storage
 		if (!strcmp($image_type, "lvm-nfs-deployment")) {
@@ -234,6 +239,25 @@ function openqrm_cloud_monitor() {
 			$resource->send_command($resource_ip, $image_remove_clone_cmd);
 
 
+		// netapp-storage
+		} else if (!strcmp($image_type, "netapp-deployment")) {
+			$netapp_volume_name=basename($image_rootdevice);
+            // get the password for the netapp-filer
+            $na_storage = new netapp_storage();
+            $na_storage->get_instance_by_storage_id($storage->id);
+            if (!strlen($na_storage->storage_id)) {
+                $strMsg = "NetApp Storage server $storage->id not configured yet<br>";
+    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", $strMsg, "", "", 0, 0, 0);
+            } else {
+                $na_storage_ip = $resource_ip;
+                $na_password = $na_storage->storage_password;
+                $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage remove -n $netapp_volume_name -p $na_password -e $na_storage_ip";
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+    			$output = shell_exec($image_remove_clone_cmd);
+            }
+
+
+        // not supported yet
 		} else {
 			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to remove clone from image type $image_type.", "", "", 0, 0, 0);
 			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types are lvm-nfs-deployment, nfs-deployment, lvm-iscsi-deployment, iscsi-deployment, lvm-aoe-deployment and aoe-deployment.", "", "", 0, 0, 0);
@@ -600,6 +624,8 @@ function openqrm_cloud_monitor() {
 // iscsi-deployment
 // lvm-aoe-deployment
 // aoe-deployment
+// zfs-storage
+// netapp-storage
 	
 					// lvm-nfs-storage
 					if (!strcmp($image_type, "lvm-nfs-deployment")) {
@@ -778,7 +804,45 @@ function openqrm_cloud_monitor() {
 							'image_rootdevice' => $zfs_zpool_name."/".$image_clone_name,
 						);
 						$image->update($image_id, $ar_image_update);
-	
+
+
+                    // netapp-storage
+                    } else if (!strcmp($image_type, "netapp-deployment")) {
+                        $netapp_volume_name=basename($image_rootdevice);
+                        // we need to special take care that the volume name does not contain special characters
+                        $image_clone_name = str_replace(".", "", $image_clone_name);
+                        $image_clone_name = str_replace("_", "", $image_clone_name);
+                        $image_clone_name = str_replace("-", "", $image_clone_name);
+                        // and do not let the volume name start with a number
+                        $image_clone_name = "na".$image_clone_name;
+                        // get the password for the netapp-filer
+                        $na_storage = new netapp_storage();
+                        $na_storage->get_instance_by_storage_id($storage->id);
+                        if (!strlen($na_storage->storage_id)) {
+                            $strMsg = "NetApp Storage server $storage->id not configured yet<br>";
+                            $event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", $strMsg, "", "", 0, 0, 0);
+                        } else {
+
+                            // generate a new image password for the clone
+                            $image->get_instance_by_id($image_id);
+                            $image_password = $image->generatePassword(14);
+                            $image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
+
+                            $na_storage_ip = $resource_ip;
+                            $na_password = $na_storage->storage_password;
+                            $image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/bin/openqrm-netapp-storage snap -n $netapp_volume_name -s $image_clone_name -i $image_password -p $na_password -e $na_storage_ip";
+                            $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_clone_cmd", "", "", 0, 0, 0);
+                            $output = shell_exec($image_clone_cmd);
+
+                            // update the image rootdevice parameter
+                            $clone_image_root_device = str_replace($netapp_volume_name, $image_clone_name, $image_rootdevice);
+                            $ar_image_update = array(
+                                'image_rootdevice' => $clone_image_root_device,
+                            );
+                            $image->update($image_id, $ar_image_update);
+
+                        }
+
 	
 					} else {
 						$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to clone the image from type $image_type.", "", "", 0, 0, 0);
