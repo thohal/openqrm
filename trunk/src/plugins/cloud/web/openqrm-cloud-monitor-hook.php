@@ -31,8 +31,11 @@ require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
 // custom billing hook, please fill in your custom-billing function 
 require_once "$RootDir/plugins/cloud/openqrm-cloud-billing-hook.php";
 
-// special netapp-storage classes
-require_once "$RootDir/plugins/netapp-storage/class/netapp-storage-server.class.php";
+// special netapp-storage classes, only if enabled
+$netapp_storage_class = "$RootDir/plugins/netapp-storage/class/netapp-storage-server.class.php";
+if (file_exists($netapp_storage_class)) {
+    require_once $netapp_storage_class;
+}
 
 global $CLOUD_USER_TABLE;
 global $CLOUD_REQUEST_TABLE;
