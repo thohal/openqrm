@@ -4,22 +4,34 @@
 OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
-. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/include/openqrm-plugin-local-storage-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/etc/openqrm-plugin-local-storage.conf
+if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+	OPENQRM_INTERFACE=$OPENQRM_SERVER_INTERFACE
+	resource_id=0
+	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+elif [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+	OPENQRM_INTERFACE=`ifconfig | grep -i $resource_mac | grep :oq | cut -d':' -f1`
+fi
 
 PARTIMAGE_NG_LIBS="libparted,libext2fs,libntfs,libstdc++,libgcc_"
 
 function copy_lib_dependencies() {
     local TARGET_LIB=$1
     local TARGET_DIR=$2
-    LIB_FILE=`find /lib/ /usr/lib -maxdepth 2 -name $TARGET_LIB*so* -type f | grep -v vmware | grep -v "\-3g" | grep -v openqrm | head -n1`
+    LIB_FILE=`find /lib/ /usr/lib /usr/local/lib -maxdepth 2 -name $TARGET_LIB*so* -type f | grep -v vmware | grep -v "\-3g" | grep -v openqrm | head -n1`
     if [ "$LIB_FILE" == "" ]; then
     	echo "ERROR: Cloud not find $TARGET_LIB on this system ! Exiting..."
         return 1
     fi
     cp -aRv $LIB_FILE $TARGET_DIR/
-    for LIB_LINK in `find /lib/ /usr/lib -maxdepth 2 -name $TARGET_LIB*so* -type l | grep -v vmware  | grep -v "\-3g" | grep -v openqrm`; do
+    for LIB_LINK in `find /lib/ /usr/lib /usr/local/lib -maxdepth 2 -name $TARGET_LIB*so* -type l | grep -v vmware  | grep -v "\-3g" | grep -v openqrm`; do
         cp -aRv $LIB_LINK $TARGET_DIR/
     done
 }
@@ -78,6 +90,7 @@ function openqrm_plugin_local_storage_init() {
     rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bs-tmp
     mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bs-tmp/bin
     mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bs-tmp/lib
+    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bs-tmp/include
     cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/partimage-ng $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bs-tmp/bin/
     # cp lib deps
     OLDIFS=$IFS
@@ -85,7 +98,11 @@ function openqrm_plugin_local_storage_init() {
     for LIB_DEP in $PARTIMAGE_NG_LIBS; do
         IFS=$OLDIFS
         if ! copy_lib_dependencies $LIB_DEP $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bs-tmp/lib/; then
+			openqrm_post_event 0 "init" 3 "openqrm-plugin-local-storage" "Init of the local-storage plugin failed"
+			openqrm_post_event 0 "init" 3 "openqrm-plugin-local-storage" "To debug please run : bash -x $0 $@"
             return 1
+        else
+            openqrm_post_event 0 "init" 5 "openqrm-plugin-local-storage" "Found all library dependencies for partimage-ng"
         fi
     done
     IFS=$OLDIFS
