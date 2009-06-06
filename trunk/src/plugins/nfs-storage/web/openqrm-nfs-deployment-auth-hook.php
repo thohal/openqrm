@@ -101,6 +101,15 @@ global $event;
         }
 */
 
+        // manual configured ?
+    	$StorageDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/nfs-storage/storage';
+        $statfile_manual="$StorageDir/".$storage_resource->id.".nfs.stat.manual";
+        if (file_exists($statfile_manual)) {
+            $event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-nfs-deployment-auth-hook.php", "NFS Storage $storage->id is manually configured. Skipping automatic authentication hook ...", "", "", 0, 0, $appliance_id);
+            return;
+        }
+
+
         switch($cmd) {
 			case "start":
 				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-nfs-deployment-auth-hook.php", "Authenticating $image_name to resource $resource_ip", "", "", 0, 0, $appliance_id);
@@ -207,7 +216,7 @@ global $event;
 	* @access public
 	*/
 	//--------------------------------------------------
-	function storage_auth_stop($appliance_id) {
+	function storage_auth_stop($image_id) {
 	
 		global $event;
 		global $OPENQRM_SERVER_BASE_DIR;

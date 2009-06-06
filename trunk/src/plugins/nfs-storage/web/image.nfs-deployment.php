@@ -47,22 +47,32 @@ function get_image_rootdevice_identifier($nfs_storage_id) {
 	$storage_resource->get_instance_by_id($storage->resource_id);
 	$storage_resource_id = $storage_resource->id;
 	$ident_file = "$StorageDir/$storage_resource_id.nfs.ident";
-    if (file_exists($ident_file)) {
-        unlink($ident_file);
-    }
-    // send command
-	$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/bin/openqrm-nfs-storage post_identifier -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-	$storage_resource->send_command($storage_resource->ip, $resource_command);
-    if (!wait_for_identfile($ident_file)) {
-        $event->log("get_image_rootdevice_identifier", $_SERVER['REQUEST_TIME'], 2, "image.nfs-deployment", "Timeout while requesting image identifier from storage id $storage->id", "", "", 0, 0, 0);
-        return;
-    }
-    $fcontent = file($ident_file);
-    foreach($fcontent as $lun_info) {
-        $tpos = strpos($lun_info, ",");
-        $timage_name = trim(substr($lun_info, 0, $tpos));
-        $troot_device = trim(substr($lun_info, $tpos+1));
-        $rootdevice_identifier_array[] = array("value" => "$troot_device", "label" => "$timage_name");
+    $statfile_manual="$StorageDir/".$storage_resource_id.".nfs.stat.manual";
+    // manual configured ?
+    if (file_exists($statfile_manual)) {
+        $fcontent = file($statfile_manual);
+        foreach($fcontent as $lun_info) {
+            $troot_device = trim($lun_info);
+            $rootdevice_identifier_array[] = array("value" => "$troot_device", "label" => "$troot_device");
+        }
+    } else {
+        if (file_exists($ident_file)) {
+            unlink($ident_file);
+        }
+        // send command
+        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/bin/openqrm-nfs-storage post_identifier -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+        $storage_resource->send_command($storage_resource->ip, $resource_command);
+        if (!wait_for_identfile($ident_file)) {
+            $event->log("get_image_rootdevice_identifier", $_SERVER['REQUEST_TIME'], 2, "image.nfs-deployment", "Timeout while requesting image identifier from storage id $storage->id", "", "", 0, 0, 0);
+            return;
+        }
+        $fcontent = file($ident_file);
+        foreach($fcontent as $lun_info) {
+            $tpos = strpos($lun_info, ",");
+            $timage_name = trim(substr($lun_info, 0, $tpos));
+            $troot_device = trim(substr($lun_info, $tpos+1));
+            $rootdevice_identifier_array[] = array("value" => "$troot_device", "label" => "$timage_name");
+        }
     }
 	return $rootdevice_identifier_array;
 }

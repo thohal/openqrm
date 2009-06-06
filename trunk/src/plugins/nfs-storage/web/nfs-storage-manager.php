@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>LVM Storage manager</title>
+	<title>NFS Storage manager</title>
     <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
     <link rel="stylesheet" type="text/css" href="nfs-storage.css" />
     <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
@@ -123,18 +123,25 @@ if(htmlobject_request('redirect') != 'yes') {
                         // remove current stat file
                         $storage_resource_id = $storage_resource->id;
                         $statfile="storage/".$storage_resource_id.".nfs.stat";
-                        if (file_exists($statfile)) {
-                            unlink($statfile);
-                        }
-                        // send command
-                        $storage_resource->send_command($storage_resource->ip, $resource_command);
-                        // and wait for the resulting statfile
-                        if (!wait_for_statfile($statfile)) {
-                            $redir_msg = "Error during refreshing NFS volumes ! Please check the Event-Log";
+                        $statfile_manual="storage/".$storage_resource_id.".nfs.stat.manual";
+                        // manual configured ?
+                        if (file_exists($statfile_manual)) {
+                            $redir_msg = "NFS storage $id is manullay configured. Displaying static export list";
+                            redirect_nfs($redir_msg, $id);
                         } else {
-                            $redir_msg = "Displaying NFS volumes on storage id $id";
+                            if (file_exists($statfile)) {
+                                unlink($statfile);
+                            }
+                            // send command
+                            $storage_resource->send_command($storage_resource->ip, $resource_command);
+                            // and wait for the resulting statfile
+                            if (!wait_for_statfile($statfile)) {
+                                $redir_msg = "Error during refreshing NFS volumes ! Please check the Event-Log";
+                            } else {
+                                $redir_msg = "Displaying NFS volumes on storage id $id";
+                            }
+                            redirect_nfs($redir_msg, $id);
                         }
-                        redirect_nfs($redir_msg, $id);
                     }
                 }
                 break;
@@ -151,18 +158,25 @@ if(htmlobject_request('redirect') != 'yes') {
                     // remove current stat file
                     $storage_resource_id = $storage_resource->id;
                     $statfile="storage/".$storage_resource_id.".nfs.stat";
-                    if (file_exists($statfile)) {
-                        unlink($statfile);
-                    }
-                    // send command
-                    $storage_resource->send_command($storage_resource->ip, $resource_command);
-                    // and wait for the resulting statfile
-                    if (!wait_for_statfile($statfile)) {
-                        $redir_msg = "Error during refreshing NFS volumes ! Please check the Event-Log";
+                    $statfile_manual="storage/".$storage_resource_id.".nfs.stat.manual";
+                    // manual configured ?
+                    if (file_exists($statfile_manual)) {
+                        $redir_msg = "NFS storage $nfs_storage_id is manullay configured. Displaying static export list";
+                        redirect_nfs($redir_msg, $nfs_storage_id);
                     } else {
-                        $redir_msg = "Displaying NFS volumes on storage id $nfs_storage_id";
+                        if (file_exists($statfile)) {
+                            unlink($statfile);
+                        }
+                        // send command
+                        $storage_resource->send_command($storage_resource->ip, $resource_command);
+                        // and wait for the resulting statfile
+                        if (!wait_for_statfile($statfile)) {
+                            $redir_msg = "Error during refreshing NFS volumes ! Please check the Event-Log";
+                        } else {
+                            $redir_msg = "Displaying NFS volumes on storage id $nfs_storage_id";
+                        }
+                        redirect_nfs($redir_msg, $nfs_storage_id);
                     }
-                    redirect_nfs($redir_msg, $nfs_storage_id);
                 }
                 break;
 
@@ -182,18 +196,25 @@ if(htmlobject_request('redirect') != 'yes') {
                     // remove current stat file
                     $storage_resource_id = $storage_resource->id;
                     $statfile="storage/".$storage_resource_id.".nfs.stat";
-                    if (file_exists($statfile)) {
-                        unlink($statfile);
-                    }
-                    // send command
-                    $storage_resource->send_command($storage_resource->ip, $resource_command);
-                    // and wait for the resulting statfile
-                    if (!wait_for_statfile($statfile)) {
-                        $redir_msg .= "Error during adding NFS volume $nfs_lun_name ! Please check the Event-Log<br>";
+                    $statfile_manual="storage/".$storage_resource_id.".nfs.stat.manual";
+                    // manual configured ?
+                    if (file_exists($statfile_manual)) {
+                        $redir_msg = "NFS storage $nfs_storage_id is manullay configured. Skipping add command ...";
+                        redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
                     } else {
-                        $redir_msg .= "Added NFS volume $nfs_lun_name to storage id $nfs_storage_id<br>";
+                        if (file_exists($statfile)) {
+                            unlink($statfile);
+                        }
+                        // send command
+                        $storage_resource->send_command($storage_resource->ip, $resource_command);
+                        // and wait for the resulting statfile
+                        if (!wait_for_statfile($statfile)) {
+                            $redir_msg .= "Error during adding NFS volume $nfs_lun_name ! Please check the Event-Log<br>";
+                        } else {
+                            $redir_msg .= "Added NFS volume $nfs_lun_name to storage id $nfs_storage_id<br>";
+                        }
+                        redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
                     }
-                    redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
                 }
                 break;
 
@@ -209,21 +230,28 @@ if(htmlobject_request('redirect') != 'yes') {
                         // remove current stat file
                         $storage_resource_id = $storage_resource->id;
                         $statfile="storage/".$storage_resource_id.".nfs.stat";
-                        if (file_exists($statfile)) {
-                            unlink($statfile);
+                        $statfile_manual="storage/".$storage_resource_id.".nfs.stat.manual";
+                        // manual configured ?
+                        if (file_exists($statfile_manual)) {
+                            $redir_msg = "NFS storage $nfs_storage_id is manullay configured. Skipping remove command ...";
+                            redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
+                        } else {
+                            if (file_exists($statfile)) {
+                                unlink($statfile);
+                            }
+                            // send command
+                            foreach($_REQUEST['identifier'] as $nfs_lun_name) {
+                                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/bin/openqrm-nfs-storage remove -n $nfs_lun_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                                $storage_resource->send_command($storage_resource->ip, $resource_command);
+                                $redir_msg .= "Removed NFS volume $nfs_lun_name from storage id $nfs_storage_id<br>";
+                                sleep(2);
+                            }
+                            // and wait for the resulting statfile
+                            if (!wait_for_statfile($statfile)) {
+                                $redir_msg = "Error during removing NFS volume ! Please check the Event-Log<br>";
+                            }
+                            redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
                         }
-                        // send command
-                        foreach($_REQUEST['identifier'] as $nfs_lun_name) {
-                            $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/bin/openqrm-nfs-storage remove -n $nfs_lun_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                            $storage_resource->send_command($storage_resource->ip, $resource_command);
-                            $redir_msg .= "Removed NFS volume $nfs_lun_name from storage id $nfs_storage_id<br>";
-                            sleep(2);
-                        }
-                        // and wait for the resulting statfile
-                        if (!wait_for_statfile($statfile)) {
-                            $redir_msg = "Error during removing NFS volume ! Please check the Event-Log<br>";
-                        }
-                        redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
                     } else {
                         $redir_msg = "No NFS volume selected. Skipping removal !";
                         redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
@@ -251,19 +279,26 @@ if(htmlobject_request('redirect') != 'yes') {
                     // remove current stat file
                     $storage_resource_id = $storage_resource->id;
                     $statfile="storage/".$storage_resource_id.".nfs.stat";
-                    if (file_exists($statfile)) {
-                        unlink($statfile);
-                    }
-                    // send command
-                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/bin/openqrm-nfs-storage snap -n $nfs_lun_name -s $nfs_lun_snap_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                    $storage_resource->send_command($storage_resource->ip, $resource_command);
-                    // and wait for the resulting statfile
-                    if (!wait_for_statfile($statfile)) {
-                        $redir_msg .= "Error during snapshotting NFS volume $nfs_lun_name ! Please check the Event-Log<br>";
+                    $statfile_manual="storage/".$storage_resource_id.".nfs.stat.manual";
+                    // manual configured ?
+                    if (file_exists($statfile_manual)) {
+                        $redir_msg = "NFS storage $nfs_storage_id is manullay configured. Skipping snap command ...";
+                        redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
                     } else {
-                        $redir_msg .= "Cloned NFS volume $nfs_lun_name on storage id $nfs_storage_id<br>";
+                        if (file_exists($statfile)) {
+                            unlink($statfile);
+                        }
+                        // send command
+                        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nfs-storage/bin/openqrm-nfs-storage snap -n $nfs_lun_name -s $nfs_lun_snap_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                        $storage_resource->send_command($storage_resource->ip, $resource_command);
+                        // and wait for the resulting statfile
+                        if (!wait_for_statfile($statfile)) {
+                            $redir_msg .= "Error during snapshotting NFS volume $nfs_lun_name ! Please check the Event-Log<br>";
+                        } else {
+                            $redir_msg .= "Cloned NFS volume $nfs_lun_name on storage id $nfs_storage_id<br>";
+                        }
+                        redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
                     }
-                    redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
                 }
                 break;
         }
@@ -378,6 +413,59 @@ function nfs_storage_display($nfs_storage_id) {
 	$deployment = new deployment();
 	$deployment->get_instance_by_id($storage->type);
 
+	$table0 = new htmlobject_db_table('storage_id');
+	$arHead0 = array();
+	$arHead0['storage_state'] = array();
+	$arHead0['storage_state']['title'] ='';
+
+	$arHead0['storage_icon'] = array();
+	$arHead0['storage_icon']['title'] ='';
+
+	$arHead0['storage_id'] = array();
+	$arHead0['storage_id']['title'] ='ID';
+
+	$arHead0['storage_name'] = array();
+	$arHead0['storage_name']['title'] ='Name';
+
+	$arHead0['storage_ip'] = array();
+	$arHead0['storage_ip']['title'] ='Ip';
+
+	$arHead0['storage_config'] = array();
+	$arHead0['storage_config']['title'] ='Manual Config.';
+
+    $storage_icon="/openqrm/base/plugins/nfs-storage/img/storage.png";
+    $state_icon="/openqrm/base/img/$storage_resource->state.png";
+    if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
+        $state_icon="/openqrm/base/img/unknown.png";
+    }
+    if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
+        $resource_icon_default=$storage_icon;
+    }
+    $storage_configuration="<a href=\"nfs-storage-config.php?nfs_storage_id=$nfs_storage_id\"><img src=\"/openqrm/base/img/storage.png\" width=\"24\" height=\"24\" border=\"0\" alt=\"manual config.\"/></a>";
+
+
+	$arBody0 = array();
+    $arBody0[] = array(
+        'storage_state' => "<img src=$state_icon>",
+        'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+        'storage_id' => $storage->id,
+        'storage_name' => $storage->name,
+        'storage_ip' => $storage_resource->ip,
+        'storage_config' => $storage_configuration,
+    );
+
+	$table0->id = 'Tabelle';
+	$table0->css = 'htmlobject_table';
+	$table0->border = 1;
+	$table0->cellspacing = 0;
+	$table0->cellpadding = 3;
+	$table0->form_action = $thisfile;
+	$table0->head = $arHead0;
+	$table0->body = $arBody0;
+	$table0->max = 1;
+
+
+
 	$table = new htmlobject_db_table('nfs_luns');
 	$arHead = array();
 
@@ -398,6 +486,12 @@ function nfs_storage_display($nfs_storage_id) {
 	$storage_icon="/openqrm/base/plugins/nfs-storage/img/storage.png";
 
 	$storage_export_list="storage/$storage_resource->id.nfs.stat";
+	$storage_export_list_manual="storage/$storage_resource->id.nfs.stat.manual";
+    // manual configured ?
+    if (file_exists($storage_export_list_manual)) {
+        $storage_export_list = $storage_export_list_manual;
+    }
+
 	if (file_exists($storage_export_list)) {
 		$storage_vg_content=file($storage_export_list);
 		foreach ($storage_vg_content as $index => $nfs) {
@@ -424,7 +518,12 @@ function nfs_storage_display($nfs_storage_id) {
             $seventh_at_pos = strpos($nfs_line_sixth_at_removed, "@");
             $seventh_at_pos++;
 
-            $nfs_lun_name = basename(trim(substr($nfs_line, 0, $first_at_pos-1)));
+            // manual configured ?
+            if (file_exists($storage_export_list_manual)) {
+                $nfs_lun_name = basename(trim(substr($nfs_line_first_at_removed, 0)));
+            } else {
+                $nfs_lun_name = basename(trim(substr($nfs_line, 0, $first_at_pos-1)));
+            }
             $nfs_lun_export = trim(substr($nfs_line_first_at_removed, 0));
             // build the snap-shot input
             $nfs_lun_snap = "<form action=\"$thisfile\" method=\"GET\">";
@@ -433,7 +532,10 @@ function nfs_storage_display($nfs_storage_id) {
             $nfs_lun_snap .= "<input type='text' name='nfs_lun_snap_name' value='' size='10' maxlength='20'>";
             $nfs_lun_snap .= "<input type='submit' name='action' value='snap'>";
             $nfs_lun_snap .= "</form>";
-
+            // manual configured ?
+            if (file_exists($storage_export_list_manual)) {
+                $nfs_lun_snap = "n.a.";
+            }
             $arBody[] = array(
                 'nfs_lun_icon' => "<img width=24 height=24 src=$storage_icon><input type='hidden' name='nfs_storage_id' value=$nfs_storage_id>",
                 'nfs_lun_name' => $nfs_lun_name,
@@ -455,10 +557,26 @@ function nfs_storage_display($nfs_storage_id) {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('reload', 'remove');
+        // manual configured ?
+        if (file_exists($storage_export_list_manual)) {
+    		$table->bottom = array('reload');
+        } else {
+    		$table->bottom = array('reload', 'remove');
+        }
 		$table->identifier = 'nfs_lun_name';
 	}
 	$table->max = $nfs_count;
+
+    // add nfs export template
+    // manual configured ?
+    if (file_exists($storage_export_list_manual)) {
+        $nfs_lun_name = "";
+        $submit = "";
+    } else {
+        $add_export_header = "<h1>Add new NFS export</h1>";
+        $nfs_lun_name = htmlobject_input('nfs_lun_name', array("value" => '', "label" => 'Lun Name'), 'text', 20);
+		$submit = htmlobject_input('action', array("value" => 'add', "label" => 'Add'), 'submit');
+    }
 
     // set template
 	$t = new Template_PHPLIB();
@@ -467,10 +585,12 @@ function nfs_storage_display($nfs_storage_id) {
 	$t->setVar(array(
 		'formaction' => $thisfile,
 		'storage_name' => $storage->name,
+		'storage_table' => $table0->get_string(),
 		'lun_table' => $table->get_string(),
-		'nfs_lun_name' => htmlobject_input('nfs_lun_name', array("value" => '', "label" => 'Lun Name'), 'text', 20),
+		'nfs_lun_name' => $nfs_lun_name,
+		'add_export_header' => $add_export_header,
     	'hidden_nfs_storage_id' => "<input type='hidden' name='nfs_storage_id' value=$nfs_storage_id>",
-		'submit' => htmlobject_input('action', array("value" => 'add', "label" => 'Add'), 'submit'),
+		'submit' => $submit,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;

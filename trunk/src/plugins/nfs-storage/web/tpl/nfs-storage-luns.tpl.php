@@ -1,7 +1,10 @@
 <h1>NFS Volumes on storage {storage_name}</h1>
+{storage_table}
+<br>
+<br>
 {lun_table}
 <form action="{formaction}" method="GET">
-<h1>Add new NFS export</h1>
+{add_export_header}
 <div style="float:left;">
 {nfs_lun_name}
 </div>
