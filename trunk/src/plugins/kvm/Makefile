@@ -32,7 +32,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && chmod +x $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm*
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/
 	. $(OPENQRM_SERVER_CONF) && . etc/build.conf/kvm-nic-bios.conf && if ! cp $$OPENQRM_BUILD_TMP_DIR/openqrm-build/kvm-nic-bios/kvm-nic-bios-$$OPENQRM_SOURCE_VERSION.tgz $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/ 2>/dev/null; then cp ../../$$OPENQRM_BUILD_TMP_DIR/openqrm-build/kvm-nic-bios/kvm-nic-bios-$$OPENQRM_SOURCE_VERSION.tgz $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/; fi
-	. $(OPENQRM_SERVER_CONF) && tar -C $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm -czvf $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/web/boot-service-kvm.tgz include/ bin/ etc/init.d/kvm etc/templates/openqrm-kvm-vm
+	. $(OPENQRM_SERVER_CONF) && tar -C $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm -czvf $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/web/boot-service-kvm.tgz include/ bin/ etc/init.d/kvm etc/templates/ etc/openqrm-plugin-kvm.conf
 
 
 uninstall:

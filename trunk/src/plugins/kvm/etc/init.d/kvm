@@ -4,6 +4,7 @@
 OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/openqrm-plugin-kvm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/openqrm-plugin-kvm.conf
 if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
 	OPENQRM_SERVER_IP=$resource_openqrmserver
@@ -72,6 +73,14 @@ function kvm_start() {
 #		ifconfig $BRIDGE_INTERFACE 0.0.0.0 up
 #		kvm_log kvm_start "NOTICE: Kvm network-bridge $OPENQRM_KVM_BRIDGE now active."
 #	fi
+    # setting the kvm-ifup +kvm-ifdown script to the internal and external bridge
+    # internal
+    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup
+    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown
+    # external
+    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_EXTERNAL_BRIDGE/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-ext
+    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_EXTERNAL_BRIDGE/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-ext
+    chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/*
 
 
 }
