@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>LVM Storage manager</title>
+	<title>KVM manager</title>
     <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
     <link rel="stylesheet" type="text/css" href="kvm.css" />
     <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
