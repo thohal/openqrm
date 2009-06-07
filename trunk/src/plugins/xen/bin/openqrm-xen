@@ -52,8 +52,8 @@ fi
 
 
 function xen_usage() {
-	echo "Usage : $0 start/stop/reboot/kill/add/delete/remove/list <-n vm-name>"
-	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-i ip-address> <-r memory> [-d disk-size -s swap-size]"
+	echo "Usage : $0 start/stop/reboot/remove/list <-n vm-name>"
+	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size -s swap-size]"
 	echo "Usage : $0 migrate <-n vm-name> <-i ip-address> <-t live/regular>"
 	echo "        $0 post_vm_list <-u username> <-p password>"
 	echo "        $0 post_vm_config <-n vm-name> <-u username> <-p password>"
@@ -260,9 +260,6 @@ case "$XEN_COMMAND" in
 		if [ "$XEN_VM_MAC" == "" ]; then
 			xen_usage
 		fi
-		if [ "$XEN_VM_IP" == "" ]; then
-			xen_usage
-		fi
 		if [ "$XEN_VM_RAM" == "" ]; then
 			xen_usage
 		fi
@@ -336,33 +333,16 @@ case "$XEN_COMMAND" in
 
 		# creating the cfg
         xen_generate_vm_config $XEN_VM_NAME
-
-		xm new $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg
+        # start it
 		SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-		if screen -dmS $SCREEN_NAME xm start $XEN_VM_NAME; then
-            openqrm_post_event 0 "create" 5 "openqrm-xen" "Created and started Xen vm $XEN_VM_NAME -> /etc/xen/$XEN_VM_NAME.cfg"
-      else
-         openqrm_post_event 0 "create" 3 "openqrm-xen" "Could not create Xen vm $XEN_VM_NAME -> /etc/xen/$XEN_VM_NAME.cfg"
-    		xen_lock release
-            exit 1
-        fi
-
-		# in case we have a username + password post the updated list to the openQRM-server
-		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
-			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
-		fi
-		xen_lock release
-		;;
-	add)
-		xen_lock aquire
-		echo "Adding Xen vm $XEN_VM_NAME"
-		if xm new $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg; then
-            openqrm_post_event 0 "add" 5 "openqrm-xen" "Added Xen vm $XEN_VM_NAME to the Xen domain-management"
+		if screen -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg; then
+            openqrm_post_event 0 "create" 5 "openqrm-xen" "Created and started Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
         else
-            openqrm_post_event 0 "add" 3 "openqrm-xen" "Cloud not add Xen vm $XEN_VM_NAME to the Xen domain-management"
+            openqrm_post_event 0 "create" 3 "openqrm-xen" "Could not create Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
     		xen_lock release
             exit 1
         fi
+		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
 		fi
@@ -372,10 +352,10 @@ case "$XEN_COMMAND" in
 		xen_lock aquire
 		echo "Starting Xen vm $XEN_VM_NAME"
 		SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-		if screen -dmS $SCREEN_NAME xm start $XEN_VM_NAME; then
-            openqrm_post_event 0 "start" 5 "openqrm-xen" "Started Xen vm $XEN_VM_NAME"
+		if screen -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg; then
+            openqrm_post_event 0 "create" 5 "openqrm-xen" "Created and started Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
         else
-            openqrm_post_event 0 "start" 3 "openqrm-xen" "Coud not start Xen vm $XEN_VM_NAME"
+            openqrm_post_event 0 "create" 3 "openqrm-xen" "Could not create Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
     		xen_lock release
             exit 1
         fi
@@ -390,24 +370,13 @@ case "$XEN_COMMAND" in
 		if xm shutdown $XEN_VM_NAME; then
     		openqrm_post_event 0 "stop" 5 "openqrm-xen" "Stopped Xen vm $XEN_VM_NAME"
         else
-    		openqrm_post_event 0 "stop" 3 "openqrm-xen" "Coud not stop Xen vm $XEN_VM_NAME"
-    		xen_lock release
-            exit 1
-        fi
-		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
-			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
-		fi
-		xen_lock release
-		;;
-	kill)
-		xen_lock aquire
-		echo "Force-stop Xen vm $XEN_VM_NAME"
-		if xm destroy $XEN_VM_NAME; then
-            openqrm_post_event 0 "kill" 5 "openqrm-xen" "Forced stop Xen vm $XEN_VM_NAME"
-        else
-            openqrm_post_event 0 "kill" 3 "openqrm-xen" "Cloud not force stop Xen vm $XEN_VM_NAME"
-    		xen_lock release
-            exit 1
+            if xm destroy $XEN_VM_NAME; then
+                openqrm_post_event 0 "kill" 5 "openqrm-xen" "Forced stop Xen vm $XEN_VM_NAME"
+            else
+                openqrm_post_event 0 "kill" 3 "openqrm-xen" "Cloud not force stop Xen vm $XEN_VM_NAME"
+                xen_lock release
+                exit 1
+            fi
         fi
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
@@ -433,27 +402,12 @@ case "$XEN_COMMAND" in
 		;;
 	remove)
 		xen_lock aquire
-		echo "Removing Xen vm $XEN_VM_NAME"
-		if xm delete $XEN_VM_NAME; then
-            openqrm_post_event 0 "remove" 5 "openqrm-xen" "Removed Xen vm $XEN_VM_NAME"
-        else
-            openqrm_post_event 0 "remove" 3 "openqrm-xen" "Could not remove Xen vm $XEN_VM_NAME"
-    		xen_lock release
-            exit 1
-        fi
-		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
-			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
-		fi
-		xen_lock release
-		;;
-	delete)
-		xen_lock aquire
 		echo "Deleting Xen vm $XEN_VM_NAME"
 		rm -f $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.*
 		if rm -rf $OPENQRM_VM_DIR/$XEN_VM_NAME; then
             openqrm_post_event 0 "delete" 5 "openqrm-xen" "Deleted Xen vm $XEN_VM_NAME"
         else
-            openqrm_post_event 0 "delete" 3 "openqrm-xen" "Cloud not delete Xen vm $XEN_VM_NAME"
+            openqrm_post_event 0 "delete" 3 "openqrm-xen" "Could not delete Xen vm $XEN_VM_NAME"
     		xen_lock release
             exit 1
         fi
@@ -494,27 +448,31 @@ case "$XEN_COMMAND" in
 	post_vm_list)
 		echo "Posting vm list to the openQRM-server"
 		VM_LIST_TMP=$resource_id.vm_list
-		xm list | grep -v ^Name | sed -e "s/^ *//;s/ *$/@/;s/ \{1,\}/@/g" > $VM_LIST_TMP
-		# add #'s at the beginning to make later parsing easier
-		sed -i -e "s/^/#/g" > $VM_LIST_TMP.up $VM_LIST_TMP
+		xm list | grep -v ^Name | grep Domain.*0 | sed -e "s/^ *//;s/ *$/@/;s/ \{1,\}/@/g" > $VM_LIST_TMP
 
         # gather informations from the not active xen vms
         for cfg in `ls $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/*.cfg 2>/dev/null`; do
             VML_NAME=`basename $cfg | cut -d'.' -f1`
             XEN_VM_BASE_DIR=$OPENQRM_VM_DIR/$VML_NAME
+            # running ?
+            if ps ax | grep qemu-dm | grep xen | grep $VML_NAME > /dev/null; then
+                VM_ONLINE=1
+            else
+                VM_ONLINE=0
+            fi
             # check if created with openQRM or manually
             if [ -f $XEN_VM_BASE_DIR/memory ]; then
                 VM_MEMORY=`cat $XEN_VM_BASE_DIR/memory`
                 VM_MAC1=`cat $XEN_VM_BASE_DIR/mac1`
                 VM_BRIDGE1=`cat $XEN_VM_BASE_DIR/bridge1`
                 VM_VNC=`cat $XEN_VM_BASE_DIR/vncdisplay`
-                echo "1@$VML_NAME""@""$VM_MEMORY""@""$VM_MAC1""@""$VM_BRIDGE1""@""$VM_VNC" >> $VM_LIST_TMP
+                echo "1@$VML_NAME""@""$VM_MEMORY""@""$VM_MAC1""@""$VM_BRIDGE1""@""$VM_VNC""@""$VM_ONLINE" >> $VM_LIST_TMP
             else
                 VM_MEMORY=`cat $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$VML_NAME.cfg | grep ^memory | cut -d'=' -f2 | sed -e "s/ //g" | sed -e "s/\"//g"`
                 VM_MAC1=`cat $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$VML_NAME.cfg | grep ^vif | grep mac | sed -e "s/.*mac=//g" | cut -d',' -f1
 `               VM_BRIDGE1=`cat $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$VML_NAME.cfg | grep ^vif | grep mac | sed -e "s/.*bridge=//g" | cut -d'"' -f1`
                 VM_VNC="n.a."
-                echo "0@$VML_NAME""@""$VM_MEMORY""@""$VM_MAC1""@""$VM_BRIDGE1""@""$VM_VNC" >> $VM_LIST_TMP
+                echo "0@$VML_NAME""@""$VM_MEMORY""@""$VM_MAC1""@""$VM_BRIDGE1""@""$VM_VNC""@""$VM_ONLINE" >> $VM_LIST_TMP
             fi
         done
 
@@ -532,7 +490,6 @@ case "$XEN_COMMAND" in
 		if [ "$XEN_VM_NAME" == "" ]; then
 			xen_usage
 		fi
-		xen_lock aquire
 		echo "Posting vm config for $XEN_VM_NAME to the openQRM-server"
 		VM_CONFIG_TMP=$resource_id.$XEN_VM_NAME.vm_config
         VM_BASE_DIR=$OPENQRM_VM_DIR/$XEN_VM_NAME
@@ -584,7 +541,6 @@ case "$XEN_COMMAND" in
 		fi
 		rm -f $VM_CONFIG_TMP
 		rm -f $VM_CONFIG_TMP.post
-		xen_lock release
 		;;
 
 
@@ -601,6 +557,9 @@ case "$XEN_COMMAND" in
         echo "$XEN_VM_RAM" > $VM_BASE_DIR/memory
 		# creating the cfg
         xen_generate_vm_config $XEN_VM_NAME
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $XEN_VM_NAME -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
 		xen_lock release
 		;;
 
@@ -617,6 +576,9 @@ case "$XEN_COMMAND" in
         echo "$XEN_VM_CPU" > $VM_BASE_DIR/vcpu
 		# creating the cfg
         xen_generate_vm_config $XEN_VM_NAME
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $XEN_VM_NAME -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
 		xen_lock release
 		;;
 
@@ -637,6 +599,9 @@ case "$XEN_COMMAND" in
         echo "$XEN_VM_MAC" > $VM_BASE_DIR/mac$XEN_VM_COMPONENT_NUMBER
 		# creating the cfg
         xen_generate_vm_config $XEN_VM_NAME
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $XEN_VM_NAME -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
 		xen_lock release
 		;;
 	remove_vm_nic)
@@ -652,6 +617,9 @@ case "$XEN_COMMAND" in
         > $VM_BASE_DIR/mac$XEN_VM_COMPONENT_NUMBER
 		# creating the cfg
         xen_generate_vm_config $XEN_VM_NAME
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $XEN_VM_NAME -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
 		xen_lock release
 		;;
 
@@ -675,6 +643,9 @@ case "$XEN_COMMAND" in
         echo "$XEN_VM_DISK" > $VM_BASE_DIR/disksize$XEN_VM_COMPONENT_NUMBER
 		# creating the cfg
         xen_generate_vm_config $XEN_VM_NAME
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $XEN_VM_NAME -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
 		xen_lock release
 		;;
 	remove_vm_disk)
@@ -692,6 +663,9 @@ case "$XEN_COMMAND" in
 		rm -f $OPENQRM_VM_DIR/$XEN_VM_NAME/disk$XEN_VM_COMPONENT_NUMBER.img
 		# creating the cfg
         xen_generate_vm_config $XEN_VM_NAME
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $XEN_VM_NAME -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
 		xen_lock release
 		;;
 

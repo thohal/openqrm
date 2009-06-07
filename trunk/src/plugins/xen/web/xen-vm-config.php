@@ -1,6 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Xen vm configuration</title>
+    <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+    <link rel="stylesheet" type="text/css" href="xen.css" />
+    <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
 
-<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-<link rel="stylesheet" type="text/css" href="xen.css" />
+<style type="text/css">
+.ui-progressbar-value {
+    background-image: url(/openqrm/base/img/progress.gif);
+}
+#progressbar {
+    position: absolute;
+    left: 150px;
+    top: 250px;
+    width: 400px;
+    height: 20px;
+}
+</style>
+</head>
+<body>
+<div id="progressbar">
+</div>
+
 
 <?php
 
@@ -16,83 +40,199 @@ require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 global $OPENQRM_SERVER_BASE_DIR;
 
-$xen_id = $_REQUEST["xen_id"];
-$xen_name = $_REQUEST["xen_name"];
-$xen_vm_component = $_REQUEST["xen_vm_component"];
-$refresh_delay=2;
+$xen_id = htmlobject_request('xen_id');
+$xen_name = htmlobject_request('xen_name');
+$xen_vm_component = htmlobject_request('xen_vm_component');
 
+$refresh_delay=1;
+$refresh_loop_max=20;
+$back_link = "<a href=\"xen-manager.php?action=refresh&xen_id=$xen_id\">Back</a>";
+
+
+function redirect_conf($strMsg, $file, $xen_id, $xen_name) {
+    global $thisfile;
+    $url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab=tab0&xen_id='.$xen_id.'&xen_name='.$xen_name;
+    echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
+    exit;
+}
+
+function wait_for_statfile($sfile) {
+    global $refresh_delay;
+    global $refresh_loop_max;
+    $refresh_loop=0;
+    while (!file_exists($sfile)) {
+        sleep($refresh_delay);
+        $refresh_loop++;
+        flush();
+        if ($refresh_loop > $refresh_loop_max)  {
+            return false;
+        }
+    }
+    return true;
+}
+
+function show_progressbar() {
+?>
+    <script type="text/javascript">
+        $("#progressbar").progressbar({
+			value: 100
+		});
+        var options = {};
+        $("#progressbar").effect("shake",options,2000,null);
+	</script>
+<?php
+        flush();
+}
 
 // run the actions
-
+$event->log("$action", $_SERVER['REQUEST_TIME'], 5, "xen-vm-config", "Processing command $action", "", "", 0, 0, 0);
 if(htmlobject_request('xen_config_action') != '' && $OPENQRM_USER->role == "administrator") {
 	switch (htmlobject_request('xen_config_action')) {
 		case 'update_ram':
-				$xen_update_ram = $_REQUEST["xen_update_ram"];
+                show_progressbar();
+				$xen_update_ram = htmlobject_request('xen_update_ram');
 				$xen_server_appliance = new appliance();
 				$xen_server_appliance->get_instance_by_id($xen_id);
 				$xen_server = new resource();
 				$xen_server->get_instance_by_id($xen_server_appliance->resources);
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen update_vm_ram -n $xen_name -r $xen_update_ram";
+                // unlink stat file
+                $statfile="xen-stat/$xen_server->id.$xen_name.vm_config";
+                if (file_exists($statfile)) {
+                    unlink($statfile);
+                }
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen update_vm_ram -n $xen_name -r $xen_update_ram -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 				$xen_server->send_command($xen_server->ip, $resource_command);
+                // and wait for the resulting statfile
+                if (!wait_for_statfile($statfile)) {
+                    $strMsg .= "Error while updating Memory of Xen vm $xen_name ! Please check the Event-Log<br>";
+                } else {
+                    $strMsg .="Updated Xen vm $xen_name with $xen_update_ram MB Memory<br>";
+                }
+                redirect_conf($strMsg, "xen-vm-config.php", $xen_id, $xen_name);
 			break;
 
+
+
 		case 'update_cpu':
-				$xen_update_cpu = $_REQUEST["xen_update_cpu"];
+                show_progressbar();
+				$xen_update_cpu = htmlobject_request('xen_update_cpu');
 				$xen_server_appliance = new appliance();
 				$xen_server_appliance->get_instance_by_id($xen_id);
 				$xen_server = new resource();
 				$xen_server->get_instance_by_id($xen_server_appliance->resources);
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen update_vm_cpu -n $xen_name -c $xen_update_cpu";
+                // unlink stat file
+                $statfile="xen-stat/$xen_server->id.$xen_name.vm_config";
+                if (file_exists($statfile)) {
+                    unlink($statfile);
+                }
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen update_vm_cpu -n $xen_name -c $xen_update_cpu -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 				$xen_server->send_command($xen_server->ip, $resource_command);
+                // and wait for the resulting statfile
+                if (!wait_for_statfile($statfile)) {
+                    $strMsg .= "Error during updating CPUs of Xen vm $xen_name ! Please check the Event-Log<br>";
+                } else {
+                    $strMsg .="Updated Xen vm $xen_name CPUs<br>";
+                }
+                redirect_conf($strMsg, "xen-vm-config.php", $xen_id, $xen_name);
 			break;
 
 
 		case 'add_vm_net':
-				$xen_new_nic = $_REQUEST["xen_new_nic"];
-				$xen_nic_nr = $_REQUEST["xen_nic_nr"];
+                show_progressbar();
+				$xen_new_nic = htmlobject_request('xen_new_nic');
+				$xen_nic_nr = htmlobject_request('xen_nic_nr');
 				$xen_server_appliance = new appliance();
 				$xen_server_appliance->get_instance_by_id($xen_id);
 				$xen_server = new resource();
 				$xen_server->get_instance_by_id($xen_server_appliance->resources);
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen add_vm_nic -n $xen_name -x $xen_nic_nr -m $xen_new_nic";
+                // unlink stat file
+                $statfile="xen-stat/$xen_server->id.$xen_name.vm_config";
+                if (file_exists($statfile)) {
+                    unlink($statfile);
+                }
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen add_vm_nic -n $xen_name -x $xen_nic_nr -m $xen_new_nic -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 				$xen_server->send_command($xen_server->ip, $resource_command);
+                // and wait for the resulting statfile
+                if (!wait_for_statfile($statfile)) {
+                    $strMsg .= "Error while adding Nic $xen_nic_nr to Xen vm $xen_name ! Please check the Event-Log<br>";
+                } else {
+                    $strMsg .="Added Nic $xen_nic_nr to Xen vm $xen_name<br>";
+                }
+                redirect_conf($strMsg, "xen-vm-config.php", $xen_id, $xen_name);
 			break;
 
 		case 'remove_vm_net':
-				$xen_nic_nr = $_REQUEST["xen_nic_nr"];
+                show_progressbar();
+				$xen_nic_nr = htmlobject_request('xen_nic_nr');
 				$xen_server_appliance = new appliance();
 				$xen_server_appliance->get_instance_by_id($xen_id);
 				$xen_server = new resource();
 				$xen_server->get_instance_by_id($xen_server_appliance->resources);
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen remove_vm_nic -n $xen_name -x $xen_nic_nr";
+                // unlink stat file
+                $statfile="xen-stat/$xen_server->id.$xen_name.vm_config";
+                if (file_exists($statfile)) {
+                    unlink($statfile);
+                }
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen remove_vm_nic -n $xen_name -x $xen_nic_nr -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 				$xen_server->send_command($xen_server->ip, $resource_command);
+                // and wait for the resulting statfile
+                if (!wait_for_statfile($statfile)) {
+                    $strMsg .= "Error during removing Nic $xen_nic_nr from Xen vm $xen_name ! Please check the Event-Log<br>";
+                } else {
+                    $strMsg .="Removed Nic $xen_nic_nr from Xen vm $xen_name<br>";
+                }
+                redirect_conf($strMsg, "xen-vm-config.php", $xen_id, $xen_name);
 			break;
 
 
 
 
 		case 'add_vm_disk':
-				$xen_new_disk = $_REQUEST["xen_new_disk"];
-				$xen_disk_nr = $_REQUEST["xen_disk_nr"];
+                show_progressbar();
+				$xen_new_disk = htmlobject_request('xen_new_disk');
+				$xen_disk_nr = htmlobject_request('xen_disk_nr');
 				$xen_server_appliance = new appliance();
 				$xen_server_appliance->get_instance_by_id($xen_id);
 				$xen_server = new resource();
 				$xen_server->get_instance_by_id($xen_server_appliance->resources);
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen add_vm_disk -n $xen_name -x $xen_disk_nr -d $xen_new_disk";
+                // unlink stat file
+                $statfile="xen-stat/$xen_server->id.$xen_name.vm_config";
+                if (file_exists($statfile)) {
+                    unlink($statfile);
+                }
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen add_vm_disk -n $xen_name -x $xen_disk_nr -d $xen_new_disk -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 				$xen_server->send_command($xen_server->ip, $resource_command);
+                // and wait for the resulting statfile
+                if (!wait_for_statfile($statfile)) {
+                    $strMsg .= "Error while adding disk $xen_disk_nr to Xen vm $xen_name ! Please check the Event-Log<br>";
+                } else {
+                    $strMsg .="Added disk $xen_disk_nr to Xen vm $xen_name<br>";
+                }
+                redirect_conf($strMsg, "xen-vm-config.php", $xen_id, $xen_name);
 			break;
 
 		case 'remove_vm_disk':
-				$xen_disk_nr = $_REQUEST["xen_disk_nr"];
+                show_progressbar();
+				$xen_disk_nr = htmlobject_request('xen_disk_nr');
 				$xen_server_appliance = new appliance();
 				$xen_server_appliance->get_instance_by_id($xen_id);
 				$xen_server = new resource();
 				$xen_server->get_instance_by_id($xen_server_appliance->resources);
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen remove_vm_disk -n $xen_name -x $xen_disk_nr";
+                // unlink stat file
+                $statfile="xen-stat/$xen_server->id.$xen_name.vm_config";
+                if (file_exists($statfile)) {
+                    unlink($statfile);
+                }
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen remove_vm_disk -n $xen_name -x $xen_disk_nr -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
 				$xen_server->send_command($xen_server->ip, $resource_command);
+                // and wait for the resulting statfile
+                if (!wait_for_statfile($statfile)) {
+                    $strMsg .= "Error during removing Disk $xen_disk_nr from Xen vm $xen_name ! Please check the Event-Log<br>";
+                } else {
+                    $strMsg .="Removed disk $xen_disk_nr from Xen vm $xen_name<br>";
+                }
+                redirect_conf($strMsg, "xen-vm-config.php", $xen_id, $xen_name);
 			break;
-
-
 
 
 	}
@@ -107,7 +247,9 @@ function xen_vm_config() {
 	global $xen_name;
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
+    global $back_link;
 	global $refresh_delay;
+
 
 	$xen_server_appliance = new appliance();
 	$xen_server_appliance->get_instance_by_id($xen_id);
@@ -118,16 +260,13 @@ function xen_vm_config() {
     $xen_server->send_command($xen_server->ip, $resource_command);
     sleep($refresh_delay);
 
-	$disp = "<b>xen Configure VM</b>";
-	$disp = $disp."<br>";
+	$disp = "<h1>xen Configure VM</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."<form action=\"$thisfile\" method=post>";
 	$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
 	$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-	$disp = $disp."<input type=submit value='Refresh'>";
+	$disp = $disp."<input type=submit value='Refresh'> $back_link";
 	$disp = $disp."</form>";
-	$disp = $disp."<br>";
-
 
 	$xen_vm_conf_file="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web/xen-stat/$xen_server->id.$xen_name.vm_config";
     if (!file_exists($xen_vm_conf_file)) {

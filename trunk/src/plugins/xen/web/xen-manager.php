@@ -1,6 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Xen manager</title>
+    <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+    <link rel="stylesheet" type="text/css" href="xen.css" />
+    <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
+<style type="text/css">
+.ui-progressbar-value {
+    background-image: url(/openqrm/base/img/progress.gif);
+}
+#progressbar {
+    position: absolute;
+    left: 150px;
+    top: 250px;
+    width: 400px;
+    height: 20px;
+}
+</style>
+</head>
+<body>
+<div id="progressbar">
+</div>
 
-<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-<link rel="stylesheet" type="text/css" href="xen.css" />
 
 <?php
 
@@ -16,12 +39,12 @@ require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 global $OPENQRM_SERVER_BASE_DIR;
-$refresh_delay=3;
-$command_delay=1;
+$refresh_delay=1;
+$refresh_loop_max=20;
 
-$xen_id = $_REQUEST["xen_id"];
-$xen_migrate_to_id = $_REQUEST["xen_migrate_to_id"];
-$xen_migrate_type = $_REQUEST["xen_migrate_type"];
+$xen_id = htmlobject_request('xen_id');
+$xen_migrate_to_id = htmlobject_request('xen_migrate_to_id');
+$xen_migrate_type = htmlobject_request('xen_migrate_type');
 
 
 
@@ -48,21 +71,122 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 }
 
 
-// xen vm actions
-// registered vms
-if(htmlobject_request('action_table1') != '') {
-	switch (htmlobject_request('action_table1')) {
-		case 'start':
-			if (isset($_REQUEST['identifier_table1'])) {
-				foreach($_REQUEST['identifier_table1'] as $xen_name) {
-					$strMsg .="Starting $xen_name <br>";
+function wait_for_statfile($sfile) {
+    global $refresh_delay;
+    global $refresh_loop_max;
+    $refresh_loop=0;
+    while (!file_exists($sfile)) {
+        sleep($refresh_delay);
+        $refresh_loop++;
+        flush();
+        if ($refresh_loop > $refresh_loop_max)  {
+            return false;
+        }
+    }
+    return true;
+}
+
+function show_progressbar() {
+?>
+    <script type="text/javascript">
+        $("#progressbar").progressbar({
+			value: 100
+		});
+        var options = {};
+        $("#progressbar").effect("shake",options,2000,null);
+	</script>
+<?php
+        flush();
+}
+
+
+
+
+// Dom0 actions
+if(htmlobject_request('action') != '') {
+	switch (htmlobject_request('action')) {
+
+		case 'refresh':
+            if (strlen($xen_id)) {
+                show_progressbar();
+                $xen_appliance = new appliance();
+                $xen_appliance->get_instance_by_id($xen_id);
+                $xen = new resource();
+                $xen->get_instance_by_id($xen_appliance->resources);
+                // remove current stat file
+                $statfile="xen-stat/$xen->id.vm_list";
+                if (file_exists($statfile)) {
+                    unlink($statfile);
+                }
+                // send command
+                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                $xen->send_command($xen->ip, $resource_command);
+                // wait for statfile to appear again
+                if (!wait_for_statfile($statfile)) {
+                    $strMsg .= "Error while refreshing Xen vm list ! Please check the Event-Log<br>";
+                } else {
+                    $strMsg .= "Refreshed Xen vm list<br>";
+                }
+                redirect($strMsg, "tab0");
+            }
+			break;
+
+		case 'select':
+			if (isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $xen_id) {
+                    show_progressbar();
                     $xen_appliance = new appliance();
                     $xen_appliance->get_instance_by_id($xen_id);
                     $xen = new resource();
                     $xen->get_instance_by_id($xen_appliance->resources);
+                    // remove current stat file
+                    $statfile="xen-stat/$xen->id.vm_list";
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
+                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                    $xen->send_command($xen->ip, $resource_command);
+                    // wait for statfile to appear again
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error while refreshing Xen vm list ! Please check the Event-Log<br>";
+                    } else {
+                        $strMsg .= "Refreshed Xen vm list<br>";
+                    }
+                    redirect($strMsg, "tab0");
+                }
+            }
+			break;
+    }
+}
+
+
+// xen vm actions
+if(htmlobject_request('action_table1') != '') {
+	switch (htmlobject_request('action_table1')) {
+
+		case 'start':
+			if (isset($_REQUEST['identifier_table1'])) {
+				foreach($_REQUEST['identifier_table1'] as $xen_name) {
+                    show_progressbar();
+                    $xen_appliance = new appliance();
+                    $xen_appliance->get_instance_by_id($xen_id);
+                    $xen = new resource();
+                    $xen->get_instance_by_id($xen_appliance->resources);
+                    // remove current stat file
+                    $statfile="xen-stat/$xen->id.vm_list";
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
                     $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen start -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
                     $xen->send_command($xen->ip, $resource_command);
-                    sleep($command_delay);
+                    // wait for statfile to appear again
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error while starting Xen vm $xen_name ! Please check the Event-Log<br>";
+                    } else {
+                        $strMsg .= "Started Xen vm $xen_name<br>";
+                    }
                 }
                 redirect($strMsg, "tab0");
             }
@@ -71,30 +195,25 @@ if(htmlobject_request('action_table1') != '') {
 		case 'stop':
 			if (isset($_REQUEST['identifier_table1'])) {
 				foreach($_REQUEST['identifier_table1'] as $xen_name) {
-					$strMsg .="Stopping $xen_name <br>";
+                    show_progressbar();
                     $xen_appliance = new appliance();
                     $xen_appliance->get_instance_by_id($xen_id);
                     $xen = new resource();
                     $xen->get_instance_by_id($xen_appliance->resources);
+                    // remove current stat file
+                    $statfile="xen-stat/$xen->id.vm_list";
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
                     $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen stop -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
                     $xen->send_command($xen->ip, $resource_command);
-                    sleep($command_delay);
-                }
-                redirect($strMsg, "tab0");
-            }
-			break;
-
-		case 'kill':
-			if (isset($_REQUEST['identifier_table1'])) {
-				foreach($_REQUEST['identifier_table1'] as $xen_name) {
-					$strMsg .="Force stopping $xen_name <br>";
-                    $xen_appliance = new appliance();
-                    $xen_appliance->get_instance_by_id($xen_id);
-                    $xen = new resource();
-                    $xen->get_instance_by_id($xen_appliance->resources);
-                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen kill -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                    $xen->send_command($xen->ip, $resource_command);
-                    sleep($command_delay);
+                    // wait for statfile to appear again
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error while stopping Xen vm $xen_name ! Please check the Event-Log<br>";
+                    } else {
+                        $strMsg .= "Stopped Xen vm $xen_name<br>";
+                    }
                 }
                 redirect($strMsg, "tab0");
             }
@@ -103,14 +222,25 @@ if(htmlobject_request('action_table1') != '') {
 		case 'reboot':
 			if (isset($_REQUEST['identifier_table1'])) {
 				foreach($_REQUEST['identifier_table1'] as $xen_name) {
-					$strMsg .="Rebooting $xen_name <br>";
+                    show_progressbar();
                     $xen_appliance = new appliance();
                     $xen_appliance->get_instance_by_id($xen_id);
                     $xen = new resource();
                     $xen->get_instance_by_id($xen_appliance->resources);
+                    // remove current stat file
+                    $statfile="xen-stat/$xen->id.vm_list";
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
                     $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen reboot -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
                     $xen->send_command($xen->ip, $resource_command);
-                    sleep($command_delay);
+                    // wait for statfile to appear again
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error while rebooting Xen vm $xen_name ! Please check the Event-Log<br>";
+                    } else {
+                        $strMsg .= "Rebooted Xen vm $xen_name<br>";
+                    }
                 }
                 redirect($strMsg, "tab0");
             }
@@ -119,14 +249,25 @@ if(htmlobject_request('action_table1') != '') {
 		case 'remove':
 			if (isset($_REQUEST['identifier_table1'])) {
 				foreach($_REQUEST['identifier_table1'] as $xen_name) {
-					$strMsg .="Removing $xen_name <br>";
+                    show_progressbar();
                     $xen_appliance = new appliance();
                     $xen_appliance->get_instance_by_id($xen_id);
                     $xen = new resource();
                     $xen->get_instance_by_id($xen_appliance->resources);
+                    // remove current stat file
+                    $statfile="xen-stat/$xen->id.vm_list";
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
                     $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen remove -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
                     $xen->send_command($xen->ip, $resource_command);
-                    sleep($command_delay);
+                    // wait for statfile to appear again
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error while removing Xen vm $xen_name ! Please check the Event-Log<br>";
+                    } else {
+                        $strMsg .= "Removed Xen vm $xen_name<br>";
+                    }
                 }
                 redirect($strMsg, "tab0");
             }
@@ -135,66 +276,38 @@ if(htmlobject_request('action_table1') != '') {
 		case 'migrate':
 			if (isset($_REQUEST['identifier_table1'])) {
 				foreach($_REQUEST['identifier_table1'] as $xen_name) {
-					$strMsg .="Migrating $xen_name <br>";
+                    show_progressbar();
                     $xen_appliance = new appliance();
                     $xen_appliance->get_instance_by_id($xen_id);
                     $xen = new resource();
                     $xen->get_instance_by_id($xen_appliance->resources);
                     $destination = new resource();
                     $destination->get_instance_by_id($xen_migrate_to_id);
+
+                    // remove current stat file
+                    $statfile="xen-stat/$xen->id.vm_list";
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
                     if ("$xen_migrate_type" == "1") {
                         $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen migrate -n $xen_name -i $destination->ip -t live -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
                     } else {
                         $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen migrate -n $xen_name -i $destination->ip -t regular -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
                     }
                     $xen->send_command($xen->ip, $resource_command);
-                    sleep($command_delay);
+                    // wait for statfile to appear again
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error while migrating Xen vm $xen_name ! Please check the Event-Log<br>";
+                    } else {
+                        $strMsg .= "Migrated Xen vm $xen_name<br>";
+                    }
                 }
                 redirect($strMsg, "tab0");
             }
 			break;
     }
 }
-
-
-
-// unregistered vms
-if(htmlobject_request('action_table2') != '') {
-	switch (htmlobject_request('action_table2')) {
-		case 'add':
-			if (isset($_REQUEST['identifier_table2'])) {
-				foreach($_REQUEST['identifier_table2'] as $xen_name) {
-					$strMsg .="Adding $xen_name <br>";
-                    $xen_appliance = new appliance();
-                    $xen_appliance->get_instance_by_id($xen_id);
-                    $xen = new resource();
-                    $xen->get_instance_by_id($xen_appliance->resources);
-                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen add -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                    $xen->send_command($xen->ip, $resource_command);
-                    sleep($command_delay);
-                }
-                redirect($strMsg, "tab0");
-            }
-			break;
-
-		case 'delete':
-			if (isset($_REQUEST['identifier_table2'])) {
-				foreach($_REQUEST['identifier_table2'] as $xen_name) {
-                    $xen_appliance = new appliance();
-                    $xen_appliance->get_instance_by_id($xen_id);
-                    $xen = new resource();
-                    $xen->get_instance_by_id($xen_appliance->resources);
-                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen delete -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                    $xen->send_command($xen->ip, $resource_command);
-                    sleep($command_delay);
-                }
-                redirect($strMsg, "tab0");
-            }
-			break;
-    }
-}
-
-
 
 
 
@@ -204,11 +317,6 @@ function xen_select() {
     global $OPENQRM_USER;
     global $thisfile;
     $table = new htmlobject_db_table('xen_id');
-
-    $disp = "<h1>Select Xen-Host</h1>";
-    $disp = $disp."<br>";
-    $disp = $disp."Please select a Xen-Host from the list below";
-    $disp = $disp."<br>";
 
     $arHead = array();
     $arHead['xen_state'] = array();
@@ -277,7 +385,19 @@ function xen_select() {
         $table->identifier = 'xen_id';
     }
     $table->max = $xen_count;
-    return $disp.$table->get_string();
+
+   // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'xen-select.tpl.php');
+	$t->setVar(array(
+		'formaction' => $thisfile,
+        'xen_server_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
+
+
 }
 
 
@@ -287,229 +407,143 @@ function xen_display($appliance_id) {
     global $OPENQRM_SERVER_BASE_DIR;
     global $OPENQRM_USER;
     global $thisfile;
-    global $refresh_delay;
 
     // refresh
     $xen_appliance = new appliance();
     $xen_appliance->get_instance_by_id($appliance_id);
     $xen = new resource();
     $xen->get_instance_by_id($xen_appliance->resources);
-    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen post_vm_list -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-    $xen->send_command($xen->ip, $resource_command);
-    sleep($refresh_delay);
 
-    // fill the arrays for the 3 tables
+    // dom0 infos
     $arBody = array();
+    $resource_icon_default="/openqrm/base/img/resource.png";
+    $xen_icon="/openqrm/base/plugins/xen/img/plugin.png";
+    $state_icon="/openqrm/base/img/$xen->state.png";
+    if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
+        $state_icon="/openqrm/base/img/unknown.png";
+    }
+    if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$xen_icon)) {
+        $resource_icon_default=$xen_icon;
+    }
+    $xen_create_button="<a href=\"xen-create.php?xen_id=$xen_appliance->id\" style=\"text-decoration: none\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> VM</b></a>";
+    // here we take the resource id as the identifier because
+    // we need to run commands on the resource ip
+    $arBody[] = array(
+        'xen_state' => "<img width=16 height=16 src=$state_icon><input type='hidden' name='xen_id' value=$appliance_id>",
+        'xen_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+        'xen_id' => $xen_appliance->id,
+        'xen_name' => $xen->hostname,
+        'xen_resource_id' => $xen->id,
+        'xen_resource_ip' => $xen->ip,
+        'xen_resource_memory' => $xen->memtotal." MB",
+        'xen_create' => $xen_create_button,
+    );
+
+
+    // vm infos
+    $loop = 0;
     $arBody1 = array();
-    $arBody2 = array();
-
-    $active_vms[] = array();
-    $registerd_vms[] = array();
-    $unregisterd_vms[] = array();
-    $openqrm_vm[] = array();
-
-
-    $loop=0;
     $xen_vm_list_file="xen-stat/$xen->id.vm_list";
     if (file_exists($xen_vm_list_file)) {
         $xen_vm_list_content=file($xen_vm_list_file);
-
         foreach ($xen_vm_list_content as $index => $xenxmoutput) {
-
-            $loop++;
-            // Dom0 informations
-            if ($loop == 1 && strcmp($xenxmoutput, "Dom0")) {
-
-                $resource_icon_default="/openqrm/base/img/resource.png";
-                $xen_icon="/openqrm/base/plugins/xen/img/plugin.png";
-                $state_icon="/openqrm/base/img/$xen->state.png";
-                if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
-                    $state_icon="/openqrm/base/img/unknown.png";
-                }
-                if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$xen_icon)) {
-                    $resource_icon_default=$xen_icon;
-                }
-                $xen_create_button="<a href=\"xen-create.php?xen_id=$xen_appliance->id\" style=\"text-decoration: none\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> VM</b></a>";
-                // here we take the resource id as the identifier because
-                // we need to run commands on the resource ip
-                $arBody[] = array(
-                    'xen_state' => "<img width=16 height=16 src=$state_icon>",
-                    'xen_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-                    'xen_id' => $xen_appliance->id,
-                    'xen_name' => $xen->hostname,
-                    'xen_resource_id' => $xen->id,
-                    'xen_resource_ip' => $xen->ip,
-                    'xen_resource_memory' => $xen->memtotal,
-                    'xen_create' => $xen_create_button,
-                );
+            if ($loop == 0) {
+                $loop = 1;
                 continue;
+            }
+            $first_at_pos = strpos($xenxmoutput, "@");
+            $first_at_pos++;
+            $xen_name_first_at_removed = substr($xenxmoutput, $first_at_pos, strlen($xenxmoutput)-$first_at_pos);
+            $second_at_pos = strpos($xen_name_first_at_removed, "@");
+            $second_at_pos++;
+            $xen_name_second_at_removed = substr($xen_name_first_at_removed, $second_at_pos, strlen($xen_name_first_at_removed)-$second_at_pos);
+            $third_at_pos = strpos($xen_name_second_at_removed, "@");
+            $third_at_pos++;
+            $xen_name_third_at_removed = substr($xen_name_second_at_removed, $third_at_pos, strlen($xen_name_second_at_removed)-$third_at_pos);
+            $fourth_at_pos = strpos($xen_name_third_at_removed, "@");
+            $fourth_at_pos++;
+            $xen_name_fourth_at_removed = substr($xen_name_third_at_removed, $fourth_at_pos, strlen($xen_name_third_at_removed)-$fourth_at_pos);
+            $fivth_at_pos = strpos($xen_name_fourth_at_removed, "@");
+            $fivth_at_pos++;
+            $xen_name_fivth_at_removed = substr($xen_name_fourth_at_removed, $fivth_at_pos, strlen($xen_name_fourth_at_removed)-$fivth_at_pos);
+            $sixth_at_pos = strpos($xen_name_fivth_at_removed, "@");
+            $sixth_at_pos++;
+            $xen_name_sixth_at_removed = substr($xen_name_fivth_at_removed, $sixth_at_pos, strlen($xen_name_fivth_at_removed)-$fivth_at_pos);
+            $seventh_at_pos = strpos($xen_name_sixth_at_removed, "@");
+            $seventh_at_pos++;
 
-            } else {
+            $xen_openqrm_vm = trim(substr($xenxmoutput, 0, $first_at_pos-1));
+            $xen_name = trim(substr($xen_name_first_at_removed, 0, $second_at_pos-1));
+            $xen_vm_memory = trim(substr($xen_name_second_at_removed, 0, $third_at_pos-1));
+            $xen_vm_mac = trim(substr($xen_name_third_at_removed, 0, $fourth_at_pos-1));
+            $xen_vm_bridge = trim(substr($xen_name_fourth_at_removed, 0, $fivth_at_pos-1));
+            $xen_vm_vnc = trim(substr($xen_name_fivth_at_removed, 0, $sixth_at_pos-1));
+            $xen_vm_online = trim(substr($xen_name_sixth_at_removed, 0));
 
-                // registered vms -> from xm list output
-                if (strstr($xenxmoutput, "#")) {
+            $xen_vm_resource = new resource();
+            $xen_vm_resource->get_instance_by_mac($xen_vm_mac);
+            $xen_vm_id = $xen_vm_resource->id;
+            $xen_vm_ip = $xen_vm_resource->ip;
 
-                    $xenxmoutput = str_replace("#", "", $xenxmoutput);
-                    $first_at_pos = strpos($xenxmoutput, "@");
-                    $first_at_pos++;
-                    $xen_name_first_at_removed = substr($xenxmoutput, $first_at_pos, strlen($xenxmoutput)-$first_at_pos);
-                    $second_at_pos = strpos($xen_name_first_at_removed, "@");
-                    $second_at_pos++;
-                    $xen_name_second_at_removed = substr($xen_name_first_at_removed, $second_at_pos, strlen($xen_name_first_at_removed)-$second_at_pos);
-                    $third_at_pos = strpos($xen_name_second_at_removed, "@");
-                    $third_at_pos++;
-                    $xen_name_third_at_removed = substr($xen_name_second_at_removed, $third_at_pos, strlen($xen_name_second_at_removed)-$third_at_pos);
-
-                    $xen_name = trim(substr($xenxmoutput, 0, $first_at_pos-1));
-                    $registerd_vms[] = $xen_name;
-
-                    // check if on- or offline
-                    if (strstr($xenxmoutput, "---")) {
-                        $active_vms[] = $xen_name;
-                    }
-                    continue;
-
-
-                // all/registered + unregistered vms
-                // -> from ls *.cfg output
-                } else {
-
-                    $first_at_pos = strpos($xenxmoutput, "@");
-                    $first_at_pos++;
-                    $xen_name_first_at_removed = substr($xenxmoutput, $first_at_pos, strlen($xenxmoutput)-$first_at_pos);
-                    $second_at_pos = strpos($xen_name_first_at_removed, "@");
-                    $second_at_pos++;
-                    $xen_name_second_at_removed = substr($xen_name_first_at_removed, $second_at_pos, strlen($xen_name_first_at_removed)-$second_at_pos);
-                    $third_at_pos = strpos($xen_name_second_at_removed, "@");
-                    $third_at_pos++;
-                    $xen_name_third_at_removed = substr($xen_name_second_at_removed, $third_at_pos, strlen($xen_name_second_at_removed)-$third_at_pos);
-                    $fourth_at_pos = strpos($xen_name_third_at_removed, "@");
-                    $fourth_at_pos++;
-                    $xen_name_fourth_at_removed = substr($xen_name_third_at_removed, $fourth_at_pos, strlen($xen_name_third_at_removed)-$fourth_at_pos);
-                    $fivth_at_pos = strpos($xen_name_fourth_at_removed, "@");
-                    $fivth_at_pos++;
-                    $xen_name_fivth_at_removed = substr($xen_name_fourth_at_removed, $fivth_at_pos, strlen($xen_name_fourth_at_removed)-$fivth_at_pos);
-                    $sixth_at_pos = strpos($xen_name_fivth_at_removed, "@");
-                    $sixth_at_pos++;
-                    $xen_name_sixth_at_removed = substr($xen_name_fivth_at_removed, $fivth_at_pos, strlen($xen_name_fivth_at_removed)-$fivth_at_pos);
-
-
-
-                    $xen_openqrm_vm = trim(substr($xenxmoutput, 0, $first_at_pos-1));
-                    $xen_name = trim(substr($xen_name_first_at_removed, 0, $second_at_pos-1));
-                    $xen_vm_memory = trim(substr($xen_name_second_at_removed, 0, $third_at_pos-1));
-                    $xen_vm_mac = trim(substr($xen_name_third_at_removed, 0, $fourth_at_pos-1));
-                    $xen_vm_bridge = trim(substr($xen_name_fourth_at_removed, 0, $fivth_at_pos-1));
-                    $xen_vm_vnc = trim(substr($xen_name_fivth_at_removed, 0, $sixth_at_pos-1));
-
-                    $xen_vm_resource = new resource();
-                    $xen_vm_resource->get_instance_by_mac($xen_vm_mac);
-                    $xen_vm_id = $xen_vm_resource->id;
-                    $xen_vm_ip = $xen_vm_resource->ip;
-
-                    switch ($xen_openqrm_vm) {
-                        case '1':
-                            $openqrm_vm[] = $xen_name;
-                            break;
-                    }
-
+            // if it is an openqrm vm -> plus migration
+            // we need a select with the ids/ips from all resources which
+            // are used by appliances with xen capabilities
+            $xen_host_resource_list = array();
+            $appliance_list = new appliance();
+            $appliance_list_array = $appliance_list->get_list();
+            foreach ($appliance_list_array as $index => $app) {
+                $appliance_xen_host_check = new appliance();
+                $appliance_xen_host_check->get_instance_by_id($app["value"]);
+                $virtualization = new virtualization();
+                $virtualization->get_instance_by_id($appliance_xen_host_check->virtualization);
+                if ((strstr($virtualization->type, "xen")) && (!strstr($virtualization->type, "xen-vm"))) {
+                    $xen_host_resource = new resource();
+                    $xen_host_resource->get_instance_by_id($appliance_xen_host_check->resources);
+                    $xen_host_resource_list[] = array("value"=>$xen_host_resource->id, "label"=>$xen_host_resource->ip,);
                 }
-
             }
 
+            $migrateion_select = xen_htmlobject_select('xen_migrate_to_id', $xen_host_resource_list, '', $xen_host_resource_list);
 
-            // here we fill table 1 + 2
-            // check if in registered_vm array
-            if (in_array($xen_name, $registerd_vms)) {
-                if (in_array($xen_name, $active_vms)) {
-
-                    $xen_vm_state_icon = "/openqrm/base/img/active.png";
-                    $xen_vm_actions = "";
-                    $xen_vm_actions= $xen_vm_actions."<a href=\"$thisfile?identifier_table1[]=$xen_name&action_table1=stop&xen_id=$xen_appliance->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"></a>&nbsp;";
-                    $xen_vm_actions = $xen_vm_actions."<a href=\"$thisfile?identifier_table1[]=$xen_name&action_table1=reboot&xen_id=$xen_appliance->id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"></a>&nbsp;";
-                    $xen_vm_actions = $xen_vm_actions."<a href=\"$thisfile?identifier_table1[]=$xen_name&action_table1=kill&xen_id=$xen_appliance->id\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"></a>&nbsp;";
-
-                    // if it is an openqrm vm -> plus migration
-                    $xen_vm_migrate_actions = "";
-                    if (in_array($xen_name, $openqrm_vm)) {
-                        $xen_vm_migrate_actions = $xen_vm_migrate_actions."<b><input type='checkbox' name='xen_migrate_type' value='1'> live</b>";
-                        // we need a select with the ids/ips from all resources which
-                        // are used by appliances with xen capabilities
-                        $xen_host_resource_list = array();
-                        $appliance_list = new appliance();
-                        $appliance_list_array = $appliance_list->get_list();
-                        foreach ($appliance_list_array as $index => $app) {
-                            $appliance_xen_host_check = new appliance();
-                            $appliance_xen_host_check->get_instance_by_id($app["value"]);
-                            $virtualization = new virtualization();
-                            $virtualization->get_instance_by_id($appliance_xen_host_check->virtualization);
-                            if ((strstr($virtualization->type, "xen")) && (!strstr($virtualization->type, "xen-vm"))) {
-                                $xen_host_resource = new resource();
-                                $xen_host_resource->get_instance_by_id($appliance_xen_host_check->resources);
-                                $xen_host_resource_list[] = array("value"=>$xen_host_resource->id, "label"=>$xen_host_resource->ip,);
-                            }
-                        }
-
-                        $migrateion_select = xen_htmlobject_select('xen_migrate_to_id', $xen_host_resource_list, '', $xen_host_resource_list);
-                        $xen_vm_migrate_actions = $xen_vm_migrate_actions.$migrateion_select;
-                    }
-
-                } else {
-
-                    // offline
-                    $xen_vm_state_icon = "/openqrm/base/img/off.png";
-                    $xen_vm_actions = "";
-                    $xen_vm_actions= $xen_vm_actions."<a href=\"$thisfile?identifier_table1[]=$xen_name&action_table1=start&xen_id=$xen_appliance->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"></a>&nbsp;";
-                    $xen_vm_actions = $xen_vm_actions."<a href=\"$thisfile?identifier_table1[]=$xen_name&action_table1=remove&xen_id=$xen_appliance->id\"><img height=16 width=16 src=\"/openqrm/base/img/error.png\" border=\"0\"></a>&nbsp;";
-                    $xen_vm_migrate_actions = "";
+            // here we fill table 1
+            $xen_vm_actions = "";
+            $xen_vm_migrate_actions = "";
+            // online ? openqrm-vm ?
+            if ($xen_vm_online == 1) {
+                $xen_vm_state_icon = "/openqrm/base/img/active.png";
+                // online actions
+                $xen_vm_actions= $xen_vm_actions."<a href=\"$thisfile?identifier_table1[]=$xen_name&action_table1=stop&xen_id=$xen_appliance->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"></a>&nbsp;";
+                $xen_vm_actions = $xen_vm_actions."<a href=\"$thisfile?identifier_table1[]=$xen_name&action_table1=reboot&xen_id=$xen_appliance->id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"></a>&nbsp;";
+                if ($xen_openqrm_vm == 1) {
+                    $xen_vm_migrate_actions = $xen_vm_migrate_actions."<b><input type='checkbox' name='xen_migrate_type' value='1'> live</b>";
+                    $xen_vm_migrate_actions = $xen_vm_migrate_actions.$migrateion_select;
                 }
-
-                // add to table1
-                $arBody1[] = array(
-                    'xen_vm_state' => "<img src=$xen_vm_state_icon><input type='hidden' name='xen_id' value=$xen_appliance->id>",
-                    'xen_vm_id' => $xen_vm_id,
-                    'xen_vm_name' => $xen_name,
-                    'xen_vm_vnc' => $xen_vm_vnc,
-                    'xen_vm_ip' => $xen_vm_ip,
-                    'xen_vm_mac' => $xen_vm_mac,
-                    'xen_vm_bridge' => $xen_vm_bridge,
-                    'xen_vm_memory' => $xen_vm_memory,
-                    'xen_vm_actions' => $xen_vm_actions,
-                    'xen_vm_migrate_actions' => $xen_vm_migrate_actions,
-                );
-
-
             } else {
-                // add to array for table->max
-                $unregisterd_vms[] = $xen_name;
-                // offline
                 $xen_vm_state_icon = "/openqrm/base/img/off.png";
-                $xen_vm_actions = "";
-                $xen_vm_actions = $xen_vm_actions."<a href=\"$thisfile?identifier_table2[]=$xen_name&action_table2=add&xen_id=$xen_appliance->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"></a>&nbsp;";
-                $xen_vm_actions = $xen_vm_actions."<a href=\"$thisfile?identifier_table2[]=$xen_name&action_table2=delete&xen_id=$xen_appliance->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"></a>&nbsp;";
-                $xen_vm_actions = $xen_vm_actions."<a href=\"xen-vm-config.php?xen_name=$xen_name&xen_id=$xen_appliance->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/plugin.png\" border=\"0\"></a>&nbsp;";
-                $xen_vm_migrate_actions = "";
-
-                // add to table2
-                $arBody2[] = array(
-                    'xen_vm_state' => "<img src=$xen_vm_state_icon><input type='hidden' name='xen_id' value=$xen_appliance->id>",
-                    'xen_vm_id' => $xen_vm_id,
-                    'xen_vm_name' => $xen_name,
-                    'xen_vm_vnc' => $xen_vm_vnc,
-                    'xen_vm_ip' => $xen_vm_ip,
-                    'xen_vm_mac' => $xen_vm_mac,
-                    'xen_vm_bridge' => $xen_vm_bridge,
-                    'xen_vm_memory' => $xen_vm_memory,
-                    'xen_vm_actions' => $xen_vm_actions,
-                    'xen_vm_migrate_actions' => $xen_vm_migrate_actions,
-                );
-
+                $xen_vm_actions= $xen_vm_actions."<a href=\"$thisfile?identifier_table1[]=$xen_name&action_table1=start&xen_id=$xen_appliance->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"></a>&nbsp;";
+                if ($xen_openqrm_vm == 1) {
+                    $xen_vm_actions = $xen_vm_actions."<a href=\"xen-vm-config.php?xen_name=$xen_name&xen_id=$xen_appliance->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/plugin.png\" border=\"0\"></a>&nbsp;";
+                    $xen_vm_actions = $xen_vm_actions."<a href=\"$thisfile?identifier_table1[]=$xen_name&action_table1=remove&xen_id=$xen_appliance->id\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"></a>&nbsp;";
+                }
             }
+
+            // add to table1
+            $arBody1[] = array(
+                'xen_vm_state' => "<img src=$xen_vm_state_icon><input type='hidden' name='xen_id' value=$xen_appliance->id>",
+                'xen_vm_id' => $xen_vm_id,
+                'xen_vm_name' => $xen_name,
+                'xen_vm_vnc' => $xen_vm_vnc,
+                'xen_vm_ip' => $xen_vm_ip,
+                'xen_vm_mac' => $xen_vm_mac,
+                'xen_vm_bridge' => $xen_vm_bridge,
+                'xen_vm_memory' => $xen_vm_memory." MB",
+                'xen_vm_actions' => $xen_vm_actions,
+                'xen_vm_migrate_actions' => $xen_vm_migrate_actions,
+            );
+
 
         }
     }
-
-
 
 
     // main output section
@@ -558,11 +592,10 @@ function xen_display($appliance_id) {
         $table->identifier = 'xen_id';
     }
     $table->max = 1;
-    $disp = $disp.$table->get_string();
 
 
-    // ############################ Xen registered vms table ###################
-    $disp = $disp."<h1>Registerd VMs on Xen Host $xen->id/$xen->hostname</h1>";
+    // ############################ Xen vms table ###################
+    $disp = $disp."<h1>VMs on Xen Host $xen->id/$xen->hostname</h1>";
     $table1 = new htmlobject_db_table('xen_vm_name');
     $arHead1 = array();
     $arHead1['xen_vm_state'] = array();
@@ -590,7 +623,7 @@ function xen_display($appliance_id) {
     $arHead1['xen_vm_memory']['title'] ='Memory';
 
     $arHead1['xen_vm_actions'] = array();
-    $arHead1['xen_vm_actions']['title'] ='Actions';
+    $arHead1['xen_vm_actions']['title'] ='VM-Actions';
 
     $arHead1['$xen_vm_migrate_actions'] = array();
     $arHead1['$xen_vm_migrate_actions']['title'] ='Migration';
@@ -614,65 +647,22 @@ function xen_display($appliance_id) {
         $table1->identifier = 'xen_vm_name';
     }
     $table1->max = count($registerd_vms);
-    $disp = $disp.$table1->get_string();
 
-    // ######################### Xen unregistered vms table ####################
-    $disp = $disp."<br>";
-    $disp = $disp."<br>";
-    $disp = $disp."<h1>Unregistered VMs on Xen Host $xen->id/$xen->hostname</h1>";
-    $table2 = new htmlobject_db_table('xen_vm_name');
-    $arHead2 = array();
-    $arHead2['xen_vm_state'] = array();
-    $arHead2['xen_vm_state']['title'] ='';
-
-    $arHead2['xen_vm_res'] = array();
-    $arHead2['xen_vm_res']['title'] ='Res.';
-
-    $arHead2['xen_vm_name'] = array();
-    $arHead2['xen_vm_name']['title'] ='Name';
-
-    $arHead2['xen_vm_vnc'] = array();
-    $arHead2['xen_vm_vnc']['title'] ='vnc';
-
-    $arHead2['xen_vm_ip'] = array();
-    $arHead2['xen_vm_ip']['title'] ='IP';
-
-    $arHead2['xen_vm_mac'] = array();
-    $arHead2['xen_vm_mac']['title'] ='MAC';
-
-    $arHead2['xen_vm_bridge'] = array();
-    $arHead2['xen_vm_bridge']['title'] ='Bridge';
-
-    $arHead2['xen_vm_memory'] = array();
-    $arHead2['xen_vm_memory']['title'] ='Memory';
-
-    $arHead2['xen_vm_actions'] = array();
-    $arHead2['xen_vm_actions']['title'] ='Actions';
-
-    $arHead2['$xen_vm_migrate_actions'] = array();
-    $arHead2['$xen_vm_migrate_actions']['title'] ='';
-
-    $table2->id = 'Tabelle';
-    $table2->css = 'htmlobject_table';
-    $table2->border = 1;
-    $table2->cellspacing = 0;
-    $table2->cellpadding = 3;
-    $table2->form_action = $thisfile;
-    $table2->sort = '';
-    $table2->identifier_type = "checkbox";
-    $table2->bottom_buttons_name = "action_table2";
-    $table2->identifier_name = "identifier_table2";
-    $table2->head = $arHead2;
-    $table2->body = $arBody2;
-    if ($OPENQRM_USER->role == "administrator") {
-        $table2->bottom = array('add', 'delete');
-        $table2->identifier = 'xen_vm_name';
-    }
-    $table2->max = count($unregisterd_vms);
-    $disp = $disp.$table2->get_string();
-
+   // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'xen-vms.tpl.php');
+	$t->setVar(array(
+		'formaction' => $thisfile,
+        'xen_server_table' => $table->get_string(),
+        'xen_server_id' => $xen_appliance->id,
+        'xen_server_name' => $xen_appliance->name,
+        'xen_vm_table' => $table1->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
 
     return $disp;
+
 }
 
 
