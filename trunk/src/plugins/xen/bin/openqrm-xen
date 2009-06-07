@@ -55,6 +55,7 @@ function xen_usage() {
 	echo "Usage : $0 start/stop/reboot/remove/list <-n vm-name>"
 	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size -s swap-size]"
 	echo "Usage : $0 migrate <-n vm-name> <-i ip-address> <-t live/regular>"
+	echo "Usage : $0 setboot <-m mac-address> <-b local/net>"
 	echo "        $0 post_vm_list <-u username> <-p password>"
 	echo "        $0 post_vm_config <-n vm-name> <-u username> <-p password>"
 	echo "        $0 update_vm_ram <-r memory> <-n vm-name>"
@@ -220,6 +221,10 @@ while [ $# -ne 0 ]; do
 			XEN_VM_COMPONENT_NUMBER=$2
 			shift
 			;;
+		-b)
+			XEN_VM_BOOT=$2
+			shift
+			;;
 		*)
 			echo "ERROR: Free commandline arguments are not allowed"
 			xen_usage
@@ -246,7 +251,7 @@ if [ "$XEN_COMMAND" == "post_vm_list" ]; then
 		fi
 else
 
-	if [ "$XEN_COMMAND" != "list" ]; then
+	if [ "$XEN_COMMAND" != "list" ] && [ "$XEN_COMMAND" != "setboot" ]; then
 		if [ "$XEN_VM_NAME" == "" ]; then
 			xen_usage
 		fi
@@ -669,6 +674,59 @@ case "$XEN_COMMAND" in
 		xen_lock release
 		;;
 
+	setboot)
+        unset XEN_VM_NAME
+		if [ "$XEN_VM_MAC" == "" ]; then
+			xen_usage
+		fi
+		if [ "$XEN_VM_BOOT" == "" ]; then
+			xen_usage
+		fi
+		xen_lock aquire
+		echo "Setting vm with mac $XEN_VM_MAC to boot from $XEN_VM_BOOT"
+        # this command is is running from the openQRM engine which does
+        # not know about the xen-name
+        for XEN_VM_NET_CONF in `find $OPENQRM_VM_DIR/ -name mac1`; do
+            XEN_VM_MAC_1=`cat $XEN_VM_NET_CONF 2>/dev/null`
+            if [ "$XEN_VM_MAC_1" == "$XEN_VM_MAC" ]; then
+                XEN_VM_NAME=`dirname $XEN_VM_NET_CONF`
+                XEN_VM_NAME=`basename $XEN_VM_NAME`
+                break
+            fi
+        done
+        if [ "$XEN_VM_NAME" == "" ]; then
+    		echo "Cloud not find Xen vm with mac $XEN_VM_MAC on this host"
+            exit 1
+        fi
+        case "$XEN_VM_BOOT" in
+            local)
+                echo "c" > $OPENQRM_VM_DIR/$XEN_VM_NAME/boot
+                ;;
+            net)
+                echo "n" > $OPENQRM_VM_DIR/$XEN_VM_NAME/boot
+                ;;
+        esac
+		# hard restart it to apply its configuration
+        # we do it here because the openQRM server engine does not
+        # know anything about the vm name to restart it later
+        if xm destroy $XEN_VM_NAME; then
+            openqrm_post_event 0 "setboot" 5 "openqrm-xen" "Forced stop for re-starting Xen vm $XEN_VM_NAME"
+        else
+            openqrm_post_event 0 "setboot" 3 "openqrm-xen" "Cloud not force stop Xen vm $XEN_VM_NAME. Trying to continue .."
+        fi
+		# creating the cfg
+        xen_generate_vm_config $XEN_VM_NAME
+        # start it
+		SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+#		if screen -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg; then
+#           openqrm_post_event 0 "setboot" 5 "openqrm-xen" "Re-started Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
+#        else
+#            openqrm_post_event 0 "setboot" 3 "openqrm-xen" "Could not re-start Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
+#    		xen_lock release
+#            exit 1
+#        fi
+		xen_lock release
+		;;
 	*)
 		xen_usage
 		;;
