@@ -3,6 +3,7 @@
 <head>
 	<title>KVM create vm</title>
     <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+    <link rel="stylesheet" type="text/css" href="kvm.css" />
     <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
     <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
     <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
