@@ -7,9 +7,6 @@ configure:
 
 compile:
 	
-	. $(OPENQRM_SERVER_CONF) && ../../make-assistant openqrm_cache_or_download partimage $(OPENQRM_PLUGIN_LOCAL_DEPLOYMENT_DIR)/etc/build.conf/partimage.conf
-	. $(OPENQRM_SERVER_CONF) && . etc/build.conf/partimage.conf && if [ -d $$OPENQRM_BUILD_TMP_DIR/openqrm-build/partimage/ ]; then cd $$OPENQRM_BUILD_TMP_DIR/openqrm-build/partimage/; else cd ../../$$OPENQRM_BUILD_TMP_DIR/openqrm-build/partimage/; fi; tar -xzvf openqrm-partimage-ng-$$OPENQRM_SOURCE_VERSION.ubuntu.tgz
-
 install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin
 	. $(OPENQRM_SERVER_CONF) && cp bin/openqrm* $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/
@@ -32,7 +29,6 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp web/class/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web/class/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web/img
 	. $(OPENQRM_SERVER_CONF) && cp web/img/*.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web/img/
-	. $(OPENQRM_SERVER_CONF) && if ! cp $$OPENQRM_BUILD_TMP_DIR/openqrm-build/partimage/bin/partimage-ng $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/ 2>/dev/null; then cp ../../$$OPENQRM_BUILD_TMP_DIR/openqrm-build/partimage/bin/partimage-ng $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/; fi
 	. $(OPENQRM_SERVER_CONF) && tar -C $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage -czvf $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web/boot-service-local-storage.tgz include/ bin/ etc/init.d/local-storage
 
 

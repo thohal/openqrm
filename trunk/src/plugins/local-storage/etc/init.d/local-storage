@@ -50,14 +50,6 @@ function local_storage_start() {
             else
                 echo "local-storage: Mounted $LOCAL_STORAGE_RESTORE rw"
             fi
-            echo "local-storage: Getting partimage util"
-            cd /
-            if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/partimage-ng.tgz; then
-                echo "local-storage: Error downloading partimage-ng.tgz package"
-                /bin/bash
-            fi
-            tar -xzf partimage-ng.tgz
-            rm -f partimage-ng.tgz
 
             # grab
             echo "local-storage: Starting grab-phase. Transfering disk-content to $LOCAL_STORAGE_INAME"
@@ -65,11 +57,8 @@ function local_storage_start() {
             for HARD_DISK in `cat /proc/partitions | grep -v major | sed -e '/^$/d' | awk {' print $4 '} | grep -v [0-9]`; do
                 echo "local-storage: Processing device /dev/$HARD_DISK"
                 INAME="/mnt/"$LOCAL_STORAGE_INAME"_x_"$HARD_DISK"_ping.img"
-                BSNAME="/mnt/"$LOCAL_STORAGE_INAME"_x_"$HARD_DISK"_bs.img"
-                rm -f $INAME $BSNAME
-                partimage-ng -b 32 save /dev/$HARD_DISK $INAME
-                echo "local-storage: Saving the MBR of /dev/$HARD_DISK"
-                dd if=/dev/$HARD_DISK of=$BSNAME bs=512 count=1
+                rm -f $INAME
+                $resource_basedir/openqrm/plugins/local-storage/bin/openqrm-partimage if=/dev/$HARD_DISK of=$INAME
             done
             echo "local-storage: Umounting image-store"
             umount /mnt

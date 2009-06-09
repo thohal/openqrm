@@ -40,14 +40,6 @@ function mount_rootfs() {
 	else
 		echo "local-storage: Mounted $image_storage_server_ip:$image_rootdevice rw"
 	fi
-    echo "local-storage: Getting partimage util"
-    cd /
-    if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/partimage-ng.tgz; then
-		echo "local-storage: Error downloading partimage-ng.tgz package"
-        /bin/bash
-    fi
-    tar -xzf partimage-ng.tgz
-    rm -f partimage-ng.tgz
 
     # grab or restore ?
     if [ "$LOCAL_STORAGE_GRAB" != "" ]; then
@@ -57,11 +49,8 @@ function mount_rootfs() {
         for HARD_DISK in `cat /proc/partitions | grep -v major | sed -e '/^$/d' | awk {' print $4 '} | grep -v [0-9]`; do
             echo "local-storage: Processing device /dev/$HARD_DISK"
             INAME="/mnt/"$image_name"_x_"$HARD_DISK"_ping.img"
-            BSNAME="/mnt/"$image_name"_x_"$HARD_DISK"_bs.img"
             rm -f $INAME $BSNAME
-            partimage-ng -b 32 save /dev/$HARD_DISK $INAME
-            echo "local-storage: Saving the MBR of /dev/$HARD_DISK"
-            dd if=/dev/$HARD_DISK of=$BSNAME bs=512 count=1
+            $resource_basedir/openqrm/plugins/local-storage/bin/openqrm-partimage if=/dev/$HARD_DISK of=$INAME
         done
         echo "local-storage: Umounting image-store"
         umount /mnt
@@ -84,10 +73,7 @@ function mount_rootfs() {
             LP_INAME="_ping.img"
             PING_DEV=`echo $PING_IMAGE | sed -e "s/.*$FP_INAME//g" | sed -e "s/$LP_INAME//g"`
             echo "local-storage: Restoring $PING_IMAGE to /dev/$PING_DEV"
-            partimage-ng restore $PING_IMAGE /dev/$PING_DEV
-            BSNAME=`echo $PING_IMAGE | sed -e "s/_ping/_bs/g"`
-            echo "local-storage: Restoring bootsector $BSNAME to /dev/$PING_DEV"
-            dd if=$BSNAME of=/dev/$PING_DEV bs=512 count=1
+            $resource_basedir/openqrm/plugins/local-storage/bin/openqrm-partimage if=$PING_IMAGE of=/dev/$PING_DEV
         done
         echo "local-storage: Umounting image-store"
         umount /mnt
@@ -120,83 +106,4 @@ function create_fstab() {
 #######################################################################
 # optional functions ##################################################
 #######################################################################
-
-
-# using partimage from grabbing
-function grab_rootfs() {
-	echo "local-storage: Grabbing $resource_image from $image_rootdevice to image_storage_server_ip:$IMAGE_GRAB_TO"
-	# mounting target location
-	modprobe sunrpc 1>/dev/null 2>&1
-	modprobe lockd 1>/dev/null 2>&1
-	modprobe nfs 1>/dev/null 2>&1
-	rm -rf /dev/null
-	mknod -m 666 /dev/null c 1 3
-	openqrm_portmap_start
-	mkdir -p /mnt2
-	if ! mount -t nfs -o rw,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_GRAB_TO /mnt2; then
-		echo "ERROR: Could not mount $image_storage_server_ip:$IMAGE_GRAB_TO by nfs"
-		# give a shell for the admin
-		/bin/bash
-	fi
-
-	echo "local-storage: Started grab-pase. This can take a while ...."
-	# grabbing the root partition
-	partimage -z1 --nocheck --overwrite --nodesc -f3 -b save $image_rootdevice /mnt2/$image_name
-	# saving the mbr
-	ROOT_DISK=`echo $image_rootdevice | sed -e "s/[0-9]//g"`
-	dd if=$ROOT_DISK of=/mnt2/$image_name.mbr count=1 bs=512
-	# saving the extend partitions
-	sfdisk -d $ROOT_DISK > /mnt2/$image_name.sf
-	echo "local-storage: Grab-phase finished. Continuing boot-up"
-
-	umount /mnt2
-	rmdir /mnt2
-	openqrm_portmap_stop
-}
-
-
-
-
-# using partimage from deploy
-function install_rootfs() {
-	echo "local-storage: Installing $resource_image from $image_storage_server_ip:$IMAGE_INSTALL_FROM to $image_rootdevice"
-	# getting partimage
-	if [ ! -x /sbin/partimage ]; then
-		cd /sbin
-		echo "local-storage: Getting partimage util"
-		if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/partimage; then
-			/bin/bash
-		fi
-		chmod +x partimage
-		cd /
-	fi
-	# mounting source location
-	modprobe sunrpc 1>/dev/null 2>&1
-	modprobe lockd 1>/dev/null 2>&1
-	modprobe nfs 1>/dev/null 2>&1
-	rm -rf /dev/null
-	mknod -m 666 /dev/null c 1 3
-	openqrm_portmap_start
-	mkdir -p /mnt2
-	if ! mount -t nfs -o ro,nolock$IMAGE_NFS_MOUNT_OPTIONS $image_storage_server_ip:$IMAGE_INSTALL_FROM /mnt2; then
-		echo "ERROR: Could not mount $image_storage_server_ip:$IMAGE_INSTALL_FROM by nfs"
-		# give a shell for the admin
-		/bin/bash
-	fi
-
-	echo "local-storage: Started install-phase. This can take a while ...."
-	# restoring the mbr
-	ROOT_DISK=`echo $image_rootdevice | sed -e "s/[0-9]//g"`
-	dd if=/mnt2/$image_name.mbr of=$ROOT_DISK
-	# restoring the extented partition layout
-	sfdisk $ROOT_DISK < /mnt2/$image_name.sf
-	partimage -b restore $image_rootdevice /mnt2/$image_name.000
-	echo "local-storage: Install-phase finished. Continuing boot-up"
-
-	umount /mnt2
-	rmdir /mnt2
-	openqrm_portmap_stop
-		
-}
-
 

@@ -20,21 +20,6 @@ elif [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
 	OPENQRM_INTERFACE=`ifconfig | grep -i $resource_mac | grep :oq | cut -d':' -f1`
 fi
 
-PARTIMAGE_NG_LIBS="libparted,libext2fs,libntfs,libstdc++,libgcc_"
-
-function copy_lib_dependencies() {
-    local TARGET_LIB=$1
-    local TARGET_DIR=$2
-    LIB_FILE=`find /lib/ /usr/lib /usr/local/lib -maxdepth 2 -name $TARGET_LIB*so* -type f | grep -v vmware | grep -v "\-3g" | grep -v openqrm | head -n1`
-    if [ "$LIB_FILE" == "" ]; then
-    	echo "ERROR: Cloud not find $TARGET_LIB on this system ! Exiting..."
-        return 1
-    fi
-    cp -aRv $LIB_FILE $TARGET_DIR/
-    for LIB_LINK in `find /lib/ /usr/lib /usr/local/lib -maxdepth 2 -name $TARGET_LIB*so* -type l | grep -v vmware  | grep -v "\-3g" | grep -v openqrm`; do
-        cp -aRv $LIB_LINK $TARGET_DIR/
-    done
-}
 
 
 function openqrm_plugin_local_storage_start() {
@@ -69,7 +54,6 @@ function openqrm_plugin_local_storage_uninstall() {
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-storage
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.local-storage
     rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.local-storage.php
-    rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/partimage-ng.tgz
     rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/local-storage-state.php
     rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-local-storage.tgz
 }
@@ -86,31 +70,6 @@ function openqrm_plugin_local_storage_init() {
 		echo
 	fi
 	echo "Initializing the openQRM local-storage-plugin"
-    # need to gather the lib dependencies for partimage-ng, for now in the init phase
-    rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bs-tmp
-    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bs-tmp/bin
-    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bs-tmp/lib
-    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bs-tmp/include
-    cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bin/partimage-ng $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bs-tmp/bin/
-    # cp lib deps
-    OLDIFS=$IFS
-    IFS=','
-    for LIB_DEP in $PARTIMAGE_NG_LIBS; do
-        IFS=$OLDIFS
-        if ! copy_lib_dependencies $LIB_DEP $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bs-tmp/lib/; then
-			openqrm_post_event 0 "init" 3 "openqrm-plugin-local-storage" "Init of the local-storage plugin failed"
-			openqrm_post_event 0 "init" 3 "openqrm-plugin-local-storage" "To debug please run : bash -x $0 $@"
-            return 1
-        else
-            openqrm_post_event 0 "init" 5 "openqrm-plugin-local-storage" "Found all library dependencies for partimage-ng"
-        fi
-    done
-    IFS=$OLDIFS
-    cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bs-tmp/
-    tar -czvf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web/partimage-ng.tgz bin include lib
-    cd - 1>/dev/null
-    rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/bs-tmp
-
 	openqrm_server_add_deployment_type $USERNAME $PASSWORD local-storage local-storage "Local-Disk deployment" local-storage "Local-Deployment Storage"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-storage
@@ -124,7 +83,6 @@ function openqrm_plugin_local_storage_init() {
 	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web/root-mount.local-storage
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web/root-mount.local-storage $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.local-storage
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web/image.local-storage.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.local-storage.php
-	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web/partimage-ng.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/partimage-ng.tgz
     ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web/local-storage-state.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/local-storage-state.php
     ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web/boot-service-local-storage.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-local-storage.tgz
     # create storage dir for stat files
