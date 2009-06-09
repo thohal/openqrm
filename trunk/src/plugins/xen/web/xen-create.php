@@ -159,7 +159,7 @@ if(htmlobject_request('xen_command') != '') {
             $resource_fields["resource_mac"]=$xen_mac;
             $resource_fields["resource_localboot"]=0;
             $resource_fields["resource_vtype"]=$virtualization->id;
-            $resource_fields["resource_vhostid"]=$xen_id;
+            $resource_fields["resource_vhostid"]=$xen->id;
             $resource->add($resource_fields);
             // and wait for the resulting statfile
             if (!wait_for_statfile($statfile)) {

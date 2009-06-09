@@ -694,13 +694,16 @@ case "$XEN_COMMAND" in
 	setboot)
         unset XEN_VM_NAME
 		if [ "$XEN_VM_MAC" == "" ]; then
+            echo "openQRM Xen-plugin: ERROR during setboot. No mac-address given" | logger
 			xen_usage
 		fi
 		if [ "$XEN_VM_BOOT" == "" ]; then
+            echo "openQRM Xen-plugin: ERROR during setboot. No boot param given" | logger
 			xen_usage
 		fi
 		xen_lock aquire
 		echo "Setting vm with mac $XEN_VM_MAC to boot from $XEN_VM_BOOT"
+        echo "openQRM Xen-plugin: Setting vm with mac $XEN_VM_MAC to boot from $XEN_VM_BOOT" | logger
         # this command is is running from the openQRM engine which does
         # not know about the xen-name
         for XEN_VM_NET_CONF in `find $OPENQRM_VM_DIR/ -name mac1`; do
@@ -713,6 +716,7 @@ case "$XEN_COMMAND" in
         done
         if [ "$XEN_VM_NAME" == "" ]; then
     		echo "Cloud not find Xen vm with mac $XEN_VM_MAC on this host"
+            echo "openQRM Xen-plugin: ERROR: Cloud not find Xen vm with mac $XEN_VM_MAC on this host" | logger
             exit 1
         fi
         case "$XEN_VM_BOOT" in
@@ -739,10 +743,12 @@ case "$XEN_COMMAND" in
            openqrm_post_event 0 "setboot" 5 "openqrm-xen" "Re-started Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
         else
             openqrm_post_event 0 "setboot" 3 "openqrm-xen" "Could not re-start Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
+            echo "openQRM Xen-plugin: ERROR: Could not re-start Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg" | logger
     		xen_lock release
             exit 1
         fi
 		xen_lock release
+        exit 0
 		;;
 	*)
 		xen_usage
