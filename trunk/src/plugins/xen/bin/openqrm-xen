@@ -68,6 +68,23 @@ function xen_usage() {
 }
 
 
+function get_disk_name() {
+    local component=$1
+    case "$component" in
+        1)
+            echo "hda"
+            ;;
+        2)
+            echo "hdb"
+            ;;
+        3)
+            echo "hdc"
+            ;;
+        4)
+            echo "hdd"
+            ;;
+    esac
+}
 
 function xen_generate_vm_config() {
     VM_NAME=$1
@@ -323,8 +340,7 @@ case "$XEN_COMMAND" in
 			echo "-> Creating disk"
 			dd if=/dev/zero of=$OPENQRM_VM_DIR/$XEN_VM_NAME/disk1.img bs=1M seek=$XEN_VM_DISK count=1
 			mkfs.ext3 -F $OPENQRM_VM_DIR/$XEN_VM_NAME/disk1.img
-            echo "/dev/hda1 ro" > $XEN_VM_BASE_DIR/root
-            echo "file:$OPENQRM_VM_DIR/$XEN_VM_NAME/disk1.img,ioemu:hda1,w" > $XEN_VM_BASE_DIR/disk1
+            echo "file:$OPENQRM_VM_DIR/$XEN_VM_NAME/disk1.img,ioemu:hda,w" > $XEN_VM_BASE_DIR/disk1
             echo "$XEN_VM_DISK" > $XEN_VM_BASE_DIR/disksize1
 		fi
 		# swap
@@ -332,7 +348,7 @@ case "$XEN_COMMAND" in
 			echo "-> Creating swap"
 			dd if=/dev/zero of=$OPENQRM_VM_DIR/$XEN_VM_NAME/swap.img bs=1M seek=$XEN_VM_SWAP count=1
 			mkswap -f $OPENQRM_VM_DIR/$XEN_VM_NAME/swap.img
-            echo "file:$OPENQRM_VM_DIR/$XEN_VM_NAME/swap.img,hdb1,w" > $XEN_VM_BASE_DIR/swap
+            echo "file:$OPENQRM_VM_DIR/$XEN_VM_NAME/swap.img,hdb,w" > $XEN_VM_BASE_DIR/swap
             echo "$XEN_VM_SWAP" > $XEN_VM_BASE_DIR/swapsize
 		fi
 
@@ -640,11 +656,12 @@ case "$XEN_COMMAND" in
 			xen_usage
 		fi
 		xen_lock aquire
+        DISK_NAME=`get_disk_name $XEN_VM_COMPONENT_NUMBER`
 		echo "Adding disk $XEN_VM_COMPONENT_NUMBER size $XEN_VM_DISK to XEN vm $XEN_VM_NAME"
         VM_BASE_DIR=$OPENQRM_VM_DIR/$XEN_VM_NAME
         dd if=/dev/zero of=$OPENQRM_VM_DIR/$XEN_VM_NAME/disk$XEN_VM_COMPONENT_NUMBER.img bs=1M seek=$XEN_VM_DISK count=1
         mkfs.ext3 -F $OPENQRM_VM_DIR/$XEN_VM_NAME/disk$XEN_VM_COMPONENT_NUMBER.img
-        echo "file:$OPENQRM_VM_DIR/$XEN_VM_NAME/disk$XEN_VM_COMPONENT_NUMBER.img,ioemu:hda$XEN_VM_COMPONENT_NUMBER,w" > $VM_BASE_DIR/disk$XEN_VM_COMPONENT_NUMBER
+        echo "file:$OPENQRM_VM_DIR/$XEN_VM_NAME/disk$XEN_VM_COMPONENT_NUMBER.img,ioemu:$DISK_NAME,w" > $VM_BASE_DIR/disk$XEN_VM_COMPONENT_NUMBER
         echo "$XEN_VM_DISK" > $VM_BASE_DIR/disksize$XEN_VM_COMPONENT_NUMBER
 		# creating the cfg
         xen_generate_vm_config $XEN_VM_NAME
@@ -718,13 +735,13 @@ case "$XEN_COMMAND" in
         xen_generate_vm_config $XEN_VM_NAME
         # start it
 		SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-#		if screen -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg; then
-#           openqrm_post_event 0 "setboot" 5 "openqrm-xen" "Re-started Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
-#        else
-#            openqrm_post_event 0 "setboot" 3 "openqrm-xen" "Could not re-start Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
-#    		xen_lock release
-#            exit 1
-#        fi
+		if screen -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg; then
+           openqrm_post_event 0 "setboot" 5 "openqrm-xen" "Re-started Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
+        else
+            openqrm_post_event 0 "setboot" 3 "openqrm-xen" "Could not re-start Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
+    		xen_lock release
+            exit 1
+        fi
 		xen_lock release
 		;;
 	*)
