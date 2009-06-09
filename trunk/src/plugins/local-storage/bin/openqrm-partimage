@@ -77,7 +77,7 @@ rm -f "${tmp}"
 mkfifo "${tmp}"
 chmod 0600 "${tmp}"
 
-dd ${parameters} 2> ${tmp} &
+nice -n 19 dd ${parameters} 2> ${tmp} &
 pid=${!}
 
 SECONDS=0
