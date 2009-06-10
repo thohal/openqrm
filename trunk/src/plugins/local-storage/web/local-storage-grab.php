@@ -345,11 +345,17 @@ function local_select_image($resource_id) {
 
 
 function local_transfer_disk($resource_id, $image_id) {
-    echo "transferring disk content of resource $resource_id to image $image_id <br>";
 
-    
-
-
+// set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'local-storage-grab3.tpl.php');
+	$t->setVar(array(
+		'resource_id' => $resource_id,
+		'image_id' => $image_id,
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
 
 }
 
