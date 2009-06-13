@@ -292,6 +292,7 @@ EOF
 		vmware_server2_log "Rebooting VMware vm $VMWARE_SERVER_VM_NAME"
 		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
 		$VMWARE_VIM_CMD vmsvc/power.off $VMID | logger
+		$OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
 		$VMWARE_VIM_CMD vmsvc/power.on $VMID | logger
 		$OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
 		# in case we have a username + password post the updated list to the openQRM-server
@@ -440,7 +441,10 @@ EOF
         # know anything about the vm name to restart it later
 		vmware_server2_log "Rebooting VMware vm $VMWARE_SERVER_VM_NAME"
 		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
-		$VMWARE_VIM_CMD vmsvc/power.reboot $VMID | logger
+		$VMWARE_VIM_CMD vmsvc/power.off $VMID | logger
+		$OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
+		$VMWARE_VIM_CMD vmsvc/power.on $VMID | logger
+		$OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
 		vmware_server2_lock release
 		;;
 	*)
