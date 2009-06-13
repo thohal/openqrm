@@ -11,6 +11,7 @@ function vmware_esx_log() {
 	local COMPONENT=$1
 	shift
 	local MESSAGE=$@
+    echo "vmware-esx plug-in" "$COMPONENT : $MESSAGE"
 	logger -i -t "vmware-esx plug-in" "$COMPONENT : $MESSAGE"
 }
 

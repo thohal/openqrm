@@ -16,6 +16,7 @@ if [ "$MONITOR_CMD" == "stop" ]; then
 	if [ -f "$MONITORD_LOCKFILE" ]; then
 		kill `cat $MONITORD_LOCKFILE`
 		rm -f $MONITORD_LOCKFILE
+        exit
 	else
 		echo "Not started !"
 		rm -f $MONITORD_LOCKFILE
