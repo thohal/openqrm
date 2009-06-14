@@ -10,14 +10,12 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 
 function openqrm_plugin_vmware_esx_start() {
 	echo "Starting the openQRM vmware-esx-plugin"
-	cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-integrate.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/action/
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-esx/.running
 }
 
 
 function openqrm_plugin_vmware_esx_stop() {
 	echo "Stopping the openQRM vmware-esx-plugin"
-	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/action/vmware-esx-integrate.php
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-esx/.running
 }
 
@@ -37,6 +35,7 @@ function openqrm_plugin_vmware_esx_uninstall() {
 	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD vmware-esx
 	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD vmware-esx-vm
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-esx
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/action/vmware-esx-integrate.php
 }
 
 function openqrm_plugin_vmware_esx_init() {
@@ -56,6 +55,7 @@ function openqrm_plugin_vmware_esx_init() {
 	openqrm_server_add_virtualization_type $USERNAME $PASSWORD vmware-esx-vm "VMware-ESX VM"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-esx
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-integrate.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/action/
 	
 }
 

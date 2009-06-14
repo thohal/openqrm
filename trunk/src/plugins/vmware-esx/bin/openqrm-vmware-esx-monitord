@@ -93,6 +93,24 @@ else
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
 fi
 
+# try to register all vms
+ESX_VER=$(vmware -v | awk '{print $4}')
+if [ -f /bin/vim-cmd ]; then
+    VMWARE_CMD=/bin/vim-cmd
+elif [ -f /usr/bin/vmware-vim-cmd ]; then
+    VMWARE_CMD=/usr/bin/vmware-vim-cmd
+elif [[ "${ESX_VER}" == "3.0.3" ]] || [[ "${ESX_VER}" == "3.0.2" ]] || [[ "${ESX_VER}" == "3.0.1" ]] || [[ "${ESX_VER}" == "3.0.0" ]]; then
+    VMWARE_CMD=/usr/bin/vimsh
+else
+    echo "WARNING: Host type is not ESX 3.x+ or ESXi"
+fi
+if [ "$VMWARE_CMD" != "" ]; then
+    for VM_CONF in `find /vmfs/volumes/ -name *.vmx`; do
+        echo "NOTICE: Trying to register $VM_CONF"
+        $VMWARE_CMD solo/registervm $VM_CONF
+    done
+fi
+
 # loop
 HNAME=`hostname`
 while(true); do

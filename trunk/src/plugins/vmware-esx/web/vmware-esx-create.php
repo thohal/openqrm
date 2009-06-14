@@ -109,6 +109,31 @@ function show_progressbar() {
 
 
 
+function validate_input($var, $type) {
+    switch ($type) {
+        case 'string':
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_alpha($var[$i])) {
+                    if (!ctype_digit($var[$i])) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+            break;
+        case 'number';
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_digit($var[$i])) {
+                    return false;
+                }
+            }
+            return true;
+            break;
+    }
+
+
+}
+
 
 
 // running the actions
@@ -117,16 +142,17 @@ if(htmlobject_request('action') != '') {
         // vmware-server-actions
 		case 'new':
 			if (strlen($vmware_esx_id)) {
+                // name check
     			if (!strlen($vmware_esx_name)) {
                     $strMsg .= "Empty vm name. Not creating the vm on VMware ESX Host $vmware_esx_id<br>";
                     redirect($strMsg, "tab0", $vmware_esx_id);
-                }
-    			if (!strlen($vmware_esx_mac)) {
-                    $strMsg .= "Empty vm mac-address. Not creating the vm on VMware ESX Host $vmware_esx_id<br>";
+                } else if (!validate_input($vmware_esx_name, 'string')) {
+                    $strMsg .= "Invalid vm name. Not creating the vm on VMware ESX Host $vmware_esx_id<br>";
                     redirect($strMsg, "tab0", $vmware_esx_id);
                 }
-    			if (!strlen($vmware_esx_ram)) {
-                    $strMsg .= "Empty vm memory. Not creating the vm on VMware ESX Host $vmware_esx_id<br>";
+                // mach check
+    			if (!strlen($vmware_esx_mac)) {
+                    $strMsg .= "Empty vm mac-address. Not creating the vm on VMware ESX Host $vmware_esx_id<br>";
                     redirect($strMsg, "tab0", $vmware_esx_id);
                 }
                 // check for wrong vmware mac address space
@@ -134,6 +160,21 @@ if(htmlobject_request('action') != '') {
                 if (strcmp($vmware_mac_address_space, $posted_mac_address_space)) {
                     $strMsg .= "Please notice that VMware is using the special mac-address space $vmware_mac_address_space:xx:yy !<br>Other mac-addresses are not supported.<br>";
                     redirect($strMsg, "tab0", $vmware_esx_id);
+                }
+                // ram check
+    			if (!strlen($vmware_esx_ram)) {
+                    $strMsg .= "Empty vm memory. Not creating the vm on VMware ESX Host $vmware_esx_id<br>";
+                    redirect($strMsg, "tab0", $vmware_esx_id);
+                } else if (!validate_input($vmware_esx_ram, 'number')) {
+                    $strMsg .= "Invalid vm memory $vmware_esx_ram. Not creating the vm on VMware ESX Host $vmware_esx_id<br>";
+                    redirect($strMsg, "tab0", $vmware_esx_id);
+                }
+                // check for disk size is int
+                if (strlen($vmware_esx_disk)) {
+                    if (!validate_input($vmware_esx_disk, 'number')) {
+                        $strMsg .= "Invalid vm disk size. Not creating the vm on VMware ESX Host $vmware_esx_id<br>";
+                        redirect($strMsg, "tab0", $vmware_esx_id);
+                    }
                 }
                 // send command to vmware_esx-host to create the new vm
                 show_progressbar();

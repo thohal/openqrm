@@ -53,81 +53,11 @@ unset($vmware_esx_fields["vmware_esx_command"]);
 	$event->log("$vmware_esx_command", $_SERVER['REQUEST_TIME'], 5, "vmware-esx-action", "Processing command $vmware_esx_command", "", "", 0, 0, 0);
 	switch ($vmware_esx_command) {
 
-		case 'new':
-			// send command to vmware_esx-host to create the new vm
-			$vmware_appliance = new appliance();
-			$vmware_appliance->get_instance_by_id($vmware_esx_id);
-			$vmware_esx = new resource();
-			$vmware_esx->get_instance_by_id($vmware_appliance->resources);
-			$esx_ip = $vmware_esx->ip;
-			if (strlen($vmware_esx_disk)) {
-				$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx create -i $esx_ip -n $vmware_esx_name -m $vmware_esx_mac -r $vmware_esx_ram -d $vmware_esx_disk";
-			} else {
-				$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx create -i $esx_ip -n $vmware_esx_name -m $vmware_esx_mac -r $vmware_esx_ram";
-			}
-			$openqrm_server->send_command($esx_command);
-			break;
+        // not used any more
 
-		case 'start':
-			$vmware_appliance = new appliance();
-			$vmware_appliance->get_instance_by_id($vmware_esx_id);
-			$vmware_esx = new resource();
-			$vmware_esx->get_instance_by_id($vmware_appliance->resources);
-			$esx_ip = $vmware_esx->ip;
-			$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx start -i $esx_ip -n $vmware_esx_name";
-			$openqrm_server->send_command($esx_command);
-			break;
 
-		case 'stop':
-			$vmware_appliance = new appliance();
-			$vmware_appliance->get_instance_by_id($vmware_esx_id);
-			$vmware_esx = new resource();
-			$vmware_esx->get_instance_by_id($vmware_appliance->resources);
-			$esx_ip = $vmware_esx->ip;
-			$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx stop -i $esx_ip -n $vmware_esx_name";
-			$openqrm_server->send_command($esx_command);
-			break;
 
-		case 'reboot':
-			$vmware_appliance = new appliance();
-			$vmware_appliance->get_instance_by_id($vmware_esx_id);
-			$vmware_esx = new resource();
-			$vmware_esx->get_instance_by_id($vmware_appliance->resources);
-			$esx_ip = $vmware_esx->ip;
-			$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx reboot -i $esx_ip -n $vmware_esx_name";
-			$openqrm_server->send_command($esx_command);
-			break;
-
-		case 'remove':
-			$vmware_appliance = new appliance();
-			$vmware_appliance->get_instance_by_id($vmware_esx_id);
-			$vmware_esx = new resource();
-			$vmware_esx->get_instance_by_id($vmware_appliance->resources);
-			$esx_ip = $vmware_esx->ip;
-			$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx remove -i $esx_ip -n $vmware_esx_name";
-			$openqrm_server->send_command($esx_command);
-			break;
-
-		case 'add':
-			$vmware_appliance = new appliance();
-			$vmware_appliance->get_instance_by_id($vmware_esx_id);
-			$vmware_esx = new resource();
-			$vmware_esx->get_instance_by_id($vmware_appliance->resources);
-			$esx_ip = $vmware_esx->ip;
-			$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx add -i $esx_ip -n $vmware_esx_name";
-			$openqrm_server->send_command($esx_command);
-			break;
-
-		case 'delete':
-			$vmware_appliance = new appliance();
-			$vmware_appliance->get_instance_by_id($vmware_esx_id);
-			$vmware_esx = new resource();
-			$vmware_esx->get_instance_by_id($vmware_appliance->resources);
-			$esx_ip = $vmware_esx->ip;
-			$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx delete -i $esx_ip -n $vmware_esx_name";
-			$openqrm_server->send_command($esx_command);
-			break;
-
+        
 		default:
 			$event->log("$vmware_esx_command", $_SERVER['REQUEST_TIME'], 3, "vmware-esx-action", "No such vmware-esx command ($vmware_esx_command)", "", "", 0, 0, 0);
 			break;

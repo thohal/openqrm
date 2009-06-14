@@ -73,8 +73,6 @@ It will create the following components :
 - and a local appliance (the ESX server appliance)
 <br>
 </li><li>
-Edit the ESX server appliance and set its resource type to 'VMware-ESX host' and save.
-</li><li>
 Go to the 'ESX-Manager' within the VMware-ESX plugin menu. Select the ESX-appliance.
 </li><li>
 In the next screen you can now create/start/stop/remove/delete virtual machines on the ESX server.

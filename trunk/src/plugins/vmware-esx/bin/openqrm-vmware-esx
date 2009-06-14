@@ -34,7 +34,7 @@ function vmware_esx_usage() {
 	vmware_esx_log "        $0 create <-i esx-server-ip> <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ]"
 	vmware_esx_log "        $0 setboot <-m mac-address> <-b local/net>"
 	vmware_esx_log "        $0 post_vm_list"
-	vmware_esx_log "        $0 init <-i esx-server-ip>"
+	vmware_esx_log "        $0 init <-i esx-server-ip> [ -u openqrm-user ] [ -p openqrm-password ]"
 	exit 1
 }
 
@@ -106,6 +106,14 @@ while [ $# -ne 0 ]; do
 			VMWARE_ESX_VM_BOOT=$2
 			shift
 			;;
+		-u)
+			OPENQRM_USERNAME=$2
+			shift
+			;;
+		-p)
+			OPENQRM_PASSWORD=$2
+			shift
+			;;
 		*)
 			vmware_esx_log "ERROR: Free commandline arguments are not allowed"
 			vmware_esx_usage
@@ -119,6 +127,7 @@ done
 # using password-less ssh to configure and manage the vms via vim-cmd
 # NOTICE: password-less ssh access as root from the openQRM server to the ESX host needs to be setup before as a requirement !
 export OPENQRM_ESX_CMD="ssh $VMWARE_ESX_HOST_IP"
+export OPENQRM_ESX_BACKGROUND_CMD="ssh -f $VMWARE_ESX_HOST_IP"
 export VMWARE_ESX_HOST_IP
 
 # main
@@ -380,62 +389,85 @@ EOF
 		;;
 
 
-# TODO
-#	setboot)
-#       unset VMWARE_SERVER_VM_NAME
-#		if [ "$VMWARE_SERVER_VM_MAC" == "" ]; then
-#			vmware-server2_usage
-#		fi
-#		if [ "$VMWARE_SERVER_VM_BOOT" == "" ]; then
-#			vmware-server2_usage
-#		fi
-#		vmware_esx_lock aquire
-#		vmware_esx_log "Setting vm with mac $VMWARE_SERVER_VM_MAC to boot from $VMWARE_SERVER_VM_BOOT"
-#       # this command is is running from the openQRM engine which does
-#      # not know about the vm-name
-#     for VMWARE_SERVER_VM_NET_CONF in `find $OPENQRM_VM_DIR -name *.vmx`; do
-#            if grep -i $VMWARE_SERVER_VM_MAC $VMWARE_SERVER_VM_NET_CONF; then
-#                VMWARE_SERVER_VM_NAME=`dirname $VMWARE_SERVER_VM_NET_CONF`
-#                VMWARE_SERVER_VM_NAME=`basename $VMWARE_SERVER_VM_NAME`
-#                vmware_esx_log "found $VMWARE_SERVER_VM_MAC"
-#                break
-#            fi
-#        done
-#        if [ "$VMWARE_SERVER_VM_NAME" == "" ]; then
-#    		vmware_esx_log "Cloud not find VMWARE_SERVER vm with mac $VMWARE_SERVER_VM_MAC on this host"
-#            vmware_esx_lock release
-#            exit 1
-#        fi
-#        case "$VMWARE_SERVER_VM_BOOT" in
-#            local)
-#        		vmware_esx_log "Setting VMware-Server 2 vm $VMWARE_SERVER_VM_NAME with mac $VMWARE_SERVER_VM_MAC to local-boot"
-#                ;;
-#            net)
-#        		vmware_esx_log "Setting VMware-Server 2 vm $VMWARE_SERVER_VM_NAME with mac $VMWARE_SERVER_VM_MAC to net-boot"
-#                ;;
-#        esac
-#		# hard restart it to apply its configuration
-#        # we do it here because the openQRM server engine does not
-#        # know anything about the vm name to restart it later
-#		vmware_esx_log "Rebooting VMware vm $VMWARE_SERVER_VM_NAME"
-#		VMID=`vmware_esx_get_vmid $VMWARE_SERVER_VM_NAME`
-#		$VMWARE_VIM_CMD vmsvc/power.off $VMID | logger
-#		$OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
-#		$VMWARE_VIM_CMD vmsvc/power.on $VMID | logger
-#		$OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
-#		vmware_esx_lock release
-#		;;
+	setboot)
+       unset VMWARE_ESX_VM_NAME
+		if [ "$VMWARE_ESX_VM_MAC" == "" ]; then
+			vmware-server2_usage
+		fi
+		if [ "$VMWARE_ESX_VM_BOOT" == "" ]; then
+			vmware-server2_usage
+		fi
+		if [ "$VMWARE_ESX_HOST_IP" == "" ]; then
+            echo "ERROR: VMWARE_ESX_HOST_IP is empty" | logger
+			vmware_esx_usage
+		fi
+		vmware_esx_lock aquire
+		vmware_esx_log "Setting vm with mac $VMWARE_ESX_VM_MAC to boot from $VMWARE_ESX_VM_BOOT"
+        # this command is is running from the openQRM engine which does
+        # not know about the vm-name
+        ESX_STATS="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/$VMWARE_ESX_HOST_IP.vm_list"
+        if [ ! -f "$ESX_STATS" ]; then
+            $0 post_vm_list -i $VMWARE_ESX_HOST_IP
+        fi
+        if [ ! -f "$ESX_STATS" ]; then
+            vmware_esx_log "Could not get a VM list for VMware Server 2 $VMWARE_ESX_HOST_IP"
+            exit 1
+        fi
+        VMID=`cat $ESX_STATS | grep $VMWARE_ESX_VM_MAC | cut -d'@' -f1`
+        if [ "$VMID" == "" ]; then
+    		vmware_esx_log "Cloud not find a registerd VMware Server 2 vm with mac $VMWARE_ESX_VM_MAC on this host"
+            vmware_esx_lock release
+            exit 1
+        fi
+        case "$VMWARE_ESX_VM_BOOT" in
+            local)
+        		vmware_esx_log "Setting VMware-Server 2 vm $VMID with mac $VMWARE_ESX_VM_MAC to local-boot"
+                ;;
+            net)
+        		vmware_esx_log "Setting VMware-Server 2 vm $VMID with mac $VMWARE_ESX_VM_MAC to net-boot"
+                ;;
+        esac
+		# hard restart it to apply its configuration
+        # we do it here because the openQRM server engine does not
+        # know anything about the vm name to restart it later
+		vmware_esx_log "Restarting VMware Server 2 vm $VMID"
+		$OPENQRM_ESX_CMD $OPENQRM_VMWARE_ESX_VM_COMMAND vmsvc/power.off $VMID | logger
+		$OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
+		$OPENQRM_ESX_CMD $OPENQRM_VMWARE_ESX_VM_COMMAND vmsvc/power.on $VMID | logger
+		$OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
+		VM_STATE=`$OPENQRM_ESX_CMD $OPENQRM_VMWARE_ESX_VM_COMMAND vmsvc/get.summary $VMID | grep powerState`
+		if echo $VM_STATE | grep poweredOn 1>/dev/null; then
+			vmware_esx_log openqrm-vmware-esx "NOTICE: ESX vm $VMID starting."
+			openqrm_post_event 0 "parameter_check" 5 "openqrm-vmware-esx" "ESX vm $VMID re-starting."
+		else
+			vmware_esx_log openqrm-vmware-esx "ERROR: ESX vm $VMID failed to start."
+			openqrm_post_event 0 "parameter_check" 3 "openqrm-vmware-esx" "ESX vm $VMID failed to start!"
+		fi
+		vmware_esx_lock release
+		;;
+
 
 	init)
 		vmware_esx_log "Initialyzing VMware ESX host $VMWARE_ESX_HOST_IP"
-		vmware_esx_log -n "-> Please give an openQRM user-name : "
-		read OPENQRM_USER
-		echo
-		vmware_esx_log "-n -> Please give the openQRM password for user $OPENQRM_USER : "
-		read OPENQRM_PASSWORD
+        if [ "$OPENQRM_USERNAME" == "" ]; then
+            echo -n "-> Please give an openQRM user-name : "
+            read OPENQRM_USER
+            echo
+        fi
+        if [ "$OPENQRM_PASSWORD" == "" ]; then
+            echo -n "-> Please give the openQRM password for user $OPENQRM_USER : "
+            read OPENQRM_PASSWORD
+            echo
+        fi
+		vmware_esx_lock aquire
 		scp $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx-monitord $VMWARE_ESX_HOST_IP:/bin/ | logger
 		$OPENQRM_ESX_CMD "chmod +x /bin/openqrm-vmware-esx-monitord"
-		$OPENQRM_ESX_CMD "busybox nohup /bin/openqrm-vmware-esx-monitord start $OPENQRM_SERVER_IP_ADDRESS $VMWARE_ESX_HOST_IP $OPENQRM_USER $OPENQRM_PASSWORD &"
+		$OPENQRM_ESX_BACKGROUND_CMD "/bin/openqrm-vmware-esx-monitord start $OPENQRM_ESX_IP_ADDRESS $VMWARE_ESX_HOST_IP $OPENQRM_USERNAME $OPENQRM_PASSWORD"
+        $OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
+        $OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
+        # post_vm_list again
+        $0 post_vm_list -i $VMWARE_ESX_HOST_IP
+		vmware_esx_lock release
 		;;
 	*)
 		vmware_esx_usage

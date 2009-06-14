@@ -152,22 +152,33 @@ if(htmlobject_request('action') != '') {
 			break;
 
 
-
-
-
-
-
 		case 'initialyze':
-			foreach($_REQUEST['identifier'] as $id) {
-				$vmware_appliance = new appliance();
-				$vmware_appliance->get_instance_by_id($id);
-				$vmware_esx = new resource();
-				$vmware_esx->get_instance_by_id($vmware_appliance->resources);
-				$esx_ip = $vmware_esx->ip;
-				$esx_id = $vmware_esx->id;
-				$esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx init -i $esx_ip -o $esx_id";
-				$openqrm_server->send_command($esx_command);
-			}
+            if (isset($_REQUEST['identifier'])) {
+                foreach($_REQUEST['identifier'] as $id) {
+                    show_progressbar();
+                    $vmware_appliance = new appliance();
+                    $vmware_appliance->get_instance_by_id($id);
+                    $vmware_esx = new resource();
+                    $vmware_esx->get_instance_by_id($vmware_appliance->resources);
+                    $esx_ip = $vmware_esx->ip;
+                    $esx_id = $vmware_esx->id;
+                    $esx_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx init -i $esx_ip -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                    // remove current stat file
+                    $statfile="vmware-esx-stat/".$esx_ip.".vm_list";
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
+                    $openqrm_server->send_command($esx_command);
+                    // and wait for the resulting statfile
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error during initialytzing VMware ESX host $id ! Please check the Event-Log<br>";
+                    } else {
+                        $strMsg .="Initialyzed VMware ESX host $id<br>";
+                    }
+                    redirect($strMsg, "tab0", $id);
+                }
+            }
 			break;
 	}
 }
@@ -430,7 +441,10 @@ function vmware_esx_display($appliance_id) {
 	$arHead['vmware_esx_comment']['title'] ='';
 
 	$arHead['vmware_esx_create'] = array();
-	$arHead['vmware_esx_create']['title'] ='';
+	$arHead['vmware_esx_create']['title'] ='Create VM';
+
+	$arHead['vmware_esx_reinit'] = array();
+	$arHead['vmware_esx_reinit']['title'] ='Re-Init';
 
 	$vmware_esx_count=1;
 	$arBody = array();
@@ -450,6 +464,7 @@ function vmware_esx_display($appliance_id) {
 		$resource_icon_default=$vmware_esx_icon;
 	}
 	$vmware_esx_create_button="<a href=\"vmware-esx-create.php?vmware_esx_id=$vmware_esx_tmp->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> VM</b></a>";
+	$vmware_esx_reinit_button="<a href=\"$thisfile?action=initialyze&identifier[]=$vmware_esx_tmp->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/img/user.gif\" border=\"0\"><b>Re-Init</b></a>";
 	// here we take the resource id as the identifier because
 	// we need to run commands on the resource ip
 	$arBody[] = array(
@@ -461,6 +476,7 @@ function vmware_esx_display($appliance_id) {
 		'vmware_esx_resource_ip' => $vmware_esx_resource->ip,
 		'vmware_esx_comment' => $vmware_esx_tmp->comment,
 		'vmware_esx_create' => $vmware_esx_create_button,
+		'vmware_esx_reinit' => $vmware_esx_reinit_button,
 	);
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
@@ -472,7 +488,7 @@ function vmware_esx_display($appliance_id) {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('initialyze', 'refresh');
+		$table->bottom = array('refresh');
 		$table->identifier = 'vmware_esx_id';
 	}
 	$table->max = $vmware_esx_count;
