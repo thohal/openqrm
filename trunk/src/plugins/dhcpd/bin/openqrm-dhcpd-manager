@@ -14,14 +14,64 @@ HOSTNAME="resource$RESOURCE_ID"
 export LANG=C
 
 
+# TODO: make this function support class b + class a
+# currently it only supports class c
+function guess_next_ip() {
+    RANGE_START_IP=`grep range.*\; $DHCPD_CONF | head -n1 | awk {' print $2 '}`
+    RANGE_START_FIRST_BYTES=`echo $RANGE_START_IP | cut -d'.' -f1-3`
+    RANGE_START_LAST_BYTE=`echo $RANGE_START_IP | cut -d'.' -f4`
+    RANGE_END_IP=`grep range.*\; $DHCPD_CONF | head -n1 | awk {' print $3 '} | sed -e "s/;//g"`
+    RANGE_END_FIRST_BYTES=`echo $RANGE_END_IP | cut -d'.' -f1-3`
+    RANGE_END_LAST_BYTE=`echo $RANGE_END_IP | cut -d'.' -f4`
+    GUESS_START=$RANGE_END_LAST_BYTE
+    while (true); do
+        if (( $GUESS_START <= $RANGE_START_LAST_BYTE )); then
+            dhcpd_log openqrm-dhcpd-manager "WARNING: Reached start of available ip-range! No free ips available any more"
+            return
+        fi
+        GUESSED_NEW_IP="$RANGE_START_FIRST_BYTES"".""$GUESS_START"
+        dhcpd_log openqrm-dhcpd-manager ".. trying $GUESSED_NEW_IP"
+        if ! grep $GUESSED_NEW_IP $DHCPD_CONF | grep fixed-address 1>/dev/null; then
+            dhcpd_log openqrm-dhcpd-manager "NOTICE: Found $GUESSED_NEW_IP free"
+            if ! ping -c 1 -i 1 -w 1 $GUESSED_NEW_IP 1>/dev/null; then
+                dhcpd_log openqrm-dhcpd-manager "NOTICE: Found $GUESSED_NEW_IP free and not pingable"
+                break
+            else
+                dhcpd_log openqrm-dhcpd-manager "NOTICE: Skipping $GUESSED_NEW_IP because it is pingable!"
+            fi
+        else
+            dhcpd_log openqrm-dhcpd-manager "NOTICE: Skipping $GUESSED_NEW_IP because it is not free any more"
+        fi
+
+        GUESS_START=$(( GUESS_START - 1 ))
+    done
+    echo "$GUESSED_NEW_IP"
+}
+
+
+
+
 case "$DHCPD_CMD" in
 	add)
 		dhcpd_lock aquire
-		if grep $RESOURCE_MAC $DHCPD_CONF 1>/dev/null; then
+		if grep $RESOURCE_MAC $DHCPD_CONF | grep -v "^#" 1>/dev/null; then
 			dhcpd_log openqrm-dhcpd-manager "Resource  $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP already existing in the dhcpd-server. Not adding it."
 			dhcpd_lock release
 			exit 0
 		fi
+        if [ "$RESOURCE_IP" == "0.0.0.0" ]; then
+            # this is when a new virtual machine is added
+            # running via the new-resource hook
+            NEXT_RESOURCE_IP=`guess_next_ip`
+            if [ "$NEXT_RESOURCE_IP" == "" ]; then
+                dhcpd_log openqrm-dhcpd-manager "Failed to guess the next ip address for Resource $HOSTNAME $RESOURCE_ID $RESOURCE_MAC. Not adding it."
+                dhcpd_lock release
+                exit 0
+            else
+                RESOURCE_IP=$NEXT_RESOURCE_IP
+                dhcpd_log openqrm-dhcpd-manager "Guessed next ip address $RESOURCE_IP for Resource $HOSTNAME $RESOURCE_ID $RESOURCE_MAC."
+            fi
+        fi
 		dhcpd_log openqrm-dhcpd-manager "adding $HOSTNAME $RESOURCE_ID $RESOURCE_MAC $RESOURCE_IP"
 		cp -f $DHCPD_CONF $DHCPD_CONF.openqrm-dhcpd-manager
 		grep -B 1000000 "^# end_static_ips" $DHCPD_CONF | sed -e "s/^# end_static_ips.*//g" > $DHCPD_CONF.first_part

@@ -193,9 +193,6 @@ if(htmlobject_request('action') != '') {
                 if (file_exists($statfile)) {
                     unlink($statfile);
                 }
-                // send command
-                $openqrm_server->send_command($resource_command);
-
                 // add resource + type + vhostid
                 $resource = new resource();
                 $resource_id=openqrm_db_get_free_id('resource_id', $RESOURCE_INFO_TABLE);
@@ -207,12 +204,15 @@ if(htmlobject_request('action') != '') {
                 $virtualization->get_instance_by_type("vmware-esx-vm");
                 // add to openQRM database
                 $resource_fields["resource_id"]=$resource_id;
+                $resource_fields["resource_ip"]=$resource_ip;
                 $resource_fields["resource_mac"]=$vmware_esx_mac;
                 $resource_fields["resource_localboot"]=0;
                 $resource_fields["resource_vtype"]=$virtualization->id;
                 $resource_fields["resource_vhostid"]=$vmware_esx->id;
                 $resource->add($resource_fields);
 
+                // send command
+                $openqrm_server->send_command($resource_command);
                 // and wait for the resulting statfile
                 if (!wait_for_statfile($statfile)) {
                     $strMsg .= "Error during creating the vm on VMware ESX Host $vmware_esx_id ! Please check the Event-Log<br>";

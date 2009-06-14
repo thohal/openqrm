@@ -143,8 +143,6 @@ if(htmlobject_request('xen_command') != '') {
             if (file_exists($statfile)) {
                 unlink($statfile);
             }
-            $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen create -n $xen_name -m $xen_mac -r $xen_ram $xen_vm_disk_param $xen_vm_swap_param -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-            $xen->send_command($xen->ip, $resource_command);
             // add resource + type + vhostid
             $resource = new resource();
             $resource_id=openqrm_db_get_free_id('resource_id', $RESOURCE_INFO_TABLE);
@@ -156,11 +154,16 @@ if(htmlobject_request('xen_command') != '') {
             $virtualization->get_instance_by_type("xen-vm");
             // add to openQRM database
             $resource_fields["resource_id"]=$resource_id;
+            $resource_fields["resource_ip"]=$resource_ip;
             $resource_fields["resource_mac"]=$xen_mac;
             $resource_fields["resource_localboot"]=0;
             $resource_fields["resource_vtype"]=$virtualization->id;
             $resource_fields["resource_vhostid"]=$xen->id;
             $resource->add($resource_fields);
+
+            // send command
+            $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen create -n $xen_name -m $xen_mac -r $xen_ram $xen_vm_disk_param $xen_vm_swap_param -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+            $xen->send_command($xen->ip, $resource_command);
             // and wait for the resulting statfile
             if (!wait_for_statfile($statfile)) {
                 $strMsg .= "Error during creating new Xen vm ! Please check the Event-Log<br>";
