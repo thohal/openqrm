@@ -41,9 +41,11 @@ require_once "$RootDir/include/htmlobject.inc.php";
 
 $vmware_esx_id = htmlobject_request('vmware_esx_id');
 $vmware_esx_name = htmlobject_request('vmware_esx_name');
+$vmware_vm_mac = htmlobject_request('vmware_vm_mac');
 $action=htmlobject_request('action');
 global $vmware_esx_id;
 global $vmware_esx_name;
+global $vmware_vm_mac;
 $refresh_delay=1;
 $refresh_loop_max=60;
 
@@ -295,6 +297,11 @@ if(htmlobject_request('action_table1') != '') {
                         }
                         // send command
                         $openqrm_server->send_command($esx_command);
+                        // we should remove the resource of the vm !
+                        $vmware_vm_resource = new resource();
+                        $vmware_vm_resource->get_instance_by_mac($vmware_vm_mac);
+                        $vmware_vm_id=$vmware_vm_resource->id;
+                        $vmware_vm_resource->remove($vmware_vm_id, $vmware_vm_mac);
                         // and wait for the resulting statfile
                         if (!wait_for_statfile($statfile)) {
                             $strMsg .= "Error during deleting vm $vmw_vm ! Please check the Event-Log<br>";
@@ -574,7 +581,7 @@ function vmware_esx_display($appliance_id) {
             if (!strcmp($vmware_vm_state, "poweredOff")) {
                 $vmware_vm_state_icon = "/openqrm/base/img/off.png";
                 $vmware_vm_actions= $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&action_table1=start&vmware_esx_id=$appliance_id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"></a>&nbsp;";
-                $vmware_vm_actions = $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&action_table1=delete&vmware_esx_id=$appliance_id\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"></a>&nbsp;";
+                $vmware_vm_actions = $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&vmware_vm_mac=$vmware_vm_mac&action_table1=delete&vmware_esx_id=$appliance_id\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"></a>&nbsp;";
             } else {
                 $vmware_vm_state_icon = "/openqrm/base/img/active.png";
                 // online actions
@@ -584,7 +591,7 @@ function vmware_esx_display($appliance_id) {
 
             // add to table1
             $arBody1[] = array(
-                'vmware_vm_state' => "<img src=$vmware_vm_state_icon><input type='hidden' name='vmware_esx_id' value=$appliance_id>",
+                'vmware_vm_state' => "<img src=$vmware_vm_state_icon><input type='hidden' name='vmware_esx_id' value=$appliance_id><input type='hidden' name='vmware_vm_mac' value=$vmware_vm_mac>",
                 'vmware_vm_res_id' => $vmware_vm_res_id,
                 'vmware_vm_id' => $vmware_vm_id,
                 'vmware_vm_name' => $vmware_vm_name,
