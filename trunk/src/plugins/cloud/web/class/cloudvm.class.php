@@ -230,4 +230,3 @@ function create($virtualization_type, $name, $mac, $cpu, $memory, $disk, $timeou
 }
 
 ?>
-
