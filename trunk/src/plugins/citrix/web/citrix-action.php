@@ -1,13 +1,6 @@
-<?php
-$citrix_command = $_REQUEST["citrix_command"];
-$citrix_id = $_REQUEST["citrix_id"];
-?>
-
-
 <html>
 <head>
 <title>openQRM Citrix actions</title>
-<meta http-equiv="refresh" content="0; URL=citrix-manager.php?currenttab=tab0&strMsg=Processing <?php echo $citrix_command; ?>">
 </head>
 <body>
 
@@ -66,40 +59,9 @@ unset($citrix_fields["citrix_command"]);
 	$event->log("$citrix_command", $_SERVER['REQUEST_TIME'], 5, "citrix-action", "Processing citrix command $citrix_command", "", "", 0, 0, 0);
 	switch ($citrix_command) {
 
-		case 'authenticate':
-			$auth_file=$_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/citrix/citrix-stat/citrix-host.pwd.'.$citrix_server_ip;
-			$fp = fopen($auth_file, 'w+');
-			fwrite($fp, $citrix_server_user);
-			fwrite($fp, "\n");
-			fwrite($fp, $citrix_server_passwd);
-			fwrite($fp, "\n");
-			fclose($fp);
-			break;
 
-		case 'new':
-			$citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix create -s $citrix_server_ip -l $citrix_name -m $citrix_ram";
-			$openqrm_server->send_command($citrix_command);
-			break;
+        // not used any more
 
-		case 'start':
-			$citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix start -s $citrix_server_ip -n $citrix_uuid";
-			$openqrm_server->send_command($citrix_command);
-			break;
-
-		case 'stop':
-			$citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix stop -s $citrix_server_ip -n $citrix_uuid";
-			$openqrm_server->send_command($citrix_command);
-			break;
-
-		case 'reboot':
-			$citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix reboot -s $citrix_server_ip -n $citrix_uuid";
-			$openqrm_server->send_command($citrix_command);
-			break;
-
-		case 'refresh_vm_list':
-			$citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix post_vm_list -s $citrix_server_ip";
-			$openqrm_server->send_command($citrix_command);
-			break;
 
 		default:
 			$event->log("$citrix_command", $_SERVER['REQUEST_TIME'], 3, "citrix-action", "No such event command ($citrix_command)", "", "", 0, 0, 0);

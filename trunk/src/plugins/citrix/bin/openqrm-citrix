@@ -12,7 +12,6 @@ openqrm_server_get_config
 export LANG=C
 export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 
-
 # let only root run this script
 WHOAMI=`whoami`
 if [ "$WHOAMI" != "root" ]; then
@@ -21,10 +20,10 @@ if [ "$WHOAMI" != "root" ]; then
 fi
 
 function citrix_usage() {
-	echo "Usage : $0 start/stop/reboot/list <-s citrix-server-ip> <-n vm-uuid>"
-	echo "        $0 vm-mem-set <-s citrix-server-ip> <-n vm-uuid> <-m ram>"
-	echo "        $0 create <-s citrix-server-ip> <-l vm-name> <-m ram>"
-	echo "        $0 post_vm_list <-s citrix-server-ip>"
+	echo "Usage : $0 start/stop/remove/reboot/list <-i citrix-server-ip> <-n vm-name>"
+	echo "        $0 create <-i citrix-server-ip> <-n vm-name> <-r memory> <-m mac-address>"
+	echo "        $0 post_vm_list <-i citrix-server-ip>"
+#	echo "        $0 vm-mem-set <-i citrix-server-ip> <-n vm-name> <-m ram>"
 	exit 1
 }
 
@@ -35,19 +34,27 @@ shift
 while [ $# -ne 0 ]; do
 	case "$1" in
 		-n)
-			CITRIX_VM_UUID=$2
-			shift
-			;;
-		-s)
-			CITRIX_SERVER_IP=$2
-			shift
-			;;
-		-l)
 			CITRIX_VM_NAME=$2
 			shift
 			;;
 		-m)
+			CITRIX_VM_MAC=$2
+			shift
+			;;
+		-r)
 			CITRIX_VM_RAM=$2
+			shift
+			;;
+		-d)
+			CITRIX_VM_DISK=$2
+			shift
+			;;
+		-b)
+			CITRIX_VM_BOOT=$2
+			shift
+			;;
+		-i)
+			CITRIX_SERVER_IP=$2
 			shift
 			;;
 		*)
@@ -65,8 +72,8 @@ if [ "$CITRIX_COMMAND" == "" ]; then
 	citrix_usage
 fi
 
-if [ "$CITRIX_COMMAND" != "list" ] && [ "$CITRIX_COMMAND" != "post_vm_list" ] && [ "$CITRIX_COMMAND" != "create" ]; then
-	if [ "$CITRIX_VM_UUID" == "" ]; then
+if [ "$CITRIX_COMMAND" != "list" ] && [ "$CITRIX_COMMAND" != "post_vm_list" ]; then
+	if [ "$CITRIX_VM_NAME" == "" ]; then
 		citrix_usage
 	fi
 fi
@@ -87,27 +94,6 @@ fi
 
 case "$CITRIX_COMMAND" in 
 
-	start)
-		echo "Starting Citrix vm $CITRIX_VM_UUID"
-		$CITRIX_XE_BINARY vm-start -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID
-		;;
-	stop)
-		echo "Stopping Citrix vm $CITRIX_VM_UUID"
-		$CITRIX_XE_BINARY vm-stop -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID
-		;;
-	list)
-		echo "Listing Citrix vms"
-		$CITRIX_XE_BINARY vm-list -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE
-		;;
-	post_vm_list)
-		echo "Posting vm list to the openQRM-server"
-		$CITRIX_XE_BINARY vm-list -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE > $CITRIX_VM_LIST_TMP
-		;;
-	# Some Additions
-	vm-reboot)
-		echo "reboot Citrix vms"
-		$CITRIX_XE_BINARY vm-reboot -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID
-		;;
 	create)
 		if [ "$CITRIX_VM_NAME" == "" ]; then
 			citrix_usage
@@ -115,32 +101,225 @@ case "$CITRIX_COMMAND" in
 		if [ "$CITRIX_VM_RAM" == "" ]; then
 			citrix_usage
 		fi
-		echo "Creating Citrix vm $CITRIX_VM_NAME"
-       	$CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-install new-name-label="$CITRIX_VM_NAME"
-       	# Find the network associated with the management interface. We'll assume that{_}{color}
-		# this is the network on which we want a network interface._{color}
-		NETWORK=`$CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE network-list bridge=${CITRIX_MANAGEMENT_INTERFACE} --minimal` 
+		if [ "$CITRIX_VM_MAC" == "" ]; then
+			citrix_usage
+		fi
+        citrix_lock aquire
+		citrix_log openqrm-citrix "Creating Citrix vm $CITRIX_VM_NAME"
+       	if ! $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-install template=Windows\ Server\ 2003 new-name-label=$CITRIX_VM_NAME; then
+            citrix_log openqrm-citrix "Failed to install the vm template for creating the new vm $CITRIX_VM_NAME !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to install the vm template for creating the new vm $CITRIX_VM_NAME !"
+            citrix_lock release
+            exit 1
+        fi
+        # get its uuid
+        VM_TMPFILE=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+        $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-list > $VM_TMPFILE
+        CITRIX_VM_UUID=`grep -B 1 $CITRIX_VM_NAME $VM_TMPFILE | grep -B 1 name-label | grep uuid | cut -d':' -f2 | awk {' print $1 '}`
+        rm -f $VM_TMPFILE
+        if [ "$CITRIX_VM_UUID" == "" ]; then
+            citrix_log openqrm-citrix "Failed to get the uuid for the new created vm $CITRIX_VM_NAME !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to get the uuid for the new created vm $CITRIX_VM_NAME !"
+            citrix_lock release
+            exit 1
+        fi
+       	# Find the network associated with the management interface. We'll assume that
+        # this is the network on which we want a network interface._{color}
+		NETWORK=`$CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE network-list bridge=$CITRIX_MANAGEMENT_INTERFACE --minimal`
+        if [ "$NETWORK" == "" ]; then
+            citrix_log openqrm-citrix "Failed to get the default network bridge to create the vif device for vm $CITRIX_VM_NAME !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to get the default network bridge to create the vif device for vm $CITRIX_VM_NAME !"
+            citrix_lock release
+            exit 1
+        fi
         # Add a VIF linking the VM to the network
-        $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vif-create vm-uuid=$CITRIX_VM_UUID network-uuid=${NETWORK} device=0
+        if ! $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vif-create vm-uuid=$CITRIX_VM_UUID network-uuid=$NETWORK device=0 mac=$CITRIX_VM_MAC; then
+            citrix_log openqrm-citrix "Failed to create the vif device for vm $CITRIX_VM_NAME with mac address $CITRIX_VM_MAC!"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to create the vif device for vm $CITRIX_VM_NAME with mac address $CITRIX_VM_MAC!"
+            citrix_lock release
+            exit 1
+        fi
         #change boot order to netbooting
-        $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-param-set uuid=$CITRIX_VM_UUID HVM-boot-params:order=ncd
-		# Please add RAM-SIZE-Variable - get from gui
-		$CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-param-set UUUID=$CITRIX_VM_UUID param-name=memory-static-max:$CITRIX_VM_RAM
-         ;;
-    vm-mem-set)
+        if ! $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-param-set uuid=$CITRIX_VM_UUID HVM-boot-params:order=ncd; then
+            citrix_log openqrm-citrix "Failed to set the boot-order for vm $CITRIX_VM_NAME !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to set the boot-order for vm $CITRIX_VM_NAME !"
+            citrix_lock release
+            exit 1
+        fi
+		# set memory
+        CITRIX_VM_RAM="$CITRIX_VM_RAM""MiB"
+		if ! $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-param-set uuid=$CITRIX_VM_UUID memory-static-max=$CITRIX_VM_RAM; then
+            citrix_log openqrm-citrix "Failed to set the memory consumption for vm $CITRIX_VM_NAME !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to set the memory consumption for vm $CITRIX_VM_NAME !"
+            citrix_lock release
+            exit 1
+        fi
+		if ! $CITRIX_XE_BINARY vm-start -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID; then
+            citrix_log openqrm-citrix "Failed to start vm $CITRIX_VM_NAME !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to start vm $CITRIX_VM_NAME !"
+            citrix_lock release
+            exit 1
+        fi
+		# post the updated list to the openQRM-server
+        $0 post_vm_list -i $CITRIX_SERVER_IP
+        citrix_lock release
+        ;;
+
+	start)
+        citrix_lock aquire
+		citrix_log openqrm-citrix "Starting Citrix vm $CITRIX_VM_NAME"
+        # get its uuid
+        VM_TMPFILE=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+        $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-list > $VM_TMPFILE
+        CITRIX_VM_UUID=`grep -B 1 $CITRIX_VM_NAME $VM_TMPFILE | grep -B 1 name-label | grep uuid | cut -d':' -f2 | awk {' print $1 '}`
+        rm -f $VM_TMPFILE
+        if [ "$CITRIX_VM_UUID" == "" ]; then
+            citrix_log openqrm-citrix "Failed to get the uuid for the new created vm $CITRIX_VM_NAME !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to get the uuid for the new created vm $CITRIX_VM_NAME !"
+            citrix_lock release
+            exit 1
+        fi
+		$CITRIX_XE_BINARY vm-start -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID
+		# post the updated list to the openQRM-server
+        $0 post_vm_list -i $CITRIX_SERVER_IP
+        citrix_lock release
+		;;
+	stop)
+        citrix_lock aquire
+		citrix_log openqrm-citrix "Stopping Citrix vm $CITRIX_VM_NAME"
+        # get its uuid
+        VM_TMPFILE=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+        $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-list > $VM_TMPFILE
+        CITRIX_VM_UUID=`grep -B 1 $CITRIX_VM_NAME $VM_TMPFILE | grep -B 1 name-label | grep uuid | cut -d':' -f2 | awk {' print $1 '}`
+        rm -f $VM_TMPFILE
+        if [ "$CITRIX_VM_UUID" == "" ]; then
+            citrix_log openqrm-citrix "Failed to get the uuid for the new created vm $CITRIX_VM_NAME !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to get the uuid for the new created vm $CITRIX_VM_NAME !"
+            citrix_lock release
+            exit 1
+        fi
+		$CITRIX_XE_BINARY vm-shutdown -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID force=true
+		# post the updated list to the openQRM-server
+        $0 post_vm_list -i $CITRIX_SERVER_IP
+        citrix_lock release
+		;;
+	reboot)
+        citrix_lock aquire
+		citrix_log openqrm-citrix "reboot Citrix vms $CITRIX_VM_NAME"
+        # get its uuid
+        VM_TMPFILE=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+        $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-list > $VM_TMPFILE
+        CITRIX_VM_UUID=`grep -B 1 $CITRIX_VM_NAME $VM_TMPFILE | grep -B 1 name-label | grep uuid | cut -d':' -f2 | awk {' print $1 '}`
+        rm -f $VM_TMPFILE
+        if [ "$CITRIX_VM_UUID" == "" ]; then
+            citrix_log openqrm-citrix "Failed to get the uuid for the new created vm $CITRIX_VM_NAME !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to get the uuid for the new created vm $CITRIX_VM_NAME !"
+            citrix_lock release
+            exit 1
+        fi
+		$CITRIX_XE_BINARY vm-shutdown -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID force=true
+		$CITRIX_XE_BINARY vm-start -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID
+		# post the updated list to the openQRM-server
+        $0 post_vm_list -i $CITRIX_SERVER_IP
+        citrix_lock release
+		;;
+	remove)
+        citrix_lock aquire
+		citrix_log openqrm-citrix "Removing Citrix vms $CITRIX_VM_NAME"
+        # get its uuid
+        VM_TMPFILE=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+        $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-list > $VM_TMPFILE
+        CITRIX_VM_UUID=`grep -B 1 $CITRIX_VM_NAME $VM_TMPFILE | grep -B 1 name-label | grep uuid | cut -d':' -f2 | awk {' print $1 '}`
+        rm -f $VM_TMPFILE
+        if [ "$CITRIX_VM_UUID" == "" ]; then
+            citrix_log openqrm-citrix "Failed to get the uuid for the new created vm $CITRIX_VM_NAME !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to get the uuid for the new created vm $CITRIX_VM_NAME !"
+            citrix_lock release
+            exit 1
+        fi
+        # be sure it is off
+		$CITRIX_XE_BINARY vm-shutdown -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID force=true
+		$CITRIX_XE_BINARY vm-uninstall -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID force=true
+		# post the updated list to the openQRM-server
+        $0 post_vm_list -i $CITRIX_SERVER_IP
+        citrix_lock release
+		;;
+	list)
+		citrix_log openqrm-citrix "Listing Citrix vms"
+		$CITRIX_XE_BINARY vm-list -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE
+		;;
+	post_vm_list)
+		citrix_log openqrm-citrix "Posting vm list to the openQRM-server"
+        VM_VIF_LIST=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+        VM_TMPFILE1=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+        VM_TMPFILE2=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+        # create list of vifs
+        $CITRIX_XE_BINARY vif-list -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE > $VM_VIF_LIST
+        # create list of vms
+        # skip dom0
+        $CITRIX_XE_BINARY vm-list -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE > $VM_TMPFILE1
+        for UUID in `cat $VM_TMPFILE1 | grep uuid | cut -d':' -f2 | awk {' print $1 '}`; do
+            CITRIX_VM_NAME=`grep -A 1 $UUID $VM_TMPFILE1 | grep name-label | cut -d':' -f2 | awk {' print $1 '}`
+            if [ "$CITRIX_VM_NAME" != "Control" ]; then
+                CITRIX_VM_STATE=`grep -A 2 $UUID $VM_TMPFILE1 | grep power-state | cut -d':' -f2 | awk {' print $1 '}`
+                # gather the mac address
+                CITRIX_VM_VIF_UUID=`grep -B 1 $UUID $VM_VIF_LIST | grep uuid | cut -d':' -f2 | awk {' print $1 '}`
+                VM_NIC_TMPFILE=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+                $CITRIX_XE_BINARY vif-param-list -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_VIF_UUID > $VM_NIC_TMPFILE
+                CITRIX_VM_MAC=`grep " MAC " $VM_NIC_TMPFILE | cut -d':' -f2- | awk {' print $1 '}`
+                rm -f $VM_NIC_TMPFILE
+                echo "$UUID""@""$CITRIX_VM_NAME""@""$CITRIX_VM_STATE""@""$CITRIX_VM_MAC""@" >> $VM_TMPFILE2
+            fi
+        done
+        /bin/cp -f $VM_TMPFILE2 $CITRIX_VM_LIST_TMP
+        chmod 777 $CITRIX_VM_LIST_TMP
+        rm -f $VM_TMPFILE1 $VM_TMPFILE2
+		;;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # TODO : finalyze config options
+   vm-mem-set)
 		if [ "$CITRIX_VM_RAM" == "" ]; then
 			citrix_usage
 		fi
-		echo "Editing RAM of Citrix vms to $CITRIX_VM_RAM"  
+        citrix_lock aquire
+		citrix_log openqrm-citrix "Editing RAM of Citrix vms $CITRIX_VM_NAME to $CITRIX_VM_RAM"
+        # get its uuid
+        VM_TMPFILE=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+        $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-list > $VM_TMPFILE
+        CITRIX_VM_UUID=`grep -B 1 $CITRIX_VM_NAME $VM_TMPFILE | grep -B 1 name-label | grep uuid | cut -d':' -f2 | awk {' print $1 '}`
+        rm -f $VM_TMPFILE
+        if [ "$CITRIX_VM_UUID" == "" ]; then
+            citrix_log openqrm-citrix "Failed to get the uuid for the new created vm $CITRIX_VM_NAME !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to get the uuid for the new created vm $CITRIX_VM_NAME !"
+            citrix_lock release
+            exit 1
+        fi
 		# Please check in future for ram - open bug
 		# $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE host-param-get UUUID=$HOST-UUID param-name=memory-free
 		# Please add RAM-SIZE-Variable - get from gui
-		$CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-param-set UUUID=$CITRIX_VM_UUID param-name=memory-static-max:$CITRIX_VM_RAM
-		;;
-	host-reboot)
-		echo "Rebooting Citrix Host"  
-		# $CITRIX_XE_BINARY host-reboot UUID=$HOST-UUID
-		# we need the host-uuid!
+		$CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-param-set UUUID=$CITRIX_VM_UUID memory-static-max=$CITRIX_VM_RAM
+		# post the updated list to the openQRM-server
+        $0 post_vm_list -i $CITRIX_SERVER_IP
+        citrix_lock release
 		;;
 	*)
 		citrix_usage

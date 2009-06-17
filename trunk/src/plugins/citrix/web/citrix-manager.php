@@ -1,9 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Citrix manager</title>
+    <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+    <link rel="stylesheet" type="text/css" href="citrix.css" />
+    <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
+<style type="text/css">
+.ui-progressbar-value {
+    background-image: url(/openqrm/base/img/progress.gif);
+}
+#progressbar {
+    position: absolute;
+    left: 150px;
+    top: 250px;
+    width: 400px;
+    height: 20px;
+}
+</style>
+</head>
+<body>
+<div id="progressbar">
+</div>
 
-<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-<link rel="stylesheet" type="text/css" href="citrix.css" />
 
 <?php
-
 
 // error_reporting(E_ALL);
 $thisfile = basename($_SERVER['PHP_SELF']);
@@ -17,11 +39,21 @@ require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 global $OPENQRM_SERVER_BASE_DIR;
-$refresh_delay=2;
+$refresh_delay=1;
+$refresh_loop_max=40;
+
+$citrix_server_id = htmlobject_request('citrix_server_id');
+$citrix_vm_name = htmlobject_request('citrix_vm_name');
+$citrix_vm_mac = htmlobject_request('citrix_vm_mac');
+
+// place for the citrix stat files
+$CitrixDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/citrix/citrix-stat';
+
 
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
+
 
 function citrix_server_htmlobject_select($name, $value, $title = '', $selected = '') {
 		$html = new htmlobject_select();
@@ -34,19 +66,280 @@ function citrix_server_htmlobject_select($name, $value, $title = '', $selected =
 }
 
 
+function redirect($strMsg, $currenttab = 'tab0', $url = '') {
+    global $thisfile;
+    global $citrix_server_id;
+    if($url == '') {
+        $url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&citrix_server_id='.$citrix_server_id;
+    }
+    echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
+    exit;
+}
+
+
+function wait_for_statfile($sfile) {
+    global $refresh_delay;
+    global $refresh_loop_max;
+    $refresh_loop=0;
+    while (!file_exists($sfile)) {
+        sleep($refresh_delay);
+        $refresh_loop++;
+        flush();
+        if ($refresh_loop > $refresh_loop_max)  {
+            return false;
+        }
+    }
+    return true;
+}
+
+function show_progressbar() {
+?>
+    <script type="text/javascript">
+        $("#progressbar").progressbar({
+			value: 100
+		});
+        var options = {};
+        $("#progressbar").effect("shake",options,2000,null);
+	</script>
+<?php
+        flush();
+}
+
+
+
+
+
+// Dom0 actions
+if(htmlobject_request('action') != '') {
+	switch (htmlobject_request('action')) {
+
+		case 'refresh':
+			if (isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $citrix_server_id) {
+                    show_progressbar();
+                    $citrix_appliance = new appliance();
+                    $citrix_appliance->get_instance_by_id($citrix_server_id);
+                    $citrix = new resource();
+                    $citrix->get_instance_by_id($citrix_appliance->resources);
+                    $citrix_server_ip = $citrix->ip;
+                     // already authenticated ?
+                    $citrix_auth_file=$_SERVER["DOCUMENT_ROOT"]."/openqrm/base/plugins/citrix/citrix-stat/citrix-host.pwd.".$citrix_server_ip;
+                    if (!file_exists($citrix_auth_file)) {
+                        $strMsg .= "Citrix XenServer not yet authenticated. Please authenticate !";
+                        redirect($strMsg, "tab0");
+                    }
+                    // remove current stat file
+                    $statfile="citrix-stat/citrix-vm.lst.".$citrix_server_ip;
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
+                    $citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix post_vm_list -i $citrix_server_ip";
+                    $openqrm_server->send_command($citrix_command);
+                    // wait for statfile to appear again
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error while refreshing Citrix vm list ! Please check the Event-Log<br>";
+                    } else {
+                        $strMsg .= "Refreshed Citrix vm list<br>";
+                    }
+                    redirect($strMsg, "tab0");
+                }
+            }
+			break;
+
+		case 'select':
+			if (isset($_REQUEST['identifier'])) {
+				foreach($_REQUEST['identifier'] as $citrix_server_id) {
+                    show_progressbar();
+                    $citrix_appliance = new appliance();
+                    $citrix_appliance->get_instance_by_id($citrix_server_id);
+                    $citrix = new resource();
+                    $citrix->get_instance_by_id($citrix_appliance->resources);
+                    $citrix_server_ip = $citrix->ip;
+                     // already authenticated ?
+                    $citrix_auth_file=$_SERVER["DOCUMENT_ROOT"]."/openqrm/base/plugins/citrix/citrix-stat/citrix-host.pwd.".$citrix_server_ip;
+                    if (!file_exists($citrix_auth_file)) {
+                        $strMsg .= "Citrix XenServer not yet authenticated. Please authenticate !";
+                        redirect($strMsg, "tab0");
+                    }
+                    // remove current stat file
+                    $statfile="citrix-stat/citrix-vm.lst.".$citrix_server_ip;
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
+                    $citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix post_vm_list -i $citrix_server_ip";
+                    $openqrm_server->send_command($citrix_command);
+                    // wait for statfile to appear again
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error while refreshing Citrix vm list ! Please check the Event-Log<br>";
+                    } else {
+                        $strMsg .= "Refreshed Citrix vm list<br>";
+                    }
+                    redirect($strMsg, "tab0");
+                }
+            }
+			break;
+    }
+}
+
+
+// citrix vm actions
+if(htmlobject_request('action_table1') != '') {
+	switch (htmlobject_request('action_table1')) {
+
+		case 'start':
+			if (isset($_REQUEST['identifier_table1'])) {
+				foreach($_REQUEST['identifier_table1'] as $citrix_name) {
+                    show_progressbar();
+                    $citrix_appliance = new appliance();
+                    $citrix_appliance->get_instance_by_id($citrix_server_id);
+                    $citrix = new resource();
+                    $citrix->get_instance_by_id($citrix_appliance->resources);
+                    $citrix_server_ip = $citrix->ip;
+                     // already authenticated ?
+                    $citrix_auth_file=$_SERVER["DOCUMENT_ROOT"]."/openqrm/base/plugins/citrix/citrix-stat/citrix-host.pwd.".$citrix_server_ip;
+                    if (!file_exists($citrix_auth_file)) {
+                        $strMsg .= "Citrix XenServer not yet authenticated. Please authenticate !";
+                        redirect($strMsg, "tab0");
+                    }
+                    // remove current stat file
+                    $statfile="citrix-stat/citrix-vm.lst.".$citrix_server_ip;
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
+                    $citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix start -i $citrix_server_ip -n $citrix_name";
+                    $openqrm_server->send_command($citrix_command);
+                    // wait for statfile to appear again
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error while starting Citrix vm $citrix_name ! Please check the Event-Log<br>";
+                    } else {
+                        $strMsg .= "Started Citrix vm $citrix_name<br>";
+                    }
+                }
+                redirect($strMsg, "tab0");
+            }
+			break;
+
+		case 'stop':
+			if (isset($_REQUEST['identifier_table1'])) {
+				foreach($_REQUEST['identifier_table1'] as $citrix_name) {
+                    show_progressbar();
+                    $citrix_appliance = new appliance();
+                    $citrix_appliance->get_instance_by_id($citrix_server_id);
+                    $citrix = new resource();
+                    $citrix->get_instance_by_id($citrix_appliance->resources);
+                    $citrix_server_ip = $citrix->ip;
+                     // already authenticated ?
+                    $citrix_auth_file=$_SERVER["DOCUMENT_ROOT"]."/openqrm/base/plugins/citrix/citrix-stat/citrix-host.pwd.".$citrix_server_ip;
+                    if (!file_exists($citrix_auth_file)) {
+                        $strMsg .= "Citrix XenServer not yet authenticated. Please authenticate !";
+                        redirect($strMsg, "tab0");
+                    }
+                    // remove current stat file
+                    $statfile="citrix-stat/citrix-vm.lst.".$citrix_server_ip;
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
+                    $citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix stop -i $citrix_server_ip -n $citrix_name";
+                    $openqrm_server->send_command($citrix_command);
+                    // wait for statfile to appear again
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error while stopping Citrix vm $citrix_name ! Please check the Event-Log<br>";
+                    } else {
+                        $strMsg .= "Stopped Citrix vm $citrix_name<br>";
+                    }
+                }
+                redirect($strMsg, "tab0");
+            }
+			break;
+
+		case 'reboot':
+			if (isset($_REQUEST['identifier_table1'])) {
+				foreach($_REQUEST['identifier_table1'] as $citrix_name) {
+                    show_progressbar();
+                    $citrix_appliance = new appliance();
+                    $citrix_appliance->get_instance_by_id($citrix_server_id);
+                    $citrix = new resource();
+                    $citrix->get_instance_by_id($citrix_appliance->resources);
+                    $citrix_server_ip = $citrix->ip;
+                     // already authenticated ?
+                    $citrix_auth_file=$_SERVER["DOCUMENT_ROOT"]."/openqrm/base/plugins/citrix/citrix-stat/citrix-host.pwd.".$citrix_server_ip;
+                    if (!file_exists($citrix_auth_file)) {
+                        $strMsg .= "Citrix XenServer not yet authenticated. Please authenticate !";
+                        redirect($strMsg, "tab0");
+                    }
+                    // remove current stat file
+                    $statfile="citrix-stat/citrix-vm.lst.".$citrix_server_ip;
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
+                    $citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix reboot -i $citrix_server_ip -n $citrix_name";
+                    $openqrm_server->send_command($citrix_command);
+                    // wait for statfile to appear again
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error while rebooting Citrix vm $citrix_name ! Please check the Event-Log<br>";
+                    } else {
+                        $strMsg .= "Rebooted Citrix vm $citrix_name<br>";
+                    }
+                }
+                redirect($strMsg, "tab0");
+            }
+			break;
+
+		case 'delete':
+			if (isset($_REQUEST['identifier_table1'])) {
+				foreach($_REQUEST['identifier_table1'] as $citrix_name) {
+                    show_progressbar();
+                    $citrix_appliance = new appliance();
+                    $citrix_appliance->get_instance_by_id($citrix_server_id);
+                    $citrix = new resource();
+                    $citrix->get_instance_by_id($citrix_appliance->resources);
+                    $citrix_server_ip = $citrix->ip;
+                     // already authenticated ?
+                    $citrix_auth_file=$_SERVER["DOCUMENT_ROOT"]."/openqrm/base/plugins/citrix/citrix-stat/citrix-host.pwd.".$citrix_server_ip;
+                    if (!file_exists($citrix_auth_file)) {
+                        $strMsg .= "Citrix XenServer not yet authenticated. Please authenticate !";
+                        redirect($strMsg, "tab0");
+                    }
+                    // remove current stat file
+                    $statfile="citrix-stat/citrix-vm.lst.".$citrix_server_ip;
+                    if (file_exists($statfile)) {
+                        unlink($statfile);
+                    }
+                    // send command
+                    $citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix remove -i $citrix_server_ip -n $citrix_name";
+                    $openqrm_server->send_command($citrix_command);
+                    // we should remove the resource of the vm !
+                    $citrix_vm_resource = new resource();
+                    $citrix_vm_resource->get_instance_by_mac($citrix_vm_mac);
+                    $citrix_vm_id=$citrix_vm_resource->id;
+                    $citrix_vm_resource->remove($citrix_vm_id, $citrix_vm_mac);
+                    // wait for statfile to appear again
+                    if (!wait_for_statfile($statfile)) {
+                        $strMsg .= "Error while removing Citrix vm $citrix_name ! Please check the Event-Log<br>";
+                    } else {
+                        $strMsg .= "Removed Citrix vm $citrix_name<br>";
+                    }
+                }
+                redirect($strMsg, "tab0");
+            }
+			break;
+
+   }
+}
+
+
+
+
 function citrix_server_select() {
 
 	global $OPENQRM_USER;
 	global $thisfile;
 	$table = new htmlobject_db_table('citrix_server_id');
-
-
-	$disp = "<h1>Select citrix-Host</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."Please select a citrix-Host from the list below";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 
 	$arHead = array();
 	$arHead['citrix_server_state'] = array();
@@ -93,7 +386,7 @@ function citrix_server_select() {
 			}
 			$arBody[] = array(
 				'citrix_server_state' => "<img src=$state_icon>",
-				'citrix_server_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+				'citrix_server_icon' => "<img src=$resource_icon_default>",
 				'citrix_server_id' => $citrix_server_db["appliance_id"],
 				'citrix_server_name' => $citrix_server_db["appliance_name"],
 				'citrix_server_resource_id' => $citrix_server_resource->id,
@@ -116,7 +409,16 @@ function citrix_server_select() {
 		$table->identifier = 'citrix_server_id';
 	}
 	$table->max = $citrix_server_count;
-	return $disp.$table->get_string();
+   // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'citrix-select.tpl.php');
+	$t->setVar(array(
+		'formaction' => $thisfile,
+        'citrix_server_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
 }
 
 
@@ -126,26 +428,8 @@ function citrix_server_select() {
 function citrix_server_display($appliance_id) {
 	global $OPENQRM_USER;
 	global $thisfile;
-	global $OPENQRM_SERVER_BASE_DIR;
-	global $refresh_delay;
-	global $OPENQRM_SERVER_IP_ADDRESS;
-	global $openqrm_server;
-
-	// refresh
-	$citrix_appliance = new appliance();
-	$citrix_appliance->get_instance_by_id($appliance_id);
-	$citrix_server = new resource();
-	$citrix_server->get_instance_by_id($citrix_appliance->resources);
-	$citrix_server_ip = $citrix_server->ip;
-	$citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix post_vm_list -s $citrix_server_ip";
-	$openqrm_server->send_command($citrix_command);
-	sleep($refresh_delay);
 
 	$table = new htmlobject_table_identifiers_checked('citrix_server_id');
-
-	$disp = "<h1>Citrix-Server-Admin</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 
 	$arHead = array();
 	$arHead['citrix_server_state'] = array();
@@ -165,9 +449,6 @@ function citrix_server_display($appliance_id) {
 
 	$arHead['citrix_server_resource_ip'] = array();
 	$arHead['citrix_server_resource_ip']['title'] ='Ip';
-
-	$arHead['citrix_server_comment'] = array();
-	$arHead['citrix_server_comment']['title'] ='';
 
 	$arHead['citrix_server_button'] = array();
 	$arHead['citrix_server_button']['title'] ='';
@@ -191,10 +472,10 @@ function citrix_server_display($appliance_id) {
 	// create or auth
 	$citrix_server_ip = $citrix_server_resource->ip;
 	$citrix_server_create_button="<a href=\"citrix-create.php?citrix_server_id=$citrix_server_tmp->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> VM</b></a>";
-	$citrix_server_auth_button="<a href=\"citrix-auth.php?citrix_server_id=$citrix_server_tmp->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> Auth</b></a>";
+	$citrix_server_auth_button="<a href=\"citrix-auth.php?citrix_server_id=$citrix_server_tmp->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base//img/user.gif\" border=\"0\"><b> Auth</b></a>";
 	$citrix_auth_file=$_SERVER["DOCUMENT_ROOT"]."/openqrm/base/plugins/citrix/citrix-stat/citrix-host.pwd.".$citrix_server_ip;
 	if (file_exists($citrix_auth_file)) {
-		$citrix_server_button=$citrix_server_create_button;
+		$citrix_server_button=$citrix_server_create_button."&nbsp;&nbsp;&nbsp;&nbsp;".$citrix_server_auth_button;
 	} else {	
 		$citrix_server_button=$citrix_server_auth_button;
 	}
@@ -203,12 +484,11 @@ function citrix_server_display($appliance_id) {
 	// we need to run commands on the resource ip
 	$arBody[] = array(
 		'citrix_server_state' => "<img src=$state_icon>",
-		'citrix_server_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+		'citrix_server_icon' => "<img src=$resource_icon_default>",
 		'citrix_server_id' => $citrix_server_tmp->id,
 		'citrix_server_name' => $citrix_server_tmp->name,
 		'citrix_server_resource_id' => $citrix_server_resource->id,
 		'citrix_server_resource_ip' => $citrix_server_resource->ip,
-		'citrix_server_comment' => $citrix_server_tmp->comment,
 		'citrix_server_button' => $citrix_server_button,
 	);
 	$table->id = 'Tabelle';
@@ -225,74 +505,164 @@ function citrix_server_display($appliance_id) {
 		$table->identifier = 'citrix_server_id';
 	}
 	$table->max = $citrix_server_count;
-	$disp = $disp.$table->get_string();
 
-	$disp = $disp."<hr>";
-	$disp = $disp."<h1>VMs on resource $citrix_server_resource->id/$citrix_server_resource->hostname</h1>";
-	$disp = $disp."<br>";
-	$citrix_server_vm_list_file="citrix-stat/citrix-vm.lst.$citrix_server_ip";
-	if (file_exists($citrix_server_vm_list_file)) {
-		$citrix_server_vm_list_content=file($citrix_server_vm_list_file);
-		foreach ($citrix_server_vm_list_content as $index => $citrix_vm_data) {
-			// find the vms
-			if (strstr($citrix_vm_data, "uuid")) {
-				$uuid_start = strpos($citrix_vm_data, ":");
-				$citrix_vm_uuid=substr($citrix_vm_data, $uuid_start+2);
-			}
-			if (strstr($citrix_vm_data, "name-label")) {
-				$label_start = strpos($citrix_vm_data, ":");
-				$citrix_vm_label=substr($citrix_vm_data, $label_start+2);
-			}
-			if (strstr($citrix_vm_data, "power-state")) {
-				$state_start = strpos($citrix_vm_data, ":");
-				$citrix_vm_state=substr($citrix_vm_data, $state_start+2);
 
-				$disp = $disp."<div id=\"eterminal\" class=\"eterminal\" nowrap=\"true\">";
-				$disp = $disp."<img src=\"/openqrm/base/img/active.png\" border=\"0\">";
-				$disp = $disp. $citrix_vm_uuid;
-				$disp = $disp."<br>";
-				$disp = $disp."$citrix_vm_label";
-				$disp = $disp."<br>";
-				$disp = $disp."$citrix_vm_state";
-				$disp = $disp."</div>";
-				$disp = $disp."<br>";
-				$disp = $disp."  <a href=\"citrix-action.php?citrix_uuid=$citrix_vm_uuid&citrix_command=start&citrix_id=$citrix_server_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>";
-				$disp = $disp." / ";
-				$disp = $disp."<a href=\"citrix-action.php?citrix_uuid=$citrix_vm_uuid&citrix_command=stop&citrix_id=$citrix_server_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Stop</a>";
-				$disp = $disp." / ";
-				$disp = $disp."<a href=\"citrix-action.php?citrix_uuid=$citrix_vm_uuid&citrix_command=reboot&citrix_id=$citrix_server_tmp->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Reboot</a>";
 
-				$disp = $disp."<br>";
-				$disp = $disp."<hr>";
-				$disp = $disp."<br>";
-			}
-		}
+
+    // table 1
+    $table1 = new htmlobject_db_table('citrix_vm_name');
+	$arHead1 = array();
+	$arHead1['citrix_vm_state'] = array();
+	$arHead1['citrix_vm_state']['title'] ='State';
+
+	$arHead1['citrix_vm_res_id'] = array();
+	$arHead1['citrix_vm_res_id']['title'] ='Res.ID';
+
+	$arHead1['citrix_vm_id'] = array();
+	$arHead1['citrix_vm_id']['title'] ='VM-ID';
+
+    $arHead1['citrix_vm_name'] = array();
+	$arHead1['citrix_vm_name']['title'] ='Name';
+
+	$arHead1['citrix_vm_mac'] = array();
+	$arHead1['citrix_vm_mac']['title'] ='MAC';
+
+    $arHead1['citrix_vm_ip'] = array();
+	$arHead1['citrix_vm_ip']['title'] ='IP';
+
+    $arHead1['citrix_vm_actions'] = array();
+	$arHead1['citrix_vm_actions']['title'] ='Actions';
+    $arBody1 = array();
+
+
+    $arBody1 = array();
+    $citrix_vm_list_file="citrix-stat/citrix-vm.lst.".$citrix_server_ip;
+    if (file_exists($citrix_vm_list_file)) {
+        $citrix_vm_list_content=file($citrix_vm_list_file);
+        foreach ($citrix_vm_list_content as $index => $citrixvimcmdoutput) {
+            $first_at_pos = strpos($citrixvimcmdoutput, "@");
+            $first_at_pos++;
+            $citrix_vm_name_first_at_removed = substr($citrixvimcmdoutput, $first_at_pos, strlen($citrixvimcmdoutput)-$first_at_pos);
+            $second_at_pos = strpos($citrix_vm_name_first_at_removed, "@");
+            $second_at_pos++;
+            $citrix_vm_name_second_at_removed = substr($citrix_vm_name_first_at_removed, $second_at_pos, strlen($citrix_vm_name_first_at_removed)-$second_at_pos);
+            $third_at_pos = strpos($citrix_vm_name_second_at_removed, "@");
+            $third_at_pos++;
+            $citrix_vm_name_third_at_removed = substr($citrix_vm_name_second_at_removed, $third_at_pos, strlen($citrix_vm_name_second_at_removed)-$third_at_pos);
+            $fourth_at_pos = strpos($citrix_vm_name_third_at_removed, "@");
+            $fourth_at_pos++;
+            $citrix_vm_name_fourth_at_removed = substr($citrix_vm_name_third_at_removed, $fourth_at_pos, strlen($citrix_vm_name_third_at_removed)-$fourth_at_pos);
+            $fivth_at_pos = strpos($citrix_vm_name_fourth_at_removed, "@");
+            $fivth_at_pos++;
+            $citrix_vm_name_fivth_at_removed = substr($citrix_vm_name_fourth_at_removed, $fivth_at_pos, strlen($citrix_vm_name_fourth_at_removed)-$fivth_at_pos);
+            $sixth_at_pos = strpos($citrix_vm_name_fivth_at_removed, "@");
+            $sixth_at_pos++;
+            $citrix_vm_name_sixth_at_removed = substr($citrix_vm_name_fivth_at_removed, $sixth_at_pos, strlen($citrix_vm_name_fivth_at_removed)-$sixth_at_pos);
+            $seventh_at_pos = strpos($citrix_vm_name_sixth_at_removed, "@");
+            $seventh_at_pos++;
+            $citrix_vm_name_seventh_at_removed = substr($citrix_vm_name_sixth_at_removed, $seventh_at_pos, strlen($citrix_vm_name_fivth_at_removed)-$seventh_at_pos);
+            $eight_at_pos = strpos($citrix_vm_name_seventh_at_removed, "@");
+            $eight_at_pos++;
+
+            $citrix_vm_id = trim(substr($citrixvimcmdoutput, 0, $first_at_pos-1));
+            $citrix_vm_name = trim(substr($citrix_vm_name_first_at_removed, 0, $second_at_pos-1));
+            $citrix_vm_state = trim(substr($citrix_vm_name_second_at_removed, 0, $third_at_pos-1));
+            $citrix_vm_mac = trim(substr($citrix_vm_name_third_at_removed, 0, $fourth_at_pos-1));
+            $citrix_vm_memory = trim(substr($citrix_vm_name_fourth_at_removed, 0, $fivth_at_pos-1));
+            $citrix_vm_cpu = trim(substr($citrix_vm_name_fivth_at_removed, 0, $sixth_at_pos-1));
+            $citrix_vm_cpu = trim(substr($citrix_vm_name_sixth_at_removed, 0, $seventh_at_pos-1));
+            $citrix_vm_disks = trim(substr($citrix_vm_name_seventh_at_removed, 0));
+
+            $citrix_vm_resource = new resource();
+            $citrix_vm_resource->get_instance_by_mac($citrix_vm_mac);
+            $citrix_vm_res_id = $citrix_vm_resource->id;
+            $citrix_vm_ip = $citrix_vm_resource->ip;
+
+
+            // here we fill table 1
+            $citrix_vm_actions = "";
+            // online ? openqrm-vm ?
+            if (strcmp($citrix_vm_state, "running")) {
+                $citrix_vm_state_icon = "/openqrm/base/img/off.png";
+                $citrix_vm_actions= $citrix_vm_actions."<a href=\"$thisfile?identifier_table1[]=$citrix_vm_name&action_table1=start&citrix_server_id=$appliance_id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"></a>&nbsp;";
+                $citrix_vm_actions = $citrix_vm_actions."<a href=\"$thisfile?identifier_table1[]=$citrix_vm_name&citrix_vm_mac=$citrix_vm_mac&action_table1=delete&citrix_server_id=$appliance_id\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"></a>&nbsp;";
+            } else {
+                $citrix_vm_state_icon = "/openqrm/base/img/active.png";
+                // online actions
+                $citrix_vm_actions= $citrix_vm_actions."<a href=\"$thisfile?identifier_table1[]=$citrix_vm_name&action_table1=stop&citrix_server_id=$appliance_id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"></a>&nbsp;";
+                $citrix_vm_actions = $citrix_vm_actions."<a href=\"$thisfile?identifier_table1[]=$citrix_vm_name&action_table1=reboot&citrix_server_id=$appliance_id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"></a>&nbsp;";
+            }
+
+            // add to table1
+            $arBody1[] = array(
+                'citrix_vm_state' => "<img src=$citrix_vm_state_icon><input type='hidden' name='citrix_server_id' value=$appliance_id><input type='hidden' name='citrix_vm_mac' value=$citrix_vm_mac>",
+                'citrix_vm_res_id' => $citrix_vm_res_id,
+                'citrix_vm_id' => $citrix_vm_id,
+                'citrix_vm_name' => $citrix_vm_name,
+                'citrix_vm_mac' => $citrix_vm_mac,
+                'citrix_vm_ip' => $citrix_vm_ip,
+                'citrix_vm_actions' => $citrix_vm_actions,
+            );
+
+
+        }
+    }
+
+	$table1->id = 'Tabelle';
+	$table1->css = 'htmlobject_table';
+	$table1->border = 1;
+	$table1->cellspacing = 0;
+	$table1->cellpadding = 3;
+	$table1->form_action = $thisfile;
+	$table1->sort = '';
+	$table1->identifier_type = "checkbox";
+    $table1->bottom_buttons_name = "action_table1";
+    $table1->identifier_name = "identifier_table1";
+	$table1->head = $arHead1;
+	$table1->body = $arBody1;
+	if ($OPENQRM_USER->role == "administrator") {
+		$table1->bottom = array('start', 'stop', 'reboot', 'delete');
+		$table1->identifier = 'citrix_vm_name';
 	}
+	$table1->max = $citrix_vm_count;
 
-
-	$disp = $disp."<br>";
-	$disp = $disp."<hr>";
+    // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'citrix-vms.tpl.php');
+	$t->setVar(array(
+		'formaction' => $thisfile,
+        'citrix_server_table' => $table->get_string(),
+        'citrix_server_id' => $citrix_server_resource->id,
+        'citrix_server_name' => $citrix_server_tmp->name,
+        'citrix_vm_table' => $table1->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
+
 }
 
 
 
 
 $output = array();
-$citrix_server_id = $_REQUEST["citrix_server_id"];
 if(htmlobject_request('action') != '') {
-	switch (htmlobject_request('action')) {
-		case 'select':
-			foreach($_REQUEST['identifier'] as $id) {
-				$output[] = array('label' => 'Citrix-Server Admin', 'value' => citrix_server_display($id));
-			}
-			break;
-		case 'refresh':
-			foreach($_REQUEST['identifier'] as $id) {
-				$output[] = array('label' => 'Citrix-Server Admin', 'value' => citrix_server_display($id));
-			}
-			break;
-	}
+    if (isset($_REQUEST['identifier'])) {
+        switch (htmlobject_request('action')) {
+            case 'select':
+                foreach($_REQUEST['identifier'] as $id) {
+                    $output[] = array('label' => 'Citrix-Server Admin', 'value' => citrix_server_display($id));
+                }
+                break;
+            case 'refresh':
+                foreach($_REQUEST['identifier'] as $id) {
+                    $output[] = array('label' => 'Citrix-Server Admin', 'value' => citrix_server_display($id));
+                }
+                break;
+        }
+    } else  {
+        $output[] = array('label' => 'Citrix-Server Admin', 'value' => citrix_server_select());
+    }
 } else if (strlen($citrix_server_id)) {
 	$output[] = array('label' => 'Citrix-Server Admin', 'value' => citrix_server_display($citrix_server_id));
 } else  {
