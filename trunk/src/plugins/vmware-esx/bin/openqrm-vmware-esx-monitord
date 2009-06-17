@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/ash
 # this is a very much stripped down openQRM monitor daemon
 
 MONITOR_CMD=$1

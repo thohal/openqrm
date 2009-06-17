@@ -12,8 +12,6 @@ openqrm_server_get_config
 export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 
 OPENQRM_VMWARE_ESX_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/etc/templates/openqrm-vmware-esx-vm"
-# using the vmware-esx default datastare from the plugins config
-OPENQRM_VM_DIR="/vmfs/volumes/$OPENQRM_VMWARE_ESX_DEFAULT_DATASTORE/"
 OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY="sleep 5"
 export LANG=C
 
@@ -147,6 +145,24 @@ if [ "$VMWARE_ESX_COMMAND" != "list" ] && [ "$VMWARE_ESX_COMMAND" != "init" ] &&
     fi
 fi
 
+# here we check if a default datastore is set, if not we are trying to gather
+# the first datastore from the ESX server and use that
+if [ "$OPENQRM_VMWARE_ESX_DEFAULT_DATASTORE" != "" ]; then
+    vmware_esx_log "Using $OPENQRM_VMWARE_ESX_DEFAULT_DATASTORE as the default datastore on VMware ESX Host $VMWARE_ESX_HOST_IP ! Configured in $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/etc/openqrm-plugin-vmware-esx.conf"
+    OPENQRM_VM_DIR="/vmfs/volumes/$OPENQRM_VMWARE_ESX_DEFAULT_DATASTORE/"
+else
+    OPENQRM_VMWARE_ESX_DATASTORE=`$OPENQRM_ESX_CMD $OPENQRM_VMWARE_ESX_VM_COMMAND hostsvc/datastore/listsummary | grep "name =" | head -n1 | sed -e 's/,//g;s/"//g' | cut -d'=' -f2 | awk {' print $1 '}`
+    if [ "$OPENQRM_VMWARE_ESX_DATASTORE" == "" ]; then
+        vmware_esx_log "ERROR: Could not find a default datastore on VMware ESX Host $VMWARE_ESX_HOST_IP ! Please manually configure a default datastore in $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/etc/openqrm-plugin-vmware-esx.conf"
+        openqrm_post_event 0 "default-datastore-setup" 3 "openqrm-vmware-esx" "Could not find a default datastore on VMware ESX Host $VMWARE_ESX_HOST_IP ! Please manually configure a default datastore in $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/etc/openqrm-plugin-vmware-esx.conf"
+        exit 1
+    else
+        vmware_esx_log "Using $OPENQRM_VMWARE_ESX_DATASTORE as the default datastore on VMware ESX Host $VMWARE_ESX_HOST_IP ! You can manually set the default datastore in $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/etc/openqrm-plugin-vmware-esx.conf"
+        OPENQRM_VM_DIR="/vmfs/volumes/$OPENQRM_VMWARE_ESX_DATASTORE/"
+    fi
+fi
+
+
 
 case "$VMWARE_ESX_COMMAND" in 
 
@@ -174,7 +190,7 @@ case "$VMWARE_ESX_COMMAND" in
 
 		# disk + swap
 		if [ "$VMWARE_ESX_VM_DISK" != "" ]; then
-			vmware_esx_log "-> Creating disk"
+			vmware_esx_log " Creating disk"
 			$OPENQRM_ESX_CMD "vmkfstools -c $VMWARE_ESX_VM_DISK""M -a lsilogic $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmdk"  | logger
 			# add the disk to the config file
 			cat >> /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx << EOF
@@ -208,7 +224,11 @@ EOF
 		$OPENQRM_ESX_CMD $OPENQRM_VMWARE_ESX_VM_COMMAND vmsvc/power.on $VMID | logger
         # restart once to apply the changes to the vmx file
         $OPENQRM_ESX_CMD $OPENQRM_VMWARE_ESX_VM_COMMAND vmsvc/power.off $VMID | logger
+		$OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
 		$OPENQRM_ESX_CMD $OPENQRM_VMWARE_ESX_VM_COMMAND vmsvc/power.on $VMID | logger
+        # make sure it is really starting
+		$OPENQRM_ESX_CMD $OPENQRM_VMWARE_ESX_VM_COMMAND vmsvc/power.on $VMID | logger
+		$OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
 		$OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
 		VM_STATE=`$OPENQRM_ESX_CMD $OPENQRM_VMWARE_ESX_VM_COMMAND vmsvc/get.summary $VMID | grep powerState`
 		if echo $VM_STATE | grep poweredOn 1>/dev/null; then
@@ -451,7 +471,7 @@ EOF
 		vmware_esx_log "Initialyzing VMware ESX host $VMWARE_ESX_HOST_IP"
         if [ "$OPENQRM_USERNAME" == "" ]; then
             echo -n "-> Please give an openQRM user-name : "
-            read OPENQRM_USER
+            read OPENQRM_USERNAME
             echo
         fi
         if [ "$OPENQRM_PASSWORD" == "" ]; then
@@ -462,7 +482,7 @@ EOF
 		vmware_esx_lock aquire
 		scp $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx-monitord $VMWARE_ESX_HOST_IP:/bin/ | logger
 		$OPENQRM_ESX_CMD "chmod +x /bin/openqrm-vmware-esx-monitord"
-		$OPENQRM_ESX_BACKGROUND_CMD "/bin/openqrm-vmware-esx-monitord start $OPENQRM_ESX_IP_ADDRESS $VMWARE_ESX_HOST_IP $OPENQRM_USERNAME $OPENQRM_PASSWORD"
+		$OPENQRM_ESX_BACKGROUND_CMD "/bin/openqrm-vmware-esx-monitord start $OPENQRM_SERVER_IP_ADDRESS $VMWARE_ESX_HOST_IP $OPENQRM_USERNAME $OPENQRM_PASSWORD"
         $OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
         $OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
         # post_vm_list again

@@ -54,7 +54,7 @@ global $vmware_esx_disk;
 
 $action=htmlobject_request('action');
 $refresh_delay=1;
-$refresh_loop_max=30;
+$refresh_loop_max=60;
 $vmware_mac_address_space = "00:50:56:20";
 
 $event = new event();
@@ -66,7 +66,7 @@ global $OPENQRM_SERVER_BASE_DIR;
 
 
 function redirect_mgmt($strMsg, $currenttab = 'tab0', $vmware_esx_id) {
-    $url = 'vmware-esx-manager.php?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&action=refresh&vmware_esx_id='.$vmware_esx_id;
+    $url = 'vmware-esx-manager.php?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&action=refresh&identifier[]='.$vmware_esx_id;
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
@@ -198,7 +198,7 @@ if(htmlobject_request('action') != '') {
                 $resource_id=openqrm_db_get_free_id('resource_id', $RESOURCE_INFO_TABLE);
                 $resource_ip="0.0.0.0";
                 // send command to the openQRM-server
-                $openqrm_server->send_command("openqrm_esx_add_resource $resource_id $vmware_esx_mac $resource_ip");
+                $openqrm_server->send_command("openqrm_server_add_resource $resource_id $vmware_esx_mac $resource_ip");
                 // set resource type
                 $virtualization = new virtualization();
                 $virtualization->get_instance_by_type("vmware-esx-vm");

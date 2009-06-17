@@ -21,16 +21,16 @@ How to get ssh enabled and 'password-less' login to the ESX server running is we
 - An existing and configured 'DataStore' (Storage) on the ESX server.
 <br>
 DataStores in VMware ESX are the location where the virtual machine files are being saved.
- For the openQRM VMware-ESX plugin this must exist as a prerequisite. It can be either created
- via a VI-client or using the 'vim-cmd' command directly on the ESX console.
+ For the openQRM VMware-ESX plugin the default datastore can be configured in the plugins configuration file.
+ By default openQRM will try to gather the first available datastore (e.g. "datastore1" on ESXi 4.0) and use
+ it for storing the virtual machines.
 <br>
 <br>
 - password-less ssh access (as user root) from the openQRM server to the ESX server (as mentioned before).
 <br>
+  Hint: make sure to set /.ssh/authorized_keys to mode 0600 on the ESX host (dir and file)
 <br>
-
-
-
+<br>
 
 <br>
 <b>How to use :</b>
@@ -53,7 +53,7 @@ This should give you a directory listing.
 Now integrate the ESX server by running the following command :
 <br>
 <br>
-<i>/usr/lib/openqrm/plugins/vmware-esx/bin/vmware-esx init -i [ip-address-of-the-esx-server]</i>
+<i>/usr/lib/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx init -i [ip-address-of-the-esx-server]</i>
 <br>
 <br>
 This procedure will ask for a valid openQRM username and password.

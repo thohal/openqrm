@@ -192,8 +192,8 @@ if(htmlobject_request('action_table1') != '') {
 		case 'start':
 			if (strlen($vmware_esx_id)) {
                 if (isset($_REQUEST['identifier_table1'])) {
+                    show_progressbar();
                     foreach($_REQUEST['identifier_table1'] as $vmw_vm) {
-                        show_progressbar();
                         $vmware_appliance = new appliance();
                         $vmware_appliance->get_instance_by_id($vmware_esx_id);
                         $vmware_esx = new resource();
@@ -213,8 +213,8 @@ if(htmlobject_request('action_table1') != '') {
                         } else {
                             $strMsg .="Started vm $vmw_vm<br>";
                         }
-                        redirect($strMsg, "tab0", $vmware_esx_id);
                     }
+                    redirect($strMsg, "tab0", $vmware_esx_id);
                 }
             }
 			break;
@@ -222,8 +222,8 @@ if(htmlobject_request('action_table1') != '') {
 		case 'stop':
 			if (strlen($vmware_esx_id)) {
                 if (isset($_REQUEST['identifier_table1'])) {
+                    show_progressbar();
                     foreach($_REQUEST['identifier_table1'] as $vmw_vm) {
-                        show_progressbar();
                         $vmware_appliance = new appliance();
                         $vmware_appliance->get_instance_by_id($vmware_esx_id);
                         $vmware_esx = new resource();
@@ -243,8 +243,8 @@ if(htmlobject_request('action_table1') != '') {
                         } else {
                             $strMsg .="Stopped vm $vmw_vm<br>";
                         }
-                        redirect($strMsg, "tab0", $vmware_esx_id);
                     }
+                    redirect($strMsg, "tab0", $vmware_esx_id);
                 }
             }
 			break;
@@ -252,8 +252,8 @@ if(htmlobject_request('action_table1') != '') {
 		case 'reboot':
 			if (strlen($vmware_esx_id)) {
                 if (isset($_REQUEST['identifier_table1'])) {
+                    show_progressbar();
                     foreach($_REQUEST['identifier_table1'] as $vmw_vm) {
-                        show_progressbar();
                         $vmware_appliance = new appliance();
                         $vmware_appliance->get_instance_by_id($vmware_esx_id);
                         $vmware_esx = new resource();
@@ -273,8 +273,8 @@ if(htmlobject_request('action_table1') != '') {
                         } else {
                             $strMsg .="Rebooted vm $vmw_vm<br>";
                         }
-                        redirect($strMsg, "tab0", $vmware_esx_id);
                     }
+                    redirect($strMsg, "tab0", $vmware_esx_id);
                 }
             }
 			break;
@@ -282,8 +282,8 @@ if(htmlobject_request('action_table1') != '') {
 		case 'delete':
 			if (strlen($vmware_esx_id)) {
                 if (isset($_REQUEST['identifier_table1'])) {
+                    show_progressbar();
                     foreach($_REQUEST['identifier_table1'] as $vmw_vm) {
-                        show_progressbar();
                         $vmware_appliance = new appliance();
                         $vmware_appliance->get_instance_by_id($vmware_esx_id);
                         $vmware_esx = new resource();
@@ -308,8 +308,8 @@ if(htmlobject_request('action_table1') != '') {
                         } else {
                             $strMsg .="Deleted vm $vmw_vm<br>";
                         }
-                        redirect($strMsg, "tab0", $vmware_esx_id);
                     }
+                    redirect($strMsg, "tab0", $vmware_esx_id);
                 }
             }
             break;
