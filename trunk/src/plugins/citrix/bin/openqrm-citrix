@@ -77,7 +77,7 @@ if [ "$CITRIX_COMMAND" == "" ]; then
 	citrix_usage
 fi
 
-if [ "$CITRIX_COMMAND" != "list" ] && [ "$CITRIX_COMMAND" != "post_template_list" ] && [ "$CITRIX_COMMAND" != "post_vm_list" ]; then
+if [ "$CITRIX_COMMAND" != "list" ] && [ "$CITRIX_COMMAND" != "post_template_list" ] && [ "$CITRIX_COMMAND" != "post_vm_list" ]  && [ "$CITRIX_COMMAND" != "setboot" ]; then
 	if [ "$CITRIX_VM_NAME" == "" ]; then
 		citrix_usage
 	fi
@@ -302,6 +302,74 @@ case "$CITRIX_COMMAND" in
         rm -f $VM_TMPFILE1 $VM_TMPFILE2
         rm -f $VM_TMPFILE
 		;;
+
+
+	setboot)
+		if [ "$CITRIX_VM_MAC" == "" ]; then
+			citrix_usage
+		fi
+		if [ "$CITRIX_VM_BOOT" == "" ]; then
+			citrix_usage
+		fi
+        citrix_lock aquire
+		citrix_log openqrm-citrix "Setting Citrix XenServer vm with mac $CITRIX_VM_MAC to $CITRIX_VM_BOOT"
+        VM_VIF_LIST=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+        VM_TMPFILE1=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+        VM_TMPFILE2=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+        # create list of vifs
+        $CITRIX_XE_BINARY vif-list -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE > $VM_VIF_LIST
+        # create list of vms
+        # skip dom0
+        FOUND_VM=1
+        $CITRIX_XE_BINARY vm-list -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE > $VM_TMPFILE1
+        for UUID in `cat $VM_TMPFILE1 | grep uuid | cut -d':' -f2 | awk {' print $1 '}`; do
+            CITRIX_VM_NAME=`grep -A 1 $UUID $VM_TMPFILE1 | grep name-label | cut -d':' -f2 | awk {' print $1 '}`
+            if [ "$CITRIX_VM_NAME" != "Control" ]; then
+                CITRIX_VM_STATE=`grep -A 2 $UUID $VM_TMPFILE1 | grep power-state | cut -d':' -f2 | awk {' print $1 '}`
+                # gather the mac address
+                CITRIX_VM_VIF_UUID=`grep -B 1 $UUID $VM_VIF_LIST | grep uuid | cut -d':' -f2 | awk {' print $1 '}`
+                VM_NIC_TMPFILE=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+                $CITRIX_XE_BINARY vif-param-list -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_VIF_UUID > $VM_NIC_TMPFILE
+                CITRIX_GATHER_VM_MAC=`grep " MAC " $VM_NIC_TMPFILE | cut -d':' -f2- | awk {' print $1 '}`
+                rm -f $VM_NIC_TMPFILE
+                if [ "$CITRIX_VM_MAC" == "$CITRIX_GATHER_VM_MAC" ]; then
+                    citrix_log openqrm-citrix "Found Citrix XenServer vm with name $CITRIX_VM_NAME, mac $CITRIX_VM_MAC and vm uuid $UUID"
+                    FOUND_VM=1
+                    CITRIX_VM_UUID=$UUID
+                    break
+                fi
+            fi
+        done
+        rm -f $VM_TMPFILE1 $VM_TMPFILE2
+        if [ "$FOUND_VM" == 0 ]; then
+            citrix_log openqrm-citrix "Failed to find the Citrix XenServer vm with mac $CITRIX_VM_MAC !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to find the Citrix XenServer vm with mac $CITRIX_VM_MAC !"
+            citrix_lock release
+            exit 1
+        fi
+        #change boot order to netbooting
+        case "$CITRIX_VM_BOOT" in
+            local)
+                VM_BOOT_ORDER="cnd"
+                ;;
+            net)
+                VM_BOOT_ORDER="ncd"
+                ;;
+        esac
+        if ! $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-param-set uuid=$CITRIX_VM_UUID HVM-boot-params:order=$VM_BOOT_ORDER; then
+            citrix_log openqrm-citrix "Failed to set the boot-order $VM_BOOT_ORDER for vm $CITRIX_VM_NAME !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to set the boot-order $VM_BOOT_ORDER for vm $CITRIX_VM_NAME !"
+            citrix_lock release
+            exit 1
+        fi
+        # restart hard
+		$CITRIX_XE_BINARY vm-shutdown -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID force=true
+		$CITRIX_XE_BINARY vm-start -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID
+        citrix_lock release
+		;;
+
+
+
 
         # TODO : finalyze config options
    vm-mem-set)
