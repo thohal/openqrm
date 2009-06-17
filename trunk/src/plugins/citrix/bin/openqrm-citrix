@@ -21,8 +21,9 @@ fi
 
 function citrix_usage() {
 	echo "Usage : $0 start/stop/remove/reboot/list <-i citrix-server-ip> <-n vm-name>"
-	echo "        $0 create <-i citrix-server-ip> <-n vm-name> <-r memory> <-m mac-address>"
+	echo "        $0 create <-i citrix-server-ip> <-n vm-name> <-r memory> <-m mac-address> <-t vm-template>"
 	echo "        $0 post_vm_list <-i citrix-server-ip>"
+	echo "        $0 post_template_list <-i citrix-server-ip>"
 #	echo "        $0 vm-mem-set <-i citrix-server-ip> <-n vm-name> <-m ram>"
 	exit 1
 }
@@ -57,6 +58,10 @@ while [ $# -ne 0 ]; do
 			CITRIX_SERVER_IP=$2
 			shift
 			;;
+		-t)
+			CITRIX_VM_TEMPLATE=$2
+			shift
+			;;
 		*)
 			echo "ERROR: Free commandline arguments are not allowed"
 			citrix_usage
@@ -72,7 +77,7 @@ if [ "$CITRIX_COMMAND" == "" ]; then
 	citrix_usage
 fi
 
-if [ "$CITRIX_COMMAND" != "list" ] && [ "$CITRIX_COMMAND" != "post_vm_list" ]; then
+if [ "$CITRIX_COMMAND" != "list" ] && [ "$CITRIX_COMMAND" != "post_template_list" ] && [ "$CITRIX_COMMAND" != "post_vm_list" ]; then
 	if [ "$CITRIX_VM_NAME" == "" ]; then
 		citrix_usage
 	fi
@@ -83,6 +88,7 @@ fi
 
 CITRIX_SERVER_PASSWD_FILE=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/web/citrix-stat/citrix-host.pwd.$CITRIX_SERVER_IP
 CITRIX_VM_LIST_TMP=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/web/citrix-stat/citrix-vm.lst.$CITRIX_SERVER_IP
+CITRIX_TEMPATE_LIST_TMP=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/web/citrix-stat/citrix-template.lst.$CITRIX_SERVER_IP
 mkdir -p `dirname $CITRIX_VM_LIST_TMP`
 chmod 777 `dirname $CITRIX_VM_LIST_TMP`
 
@@ -104,9 +110,16 @@ case "$CITRIX_COMMAND" in
 		if [ "$CITRIX_VM_MAC" == "" ]; then
 			citrix_usage
 		fi
+		if [ "$CITRIX_VM_TEMPLATE" == "" ]; then
+			citrix_usage
+		fi
         citrix_lock aquire
-		citrix_log openqrm-citrix "Creating Citrix vm $CITRIX_VM_NAME"
-       	if ! $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-install template=Windows\ Server\ 2003 new-name-label=$CITRIX_VM_NAME; then
+		citrix_log openqrm-citrix "Creating Citrix vm $CITRIX_VM_NAME from template $CITRIX_VM_TEMPLATE"
+        VM_TEMPLATE_NAME=`echo $CITRIX_VM_TEMPLATE | sed -e "s/@/ /g"`
+        VM_TEMPLATE_NAME=`echo $VM_TEMPLATE_NAME`
+		citrix_log openqrm-citrix "!!!! vm $CITRIX_VM_NAME from template $VM_TEMPLATE_NAME"
+
+       	if ! $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-install template="$VM_TEMPLATE_NAME" new-name-label=$CITRIX_VM_NAME; then
             citrix_log openqrm-citrix "Failed to install the vm template for creating the new vm $CITRIX_VM_NAME !"
             openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to install the vm template for creating the new vm $CITRIX_VM_NAME !"
             citrix_lock release
@@ -276,24 +289,19 @@ case "$CITRIX_COMMAND" in
         rm -f $VM_TMPFILE1 $VM_TMPFILE2
 		;;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	post_template_list)
+		citrix_log openqrm-citrix "Posting template list to the openQRM-server"
+        VM_TMPFILE1=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+        VM_TMPFILE2=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
+        # create list of vifs
+        $CITRIX_XE_BINARY template-list -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE > $VM_TMPFILE1
+        grep name-label $VM_TMPFILE1 | grep -i windows | cut -d':' -f2 | awk {' print $1" "$2" "$3" "$4" "$5 '}  > $VM_TMPFILE2
+        sed -i -e "s/ \{1,\}/@/g" $VM_TMPFILE2
+        /bin/cp -f $VM_TMPFILE2 $CITRIX_TEMPATE_LIST_TMP
+        chmod 777 $CITRIX_TEMPATE_LIST_TMP
+        rm -f $VM_TMPFILE1 $VM_TMPFILE2
+        rm -f $VM_TMPFILE
+		;;
 
         # TODO : finalyze config options
    vm-mem-set)

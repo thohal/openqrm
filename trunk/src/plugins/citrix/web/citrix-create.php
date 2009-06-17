@@ -48,6 +48,14 @@ $citrix_command = htmlobject_request('citrix_command');
 $citrix_name = htmlobject_request('citrix_name');
 $citrix_ram = htmlobject_request('citrix_ram');
 $citrix_mac = htmlobject_request('citrix_mac');
+$citrix_template = htmlobject_request('citrix_template');
+global $citrix_server_id;
+global $citrix_command;
+global $citrix_name;
+global $citrix_server_id;
+global $citrix_ram;
+global $citrix_mac;
+global $citrix_template;
 
 // place for the citrix stat files
 $CitrixDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/citrix/citrix-stat';
@@ -58,18 +66,6 @@ $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
 
 
-function citrix_server_htmlobject_select($name, $value, $title = '', $selected = '') {
-		$html = new htmlobject_select();
-		$html->name = $name;
-		$html->title = $title;
-		$html->selected = $selected;
-		$html->text_index = array("value" => "value", "text" => "label");
-		$html->text = $value;
-		return $html->get_string();
-}
-
-
-
 function redirect_mgmt($strMsg, $currenttab = 'tab0') {
     global $citrix_server_id;
     $url = 'citrix-manager.php?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&action=refresh&identifier[]='.$citrix_server_id;
@@ -78,12 +74,10 @@ function redirect_mgmt($strMsg, $currenttab = 'tab0') {
 }
 
 
-function redirect($strMsg, $currenttab = 'tab0', $url = '') {
+function redirect($strMsg, $currenttab = 'tab0') {
     global $thisfile;
     global $citrix_server_id;
-    if($url == '') {
-        $url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&citrix_server_id='.$citrix_server_id;
-    }
+    $url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&citrix_server_id='.$citrix_server_id;
     echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
     exit;
 }
@@ -152,25 +146,29 @@ if(htmlobject_request('citrix_command') != '') {
 		case 'new':
             if (!strlen($citrix_server_id)) {
                 $strMsg .= "Citrix XenServer server-id not set. Not adding new VM!";
-                redirect($strMsg, "tab0", $thisfile);
+                redirect($strMsg, "tab0");
             }
             if (!strlen($citrix_name)) {
                 $strMsg .= "Citrix XenServer VM name not set. Not adding new VM!";
                 redirect($strMsg, "tab0", $thisfile);
             } else if (!validate_input($citrix_name, 'string')) {
                 $strMsg .= "Invalid Citrix XenServer VM name. Not adding new VM!";
-                redirect($strMsg, "tab0", $thisfile);
+                redirect($strMsg, "tab0");
             }
             if (!strlen($citrix_ram)) {
                 $strMsg .= "Citrix XenServer VM memory not set. Not adding new VM!";
                 redirect($strMsg, "tab0", $thisfile);
             } else if (!validate_input($citrix_ram, 'number')) {
                 $strMsg .= "Invalid Citrix XenServer VM memory. Not adding new VM!";
-                redirect($strMsg, "tab0", $thisfile);
+                redirect($strMsg, "tab0");
             }
             if (!strlen($citrix_mac)) {
                 $strMsg .= "Citrix XenServer mac-address not set. Not adding new VM!";
-                redirect($strMsg, "tab0", $thisfile);
+                redirect($strMsg, "tab0");
+            }
+            if (!strlen($citrix_template)) {
+                $strMsg .= "Citrix XenServer VM template not set. Not adding new VM!";
+                redirect($strMsg, "tab0");
             }
             show_progressbar();
             $citrix_appliance = new appliance();
@@ -194,7 +192,7 @@ if(htmlobject_request('citrix_command') != '') {
             $resource_id=openqrm_db_get_free_id('resource_id', $RESOURCE_INFO_TABLE);
             $resource_ip="0.0.0.0";
             // send command
-			$citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix create -i $citrix_server_ip -n $citrix_name -r $citrix_ram -m $citrix_mac";
+			$citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix create -i $citrix_server_ip -n $citrix_name -r $citrix_ram -m $citrix_mac -t $citrix_template";
             // set resource type
             $virtualization = new virtualization();
             $virtualization->get_instance_by_type("citrix-vm");
@@ -218,21 +216,70 @@ if(htmlobject_request('citrix_command') != '') {
             redirect_mgmt($strMsg, "tab0");
 			break;
 
-
-
     }
 }
+
+if (!strlen($citrix_server_id)) {
+    echo "ERROR: server-id not set <br>";
+    exit(1);
+
+}
+
+// get template list
+$citrix_appliance = new appliance();
+$citrix_appliance->get_instance_by_id($citrix_server_id);
+$citrix = new resource();
+$citrix->get_instance_by_id($citrix_appliance->resources);
+$citrix_server_ip = $citrix->ip;
+ // already authenticated ?
+$citrix_auth_file=$_SERVER["DOCUMENT_ROOT"]."/openqrm/base/plugins/citrix/citrix-stat/citrix-host.pwd.".$citrix_server_ip;
+if (!file_exists($citrix_auth_file)) {
+    $strMsg .= "Citrix XenServer not yet authenticated. Please authenticate !";
+    redirect_mgmt($strMsg, "tab0");
+}
+// remove current stat file
+$template_list="citrix-stat/citrix-template.lst.".$citrix_server_ip;
+global $template_list;
+if (file_exists($template_list)) {
+    unlink($template_list);
+}
+// send command
+$citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix post_template_list -i $citrix_server_ip";
+$openqrm_server->send_command($citrix_command);
+// wait for statfile to appear again
+if (!wait_for_statfile($template_list)) {
+    echo "Error while getting list of templates from Citrix XenServer Host $citrix_server_id ! Please check the Event-Log<br>";
+    exit(1);
+}
+
+
+
 
 
 
 function citrix_create() {
 	global $citrix_server_id;
-	$citrix = new resource();
+    global $template_list;
+    global $thisfile;
+    $citrix = new resource();
 	$citrix->get_instance_by_id($citrix_server_id);
 	$resource_mac_gen = new resource();
 	$resource_mac_gen->generate_mac();
 	$suggested_mac = $resource_mac_gen->mac;
     $back_link = "<a href=\"citrix-manager.php?action=refresh&identifier[]=$citrix_server_id\">Back</a>";
+    // read template file
+    $template_list_select = array();
+    if (file_exists($template_list)) {
+        $citrix_template_list_content=file($template_list);
+        foreach ($citrix_template_list_content as $index => $citrix_template) {
+            $citrix_template_name = trim(substr($citrix_template, 0));
+            $citrix_display_template_name = trim(str_replace("@", " ", $citrix_template_name));
+            // echo "-> $citrix_template_name , $citrix_display_template_name<br>";
+			$template_list_select[] = array("value" => $citrix_template_name, "label" => $citrix_display_template_name);
+        }
+    }
+
+
     // set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
@@ -247,6 +294,7 @@ function citrix_create() {
 //		'citrix_server_disk' => htmlobject_input('citrix_disk', array("value" => '', "label" => 'Disk (MB)'), 'text', 10),
 //		'citrix_server_swap' => htmlobject_input('citrix_swap', array("value" => '', "label" => 'Swap (MB)'), 'text', 10),
 		'hidden_citrix_server_id' => "<input type=hidden name=citrix_server_id value=$citrix_server_id><input type=hidden name=citrix_command value='new'>",
+		'template_list_select' => htmlobject_select('citrix_template', $template_list_select, 'VM Template'),
 		'submit' => htmlobject_input('action', array("value" => 'new', "label" => 'Create'), 'submit'),
 	));
 	$disp =  $t->parse('out', 'tplfile');

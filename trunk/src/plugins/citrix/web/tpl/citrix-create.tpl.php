@@ -14,6 +14,9 @@ Add new VM to Citrix XenServer Host id {citrix_server_id}
 {citrix_server_name}
 {citrix_server_mac}
 {citrix_server_ram}
+{template_list_select}
+Please select one of the HVM templates supporting PXE-boot
+
 </div>
 {hidden_citrix_server_id}
 <div style="text-align:center;">
