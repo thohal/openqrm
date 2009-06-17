@@ -30,7 +30,7 @@ fi
 function vmware_esx_usage() {
 	vmware_esx_log "Usage : $0 start/stop/reboot/add/delete/remove/list <-i esx-server-ip> <-n vm-name>"
 	vmware_esx_log "        $0 create <-i esx-server-ip> <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ]"
-	vmware_esx_log "        $0 setboot <-m mac-address> <-b local/net>"
+	vmware_esx_log "        $0 setboot <-m mac-address> <-b local/net> <-i esx-server-ip>"
 	vmware_esx_log "        $0 post_vm_list"
 	vmware_esx_log "        $0 init <-i esx-server-ip> [ -u openqrm-user ] [ -p openqrm-password ]"
 	exit 1
