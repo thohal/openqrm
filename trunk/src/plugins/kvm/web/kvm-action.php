@@ -1,8 +1,3 @@
-<?php
-$kvm_server_command = $_REQUEST["kvm_server_command"];
-$kvm_server_id = $_REQUEST["kvm_server_id"];
-?>
-
 <html>
 <head>
 <title>openQRM Kvm-server actions</title>
@@ -21,13 +16,16 @@ require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/kernel.class.php";
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
+require_once "$RootDir/include/htmlobject.inc.php";
 global $OPENQRM_SERVER_BASE_DIR;
 global $RESOURCE_INFO_TABLE;
 
 // place for the kvm_server stat files
 $KvmDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/kvm/kvm-stat';
-
 $event = new event();
+// get params
+$kvm_server_command = htmlobject_request('kvm_server_command');
+$kvm_server_id = htmlobject_request('kvm_server_id');
 
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {

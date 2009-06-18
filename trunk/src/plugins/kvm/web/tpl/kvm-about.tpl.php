@@ -7,6 +7,8 @@
 <div style="float:left;">
 
 <h1><img border=0 src="/openqrm/base/plugins/kvm/img/plugin.png"> KVM plugin</h1>
+<strong>This plugin is tested with KVM kvm-62</strong>
+<br>
 <br>
 The KVM plugin adds support for KVM-Virtualization to openQRM.
  Appliances with the resource-type 'KVM Host' are listed in the KVM-Manager and
@@ -19,13 +21,23 @@ Hint:
 <br>
 The openQRM-server itself can be used as a resource for an KVM-Host appliance.
  In this case network-bridging should be setup on openQRM-server system before
- installing openQRM. After having a network-bridge configured openQRM should be installed
-
- on the bridge-interface (br0).
+ installing openQRM. At least an "internal" bridge for the openQRM management network
+ is needed. The name for this bridge can be configured in the KVM plugin-configuration file
+ via the parameter OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE.
 <br>
-On managed resources a network-bridge (br0) for the KVM vms is created automatically
- during start of the KVM-plugin (if not already existing). This bridge (named br0)
- is then used for the virtual network-interfaces of the partitions.
+<br>
+Additional an external bridge (e.g. pointing to the internet) can be setup and configured
+ via the OPENQRM_PLUGIN_KVM_EXTERNAL_BRIDGE parameter in the KVM plugin-configuration file.
+<br>
+openQRM then will create every first (virtual) network-card for the KVM vms on the internal
+ bridge and every other on the external one. With this 2-bridge setup every vm will then
+ have its first nic pointing to the openQRM management network (doing the pxe-boot)
+ and every other nic will point e.g. to the internet.
+<br>
+<br>
+After having a network-bridge configured openQRM should be installed
+ on the internal bridge-interface (by default br0). This can be done by setting the openQRM management
+ network-interface in /usr/lib/openqrm/etc/openqrm-server.conf to br0 before initalyzing openQRM.
 <br>
 <br>
 <br>
@@ -44,6 +56,3 @@ Use the 'VM Manager' in the Kvm-plugin menu to create a new Kvm-server virtual-m
 <br>
 
 </div>
-
-</form>
-

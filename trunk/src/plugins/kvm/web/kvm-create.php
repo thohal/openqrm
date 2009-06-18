@@ -96,20 +96,61 @@ function show_progressbar() {
 }
 
 
+function validate_input($var, $type) {
+    switch ($type) {
+        case 'string':
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_alpha($var[$i])) {
+                    if (!ctype_digit($var[$i])) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+            break;
+        case 'number';
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_digit($var[$i])) {
+                    return false;
+                }
+            }
+            return true;
+            break;
+    }
+}
+
+
+
 $event->log("$action", $_SERVER['REQUEST_TIME'], 5, "kvm-action", "Processing command $action", "", "", 0, 0, 0);
 if(htmlobject_request('action') != '') {
     switch ($action) {
         case 'new':
             show_progressbar();
-            if (!strlen($kvm_server_mac)) {
-                $strMsg="Got empty mac-address. Not creating new KVM vm";
+            // name check
+            if (!strlen($kvm_server_name)) {
+                $strMsg .= "Empty vm name. Not creating new vm on KVM Host $kvm_server_id";
                 redirect_mgmt($strMsg, $thisfile, $kvm_server_id);
-                exit(1);
+            } else if (!validate_input($kvm_server_name, 'string')) {
+                $strMsg .= "Invalid vm name. Not creating new vm on KVM Host $kvm_server_id";
+                redirect_mgmt($strMsg, $thisfile, $kvm_server_id);
+            }
+            if (!strlen($kvm_server_mac)) {
+                $strMsg="Got empty mac-address. Not creating new vm on KVM Host $kvm_server_id";
+                redirect_mgmt($strMsg, $thisfile, $kvm_server_id);
             }
             if (!strlen($kvm_server_ram)) {
-                $strMsg="Got empty Memory size. Not creating new KVM vm";
+                $strMsg="Got empty Memory size. Not creating new vm on KVM Host $kvm_server_id";
                 redirect_mgmt($strMsg, $thisfile, $kvm_server_id);
-                exit(1);
+            } else if (!validate_input($kvm_server_ram, 'number')) {
+                $strMsg .= "Invalid vm memory $kvm_server_ram. Not creating new vm on KVM Host $kvm_server_id";
+                redirect_mgmt($strMsg, $thisfile, $kvm_server_id);
+            }
+            // check for disk size is int
+            if (strlen($kvm_server_disk)) {
+                if (!validate_input($kvm_server_disk, 'number')) {
+                    $strMsg .= "Invalid vm disk size. Not creating new vm on KVM Host $kvm_server_id";
+                    redirect_mgmt($strMsg, $thisfile, $kvm_server_id);
+                }
             }
 
             // send command to kvm_server-host to create the new vm
