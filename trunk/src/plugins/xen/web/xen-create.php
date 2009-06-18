@@ -105,6 +105,31 @@ function show_progressbar() {
         flush();
 }
 
+
+function validate_input($var, $type) {
+    switch ($type) {
+        case 'string':
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_alpha($var[$i])) {
+                    if (!ctype_digit($var[$i])) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+            break;
+        case 'number';
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_digit($var[$i])) {
+                    return false;
+                }
+            }
+            return true;
+            break;
+    }
+}
+
+
 $event->log("$action", $_SERVER['REQUEST_TIME'], 5, "xen-create", "Processing command $action", "", "", 0, 0, 0);
 if(htmlobject_request('xen_command') != '') {
     switch ($xen_command) {
@@ -112,19 +137,36 @@ if(htmlobject_request('xen_command') != '') {
             // send command to xen-host to create the new vm
             show_progressbar();
             if (!strlen($xen_name)) {
-                $strMsg="Got empty vm name. Not creating new Xen vm";
+                $strMsg="Got empty vm name. Not creating new vm on Xen Host $xen_id";
                 redirect_mgmt($strMsg, $thisfile, $xen_id);
-                exit(1);
+            } else if (!validate_input($xen_name, 'string')) {
+                $strMsg= "Invalid vm name. Not creating new vm on Xen Host $xen_id";
+                redirect_mgmt($strMsg, $thisfile, $xen_id);
             }
             if (!strlen($xen_mac)) {
-                $strMsg="Got empty mac-address. Not creating new Xen vm";
+                $strMsg="Got empty mac-address. Not creating new vm on Xen Host $xen_id";
                 redirect_mgmt($strMsg, $thisfile, $xen_id);
-                exit(1);
             }
             if (!strlen($xen_ram)) {
-                $strMsg="Got empty Memory size. Not creating new Xen vm";
+                $strMsg="Got empty Memory size. Not creating new vm on Xen Host $xen_id";
                 redirect_mgmt($strMsg, $thisfile, $xen_id);
-                exit(1);
+            } else if (!validate_input($xen_ram, 'number')) {
+                $strMsg .= "Invalid vm memory $xen_ram. Not creating new vm on Xen Host $xen_id";
+                redirect_mgmt($strMsg, $thisfile, $xen_id);
+            }
+            // disk + swap
+            // check for disk size is int
+            if (strlen($xen_disk)) {
+                if (!validate_input($xen_disk, 'number')) {
+                    $strMsg .= "Invalid vm disk size. Not creating new vm on Xen Host $xen_id";
+                    redirect_mgmt($strMsg, $thisfile, $xen_id);
+                }
+            }
+            if (strlen($xen_swap)) {
+                if (!validate_input($xen_swap, 'number')) {
+                    $strMsg .= "Invalid vm swap size. Not creating new vm on Xen Host $xen_id";
+                    redirect_mgmt($strMsg, $thisfile, $xen_id);
+                }
             }
 
             $xen_appliance = new appliance();

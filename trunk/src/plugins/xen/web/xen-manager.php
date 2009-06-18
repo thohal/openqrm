@@ -45,7 +45,13 @@ $refresh_loop_max=20;
 $xen_id = htmlobject_request('xen_id');
 $xen_migrate_to_id = htmlobject_request('xen_migrate_to_id');
 $xen_migrate_type = htmlobject_request('xen_migrate_type');
-
+$xen_vm_mac = htmlobject_request('xen_vm_mac');
+$xen_vm_mac_ar = htmlobject_request('xen_vm_mac_ar');
+global $xen_id;
+global $xen_migrate_to_id;
+global $xen_migrate_type;
+global $xen_vm_mac;
+global $xen_vm_mac_ar;
 
 
 function xen_htmlobject_select($name, $value, $title = '', $selected = '') {
@@ -167,8 +173,8 @@ if(htmlobject_request('action_table1') != '') {
 
 		case 'start':
 			if (isset($_REQUEST['identifier_table1'])) {
+                show_progressbar();
 				foreach($_REQUEST['identifier_table1'] as $xen_name) {
-                    show_progressbar();
                     $xen_appliance = new appliance();
                     $xen_appliance->get_instance_by_id($xen_id);
                     $xen = new resource();
@@ -194,8 +200,8 @@ if(htmlobject_request('action_table1') != '') {
 
 		case 'stop':
 			if (isset($_REQUEST['identifier_table1'])) {
+                show_progressbar();
 				foreach($_REQUEST['identifier_table1'] as $xen_name) {
-                    show_progressbar();
                     $xen_appliance = new appliance();
                     $xen_appliance->get_instance_by_id($xen_id);
                     $xen = new resource();
@@ -221,8 +227,8 @@ if(htmlobject_request('action_table1') != '') {
 
 		case 'reboot':
 			if (isset($_REQUEST['identifier_table1'])) {
+                show_progressbar();
 				foreach($_REQUEST['identifier_table1'] as $xen_name) {
-                    show_progressbar();
                     $xen_appliance = new appliance();
                     $xen_appliance->get_instance_by_id($xen_id);
                     $xen = new resource();
@@ -248,8 +254,8 @@ if(htmlobject_request('action_table1') != '') {
 
 		case 'remove':
 			if (isset($_REQUEST['identifier_table1'])) {
+                show_progressbar();
 				foreach($_REQUEST['identifier_table1'] as $xen_name) {
-                    show_progressbar();
                     $xen_appliance = new appliance();
                     $xen_appliance->get_instance_by_id($xen_id);
                     $xen = new resource();
@@ -262,6 +268,12 @@ if(htmlobject_request('action_table1') != '') {
                     // send command
                     $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen remove -n $xen_name -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
                     $xen->send_command($xen->ip, $resource_command);
+                    // we should remove the resource of the vm !
+                    $xen_vm_mac = $xen_vm_mac_ar[$xen_name];
+                    $xen_resource = new resource();
+                    $xen_resource->get_instance_by_mac($xen_vm_mac);
+                    $xen_vm_id=$xen_resource->id;
+                    $xen_resource->remove($xen_vm_id, $xen_vm_mac);
                     // wait for statfile to appear again
                     if (!wait_for_statfile($statfile)) {
                         $strMsg .= "Error while removing Xen vm $xen_name ! Please check the Event-Log<br>";
@@ -275,8 +287,8 @@ if(htmlobject_request('action_table1') != '') {
 
 		case 'migrate':
 			if (isset($_REQUEST['identifier_table1'])) {
+                show_progressbar();
 				foreach($_REQUEST['identifier_table1'] as $xen_name) {
-                    show_progressbar();
                     $xen_appliance = new appliance();
                     $xen_appliance->get_instance_by_id($xen_id);
                     $xen = new resource();
@@ -523,13 +535,13 @@ function xen_display($appliance_id) {
                 $xen_vm_actions= $xen_vm_actions."<a href=\"$thisfile?identifier_table1[]=$xen_name&action_table1=start&xen_id=$xen_appliance->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"></a>&nbsp;";
                 if ($xen_openqrm_vm == 1) {
                     $xen_vm_actions = $xen_vm_actions."<a href=\"xen-vm-config.php?xen_name=$xen_name&xen_id=$xen_appliance->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/plugin.png\" border=\"0\"></a>&nbsp;";
-                    $xen_vm_actions = $xen_vm_actions."<a href=\"$thisfile?identifier_table1[]=$xen_name&action_table1=remove&xen_id=$xen_appliance->id\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"></a>&nbsp;";
+                    $xen_vm_actions = $xen_vm_actions."<a href=\"$thisfile?identifier_table1[]=$xen_name&action_table1=remove&xen_id=$xen_appliance->id&xen_vm_mac_ar[$xen_name]=\"$xen_vm_mac\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"></a>&nbsp;";
                 }
             }
 
             // add to table1
             $arBody1[] = array(
-                'xen_vm_state' => "<img src=$xen_vm_state_icon><input type='hidden' name='xen_id' value=$xen_appliance->id>",
+                'xen_vm_state' => "<img src=$xen_vm_state_icon><input type='hidden' name='xen_id' value=$xen_appliance->id><input type='hidden' name='xen_vm_mac_ar[$xen_name]' value=$xen_vm_mac>",
                 'xen_vm_id' => $xen_vm_id,
                 'xen_vm_name' => $xen_name,
                 'xen_vm_vnc' => $xen_vm_vnc,

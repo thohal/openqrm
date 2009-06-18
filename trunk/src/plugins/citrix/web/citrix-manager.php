@@ -45,6 +45,11 @@ $refresh_loop_max=40;
 $citrix_server_id = htmlobject_request('citrix_server_id');
 $citrix_vm_name = htmlobject_request('citrix_vm_name');
 $citrix_vm_mac = htmlobject_request('citrix_vm_mac');
+$citrix_vm_mac_ar = htmlobject_request('citrix_vm_mac_ar');
+global $citrix_server_id;
+global $citrix_vm_name;
+global $citrix_vm_mac;
+global $citrix_vm_mac_ar;
 
 // place for the citrix stat files
 $CitrixDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/citrix/citrix-stat';
@@ -190,8 +195,8 @@ if(htmlobject_request('action_table1') != '') {
 
 		case 'start':
 			if (isset($_REQUEST['identifier_table1'])) {
+                show_progressbar();
 				foreach($_REQUEST['identifier_table1'] as $citrix_name) {
-                    show_progressbar();
                     $citrix_appliance = new appliance();
                     $citrix_appliance->get_instance_by_id($citrix_server_id);
                     $citrix = new resource();
@@ -224,8 +229,8 @@ if(htmlobject_request('action_table1') != '') {
 
 		case 'stop':
 			if (isset($_REQUEST['identifier_table1'])) {
+                show_progressbar();
 				foreach($_REQUEST['identifier_table1'] as $citrix_name) {
-                    show_progressbar();
                     $citrix_appliance = new appliance();
                     $citrix_appliance->get_instance_by_id($citrix_server_id);
                     $citrix = new resource();
@@ -258,8 +263,8 @@ if(htmlobject_request('action_table1') != '') {
 
 		case 'reboot':
 			if (isset($_REQUEST['identifier_table1'])) {
+                show_progressbar();
 				foreach($_REQUEST['identifier_table1'] as $citrix_name) {
-                    show_progressbar();
                     $citrix_appliance = new appliance();
                     $citrix_appliance->get_instance_by_id($citrix_server_id);
                     $citrix = new resource();
@@ -292,8 +297,8 @@ if(htmlobject_request('action_table1') != '') {
 
 		case 'delete':
 			if (isset($_REQUEST['identifier_table1'])) {
+                show_progressbar();
 				foreach($_REQUEST['identifier_table1'] as $citrix_name) {
-                    show_progressbar();
                     $citrix_appliance = new appliance();
                     $citrix_appliance->get_instance_by_id($citrix_server_id);
                     $citrix = new resource();
@@ -314,6 +319,7 @@ if(htmlobject_request('action_table1') != '') {
                     $citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix remove -i $citrix_server_ip -n $citrix_name";
                     $openqrm_server->send_command($citrix_command);
                     // we should remove the resource of the vm !
+                    $citrix_vm_mac = $citrix_vm_mac_ar[$citrix_name];
                     $citrix_vm_resource = new resource();
                     $citrix_vm_resource->get_instance_by_mac($citrix_vm_mac);
                     $citrix_vm_id=$citrix_vm_resource->id;
@@ -585,7 +591,7 @@ function citrix_server_display($appliance_id) {
             if (strcmp($citrix_vm_state, "running")) {
                 $citrix_vm_state_icon = "/openqrm/base/img/off.png";
                 $citrix_vm_actions= $citrix_vm_actions."<a href=\"$thisfile?identifier_table1[]=$citrix_vm_name&action_table1=start&citrix_server_id=$appliance_id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"></a>&nbsp;";
-                $citrix_vm_actions = $citrix_vm_actions."<a href=\"$thisfile?identifier_table1[]=$citrix_vm_name&citrix_vm_mac=$citrix_vm_mac&action_table1=delete&citrix_server_id=$appliance_id\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"></a>&nbsp;";
+                $citrix_vm_actions = $citrix_vm_actions."<a href=\"$thisfile?identifier_table1[]=$citrix_vm_name&citrix_vm_mac_ar[$citrix_vm_name]=$citrix_vm_mac&action_table1=delete&citrix_server_id=$appliance_id\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"></a>&nbsp;";
             } else {
                 $citrix_vm_state_icon = "/openqrm/base/img/active.png";
                 // online actions
@@ -595,7 +601,7 @@ function citrix_server_display($appliance_id) {
 
             // add to table1
             $arBody1[] = array(
-                'citrix_vm_state' => "<img src=$citrix_vm_state_icon><input type='hidden' name='citrix_server_id' value=$appliance_id><input type='hidden' name='citrix_vm_mac' value=$citrix_vm_mac>",
+                'citrix_vm_state' => "<img src=$citrix_vm_state_icon><input type='hidden' name='citrix_server_id' value=$appliance_id><input type='hidden' name='citrix_vm_mac_ar[$citrix_vm_name]' value=$citrix_vm_mac>",
                 'citrix_vm_res_id' => $citrix_vm_res_id,
                 'citrix_vm_id' => $citrix_vm_id,
                 'citrix_vm_name' => $citrix_vm_name,
