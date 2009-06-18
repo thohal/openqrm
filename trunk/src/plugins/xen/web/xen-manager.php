@@ -390,6 +390,7 @@ function xen_select() {
     $table->cellspacing = 0;
     $table->cellpadding = 3;
     $table->form_action = $thisfile;
+    $table->identifier_type = "radio";
     $table->head = $arHead;
     $table->body = $arBody;
     if ($OPENQRM_USER->role == "administrator") {

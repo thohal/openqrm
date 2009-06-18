@@ -202,7 +202,8 @@ if(htmlobject_request('xen_command') != '') {
             $resource_fields["resource_vtype"]=$virtualization->id;
             $resource_fields["resource_vhostid"]=$xen->id;
             $resource->add($resource_fields);
-
+            // wait for the new-resource hooks to run
+            sleep(5);
             // send command
             $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen create -n $xen_name -m $xen_mac -r $xen_ram $xen_vm_disk_param $xen_vm_swap_param -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
             $xen->send_command($xen->ip, $resource_command);
