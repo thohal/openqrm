@@ -41,9 +41,11 @@ require_once "$RootDir/include/htmlobject.inc.php";
 
 $kvm_server_id = htmlobject_request('kvm_server_id');
 $kvm_vm_mac = htmlobject_request('kvm_vm_mac');
+$kvm_vm_mac_ar = htmlobject_request('kvm_vm_mac_ar');
 $action=htmlobject_request('action');
 global $kvm_server_id;
 global $kvm_vm_mac;
+global $kvm_vm_mac_ar;
 $refresh_delay=1;
 $refresh_loop_max=20;
 
@@ -256,6 +258,7 @@ if(htmlobject_request('action') != '') {
                     // send command
                     $kvm_server->send_command($kvm_server->ip, $resource_command);
                     // we should remove the resource of the vm !
+                    $kvm_vm_mac = $kvm_vm_mac_ar[$kvm_server_name];
                     $kvm_resource = new resource();
                     $kvm_resource->get_instance_by_mac($kvm_vm_mac);
                     $kvm_vm_id=$kvm_resource->id;
@@ -264,7 +267,7 @@ if(htmlobject_request('action') != '') {
                     if (!wait_for_statfile($statfile)) {
                         $strMsg .= "Error during removing $kvm_server_name ! Please check the Event-Log<br>";
                     } else {
-    					$strMsg .="Removed $kvm_server_name and its resource $kvm_vm_id<br><br>";
+    					$strMsg .="Removed $kvm_server_name and its resource $kvm_vm_id<br>";
                     }
 				}
 				redirect($strMsg, "tab0");
@@ -496,14 +499,14 @@ function kvm_server_display($appliance_id) {
                     $state_icon="/openqrm/base/img/off.png";
     				$vm_actions = $vm_actions."<a href=\"$thisfile?identifier[]=$kvm_short_name&action=start&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>&nbsp;&nbsp;&nbsp;&nbsp;";
     				$vm_actions = $vm_actions."<a href=\"kvm-vm-config.php?kvm_server_name=$kvm_short_name&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/plugin.png\" border=\"0\"> Config</a>&nbsp;&nbsp;&nbsp;&nbsp;";
-    				$vm_actions = $vm_actions."<a href=\"$thisfile?identifier[]=$kvm_short_name&action=delete&kvm_server_id=$kvm_server_tmp->id&kvm_vm_mac=$kvm_vm_mac\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Delete</a>&nbsp;&nbsp;";
+    				$vm_actions = $vm_actions."<a href=\"$thisfile?identifier[]=$kvm_short_name&action=delete&kvm_server_id=$kvm_server_tmp->id&kvm_vm_mac_ar[$kvm_short_name]=$kvm_vm_mac\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Delete</a>&nbsp;&nbsp;";
                 }
 
 				$kvm_vm_registered[] = $kvm_short_name;
                 $kvm_vm_count++;
 
                 $arBody1[] = array(
-                    'kvm_vm_state' => "<img src=$state_icon><input type='hidden' name='kvm_server_id' value=$appliance_id><input type='hidden' name='kvm_vm_mac' value=$kvm_vm_mac>",
+                    'kvm_vm_state' => "<img src=$state_icon><input type='hidden' name='kvm_server_id' value=$appliance_id><input type='hidden' name='kvm_vm_mac_ar[$kvm_short_name]' value=$kvm_vm_mac>",
                     'kvm_vm_id' => $kvm_vm_id,
                     'kvm_vm_name' => $kvm_short_name,
                     'kvm_vm_ip' => $kvm_vm_ip,
