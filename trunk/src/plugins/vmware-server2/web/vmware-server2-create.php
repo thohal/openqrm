@@ -110,6 +110,30 @@ function show_progressbar() {
 
 
 
+function validate_input($var, $type) {
+    switch ($type) {
+        case 'string':
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_alpha($var[$i])) {
+                    if (!ctype_digit($var[$i])) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+            break;
+        case 'number';
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_digit($var[$i])) {
+                    return false;
+                }
+            }
+            return true;
+            break;
+    }
+}
+
+
 
 
 // running the actions
@@ -121,13 +145,19 @@ if(htmlobject_request('action') != '') {
     			if (!strlen($vmware_server_name)) {
                     $strMsg .= "Empty vm name. Not creating the vm on VMware Server 2 Host $vmware_server_id<br>";
                     redirect($strMsg, "tab0", $vmware_server_id);
+                } else if (!validate_input($vmware_server_name, 'string')) {
+                    $strMsg .= "Invalid vm name. Not creating the vm on VMware Server 2 Host $vmware_server_id<br>";
+                    redirect($strMsg, "tab0", $vmware_server_id);
                 }
-    			if (!strlen($vmware_server_mac)) {
+                if (!strlen($vmware_server_mac)) {
                     $strMsg .= "Empty vm mac-address. Not creating the vm on VMware Server 2 Host $vmware_server_id<br>";
                     redirect($strMsg, "tab0", $vmware_server_id);
                 }
     			if (!strlen($vmware_server_ram)) {
                     $strMsg .= "Empty vm memory. Not creating the vm on VMware Server 2 Host $vmware_server_id<br>";
+                    redirect($strMsg, "tab0", $vmware_server_id);
+                } else if (!validate_input($vmware_server_ram, 'number')) {
+                    $strMsg .= "Invalid vm memory $vmware_server_ram. Not creating the vm on VMware Server 2 Host $vmware_server_id<br>";
                     redirect($strMsg, "tab0", $vmware_server_id);
                 }
                 // check for wrong vmware mac address space
@@ -135,6 +165,13 @@ if(htmlobject_request('action') != '') {
                 if (strcmp($vmware_mac_address_space, $posted_mac_address_space)) {
                     $strMsg .= "Please notice that VMware is using the special mac-address space $vmware_mac_address_space:xx:yy !<br>Other mac-addresses are not supported.<br>";
                     redirect($strMsg, "tab0", $vmware_server_id);
+                }
+                // check for disk size is int
+                if (strlen($vmware_server_disk)) {
+                    if (!validate_input($vmware_server_disk, 'number')) {
+                        $strMsg .= "Invalid vm disk size. Not creating the vm on VMware Server 2 Host $vmware_server_id<br>";
+                        redirect($strMsg, "tab0", $vmware_server_id);
+                    }
                 }
                 // send command to vmware_server-host to create the new vm
                 show_progressbar();
