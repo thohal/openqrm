@@ -1,6 +1,5 @@
 <h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/plugin.png"> VMware-ESX plugin</h1>
-<br>
-<b>The vmware-esx-plugin</b>
+<strong>This plugin is tested with VMware ESX 3.5 - ESXi 4.0</strong>
 <br>
 <br>
 This plugin integrates VMware ESX server as another virtual resource provider for openQRM.
@@ -18,11 +17,11 @@ How to get ssh enabled and 'password-less' login to the ESX server running is we
 <br>
 <b>Requirements :</b>
 <br>
-- An existing and configured 'DataStore' (Storage) on the ESX server.
+- An existing 'DataStore' (Storage) on the ESX server.
 <br>
 DataStores in VMware ESX are the location where the virtual machine files are being saved.
  For the openQRM VMware-ESX plugin the default datastore can be configured in the plugins configuration file.
- By default openQRM will try to gather the first available datastore (e.g. "datastore1" on ESXi 4.0) and use
+ By default openQRM will try to gather the first available datastore (e.g. "datastore1" on a fresh installed ESXi 4.0) and use
  it for storing the virtual machines.
 <br>
 <br>
