@@ -37,6 +37,7 @@ require_once "$RootDir/class/resource.class.php";
 require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/deployment.class.php";
+require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 global $OPENQRM_SERVER_BASE_DIR;
 $refresh_delay=1;
@@ -52,6 +53,14 @@ global $xen_migrate_to_id;
 global $xen_migrate_type;
 global $xen_vm_mac;
 global $xen_vm_mac_ar;
+
+$event = new event();
+global $event;
+$openqrm_server = new openqrm_server();
+$OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
+global $OPENQRM_SERVER_IP_ADDRESS;
+global $OPENQRM_SERVER_BASE_DIR;
+
 
 
 function xen_htmlobject_select($name, $value, $title = '', $selected = '') {
