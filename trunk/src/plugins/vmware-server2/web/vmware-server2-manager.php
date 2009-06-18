@@ -43,7 +43,7 @@ $vmware_server_id = htmlobject_request('vmware_server_id');
 $vmware_server_name = htmlobject_request('vmware_server_name');
 $vmware_vm_mac = htmlobject_request('vmware_vm_mac');
 $action=htmlobject_request('action');
-$vmware_vm_mac_ar = $_REQUEST['vmware_vm_mac_ar'];
+$vmware_vm_mac_ar = htmlobject_request('vmware_vm_mac_ar');
 global $vmware_server_id;
 global $vmware_server_name;
 global $vmware_vm_mac_ar;
