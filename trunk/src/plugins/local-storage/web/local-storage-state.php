@@ -115,12 +115,37 @@ if(htmlobject_request('action') != '') {
                 $virtualization = new virtualization();
                 $virtualization->get_instance_by_id($resource->vtype);
                 $virtualization_plugin_name = str_replace("-vm", "", $virtualization->type);
-                $vlboot_cmd = $OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." setboot -m ".$resource->mac." -b local";
-                // get the virtualization hosts resource
-                $virtualization_host = new resource();
-                $virtualization_host->get_instance_by_id($resource->vhostid);
-                $event->log("local-storage", $_SERVER['REQUEST_TIME'], 5, "local-storage-state.php", "Resource $resource->id is a vm on $resource->vhostid -> sending command to set it to localboot", "", "", 0, 0, 0);
-                $virtualization_host->send_command($virtualization_host->ip, $vlboot_cmd);
+                // special handling for vmware-esx and citrix hosts
+                switch ($virtualization_plugin_name) {
+
+                    case 'vmware-esx':
+                        // get the virtualization hosts resource
+                        $virtualization_host = new resource();
+                        $virtualization_host->get_instance_by_id($resource->vhostid);
+                        $event->log("local-storage", $_SERVER['REQUEST_TIME'], 5, "local-storage-state.php", "Resource $resource->id is a vm on $resource->vhostid -> sending command to set it to localboot (vmware-esx)", "", "", 0, 0, 0);
+                        $vlboot_cmd = $OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." setboot -m ".$resource->mac." -b local -i $virtualization_host->ip";
+                        $openqrm_server->send_command($vlboot_cmd);
+                        break;
+
+                    case 'citrix':
+                        // get the virtualization hosts resource
+                        $virtualization_host = new resource();
+                        $virtualization_host->get_instance_by_id($resource->vhostid);
+                        $event->log("local-storage", $_SERVER['REQUEST_TIME'], 5, "local-storage-state.php", "Resource $resource->id is a vm on $resource->vhostid -> sending command to set it to localboot (citrix)", "", "", 0, 0, 0);
+                        $vlboot_cmd = $OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." setboot -m ".$resource->mac." -b local -i $virtualization_host->ip";
+                        $openqrm_server->send_command($vlboot_cmd);
+                        break;
+
+            		default:
+                        $vlboot_cmd = $OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." setboot -m ".$resource->mac." -b local";
+                        // get the virtualization hosts resource
+                        $virtualization_host = new resource();
+                        $virtualization_host->get_instance_by_id($resource->vhostid);
+                        $event->log("local-storage", $_SERVER['REQUEST_TIME'], 5, "local-storage-state.php", "Resource $resource->id is a vm on $resource->vhostid -> sending command to set it to localboot", "", "", 0, 0, 0);
+                        $virtualization_host->send_command($virtualization_host->ip, $vlboot_cmd);
+                        break;
+                }
+
             } else {
                 // its a physical host, we have to send a regular reboot
                 $event->log("local-storage", $_SERVER['REQUEST_TIME'], 5, "local-storage-state.php", "Resource $resource->id is a physical system -> sending reboot command", "", "", 0, 0, 0);
