@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Select ZFS Storage</title>
+	<title>Select Local Storage</title>
     <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
     <link rel="stylesheet" type="text/css" href="local-storage.css" />
     <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
@@ -117,6 +117,29 @@ function show_progressbar() {
 }
 
 
+function validate_input($var, $type) {
+    switch ($type) {
+        case 'string':
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_alpha($var[$i])) {
+                    if (!ctype_digit($var[$i])) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+            break;
+        case 'number';
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_digit($var[$i])) {
+                    return false;
+                }
+            }
+            return true;
+            break;
+    }
+}
+
 
 
 // running the actions
@@ -224,11 +247,18 @@ if(htmlobject_request('redirect') != 'yes') {
                     $redir_msg = "Got emtpy logical volume name. Not adding ...";
                     redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
                     exit(0);
+                } else if (!validate_input($local_lun_name, 'string')) {
+                    $redir_msg = "Got invalid logical volume name. Not adding ...";
+                    redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+                    exit(0);
                 }
-
                 $local_lun_size = htmlobject_request('local_lun_size');
                 if (!strlen($local_lun_size)) {
                     $local_lun_size=2000;
+                } else if (!validate_input($local_lun_size, 'number')) {
+                    $redir_msg = "Got invalid logical volume size. Not adding ...";
+                    redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+                    exit(0);
                 }
                 $storage = new storage();
                 $storage->get_instance_by_id($local_storage_id);
@@ -329,7 +359,31 @@ if(htmlobject_request('redirect') != 'yes') {
                     show_progressbar();
                     if (!strlen($local_lun_snap_size)) {
                         $local_lun_snap_size=5000;
+                    } else if (!validate_input($local_lun_snap_size, 'number')) {
+                        $redir_msg = "Got invalid logical volume clone size. Not adding ...";
+                        redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+                        exit(0);
                     }
+                    if (!strlen($local_lun_name)) {
+                        $redir_msg = "Got emtpy logical volume name. Not adding ...";
+                        redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+                        exit(0);
+                    } else if (!validate_input($local_lun_name, 'string')) {
+                        $redir_msg = "Got invalid logical volume name. Not adding ...";
+                        redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+                        exit(0);
+                    }
+
+                    if (!strlen($local_lun_snap_name)) {
+                        $redir_msg = "Got emtpy logical volume clone name. Not adding ...";
+                        redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+                        exit(0);
+                    } else if (!validate_input($local_lun_snap_name, 'string')) {
+                        $redir_msg = "Got invalid logical volume clone name. Not adding ...";
+                        redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
+                        exit(0);
+                    }
+
                     // generate a new password
                     $image = new image();
                     $local_chap_password = $image->generatePassword(14);

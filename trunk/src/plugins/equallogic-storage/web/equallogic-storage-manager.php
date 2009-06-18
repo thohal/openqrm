@@ -96,6 +96,28 @@ function show_progressbar() {
         flush();
 }
 
+function validate_input($var, $type) {
+    switch ($type) {
+        case 'string':
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_alpha($var[$i])) {
+                    if (!ctype_digit($var[$i])) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+            break;
+        case 'number';
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_digit($var[$i])) {
+                    return false;
+                }
+            }
+            return true;
+            break;
+    }
+}
 
 // running the actions
 if(htmlobject_request('redirect') != 'yes') {
@@ -179,9 +201,17 @@ if(htmlobject_request('redirect') != 'yes') {
                                 $strMsg = "Please provide a name for the new Lun<br>";
                                 redirect($strMsg, 'tab0', $id);
                                 exit(0);
+                            } else if (!validate_input($eq_image_name, 'string')) {
+                                $redir_msg = "Got invalid volume name. Not adding ...";
+                                redirect($strMsg, 'tab0', $id);
+                                exit(0);
                             }
                             if (!strlen($eq_image_size)) {
                                 $strMsg = "Please provide a size for the new Lun<br>";
+                                redirect($strMsg, 'tab0', $id);
+                                exit(0);
+                            } else if (!validate_input($eq_image_size, 'number')) {
+                                $redir_msg = "Got invalid volume size. Not adding ...";
                                 redirect($strMsg, 'tab0', $id);
                                 exit(0);
                             }

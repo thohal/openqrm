@@ -111,6 +111,28 @@ function show_progressbar() {
         flush();
 }
 
+function validate_input($var, $type) {
+    switch ($type) {
+        case 'string':
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_alpha($var[$i])) {
+                    if (!ctype_digit($var[$i])) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+            break;
+        case 'number';
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_digit($var[$i])) {
+                    return false;
+                }
+            }
+            return true;
+            break;
+    }
+}
 
 
 
@@ -219,10 +241,18 @@ if(htmlobject_request('redirect') != 'yes') {
                     $redir_msg = "Got emtpy logical volume name. Not adding ...";
                     redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
                     exit(0);
+                } else if (!validate_input($lvm_lun_name, 'string')) {
+                    $redir_msg = "Got invalid logical volume name. Not adding ...";
+                    redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
+                    exit(0);
                 }
                 $lvm_lun_size = htmlobject_request('lvm_lun_size');
                 if (!strlen($lvm_lun_size)) {
                     $lvm_lun_size=2000;
+                } else if (!validate_input($lvm_lun_size, 'number')) {
+                    $redir_msg = "Got invalid logical volume size. Not adding ...";
+                    redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
+                    exit(0);
                 }
                 $storage = new storage();
                 $storage->get_instance_by_id($lvm_storage_id);
@@ -321,8 +351,32 @@ if(htmlobject_request('redirect') != 'yes') {
             case 'snap':
                 if (strlen($lvm_lun_snap_name)) {
                     show_progressbar();
+                    if (!strlen($lvm_lun_name)) {
+                        $redir_msg = "Got emtpy logical volume name. Not adding ...";
+                        redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
+                        exit(0);
+                    } else if (!validate_input($lvm_lun_name, 'string')) {
+                        $redir_msg = "Got invalid logical volume name. Not adding ...";
+                        redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
+                        exit(0);
+                    }
+
+                    if (!strlen($lvm_lun_snap_name)) {
+                        $redir_msg = "Got emtpy logical volume clone name. Not adding ...";
+                        redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
+                        exit(0);
+                    } else if (!validate_input($lvm_lun_snap_name, 'string')) {
+                        $redir_msg = "Got invalid logical volume clone name. Not adding ...";
+                        redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
+                        exit(0);
+                    }
+
                     if (!strlen($lvm_lun_snap_size)) {
                         $lvm_lun_snap_size=5000;
+                    } else if (!validate_input($lvm_lun_snap_size, 'number')) {
+                        $redir_msg = "Got invalid logical volume clone size. Not adding ...";
+                        redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
+                        exit(0);
                     }
                     // generate a new password
                     $image = new image();

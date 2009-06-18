@@ -106,6 +106,29 @@ function show_progressbar() {
         flush();
 }
 
+function validate_input($var, $type) {
+    switch ($type) {
+        case 'string':
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_alpha($var[$i])) {
+                    if (!ctype_digit($var[$i])) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+            break;
+        case 'number';
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_digit($var[$i])) {
+                    return false;
+                }
+            }
+            return true;
+            break;
+    }
+}
+
 
 // running the actions
 if(htmlobject_request('redirect') != 'yes') {
@@ -187,6 +210,10 @@ if(htmlobject_request('redirect') != 'yes') {
                         $redir_msg = "Got emtpy NFS volume name. Not adding ...";
                         redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
                         exit(0);
+                    } else if (!validate_input($nfs_lun_name, 'string')) {
+                        $redir_msg = "Got invalid NFS volume name. Not adding ...";
+                        redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
+                        exit(0);
                     }
                     $storage = new storage();
                     $storage->get_instance_by_id($nfs_storage_id);
@@ -266,9 +293,17 @@ if(htmlobject_request('redirect') != 'yes') {
                         $redir_msg = "Got emtpy NFS volume name. Not adding ...";
                         redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
                         exit(0);
+                    } else if (!validate_input($nfs_lun_name, 'string')) {
+                        $redir_msg = "Got invalid NFS volume name. Not adding ...";
+                        redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
+                        exit(0);
                     }
                     if (!strlen($nfs_lun_snap_name)) {
                         $redir_msg = "Got emtpy NFS volume snapshot name. Not adding ...";
+                        redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
+                        exit(0);
+                    } else if (!validate_input($nfs_lun_snap_name, 'string')) {
+                        $redir_msg = "Got invalid NFS volume clone name. Not adding ...";
                         redirect_nfs_mgmt($redir_msg, $nfs_storage_id);
                         exit(0);
                     }

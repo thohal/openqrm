@@ -111,6 +111,29 @@ function show_progressbar() {
 }
 
 
+function validate_input($var, $type) {
+    switch ($type) {
+        case 'string':
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_alpha($var[$i])) {
+                    if (!ctype_digit($var[$i])) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+            break;
+        case 'number';
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_digit($var[$i])) {
+                    return false;
+                }
+            }
+            return true;
+            break;
+    }
+}
+
 
 // running the actions
 if(htmlobject_request('redirect') != 'yes') {
@@ -177,9 +200,17 @@ if(htmlobject_request('redirect') != 'yes') {
                         $redir_msg = "Got emtpy AOE volume name. Not adding ...";
                         redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
                         exit(0);
+                    } else if (!validate_input($aoe_lun_name, 'string')) {
+                        $redir_msg = "Got invalid AOE volume name. Not adding ...";
+                        redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
+                        exit(0);
                     }
                     if (!strlen($aoe_lun_size)) {
                         $redir_msg = "Got emtpy AOE volume size. Not adding ...";
+                        redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
+                        exit(0);
+                    } else if (!validate_input($aoe_lun_size, 'number')) {
+                        $redir_msg = "Got invalid AOE volume size. Not adding ...";
                         redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
                         exit(0);
                     }
@@ -246,9 +277,17 @@ if(htmlobject_request('redirect') != 'yes') {
                         $redir_msg = "Got emtpy AOE volume name. Not adding ...";
                         redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
                         exit(0);
+                    } else if (!validate_input($aoe_lun_name, 'string')) {
+                        $redir_msg = "Got invalid AOE volume name. Not adding ...";
+                        redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
+                        exit(0);
                     }
                     if (!strlen($aoe_lun_snap_name)) {
                         $redir_msg = "Got emtpy AOE volume snapshot name. Not adding ...";
+                        redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
+                        exit(0);
+                    } else if (!validate_input($aoe_lun_snap_name, 'string')) {
+                        $redir_msg = "Got invalid AOE volume cöpme name. Not adding ...";
                         redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
                         exit(0);
                     }

@@ -101,6 +101,29 @@ function show_progressbar() {
         flush();
 }
 
+function validate_input($var, $type) {
+    switch ($type) {
+        case 'string':
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_alpha($var[$i])) {
+                    if (!ctype_digit($var[$i])) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+            break;
+        case 'number';
+            for ($i = 0; $i<strlen($var); $i++) {
+                if (!ctype_digit($var[$i])) {
+                    return false;
+                }
+            }
+            return true;
+            break;
+    }
+}
+
 
 // run the actions
 if(htmlobject_request('redirect') != 'yes') {
@@ -198,14 +221,26 @@ if(htmlobject_request('redirect') != 'yes') {
                                 $strMsg = "Please provide a name for the new Lun<br>";
                                 redirect($strMsg, 'tab0', $id);
                                 exit(0);
+                            } else if (!validate_input($netapp_storage_image_name, 'string')) {
+                                $strMsg = "Got invalid NetApp volume name. Not adding ...";
+                                redirect($strMsg, 'tab0', $id);
+                                exit(0);
                             }
                             if (!strlen($netapp_storage_image_size)) {
                                 $strMsg = "Please provide a size for the new Lun<br>";
                                 redirect($strMsg, 'tab0', $id);
                                 exit(0);
+                            } else if (!validate_input($netapp_storage_image_size, 'number')) {
+                                $strMsg = "Got invalid NetApp volume size. Not adding ...";
+                                redirect($strMsg, 'tab0', $id);
+                                exit(0);
                             }
                             if (!strlen($netapp_aggregate)) {
                                 $strMsg = "Please provide an aggregate to add the Lun to<br>";
+                                redirect($strMsg, 'tab0', $id);
+                                exit(0);
+                            } else if (!validate_input($netapp_aggregate, 'string')) {
+                                $strMsg = "Got invalid NetApp aggregate name. Not adding ...";
                                 redirect($strMsg, 'tab0', $id);
                                 exit(0);
                             }
@@ -280,6 +315,25 @@ if(htmlobject_request('redirect') != 'yes') {
                         redirect($strMsg, 'tab0', $netapp_storage_id);
                     } else {
                         show_progressbar();
+                        if (!strlen($netapp_storage_image_name)) {
+                            $strMsg = "Please provide a name for the origin Lun<br>";
+                            redirect($strMsg, 'tab0', $netapp_storage_id);
+                            exit(0);
+                        } else if (!validate_input($netapp_storage_image_name, 'string')) {
+                            $strMsg = "Got invalid origin NetApp volume name. Not adding ...";
+                            redirect($strMsg, 'tab0', $netapp_storage_id);
+                            exit(0);
+                        }
+
+                        if (!strlen($netapp_storage_image_clone_name)) {
+                            $strMsg = "Please provide a name for the cloned Lun<br>";
+                            redirect($strMsg, 'tab0', $netapp_storage_id);
+                            exit(0);
+                        } else if (!validate_input($netapp_storage_image_clone_name, 'string')) {
+                            $strMsg = "Got invalid NetApp volume clone name. Not adding ...";
+                            redirect($strMsg, 'tab0', $netapp_storage_id);
+                            exit(0);
+                        }
                         // generate a new password
                         $image = new image();
                         $netapp_chap_password = $image->generatePassword(14);
