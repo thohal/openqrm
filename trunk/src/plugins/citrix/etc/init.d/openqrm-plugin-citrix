@@ -52,6 +52,7 @@ function openqrm_plugin_citrix_uninstall() {
 	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD citrix
 	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD citrix-vm
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/citrix
+    rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/web/citrix-stat
 }
 
 function openqrm_plugin_citrix_init() {
@@ -72,6 +73,9 @@ function openqrm_plugin_citrix_init() {
 	openqrm_server_add_virtualization_type $USERNAME $PASSWORD citrix-vm "Citrix VM"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/citrix
+    # create dir for stat files
+    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/web/citrix-stat
+    chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/web/citrix-stat
 	
 }
 
