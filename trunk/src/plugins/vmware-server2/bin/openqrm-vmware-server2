@@ -69,7 +69,7 @@ function vmware_server2_get_vmid() {
 	local VM_NAME=$1
 	local VMID=`$VMWARE_VIM_CMD vmsvc/getallvms | grep $VM_NAME.vmx | awk {' print $1 '}`
 	if [ "$VMID" == "" ]; then
-		vmware_server2_log "ERROR: Could not find the vm id for the ESX vm $VM_NAME"
+		vmware_server2_log "ERROR: Could not find the vm id for the VMware Server 2 vm $VM_NAME"
 		openqrm_post_event 0 "vmware_server2_get_vmid" 3 "openqrm-vmware-server2" "Could not find the vm id for the VMWare-server2 vm $VM_NAME!"
 		return 1
 	else
@@ -80,10 +80,10 @@ function vmware_server2_get_vmid() {
 # returns the full path the the vmx file of a vm
 function vmware_server2_get_vmx() {
 	local VM_NAME=$1
-	local VMX=`$OPENQRM_ESX_CMD find $OPENQRM_VM_DIR/* -name $VM_NAME.vmx`
+	local VMX=`find $OPENQRM_VM_DIR/* -name $VM_NAME.vmx`
 	if [ "$VMX" == "" ]; then
-		vmware_server2_log "ERROR: Could not find the vmx config file for the ESX vm $VM_NAME"
-		openqrm_post_event 0 "vmware_server2_get_vmx" 3 "openqrm-vmware-server2" "Could not find the vmx config file for the ESX vm $VM_NAME!"
+		vmware_server2_log "ERROR: Could not find the vmx config file for the VMware Server 2 vm $VM_NAME"
+		openqrm_post_event 0 "vmware_server2_get_vmx" 3 "openqrm-vmware-server2" "Could not find the vmx config file for the VMware Server 2 vm $VM_NAME!"
 		return 1
 	else
 		echo $VMX
@@ -230,8 +230,8 @@ EOF
 		vmware_server2_log "Adding VMware-server2 vm $VMWARE_SERVER_VM_NAME"
 		VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
 		$VMWARE_VIM_CMD solo/registervm $VMX_CONFIG | logger
-		$OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
-		VMID=`vmware_server2_get_vmid $VMWARE_ESX_VM_NAME`
+		$OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY
+		VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
 		REGISTERED=`$VMWARE_VIM_CMD vmsvc/getallvms | grep "^$VMID "`
 		if [ "$REGISTERED" == "" ]; then
 			vmware_server2_log openqrm-vmware-server2 "ERROR: VMware-server2 vm $VMID failed to register!"

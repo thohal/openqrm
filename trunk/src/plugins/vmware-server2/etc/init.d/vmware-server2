@@ -13,9 +13,10 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	openqrm_server_get_config
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 fi
+VMWARE_VIM_CMD="vmware-vim-cmd ${VMWARE_VIM_CMD_ARGS}"
 
 # only run on vmware-server2 hosts
-which vmware-cmd 1>/dev/null 2>&1 || exit 0
+which $VMWARE_VIM_CMD 1>/dev/null 2>&1 || exit 0
 
 # do not start on the intitrd
 if [ -f /etc/initrd-devices.conf ]; then
