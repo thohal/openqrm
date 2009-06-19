@@ -21,64 +21,91 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 
 
 if(htmlobject_request('action') != '') {
-$strMsg = '';
-$openqrm_server = new openqrm_server();
-$OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
-global $OPENQRM_SERVER_IP_ADDRESS;
-
+    $strMsg = '';
+    $openqrm_server = new openqrm_server();
+    $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
+    global $OPENQRM_SERVER_IP_ADDRESS;
 	if(strtolower(OPENQRM_USER_ROLE_NAME) == 'administrator') {
 		switch (htmlobject_request('action')) {
 			case 'start':
-				foreach($_REQUEST['identifier'] as $id) {
-					$appliance = new appliance();
-					$appliance->get_instance_by_id($id);
-					$resource = new resource();
-					if ($appliance->resources <0) {
-						// an appliance with resource auto-select enabled
-						$appliance_virtualization=$appliance->virtualization;
-						$appliance->find_resource($appliance_virtualization);
-						$appliance->get_instance_by_id($id);
-					}
-					$resource->get_instance_by_id($appliance->resources);
-					if ($appliance->resources == 0) {
-						$strMsg .= "The openQRM-server appliance is always active!<br>";
-					} else {
-						$kernel = new kernel();
-						$kernel->get_instance_by_id($appliance->kernelid);
-						// send command to the openQRM-server
-						$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac $kernel->name");
-						// start appliance
-						$strMsg .= $appliance->start();
-					}
-				}
+                if(isset($_REQUEST['identifier'])) {
+                    foreach($_REQUEST['identifier'] as $id) {
+                        $appliance = new appliance();
+                        $appliance->get_instance_by_id($id);
+                        $resource = new resource();
+                        if ($appliance->resources <0) {
+                            // an appliance with resource auto-select enabled
+                            $appliance_virtualization=$appliance->virtualization;
+                            $appliance->find_resource($appliance_virtualization);
+                            $appliance->get_instance_by_id($id);
+                        }
+                        $resource->get_instance_by_id($appliance->resources);
+                        if ($appliance->resources == 0) {
+                            $strMsg .= "An appliance with the openQRM-server as resource is always active!<br>";
+                        } else {
+                            if (!strcmp($appliance->state, "active"))  {
+                                $strMsg .= "Not starting already started appliance $id <br>";
+                            } else {
+                                $kernel = new kernel();
+                                $kernel->get_instance_by_id($appliance->kernelid);
+                                // send command to the openQRM-server
+                                $openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac $kernel->name");
+                                // start appliance
+                                $return_msg .= $appliance->start();
+                                $strMsg .= "Started appliance $id <br>";
+                            }
+                        }
+                    }
+                }
 				redirect($strMsg);
 				break;
 	
 			case 'stop':
-				foreach($_REQUEST['identifier'] as $id) {
-					$appliance = new appliance();
-					$appliance->get_instance_by_id($id);
-					$resource = new resource();
-					$resource->get_instance_by_id($appliance->resources);
-					if ($appliance->resources == 0) {
-						$strMsg .= "The openQRM-server appliance is always active!<br>";
-					} else {
-						$kernel = new kernel();
-						$kernel->get_instance_by_id($appliance->kernelid);
-						// send command to the openQRM-server
-						$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
-						// stop appliance
-						$strMsg .= $appliance->stop();
-					}
-				}
+                if(isset($_REQUEST['identifier'])) {
+                    foreach($_REQUEST['identifier'] as $id) {
+                        $appliance = new appliance();
+                        $appliance->get_instance_by_id($id);
+                        $resource = new resource();
+                        $resource->get_instance_by_id($appliance->resources);
+                        if ($appliance->resources == 0) {
+                            $strMsg .= "An appliance with the openQRM-server as resource is always active!<br>";
+                        } else {
+                            if (strcmp($appliance->state, "stopped"))  {
+                                $kernel = new kernel();
+                                $kernel->get_instance_by_id($appliance->kernelid);
+                                // send command to the openQRM-server
+                                $openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
+                                // stop appliance
+                                $return_msg .= $appliance->stop();
+                                $strMsg .= "Stopped appliance $id <br>";
+                            } else {
+                                $strMsg .= "Not stopping already stopped appliance $id <br>";
+                            }
+                        }
+                    }
+                }
 				redirect($strMsg);
 				break;
 	
 			case 'remove':
 				$appliance = new appliance();
-				foreach($_REQUEST['identifier'] as $id) {
-					$strMsg .= $appliance->remove($id);
-				}
+                if(isset($_REQUEST['identifier'])) {
+                    foreach($_REQUEST['identifier'] as $id) {
+                        $appliance->get_instance_by_id($id);
+                        // we can remove active openQRM-server appliances
+                        if ($appliance->resources == 0) {
+                            $return_msg .= $appliance->remove($id);
+                            $strMsg .= "Removed appliance $id <br>";
+                        } else {
+                            if (strcmp($appliance->state, "active"))  {
+                                $return_msg .= $appliance->remove($id);
+                                $strMsg .= "Removed appliance $id <br>";
+                            } else {
+                                $strMsg .= "Not removing active appliance $id <br>";
+                            }
+                        }
+                    }
+                }
 				redirect($strMsg);
 				break;
 		}
