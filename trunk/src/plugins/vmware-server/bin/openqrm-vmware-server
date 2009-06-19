@@ -5,6 +5,7 @@ OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/include/openqrm-plugin-vmware-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/etc/openqrm-plugin-vmware-server.conf
 if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
 	OPENQRM_SERVER_IP=$resource_openqrmserver
@@ -19,7 +20,7 @@ fi
 OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
 OPENQRM_VMWARE_SERVER_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server/etc/templates/openqrm-vmware-server-vm"
 # using the vmware-server-tools domain location
-OPENQRM_VM_DIR="/var/lib/vmware/openqrm/"
+OPENQRM_VM_DIR="/var/lib/vmware/openqrm"
 export LANG=C
 
 # let only root run this script
@@ -31,8 +32,9 @@ fi
 
 function vmware-server_usage() {
 	echo "Usage : $0 start/stop/reboot/add/delete/remove/list <-n vm-name>"
-	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ]"
-	echo "        $0 post_vm_list <-u username> <-p password>"
+	echo "      : $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ]"
+	echo "      : $0 setboot <-m mac-address> <-b local/net>"
+	echo "      :  $0 post_vm_list <-u username> <-p password>"
 	exit 1
 }
 
@@ -66,6 +68,10 @@ while [ $# -ne 0 ]; do
 			VMWARE_SERVER_OPENQRM_PASSWORD=$2
 			shift
 			;;
+		-b)
+			VMWARE_SERVER_VM_BOOT=$2
+			shift
+			;;
 		*)
 			echo "ERROR: Free commandline arguments are not allowed"
 			vmware-server_usage
@@ -92,7 +98,7 @@ if [ "$VMWARE_SERVER_COMMAND" == "post_vm_list" ]; then
 		fi
 else
 
-	if [ "$VMWARE_SERVER_COMMAND" != "list" ]; then
+	if [ "$VMWARE_SERVER_COMMAND" != "list" ] && [ "$VMWARE_SERVER_COMMAND" != "setboot" ]; then
 		if [ "$VMWARE_SERVER_VM_NAME" == "" ]; then
 			vmware-server_usage
 		fi
@@ -110,17 +116,20 @@ case "$VMWARE_SERVER_COMMAND" in
 			vmware-server_usage
 		fi
 		vmware_server_lock aquire
-		echo "Creating VMware vm $VMWARE_SERVER_VM_NAME -> $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx"
+        vmware_server_log openqrm-vmware-server "Creating VMware vm $VMWARE_SERVER_VM_NAME -> $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx"
+        openqrm_post_event 0 "openqrm-vmware-server" 5 "openqrm-vmware-server" "Creating VMware vm $VMWARE_SERVER_VM_NAME -> $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx"
 		# creating the vmx
 		mkdir -p $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/
 		cat $OPENQRM_VMWARE_SERVER_VM_TEMPLATE |	\
 			sed -e "s/@@VMWARE_SERVER_VM_NAME@@/$VMWARE_SERVER_VM_NAME/g" |	\
-			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$VMWARE_SERVER_VM_RAM/g"	\
+			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$VMWARE_SERVER_VM_RAM/g"	|   \
+			sed -e "s/@@VMWARE_SERVER_VM_MAC@@/$VMWARE_SERVER_VM_MAC/g"	\
 			> $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
 
 		# disk + swap
 		if [ "$VMWARE_SERVER_VM_DISK" != "" ]; then
-			echo "-> Creating disk"
+            vmware_server_log openqrm-vmware-server "Creating disk with size $VMWARE_SERVER_VM_DISK MB on VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 5 "openqrm-vmware-server" "Creating disk with size $VMWARE_SERVER_VM_DISK MB on VMware vm $VMWARE_SERVER_VM_NAME"
 			mkdir -p $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME
 			vmware-vdiskmanager -c -s $VMWARE_SERVER_VM_DISK""Mb -a ide -t 0 $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmdk
 			# add the disk to the config file
@@ -136,45 +145,133 @@ EOF
 		
 		# register
 		chmod +x $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
-		vmware-cmd -s register $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
+		if ! vmware-cmd -s register $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx; then
+            vmware_server_log openqrm-vmware-server "Failed to register VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 3 "openqrm-vmware-server" "Failed to register VMware vm $VMWARE_SERVER_VM_NAME"
+    		vmware_server_lock release
+            exit 1
+        fi
 		# start
-		vmware-cmd $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx start
+		if ! vmware-cmd $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx start; then
+            vmware_server_log openqrm-vmware-server "Failed to start VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 3 "openqrm-vmware-server" "Failed to start VMware vm $VMWARE_SERVER_VM_NAME"
+    		vmware_server_lock release
+            exit 1
+        else
+            vmware_server_log openqrm-vmware-server "Started VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 5 "openqrm-vmware-server" "Started VMware vm $VMWARE_SERVER_VM_NAME"
+        fi
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
+		fi
 		vmware_server_lock release
 		;;
 	add)
 		vmware_server_lock aquire
-		echo "Adding VMware vm $VMWARE_SERVER_VM_NAME"
-		vmware-cmd -s register $VMWARE_SERVER_VM_NAME
+        vmware_server_log openqrm-vmware-server "Registering VMware vm $VMWARE_SERVER_VM_NAME"
+        openqrm_post_event 0 "openqrm-vmware-server" 3 "openqrm-vmware-server" "Registering VMware vm $VMWARE_SERVER_VM_NAME"
+		if ! vmware-cmd -s register $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx; then
+            vmware_server_log openqrm-vmware-server "Failed to register VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 3 "openqrm-vmware-server" "Failed to register VMware vm $VMWARE_SERVER_VM_NAME"
+    		vmware_server_lock release
+            exit 1
+        fi
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
+		fi
 		vmware_server_lock release
 		;;
 	start)
 		vmware_server_lock aquire
-		echo "Starting VMware vm $VMWARE_SERVER_VM_NAME"
-		vmware-cmd $VMWARE_SERVER_VM_NAME start
+		if ! vmware-cmd $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx start; then
+            vmware_server_log openqrm-vmware-server "Failed to start VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 3 "openqrm-vmware-server" "Failed to start VMware vm $VMWARE_SERVER_VM_NAME"
+    		vmware_server_lock release
+            exit 1
+        else
+            vmware_server_log openqrm-vmware-server "Started VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 5 "openqrm-vmware-server" "Started VMware vm $VMWARE_SERVER_VM_NAME"
+        fi
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
+		fi
 		vmware_server_lock release
 		;;
 	stop)
 		vmware_server_lock aquire
-		echo "Stopping VMware vm $VMWARE_SERVER_VM_NAME"
-		vmware-cmd $VMWARE_SERVER_VM_NAME stop hard
+		if ! vmware-cmd $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx stop hard; then
+            vmware_server_log openqrm-vmware-server "Failed to stop VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 3 "openqrm-vmware-server" "Failed to stop VMware vm $VMWARE_SERVER_VM_NAME"
+    		vmware_server_lock release
+            exit 1
+        else
+            vmware_server_log openqrm-vmware-server "Stopped VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 5 "openqrm-vmware-server" "Stopped VMware vm $VMWARE_SERVER_VM_NAME"
+        fi
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
+		fi
 		vmware_server_lock release
 		;;
 	reboot)
 		vmware_server_lock aquire
-		echo "Rebooting VMware vm $VMWARE_SERVER_VM_NAME"
-		vmware-cmd $VMWARE_SERVER_VM_NAME reset hard
+		if ! vmware-cmd $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx reset hard; then
+            vmware_server_log openqrm-vmware-server "Failed to restart VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 3 "openqrm-vmware-server" "Failed to restart VMware vm $VMWARE_SERVER_VM_NAME"
+    		vmware_server_lock release
+            exit 1
+        else
+            vmware_server_log openqrm-vmware-server "Restarted VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 5 "openqrm-vmware-server" "Restarted VMware vm $VMWARE_SERVER_VM_NAME"
+        fi
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
+		fi
 		vmware_server_lock release
 		;;
 	remove)
 		vmware_server_lock aquire
-		echo "Removing VMware vm $VMWARE_SERVER_VM_NAME"
-		vmware-cmd -s unregister $VMWARE_SERVER_VM_NAME
+		if ! vmware-cmd -s unregister $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx; then
+            vmware_server_log openqrm-vmware-server "Failed to unregister VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 3 "openqrm-vmware-server" "Failed to unregister VMware vm $VMWARE_SERVER_VM_NAME"
+    		vmware_server_lock release
+            exit 1
+        else
+            vmware_server_log openqrm-vmware-server "Unregistered VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 5 "openqrm-vmware-server" "Unregistered VMware vm $VMWARE_SERVER_VM_NAME"
+        fi
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
+		fi
 		vmware_server_lock release
 		;;
 	delete)
 		vmware_server_lock aquire
-		echo "Deleting VMware vm $VMWARE_SERVER_VM_NAME"
-		rm -rf `dirname $VMWARE_SERVER_VM_NAME`
+        vmware_server_log openqrm-vmware-server "Deleting VMware vm $VMWARE_SERVER_VM_NAME"
+        openqrm_post_event 0 "openqrm-vmware-server" 3 "openqrm-vmware-server" "Deleting VMware vm $VMWARE_SERVER_VM_NAME"
+		if ! vmware-cmd -s unregister $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx; then
+            vmware_server_log openqrm-vmware-server "Failed to unregister VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 3 "openqrm-vmware-server" "Failed to unregister VMware vm $VMWARE_SERVER_VM_NAME"
+    		vmware_server_lock release
+            exit 1
+        else
+            vmware_server_log openqrm-vmware-server "Unregistered VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 5 "openqrm-vmware-server" "Unregistered VMware vm $VMWARE_SERVER_VM_NAME"
+        fi
+        if [ -d $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME ]; then
+            vmware_server_log openqrm-vmware-server "Removing directory $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME"
+    		rm -rf $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME
+        fi
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
+		fi
 		vmware_server_lock release
 		;;
 	list)
@@ -182,18 +279,75 @@ EOF
 		vmware-cmd -l
 		;;
 	post_vm_list)
-		vmware_server_lock aquire
 		echo "Posting vm list to the openQRM-server"
 		VM_LIST_TMP=$resource_id.vm_list
-		vmware-cmd -l > $VM_LIST_TMP
-		# and the not active vms
-		find $OPENQRM_VM_DIR/../* -name *.vmx | sed -e "s/^/#/g" >> $VM_LIST_TMP
+        > $VM_LIST_TMP
+		for VMX in `vmware-cmd -l`; do
+            VM_NAME=`grep "displayName =" $VMX | cut -d '=' -f2 | sed -e 's/,//g;s/"//g' | awk {' print $1 '}`
+            VM_MEM=`grep "memsize =" $VMX | cut -d '=' -f2 | sed -e 's/,//g;s/"//g' | awk {' print $1 '}`
+            VM_MAC=`grep "ethernet0.address =" $VMX | cut -d '=' -f2 | sed -e 's/,//g;s/"//g' | awk {' print $1 '}`
+            if [ "$VM_MAC" == "" ]; then
+                VM_MAC=`grep "ethernet0.generatedAddress =" $VMX | cut -d '=' -f2 | sed -e 's/,//g;s/"//g' | awk {' print $1 '}`
+            fi
+            # state
+            if ps ax | grep $VM_NAME.vmx | grep -v grep 1>/dev/null; then
+                VM_STATE=1
+            else
+                VM_STATE=0
+            fi
+            echo "$VM_NAME""@""$VM_MAC""@""$VM_STATE""@""$VM_MEM" >> $VM_LIST_TMP
+        done
 		if ! wget -q -O /dev/null --http-user=$VMWARE_SERVER_OPENQRM_USERNAME --http-password=$VMWARE_SERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/vmware-server/vmware-server-action.php?vmware_server_command=get_vmware_server; then
 			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!"
 			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
 		fi
 		rm -f $VM_LIST_TMP
 		rm -f $VM_LIST_TMP.post
+		;;
+	setboot)
+        unset VMWARE_SERVER_VM_NAME
+		if [ "$VMWARE_SERVER_VM_MAC" == "" ]; then
+			vmware-server_usage
+		fi
+		if [ "$VMWARE_SERVER_VM_BOOT" == "" ]; then
+			vmware-server_usage
+		fi
+		vmware_server_lock aquire
+		vmware_server_log "Setting vm with mac $VMWARE_SERVER_VM_MAC to boot from $VMWARE_SERVER_VM_BOOT"
+        # this command is is running from the openQRM engine which does
+        # not know about the vm-name
+        for VMWARE_SERVER_VM_NET_CONF in `find $OPENQRM_VM_DIR -name *.vmx`; do
+            if grep -i $VMWARE_SERVER_VM_MAC $VMWARE_SERVER_VM_NET_CONF; then
+                VMWARE_SERVER_VM_NAME=`dirname $VMWARE_SERVER_VM_NET_CONF`
+                VMWARE_SERVER_VM_NAME=`basename $VMWARE_SERVER_VM_NAME`
+                vmware_server_log "found $VMWARE_SERVER_VM_MAC"
+                break
+            fi
+        done
+        if [ "$VMWARE_SERVER_VM_NAME" == "" ]; then
+    		vmware_server_log "Cloud not find VMWARE_SERVER vm with mac $VMWARE_SERVER_VM_MAC on this host"
+            vmware_server_lock release
+            exit 1
+        fi
+        case "$VMWARE_SERVER_VM_BOOT" in
+            local)
+        		vmware_server_log "Setting VMware-Server 2 vm $VMWARE_SERVER_VM_NAME with mac $VMWARE_SERVER_VM_MAC to local-boot"
+                ;;
+            net)
+        		vmware_server_log "Setting VMware-Server 2 vm $VMWARE_SERVER_VM_NAME with mac $VMWARE_SERVER_VM_MAC to net-boot"
+                ;;
+        esac
+		# hard restart it to apply its configuration
+        # we do it here because the openQRM server engine does not
+        # know anything about the vm name to restart it later
+		vmware_server_log "Rebooting VMware vm $VMWARE_SERVER_VM_NAME"
+		if ! vmware-cmd $VMWARE_SERVER_VM_NAME reset hard; then
+            vmware_server_log openqrm-vmware-server "Failed to restart VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 3 "openqrm-vmware-server" "Failed to restart VMware vm $VMWARE_SERVER_VM_NAME"
+        else
+            vmware_server_log openqrm-vmware-server "Restarted VMware vm $VMWARE_SERVER_VM_NAME"
+            openqrm_post_event 0 "openqrm-vmware-server" 5 "openqrm-vmware-server" "Restarted VMware vm $VMWARE_SERVER_VM_NAME"
+        fi
 		vmware_server_lock release
 		;;
 	*)
