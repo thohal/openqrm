@@ -1,8 +1,4 @@
 <?php
-/**
- * @package Htmlobjects
- */
-
 // vim: set expandtab tabstop=4 shiftwidth=4:
 // This code that was derived from the original PHPLIB Template class
 // is copyright by Kristian Koehntopp, NetUSE AG and was released
@@ -25,7 +21,6 @@
  * template code from phplib-stable CVS. Original author
  * was Kristian Koehntopp <kris@koehntopp.de>
  *
- * @package Htmlobjects
  * @author  Bjoern Schotte <bjoern@rent-a-phpwizard.de>
  * @author  Martin Jansen <mj@php.net> (PEAR conformance)
  * @version 1.0

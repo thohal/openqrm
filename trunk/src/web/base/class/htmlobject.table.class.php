@@ -1,14 +1,19 @@
 <?php
 /**
- * @package Htmlobjects
+ * @package htmlobjects
  */
 
-
+//----------------------------------------------------------------------------------------
 /**
- * @package Htmlobjects
+ * Table
+ *
+ * @package htmlobjects
  * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @copyright Copyright (c) 2009, Alexander Kuballa
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @version 1.0
- */
+*/
+//----------------------------------------------------------------------------------------
 
 class htmlobject_table extends htmlobject
 {
@@ -74,29 +79,24 @@ var $width = '';
 */
 var $arr_table = array();
 
-/**
-* internal use only
-*/
-var $_init_table;
 
-	function init_table() {
-	$this->_init_table = '';
-		if ($this->align != '') { $this->_init_table .= ' align="'.$this->align.'"'; }
-		if (isset($this->border) && $this->border !== '') { $this->_init_table .= ' border="'.$this->border.'"'; }
-		if ($this->bgcolor != '') { $this->_init_table .= ' bgcolor="'.$this->bgcolor.'"'; }
-		if (isset($this->cellpadding) && $this->cellpadding !== '') { $this->_init_table .= ' cellpadding="'.$this->cellpadding.'"'; }
-		if (isset($this->cellspacing) && $this->cellspacing !== '') { $this->_init_table .= ' cellspacing="'.$this->cellspacing.'"'; }
-		if ($this->frame != '') { $this->_init_table .= ' frame="'.$this->frame.'"'; }
-		if ($this->rules != '') { $this->_init_table .= ' rules="'.$this->rules.'"'; }
-		if ($this->summary != '') { $this->_init_table .= ' summary="'.$this->summary.'"'; }
-		if ($this->width != '') { $this->_init_table .= ' width="'.$this->width.'"'; }
+	function init() {
+		parent::init();
+		if ($this->align != '') { $this->_init .= ' align="'.$this->align.'"'; }
+		if (isset($this->border) && $this->border !== '') { $this->_init .= ' border="'.$this->border.'"'; }
+		if ($this->bgcolor != '') { $this->_init .= ' bgcolor="'.$this->bgcolor.'"'; }
+		if (isset($this->cellpadding) && $this->cellpadding !== '') { $this->_init .= ' cellpadding="'.$this->cellpadding.'"'; }
+		if (isset($this->cellspacing) && $this->cellspacing !== '') { $this->_init .= ' cellspacing="'.$this->cellspacing.'"'; }
+		if ($this->frame != '') { $this->_init .= ' frame="'.$this->frame.'"'; }
+		if ($this->rules != '') { $this->_init .= ' rules="'.$this->rules.'"'; }
+		if ($this->summary != '') { $this->_init .= ' summary="'.$this->summary.'"'; }
+		if ($this->width != '') { $this->_init .= ' width="'.$this->width.'"'; }
 	}
 
 	function get_string() {
 	$_strReturn = '';
-		$this->init_htmlobject();
-		$this->init_table();
-		$_strReturn = "\n<table$this->_init_htmlobject$this->_init_table>";
+		$this->init();
+		$_strReturn = "\n<table$this->_init>";
 		foreach($this->arr_table as $tr) {
 			if(is_object($tr) == true && get_class($tr) == 'htmlobject_tr') {
 				$_strReturn .= $tr->get_string();
@@ -118,11 +118,17 @@ var $_init_table;
 	
 }
 
-//------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 /**
-* @access public
+ * Tr
+ *
+ * @package htmlobjects
+ * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @copyright Copyright (c) 2009, Alexander Kuballa
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
+ * @version 1.0
 */
-//------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 
 class htmlobject_tr extends htmlobject_table
 {
@@ -133,15 +139,11 @@ class htmlobject_tr extends htmlobject_table
 */
 var $arr_tr = array();
 
-/**
-* internal use only
-*/
-var $_init_tr;
 
 	function get_string() {
 	$_strReturn = '';
-		$this->init_htmlobject();
-		$_strReturn = "\n<tr$this->_init_htmlobject$this->_init_tr>";
+		$this->init();
+		$_strReturn = "\n<tr$this->_init>";
 		foreach($this->arr_tr as $td) {
 			if(is_object($td) == true && get_class($td) == 'htmlobject_td') {
 				$_strReturn .= $td->get_string();
@@ -163,11 +165,17 @@ var $_init_tr;
 	
 }
 
-//------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 /**
-* @access public
+ * Td
+ *
+ * @package htmlobjects
+ * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @copyright Copyright (c) 2009, Alexander Kuballa
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
+ * @version 1.0
 */
-//------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 
 class htmlobject_td extends htmlobject_tr
 {
@@ -190,38 +198,33 @@ var $type = 'td';
 */
 var $text = '';
 
-/**
-* internal use only
-*/
-var $_init_td;
 
-	function init_td() {
-	$this->_init_td = '';
-		#if ($this->align != '') { $this->_init_td .= ' align="'.$this->align.'"'; }
-		#if ($this->bgcolor != '') { $this->_init_td .= ' bgcolor="'.$this->bgcolor.'"'; }
-		if ($this->colspan != '') { $this->_init_td .= ' colspan="'.$this->colspan.'"'; }
-		#if ($this->valign != '') { $this->_init_td .= ' valign="'.$this->valign.'"'; }
+	function init() {
+		parent::init();
+		if ($this->colspan != '') { $this->_init .= ' colspan="'.$this->colspan.'"'; }
 	}
 
 	function get_string() {
 	$_strReturn = '';
-		$this->init_htmlobject();
-		$this->init_td();
-		$_strReturn = "\n<$this->type$this->_init_htmlobject$this->_init_td>";
+		$this->init();
+		$_strReturn = "\n<$this->type$this->_init>";
 		$_strReturn .= $this->text;
 		$_strReturn .= "</$this->type>";
 	return $_strReturn;
 	}
 }
 
-
-
-
-//------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 /**
-* @access public
+ * Tablebuilder
+ *
+ * @package htmlobjects
+ * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @copyright Copyright (c) 2009, Alexander Kuballa
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
+ * @version 1.0
 */
-//------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 
 class htmlobject_table_builder extends htmlobject_table
 {
@@ -509,6 +512,10 @@ var $_var_prefix;
 
 		$this->_var_prefix = $var_prefix;		
 	
+		// filter request - remove all none digits
+		$replace_tmp = $this->request_filter;
+		$this->request_filter = array(array('pattern' => '~[^0-9]~', 'replace' => '')); 
+		
 		if($this->get_request($this->_var_prefix.'limit') != '') {
 			$this->limit = $this->get_request($this->_var_prefix.'limit');
 		}
@@ -518,6 +525,16 @@ var $_var_prefix;
 		if($this->get_request($this->_var_prefix.'max') != '') {
 			$this->max = $this->get_request($this->_var_prefix.'max');
 		}
+		if($this->get_request($this->_var_prefix.'offset') != '') {
+			$this->offset = $this->get_request($this->_var_prefix.'offset');
+		} 
+		else if ($offset != '') {
+			$this->offset = $offset;
+		}
+		
+		// reset request filter
+		$this->request_filter = $replace_tmp;		
+		
 		if($this->get_request($this->_var_prefix.'order') != '') {
 			$this->order = $this->get_request($this->_var_prefix.'order');
 		}
@@ -530,12 +547,7 @@ var $_var_prefix;
 		else if($sort != '') {
 			$this->sort = $sort;
 		}
-		if($this->get_request($this->_var_prefix.'offset') != '') {
-			$this->offset = $this->get_request($this->_var_prefix.'offset');
-		} 
-		else if ($offset != '') {
-			$this->offset = $offset;
-		}
+
 		//------------------------------------------------------------------- set new offset
 		if($this->get_request($this->_var_prefix.'action') != '') {		
 		    switch ($this->get_request($this->_var_prefix.'action')) {
@@ -821,7 +833,7 @@ var $_var_prefix;
 			$sort->text_index = array("value" => "value", "text" => "label");
 			$sort->text = $value;
 			$sort->selected = array($this->sort);
-			$str_sort = '<label for"'.$sort->id.'">'.$this->lang_label_sort.$sort->get_string().'</label>';
+			$str_sort = '<label for="'.$sort->id.'">'.$this->lang_label_sort.$sort->get_string().'</label>';
 			
 			$order = new htmlobject_select();
 			$order->id = 'p'.uniqid();
@@ -847,7 +859,7 @@ var $_var_prefix;
 			$limit_input->text_index = array("value" => "value", "text" => "text");
 			$limit_input->text = $this->limit_select;
 			$limit_input->selected = array($this->limit);
-			$str_limit = '<label for"'.$limit_input->id.'">'.$this->lang_label_limit.$limit_input->get_string().'</label>';
+			$str_limit = '<label for="'.$limit_input->id.'">'.$this->lang_label_limit.$limit_input->get_string().'</label>';
 			
 			$offset_input = new htmlobject_input();
 			$offset_input->id = 'p'.uniqid();
@@ -855,7 +867,7 @@ var $_var_prefix;
 			$offset_input->value = "$this->offset";
 			$offset_input->type = 'text';
 			$offset_input->size = 3;
-			$str_offset = '<label for"'.$offset_input->id.'">'.$this->lang_label_offset.$offset_input->get_string().'</label>';
+			$str_offset = '<label for="'.$offset_input->id.'">'.$this->lang_label_offset.$offset_input->get_string().'</label>';
 			
 			$max_input = new htmlobject_input();
 			$max_input->name = $this->_var_prefix.'max';
@@ -951,7 +963,7 @@ var $_var_prefix;
 	//----------------------------------------------------------------------------------------
 	function get_select() {
 	$strR = '';
-		if($this->identifier != '' && $this->identifier_type == 'checkbox') {
+		if($this->identifier_type == 'checkbox' && $this->identifier != '') {
 			$strR .= '<div class="selecttable" id="SelectTable" style="display:none;">';
 			$strR .= $this->lang_select_title;
 			$strR .= ' <a href="javascript:selectident(\'all\');">'.$this->lang_select_all.'</a>'."\n";

@@ -1,12 +1,16 @@
 <?php
 /**
- * @package Htmlobjects
- */
-
+ * @package htmlobject
+ *
+ */  
 
 /**
- * @package Htmlobjects
+ * Base Class
+ *
+ * @package htmlobject
  * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @copyright Copyright (c) 2008, Alexander Kuballa
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @version 1.0
  */
 
@@ -14,54 +18,88 @@ class htmlobject extends http
 {
 /**
 * Attribute class
-* @access private
+* @access public
 * @var string
 */
 var $css = '';
 /**
 * Attribute id
-* @access private
+* @access public
 * @var string
 */
 var $id = '';
 /**
 * Attribute style
-* @access private
+* @access public
 * @var string
 */
 var $style = '';
 /**
 * Attribute title
-* @access private
+* @access public
 * @var string
 */
 var $title = '';
 
 /**
 * adds an eventhandler to
-* @access private
+* @access public
 * @var string
 */
 var $handler = '';
 
 /**
-* internal use only
+* string of attribs
+* @acess protected
+* @var string
 */
-var $_init_htmlobject;
+var $_init;
 
-	function init_htmlobject() {
-		if ($this->css != '')  		{ $this->_init_htmlobject .= ' class="'.$this->css.'"'; }
-		if ($this->id != '')  		{ $this->_init_htmlobject .= ' id="'.$this->id.'"'; }
-		if ($this->style != '')		{ $this->_init_htmlobject .= ' style="'.$this->style.'"'; }
-		if ($this->title != '')		{ $this->_init_htmlobject .= ' title="'.$this->title.'"'; }
-		if ($this->handler != '')	{ $this->_init_htmlobject .= ' '.$this->handler; }
+	/**
+	 * init attribs
+	 *
+	 * @acess protected
+	 */
+	function init() {
+		$this->_init = '';
+		if ($this->css != '')  		{ $this->_init .= ' class="'.$this->css.'"'; }
+		if ($this->style != '')		{ $this->_init .= ' style="'.$this->style.'"'; }
+		if ($this->title != '')		{ $this->_init .= ' title="'.$this->title.'"'; }
+		if ($this->handler != '')	{ $this->_init .= ' '.$this->handler; }
+		// set id
+		if ($this->id == '') 		{ $this->set_id(); }
+		if ($this->id != '')		{ $this->_init .= ' id="'.$this->id.'"'; }
+	}
+
+	/**
+	 * set html id
+	 *
+	 * @acess public
+	 * @param string $id
+	 */
+	function set_id($id = '') {
+		if($id != '') {
+			$this->id = $id;
+		}
+		// if no id is set
+		if($this->id == '') {
+			if(isset($this->name)) {
+				$this->id = $this->name;				
+			} else {
+				$this->id = uniqid('p');
+			}				
+		}
 	}
 	
 }
 
 /**
- * @package Htmlobjects
+ * Select
+ *
+ * @package htmlobject
  * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @copyright Copyright (c) 2008, Alexander Kuballa
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @version 1.0
  */
 class htmlobject_select extends htmlobject
@@ -119,6 +157,7 @@ var $text_index = array(
 var $selected = array();
 /**
 * selected  by text or value
+*
 * true = selected by text
 * false  = selected by values
 * @access public
@@ -126,25 +165,30 @@ var $selected = array();
 */
 var $selected_by_text = false;
 
-/**
-* internal use only
-*/
-var $_init_select;
-
-	function init_select() {
-		$this->_init_select = '';
-		if ($this->disabled === true)	{ $this->_init_select .= ' disabled'; }
-		if ($this->multiple === true)	{ $this->_init_select .= ' multiple'; }
-		if ($this->name != '')  		{ $this->_init_select .= ' name="'.$this->name.'"'; }
-		if ($this->size != '')			{ $this->_init_select .= ' size="'.$this->size.'"'; }
-		if ($this->tabindex != '')  	{ $this->_init_select .= ' tabindex="'.$this->tabindex.'"'; }
+	/**
+	 * init attribs
+	 *
+	 * @acess protected
+	 */
+	function init() {
+		parent::init();
+		if ($this->disabled === true)	{ $this->_init .= ' disabled'; }
+		if ($this->multiple === true)	{ $this->_init .= ' multiple'; }
+		if ($this->name != '')  		{ $this->_init .= ' name="'.$this->name.'"'; }
+		if ($this->size != '')			{ $this->_init .= ' size="'.$this->size.'"'; }
+		if ($this->tabindex != '')  	{ $this->_init .= ' tabindex="'.$this->tabindex.'"'; }
 	}
 
+	/**
+	 * Get html element as string
+	 *
+	 * @acess public
+	 * @return string
+	 */
 	function get_string() {
 	$_strReturn = '';
-		$this->init_htmlobject();
-		$this->init_select();
-		$_strReturn = "\n<select$this->_init_htmlobject$this->_init_select>\n";
+		$this->init();
+		$_strReturn = "\n<select$this->_init>\n";
 		$_strReturn .= $this->get_options();
 		$_strReturn .= "</select>\n";
 	return $_strReturn;
@@ -175,8 +219,12 @@ var $_init_select;
 }
 
 /**
- * @package Htmlobjects
+ * Input
+ *
+ * @package htmlobject
  * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @copyright Copyright (c) 2008, Alexander Kuballa
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @version 1.0
  */
 class htmlobject_input extends htmlobject
@@ -218,21 +266,9 @@ var $size = '';
 var $tabindex = '';
 /**
 * type of element
-*
-* possible values
-*
-* -password 
-* -checkbox 
-* -radio 
-* -submit 
-* -reset 
-* -file 
-* -hidden 
-* -image 
-* -button
-*
 * @access public 
-* @var enum
+* @var string
+* @values text | password | checkbox | radio | submit | reset | file | hidden | image | button
 */
 var $type = '';
 /**
@@ -242,35 +278,153 @@ var $type = '';
 */
 var $value = '';
 
-/**
-* internal use only
-*/
-var $_init_input;
-
-	function init_input() {
-	$this->_init_input = '';
-		if ($this->checked != '')  		{ $this->_init_input .= ' checked="checked"'; }
-		if ($this->disabled === true)	{ $this->_init_input .= ' disabled="disabled"'; }
-		if ($this->maxlength != '')		{ $this->_init_input .= ' maxlength="'.$this->maxlength.'"'; }
-		if ($this->name != '')  		{ $this->_init_input .= ' name="'.$this->name.'"'; }
-		if ($this->size != '')			{ $this->_init_input .= ' size="'.$this->size.'"'; }
-		if ($this->tabindex != '')  	{ $this->_init_input .= ' tabindex="'.$this->tabindex.'"'; }
-		if ($this->type != '')  		{ $this->_init_input .= ' type="'.$this->type.'"'; }
-		if ($this->value != '')  		{ $this->_init_input .= ' value="'.$this->value.'"'; }
+	/**
+	 * init attribs
+	 *
+	 * @acess protected
+	 */
+	function init() {
+		parent::init();
+		if ($this->checked != '')  		{ $this->_init .= ' checked="checked"'; }
+		if ($this->disabled === true)	{ $this->_init .= ' disabled="disabled"'; }
+		if ($this->maxlength != '')		{ $this->_init .= ' maxlength="'.$this->maxlength.'"'; }
+		if ($this->name != '')  		{ $this->_init .= ' name="'.$this->name.'"'; }
+		if ($this->size != '')			{ $this->_init .= ' size="'.$this->size.'"'; }
+		if ($this->tabindex != '')  	{ $this->_init .= ' tabindex="'.$this->tabindex.'"'; }
+		if ($this->value != '')  		{ $this->_init .= ' value="'.$this->value.'"'; }
+		$this->type = strtolower($this->type);
+		switch($this->type) {
+			case 'text':
+			case 'password':
+			case 'checkbox':
+			case 'radio':
+			case 'submit':
+			case 'reset':
+			case 'hidden':
+			case 'image':
+			case 'button':
+				$this->_init .= ' type="'.$this->type.'"';
+			break;
+			default:
+				$this->_init .= ' type="text"';
+				if(debug::active()) {
+					debug::add('type '.$this->type.' not supported - type set to text', 'ERROR');
+				}
+			break;
+		}
 	}
 
+	/**
+	 * Get html element as string
+	 *
+	 * @acess public
+	 * @return string
+	 */
 	function get_string() {
 	$_strReturn = '';
-		$this->init_htmlobject();
-		$this->init_input();
-		$_strReturn = "\n<input$this->_init_htmlobject$this->_init_input>";
+		$this->init();
+		$_strReturn = "<input$this->_init>";
 	return $_strReturn;
 	}
 }
 
 /**
- * @package Htmlobjects
+ * Button
+ *
+ * @package htmlobject
  * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @copyright Copyright (c) 2008, Alexander Kuballa
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
+ * @version 1.0
+ */
+class htmlobject_button extends htmlobject
+{
+/**
+* disable select 
+* @access public 
+* @var bool
+*/
+var $disabled = false;
+/**
+* Attribute name
+* @access public 
+* @var string
+*/
+var $name = '';
+/**
+* Attribute tabindex
+* @access public 
+* @var int
+*/
+var $tabindex = '';
+/**
+* type of element
+* @access public 
+* @var string
+* @values button | submit | reset
+*/
+var $type = '';
+/**
+* value of input
+* @access public 
+* @var string
+*/
+var $value = '';
+/**
+* value of input
+* @access public 
+* @var string
+*/
+var $label = '';
+
+	/**
+	 * init attribs
+	 *
+	 * @acess protected
+	 */
+	function init() {
+		parent::init();
+		if ($this->disabled === true)	{ $this->_init .= ' disabled="disabled"'; }
+		if ($this->name != '')  		{ $this->_init .= ' name="'.$this->name.'"'; }
+		if ($this->tabindex != '')  	{ $this->_init .= ' tabindex="'.$this->tabindex.'"'; }
+		if ($this->value != '')  		{ $this->_init .= ' value="'.$this->value.'"'; }
+		$this->type = strtolower($this->type);
+		switch($this->type) {
+			case 'submit':
+			case 'reset':
+			case 'button':
+				$this->_init .= ' type="'.$this->type.'"';
+			break;
+			default:
+				$this->_init .= ' type="button"';
+				if(debug::active()) {
+					debug::add('type '.$this->type.' not supported - type set to button', 'ERROR');
+				}
+			break;
+		}
+	}
+
+	/**
+	 * Get html element as string
+	 *
+	 * @acess public
+	 * @return string
+	 */
+	function get_string() {
+	$_strReturn = '';
+		$this->init();
+		$_strReturn = "\n<button$this->_init>$this->label</button>";
+	return $_strReturn;
+	}
+}
+
+/**
+ * Textarea
+ *
+ * @package htmlobject
+ * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @copyright Copyright (c) 2008, Alexander Kuballa
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @version 1.0
  */
 class htmlobject_textarea extends htmlobject
@@ -325,27 +479,32 @@ var $wrap = '';
 */
 var $text = '';
 
-/**
-* internal use only
-*/
-var $_init_textarea;
-
-	function init_textarea() {
-	$this->_init_textarea = '';
-		if ($this->cols != '')			{ $this->_init_textarea .= ' cols="'.$this->cols.'"'; }
-		if ($this->disabled === true)	{ $this->_init_textarea .= ' disabled'; }
-		if ($this->name != '')  		{ $this->_init_textarea .= ' name="'.$this->name.'"'; }
-		if ($this->readonly === true)	{ $this->_init_textarea .= ' readonly'; }
-		if ($this->rows != '')			{ $this->_init_textarea .= ' rows="'.$this->rows.'"'; }
-		if ($this->tabindex != '')  	{ $this->_init_textarea .= ' tabindex="'.$this->tabindex.'"'; }
-		if ($this->wrap != '')  		{ $this->_init_textarea .= ' wrap="'.$this->wrap.'"'; }
+	/**
+	 * init attribs
+	 *
+	 * @acess protected
+	 */
+	function init() {
+		parent::init();
+		if ($this->cols != '')			{ $this->_init .= ' cols="'.$this->cols.'"'; }
+		if ($this->disabled === true)	{ $this->_init .= ' disabled'; }
+		if ($this->name != '')  		{ $this->_init .= ' name="'.$this->name.'"'; }
+		if ($this->readonly === true)	{ $this->_init .= ' readonly'; }
+		if ($this->rows != '')			{ $this->_init .= ' rows="'.$this->rows.'"'; }
+		if ($this->tabindex != '')  	{ $this->_init .= ' tabindex="'.$this->tabindex.'"'; }
+		if ($this->wrap != '')  		{ $this->_init .= ' wrap="'.$this->wrap.'"'; }
 	}
 
+	/**
+	 * Get html element as string
+	 *
+	 * @acess public
+	 * @return string
+	 */
 	function get_string() {
 	$_strReturn = '';
-		$this->init_htmlobject();
-		$this->init_textarea();
-		$_strReturn = "\n<textarea$this->_init_htmlobject$this->_init_textarea>";
+		$this->init();
+		$_strReturn = "\n<textarea$this->_init>";
 		$_strReturn .= $this->text;
 		$_strReturn .= "</textarea>\n";
 	return $_strReturn;
@@ -353,8 +512,90 @@ var $_init_textarea;
 }
 
 /**
- * @package Htmlobjects
+ * Form
+ *
+ * @package htmlobject
  * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @copyright Copyright (c) 2008, Alexander Kuballa
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
+ * @version 1.0
+ */
+class htmlobject_form extends htmlobject
+{
+/**
+* uri 
+* @access public 
+* @var string
+*/
+var $action = '';
+/**
+* mime type
+* @access public 
+* @var string
+*/
+var $enctype = '';
+/**
+* Post/Get
+* @access public 
+* @var string
+*/
+var $method = '';
+/**
+* Attribute name
+* @access public 
+* @var string
+*/
+var $name = '';
+/**
+* target
+* @access public 
+* @var string
+*/
+var $target = '';
+/**
+* form elements
+* @access public 
+* @var string
+*/
+var $fields = '';
+
+	/**
+	 * init attribs
+	 *
+	 * @acess protected
+	 */
+	function init() {
+		parent::init();
+		if ($this->action != '')  		{ $this->_init .= ' action="'.$this->action.'"'; }
+		if ($this->enctype != '')  		{ $this->_init .= ' enctype="'.$this->enctype.'"'; }
+		if ($this->method != '')  		{ $this->_init .= ' method="'.$this->method.'"'; }
+		if ($this->name != '')  		{ $this->_init .= ' name="'.$this->name.'"'; }
+		if ($this->target != '')  		{ $this->_init .= ' target="'.$this->target.'"'; }
+	}
+
+	/**
+	 * Get html element as string
+	 *
+	 * @acess public
+	 * @return string
+	 */
+	function get_string() {
+	$_strReturn = '';
+		$this->init();
+		$_strReturn .= "\n<form$this->_init>\n";
+		$_strReturn .= $this->fields;
+		$_strReturn .= "\n</form>\n";
+	return $_strReturn;
+	}
+}
+
+/**
+ * Div
+ *
+ * @package htmlobject
+ * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @copyright Copyright (c) 2008, Alexander Kuballa
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @version 1.0
  */
 class htmlobject_div extends htmlobject
@@ -365,13 +606,105 @@ class htmlobject_div extends htmlobject
 * @var string
 */
 var $text = '';
-	
+
+	/**
+	 * Get html element as string
+	 *
+	 * @acess public
+	 * @return string
+	 */	
 	function get_string() {
 	$_strReturn = '';
-		$this->init_htmlobject();
-		$_strReturn = "\n<div$this->_init_htmlobject>$this->text</div>";
+		$this->init();
+		$_strReturn = "\n<div$this->_init>$this->text</div>";
 	return $_strReturn;
 	}
 }
 
+/**
+ * Box
+ *
+ * @package htmlobject
+ * @author Alexander Kuballa <akuballa@users.sourceforge.net>
+ * @copyright Copyright (c) 2008, Alexander Kuballa
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
+ * @version 1.0
+ */
+class htmlobject_box extends htmlobject
+{
+
+/**
+* Label (Title) of box
+* @access public
+* @var string
+*/
+var $label = '';
+/**
+* Label for input
+* @access public
+* @var string
+*/
+var $label_for = '';
+/**
+* content
+* @access public
+* @var object | string
+*/
+var $content = '';
+/**
+* css class for left box
+* @access public
+* @var string
+*/
+var $css_left = 'left';
+/**
+* css class for right box
+* @access public
+* @var string
+*/
+var $css_right = 'right';
+
+	/**
+	 * init attribs
+	 *
+	 * @acess protected
+	 */
+	function init() {
+		parent::init();
+		if ($this->content == '')	{ $this->content = '&#160;'; }
+		if ($this->css_left != '') 	{ $this->css_left = ' class="'.$this->css_left.'"'; }
+		if ($this->css_right != '') { $this->css_right = ' class="'.$this->css_right.'"'; }
+	}
+
+	/**
+	 * Get html element as string
+	 *
+	 * @acess public
+	 * @return string
+	 */
+	function get_string() {
+	$_strReturn = '';
+		$this->init();
+		$_strReturn .= "\n<div".$this->_init.">";
+
+		if($this->label != '') {
+			$_strReturn .= "\n<div".$this->css_left.">";
+			if(is_object($this->content) && isset($this->content->id)) { $_strReturn .= '<label for="'.$this->content->id.'">'.$this->label.'</label>'; }
+			if(is_string($this->content)) {
+				if($this->label_for != '') { $_strReturn .= '<label for="'.$this->label_for.'">'.$this->label.'</label>'; }
+				else { $_strReturn .= $this->label; } 
+			}
+			$_strReturn .= "</div>";
+		}
+		$_strReturn .= "\n<div".$this->css_right.">";
+
+		if(is_object($this->content)) {	$_strReturn .= $this->content->get_string(); }
+		if(is_string($this->content)) {	$_strReturn .= $this->content; }
+
+		$_strReturn .= "</div>";
+		$_strReturn .= "\n<div style=\"line-height:0px;height:0px;clear:both;\" class=\"floatbreaker\">&#160;</div>";
+		$_strReturn .= "\n</div>";
+	return $_strReturn;
+	}
+}
 ?>

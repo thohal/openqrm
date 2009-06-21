@@ -1,14 +1,4 @@
 <?php
-/**
- * @package Htmlobjects
- */
-
-
-/**
- * @package Htmlobjects
- * @author Alexander Kuballa <akuballa@users.sourceforge.net>
- * @version 1.0
- */
 class htmlobject_doctype
 {
 /**
@@ -107,15 +97,15 @@ var $_script = array();
 		if(count($this->_script) > 0) {
 			$this->add_meta('Content-Script-Type', 'text/javascript');
 		}
-		$_strReturn = '
-		'.$this->get_doctype().'
-		<head>
-		'.implode("\n", $this->_meta).'
-		'.implode("\n", $this->_style).'
-		'.implode("\n", $this->_script).'
-		<title>'.$this->title.'</title>
-		</head>
-		';
+		$_strReturn = "\n";
+		$_strReturn .= $this->get_doctype();
+		$_strReturn .= "<head>\n";
+		$_strReturn .= implode("\n", $this->_meta)."\n";
+		$_strReturn .= implode("\n", $this->_style)."\n";
+		$_strReturn .= implode("\n", $this->_script)."\n";
+		$_strReturn .= '<title>'.$this->title."</title>\n";
+		$_strReturn .= "</head>\n";
+
 		return $_strReturn;
 	}
 	/**

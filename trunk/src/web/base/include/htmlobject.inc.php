@@ -1,14 +1,16 @@
 <?php
 $ClassDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/class/';
 
-require_once($ClassDir.'PHPLIB.php');
-require_once($ClassDir.'http.class.php');
-require_once($ClassDir.'htmlobject.class.php');
-require_once($ClassDir.'htmlobject.box.class.php');
-require_once($ClassDir.'htmlobject.table.class.php');
-require_once($ClassDir.'htmlobject.head.class.php');
-require_once($ClassDir.'htmlobject.tabs.class.php');
-require_once($ClassDir.'htmlobject.preloader.class.php');
+require_once($ClassDir."htmlobject.http.class.php");
+require_once($ClassDir."htmlobject.class.php");
+require_once($ClassDir."htmlobject.head.class.php");
+require_once($ClassDir."htmlobject.tabmenu.class.php");
+require_once($ClassDir."htmlobject.table.class.php");
+require_once($ClassDir."htmlobject.preloader.class.php");
+require_once($ClassDir."htmlobject.form.class.php");
+require_once($ClassDir."htmlobject.debug.class.php");
+require_once($ClassDir."regex.class.php");
+require_once($ClassDir."PHPLIB.php");
 
 //---------------------------------------------------------------
 /**
@@ -119,6 +121,7 @@ function htmlobject_textarea($name, $value) {
 function htmlobject_tabmenu($value) {
 
 	$tabmenu = new htmlobject_tabmenu($value);
+	$tabmenu->prefix_tab = 'tab';
 	$tabmenu->css = 'htmlobject_tabs';
 
 	/*
