@@ -1,6 +1,6 @@
 <style>
 .htmlobject_tab_box {
-	width:700px;
+	width:800px;
 }
 </style>
 <form action="{formaction}" method="GET">
