@@ -63,7 +63,8 @@ function local_storage_start() {
                 echo "local-storage: Saving the MBR of /dev/$HARD_DISK"
                 dd if=/dev/$HARD_DISK of=$BSNAME bs=512 count=1
                 echo "local-storage: Cleaning device /dev/$HARD_DISK"
-                dd if=/dev/zero of=/dev/$HARD_DISK
+                nice -n 19 dd if=/dev/zero of=/dev/$HARD_DISK 2> /local-storage.err
+                rm -f /local-storage.err
             done
             echo "local-storage: Umounting image-store"
             umount /mnt
