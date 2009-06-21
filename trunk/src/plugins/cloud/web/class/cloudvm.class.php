@@ -193,24 +193,8 @@ function create($virtualization_type, $name, $mac, $cpu, $memory, $disk, $timeou
 
 	// adapting the resource type to the virtualization type
 	$resource_fields = array();
-	if (strlen($new_vm_resource->capabilities)) {
-		if (strstr($new_vm_resource->capabilities, "VIRTUAL")) {
-			// edit
-			$olds = str_replace("VIRTUAL='", '', $resource->capabilities);
-			$nspos = strpos($olds, "'");
-			$oldt = substr($olds, 0, $nspos);
-			$oldstr = "VIRTUAL='$oldt'";
-			$newstr = "VIRTUAL='$vtype->name'";
-			$new_resource_caps = str_replace($oldstr, $newstr, $resource->capabilities);
-			$resource_fields["resource_capabilities"] = "$new_resource_caps";
-		} else {
-			// add
-			$resource_fields["resource_capabilities"] = "$resource->capabilities VIRTUAL='$vtype->name'";
-		}
-	} else {
-		// new
-		$resource_fields["resource_capabilities"] = "VIRTUAL='$vtype->name'";
-	}
+    $resource_fields["resource_vtype"] = $virtualization_type;
+    $resource_fields["resource_vhostid"] = $host_resource->id;
 	$new_vm_resource->update_info($new_resource_id, $resource_fields);
 	// setting this object resource id as return state
 	$event->log("create", $_SERVER['REQUEST_TIME'], 5, "cloudvm.class.php", "Adapted resource type of vm resource $new_resource_id to $vtype->name", "", "", 0, 0, 0);

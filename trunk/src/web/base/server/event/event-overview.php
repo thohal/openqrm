@@ -26,18 +26,24 @@ $strMsg = '';
 	switch (htmlobject_request('action')) {
 		case 'remove':
 			$event = new event();
-			foreach($_REQUEST['identifier'] as $id) {
-				$strMsg .= $event->remove($id);
-			}
+            if(isset($_REQUEST['identifier'])) {
+                foreach($_REQUEST['identifier'] as $id) {
+                    $return_msg .= $event->remove($id);
+                    $strMsg .= "Removed event $id <br>";
+                }
+            }
 			redirect($strMsg);
 			break;
 		case 'acknowledge':
 			$event = new event();
-			foreach($_REQUEST['identifier'] as $id) {
-				$event_fields=array();
-				$event_fields["event_status"]=1;
-				$strMsg .= $event->update($id, $event_fields);
-			}
+            if(isset($_REQUEST['identifier'])) {
+                foreach($_REQUEST['identifier'] as $id) {
+                    $event_fields=array();
+                    $event_fields["event_status"]=1;
+                    $return_msg .= $event->update($id, $event_fields);
+                    $strMsg .= "Acknowledged event $id <br>";
+                }
+            }
 			redirect($strMsg);
 			break;
 	}

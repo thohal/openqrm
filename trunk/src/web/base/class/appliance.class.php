@@ -446,14 +446,9 @@ function find_resource($appliance_virtualization) {
 	foreach ($resource_list as $index => $resource_db) {
 		$resource->get_instance_by_id($resource_db["resource_id"]);
 		if (($resource->id > 0) && ("$resource->imageid" == "1") && ("$resource->state" == "active")) {
-			$new_resource_id = $resource->id;	
+			$new_resource_id = $resource->id;
 			// check resource-type
-			$restype = str_replace("VIRTUAL='", '', $resource->capabilities);
-			$nspos = strpos($restype, "'");
-			$restype = substr($restype, 0, $nspos);
-			$virt = new $virtualization();
-			$virt->get_instance_by_name($restype);
-			$restype_id = $virt->id;
+            $restype_id = $resource->vtype;
 			if ($restype_id == $appliance_virtualization) {
 				// check the rest of the required parameters for the appliance
 

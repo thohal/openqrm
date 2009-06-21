@@ -25,32 +25,33 @@ $strMsg = '';
 	switch (htmlobject_request('action')) {
 		case 'remove':
 			$kernel = new kernel();
-			foreach($_REQUEST['identifier'] as $id) {
-				$strMsg .= $kernel->remove($id);
-			}
+            if(isset($_REQUEST['identifier'])) {
+                foreach($_REQUEST['identifier'] as $id) {
+                    $strMsg .= $kernel->remove($id);
+                }
+            }
 			redirect($strMsg);
 			break;
 
 		case 'set-default':
 			$kernel = new kernel();
-			foreach($_REQUEST['identifier'] as $id) {
-				// update default kernel in db
-				$kernel->get_instance_by_id($id);
-				$ar_kernel_update = array(
-					'kernel_name' => "default",
-					'kernel_version' => $kernel->version,
-					'kernel_capabilities' => $kernel->capabilities,
-				);
-				$kernel->update(1, $ar_kernel_update);
-				// send set-default kernel command to openQRM
-				$openqrm_server->send_command("openqrm_server_set_default_kernel $kernel->name");
-				$strMsg .= "Set kernel ".$kernel->name." as the default kernel";
-			}
-			redirect($strMsg);
+            if(isset($_REQUEST['identifier'])) {
+                foreach($_REQUEST['identifier'] as $id) {
+                    // update default kernel in db
+                    $kernel->get_instance_by_id($id);
+                    $ar_kernel_update = array(
+                        'kernel_name' => "default",
+                        'kernel_version' => $kernel->version,
+                        'kernel_capabilities' => $kernel->capabilities,
+                    );
+                    $kernel->update(1, $ar_kernel_update);
+                    // send set-default kernel command to openQRM
+                    $openqrm_server->send_command("openqrm_server_set_default_kernel $kernel->name");
+                    $strMsg .= "Set kernel ".$kernel->name." as the default kernel";
+                }
+                redirect($strMsg);
+            }
 			break;
-
-
-
 
 	}
 
@@ -174,19 +175,25 @@ function kernel_edit($kernel_id) {
 
 
 $output = array();
-$output[] = array('label' => 'Kernel-Admin', 'value' => kernel_display());
 if($OPENQRM_USER->role == "administrator") {
-	$output[] = array('label' => 'New', 'value' => kernel_form());
-	
 	if(htmlobject_request('action') != '') {
-		switch (htmlobject_request('action')) {
-			case 'edit':
-				foreach($_REQUEST['identifier'] as $id) {
-					$output[] = array('label' => 'Edit Kernel', 'value' => kernel_edit($id));
-				}
-				break;
-		}
-	}
+        if(isset($_REQUEST['identifier'])) {
+            switch (htmlobject_request('action')) {
+                case 'edit':
+                    foreach($_REQUEST['identifier'] as $id) {
+                        $output[] = array('label' => 'Edit Kernel', 'value' => kernel_edit($id));
+                        break;
+                    }
+                    break;
+            }
+        } else {
+            $output[] = array('label' => 'Kernel-Admin', 'value' => kernel_display());
+            $output[] = array('label' => 'New', 'value' => kernel_form());
+        }
+	} else {
+        $output[] = array('label' => 'Kernel-Admin', 'value' => kernel_display());
+        $output[] = array('label' => 'New', 'value' => kernel_form());
+    }
 }
 
 

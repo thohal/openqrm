@@ -1,3 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>openQRM plugin manager</title>
+    <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
+
+<style type="text/css">
+
+.ui-progressbar-value {
+    background-image: url(/openqrm/base/img/progress.gif);
+}
+
+#progressbar {
+    position: absolute;
+    left: 150px;
+    top: 250px;
+    width: 400px;
+    height: 20px;
+}
+</style>
+</head>
+<body>
+<div id="progressbar">
+</div>
+
+
 <?php
 $thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
@@ -10,20 +40,94 @@ $plugin = new plugin();
 $plugins_available = $plugin->available();
 $plugins_enabled = $plugin->enabled();
 $plugins_started = $plugin->started();
+$refresh_delay=1;
+$refresh_loop_max=20;
 
 $imgDir = '/openqrm/base/plugins/aa_plugins/img/';
 global $OPENQRM_SERVER_BASE_DIR;
 
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
-global $thisfile;
-
+    global $thisfile;
 	if($url == '') {
 		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&plugin_filter='.htmlobject_request('plugin_filter');
 	}
-	sleep(1);
 	//header("Location: $url");
-	echo "<meta http-equiv=\"refresh\" content=\"2; URL=$url\">";
+	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
+}
+
+
+// checks the state of a plugin after an action
+// waits for plugin to get to the new state
+function check_plugin_state($cmd, $plugin) {
+    global $refresh_delay;
+    global $refresh_loop_max;
+    $refresh_loop=0;
+    switch($cmd) {
+        case "start";
+            $pfile = $_SERVER["DOCUMENT_ROOT"]."/openqrm/base/plugins/".$plugin."/.running";
+            while (!file_exists($pfile)) {
+                sleep($refresh_delay);
+                $refresh_loop++;
+                flush();
+                if ($refresh_loop > $refresh_loop_max)  {
+                    return false;
+                }
+            }
+            return true;
+            break;
+        case "stop";
+            $pfile = $_SERVER["DOCUMENT_ROOT"]."/openqrm/base/plugins/".$plugin."/.running";
+            while (file_exists($pfile)) {
+                sleep($refresh_delay);
+                $refresh_loop++;
+                flush();
+                if ($refresh_loop > $refresh_loop_max)  {
+                    return false;
+                }
+            }
+            return true;
+            break;
+        case "enable";
+            $pdir = $_SERVER["DOCUMENT_ROOT"]."/openqrm/base/plugins/".$plugin;
+            while (!file_exists($pdir)) {
+                sleep($refresh_delay);
+                $refresh_loop++;
+                flush();
+                if ($refresh_loop > $refresh_loop_max)  {
+                    return false;
+                }
+            }
+            return true;
+            break;
+        case "disable";
+            $pdir = $_SERVER["DOCUMENT_ROOT"]."/openqrm/base/plugins/".$plugin;
+            while (file_exists($pdir)) {
+                sleep($refresh_delay);
+                $refresh_loop++;
+                flush();
+                if ($refresh_loop > $refresh_loop_max)  {
+                    return false;
+                }
+            }
+            return true;
+            break;
+    }
+    return false;
+}
+
+
+function show_progressbar() {
+?>
+    <script type="text/javascript">
+        $("#progressbar").progressbar({
+			value: 100
+		});
+        var options = {};
+        $("#progressbar").effect("shake",options,2000,null);
+	</script>
+<?php
+        flush();
 }
 
 
@@ -63,9 +167,14 @@ $identifier = htmlobject_request('identifier');
 				}
 
 				if($error === false) {
+                    show_progressbar();
 					$return = $openqrm_server->send_command("openqrm_server_plugin_command $plugin_name init $OPENQRM_USER->name $OPENQRM_USER->password");
 					if($return === true) {
-						$strMsg .= 'enabled '.$plugin_name.'<br>';
+                        if (check_plugin_state("enable", $plugin_name)) {
+    						$strMsg .= 'enabled '.$plugin_name.'<br>';
+                        } else {
+    						$strMsg .= 'Timeout while enabling '.$plugin_name.'<br>';
+                        }
 					} else {
 						$strMsg .= $plugin_name.' not enabled <br>';
 					}
@@ -95,9 +204,14 @@ $identifier = htmlobject_request('identifier');
 				}
 
 				if($error === false) {
+                    show_progressbar();
 					$return = $openqrm_server->send_command("openqrm_server_plugin_command $plugin_name uninstall $OPENQRM_USER->name $OPENQRM_USER->password");
 					if($return === true) {
-						$strMsg .= 'disabled '.$plugin_name.'<br>';
+                        if (check_plugin_state("disable", $plugin_name)) {
+    						$strMsg .= 'disabled '.$plugin_name.'<br>';
+                        } else {
+    						$strMsg .= 'Timeout while disabling '.$plugin_name.'<br>';
+                        }
 					} else {
 						$strMsg .= $plugin_name.' not disabled <br>';
 					}
@@ -109,9 +223,14 @@ $identifier = htmlobject_request('identifier');
 			$event = new event();
 			foreach($identifier as $id) {
 				if (in_array($id, $plugins_enabled)) {
+                    show_progressbar();
 					$return = $openqrm_server->send_command("openqrm_server_plugin_command $id start");
 					if($return === true) {
-						$strMsg .= 'started '.$id.'<br>';
+                        if (check_plugin_state("start", $id)) {
+    						$strMsg .= 'started '.$id.'<br>';
+                        } else {
+    						$strMsg .= 'Timeout while starting '.$id.'<br>';
+                        }
 					} else {
 						$strMsg .= $id.' not started <br>';
 					}
@@ -125,9 +244,14 @@ $identifier = htmlobject_request('identifier');
 			$event = new event();
 			foreach($identifier as $id) {
 				if (in_array($id, $plugins_enabled)) {
+                    show_progressbar();
 					$return = $openqrm_server->send_command("openqrm_server_plugin_command $id stop");
 					if($return === true) {
-						$strMsg .= 'stopped '.$id.'<br>';
+                        if (check_plugin_state("stop", $id)) {
+    						$strMsg .= 'stopped '.$id.'<br>';
+                        } else {
+    						$strMsg .= 'Timeout while stopping '.$id.'<br>';
+                        }
 					} else {
 						$strMsg .= $id.' not stopped <br>';
 					}

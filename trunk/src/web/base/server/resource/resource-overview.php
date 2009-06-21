@@ -1,3 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Resource overview</title>
+    <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+    <link rel="stylesheet" type="text/css" href="resource.css" />
+    <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
+<style type="text/css">
+.ui-progressbar-value {
+    background-image: url(/openqrm/base/img/progress.gif);
+}
+#progressbar {
+    position: absolute;
+    left: 150px;
+    top: 250px;
+    width: 400px;
+    height: 20px;
+}
+</style>
+</head>
+<body>
+<div id="progressbar">
+</div>
+
+
 <?php
 $thisfile = basename($_SERVER['PHP_SELF']);
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
@@ -25,94 +52,79 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 }
 
+function show_progressbar() {
+?>
+    <script type="text/javascript">
+        $("#progressbar").progressbar({
+			value: 100
+		});
+        var options = {};
+        $("#progressbar").effect("shake",options,2000,null);
+	</script>
+<?php
+        flush();
+}
+
 
 if(htmlobject_request('action') != '' && $OPENQRM_USER->role == "administrator") {
-$strMsg = '';
-
+    $strMsg = '';
 	if(isset($_REQUEST['identifier'])) { 
-	
 		switch (htmlobject_request('action')) {
 			case 'reboot':
+                show_progressbar();
 				foreach($_REQUEST['identifier'] as $id) {
 					if($id != 0) {
 						$resource = new resource();
 						$resource->get_instance_by_id($id);
 						$ip = $resource->ip;
-						$strMsg .= $resource->send_command("$ip", "reboot");
+						$return_msg .= $resource->send_command("$ip", "reboot");
+                        $strMsg .= "Rebooted resource $id <br>";
 						// set state to transition
 						$resource_fields=array();
 						$resource_fields["resource_state"]="transition";
 						$resource->update_info($id, $resource_fields);
 					}
 				}
+                sleep(1);
 				redirect($strMsg);
 				break;
 	
 			case 'poweroff':
+                show_progressbar();
 				foreach($_REQUEST['identifier'] as $id) {
 					if($id != 0) {
 						$resource = new resource();
 						$resource->get_instance_by_id($id);
 						$ip = $resource->ip;
-						$strMsg .= $resource->send_command("$ip", "halt");
+						$return_msg .= $resource->send_command("$ip", "halt");
+                        $strMsg .= "Shutdown resource $id <br>";
 						// set state to transition
 						$resource_fields=array();
 						$resource_fields["resource_state"]="off";
 						$resource->update_info($id, $resource_fields);
 					}
 				}
+                sleep(1);
 				redirect($strMsg);
 				break;
 	
 			case 'remove':
+                show_progressbar();
 				foreach($_REQUEST['identifier'] as $id) {
 					if($id != 0) {
 						$resource = new resource();
 						$resource->get_instance_by_id($id);
 						$mac = $resource->mac;
 						$openqrm_server->send_command("openqrm_remove_resource $id, $mac");
-						$strMsg .= $resource->remove($id, $mac);
+						$return_msg .= $resource->remove($id, $mac);
+                        $strMsg .= "Removed resource $id <br>";
 					}
 				}
+                sleep(1);
 				redirect($strMsg);
 				break;
 
 
-			case 'update':
-				foreach($_REQUEST['identifier'] as $id) {
-					if($id != 0) {
-						$resource = new resource();
-						$resource->get_instance_by_id($id);
-						$resource_type = $_REQUEST['resource_type'];
-
-						$virtualization = new virtualization();
-						$virtualization->get_instance_by_id($resource_type[$id]);
-						$resource_fields = array();
-
-						if (strlen($resource->capabilities)) {
-							if (strstr($resource->capabilities, "VIRTUAL")) {
-								// edit
-								$olds = str_replace("VIRTUAL='", '', $resource->capabilities);
-								$nspos = strpos($olds, "'");
-								$oldt = substr($olds, 0, $nspos);
-								$oldstr = "VIRTUAL='$oldt'";
-								$newstr = "VIRTUAL='$virtualization->name'";
-								$new_resource_caps = str_replace($oldstr, $newstr, $resource->capabilities);
-								$resource_fields["resource_capabilities"] = "$new_resource_caps";
-							} else {
-								// add
-								$resource_fields["resource_capabilities"] = "$resource->capabilities VIRTUAL='$virtualization->name'";
-							}
-						} else {
-							// new
-							$resource_fields["resource_capabilities"] = "VIRTUAL='$virtualization->name'";
-						}
-						$resource->update_info($id, $resource_fields);
-						$strMsg .= "Updated resource $id with resource-type $virtualization->name";
-					}
-				}
-				redirect($strMsg);
-				break;
 	
 		}
 
@@ -125,25 +137,8 @@ function resource_display() {
 	global $OPENQRM_USER;
 	global $thisfile;
 
-	$virtualization = new virtualization();
-	$virtualization_list = array();
-	$v_list_select = array();
-	$virtualization_list_select = array();
-	$virtualization_list = $virtualization->get_list();
-
-	// filter out the virtualization hosts
-	foreach ($virtualization_list as $id => $virt) {
-		if (!strstr($virt[label], "Host")) {
-			$virtualization_list_select[] = array("value" => $virt[value], "label" => $virt[label]);
-			
-		}
-	}
-
 	$resource_tmp = new resource();
 	$table = new htmlobject_db_table('resource_id');
-
-	$disp = '<h1>Resource List</h1>';
-	$disp .= '<br>';
 
 	$arHead = array();
 	$arHead['resource_state'] = array();
@@ -190,20 +185,17 @@ function resource_display() {
 		$swap = "$swap_used/$swap_total";
 		if ($resource->id == 0) {
 			$resource_icon_default="/openqrm/base/img/logo.png";
-			$resource_type_select = "openQRM-server";
+			$resource_type = "openQRM";
 		} else {
 			$resource_icon_default="/openqrm/base/img/resource.png";
-			// select box for the resource_type
-			if (strstr($resource->capabilities, "VIRTUAL")) {
+			// the resource_type
+			if ((strlen($resource->vtype)) && (!strstr($resource->vtype, "NULL"))){
 				// find out what should be preselected
-				$olds = str_replace("VIRTUAL='", '', $resource->capabilities);
-				$nspos = strpos($olds, "'");
-				$resource_type_name = substr($olds, 0, $nspos);
-				// translate name to id
-				$virtualization->get_instance_by_name($resource_type_name);
-				$resource_type_select = htmlobject_select("resource_type[$res_id]", $virtualization_list_select, '', array($virtualization->id));
+            	$virtualization = new virtualization();
+				$virtualization->get_instance_by_id($resource->vtype);
+				$resource_type = "<nobr>".$virtualization->name." on Res. ".$resource->vhostid."</nobr>";
 			} else {
-				$resource_type_select = htmlobject_select("resource_type[$res_id]", $virtualization_list_select, '', array(0));
+				$resource_type = "Unknown";
 			}
 		
 		}
@@ -223,7 +215,7 @@ function resource_display() {
 			'resource_hostname' => $resource_db["resource_hostname"],
 			'resource_mac' => $resource_db["resource_mac"],
 			'resource_ip' => $resource_db["resource_ip"],
-			'resource_type' => $resource_type_select,
+			'resource_type' => $resource_type,
 			'resource_memtotal' => $mem,
 			'resource_load' => $resource_db["resource_load"],
 		);
@@ -239,35 +231,58 @@ function resource_display() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('update', 'reboot', 'poweroff', 'remove');
+		$table->bottom = array('reboot', 'poweroff', 'remove');
 		$table->identifier = 'resource_id';
 		$table->identifier_disabled = array(0);
 	}
 	$table->max = $resource_tmp->get_count('all') + 1; // adding openqrmserver
 	
-	return $disp.$table->get_string();
+  // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './resource-overview.tpl.php');
+	$t->setVar(array(
+		'resource_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
+
+
 }
 
 
 
 function resource_form() {
 
-	$disp = "<h1>New Resource</h1>";
-	$disp .= "<form action='resource-action.php' method=post>";
-	$disp .= "<br>";
-	$disp .= "<br>";
-	$disp .= htmlobject_input('resource_mac', array("value" => 'XX:XX:XX:XX:XX:XX', "label" => 'Mac-address'), 'text', 17);
-	$disp .= htmlobject_input('resource_ip', array("value" => '0.0.0.0', "label" => 'Ip-address'), 'text', 20);
-	$disp .= "<input type=hidden name=resource_id value='-1'>";
-	$disp .= "<input type=hidden name=resource_command value='new_resource'>";
-	$disp .= "<input type=submit value='add'>";
-	$disp .= "";
-	$disp .= "";
-	$disp .= "";
-	$disp .= "";
-	$disp .= "";
-	$disp .= "</form>";
+	$virtualization = new virtualization();
+	$virtualization_list = array();
+	$v_list_select = array();
+	$virtualization_list_select = array();
+	$virtualization_list = $virtualization->get_list();
+
+	// filter out the virtualization hosts
+	foreach ($virtualization_list as $id => $virt) {
+		if (!strstr($virt[label], "Host")) {
+			$virtualization_list_select[] = array("value" => $virt[value], "label" => $virt[label]);
+
+		}
+	}
+
+   // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './resource-create.tpl.php');
+	$t->setVar(array(
+		'formaction' => "resource-action.php",
+        'hidden_resource_id' => "<input type=hidden name=resource_id value='-1'>",
+        'hidden_resource_command' => "<input type=hidden name=resource_command value='new_resource'>",
+        'resource_mac' => htmlobject_input('resource_mac', array("value" => 'XX:XX:XX:XX:XX:XX', "label" => 'Mac-address'), 'text', 17),
+        'resource_ip' => htmlobject_input('resource_ip', array("value" => '0.0.0.0', "label" => 'Ip-address'), 'text', 20),
+		'submit' => htmlobject_input('action', array("value" => 'new', "label" => 'Create'), 'submit'),
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
+
 }
 
 
@@ -278,10 +293,7 @@ if($OPENQRM_USER->role == "administrator") {
 	$output[] = array('label' => 'New', 'value' => resource_form());
 }
 
-?>
-<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
-<link rel="stylesheet" type="text/css" href="resource.css" />
-<?php
 echo htmlobject_tabmenu($output);
+
 ?>
 
