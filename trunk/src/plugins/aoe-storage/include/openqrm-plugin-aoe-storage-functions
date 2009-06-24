@@ -94,7 +94,8 @@ function manage_aoe() {
 				. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 				AOE_INTERFACE=$OPENQRM_SERVER_INTERFACE
 			else
-				AOE_INTERFACE=`ifconfig | grep $resource_mac | awk {' print $1 '} | tail -1`
+                . /var/openqrm/openqrm-resource.conf
+				AOE_INTERFACE=`ifconfig | grep -i $resource_mac | awk {' print $1 '} | tail -1`
 			fi
 			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME $AUTHENTICATED_MAC" >> $VBLADECONF
 			sed -i '/^$/d' $VBLADECONF
