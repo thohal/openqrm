@@ -578,7 +578,7 @@ function openqrm_get_js_interface() {
 	CURRENT_DIR=`pwd`
 	openqrm_cache_or_download js-interface
 	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/js-interface/
-	unzip -qfo interface_$INTERFACE_VERSION.zip
+	unzip -qf interface_$INTERFACE_VERSION.zip
     for f in *; do mv "$f" `echo $f | tr ' ' '_'` 2>/dev/null; done
 	cd $CURRENT_DIR
 }
