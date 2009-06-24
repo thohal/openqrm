@@ -14,7 +14,7 @@ border:1px solid;
   <frame src="top.php" name="TopFrame" noresize scrolling="no" marginwidth="0" marginheight="0">
 	<frameset cols="200,*" frameborder="0" framespacing="0" border="0">
 	<frame src="menu.php" name="NaviFrame" marginwidth="0" marginheight="0">
-  <frame src="server/resource/resource-overview.php" name="MainFrame" marginwidth="0" marginheight="0">
+  <frame src="server/aa_server/dc-overview.php" name="MainFrame" marginwidth="0" marginheight="0">
   </frameset>
 
   <noframes>

@@ -8,6 +8,7 @@ compile:
 	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_get_adodb
 	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_get_api_docu
 	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_get_jquery_bundle
+	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_get_js_interface
 
 install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web
@@ -26,6 +27,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/js
 	. $(OPENQRM_SERVER_CONF) && cp base/js/*.js $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/js/
 	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_install_jquery_bundle
+	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_install_js_interface
 	# base/class
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/class
 	. $(OPENQRM_SERVER_CONF) && cp base/class/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/class/
@@ -42,6 +44,11 @@ install:
 	# base/server/aa_server
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/aa_server
 	. $(OPENQRM_SERVER_CONF) && cp base/server/aa_server/*.txt $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/aa_server/
+	. $(OPENQRM_SERVER_CONF) && cp base/server/aa_server/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/aa_server/
+	. $(OPENQRM_SERVER_CONF) && cp base/server/aa_server/*.css $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/aa_server/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/aa_server/img
+	. $(OPENQRM_SERVER_CONF) && cp base/server/aa_server/img/*.gif $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/aa_server/img/
+	. $(OPENQRM_SERVER_CONF) && cp base/server/aa_server/img/*.jpg $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/aa_server/img/
 	# base/server/resource
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/resource
 	. $(OPENQRM_SERVER_CONF) && cp base/server/resource/*.txt $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/resource/
