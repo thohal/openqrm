@@ -351,8 +351,10 @@ function openqrm_server_stop() {
 function openqrm_server_status() {
 	if [ -f ${LOCKFILE} ]; then
 		echo "openQRM-server ver. $OPENQRM_SERVER_VERSION is running"
+        exit 0
 	else
 		echo "openQRM-server ver. $OPENQRM_SERVER_VERSION is not running"
+        exit 3
 	fi
 }
 
