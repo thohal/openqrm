@@ -55,7 +55,7 @@ unset($xen_fields["xen_command"]);
 
 
 
-$event->log("$xen_command", $_SERVER['REQUEST_TIME'], 5, "xem-action", "Processing xen command $xen_command", "", "", 0, 0, 0);
+$event->log("$xen_command", $_SERVER['REQUEST_TIME'], 5, "xen-action", "Processing xen command $xen_command", "", "", 0, 0, 0);
 switch ($xen_command) {
 
     case 'get_xen':
