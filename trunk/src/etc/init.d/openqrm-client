@@ -86,7 +86,7 @@ function openqrm_client_start() {
 				return 1
 			fi
 			if [ ! -d /root/.ssh ]; then
-				mkdir /root/.ssh
+				mkdir -p /root/.ssh
 			fi
 			if [ ! -f /root/.ssh/authorized_keys ]; then
 				mv -f openqrm-server-public-rsa-key /root/.ssh/authorized_keys
