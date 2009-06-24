@@ -570,4 +570,29 @@ function openqrm_install_jquery_bundle() {
 }
 
 
+# function to get the interface js
+# -> this is for "make " phase
+function openqrm_get_js_interface() {
+    # TODO gather version from build.conf file
+    INTERFACE_VERSION="1.2"
+	CURRENT_DIR=`pwd`
+	openqrm_cache_or_download js-interface
+	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/js-interface/
+	unzip -q interface_$INTERFACE_VERSION.zip
+    for f in *; do mv "$f" `echo $f | tr ' ' '_'` 2>/dev/null; done
+	cd $CURRENT_DIR
+}
+
+# function to install the jquery-bundle
+# -> this is for "make install" phase
+function openqrm_install_js_interface() {
+    INTERFACE_VERSION="1.2"
+	mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/js/interface
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/js-interface/interface_$INTERFACE_VERSION/interface.js $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/js/interface/
+    # also install it for the cloud plugin
+	mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/js
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/js-interface/interface_$INTERFACE_VERSION/interface.js $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/js/
+}
+
+
 
