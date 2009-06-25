@@ -104,7 +104,7 @@ function imageshelf_form() {
 		// step two, after selecting the protocol
 		$t = new Template_PHPLIB();
 		$t->debug = false;
-		$t->setFile('tplfile', './' . 'imageshelf-tpl.php');
+		$t->setFile('tplfile', './tpl/' . 'imageshelf-new.tpl.php');
 
 		// here we select which inputs to show depending on the protocol
 		switch ($ident) {

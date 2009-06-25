@@ -1,6 +1,6 @@
 #!/bin/bash
 # this is the functions file for the image-shelf-plugin
-IMAGE_SHELF_LOCK_FILE=/var/run/lvm-storage/lvm-storage-plugin.lock
+IMAGE_SHELF_LOCK_FILE=/var/run/image-shelf/image-shelf-plugin.lock
 IMAGE_SHELF_LOCK_DELAY=5
 IMAGE_SHELF_LOCK_RETRY=100
 IMAGE_SHELF_LOCK_TIMEOUT=500
