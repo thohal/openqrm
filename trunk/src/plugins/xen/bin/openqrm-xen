@@ -424,6 +424,7 @@ case "$XEN_COMMAND" in
 	remove)
 		xen_lock aquire
 		echo "Deleting Xen vm $XEN_VM_NAME"
+        xm destroy $XEN_VM_NAME 1>/dev/null 2>&1
 		rm -f $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.*
 		if rm -rf $OPENQRM_VM_DIR/$XEN_VM_NAME; then
             openqrm_post_event 0 "delete" 5 "openqrm-xen" "Deleted Xen vm $XEN_VM_NAME"
