@@ -99,6 +99,10 @@ function show_progressbar() {
 function validate_input($var, $type) {
     switch ($type) {
         case 'string':
+            // remove allowed chars
+            $var = str_replace(".", "", $var);
+            $var = str_replace("-", "", $var);
+            $var = str_replace("_", "", $var);
             for ($i = 0; $i<strlen($var); $i++) {
                 if (!ctype_alpha($var[$i])) {
                     if (!ctype_digit($var[$i])) {
@@ -131,7 +135,7 @@ if(htmlobject_request('action') != '') {
                 $strMsg .= "Empty vm name. Not creating new vm on KVM Host $kvm_server_id";
                 redirect_mgmt($strMsg, $thisfile, $kvm_server_id);
             } else if (!validate_input($kvm_server_name, 'string')) {
-                $strMsg .= "Invalid vm name. Not creating new vm on KVM Host $kvm_server_id";
+                $strMsg .= "Invalid vm name. Not creating new vm on KVM Host $kvm_server_id <br>(allowed characters are [a-z][A-z][0-9].-_)";
                 redirect_mgmt($strMsg, $thisfile, $kvm_server_id);
             }
             if (!strlen($kvm_server_mac)) {

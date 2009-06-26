@@ -114,6 +114,10 @@ function show_progressbar() {
 function validate_input($var, $type) {
     switch ($type) {
         case 'string':
+            // remove allowed chars
+            $var = str_replace(".", "", $var);
+            $var = str_replace("-", "", $var);
+            $var = str_replace("_", "", $var);
             for ($i = 0; $i<strlen($var); $i++) {
                 if (!ctype_alpha($var[$i])) {
                     if (!ctype_digit($var[$i])) {
@@ -201,7 +205,7 @@ if(htmlobject_request('redirect') != 'yes') {
                         redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
                         exit(0);
                     } else if (!validate_input($aoe_lun_name, 'string')) {
-                        $redir_msg = "Got invalid AOE volume name. Not adding ...";
+                        $redir_msg = "Got invalid AOE volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
                         redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
                         exit(0);
                     }
@@ -278,7 +282,7 @@ if(htmlobject_request('redirect') != 'yes') {
                         redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
                         exit(0);
                     } else if (!validate_input($aoe_lun_name, 'string')) {
-                        $redir_msg = "Got invalid AOE volume name. Not adding ...";
+                        $redir_msg = "Got invalid AOE volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
                         redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
                         exit(0);
                     }
@@ -287,7 +291,7 @@ if(htmlobject_request('redirect') != 'yes') {
                         redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
                         exit(0);
                     } else if (!validate_input($aoe_lun_snap_name, 'string')) {
-                        $redir_msg = "Got invalid AOE volume cöpme name. Not adding ...";
+                        $redir_msg = "Got invalid AOE volume cöpme name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
                         redirect_aoe_mgmt($redir_msg, $aoe_storage_id);
                         exit(0);
                     }

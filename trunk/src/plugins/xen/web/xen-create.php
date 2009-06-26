@@ -109,6 +109,10 @@ function show_progressbar() {
 function validate_input($var, $type) {
     switch ($type) {
         case 'string':
+            // remove allowed chars
+            $var = str_replace(".", "", $var);
+            $var = str_replace("-", "", $var);
+            $var = str_replace("_", "", $var);
             for ($i = 0; $i<strlen($var); $i++) {
                 if (!ctype_alpha($var[$i])) {
                     if (!ctype_digit($var[$i])) {
@@ -140,7 +144,7 @@ if(htmlobject_request('xen_command') != '') {
                 $strMsg="Got empty vm name. Not creating new vm on Xen Host $xen_id";
                 redirect_mgmt($strMsg, $thisfile, $xen_id);
             } else if (!validate_input($xen_name, 'string')) {
-                $strMsg= "Invalid vm name. Not creating new vm on Xen Host $xen_id";
+                $strMsg= "Invalid vm name. Not creating new vm on Xen Host $xen_id <br>(allowed characters are [a-z][A-z][0-9].-_)";
                 redirect_mgmt($strMsg, $thisfile, $xen_id);
             }
             if (!strlen($xen_mac)) {

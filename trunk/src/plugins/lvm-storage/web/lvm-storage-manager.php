@@ -114,6 +114,10 @@ function show_progressbar() {
 function validate_input($var, $type) {
     switch ($type) {
         case 'string':
+            // remove allowed chars
+            $var = str_replace(".", "", $var);
+            $var = str_replace("-", "", $var);
+            $var = str_replace("_", "", $var);
             for ($i = 0; $i<strlen($var); $i++) {
                 if (!ctype_alpha($var[$i])) {
                     if (!ctype_digit($var[$i])) {
@@ -242,7 +246,7 @@ if(htmlobject_request('redirect') != 'yes') {
                     redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
                     exit(0);
                 } else if (!validate_input($lvm_lun_name, 'string')) {
-                    $redir_msg = "Got invalid logical volume name. Not adding ...";
+                    $redir_msg = "Got invalid logical volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
                     redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
                     exit(0);
                 }
@@ -356,7 +360,7 @@ if(htmlobject_request('redirect') != 'yes') {
                         redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
                         exit(0);
                     } else if (!validate_input($lvm_lun_name, 'string')) {
-                        $redir_msg = "Got invalid logical volume name. Not adding ...";
+                        $redir_msg = "Got invalid logical volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
                         redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
                         exit(0);
                     }
@@ -366,7 +370,7 @@ if(htmlobject_request('redirect') != 'yes') {
                         redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
                         exit(0);
                     } else if (!validate_input($lvm_lun_snap_name, 'string')) {
-                        $redir_msg = "Got invalid logical volume clone name. Not adding ...";
+                        $redir_msg = "Got invalid logical volume clone name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
                         redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
                         exit(0);
                     }

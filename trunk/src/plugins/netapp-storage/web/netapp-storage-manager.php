@@ -222,7 +222,7 @@ if(htmlobject_request('redirect') != 'yes') {
                                 redirect($strMsg, 'tab0', $id);
                                 exit(0);
                             } else if (!validate_input($netapp_storage_image_name, 'string')) {
-                                $strMsg = "Got invalid NetApp volume name. Not adding ...";
+                                $strMsg = "Got invalid NetApp volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9] and volume name must not start with a number)";
                                 redirect($strMsg, 'tab0', $id);
                                 exit(0);
                             }
@@ -240,7 +240,7 @@ if(htmlobject_request('redirect') != 'yes') {
                                 redirect($strMsg, 'tab0', $id);
                                 exit(0);
                             } else if (!validate_input($netapp_aggregate, 'string')) {
-                                $strMsg = "Got invalid NetApp aggregate name. Not adding ...";
+                                $strMsg = "Got invalid NetApp aggregate name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9] and volume name must not start with a number)";
                                 redirect($strMsg, 'tab0', $id);
                                 exit(0);
                             }
@@ -320,7 +320,7 @@ if(htmlobject_request('redirect') != 'yes') {
                             redirect($strMsg, 'tab0', $netapp_storage_id);
                             exit(0);
                         } else if (!validate_input($netapp_storage_image_name, 'string')) {
-                            $strMsg = "Got invalid origin NetApp volume name. Not adding ...";
+                            $strMsg = "Got invalid origin NetApp volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9] and volume name must not start with a number)";
                             redirect($strMsg, 'tab0', $netapp_storage_id);
                             exit(0);
                         }
@@ -330,7 +330,7 @@ if(htmlobject_request('redirect') != 'yes') {
                             redirect($strMsg, 'tab0', $netapp_storage_id);
                             exit(0);
                         } else if (!validate_input($netapp_storage_image_clone_name, 'string')) {
-                            $strMsg = "Got invalid NetApp volume clone name. Not adding ...";
+                            $strMsg = "Got invalid NetApp volume clone name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9] and volume name must not start with a number)";
                             redirect($strMsg, 'tab0', $netapp_storage_id);
                             exit(0);
                         }

@@ -112,6 +112,10 @@ function show_progressbar() {
 function validate_input($var, $type) {
     switch ($type) {
         case 'string':
+            // remove allowed chars
+            $var = str_replace(".", "", $var);
+            $var = str_replace("-", "", $var);
+            $var = str_replace("_", "", $var);
             for ($i = 0; $i<strlen($var); $i++) {
                 if (!ctype_alpha($var[$i])) {
                     if (!ctype_digit($var[$i])) {
@@ -147,7 +151,7 @@ if(htmlobject_request('action') != '') {
                     $strMsg .= "Empty vm name. Not creating the vm on VMware ESX Host $vmware_esx_id<br>";
                     redirect($strMsg, "tab0", $vmware_esx_id);
                 } else if (!validate_input($vmware_esx_name, 'string')) {
-                    $strMsg .= "Invalid vm name. Not creating the vm on VMware ESX Host $vmware_esx_id<br>";
+                    $strMsg .= "Invalid vm name. Not creating the vm on VMware ESX Host $vmware_esx_id<br>(allowed characters are [a-z][A-z][0-9].-_)";
                     redirect($strMsg, "tab0", $vmware_esx_id);
                 }
                 // mach check

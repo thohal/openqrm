@@ -113,6 +113,10 @@ function show_progressbar() {
 function validate_input($var, $type) {
     switch ($type) {
         case 'string':
+            // remove allowed chars
+            $var = str_replace(".", "", $var);
+            $var = str_replace("-", "", $var);
+            $var = str_replace("_", "", $var);
             for ($i = 0; $i<strlen($var); $i++) {
                 if (!ctype_alpha($var[$i])) {
                     if (!ctype_digit($var[$i])) {
@@ -146,7 +150,7 @@ if(htmlobject_request('action') != '') {
                     $strMsg .= "Empty vm name. Not creating the vm on VMware Server 1 Host $vmware_server_id<br>";
                     redirect($strMsg, "tab0", $vmware_server_id);
                 } else if (!validate_input($vmware_server_name, 'string')) {
-                    $strMsg .= "Invalid vm name. Not creating the vm on VMware Server 1 Host $vmware_server_id<br>";
+                    $strMsg .= "Invalid vm name. Not creating the vm on VMware Server 1 Host $vmware_server_id<br>(allowed characters are [a-z][A-z][0-9].-_)";
                     redirect($strMsg, "tab0", $vmware_server_id);
                 }
                 if (!strlen($vmware_server_mac)) {

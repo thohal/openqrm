@@ -117,6 +117,10 @@ function show_progressbar() {
 function validate_input($var, $type) {
     switch ($type) {
         case 'string':
+            // remove allowed chars
+            $var = str_replace(".", "", $var);
+            $var = str_replace("-", "", $var);
+            $var = str_replace("_", "", $var);
             for ($i = 0; $i<strlen($var); $i++) {
                 if (!ctype_alpha($var[$i])) {
                     if (!ctype_digit($var[$i])) {
@@ -152,7 +156,7 @@ if(htmlobject_request('citrix_command') != '') {
                 $strMsg .= "Citrix XenServer VM name not set. Not adding new VM!";
                 redirect($strMsg, "tab0", $thisfile);
             } else if (!validate_input($citrix_name, 'string')) {
-                $strMsg .= "Invalid Citrix XenServer VM name. Not adding new VM!";
+                $strMsg .= "Invalid Citrix XenServer VM name. Not adding new VM!<br>(allowed characters are [a-z][A-z][0-9].-_)";
                 redirect($strMsg, "tab0");
             }
             if (!strlen($citrix_ram)) {
