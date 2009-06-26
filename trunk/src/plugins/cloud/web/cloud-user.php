@@ -153,9 +153,6 @@ function cloud_user_manager() {
 	$arHead['cu_name'] = array();
 	$arHead['cu_name']['title'] ='Name';
 
-	$arHead['cu_password'] = array();
-	$arHead['cu_password']['title'] ='Password';
-
 	$arHead['cu_fore_name'] = array();
 	$arHead['cu_fore_name']['title'] ='Fore name';
 
@@ -195,7 +192,6 @@ function cloud_user_manager() {
 		$arBody[] = array(
 			'cu_id' => $cu["cu_id"],
 			'cu_name' => $cu["cu_name"],
-			'cu_password' => $cu["cu_password"],
 			'cu_forename' => $cu["cu_forename"],
 			'cu_lastname' => $cu["cu_lastname"],
 			'cu_email' => $cu["cu_email"],
