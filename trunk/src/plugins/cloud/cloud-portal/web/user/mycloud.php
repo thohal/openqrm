@@ -706,7 +706,7 @@ if ($cloudu->status == 1) {
 	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab3\">Cloud Appliances</a>", 'value' => my_cloud_appliances());
 	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab4\">My Account</a>", 'value' => mycloud_account());
 	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab5\">Help</a>", 'value' => mycloud_documentation());
-	$output[] = array('label' => "<a href=\"/cloud-portal/\">Logout</a>", 'value' => "");
+	$output[] = array('label' => "<a href=\"/cloud-portal/mycloud-logout.php\">Logout</a>", 'value' => "");
 } else {
 	$output[] = array('label' => 'Your account has been disabled', 'value' => my_cloud_account_disabled());
 }

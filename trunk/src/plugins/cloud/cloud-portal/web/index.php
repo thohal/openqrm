@@ -420,12 +420,27 @@ function register_user() {
 		$disp = $disp."<br>";
 		$disp = $disp."Please contact <a href=\"mailto:$cc_admin_email?subject=openQRM Cloud: Account request\">$cc_admin_email</a> to ask for an account.";
 		$disp = $disp."<br>";
-		$disp = $disp."<br>";
-		$disp = $disp."<br>";
-		$disp = $disp."<br>";
-		$disp = $disp."<br>";
 	}
-	return $disp;
+
+	$disp = $disp."<form action=$thisfile method=post>";
+    $disp = $disp."<br>";
+	$disp = $disp."<hr>";
+	$disp = $disp."<h4>Forgot the password ?</h4>";
+	$disp = $disp."You already have an existing account on the openQRM Cloud but forgot your password ?";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."Then please just put your username in the box below and click on 'Forgot-Password' to";
+	$disp = $disp." let the Cloud sent you a new password.";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp.htmlobject_input('fusername', array("value" => '[Username]', "label" => 'Username'), 'text', 20);
+	$disp = $disp."<input type=hidden name='action' value='forgotpass'>";
+	$disp = $disp."<br>";
+	$disp = $disp."<br>";
+	$disp = $disp."<input type=submit value='Forgot-Password'>";
+	$disp = $disp."</form>";
+
+    return $disp;
 }
 
 
@@ -460,23 +475,9 @@ function login_user() {
 
 	$disp = "<a href=\"/cloud-portal/user/mycloud.php\"><img src='img/forward.gif' width='36' height='32' border='0' alt='' align='left'>";
 	$disp = $disp."<h1><b>Click here to login to the openQRM Cloud</b></h1></a>";
-	$disp = $disp."<form action=$thisfile method=post>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<hr>";
-	$disp = $disp."<b>Forgot the password ?</b>";
-	$disp = $disp."<br>";
-	$disp = $disp."You already have an existing account on the openQRM Cloud but forgot your password ?";
-	$disp = $disp."<br>";
-	$disp = $disp."Then please just put your username in the box below and click on 'Forgot-Password' to";
-	$disp = $disp." let the Cloud sent you a new password.";
-	$disp = $disp."<br>";
-	$disp = $disp.htmlobject_input('fusername', array("value" => '[Username]', "label" => 'Username'), 'text', 20);
-	$disp = $disp."<input type=hidden name='action' value='forgotpass'>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<input type=submit value='Forgot-Password'>";
-	$disp = $disp."</form>";
 	return $disp;
 }
 
