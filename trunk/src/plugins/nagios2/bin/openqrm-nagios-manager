@@ -94,45 +94,46 @@ case "$NAGIOS_CHECK_CMD" in
         # here we define the addtional nagios3 dependencies because especially for Debian/Ubuntu
         # for some versions only nagios2 packages are available, for other only nagios3
         if [ -f /etc/debian_version ]; then
-            NAGIOS2_PACKAGE_DEPENDENCIES="nagios2 nagios2-common ndoutils-nagios2-mysql"
-            if ! apt-cache search nagios2 1>/dev/null; then
-    			openqrm_post_event 0 "init" 3 "openqrm-nagios-manager" "Nagios2 is not available for this distribution, skipping..."
+            #NAGIOS2_PACKAGE_DEPENDENCIES="nagios2 nagios2-common ndoutils-nagios2-mysql"
+            NAGIOS2_PACKAGE_DEPENDENCIES="nagios2 nagios2-common"
+            if ! apt-cache search nagios2 | grep nagios2 1>/dev/null; then
+    			openqrm_post_event 0 "init" 5 "openqrm-nagios-manager" "Nagios2 is not available for this distribution, skipping..."
                 exit 1
             fi
             # before we install we have to create a fake ucf because because of a
             # bug in the nagios-mysql package db-common hangs during install
-            mv /usr/bin/ucf /usr/bin/ucf.org
-            echo "#!/bin/bash" > /usr/bin/ucf
-            echo "exit 0" >> /usr/bin/ucf
-            chmod +x /usr/bin/ucf
+#            mv /usr/bin/ucf /usr/bin/ucf.org
+#            echo "#!/bin/bash" > /usr/bin/ucf
+#            echo "exit 0" >> /usr/bin/ucf
+#            chmod +x /usr/bin/ucf
             if ! apt-get install -y $NAGIOS2_PACKAGE_DEPENDENCIES; then
     			openqrm_post_event 0 "init" 3 "openqrm-nagios-manager" "Failed to install the required Nagios packages : $NAGIOS2_PACKAGE_DEPENDENCIES. Please install manual and try again."
                 exit 1
             fi
             # moving back ucf
-            mv /usr/bin/ucf.org /usr/bin/ucf
+#            mv /usr/bin/ucf.org /usr/bin/ucf
             # adding broker module
-            if ! grep ^broker_module.*ndomod /etc/nagios2/nagios.cfg 1>/dev/null; then
-                echo "broker_module=/usr/lib/ndoutils/ndomod.o config_file=/etc/nagios2/ndomod.cfg" >> /etc/nagios2/nagios.cfg
-            fi
+#            if ! grep ^broker_module.*ndomod /etc/nagios2/nagios.cfg 1>/dev/null; then
+#                echo "broker_module=/usr/lib/ndoutils/ndomod.o config_file=/etc/nagios2/ndomod.cfg" >> /etc/nagios2/nagios.cfg
+#            fi
             # enable ndoutils in default-sysconfig
-            sed -i -e "s/ENABLE_NDOUTILS=.*/ENABLE_NDOUTILS=1/g" /etc/default/ndoutils
+#            sed -i -e "s/ENABLE_NDOUTILS=.*/ENABLE_NDOUTILS=1/g" /etc/default/ndoutils
             # bug in debian/ubuntu, manually creating the database + tables
-            if [ "$OPENQRM_DATABASE_PASSWWORD" != "" ]; then
-                ADDTIONAL_CMD_ARG="-p$OPENQRM_DATABASE_PASSWWORD "
-            fi
-            mysql -u $OPENQRM_DATABASE_USER $ADDTIONAL_CMD_ARG -e "create database ndoutils"
-            mysql -u $OPENQRM_DATABASE_USER $ADDTIONAL_CMD_ARG ndoutils < /usr/share/dbconfig-common/data/ndoutils-nagios2-mysql/install/mysql
+#            if [ "$OPENQRM_DATABASE_PASSWWORD" != "" ]; then
+#                ADDTIONAL_CMD_ARG="-p$OPENQRM_DATABASE_PASSWWORD "
+#            fi
+#            mysql -u $OPENQRM_DATABASE_USER $ADDTIONAL_CMD_ARG -e "create database ndoutils"
+#            mysql -u $OPENQRM_DATABASE_USER $ADDTIONAL_CMD_ARG ndoutils < /usr/share/dbconfig-common/data/ndoutils-nagios2-mysql/install/mysql
             # patch ndoutils table  -> known bug
-            mysql -u $OPENQRM_DATABASE_USER $ADDTIONAL_CMD_ARG ndoutils -e 'ALTER TABLE `nagios_configfilevariables` DROP INDEX `instance_id` , ADD INDEX `instance_id` ( `instance_id` , `configfile_id` );'
+#            mysql -u $OPENQRM_DATABASE_USER $ADDTIONAL_CMD_ARG ndoutils -e 'ALTER TABLE `nagios_configfilevariables` DROP INDEX `instance_id` , ADD INDEX `instance_id` ( `instance_id` , `configfile_id` );'
 
 
         elif [ -f /etc/redhat-release ]; then
             NAGIOS3_PACKAGE_DEPENDENCIES=""
-			openqrm_post_event 0 "init" 3 "openqrm-nagios-manager" "Auto-setup of ndoutils is not supported for SUSE based distributions, skipping..."
+			openqrm_post_event 0 "init" 5 "openqrm-nagios-manager" "Auto-setup of Nagios is not supported for Redhat based distributions, skipping..."
         elif [ -f /etc/SuSE-release ]; then
             NAGIOS3_PACKAGE_DEPENDENCIES=""
-			openqrm_post_event 0 "init" 3 "openqrm-nagios-manager" "Auto-setup of ndoutils is not supported for SUSE based distributions, skipping..."
+			openqrm_post_event 0 "init" 5 "openqrm-nagios-manager" "Auto-setup of Nagios is not supported for SUSE based distributions, skipping..."
         fi
 
         # linking the web dir
