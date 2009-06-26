@@ -6,7 +6,9 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zabbix/include/openqrm-plugin-zabbix-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zabbix/etc/openqrm-plugin-zabbix.conf
-
+openqrm_server_get_config
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+export LANG=C
 
 function openqrm_plugin_zabbix_start() {
 	echo "Starting the openQRM zabbix-plugin"
@@ -42,7 +44,6 @@ function openqrm_plugin_zabbix_stop() {
 	else
 		zabbix_manager_lock release
 		openqrm_post_event 0 "openqrm_plugin_zabbix_stop" 3 "openqrm-plugin-zabbix" "Could not stop Zabbix-agent. Init script not found !."
-		exit 1
 	fi
 
 	if [ -x /etc/init.d/zabbix-server ]; then
@@ -52,7 +53,6 @@ function openqrm_plugin_zabbix_stop() {
 	else
 		zabbix_manager_lock release
 		openqrm_post_event 0 "openqrm_plugin_zabbix_stop" 3 "openqrm-plugin-zabbix" "Could not stop Zabbix-server. Init script not found !."
-		exit 1
 	fi
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/zabbix/.running
 	return 0
