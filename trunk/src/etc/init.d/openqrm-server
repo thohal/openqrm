@@ -71,6 +71,35 @@ function openqrm_server_init() {
 		done
 	fi
 
+    # make sure apache and db are up
+	if [ -f /etc/debian_version ]; then
+        if ! ps ax | grep apache2 | grep -v grep 1>/dev/null; then
+            $OPENQRM_WEBSERVER_INIT start
+        fi
+        OPENQRM_DATABASE_INIT="/etc/init.d/mysql"
+	elif [ -f /etc/redhat-release ]; then
+        if ! ps ax | grep httpd | grep -v grep 1>/dev/null; then
+            $OPENQRM_WEBSERVER_INIT start
+        fi
+        OPENQRM_DATABASE_INIT="/etc/init.d/mysqld"
+	elif [ -f /etc/SuSE-release ]; then
+        if ! ps ax | grep apache | grep -v grep 1>/dev/null; then
+            $OPENQRM_WEBSERVER_INIT start
+        fi
+        OPENQRM_DATABASE_INIT="/etc/init.d/mysql"
+
+	fi
+    if [ "$OPENQRM_DATABASE_TYPE" == "mysql" ]; then
+        if ! ps ax | grep mysqld | grep -v grep 1>/dev/null; then
+            if [ -x "$OPENQRM_DATABASE_INIT" ]; then
+                $OPENQRM_DATABASE_INIT start
+            else
+                echo "ERROR: Could not start MySQL !"
+                echo "Please start MySQL manually and try again"
+                exit -1
+            fi
+        fi
+    fi
 
 	# initialyze the database
 	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions

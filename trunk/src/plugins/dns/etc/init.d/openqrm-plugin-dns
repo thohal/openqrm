@@ -94,7 +94,7 @@ function openqrm_plugin_dns_init() {
 	if [ "$CONFIGURED_DNS_FORWARDERS" != "" ] && openqrm_validate_ip $CONFIGURED_DNS_FORWARDERS; then
 		echo "NOTICE: Found already configured dns-forwarders $CONFIGURED_DNS_FORWARDERS"
 	else
-		if [ /etc/resolv.conf.openqrm-dns-plugin.backup ]; then
+		if [ -f /etc/resolv.conf.openqrm-dns-plugin.backup ]; then
 			CHECK_FOR_FORWARDERS="/etc/resolv.conf.openqrm-dns-plugin.backup"
 		else
 			CHECK_FOR_FORWARDERS="/etc/resolv.conf"
@@ -115,7 +115,22 @@ function openqrm_plugin_dns_init() {
 			echo "WARNING: Could not find out any dns-forwarders ! Please configure manually in /etc/bind/named.conf.options"
 		fi
 	fi
-
+    # link the named.conf file to /etc on redhat based systems
+    if [ -f /etc/redhat-release ]; then
+        if [ -f /etc/named.conf ]; then
+            mv -f /etc/named.conf /etc/named.conf.openqrm-backup
+        fi
+        ln -sf /etc/bind/named.conf.local /etc/named.conf
+    elif [ -f /etc/SuSE-release ]; then
+        # chroot is not supported yet
+        sed -i -e 's/NAMED_RUN_CHROOTED.*/NAMED_RUN_CHROOTED="no"/g' /etc/sysconfig/named
+        if [ -f /etc/named.conf.include ]; then
+            /bin/cp -f /etc/named.conf.include /etc/named.conf.include.openqrm-backup
+        fi
+cat >> /etc/named.conf.include << EOF
+include "/etc/bind/named.conf.local";
+EOF
+    fi
 
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dns
@@ -141,6 +156,16 @@ function openqrm_plugin_dns_uninstall() {
 		cp -f /etc/bind/named.conf.options.openqrm-dns-plugin.backup /etc/bind/named.conf.options
 	fi
 
+    # unlink the named.conf file to /etc on redhat based systems
+    if [ -f /etc/redhat-release ]; then
+        if [ -f /etc/named.conf.openqrm-backup ]; then
+            mv -f /etc/named.conf.openqrm-backup /etc/named.conf
+        fi
+    elif [ -f /etc/SuSE-release ]; then
+        if [ -f /etc/named.conf.include.openqrm-backup ]; then
+            /bin/cp -f /etc/named.conf.include.openqrm-backup /etc/named.conf.include
+        fi
+    fi
 	# unlinking the web dir
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dns
 }
