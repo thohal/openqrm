@@ -14,10 +14,6 @@ function documentation_howtos() {
 	$disp = $disp."<li>";
 	$disp = $disp."<a href='quickstart.php'>Get started</a>";
 	$disp = $disp."</li><li>";
-	$disp = $disp."<a href='local-storage.php'>Local-Storage deployment</a>";
-	$disp = $disp."</li><li>";
-	$disp = $disp."<a href='nfs-storage.php'>NFS-Storage deployment</a>";
-	$disp = $disp."</li><li>";
 	$disp = $disp."(more soon)";
 	$disp = $disp."</li>";
 	$disp = $disp."</ul>";
