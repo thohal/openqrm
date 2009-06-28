@@ -38,6 +38,73 @@ up to the
 				fixed
 24.08.2008	-	security fixes, GUI- and Usablility improvements
 29.08.2008	-	fixed [ 1934416 ] ng: template-based Image-Installer
-
+30.12.2008  -   for the 4.3 release :
+            -   improved usability for the storage management
+            -   implemented storage security features
+            -   new debian build system
+            -   fixed [ openqrm-Bugs-2298162 ] Selecting the resource-type in the overview is tricky
+            -   implemented [ openqrm-Feature Requests-2342603 ] Cloud Plugin Enhancement
+            -   implemented "auto-create-virtual-machines" for the Cloud Plugin
+            -   implemented [ 2147701 ] Support for VMware-server 2.x
+            -   fixed [ 2153376 ] Image-Shelf not extendable
+            -   xen plugin enhancements [ openqrm-Feature Requests-1949902 ] ng: booting xen domains via pypxeboot
+            -   fixed [ openqrm-Bugs-2413524 ] Nagios on Centos uses wrong dir
+            -   implemented [ 2250673 ] assigning default-image
+            -   implemented [ 2468842 ] state backups of the openQRM-server
+14.03.2009  -   for the 4.4 release :
+            -   debian build system updated
+            -   added nagios3 plugin
+            -   enhanced nagios2 integration, provding new automap option
+            -   implemented [ 2474672 ] persistant appliances for the cloud
+            -   fixed [ 2509597 ] requesting multiple resource does not free up cloud-ips
+            -   fixed [ 2520734 ] in openqrm 4.3 xen plugin there's a typo
+            -   fixed [ 2529860 ] umounting of /lib/modules before init
+            -   fixed [ 2524342 ] xen plugin does not find xen.gz in redhat based installs
+            -   fixed [ 2524370 ] xen plugin: xm/new.py requires xen 3.1+
+            -   implemented [ 2513579 ] integration of the Puppet groups into the Cloud
+            -   fixed [ openqrm-Bugs-2544987 ] xen plugin xm list avoiding dom0 entry
+            -   fixed [ openqrm-Bugs-2509728 ] growing event_info table slows down base engine
+            -   implemented [ openqrm-Feature Requests-2542613 ] xen-plugin make the location of the cfg files configurable
+            -   implemented [ openqrm-Feature Requests-1875784 ] enhancing the LinuxCOE integration
+            -   made the command-execution layer plug-able
+            -   added new command-execution layer based on dropbear (ssl + shared keys)
+            -   implemented [ openqrm-Feature Requests-2468844 ] cloud: on/off switch for the cloud -> being able to take it offline
+            -   puppet + webmin
+            -   added per-User Cloud-resource limits (quantity, memory, disk, network, cpus)
+            -   enhanced sshterm plugin, implemented secure remote access via ajaxterm and pound reverse-ssl-proxy
+            -   integrated sshterm-plugin into the Cloud
+            -   implemented [ openqrm-Feature Requests-1881578 ] ng: automatic loadbalancing for Xen vms
+            -   implemented [ openqrm-Feature Requests-1921180 ] ng: need a way to execute commands on the managed resources
+            -   implemented [ openqrm-Feature Requests-2502207 ] Web service plugin.
+28.06.2009  -   for the 4.5 release :
+            -   implemented "the Cloud billing should be plug-able"
+            -   implemented Cloud NAT feature
+            -   improved iSCSI boot for the iscsi-storage and lvm-storage plugin
+            -   added Cloud-Mailer
+            -   added Cloud VCD - Visual Cloud Designer
+            -   added Zabbix monitoring plugin
+            -   added Equallogic suppport, plugin development sponsored by XXLWebHosting
+            -   re-organized the left tree menu -> plus subsections
+            -   re-worked lvm-storage plugin
+            -   re-worked ALL storage plugins
+            -   completely re-worked the netapp-storage plugin
+                -> added netapp authentication hooks to fit into the storage security framework
+                -> tested with ontap 7.0
+            -   added support not "un-managed" nfs-storage server via an option to manually set the export-list
+            -   reworked VMware ESX plugin
+                -> tested with VMware ESX 3.5 - ESXi 4.0
+            -   reworked VMware Server 2 plugin
+                -> tested with VMware-server-2.0.1-156745.i386
+            -   reworked VMware Server plugin
+                -> tested with VMware-server 1
+            -   reworked Xen plugin
+                -> tested with Xen 3.2 - 3.4
+            -   reworked and finalyzed Citrix XenServer plugin
+                -> tested with Citrix XenServer 5.5.0
+            -   reworked KVM plugin
+                -> tested with kvm-62
+            -   New landing page with Data-Center summary
+            -   Fixed bugs : 2527643, 2636465, 2806793, 2709553, 2806816, 2781100, 2812712
+            -   Implemented/Closed Feature requests : 2208009, 2785130, 2208012, 2153370, 2697291
 
 
