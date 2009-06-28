@@ -630,24 +630,22 @@ if(htmlobject_request('action') != '') {
             $cr_list = $cr->get_all_ids();
 
             foreach ($cr_list as $cr_id_arr) {
-                foreach ($cr_id_arr as $cr_idr) {
-                    $cr_id=$cr_idr['cr_id'];
-                    $cr_all++;
-                    $g_cr = new cloudrequest();
-                    $g_cr->get_instance_by_id($cr_id);
-                    if ($g_cr->status == 3) {
-                        // fill active
-                        $cr_active++;
-                        // find most active cloud appliance
-                        $c_app = new appliance();
-                        $c_app->get_instance_by_id($g_cr->appliance_id);
-                        $c_resource = new resource();
-                        $c_resource->get_instance_by_id($c_app->resources);
-                        if ("$c_resource->state" == "active") {
-                            $cloud_load_array[$cr_id] = $c_resource->load;
-                        } else if ("$c_resource->state" == "error") {
-                            $cloud_errors++;
-                        }
+                $cr_id=$cr_id_arr['cr_id'];
+                $cr_all++;
+                $g_cr = new cloudrequest();
+                $g_cr->get_instance_by_id($cr_id);
+                if ($g_cr->status == 3) {
+                    // fill active
+                    $cr_active++;
+                    // find most active cloud appliance
+                    $c_app = new appliance();
+                    $c_app->get_instance_by_id($g_cr->appliance_id);
+                    $c_resource = new resource();
+                    $c_resource->get_instance_by_id($c_app->resources);
+                    if ("$c_resource->state" == "active") {
+                        $cloud_load_array[$cr_id] = $c_resource->load;
+                    } else if ("$c_resource->state" == "error") {
+                        $cloud_errors++;
                     }
                 }
             }
