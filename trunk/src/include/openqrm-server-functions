@@ -91,6 +91,13 @@ function openqrm_server_create_kernel() {
 			/bin/cp -f $MODULE $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/lib/modules/$OPENQRM_SERVER_KERNEL_VERSION
 		fi
 	done
+    # also need virtio* for kvm virtio pci network card
+    for MODULE in `find $OPENQRM_SERVER_KERNEL_LOCATION/lib/modules/$OPENQRM_SERVER_KERNEL_VERSION/kernel/drivers -type f -name virtio*`; do
+        MODULE_NAME=`echo $MODULE | sed -e "s/.*\///"`
+        if ! echo $OPENQRM_UNWANTED_MODULES | grep $MODULE_NAME 1>/dev/null; then
+            /bin/cp -f $MODULE $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/lib/modules/$OPENQRM_SERVER_KERNEL_VERSION
+        fi
+    done
 	# unpack the initrd-template
 	echo "-> using initrd-template from $OPENQRM_SERVER_INITRD_TEMPLATE"
 	tar -C $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME -xzf $OPENQRM_SERVER_INITRD_TEMPLATE

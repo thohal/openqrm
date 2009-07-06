@@ -204,6 +204,12 @@ syslogd &&  klogd
 # need to run depmod 2 times as experienced
 depmod -a
 depmod -a
+# load virtio drivers for KVM VMs because hwsetup doesn't handle it
+modprobe virtio 2>/mplog
+modprobe virtio_pci 2>/mplog
+modprobe virtio_ring 2>/mplog
+modprobe virtio_net 2>/mplog
+rm -f  /mplog
 hwsetup -p
 eval `cat /proc/cmdline`
 if grep -q sysfs /proc/filesystems ; then
