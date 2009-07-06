@@ -1,0 +1,95 @@
+#!/bin/bash
+# This script starts/stops the remote-exec and monitoring subsystem for openQRM
+
+OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
+export LANGUAGE=C
+export LANG=C
+export LC_ALL=C
+
+if [ ! -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+    echo "ERROR: Cloud not find the openQRM configuration file $OPENQRM_RESOURCE_PARAMETER_FILE"
+    echo "ERROR: Is this system already integrated with openQRM ?"
+    exit 1
+fi
+. $OPENQRM_RESOURCE_PARAMETER_FILE
+
+# currently static list of plugin with boot-services for solaris/opensolaris systems
+OPENQRM_PLUGINS_FOR_SOLARIS="zfs-storage"
+
+
+
+
+
+case "$1" in
+'start')
+        echo "Starting the openQRM-client"
+
+        # generate a new key
+        mkdir -p $resource_basedir/openqrm/etc/dropbear/
+        rm -f $resource_basedir/openqrm/etc/dropbear/dropbear_rsa_host_key
+        $resource_basedir/openqrm/bin/dropbearkey -t rsa -f $resource_basedir/openqrm/etc/dropbear/dropbear_rsa_host_key
+        # get the public key from the openQRM server
+        if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/openqrm-server-public-rsa-key; then
+            echo "ERROR: Could not get the public key of the openQRM-server at $resource_openqrmserver ! Please check the certificates !"
+            exit 1
+        fi
+        if [ ! -d /root/.ssh ]; then
+            mkdir -p /root/.ssh
+        fi
+    	mv -f openqrm-server-public-rsa-key /root/.ssh/authorized_keys
+        # start dropbear server
+        $resource_basedir/openqrm/sbin/dropbear -p $resource_execdport -r $resource_basedir/openqrm/etc/dropbear/dropbear_rsa_host_key
+        # start openqrm-monitord
+        $resource_basedir/openqrm/sbin/openqrm-monitord.solx86 &
+
+        # start the Solaris/openSolaris plugins
+        for SOL_PLUGIN in $OPENQRM_PLUGINS_FOR_SOLARIS; do
+            if echo $openqrm_plugins | grep $SOL_PLUGIN 1>/dev/null; then
+                echo "NOTICE: Getting boot-service for plugin $SOL_PLUGIN"
+                mkdir -p $resource_basedir/openqrm/plugins/$SOL_PLUGIN
+                cd $resource_basedir/openqrm/plugins/$SOL_PLUGIN
+                wget -q http://$resource_openqrmserver/openqrm/boot-service/openqrm-$SOL_PLUGIN.solx86.tgz
+                gunzip openqrm-$SOL_PLUGIN.solx86.tgz
+                tar -xf openqrm-$SOL_PLUGIN.solx86.tar
+                rm -f openqrm-$SOL_PLUGIN.solx86.tar
+                cd - 1>/dev/null
+                # check for init script to start
+                if [ -x $resource_basedir/openqrm/plugins/$SOL_PLUGIN/etc/init.d/$SOL_PLUGIN ]; then
+                    $resource_basedir/openqrm/plugins/$SOL_PLUGIN/etc/init.d/$SOL_PLUGIN start
+                fi
+
+            fi
+        done
+
+        ;;
+
+'stop')
+        echo "Stopping the openQRM-client"
+
+        # stop the Solaris/openSolaris plugins
+        for SOL_PLUGIN in $OPENQRM_PLUGINS_FOR_SOLARIS; do
+            if echo $openqrm_plugins | grep $SOL_PLUGIN 1>/dev/null; then
+                # check for init script to stop
+                if [ -x $resource_basedir/openqrm/plugins/$SOL_PLUGIN/etc/init.d/$SOL_PLUGIN ]; then
+                    $resource_basedir/openqrm/plugins/$SOL_PLUGIN/etc/init.d/$SOL_PLUGIN stop
+                fi
+
+            fi
+        done
+
+        DBPID=`ps -ef | grep dropbear | grep $resource_execdport | grep -v grep | awk {' print $2 '}`
+        if [ "$DBPID" != "" ]; then
+            kill $DBPID
+        fi
+        killall openqrm-monitord.solx86 1>/dev/null 2>&1
+        # in case we do not have killall
+        for OPENQRM_PID in `ps -ef 2>/dev/null | grep openqrm-monitord.solx86 | grep -v grep | awk {' print $2 '}`; do
+            kill $OPENQRM_PID
+        done
+        ;;
+
+*)
+        echo "Usage: $0 { start | stop }"
+        exit 1
+        ;;
+esac

@@ -1,0 +1,160 @@
+#!/bin/bash
+# openqrm-monitord, a openQRM daemon for gathering system statistics
+
+OPENQRM_SBIN_DIR=`dirname $0`
+OPENQRM_BASE_DIR=`pushd $OPENQRM_SBIN_DIR/.. 1>/dev/null && pwd && popd 1>/dev/null`
+OPENQRM_EVENT="statistics"
+OPENQRM_ACTIVE_STATE="active"
+OPENQRM_STARTING_STATE="starting"
+OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
+export LANGUAGE=C
+export LANG=C
+export LC_ALL=C
+
+if [ ! -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+    echo "ERROR: Cloud not find the openQRM configuration file $OPENQRM_RESOURCE_PARAMETER_FILE"
+    echo "ERROR: Is this system already integrated with openQRM ?"
+    exit 1
+fi
+. $OPENQRM_RESOURCE_PARAMETER_FILE
+
+# defines for startup
+current_uptime=0
+
+# local used functions
+
+function send_info() {
+	current_state="$OPENQRM_ACTIVE_STATE"
+	current_event="$OPENQRM_EVENT"
+	MESSAGEDATA="resource_id=$resource_id&resource_uptime=$current_uptime&resource_cpunumber=$current_cpu_number&resource_cpuspeed=$current_cpu_speed&resource_cpumodel=$current_cpu_model&resource_memtotal=$current_mem_total&resource_memused=$current_mem_used&resource_swaptotal=$current_swap_total&resource_swapused=$current_swap_used&resource_hostname=$current_hostname&resource_load=$current_cpu_load&resource_state=$current_state&resource_event=$current_event";
+	OPENQRM_RESOURCE_INFO_URL="http://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=update_info&$MESSAGEDATA"
+	wget -q -O /dev/null "$OPENQRM_RESOURCE_INFO_URL"
+}
+
+
+# converts bytes to mega-bytes
+function bytes_to_mega() {
+        echo $1 | awk '{printf("%.0f",  $1 /  1024/ 1024)}'
+}
+
+
+# statistic gathering functions
+
+# uptime
+function find_uptime() {
+	current_uptime=$(( $current_uptime + 30 ))
+}
+
+
+
+# cpu_number
+function find_cpu_number() {
+	current_cpu_number=`prtconf | grep cpu | grep -v cpus | wc -l`
+	if [ -z "$current_cpu_number" ]; then
+		current_cpu_number=1
+	fi
+}
+
+# cpu_speed
+function find_cpu_speed() {
+	if [ -z "$current_cpu_speed" ]; then
+		current_cpu_speed=1
+	fi
+}
+
+
+# cpu_model
+function find_cpu_model() {
+	current_cpu_model=X86
+}
+
+# mem_total
+function find_mem_total() {
+	current_mem_total=`top -n | grep Memory | grep phys | grep swap | awk {' print $2 '} | sed -e "s/[A-Z]//g"`
+	if [ -z "current_mem_total" ]; then
+		current_mem_total=0
+	fi
+}
+
+# mem_used
+function find_mem_used() {
+	current_mem_free=`top -n | grep Memory | grep phys | grep swap | awk {' print $5 '} | sed -e "s/[A-Z]//g"`
+    current_mem_used=$(( $current_mem_total - $current_mem_free ))
+	if [ -z "$current_mem_used" ]; then
+		current_mem_used=0
+	fi
+}
+
+
+# swap_total
+function find_swap_total() {
+    current_swap_total=`top -n | grep Memory | grep phys | grep swap | awk {' print $8 '} | sed -e "s/[A-Z]//g"`
+	if [ -z "$current_swap_total" ]; then
+		current_swap_total=0
+	fi
+}
+
+
+# swap_used
+function find_swap_used() {
+    current_swap_free=`top -n | grep Memory | grep phys | grep swap | awk {' print $11 '} | sed -e "s/[A-Z]//g"`
+    current_swap_used=$(( $current_swap_total - $current_swap_free))
+	if [ -z "$current_swap_used" ]; then
+		current_swap_used=0
+	fi
+}
+
+# hostname
+function find_hostname() {
+	current_hostname=`hostname`
+	if [ -z "$current_hostname" ]; then
+		current_hostname=0
+	fi
+}
+
+
+
+# cpu_load
+function find_cpu_load() {
+	current_cpu_load=`top -n | head -n1 | grep load | awk {' print $6 '} | sed -e "s/,//g"`
+	if [ -z "$current_cpu_load" ]; then
+		current_cpu_load=0
+	fi
+}
+
+
+
+# gathering the static values
+echo "$0: Gathering resources-information" | logger
+# cpu_number
+find_cpu_number
+# cpu_speed
+find_cpu_speed
+# cpu_model
+find_cpu_model
+# mem_total
+find_mem_total
+
+# main loop
+while (true); do
+	# uptime
+	find_uptime
+	# mem_used
+	find_mem_used
+	# swap_total
+	find_swap_total
+	# swap_used
+	find_swap_used
+	# hostname
+	find_hostname
+	# cpu_load
+	find_cpu_load
+	# sending statistics
+	send_info
+	# delay
+	sleep $resource_senddelay
+done
+# never reached
+exit 0
+
+

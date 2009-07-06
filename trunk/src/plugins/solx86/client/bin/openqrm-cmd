@@ -1,0 +1,37 @@
+#!/bin/bash
+# this is the openQRM commandline client
+
+export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/X11R6/bin
+
+WHOAMI=`whoami`
+echo "openQRM engine: Running as $WHOAMI cmd : $@"  >> /var/log/syslog
+
+function stop_openqrm_monitord() {
+	killall openqrm-monitord 1>/dev/null 2>&1
+	# in case we do not have killall
+	for OPENQRM_PID in `ps ef 2>/dev/null | grep openqrm-monitord | grep -v grep | awk {' print $2 '}`; do
+		kill $OPENQRM_PID
+	done
+}
+
+
+case "$@" in
+	reboot)
+		stop_openqrm_monitord
+		/usr/sbin/reboot &
+		exit 0
+		;;
+	halt)
+		stop_openqrm_monitord
+		/usr/sbin/poweroff &
+		exit 0
+		;;
+esac
+
+CMD_OUTPUT=$($@ 2>&1)
+CMD_RESULT=$?
+echo $CMD_OUTPUT >> /var/log/syslog
+if [ "$CMD_RESULT" != "0" ]; then
+	echo "ERROR: openqrm-cmd failed running : $@"
+	exit 1
+fi

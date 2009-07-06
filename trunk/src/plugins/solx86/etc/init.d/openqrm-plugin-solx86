@@ -1,0 +1,94 @@
+#!/bin/bash
+# init script for the openQRM solx86-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/solx86/include/openqrm-plugin-solx86-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/solx86/etc/openqrm-plugin-solx86.conf
+
+function openqrm_plugin_solx86_start() {
+	echo "Starting the openQRM solx86-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/solx86/.running
+}
+
+
+function openqrm_plugin_solx86_stop() {
+	echo "Stopping the openQRM solx86-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/solx86/.running
+}
+
+function openqrm_plugin_solx86_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "solx86: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "solx86: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM solx86-plugin"
+	openqrm_plugin_solx86_stop
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD solx86
+    rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-solx86
+    rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-client.solx86.tgz
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/solx86
+
+}
+
+function openqrm_plugin_solx86_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "solx86: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "solx86: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Initializing the openQRM solx86-plugin"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD solx86 solx86 "Solaris server" solx86 "Solaris server"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/solx86/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/solx86
+    # linking integration util
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/solx86/bin/openqrm-solx86 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-solx86
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/solx86/web/openqrm-client.solx86.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-client.solx86.tgz
+
+}
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_solx86_start
+		;;
+	stop)
+		openqrm_plugin_solx86_stop
+		;;
+	restart)
+		openqrm_plugin_solx86_stop
+		sleep 1
+		openqrm_plugin_solx86_start
+		;;
+	init)
+		openqrm_plugin_solx86_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_solx86_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+

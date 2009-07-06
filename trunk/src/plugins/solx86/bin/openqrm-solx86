@@ -1,0 +1,297 @@
+#!/bin/bash
+
+# This script integrates a local (existing) server into openQRM
+# The system then can (should) be set to netboot to gain the full
+# advantages and flexibility of the openQRM management platform
+OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
+SOLARIS_DEPENDENCIES="top,SUNWtop,base:python,SUNWPython,base:expect,SUNWexpect,base:dropbear,dropbear,contrib"
+OLDIFS=$IFS
+export LANGUAGE=C
+export LANG=C
+export LC_ALL=C
+
+# are we root ?
+if ! id | grep root 1>/dev/null; then
+    echo "ERROR: Please run this util as root"
+    exit 1
+fi
+
+
+
+function usage() {
+        echo "Usage : $0 integrate -u <user> -p <password> -q <ip-address-of-openQRM-server> [-i <network-interface>]"
+        echo "        $0 remove -u <user> -p <password> -q <ip-address-of-openQRM-server>"
+}
+
+
+# function to check if required packages are installed
+function check_dependencies() {
+    IFS=':'
+    for PACKAGE in $SOLARIS_DEPENDENCIES; do
+            PBIN=`echo $PACKAGE | cut -d',' -f1`
+            PPGK=`echo $PACKAGE | cut -d',' -f2`
+            PREP=`echo $PACKAGE | cut -d',' -f3`
+            if ! which $PBIN 1>/dev/null 2>&1; then
+                    echo "NOTICE: The openQRM integration depends on the $PBIN util which is not installed!"
+                    echo "        Please install package $PPGK from the $PREP repository and try again."
+                    return 1
+            fi
+    done
+    IFS=$OLDIFS
+    return 0
+}
+
+
+
+# this function add missing 0's to the mac address
+# e.g. it transforms 0:16:3e:0:33:3 into 00:16:3e:0:33:03
+# this is needed to create the right pxe-configuration file name in openQRM
+function fix_mac() {
+ local SOL_MAC=$1
+ FIRST_BYTE=`echo $SOL_MAC | cut -d':' -f1`
+ SECOND_BYTE=`echo $SOL_MAC | cut -d':' -f2`
+ THIRD_BYTE=`echo $SOL_MAC | cut -d':' -f3`
+ FOURTH_BYTE=`echo $SOL_MAC | cut -d':' -f4`
+ FIVTH_BYTE=`echo $SOL_MAC | cut -d':' -f5`
+ SIXTH_BYTE=`echo $SOL_MAC | cut -d':' -f6`
+
+ STRLEN=${#FIRST_BYTE}
+ if (( $STRLEN < 2 )); then
+  FIRST_BYTE="0$FIRST_BYTE"
+ fi
+ STRLEN=${#SECOND_BYTE}
+ if (( $STRLEN < 2 )); then
+  SECOND_BYTE="0$SECOND_BYTE"
+ fi
+ STRLEN=${#THIRD_BYTE}
+ if (( $STRLEN < 2 )); then
+  THIRD_BYTE="0$THIRD_BYTE"
+ fi
+ STRLEN=${#FOURTH_BYTE}
+ if (( $STRLEN < 2 )); then
+  FOURTH_BYTE="0$FOURTH_BYTE"
+ fi
+ STRLEN=${#FIVTH_BYTE}
+ if (( $STRLEN < 2 )); then
+  FIVTH_BYTE="0$FIVTH_BYTE"
+ fi
+ STRLEN=${#SIXTH_BYTE}
+ if (( $STRLEN < 2 )); then
+  SIXTH_BYTE="0$SIXTH_BYTE"
+ fi
+ echo "$FIRST_BYTE:$SECOND_BYTE:$THIRD_BYTE:$FOURTH_BYTE:$FIVTH_BYTE:$SIXTH_BYTE"
+}
+
+
+
+function openqrm_integrate_solx86() {
+	local USER=$1
+	local PASSWORD=$2
+	local OPENQRM_SERVER=$3
+	local INTERFACE=$4
+
+    echo "... checking dependecies"
+    if ! check_dependencies; then
+        return 1
+    fi
+    # do we have dropbear now ?
+    if ! which dropbear 1>/dev/null 2>&1; then
+        echo "ERROR: Please install dropbear server before integrating with openQRM"
+        return 1
+    else
+        DBSERVER=`which dropbear`
+    fi
+    if ! which dropbearkey 1>/dev/null 2>&1; then
+        echo "ERROR: Please install dropbearkey before integrating with openQRM"
+        return 1
+    else
+        DBKEY=`which dropbearkey`
+    fi
+
+	echo "Integrating system to openQRM-server at $OPENQRM_SERVER"
+	mkdir -p `dirname $OPENQRM_RESOURCE_PARAMETER_FILE`
+	
+	if [ "$INTERFACE" == "" ]; then
+		echo "Which network-interface to use for the integration ?"
+		ifconfig -a | grep -v lo0 | grep UP | cut -d':' -f1 | uniq
+		echo -n "-> : "
+		read INTERFACE
+	fi
+	# check if exists
+	if ! ifconfig $INTERFACE 1>/dev/null; then
+		echo "ERROR: Interface $INTERFACE does not exists !"
+		return 1
+	fi
+	local resource_id=-1
+	local resource_ip=`ifconfig $INTERFACE | grep inet | grep -v inet6 | awk {' print $2 '}`
+	local resource_mac=`ifconfig $INTERFACE | grep ether | awk {' print $2 '}`
+	# remove whitespaces
+	resource_mac=`fix_mac $resource_mac`
+	echo "Using $INTERFACE $resource_ip/$resource_mac"
+	
+	wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	
+	echo "Getting openqrm-client package"
+    mkdir -p $resource_basedir/openqrm/
+
+	cd $resource_basedir/openqrm/
+	wget -q "http://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.solx86.tgz"
+    gunzip openqrm-client.solx86.tgz
+	tar -xf openqrm-client.solx86.tar
+	rm -f openqrm-client.solx86.tar
+	export OPENQRM_SERVER_BASE_DIR=$resource_basedir
+    chmod +x $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86
+    chmod +x $resource_basedir/openqrm/sbin/*
+    chmod +x $resource_basedir/openqrm/bin/*
+
+	# gather some more details to create the appliance on the openQRM-server
+	solx86_root_device="local-disk"
+	solx86_root_device_type="zfs"
+	solx86_kernel_version="solaris-$resource_id"
+	
+	# now we send the local-integration signal to create
+	# the solx86 storage, image and appliance
+	if ! wget -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "http://$OPENQRM_SERVER/openqrm/base/plugins/solx86/solx86-action.php?solx86_command=integrate&solx86_id=$resource_id&solx86_root_device=$solx86_root_device&solx86_root_device_type=$solx86_root_device_type&solx86_kernel_version=$solx86_kernel_version"; then
+		echo "ERROR: Could not create the appliance resource$resource_id on the openQRM-server!"
+		sleep 2
+		echo "NOTCIE: Removing the system from openQRM because of errors !"
+		openqrm_remove_solx86 $USER $PASSWORD $OPENQRM_SERVER
+		return 1
+	fi
+
+    # here the system is integrated so far
+    # a resource, a kernel, an image, a (local) storage server and an appliance
+    # had been created. Now we need to start the remote-exec subsystem and the monitoring
+    ln -sf $DBSERVER $resource_basedir/openqrm/sbin/dropbear
+    ln -sf $DBKEY $resource_basedir/openqrm/bin/dropbearkey
+    # link the init script to rc.d 
+	ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 /etc/init.d/openqrm-client.solx86
+    ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 /etc/rc2.d/S99openqrm-client.solx86
+    ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 /etc/rcS.d/K99openqrm-client.solx86
+
+    $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 start
+
+	
+	
+}
+
+function openqrm_remove_solx86() {
+	local USER=$1
+	local PASSWORD=$2
+	local OPENQRM_SERVER=$3
+    if [ ! -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+    	echo "System already removed from openQRM-server at $OPENQRM_SERVER"
+        return 1
+    fi
+	echo "Removing system from openQRM-server at $OPENQRM_SERVER"
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+    # stop the openqrm-client
+
+	# try to remove components from the solx86 appliance
+	if ! wget -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "http://$OPENQRM_SERVER/openqrm/base/plugins/solx86/solx86-action.php?solx86_command=remove&solx86_id=$resource_id"; then
+		echo "WARNING: Could not remove the appliance resource$resource_id from the openQRM-server!"
+	fi
+
+	# remove system from openQRM
+	if ! wget -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "http://$OPENQRM_SERVER/openqrm/base/server/resource/resource-action.php?resource_command=remove&resource_id=$resource_id&resource_mac=$resource_mac"; then
+		echo "ERROR: Could not remove system from the openQRM-server!"
+		return 1
+	fi
+
+    $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 stop
+	rm -f $OPENQRM_RESOURCE_PARAMETER_FILE
+	rm -rf $resource_basedir/openqrm
+    # remove init scripts
+	rm -f /etc/init.d/openqrm-client.solx86 /etc/rc2.d/S99openqrm-client.solx86 /etc/rcS.d/K99openqrm-client.solx86
+	echo "Successfully removed system from openQRM"
+}
+
+
+case "$1" in
+	integrate)
+		shift
+		if [ $# == 0 ]; then
+			usage
+			exit 0
+		fi
+		while [ $# -ne 0 ]; do
+			case "$1" in
+				-u)
+					USER=$2
+					;;
+				-p)
+					PASSWORD=$2
+					;;			
+				-q)
+					OPENQRM_SERVER=$2
+					;;			
+				-i)
+					INTERFACE=$2
+					;;			
+			esac
+			shift
+		done
+		if [ "$USER" == "" ]; then
+			echo "ERROR: Missing username !"
+			usage
+			exit 1
+		fi
+		if [ "$PASSWORD" == "" ]; then
+			echo "PASSWORD: Missing password !"
+			usage
+			exit 1
+		fi
+		if [ "$OPENQRM_SERVER" == "" ]; then
+			echo "OPENQRM_SERVER: Missing openQRM-server ip-address !"
+			usage
+			exit 1
+		fi
+		openqrm_integrate_solx86 $USER $PASSWORD $OPENQRM_SERVER $INTERFACE
+		;;
+
+	remove)
+		shift
+		if [ $# == 0 ]; then
+			usage
+			exit 0
+		fi
+		while [ $# -ne 0 ]; do
+			case "$1" in
+				-u)
+					USER=$2
+					;;
+				-p)
+					PASSWORD=$2
+					;;			
+				-q)
+					OPENQRM_SERVER=$2
+					;;			
+			esac
+			shift
+		done
+		if [ "$USER" == "" ]; then
+			echo "ERROR: Missing username !"
+			usage
+			exit 1
+		fi
+		if [ "$PASSWORD" == "" ]; then
+			echo "PASSWORD: Missing password !"
+			usage
+			exit 1
+		fi
+		if [ "$OPENQRM_SERVER" == "" ]; then
+			echo "OPENQRM_SERVER: Missing openQRM-server ip-address !"
+			usage
+			exit 1
+		fi
+		openqrm_remove_solx86 $USER $PASSWORD $OPENQRM_SERVER
+		;;
+
+	*)
+		usage
+		exit 0
+		;;
+
+esac
+		
