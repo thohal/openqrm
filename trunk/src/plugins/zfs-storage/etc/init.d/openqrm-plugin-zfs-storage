@@ -1,0 +1,117 @@
+#!/bin/bash
+# init script for the openQRM zfs-storage-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zfs-storage/include/openqrm-plugin-zfs-storage-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zfs-storage/etc/openqrm-plugin-zfs-storage.conf
+
+
+
+function openqrm_plugin_zfs_storage_start() {
+	openqrm_plugin_zfs_storage_stop 1>/dev/null 2>&1
+	echo "Starting the openQRM zfs-storage-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/zfs-storage/.running
+}
+
+
+function openqrm_plugin_zfs_storage_stop() {
+	echo "Stopping the openQRM zfs-storage-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/zfs-storage/.running
+}
+
+function openqrm_plugin_zfs_storage_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "zfs-storage: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "zfs-storage: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM zfs-storage-plugin"
+	openqrm_plugin_zfs_storage_stop
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD zfs-deployment
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/zfs-storage
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.zfs-deployment
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.zfs-deployment.php
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-zfs-storage.solx86.tgz
+
+	# remove only if lvm-storage is not enabled
+	if ! ls $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins | grep lvm-storage 1>/dev/null 2>&1; then
+		if ! ls $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins | grep netapp-storage 1>/dev/null 2>&1; then
+			rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsid
+			rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsiadm
+		fi
+	fi
+}
+
+function openqrm_plugin_zfs_storage_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "zfs-storage: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "zfs-storage: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Initializing the openQRM zfs-storage-plugin"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD zfs-deployment zfs-deployment "ZFS-root deployment" zfs-storage "Solaris ZFS Storage"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zfs-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/zfs-storage
+	# linking the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zfs-storage/web/openqrm-zfs-storage.solx86.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/openqrm-zfs-storage.solx86.tgz
+	# linking the root mount hook
+	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zfs-storage/web/root-mount.zfs-deployment
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zfs-storage/web/root-mount.zfs-deployment $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.zfs-deployment
+	# linking the default image-parameters
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zfs-storage/web/image.zfs-deployment.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.zfs-deployment.php
+
+	# copying iscsid to boot-service dir
+	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsid ]; then
+		cp -f `which iscsid` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
+	fi
+	# copying iscsiadm to boot-service dir
+	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsiadm ]; then
+		cp -f `which iscsiadm` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
+	fi
+	
+}
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_zfs_storage_start
+		;;
+	stop)
+		openqrm_plugin_zfs_storage_stop
+		;;
+	restart)
+		openqrm_plugin_zfs_storage_stop
+		sleep 1
+		openqrm_plugin_zfs_storage_start
+		;;
+	init)
+		openqrm_plugin_zfs_storage_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_zfs_storage_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+

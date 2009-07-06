@@ -1,0 +1,8 @@
+#	Title
+#	Href
+#	Alt
+#	IMG
+#	Target
+..|ZFS-Storage
+...|About|plugins/zfs-storage/zfs-storage-about.php
+...|Luns|plugins/zfs-storage/zfs-storage-manager.php

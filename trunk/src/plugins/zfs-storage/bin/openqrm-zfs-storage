@@ -1,0 +1,384 @@
+#!/bin/bash
+
+export PATH=$PATH:/opt/csw/bin:/opt/csw/sbin
+
+# this script automatically manages zfs-storage server (Solaris/openSolaris)
+. /var/openqrm/openqrm-resource.conf
+OPENQRM_SERVER_BASE_DIR=$resource_basedir
+OPENQRM_SERVER_IP=$resource_openqrmserver
+OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.solx86.py"
+export LANG=C
+LINEBR='
+'
+DEFAULT_IMAGE_SIZE=1
+ZFS_MGMT_LOCK_FILE=/var/run/zfs-storage/zfs-storage-plugin.lock
+ZFS_MGMT_LOCK_DELAY=5
+ZFS_MGMT_LOCK_RETRY=10
+ZFS_BASE_IQN="iqn.1986-00.com.oq:01:e00000000000"
+
+
+# are we root ?
+if ! id | grep root 1>/dev/null; then
+    echo "ERROR: Please run this util as root"
+    exit 1
+fi
+
+
+function zfs_storage_usage() {
+	echo "Usage : $0 add/remove/snap <-n image-name> <-i image-password> <-z zpoolname>"
+	echo "             [-m size in MB]"
+	echo "             [-s image-snapshot-name]"
+	echo "        $0 auth <-r image-rootdevice> <-i image-password>"
+	echo "        $0 post_zpools <-u username> <-p password>"
+	echo "        $0 post_luns <-z zpoolname> <-u username> <-p password>"
+	echo "        $0 post_identifier <-u username> <-p password>"
+	exit 1
+}
+
+function zfs_log() {
+    echo $@
+    echo $@ >> /var/log/syslog
+}
+
+
+# locking function
+function zfs_storage_lock() {
+	local COMMAND=$1
+	local RET=1
+    local ZFS_LOCK_LOOP=1
+	if [ ! -d `dirname $ZFS_MGMT_LOCK_FILE` ]; then
+		mkdir -p `dirname $ZFS_MGMT_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+                while [ -f $ZFS_MGMT_LOCK_FILE ]; do
+                    sleep $ZFS_MGMT_LOCK_DELAY
+                    ZFS_LOCK_LOOP=$(( $ZFS_LOCK_LOOP + 1 ))
+                    if [ "$ZFS_LOCK_LOOP" == "$ZFS_MGMT_LOCK_RETRY" ]; then
+                        break
+                    fi
+                done
+				touch $ZFS_MGMT_LOCK_FILE
+				zfs_log "openqrm - zfs-storage - Aquired the lock"
+				;;
+		release)
+				/bin/rm -f $ZFS_MGMT_LOCK_FILE
+				zfs_log "openqrm - zfs-storage - Released the lock"
+				;;
+	esac
+}
+
+
+
+
+
+
+# main
+ZFS_COMMAND=$1
+shift
+
+while [ $# -ne 0 ]; do
+	case "$1" in
+		-n)
+			ZFS_IMAGE_NAME=$2
+			shift
+			;;
+		-s)
+			ZFS_IMAGE_SNAPSHOT_NAME=$2
+			shift
+			;;
+		-m)
+			ZFS_IMAGE_SIZE=$2
+			shift
+			;;
+		-i)
+			ZFS_IMAGE_PASSWORD=$2
+			shift
+			;;
+		-r)
+			ZFS_IMAGE_ROOTDEVICE=$2
+			shift
+			;;
+		-u)
+			ZFS_OPENQRM_USERNAME=$2
+			shift
+			;;
+		-p)
+			ZFS_OPENQRM_PASSWORD=$2
+			shift
+			;;
+		-z)
+			ZFS_ZPOOL_NAME=$2
+			shift
+			;;
+		*)
+			zfs_log "ERROR: Free commandline arguments are not allowed"
+			zfs_storage_usage
+			exit 6
+			;;
+	esac
+	shift
+done
+
+
+
+
+# main
+if [ "$ZFS_COMMAND" == "" ]; then
+	zfs_storage_usage
+fi
+
+if [ "$ZFS_COMMAND" == "post_luns" ] || [ "$ZFS_COMMAND" == "post_identifier" ]; then
+	if [ "$ZFS_OPENQRM_USERNAME" == "" ]; then
+		zfs_storage_usage
+	fi
+	if [ "$ZFS_OPENQRM_PASSWORD" == "" ]; then
+		zfs_storage_usage
+	fi
+else
+	if [ "$ZFS_COMMAND" != "post_zpools" ] && [ "$ZFS_COMMAND" != "auth" ]; then
+		if [ "$ZFS_IMAGE_NAME" == "" ]; then
+			zfs_storage_usage
+		fi
+	fi
+fi
+
+case "$ZFS_COMMAND" in
+
+	add)
+		if [ "$ZFS_ZPOOL_NAME" == "" ]; then
+			zfs_storage_usage
+		fi
+		if [ "$ZFS_IMAGE_PASSWORD" == "" ]; then
+			zfs_storage_usage
+		fi
+		if [ "$ZFS_IMAGE_SIZE" == "" ]; then
+			ZFS_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
+			zfs_log "Using default size of $DEFAULT_IMAGE_SIZE GB!"
+		fi
+		export ZFS_IMAGE_SIZE
+		zfs_log "Creating ZFS iSCSI Lun $ZFS_IMAGE_NAME with size $ZFS_IMAGE_SIZE GB on zpool $ZFS_ZPOOL_NAME"
+		zfs_storage_lock aquire
+        if ! zfs create -o shareiscsi=on -V $ZFS_IMAGE_SIZE""G $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME; then
+            zfs_log "ERROR: openQRM zfs-storage plugin could not create ZFS iSCSI Lun $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+    		zfs_storage_lock release
+            exit 1
+        fi
+
+        # create local initiatior + alias
+        IQN="$ZFS_BASE_IQN.$ZFS_IMAGE_NAME"
+        zfs_log "NOTICE: openQRM zfs-storage plugin creating ZFS iSCSI iqn $IQN on Lun $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+        if ! iscsitadm create initiator --iqn $IQN $ZFS_IMAGE_NAME; then
+            zfs_log "ERROR: openQRM zfs-storage plugin could not create ZFS iSCSI iqn $IQN on Lun $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+    		zfs_storage_lock release
+            exit 1
+        fi
+        # connect iqn alias with target
+        zfs_log "NOTICE: openQRM zfs-storage plugin connecting the ZFS iSCSI iqn $IQN to target $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+        if ! iscsitadm modify target --acl $ZFS_IMAGE_NAME $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME; then
+            zfs_log "ERROR: openQRM zfs-storage plugin could not connect the ZFS iSCSI iqn $IQN to target $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+    		zfs_storage_lock release
+            exit 1
+        fi
+        # set chap user name
+        zfs_log "NOTICE: openQRM zfs-storage plugin setting the CHAP user on the ZFS iSCSI iqn $IQN on target $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+        if ! iscsitadm modify initiator --chap-name $ZFS_IMAGE_NAME $ZFS_IMAGE_NAME; then
+            zfs_log "ERROR: openQRM zfs-storage plugin could not set the CHAP user on the ZFS iSCSI iqn $IQN on target $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+    		zfs_storage_lock release
+            exit 1
+        fi
+        # set chap password
+        zfs_log "NOTICE: openQRM zfs-storage plugin setting the CHAP password $ZFS_IMAGE_PASSWORD for chap user $ZFS_IMAGE_NAME"
+        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zfs-storage/bin/openqrm-set-chap-password.exp $ZFS_IMAGE_NAME $ZFS_IMAGE_PASSWORD
+
+		zfs_storage_lock release
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$ZFS_OPENQRM_USERNAME" != "" ] && [ "$ZFS_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_luns -z $ZFS_ZPOOL_NAME -u $ZFS_OPENQRM_USERNAME -p $ZFS_OPENQRM_PASSWORD
+		fi
+		;;
+
+	remove)
+		if [ "$ZFS_ZPOOL_NAME" == "" ]; then
+			zfs_storage_usage
+		fi
+		zfs_log "Removing ZFS iSCSI Lun $ZFS_IMAGE_NAME from zpool $ZFS_ZPOOL_NAME"
+		zfs_storage_lock aquire
+        if ! zfs destroy $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME; then
+            zfs_log "ERROR: openQRM zfs-storage plugin could not remove ZFS iSCSI Lun $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+    		zfs_storage_lock release
+            exit 1
+        fi
+        # remove eventual snapshots
+        if zfs list -t snapshot | grep -v NAME | grep $ZFS_ZPOOL_NAME | cut -d'@' -f2 | awk {' print $1 '} | grep $ZFS_IMAGE_NAME 1> /dev/null; then
+            ZFS_SNAPSHOT_NAME=`zfs list -t snapshot | grep -v NAME | grep $ZFS_ZPOOL_NAME | grep $ZFS_IMAGE_NAME | awk {' print $1 '}`
+            zfs_log "NOTICE: Found snapshot of removed ZFS Lun. Removing snapshot $ZFS_SNAPSHOT_NAME"
+            if ! zfs destroy $ZFS_SNAPSHOT_NAME; then
+                zfs_log "ERROR: openQRM zfs-storage plugin could not remove ZFS snapshot $ZFS_SNAPSHOT_NAME"
+            fi
+        fi
+        # remove local initiator
+        if ! iscsitadm delete initiator -A $ZFS_IMAGE_NAME; then
+            zfs_log "ERROR: openQRM zfs-storage plugin could not remove local initiator of ZFS iSCSI Lun $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+    		zfs_storage_lock release
+            exit 1
+        fi
+
+		zfs_storage_lock release
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$ZFS_OPENQRM_USERNAME" != "" ] && [ "$ZFS_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_luns -z $ZFS_ZPOOL_NAME -u $ZFS_OPENQRM_USERNAME -p $ZFS_OPENQRM_PASSWORD
+		fi
+		;;
+
+	snap)
+		if [ "$ZFS_IMAGE_PASSWORD" == "" ]; then
+			zfs_storage_usage
+		fi
+		if [ "$ZFS_IMAGE_SNAPSHOT_NAME" == "" ]; then
+			zfs_log "ERROR: Please give a name for the snapshot using the -s cmdline parmeter"
+			zfs_storage_usage
+		fi
+		if [ "$ZFS_ZPOOL_NAME" == "" ]; then
+			zfs_storage_usage
+		fi
+		
+		# check that source fs-images exist
+        if ! zfs list | grep $ZFS_ZPOOL_NAME | grep $ZFS_IMAGE_NAME; then
+			zfs_log "ERROR: Could not find source image $ZFS_IMAGE_NAME on zpool $ZFS_ZPOOL_NAME"
+			exit 1
+		fi
+		zfs_log "Creating snapshot from image $ZFS_IMAGE_NAME -> $ZFS_IMAGE_SNAPSHOT_NAME on zpool $ZFS_ZPOOL_NAME"
+		zfs_storage_lock aquire
+        # create snapshot
+        ZFS_SNAPHOT=$ZFS_ZPOOL_NAME""/""$ZFS_IMAGE_NAME""@""$ZFS_IMAGE_SNAPSHOT_NAME
+        if ! zfs snapshot $ZFS_SNAPHOT; then
+			zfs_log "ERROR: Could not create snapshot $ZFS_SNAPHOT on zpool $ZFS_ZPOOL_NAME"
+        	zfs_storage_lock release
+			exit 1
+        fi
+        # clone
+        if ! zfs clone $ZFS_SNAPHOT $ZFS_ZPOOL_NAME/$ZFS_IMAGE_SNAPSHOT_NAME; then
+			zfs_log "ERROR: Could not clone snapshot $ZFS_SNAPHOT on zpool $ZFS_ZPOOL_NAME"
+        	zfs_storage_lock release
+    		exit 1
+        fi
+        # iscsi on
+        if ! zfs set shareiscsi=on $ZFS_ZPOOL_NAME/$ZFS_IMAGE_SNAPSHOT_NAME; then
+			zfs_log "ERROR: Could not set iscsi=on on ZFS_SNAPHOT on $ZFS_ZPOOL_NAME/$ZFS_IMAGE_SNAPSHOT_NAME"
+        	zfs_storage_lock release
+    		exit 1
+        fi
+        # authenticate the clone
+        ZFS_IMAGE_NAME=$ZFS_IMAGE_SNAPSHOT_NAME
+        # create local initiatior + alias
+        IQN="$ZFS_BASE_IQN.$ZFS_IMAGE_NAME"
+        zfs_log "NOTICE: openQRM zfs-storage plugin creating ZFS iSCSI iqn $IQN on Lun $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+        if ! iscsitadm create initiator --iqn $IQN $ZFS_IMAGE_NAME; then
+            zfs_log "ERROR: openQRM zfs-storage plugin could not create ZFS iSCSI iqn $IQN on Lun $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+    		zfs_storage_lock release
+            exit 1
+        fi
+        # connect iqn alias with target
+        zfs_log "NOTICE: openQRM zfs-storage plugin connecting the ZFS iSCSI iqn $IQN to target $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+        if ! iscsitadm modify target --acl $ZFS_IMAGE_NAME $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME; then
+            zfs_log "ERROR: openQRM zfs-storage plugin could not connect the ZFS iSCSI iqn $IQN to target $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+    		zfs_storage_lock release
+            exit 1
+        fi
+        # set chap user name
+        zfs_log "NOTICE: openQRM zfs-storage plugin setting the CHAP user on the ZFS iSCSI iqn $IQN on target $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+        if ! iscsitadm modify initiator --chap-name $ZFS_IMAGE_NAME $ZFS_IMAGE_NAME; then
+            zfs_log "ERROR: openQRM zfs-storage plugin could not set the CHAP user on the ZFS iSCSI iqn $IQN on target $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+    		zfs_storage_lock release
+            exit 1
+        fi
+        # set chap password
+        zfs_log "NOTICE: openQRM zfs-storage plugin setting the CHAP password $ZFS_IMAGE_PASSWORD for chap user $ZFS_IMAGE_NAME"
+        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zfs-storage/bin/openqrm-set-chap-password.exp $ZFS_IMAGE_NAME $ZFS_IMAGE_PASSWORD
+
+		zfs_storage_lock release
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$ZFS_OPENQRM_USERNAME" != "" ] && [ "$ZFS_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_luns -z $ZFS_ZPOOL_NAME -u $ZFS_OPENQRM_USERNAME -p $ZFS_OPENQRM_PASSWORD
+		fi
+		;;
+
+	auth)
+		zfs_log "Authenticating ISCSI Lun for image rootdevice $ZFS_IMAGE_ROOTDEVICE"
+		zfs_storage_lock aquire
+        ZFS_IMAGE_NAME=`basename $ZFS_IMAGE_ROOTDEVICE`
+        zfs_log "NOTICE: openQRM zfs-storage plugin setting the CHAP password $ZFS_IMAGE_PASSWORD for chap user $ZFS_IMAGE_NAME"
+        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zfs-storage/bin/openqrm-set-chap-password.exp $ZFS_IMAGE_NAME $ZFS_IMAGE_PASSWORD
+		zfs_storage_lock release
+		;;
+
+	post_zpools)
+		zfs_log "Posting current zpools to the openQRM-server"
+		STORAGE_STATUS_TMP=$resource_id.zfs.zpool.stat
+        STORAGE_STATUS_TMP1=$resource_id.zfs.zpool.tmp
+        zpool list | grep -v NAME > $STORAGE_STATUS_TMP1
+        cat $STORAGE_STATUS_TMP1 | sed -e "s/ \{1,\}/@/g" > $STORAGE_STATUS_TMP
+		if ! wget -q -O /dev/null --http-user=$ZFS_OPENQRM_USERNAME --http-password=$ZFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/zfs-storage/zfs-storage-action.php?zfs_storage_command=get_zpools; then
+			zfs_log "ERROR: Could not post the zfs-zpool status to the openQRM-server at $resource_openqrmserver!"
+		fi
+		rm -f $STORAGE_STATUS_TMP $STORAGE_STATUS_TMP1 $STORAGE_STATUS_TMP.post
+		;;
+
+	post_luns)
+        if [ "$ZFS_ZPOOL_NAME" == "" ]; then
+            zfs_storage_usage
+        fi
+		echo "Posting current zfs-luns to the openQRM-server"
+		STORAGE_STATUS_TMP=$resource_id.zfs.luns.stat
+        STORAGE_STATUS_TMP1=$resource_id.zfs.zpool.tmp
+        OLD_IFS=$IFS
+        IFS=$LINEBR
+        > $STORAGE_STATUS_TMP
+        > $STORAGE_STATUS_TMP1
+        for ZFS_ZPOOL_LUN in `zfs list | grep $ZFS_ZPOOL_NAME/`; do
+                ZPOOL_LUN_NAME=`echo $ZFS_ZPOOL_LUN | awk {' print $1 '}`
+                if iscsitadm list target | grep $ZPOOL_LUN_NAME 1>/dev/null; then
+                        echo $ZFS_ZPOOL_LUN >> $STORAGE_STATUS_TMP1
+                fi
+
+        done
+        IFS=$OLD_IFS
+        cat $STORAGE_STATUS_TMP1 | sed -e "s/ \{1,\}/@/g" > $STORAGE_STATUS_TMP
+		if ! wget -q -O /dev/null --http-user=$ZFS_OPENQRM_USERNAME --http-password=$ZFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/zfs-storage/zfs-storage-action.php?zfs_storage_command=get_luns; then
+			zfs_log "ERROR: Could not post the zfs-lun status to the openQRM-server at $resource_openqrmserver!"
+		fi
+		rm -f $STORAGE_STATUS_TMP
+		rm -f $STORAGE_STATUS_TMP.post
+		;;
+
+	post_identifier)
+		zfs_log "Posting current zfs-identifier to the openQRM-server"
+		STORAGE_STATUS_TMP=$resource_id.zfs.ident
+		> $STORAGE_STATUS_TMP
+
+        for ZFS_ZPOOL_NAME in `zpool list | grep -v NAME | awk {' print $1 '}`; do
+            OLD_IFS=$IFS
+            IFS=$LINEBR
+            for ZFS_ZPOOL_LUN in `zfs list | grep $ZFS_ZPOOL_NAME/`; do
+                ZPOOL_LUN_NAME=`echo $ZFS_ZPOOL_LUN | awk {' print $1 '}`
+                if iscsitadm list target | grep $ZPOOL_LUN_NAME 1>/dev/null; then
+                    echo "$ZPOOL_LUN_NAME,$ZPOOL_LUN_NAME" >> $STORAGE_STATUS_TMP
+                fi
+            done
+            IFS=$OLD_IFS
+        done
+		if ! wget -q -O /dev/null --http-user=$ZFS_OPENQRM_USERNAME --http-password=$ZFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/zfs-storage/zfs-storage-action.php?zfs_storage_command=get_ident; then
+			zfs_log "ERROR: Could not post the zfs-identifier to the openQRM-server at $resource_openqrmserver!"
+		fi
+		rm -f $STORAGE_STATUS_TMP
+		rm -f $STORAGE_STATUS_TMP.post
+		;;
+
+	*)
+		zfs_storage_usage
+		;;
+
+
+esac
+
