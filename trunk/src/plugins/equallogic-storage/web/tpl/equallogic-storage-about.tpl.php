@@ -7,23 +7,25 @@ The Equallogic-storage plugin integrates Equallogic Storage into openQRM.
 <br>
 <b>Equallogic-storage type :</b>
 <br>
-A Equallogic-Server added manually as a new resource with its ip-address should be used to create
+An Equallogic-Server added manually as a new resource with its ip-address should be used to create
  a new Storage-server through the openQRM-GUI.
  openQRM then automatically manages the Equallogic-disks (Luns) on the Equallogic-storage server.
 <br>
 <br>
 <b>Equallogic-deployment type :</b>
 <br>
-The Equallogic-deployment type supports to boot servers/resources from the Equallogic-stoage server.
+The Equallogic-deployment type supports booting servers/resources from the Equallogic-storage server.
  Server images created with the 'equallogic-root' deployment type are stored on Storage-server
- from the storage-server type 'equallogic-storage'. During startup of an appliance they are directly
- attached to the resource as its rootfs via the iSCSI-protokol.
+ from the storage-server type 'equallogic-storage'. During startup of an appliance, they are directly
+ attached to the resource as its rootfs via the iSCSI-protocol.
 <br>
 <br>
 <b>How to use :</b>
 <br>
 <ul>
 <li>
+Enable SSH access on your Equallogic storage group
+</li><li>
 Create an Equallogic-storage server via the 'Storage-Admin' (Storage menu)
 </li><li>
 Create a Disk-shelf on the Equallogic-storage using the 'Luns' link (Equallogic-plugin menu)

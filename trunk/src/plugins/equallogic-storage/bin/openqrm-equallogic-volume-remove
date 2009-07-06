@@ -4,16 +4,16 @@
 #
 
 if {[llength $argv]<2} {
-        send_user "usage: $argv0 <equallogic-ip> <equallogic-user> <equallogic-password> <command>\n"
+        send_user "usage: $argv0 <equallogic-ip> <equallogic-user> <equallogic-password> <volume>\n"
         exit
 }
 
 set EQUALLOGIC_IP [lindex $argv 0]
 set EQUALLOGIC_USER [lindex $argv 1]
 set EQUALLOGIC_PASSWORD [lindex $argv 2]
-set EQUALLOGIC_CMD [lindex $argv 3]
+set EQUALLOGIC_VOLUME [lindex $argv 3]
 
-send_user "Running command $EQUALLOGIC_CMD on $EQUALLOGIC_IP as $EQUALLOGIC_USER\n"
+send_user "Running command volume delete $EQUALLOGIC_VOLUME on $EQUALLOGIC_IP as $EQUALLOGIC_USER\n"
 
 set force_conservative 0  ;# set to 1 to force conservative mode even if
                           ;# script wasn't run conservatively originally
@@ -43,20 +43,26 @@ expect {
     }
  }
 
-expect -exact "$EQUALLOGIC_USER@$EQUALLOGIC_IP's password: "
+expect -exact "password: "
 send -- "$EQUALLOGIC_PASSWORD\r"
 expect -exact ">"
 
-send -- "$EQUALLOGIC_CMD\r"
-
-send -- "y\r"
+send -- "volume select $EQUALLOGIC_VOLUME offline\r"
+expect -exact ">"
+send -- "volume delete $EQUALLOGIC_VOLUME\r"
 expect -exact ">"
 send -- "logout\r"
 send -- "\r"
-expect -exact "t\r
-Do you really want to logout? (y/n) \[n\]"
-send -- "y\r"
-
+expect {
+    "Do you really want to logout? (y/n) \[n\]" {
+        send -- "y\r"
+    } "Connection to $EQUALLOGIC_IP closed." {
+    } timeout {
+        exit
+    } eof {
+        exit
+    }
+}
 
 
 

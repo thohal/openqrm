@@ -50,7 +50,7 @@ $event->log("$equallogic_storage_command", $_SERVER['REQUEST_TIME'], 5, "equallo
 			$create_equallogic_storage_config = "create table equallogic_storage_servers(eq_id INT(5), eq_storage_id INT(5), eq_storage_name VARCHAR(20), eq_storage_user VARCHAR(20), eq_storage_password VARCHAR(20), eq_storage_comment VARCHAR(50))";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($create_equallogic_storage_config);
-			$event->log("$equallogic_storage_command", $_SERVER['REQUEST_TIME'], 5, "equallogic-storage-action", "Initialyzed Eqallogic-storage Server table", "", "", 0, 0, 0);
+			$event->log("$equallogic_storage_command", $_SERVER['REQUEST_TIME'], 5, "equallogic-storage-action", "Initialyzed Equallogic-storage Server table", "", "", 0, 0, 0);
 		    $db->Close();
 			break;
 
@@ -58,7 +58,7 @@ $event->log("$equallogic_storage_command", $_SERVER['REQUEST_TIME'], 5, "equallo
 			$drop_equallogic_storage_config = "drop table equallogic_storage_servers";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($drop_equallogic_storage_config);
-			$event->log("$equallogic_storage_command", $_SERVER['REQUEST_TIME'], 5, "equallogic-storage-action", "Uninstalled Eqallogic-storage Server table", "", "", 0, 0, 0);
+			$event->log("$equallogic_storage_command", $_SERVER['REQUEST_TIME'], 5, "equallogic-storage-action", "Uninstalled Equallogic-storage Server table", "", "", 0, 0, 0);
 		    $db->Close();
 			break;
 

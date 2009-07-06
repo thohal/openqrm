@@ -155,7 +155,7 @@ case "$EQUALLOGIC_COMMAND" in
 	remove)
 		echo -n "Removing EQUALLOGIC export for image $EQUALLOGIC_IMAGE_NAME"
 		equallogic_storage_lock aquire
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-volume-remove $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume delete $EQUALLOGIC_IMAGE_NAME"
+        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-volume-remove $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "$EQUALLOGIC_IMAGE_NAME"
 		equallogic_storage_lock release
 		$0 post_luns -u $EQUALLOGIC_USERNAME -p $EQUALLOGIC_PASSWORD -e $EQUALLOGIC_SERVER_IP
 		;;

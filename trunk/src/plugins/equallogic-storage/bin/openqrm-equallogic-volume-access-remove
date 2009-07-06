@@ -44,7 +44,7 @@ expect {
     }
  }
 
-expect -exact "$EQUALLOGIC_USER@$EQUALLOGIC_IP's password: "
+expect -exact "password: "
 send -- "$EQUALLOGIC_PASSWORD\r"
 expect -exact ">"
 
@@ -59,10 +59,16 @@ send -- "exit\r"
 expect -exact ">"
 send -- "logout\r"
 send -- "\r"
-expect -exact "t\r
-Do you really want to logout? (y/n) \[n\]"
-send -- "y\r"
-
+expect {
+    "Do you really want to logout? (y/n) \[n\]" {
+        send -- "y\r"
+    } "Connection to $EQUALLOGIC_IP closed." {
+    } timeout {
+        exit
+    } eof {
+        exit
+    }
+}
 
 
 

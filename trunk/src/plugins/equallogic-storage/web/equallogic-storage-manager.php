@@ -100,9 +100,9 @@ function validate_input($var, $type) {
     switch ($type) {
         case 'string':
             // remove allowed chars
+            // On Equallogic: Only alphanumeric characters, colon, dot and dash are allowed in volume name or collection name.
             $var = str_replace(".", "", $var);
             $var = str_replace("-", "", $var);
-            $var = str_replace("_", "", $var);
             for ($i = 0; $i<strlen($var); $i++) {
                 if (!ctype_alpha($var[$i])) {
                     if (!ctype_digit($var[$i])) {
@@ -206,7 +206,7 @@ if(htmlobject_request('redirect') != 'yes') {
                                 redirect($strMsg, 'tab0', $id);
                                 exit(0);
                             } else if (!validate_input($eq_image_name, 'string')) {
-                                $redir_msg = "Got invalid volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
+                                $redir_msg = "Got invalid volume name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-)";
                                 redirect($strMsg, 'tab0', $id);
                                 exit(0);
                             }

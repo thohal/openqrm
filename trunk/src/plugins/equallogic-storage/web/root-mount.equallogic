@@ -66,6 +66,15 @@ IMAGE_ROOT_DEVICE="/dev/iscsi_$IMAGE_LUN"
 
 function mount_rootfs() {
 
+    # setup the bonded network here
+    OPENQRM_RESOURCE_OTHER_INTERFACES=`ifconfig -a | grep -i hwaddr | grep -v $OPENQRM_RESOURCE_MAC_ADDRESS | awk {' print $1 '}`
+    # set up extra nics in case they are needed for root_fs
+    # note that we just assume dhcp runs on these networks
+    for interface in $OPENQRM_RESOURCE_OTHER_INTERFACES; do
+        ifconfig $interface up
+        udhcpc -i $interface -q
+    done
+
 	# get iscsid via wget from the openQRM-servers boot-service dir
 	wget -q -O /sbin/iscsid http://$resource_openqrmserver/openqrm/boot-service/iscsid
 	# get the iscsiadm via wget from the openQRM-servers boot-service dir
@@ -97,13 +106,24 @@ node.startup = manual
 node.session.timeo.replacement_timeout = 120
 node.conn[0].timeo.login_timeout = 15
 node.conn[0].timeo.logout_timeout = 15
-node.conn[0].timeo.noop_out_interval = 10
-node.conn[0].timeo.noop_out_timeout = 15
+node.conn[0].timeo.noop_out_interval = 5
+node.conn[0].timeo.noop_out_timeout = 30
 node.session.iscsi.InitialR2T = No
 node.session.iscsi.ImmediateData = Yes
 node.session.iscsi.FirstBurstLength = 262144
 node.session.iscsi.MaxBurstLength = 16776192
-node.conn[0].iscsi.MaxRecvDataSegmentLength = 65536
+node.conn[0].iscsi.MaxRecvDataSegmentLength = 262144
+node.conn[0].iscsi.MaxXmitDataSegmentLength = 262144
+node.session.cmds_max = 1024
+node.session.queue_depth = 128
+node.session.err_timeo.abort_timeout = 15
+node.session.err_timeo.lu_reset_timeout = 20
+node.session.iscsi.FastAbort = No
+
+discovery.sendtargets.auth.authmethod = CHAP
+discovery.sendtargets.auth.username = $image_name
+discovery.sendtargets.auth.password = $IMAGE_ISCSI_AUTH
+discovery.sendtargets.iscsi.MaxRecvDataSegmentLength = 65536
 
 node.session.auth.authmethod = CHAP
 node.session.auth.username = $image_name
@@ -113,7 +133,7 @@ EOF
 
 	# create /etc/iscsi/initiatorname.iscsi
 	cat >> /etc/iscsi/initiatorname.iscsi << EOF
-InitiatorName=iqn.1993-08.org.debian:01:31721e7e6b8f
+InitiatorName=iqn.2009-07.openqrm.$image_name
 EOF
 	# also create /etc/initiatorname.iscsi, some open-iscsi version looking for that
 	cp /etc/iscsi/initiatorname.iscsi /etc/initiatorname.iscsi
