@@ -380,7 +380,7 @@ function openqrm_server_start() {
                   "       The openQRM-server is configured to have the ip-address $CONFIGURED_IP\n" \
                   "       but the interface $OPENQRM_SERVER_INTERFACE is running with the ip-address $OPENQRM_SERVER_IP_ADDRESS"
             # create lockfile again to forcre re-configuration
-            touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured
+            ifconfig -a | grep -v inet6  | grep -B1 inet | grep -i link | grep -v lo | awk {' print $1 '} > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured
             echo
             if [ "$OPENQRM_SERVER_IP_ADDRESS" != "" ]; then
                 echo "Please re-configure your openQRM Server at : http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/"
