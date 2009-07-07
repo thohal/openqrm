@@ -151,6 +151,7 @@ $identifier = htmlobject_request('identifier');
 	switch (htmlobject_request('action')) {
 		case 'enable':
 			$event = new event();
+            show_progressbar();
 			foreach($identifier as $plugin_name) {
 				$error = false;
 				$tmp = $plugin->get_config($plugin_name);
@@ -167,7 +168,6 @@ $identifier = htmlobject_request('identifier');
 				}
 
 				if($error === false) {
-                    show_progressbar();
 					$return = $openqrm_server->send_command("openqrm_server_plugin_command $plugin_name init $OPENQRM_USER->name $OPENQRM_USER->password");
 					if($return === true) {
                         if (check_plugin_state("enable", $plugin_name)) {
@@ -184,6 +184,7 @@ $identifier = htmlobject_request('identifier');
 			break;
 		case 'disable':
 			$event = new event();
+            show_progressbar();
 			foreach($identifier as $plugin_name) {
 				$error = false;
 				$tmp = $plugin->get_config($plugin_name);
@@ -204,7 +205,6 @@ $identifier = htmlobject_request('identifier');
 				}
 
 				if($error === false) {
-                    show_progressbar();
 					$return = $openqrm_server->send_command("openqrm_server_plugin_command $plugin_name uninstall $OPENQRM_USER->name $OPENQRM_USER->password");
 					if($return === true) {
                         if (check_plugin_state("disable", $plugin_name)) {
@@ -221,9 +221,9 @@ $identifier = htmlobject_request('identifier');
 			break;
 		case 'start':
 			$event = new event();
+            show_progressbar();
 			foreach($identifier as $id) {
 				if (in_array($id, $plugins_enabled)) {
-                    show_progressbar();
 					$return = $openqrm_server->send_command("openqrm_server_plugin_command $id start");
 					if($return === true) {
                         if (check_plugin_state("start", $id)) {
@@ -242,9 +242,9 @@ $identifier = htmlobject_request('identifier');
 			break;
 		case 'stop':
 			$event = new event();
+            show_progressbar();
 			foreach($identifier as $id) {
 				if (in_array($id, $plugins_enabled)) {
-                    show_progressbar();
 					$return = $openqrm_server->send_command("openqrm_server_plugin_command $id stop");
 					if($return === true) {
                         if (check_plugin_state("stop", $id)) {
