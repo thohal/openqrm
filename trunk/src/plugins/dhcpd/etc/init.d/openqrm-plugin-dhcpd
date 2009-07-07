@@ -12,8 +12,13 @@ function openqrm_plugin_dhcpd_start() {
 	openqrm_plugin_dhcpd_stop 1>/dev/null 2>&1
 	# on debian/ubuntu dhcpd ver.3 is named dhcpd3
 	if [ -x /usr/sbin/dhcpd3 ]; then
-		/usr/sbin/dhcpd3 -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/dhcpd.leases 2>&1
-		RET=$?
+        # fix for ubuntu jaunty which does not like the leass file in the plugin dir
+		if ! /usr/sbin/dhcpd3 -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/dhcpd.leases 2>&1; then
+            /usr/sbin/dhcpd3 -cf $OPENQRM_PLUGIN_DHCPD_CONF 2>&1
+    		RET=$?
+        else
+            return 0
+        fi
 	elif [ -x /usr/sbin/dhcpd ]; then
 		/usr/sbin/dhcpd -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/dhcpd.leases 2>&1
 		RET=$?
