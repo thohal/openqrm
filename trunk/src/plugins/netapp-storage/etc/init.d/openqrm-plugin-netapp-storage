@@ -85,6 +85,9 @@ function openqrm_plugin_netapp_storage_init() {
 		netapp_storage_log uninstall "ERROR: Could not initialyze the NetApp-Storage plugin tables in the database!"
         exit 1
 	fi
+    # create storage dir for stat files
+    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage
+    chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/web/storage
 
 	
 }

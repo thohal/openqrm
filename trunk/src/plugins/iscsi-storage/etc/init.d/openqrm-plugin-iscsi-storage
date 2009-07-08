@@ -95,6 +95,9 @@ function openqrm_plugin_iscsi_storage_init() {
 	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsiadm ]; then
 		cp -f `which iscsiadm` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
 	fi
+    # create storage dir for stat files
+    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/storage
+    chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/iscsi-storage/web/storage
 	
 }
 
