@@ -38,6 +38,7 @@ function openqrm_plugin_kvm_server_uninstall() {
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-kvm.tgz
 	cp -f /usr/share/kvm/pxe-e1000.bin.openqrm-backup /usr/share/kvm/pxe-e1000.bin
 	cp -f /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup /usr/share/kvm/pxe-rtl8139.bin
+    cp -f /usr/share/kvm/pxe-virtio.bin.openqrm-backup /usr/share/kvm/pxe-virtio.bin
 }
 
 function openqrm_plugin_kvm_server_init() {
@@ -70,8 +71,11 @@ function openqrm_plugin_kvm_server_init() {
 	if [ -f /usr/share/kvm/pxe-rtl8139.bin ] && [ ! -f /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup ]; then
 		cp -f /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup
 	fi
-	tar -C /usr/share/kvm/ -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.0.tgz
-	chown root:root /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-rtl8139.bin
+    if [ -f /usr/share/kvm/pxe-virtio.bin ] && [ ! -f /usr/share/kvm/pxe-virtio.bin.openqrm-backup ]; then
+        cp -f /usr/share/kvm/pxe-virtio.bin /usr/share/kvm/pxe-virtio.bin.openqrm-backup
+    fi
+	tar -C /usr/share/kvm/ -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.1.tgz
+	chown root:root /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-virtio.bin
 
     # setting the kvm-ifup +kvm-ifdown script to the internal and external bridge
     # internal

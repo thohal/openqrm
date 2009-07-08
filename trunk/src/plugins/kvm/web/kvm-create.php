@@ -57,6 +57,7 @@ $kvm_server_name = htmlobject_request('kvm_server_name');
 $kvm_server_mac = htmlobject_request('kvm_server_mac');
 $kvm_server_ram = htmlobject_request('kvm_server_ram');
 $kvm_server_disk = htmlobject_request('kvm_server_disk');
+$kvm_nic_model = htmlobject_request('kvm_nic_model');
 
 
 function redirect_mgmt($strMsg, $file, $kvm_server_id) {
@@ -163,9 +164,9 @@ if(htmlobject_request('action') != '') {
             $kvm_server = new resource();
             $kvm_server->get_instance_by_id($kvm_appliance->resources);
             if (strlen($kvm_server_disk)) {
-                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm create -n $kvm_server_name -m $kvm_server_mac -r $kvm_server_ram -d $kvm_server_disk -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm create -n $kvm_server_name -m $kvm_server_mac -r $kvm_server_ram -d $kvm_server_disk -t $kvm_nic_model -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
             } else {
-                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm create -n $kvm_server_name -m $kvm_server_mac -r $kvm_server_ram -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm create -n $kvm_server_name -m $kvm_server_mac -r $kvm_server_ram -t $kvm_nic_model -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
             }
             // remove current stat file
             $kvm_server_resource_id = $kvm_server->id;

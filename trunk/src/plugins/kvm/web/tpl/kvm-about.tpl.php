@@ -9,6 +9,8 @@
 <h1><img border=0 src="/openqrm/base/plugins/kvm/img/plugin.png"> KVM plugin</h1>
 <strong>This plugin is tested with KVM kvm-62</strong>
 <br>
+<strong>To benefit from KVM's 'virtio' feature at least kvm-84 is needed</strong>
+<br>
 <br>
 The KVM plugin adds support for KVM-Virtualization to openQRM.
  Appliances with the resource-type 'KVM Host' are listed in the KVM-Manager and

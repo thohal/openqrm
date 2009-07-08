@@ -35,8 +35,11 @@ function kvm_start() {
 	if [ -f /usr/share/kvm/pxe-rtl8139.bin ] && [ ! -f /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup ]; then
 		cp -f /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup
 	fi
-	tar -C /usr/share/kvm/ -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.0.tgz
-	chown root:root /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-rtl8139.bin
+    if [ -f /usr/share/kvm/pxe-virtio.bin ] && [ ! -f /usr/share/kvm/pxe-virtio.bin.openqrm-backup ]; then
+        cp -f /usr/share/kvm/pxe-virtio.bin /usr/share/kvm/pxe-virtio.bin.openqrm-backup
+    fi
+	tar -C /usr/share/kvm/ -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.1.tgz
+	chown root:root /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-virtio.bin
 
 	# be sure to have the tun device
 	if [ ! -f /dev/tun ]; then
@@ -54,25 +57,6 @@ function kvm_start() {
 		kvm_log kvm_start "ERROR: kvm is not installed! Please install kvm."
 		exit 1
 	fi
-	# does bridge already exist ?
-#	if ! brctl show | grep $OPENQRM_KVM_BRIDGE 1>/dev/null; then
-#		kvm_log kvm_start "NOTICE: Kvm network-bridge $OPENQRM_KVM_BRIDGE not active yet. Activating now ..."
-#		BRIDGE_INTERFACE=`ifconfig -a | grep -A1 $resource_mac | grep -B1 $resource_ip | head -n1 | awk {' print $1 '}`
-#		if [ "$BRIDGE_INTERFACE" == "" ]; then
-#			kvm_log kvm_start "ERROR: Could not find openQRM-interface to create the kvm network-bridge on!"
-#			exit 1
-#		fi
-#		# create the bridge
-#		brctl addbr $OPENQRM_KVM_BRIDGE
-#		brctl setfd $OPENQRM_KVM_BRIDGE 0
-#		brctl sethello $OPENQRM_KVM_BRIDGE 2
-#		brctl setmaxage $OPENQRM_KVM_BRIDGE 12
-#		brctl stp $OPENQRM_KVM_BRIDGE off
-#		brctl addif $OPENQRM_KVM_BRIDGE $BRIDGE_INTERFACE
-#		ifconfig $OPENQRM_KVM_BRIDGE $resource_ip up
-#		ifconfig $BRIDGE_INTERFACE 0.0.0.0 up
-#		kvm_log kvm_start "NOTICE: Kvm network-bridge $OPENQRM_KVM_BRIDGE now active."
-#	fi
     # setting the kvm-ifup +kvm-ifdown script to the internal and external bridge
     # internal
     cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup
@@ -82,6 +66,10 @@ function kvm_start() {
     cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_EXTERNAL_BRIDGE/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-ext
     chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/*
 
+    # make sure the kvm modules are loaded
+    modprobe kvm
+    if grep flags.*vmx /proc/cpuinfo 1>/dev/null; then modprobe kvm-intel; fi
+    if grep flags.*svm /proc/cpuinfo 1>/dev/null; then modprobe kvm-amd; fi
 
 }
 

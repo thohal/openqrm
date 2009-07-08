@@ -51,6 +51,8 @@ $kvm_server_mac = htmlobject_request('kvm_server_mac');
 $kvm_server_ram = htmlobject_request('kvm_server_ram');
 $kvm_server_disk = htmlobject_request('kvm_server_disk');
 $kvm_component = htmlobject_request('kvm_component');
+$kvm_nic_model = htmlobject_request('kvm_nic_model');
+
 
 function redirect_config($strMsg, $kvm_server_id, $kvm_server_name) {
     global $thisfile;
@@ -125,7 +127,7 @@ if(htmlobject_request('action') != '') {
 				$kvm_server_appliance->get_instance_by_id($kvm_server_id);
 				$kvm_server = new resource();
 				$kvm_server->get_instance_by_id($kvm_server_appliance->resources);
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm add_vm_nic -n $kvm_server_name -s $kvm_nic_nr -m $kvm_new_nic -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm add_vm_nic -n $kvm_server_name -s $kvm_nic_nr -m $kvm_new_nic -t $kvm_nic_model -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
                 // remove current stat file
                 $kvm_server_resource_id = $kvm_server->id;
                 $statfile="kvm-stat/".$kvm_server_resource_id.".".$kvm_server_name.".vm_config";
@@ -568,15 +570,25 @@ function kvm_vm_config_net() {
 		$resource_mac_gen = new resource();
 		$resource_mac_gen->generate_mac();
 		$suggested_mac = $resource_mac_gen->mac;
-
 		$disp = $disp."<br>";
 		$disp = $disp."<form action=\"$thisfile\" method=post>";
+        $disp = $disp."<div style=\"float:left;\">";
 		$disp = $disp."<input type=hidden name=action value='add_vm_net'>";
 		$disp = $disp."<input type=hidden name=kvm_server_id value=$kvm_server_id>";
 		$disp = $disp."<input type=hidden name=kvm_server_name value=$kvm_server_name>";
 		$disp = $disp."<input type=hidden name=kvm_nic_nr value=$nic_number>";
 		$disp = $disp.htmlobject_input('kvm_new_nic', array("value" => $suggested_mac, "label" => 'Add Network'), 'text', 10);
-		$disp = $disp."<input type=submit value='Submit'>";
+        $disp = $disp."</div>";
+
+        $disp = $disp."<div style=\"float:right;\">";
+        $disp = $disp."<strong>Select the Networkcard model for the VM</strong>";
+        $disp = $disp."<div style=\"border: solid 1px #ccc; padding: 10px 10px 0 10px;\">";
+        $disp = $disp."<input type=\"radio\" name=\"kvm_nic_model\" value=\"virtio\" checked=\"checked\" /> virtio - Best performance, Linux only <br>";
+        $disp = $disp."<input type=\"radio\" name=\"kvm_nic_model\" value=\"e1000\" /> e1000 - Server Operating systems <br>";
+        $disp = $disp."<input type=\"radio\" name=\"kvm_nic_model\" value=\"rtl8139\" /> rtl8139 - Best supported <br><br>";
+        $disp = $disp."</div></div>";
+		$disp = $disp."<div style=\"clear:both;line-height:0px;\">&#160;</div>";
+        $disp = $disp."<input type=submit value='Submit'>";
 		$disp = $disp."</form>";
 	}
 
