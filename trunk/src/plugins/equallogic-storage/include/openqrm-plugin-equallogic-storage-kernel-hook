@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# this is a hook function for the kernel-creation phase
+
+function equallogic_storage_kernel_hook() {
+
+	local KERNEL_NAME=$1
+	local KERNEL_VERSION=$2
+	local KERNEL_LOCATION=$3
+	local KERNEL_TYPE=$4
+
+	echo "equallogic-storage-plugin: Running equallogic_storage_kernel_hook $KERNEL_NAME $KERNEL_VERSION $KERNEL_LOCATION $KERNEL_TYPE"
+	echo "equallogic-storage-plugin: Running equallogic_storage_kernel_hook $KERNEL_NAME $KERNEL_VERSION $KERNEL_LOCATION $KERNEL_TYPE" | logger
+
+    # try to find the iscsid + iscsiadm util fitting to the created kernel
+    if [ -x "$KERNEL_LOCATION/sbin/iscsid" ]; then
+        cp -a $KERNEL_LOCATION/sbin/iscsid $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsid.$KERNEL_NAME
+        echo "equallogic-storage-plugin: Found iscsid at $KERNEL_LOCATION/sbin/iscsid. Coping to $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsid.$KERNEL_NAME"
+        echo "equallogic-storage-plugin: Found iscsid at $KERNEL_LOCATION/sbin/iscsid. Coping to $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsid.$KERNEL_NAME" | logger
+    fi
+    if [ -x "$KERNEL_LOCATION/sbin/iscsiadm" ]; then
+        cp -a $KERNEL_LOCATION/sbin/iscsiadm $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsiadm.$KERNEL_NAME
+        echo "equallogic-storage-plugin: Found iscsiadm at $KERNEL_LOCATION/sbin/iscsiadm. Coping to $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsiadm.$KERNEL_NAME"
+        echo "equallogic-storage-plugin: Found iscsiadm at $KERNEL_LOCATION/sbin/iscsiadm. Coping to $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsiadm.$KERNEL_NAME" | logger
+    fi
+
+}
+

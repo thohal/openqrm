@@ -66,11 +66,24 @@ IMAGE_ROOT_DEVICE="/dev/iscsi_$IMAGE_LUN"
 
 function mount_rootfs() {
 
-	# get iscsid via wget from the openQRM-servers boot-service dir
-	wget -q -O /sbin/iscsid http://$resource_openqrmserver/openqrm/boot-service/iscsid
-	# get the iscsiadm via wget from the openQRM-servers boot-service dir
-	wget -q -O /sbin/iscsiadm http://$resource_openqrmserver/openqrm/boot-service/iscsiadm
-	chmod +x /sbin/iscsi*
+    # check to find the right binaries fitting to kernel + rootfs
+    if [ "$kernel_name" == "default" ]; then
+        # we get the default binaries
+        # get iscsid via wget from the openQRM-servers boot-service dir
+        wget -q -O /sbin/iscsid http://$resource_openqrmserver/openqrm/boot-service/iscsid
+        wget -q -O /sbin/iscsiadm http://$resource_openqrmserver/openqrm/boot-service/iscsiadm
+    else
+        # we try to get the binaries fitting to the kernel name
+        # -> if a special version is not available we go with the default
+        if ! wget -q -O /sbin/iscsid http://$resource_openqrmserver/openqrm/boot-service/iscsid.$kernel_name; then
+            wget -q -O /sbin/iscsid http://$resource_openqrmserver/openqrm/boot-service/iscsid
+        fi
+        if ! wget -q -O /sbin/iscsiadm http://$resource_openqrmserver/openqrm/boot-service/iscsiadm.$kernel_name; then
+            wget -q -O /sbin/iscsiadm http://$resource_openqrmserver/openqrm/boot-service/iscsiadm
+        fi
+
+    fi
+    chmod +x /sbin/iscsi*
 
 	# perstistance iscsi device names
 	echo "BUS==\"scsi\", SYSFS{vendor}==\"IET\", SYSFS{model}==\"VIRTUAL-DISK\", KERNEL==\"sd*\", NAME=\"%k\", PROGRAM=\"/lib/udev/getlun.sh \$id\", SYMLINK+=\"iscsi_%c%n\"" >>/etc/udev/rules.d/10_persistant_scsi.rules

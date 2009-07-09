@@ -150,6 +150,19 @@ function openqrm_server_init() {
 	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth
 	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth
 
+    # create the openqrm-client link in the right arch
+    KERNEL_ARCH=`uname -m`
+    if echo $KERNEL_ARCH | grep i.*86 1>/dev/null; then
+        # i386
+        OPENQRM_CLIENT_ARCH=i386
+    else
+        OPENQRM_CLIENT_ARCH=$KERNEL_ARCH
+    fi
+    cd $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/
+    ln -sf openqrm-client.tgz openqrm-client.$OPENQRM_CLIENT_ARCH.tgz
+    cd - 1>/dev/null
+
+
     # init and start the remote execution layer
 	case "$OPENQRM_EXECUTION_LAYER" in
 		dropbear)
