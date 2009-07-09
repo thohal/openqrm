@@ -288,8 +288,8 @@ case "$XEN_COMMAND" in
 		xen_lock aquire
 		echo "Creating Xen vm $XEN_VM_NAME -> /etc/xen/$XEN_VM_NAME.cfg"
 		# find the hvmloader
-		HVM_LOADER=`find /usr/lib/xen* -name hvmloader | head -n1`
-		QEMU_DM=`find /usr/lib/xen* -name qemu-dm | head -n1`
+		HVM_LOADER=`find /usr/lib/xen* /usr/lib64/xen* -name hvmloader | head -n1`
+		QEMU_DM=`find /usr/lib/xen* /usr/lib64/xen* -name qemu-dm | head -n1`
 		if [ "$HVM_LOADER" == "" ]; then
             openqrm_post_event 0 "create" 3 "openqrm-xen" "Could not find the hvmloader on this Xen system. Please make sure to install it!"
     		xen_lock release
