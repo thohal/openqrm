@@ -192,7 +192,7 @@ case "$KVM_COMMAND" in
 		echo "KVM_VM_DISK_4=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk4
 		echo "KVM_VM_DISK_SIZE_4=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/disk4
         # boot from network
-        echo "KVM_VM_BOOT=\"-boot n\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/boot
+        echo "KVM_VM_BOOT=\"-boot nc\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/boot
 
 		# vnc : check on which vnc display which can run it
 		ALREADY_USED_VNC_IDS=""
@@ -487,10 +487,10 @@ case "$KVM_COMMAND" in
         fi
         case "$KVM_VM_BOOT" in
             local)
-                echo "KVM_VM_BOOT=\"-boot c\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/boot
+                echo "KVM_VM_BOOT=\"-boot nc\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/boot
                 ;;
             net)
-                echo "KVM_VM_BOOT=\"-boot n\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/boot
+                echo "KVM_VM_BOOT=\"-boot nc\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/boot
                 ;;
         esac
 		# hard restart it to apply its configuration
