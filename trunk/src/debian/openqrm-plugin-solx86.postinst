@@ -1,0 +1,4 @@
+#!/bin/bash
+# this is the openqrm-plugin-solx86 postinstall script
+ln -s /usr/lib/openqrm/plugins/solx86/etc/init.d/openqrm-plugin-solx86 /etc/init.d/openqrm-plugin-solx86
+mkdir -p /var/www/openqrm/base/plugins/solx86

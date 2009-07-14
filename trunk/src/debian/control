@@ -1,7 +1,7 @@
 Source: openqrm
 Section: admin
 Priority: extra
-Maintainer: Thomas Halinka <mail@thohal.de>
+Maintainer: Thomas Halinka <mail@thohal.de>, Martin Alfke <martin@ppcnux.de>
 Build-Depends: debhelper (>= 5), make, gcc, libpci-dev, portmap, rsync, zlib1g-dev, wget, tar, bzip2, cdbs, patch
 Standards-Version: 3.7.2
 
@@ -172,3 +172,21 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, screen, zabbix-server-mysql, zabbix-frontend-php, zabbix-agent
 Description: This openQRM plugin integrates zabbix
  The zabbix-plugin automatically monitors the systems and services managed by the openQRM-server.
+
+Package: openqrm-plugin-equallogic-storage
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, screen, open-iscsi
+Description: This openQRM plugin integrates equallogic storage
+ This openQRM plugin integrates Iscsi storage server and features the capability to boot resources directly from the Iscsi-Target.
+
+Package: openqrm-plugin-solx86
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, screen
+Description: This openQRM plugin integrates solaris x86 clients
+ The solx86-plugin provides an integration for already existing, local-installed openSolaris/Solaris X86 systems in openQRM.
+
+Package: openqrm-plugin-zfs-storage
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, screen, open-iscsi
+Description: This openQRM plugin integrates zfs storage
+ This openQRM plugin integrates ZFS storage server and features the capability to boot from the ZFS Iscsi-Target.
