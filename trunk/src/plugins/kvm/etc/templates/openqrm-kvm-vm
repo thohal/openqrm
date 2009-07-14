@@ -2,8 +2,11 @@
 
 KVM=`which kvm`
 if [ "$KVM" == "" ]; then
-	echo "ERROR: kvm ist not installed on this system !" | logger
-	exit 1
+    KVM=`which qemu-kvm`
+    if [ "$KVM" == "" ]; then
+        echo "ERROR: kvm ist not installed on this system !" | logger
+        exit 1
+    fi
 fi
 # source the component config files
 VM_CONF_DIR=`dirname $0`

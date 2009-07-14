@@ -54,9 +54,11 @@ function kvm_start() {
 		exit 1
 	fi
 	if ! which kvm 1>/dev/null; then
-		kvm_log kvm_start "ERROR: kvm is not installed! Please install kvm."
-		exit 1
-	fi
+        if ! which qemu-kvm 1>/dev/null; then
+            kvm_log kvm_start "ERROR: kvm is not installed! Please install kvm."
+            exit 1
+        fi
+    fi
     # setting the kvm-ifup +kvm-ifdown script to the internal and external bridge
     # internal
     cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup
