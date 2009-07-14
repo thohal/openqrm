@@ -1,0 +1,4 @@
+#!/bin/bash
+# this is the openqrm-plugin-linuxcoe postinstall script
+ln -s /usr/lib/openqrm/plugins/linuxcoe/etc/init.d/openqrm-plugin-linuxcoe /etc/init.d/openqrm-plugin-linuxcoe
+mkdir -p /var/www/openqrm/base/plugins/linuxcoe

@@ -2,7 +2,7 @@ Source: openqrm
 Section: admin
 Priority: extra
 Maintainer: Thomas Halinka <mail@thohal.de>
-Build-Depends: debhelper (>= 5), make, gcc, pciutils-dev, portmap, rsync, zlib1g-dev, wget, tar, bzip2, cdbs, patch
+Build-Depends: debhelper (>= 5), make, gcc, libpci-dev, portmap, rsync, zlib1g-dev, wget, tar, bzip2, cdbs, patch
 Standards-Version: 3.7.2
 
 Package: openqrm
@@ -13,7 +13,7 @@ Description: <insert up to 60 chars description>
 
 Package: openqrm-entire
 Architecture: i386
-Depends: openqrm, openqrm-plugin-lvm-storage, openqrm-plugin-local-server, openqrm-plugin-highavailability, openqrm-plugin-local-storage, openqrm-plugin-tftpd, openqrm-plugin-vmware-server, openqrm-plugin-netapp-storage, openqrm-plugin-dhcpd, openqrm-plugin-nfs-storage, openqrm-plugin-iscsi-storage, openqrm-plugin-sshterm, openqrm-plugin-xen, openqrm-plugin-linux-vserver, openqrm-plugin-aoe-storage, openqrm-plugin-citrix, openqrm-plugin-cloud, openqrm-plugin-dns, openqrm-plugin-image-shelf, openqrm-plugin-kvm, openqrm-plugin-puppet, openqrm-plugin-vmware-esx, openqrm-plugin-vmware-server2, openqrm-plugin-windows
+Depends: openqrm, openqrm-plugin-lvm-storage, openqrm-plugin-local-server, openqrm-plugin-highavailability, openqrm-plugin-local-storage, openqrm-plugin-tftpd, openqrm-plugin-vmware-server, openqrm-plugin-netapp-storage, openqrm-plugin-dhcpd, openqrm-plugin-nfs-storage, openqrm-plugin-iscsi-storage, openqrm-plugin-sshterm, openqrm-plugin-xen, openqrm-plugin-aoe-storage, openqrm-plugin-citrix, openqrm-plugin-cloud, openqrm-plugin-dns, openqrm-plugin-image-shelf, openqrm-plugin-kvm, openqrm-plugin-puppet, openqrm-plugin-vmware-esx, openqrm-plugin-vmware-server2, openqrm-plugin-windows, openqrm-plugin-linuxcoe
 Description: <insert up to 60 chars description>
  <insert long description, indented with spaces>
 
@@ -95,12 +95,6 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
 Description: This openQRM plugin integrates the Xen virtualization technology.
  <insert long description, indented with spaces>
 
-Package: openqrm-plugin-linux-vserver
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
-Description: This openQRM plugin integrates the Linux-VServer virtualization technology.
- <insert long description, indented with spaces>
-
 Package: openqrm-plugin-aoe-storage
 Architecture: i386
 Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, aoetools
@@ -167,3 +161,14 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, nagios3, nagios-images, na
 Description: This openQRM plugin integrates nagios3
  <insert long description, indented with spaces>
 
+Package: openqrm-plugin-linuxcoe
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, screen
+Description: This openQRM plugin integrates linuxcoe
+ This openQRM provides fully automatic installations via LinuxCOE.
+
+Package: openqrm-plugin-zabbix
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, screen, zabbix-server-mysql, zabbix-frontend-php, zabbix-agent
+Description: This openQRM plugin integrates zabbix
+ The zabbix-plugin automatically monitors the systems and services managed by the openQRM-server.
