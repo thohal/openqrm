@@ -1,0 +1,23 @@
+#!/usr/bin/expect -f
+# expect script to answer the connect question at first login
+
+if {[llength $argv]<2} {
+    send_user "usage: $argv0 <hostname> <sshkeyfile> <command>\n"
+    exit
+}
+set hostname [lrange $argv 0 0]
+set sshkey [lrange $argv 1 1]
+set command [lrange $argv 2 2]
+set timeout -1
+
+spawn ssh -p 22 -i $sshkey root@$hostname $command
+match_max 100000
+
+expect {
+    -re ".*yes.*no.*" {
+    send "yes\r"
+    exp_continue
+    }
+    send -- "$command\r"
+}
+

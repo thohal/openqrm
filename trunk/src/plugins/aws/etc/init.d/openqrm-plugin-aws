@@ -1,0 +1,107 @@
+#!/bin/bash
+# init script for the openQRM aws-plugin
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aws/include/openqrm-plugin-aws-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aws/etc/openqrm-plugin-aws.conf
+# get the ip config
+openqrm_server_get_config
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+export LANG=C
+
+
+function openqrm_plugin_aws_start() {
+	echo "Starting the openQRM aws-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aws/.running
+}
+
+
+function openqrm_plugin_aws_stop() {
+	echo "Stopping the openQRM aws-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aws/.running
+}
+
+function openqrm_plugin_aws_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "aws: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "aws: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM aws-plugin"
+	openqrm_plugin_aws_stop
+
+	# removing the table
+	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/aws/aws-action.php?aws_command=uninstall"; then
+		aws_log init "ERROR: Could not drop the aws-plugin tables in the database!"
+		return 1
+	fi
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aws
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-aws.tgz
+
+
+}
+
+function openqrm_plugin_aws_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "aws: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "aws: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Initializing the openQRM aws-plugin"
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aws/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aws
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aws/web/boot-service-aws.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-aws.tgz
+
+	# creating the table
+	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/aws/aws-action.php?aws_command=init"; then
+		aws_log init "ERROR: Could not create the aws-plugin tables in the database!"
+		return 1
+	fi
+	
+}
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_aws_start
+		;;
+	stop)
+		openqrm_plugin_aws_stop
+		;;
+	restart)
+		openqrm_plugin_aws_stop
+		sleep 1
+		openqrm_plugin_aws_start
+		;;
+	init)
+		openqrm_plugin_aws_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_aws_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+

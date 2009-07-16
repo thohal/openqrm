@@ -1,0 +1,50 @@
+#!/bin/bash
+# this is the functions file for the aws-plugin
+AWS_LOCK_FILE=/var/run/aws/aws-plugin.lock
+AWS_LOCK_DELAY=5
+AWS_LOCK_RETRY=100
+AWS_LOCK_TIMEOUT=500
+################ common aws functions
+
+# logs for aws
+function aws_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "aws plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function aws_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $AWS_LOCK_FILE` ]; then
+		mkdir -p `dirname $AWS_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $AWS_LOCK_DELAY -r $AWS_LOCK_RETRY -l $AWS_LOCK_TIMEOUT $AWS_LOCK_FILE
+				RET=$?
+				aws_log aws_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $AWS_LOCK_FILE
+				RET=$?
+				aws_log aws_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			aws_log aws_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ aws functions
+
+

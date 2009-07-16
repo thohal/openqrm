@@ -1,0 +1,211 @@
+#!/bin/bash
+
+# this script automatically manages aws
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aws/include/openqrm-plugin-aws-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aws/etc/openqrm-plugin-aws.conf
+# get the ip config
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+openqrm_server_get_config
+export LANG=C
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+# stat dir
+AWS_STAT_DIR="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aws/web/aws-stat/"
+
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+
+if ! which screen 1>/dev/null; then
+	echo "ERROR: The 'screen' utility is not installed! Please install and try again."
+	aws_log "ERROR: The 'screen' utility is not installed! Please install and try again."
+	exit 6
+fi
+
+# re-run in background via screen
+if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+	export RUN_IN_BACKGROUND=true
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	screen -dmS $SCREEN_NAME $0 $@
+	exit	
+fi
+# create stat dir
+if [ ! -d "$AWS_STAT_DIR" ]; then
+    mkdir -p $AWS_STAT_DIR
+    chmod -R 777 $AWS_STAT_DIR
+fi
+
+
+function aws_usage() {
+	echo "Usage : $0 describe_instances -j <java-home> -e <ec2-home> -p <ec2-private-key> -c <ec2-cert> [ -u <ec2-region-url> ]"
+	exit 1
+}
+
+
+AWS_COMMAND=$1
+shift
+
+while [ $# -ne 0 ]; do
+	case "$1" in
+		-i)
+			PARAM_AWS_ACCOUNT_ID=$2
+			shift
+			;;
+		-j)
+			PARAM_JAVA_HOME=$2
+			shift
+			;;
+		-e)
+			PARAM_EC2_HOME=$2
+			shift
+			;;
+		-p)
+			PARAM_EC2_PRIVATE_KEY=$2
+			shift
+			;;
+		-c)
+			PARAM_EC2_CERT=$2
+			shift
+			;;
+		-u)
+			PARAM_EC2_URL=$2
+			shift
+			;;
+		-s)
+			PARAM_IMAGE_STORE=$2
+			shift
+			;;
+		-a)
+			PARAM_INSTANCE_ID=$2
+			shift
+			;;
+		-k)
+			PARAM_SSH_KEY=$2
+			shift
+			;;
+		*)
+			echo "ERROR: Free commandline arguments are not allowed"
+			aws_usage
+			exit 6
+			;;
+	esac
+	shift
+done
+
+# checks
+if [ "$AWS_COMMAND" == "" ]; then
+	aws_usage
+fi
+if [ "$PARAM_JAVA_HOME" == "" ] || [ "$PARAM_EC2_HOME" == "" ] || [ "$PARAM_EC2_PRIVATE_KEY" == "" ] || [ "$PARAM_EC2_CERT" == "" ] || [ "$PARAM_AWS_ACCOUNT_ID" == "" ]; then
+	aws_usage
+fi
+# default region
+if [ "$PARAM_EC2_URL" == "" ]; then
+	PARAM_EC2_URL="https://eu-west-1.ec2.amazonaws.com"
+fi
+
+JAVA_HOME=$PARAM_JAVA_HOME
+EC2_HOME=$PARAM_EC2_HOME
+EC2_PRIVATE_KEY=$PARAM_EC2_PRIVATE_KEY
+EC2_CERT=$PARAM_EC2_CERT
+EC2_URL=$PARAM_EC2_URL
+export JAVA_HOME
+export EC2_HOME
+export EC2_PRIVATE_KEY
+export EC2_CERT
+export EC2_URL
+
+# main
+case "$AWS_COMMAND" in
+
+	describe_instances)
+		openqrm_post_event 0 "describe_instances" 5 "openqrm-aws" "Listing active AWS instances"
+        $EC2_HOME/bin/ec2-describe-instances > $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log.tmp.1
+        AWS_RET=$?
+        if [ "$AWS_RET" != 0 ]; then
+    		openqrm_post_event 0 "get" 3 "openqrm-aws" "Could not list active AWS instances. Please check the aws-plugin configuration !"
+        else
+            grep INSTANCE $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log.tmp.1 | grep running > $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log.tmp
+            sed -i -e "s/\x09/@/g" $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log.tmp
+            sed -i -e "s/\x20/@/g" $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log.tmp
+            chmod -R 777 $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log.tmp
+            mv -f $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log.tmp $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log
+            rm -f $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log.tmp.1 $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log.tmp
+# for testing
+#> $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log
+#echo "RESERVATION@i-3ea74257@ami-6ba54002@domU-12-31-33-00-00-01.dc3.compute.amazonaws.com@running@0" >> $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log
+#echo "INSTANCE@i-31a74258@ami-6ba54002@domU-12-31-33-00-00-02.dc3.compute.amazonaws.com@running@1" >> $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log
+#echo "INSTANCE@i-3ea74259@ami-6ba54002@domU-12-31-33-00-00-03.dc3.compute.amazonaws.com@terminating@0" >> $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log
+#echo "INSTANCE@i-31a74260@ami-6ba54002@domU-12-31-33-00-00-04.dc3.compute.amazonaws.com@running@1" >> $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log
+#chmod -R 777 $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log
+
+
+        fi
+		;;
+
+	import_instance)
+        if [ "$PARAM_INSTANCE_ID" == "" ] || [ "$PARAM_IMAGE_STORE" == "" ] || [ "$PARAM_SSH_KEY" == "" ]; then
+            aws_usage
+        fi
+
+		aws_log "NOTICE: Importing AWS Instance $PARAM_INSTANCE_ID to Server Image at $PARAM_IMAGE_STORE"
+		aws_log "NOTICE: -> using ssh-key file $PARAM_SSH_KEY"
+
+		MOUNTPOINT=`mktemp -d /tmp/$PARAM_INSTANCE_ID.XXXXXXXXXX` || exit 1
+		if ! mount -t nfs $PARAM_IMAGE_STORE $MOUNTPOINT; then
+			aws_log "ERROR: Could not mount $PARAM_IMAGE_STORE!"
+			openqrm_post_event 0 "import_instance" 3 "openqrm-aws" "Could not mount $PARAM_IMAGE_STORE!"
+			exit 1
+		else
+			aws_log "NOTICE: Mounted $PARAM_IMAGE_STORE. Starting the import."
+			openqrm_post_event 0 "import_instance" 5 "openqrm-aws" "Mounted $PARAM_IMAGE_STORE. Starting the import."
+		fi
+
+        # starting import via rsync
+        INSTANCE_HOSTNAME=`$EC2_HOME/bin/ec2-describe-instances $PARAM_INSTANCE_ID | grep INSTANCE | awk {' print $4 '}`
+        if [ "$INSTANCE_HOSTNAME" == "" ]; then
+            umount $MOUNTPOINT
+            rmdir $MOUNTPOINT
+            aws_log "ERROR: Could not get hostname from AWS Instance $PARAM_INSTANCE_ID"
+            openqrm_post_event 0 "import_instance" 3 "openqrm-aws" "Could not get hostname from AWS Instance $PARAM_INSTANCE_ID"
+            exit 1
+        else
+            aws_log "NOTICE: Got hostname $INSTANCE_HOSTNAME for AWS Instance $PARAM_INSTANCE_ID"
+            openqrm_post_event 0 "import_instance" 5 "openqrm-aws" "Got hostname $INSTANCE_HOSTNAME for AWS Instance $PARAM_INSTANCE_ID"
+        fi
+        # run one simple command per expetc + ssh so the machine key gets accpeted and added to known_hosts
+        aws_log "NOTICE: Checking ssh connection to $INSTANCE_HOSTNAME via key $PARAM_SSH_KEY"
+        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aws/bin/openqrm-aws-ssh $INSTANCE_HOSTNAME $PARAM_SSH_KEY
+
+        aws_log "NOTICE: Starting AMI import of $INSTANCE_HOSTNAME to $PARAM_IMAGE_STORE"
+        #AWSC="rsync -avz -e \"ssh -i $PARAM_SSH_KEY\" --exclude /proc --exclude /sys $INSTANCE_HOSTNAME:/* $MOUNTPOINT/"
+        #echo "RUNNING : $AWSC" | logger
+        rsync -avz -e "ssh -i $PARAM_SSH_KEY" --exclude /proc --exclude /sys $INSTANCE_HOSTNAME:/* $MOUNTPOINT/
+        if ! [ $? == 24 -o $? == 0 ] ; then
+            umount $MOUNTPOINT
+            rmdir $MOUNTPOINT
+            aws_log "ERROR: Error importing AWS Instance $PARAM_INSTANCE_ID"
+            openqrm_post_event 0 "import_instance" 3 "openqrm-aws" "Error importing AWS Instance $PARAM_INSTANCE_ID"
+            exit 1
+        fi
+        mkdir -p $MOUNTPOINT/proc $MOUNTPOINT/sys
+		umount $MOUNTPOINT
+		rmdir $MOUNTPOINT
+		aws_log "NOTICE: Successfully created Server-image from AWS Instance $PARAM_INSTANCE_ID"
+		openqrm_post_event 0 "import_instance" 5 "openqrm-aws" "Successfully imported AWS Instance $PARAM_INSTANCE_ID to Server Image at $PARAM_IMAGE_STORE"
+	
+		;;
+
+	*)
+		aws_usage
+		;;
+
+
+esac
+
