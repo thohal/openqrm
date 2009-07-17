@@ -545,7 +545,7 @@ function xen_display($appliance_id) {
                 $xen_vm_actions= $xen_vm_actions."<a href=\"$thisfile?identifier_table1[]=$xen_name&action_table1=start&xen_id=$xen_appliance->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"></a>&nbsp;";
                 if ($xen_openqrm_vm == 1) {
                     $xen_vm_actions = $xen_vm_actions."<a href=\"xen-vm-config.php?xen_name=$xen_name&xen_id=$xen_appliance->id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/plugin.png\" border=\"0\"></a>&nbsp;";
-                    $xen_vm_actions = $xen_vm_actions."<a href=\"$thisfile?identifier_table1[]=$xen_name&action_table1=remove&xen_id=$xen_appliance->id&xen_vm_mac_ar[$xen_name]=\"$xen_vm_mac\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"></a>&nbsp;";
+                    $xen_vm_actions = $xen_vm_actions."<a href=\"$thisfile?identifier_table1[]=$xen_name&action_table1=remove&xen_id=$xen_appliance->id&xen_vm_mac_ar[$xen_name]=$xen_vm_mac\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"></a>&nbsp;";
                 }
             }
 
