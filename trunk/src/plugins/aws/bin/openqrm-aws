@@ -43,7 +43,9 @@ fi
 
 
 function aws_usage() {
-	echo "Usage : $0 describe_instances -j <java-home> -e <ec2-home> -p <ec2-private-key> -c <ec2-cert> [ -u <ec2-region-url> ]"
+	echo "Usage : $0 describe_instances -j <java-home> -e <ec2-home> -p <ec2-private-key> -c <ec2-cert> -i <openQRM-aws-account-id> [ -u <ec2-region-url> ]"
+	echo "        $0 import_instance -j <java-home> -e <ec2-home> -p <ec2-private-key> -c <ec2-cert> -x <instance-id> -k <ssh-key> -s <image-storage:/image-path/> [ -u <ec2-region-url> ]"
+	echo "        $0 export_image -j <java-home> -e <ec2-home> -p <ec2-private-key> -c <ec2-cert> -s <image-storage:/image-path/> -a <ami-tools-dir> -m <ami-size(in MB)> -r <ami-architecture> -n <ami-name> -b <s3-bucket> -w <aws-account-number> -y <aws-access-key> -z <aws-secret-access-key> [ -u <ec2-region-url> ]"
 	exit 1
 }
 
@@ -57,12 +59,20 @@ while [ $# -ne 0 ]; do
 			PARAM_AWS_ACCOUNT_ID=$2
 			shift
 			;;
+		-w)
+			PARAM_AWS_ACCOUNT=$2
+			shift
+			;;
 		-j)
 			PARAM_JAVA_HOME=$2
 			shift
 			;;
 		-e)
 			PARAM_EC2_HOME=$2
+			shift
+			;;
+		-a)
+			PARAM_EC2_AMITOOL_HOME=$2
 			shift
 			;;
 		-p)
@@ -81,12 +91,37 @@ while [ $# -ne 0 ]; do
 			PARAM_IMAGE_STORE=$2
 			shift
 			;;
-		-a)
+		-x)
 			PARAM_INSTANCE_ID=$2
 			shift
 			;;
 		-k)
 			PARAM_SSH_KEY=$2
+			shift
+			;;
+		-m)
+			PARAM_AMI_SIZE=$2
+			shift
+			;;
+		-r)
+			PARAM_AMI_ARCH=$2
+			shift
+			;;
+		-n)
+			PARAM_AMI_NAME=$2
+			shift
+			;;
+		-b)
+			PARAM_S3_BUCKET=$2
+			shift
+			;;
+		-y)
+			PARAM_PUBLIC_ACCESS_KEY=$2
+			shift
+			;;
+
+		-z)
+			PARAM_SECRET_ACCESS_KEY=$2
 			shift
 			;;
 		*)
@@ -112,6 +147,7 @@ fi
 
 JAVA_HOME=$PARAM_JAVA_HOME
 EC2_HOME=$PARAM_EC2_HOME
+EC2_AMITOOL_HOME=$PARAM_EC2_AMITOOL_HOME
 EC2_PRIVATE_KEY=$PARAM_EC2_PRIVATE_KEY
 EC2_CERT=$PARAM_EC2_CERT
 EC2_URL=$PARAM_EC2_URL
@@ -120,6 +156,8 @@ export EC2_HOME
 export EC2_PRIVATE_KEY
 export EC2_CERT
 export EC2_URL
+export EC2_AMITOOL_HOME
+
 
 # main
 case "$AWS_COMMAND" in
@@ -137,15 +175,6 @@ case "$AWS_COMMAND" in
             chmod -R 777 $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log.tmp
             mv -f $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log.tmp $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log
             rm -f $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log.tmp.1 $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log.tmp
-# for testing
-#> $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log
-#echo "RESERVATION@i-3ea74257@ami-6ba54002@domU-12-31-33-00-00-01.dc3.compute.amazonaws.com@running@0" >> $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log
-#echo "INSTANCE@i-31a74258@ami-6ba54002@domU-12-31-33-00-00-02.dc3.compute.amazonaws.com@running@1" >> $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log
-#echo "INSTANCE@i-3ea74259@ami-6ba54002@domU-12-31-33-00-00-03.dc3.compute.amazonaws.com@terminating@0" >> $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log
-#echo "INSTANCE@i-31a74260@ami-6ba54002@domU-12-31-33-00-00-04.dc3.compute.amazonaws.com@running@1" >> $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log
-#chmod -R 777 $AWS_STAT_DIR/$PARAM_AWS_ACCOUNT_ID.ec2_describe_instances.log
-
-
         fi
 		;;
 
@@ -201,6 +230,141 @@ case "$AWS_COMMAND" in
 		openqrm_post_event 0 "import_instance" 5 "openqrm-aws" "Successfully imported AWS Instance $PARAM_INSTANCE_ID to Server Image at $PARAM_IMAGE_STORE"
 	
 		;;
+
+
+	export_image)
+        if [ "$PARAM_IMAGE_STORE" == "" ]; then
+            aws_usage
+        fi
+        if [ "$PARAM_AMI_SIZE" == "" ] || [ "$PARAM_AMI_NAME" == "" ] || [ "$PARAM_S3_BUCKET" == "" ] || [ "$PARAM_AWS_ACCOUNT" == "" ]; then
+            aws_usage
+        fi
+        if [ "$PARAM_PUBLIC_ACCESS_KEY" == "" ] || [ "$PARAM_SECRET_ACCESS_KEY" == "" ] || [ "$PARAM_AMI_ARCH" == "" ]; then
+            aws_usage
+        fi
+
+        PARAM_AWS_ACCOUNT=`echo $PARAM_AWS_ACCOUNT | sed -e "s/-//g"`
+		aws_log "NOTICE: Exporting Server Image at $PARAM_IMAGE_STORE to AWS as a new AMI $PARAM_AMI_NAME using S3 bucket $PARAM_S3_BUCKET"
+
+		MOUNTPOINT=`mktemp -d /tmp/image-mnt.XXXXXXXXXX` || exit 1
+		if ! mount -t nfs $PARAM_IMAGE_STORE $MOUNTPOINT; then
+			aws_log "ERROR: Could not mount $PARAM_IMAGE_STORE!"
+			openqrm_post_event 0 "export_image" 3 "openqrm-aws" "Could not mount $PARAM_IMAGE_STORE!"
+			exit 1
+		else
+			aws_log "NOTICE: Mounted $PARAM_IMAGE_STORE."
+			openqrm_post_event 0 "export_image" 5 "openqrm-aws" "Mounted $PARAM_IMAGE_STORE."
+		fi
+		LOOP_IMAGE_FILE="/tmp/$PARAM_AMI_NAME.img"
+		LOOP_IMAGE_MNT=`mktemp -d /tmp/image-loop-mnt.XXXXXXXXXX` || exit 1
+        dd if=/dev/zero of=$LOOP_IMAGE_FILE bs=1M seek=$PARAM_AMI_SIZE count=1
+        mkfs.ext3 -F $LOOP_IMAGE_FILE
+		if ! mount -o loop $LOOP_IMAGE_FILE $LOOP_IMAGE_MNT; then
+			aws_log "ERROR: Could not loop mount $LOOP_IMAGE_FILE!"
+			openqrm_post_event 0 "export_image" 3 "openqrm-aws" "Could not loop mount $LOOP_IMAGE_FILE!"
+			exit 1
+		else
+			aws_log "NOTICE: Loop mounted $LOOP_IMAGE_FILE."
+			openqrm_post_event 0 "export_image" 5 "openqrm-aws" "Mounted $PARAM_IMAGE_STORE."
+		fi
+        rsync -az $MOUNTPOINT/* $LOOP_IMAGE_MNT/
+        if ! [ $? == 24 -o $? == 0 ] ; then
+            umount $MOUNTPOINT
+            rmdir $MOUNTPOINT
+            aws_log "ERROR: Syncing the Image to loop-back file failed. Exiting"
+            openqrm_post_event 0 "export_image" 3 "openqrm-aws" "Syncing the Image to loop-back file failed. Exiting"
+            exit 1
+        fi
+
+        # modify it a bit to fit to ec2
+        rm -rf $LOOP_IMAGE_MNT/$OPENQRM_SERVER_BASE_DIR/openqrm
+        rm -f $LOOP_IMAGE_MNT/iauth*
+        cd $LOOP_IMAGE_MNT/etc
+        rm -f `find -name openqrm-client`
+        cd - 1>/dev/null
+        # create network config
+        if [ -f $LOOP_IMAGE_MNT/etc/debian_version ]; then
+        rm -f $LOOP_IMAGE_MNT/etc/network/interfaces
+        cat >> $LOOP_IMAGE_MNT/etc/network/interfaces << EOF
+auto lo
+iface lo inet loopback
+auto eth0
+iface eth0 inet dhcp
+EOF
+        elif [ -f $LOOP_IMAGE_MNT/etc/redhat-release ]; then
+
+            cat >> $LOOP_IMAGE_MNT/etc/sysconfig/network-scripts/ifcfg-eth0 << EOF
+DEVICE=eth0
+BOOTPROTO=dhcp
+ONBOOT=yes
+TYPE=Ethernet
+USERCTL=yes
+PEERDNS=yes
+IPV6INIT=no
+EOF
+            echo "NETWORKING=yes" > $LOOP_IMAGE_MNT/etc/sysconfig/network.
+        fi
+            # re-create fstab / small instances only for now
+            rm -f $LOOP_IMAGE_MNT/etc/fstab
+            cat >> $LOOP_IMAGE_MNT/etc/fstab << EOF
+/dev/sda1  /         ext3    defaults        1 1
+/dev/sda2  /mnt      ext3    defaults        1 2
+/dev/sda3  swap      swap    defaults        0 0
+none       /dev/pts  devpts  gid=5,mode=620  0 0
+none       /dev/shm  tmpfs   defaults        0 0
+none       /proc     proc    defaults        0 0
+none       /sys      sysfs   defaults        0 0
+EOF
+
+        # create required devices
+        mknod $LOOP_IMAGE_MNT/dev/zero c 1 5
+        mknod $LOOP_IMAGE_MNT/dev/null c 1 3
+        mknod $LOOP_IMAGE_MNT/dev/tty c 5 0
+        mknod $LOOP_IMAGE_MNT/dev/console c 5 1
+        mknod $LOOP_IMAGE_MNT/dev/ptmx c 5 2
+        mknod $LOOP_IMAGE_MNT/dev/tty0 c 4 0
+        mknod $LOOP_IMAGE_MNT/dev/tty1 c 4 1
+
+        # umounting
+		umount $MOUNTPOINT
+		rmdir $MOUNTPOINT
+		umount $LOOP_IMAGE_MNT
+		rmdir $LOOP_IMAGE_MNT
+
+        # bundle
+        aws_log "BUNDLING: $EC2_AMITOOL_HOME/bin/ec2-bundle-image -i $LOOP_IMAGE_FILE -c $EC2_CERT -k $EC2_PRIVATE_KEY -u $PARAM_AWS_ACCOUNT -r $PARAM_AMI_ARCH"
+		if ! $EC2_AMITOOL_HOME/bin/ec2-bundle-image -i $LOOP_IMAGE_FILE -c $EC2_CERT -k $EC2_PRIVATE_KEY -u $PARAM_AWS_ACCOUNT -r $PARAM_AMI_ARCH; then
+			aws_log "ERROR: Bundling AMI $LOOP_IMAGE_FILE! failed"
+			#openqrm_post_event 0 "export_image" 3 "openqrm-aws" "Bundling AMI $LOOP_IMAGE_FILE! failed"
+			exit 1
+		else
+			aws_log "NOTICE: Successfully bundled $LOOP_IMAGE_FILE."
+			openqrm_post_event 0 "export_image" 5 "openqrm-aws" "Successfully bundled $LOOP_IMAGE_FILE."
+		fi
+        # upload
+        if echo $EC2_URL | grep us; then
+            AWS_AMI_REGION="US"
+        elif echo $EC2_URL | grep eu; then
+            AWS_AMI_REGION="EU"
+        fi
+        aws_log "UPLOADING: $EC2_AMITOOL_HOME/bin/ec2-upload-bundle -b $PARAM_S3_BUCKET -m /tmp/$PARAM_AMI_NAME.img.manifest.xml -a $PARAM_PUBLIC_ACCESS_KEY -s $PARAM_SECRET_ACCESS_KEY --location $AWS_AMI_REGION"
+		if ! $EC2_AMITOOL_HOME/bin/ec2-upload-bundle -b $PARAM_S3_BUCKET -m /tmp/$PARAM_AMI_NAME.img.manifest.xml -a $PARAM_PUBLIC_ACCESS_KEY -s $PARAM_SECRET_ACCESS_KEY --location $AWS_AMI_REGION; then
+			aws_log "ERROR: Uploading bundled AMI $LOOP_IMAGE_FILE! failed"
+			openqrm_post_event 0 "export_image" 3 "openqrm-aws" "Uploading bundled AMI $LOOP_IMAGE_FILE! failed"
+			exit 1
+		else
+			aws_log "NOTICE: Successfully uploaded bundled AMI $LOOP_IMAGE_FILE."
+			openqrm_post_event 0 "export_image" 5 "openqrm-aws" "Successfully uploaded bundled AMI $LOOP_IMAGE_FILE."
+		fi
+
+        # register
+        aws_log "REGISTER: $EC2_HOME/bin/ec2-register -U $EC2_URL $PARAM_S3_BUCKET/$PARAM_AMI_NAME.img.manifest.xml"
+        AWS_AMI_NAME=`$EC2_HOME/bin/ec2-register -U $EC2_URL $PARAM_S3_BUCKET/$PARAM_AMI_NAME.img.manifest.xml | awk {' print $2 '}`
+		aws_log "NOTICE: Successfully exported Server-image from $PARAM_IMAGE_STORE to AWS AMI $AWS_AMI_NAME"
+		openqrm_post_event 0 "import_instance" 5 "openqrm-aws" "Successfully exported Server-image from $PARAM_IMAGE_STORE to AWS AMI $AWS_AMI_NAME"
+		;;
+
+
 
 	*)
 		aws_usage

@@ -10,13 +10,17 @@
 <div>
 	<div style="float:left;">
     {aws_account_name}
+    {aws_account_number}
     {aws_java_home}
     {aws_ec2_home}
+    {aws_ami_home}
     </div>
     <div style="float:right;">
         {aws_ec2_private_key}
         {aws_ec2_cert}
         {aws_ec2_ssh_key}
+        {aws_access_key}
+        {aws_secret_access_key}
         {aws_ec2_url}
     </div>
 	<div style="clear:both;line-height:0px;">&#160;</div>

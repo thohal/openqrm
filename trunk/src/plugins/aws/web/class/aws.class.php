@@ -33,6 +33,12 @@ var $id = '';
 */
 var $account_name = '';
 /**
+* aws account_number
+* @access protected
+* @var string
+*/
+var $account_number = '';
+/**
 * java_home
 * @access protected
 * @var string
@@ -44,6 +50,12 @@ var $java_home = '';
 * @var string
 */
 var $ec2_home = '';
+/**
+* ami_home
+* @access protected
+* @var string
+*/
+var $ami_home = '';
 /**
 * ec2_private_key
 * @access protected
@@ -69,6 +81,20 @@ var $ec2_region = '';
 * @var string
 */
 var $ec2_ssh_key= '';
+
+/**
+* access_key
+* @access protected
+* @var string
+*/
+var $access_key= '';
+
+/**
+* secret_access_key
+* @access protected
+* @var string
+*/
+var $secret_access_key= '';
 
 
 /**
@@ -134,12 +160,17 @@ var $_event;
 		foreach ($aws_array as $index => $aws) {
 			$this->id = $aws["aws_id"];
 			$this->account_name = $aws["aws_account_name"];
+			$this->account_number = $aws["aws_account_number"];
 			$this->java_home = $aws["aws_java_home"];
 			$this->ec2_home = $aws["aws_ec2_home"];
+			$this->ami_home = $aws["aws_ami_home"];
 			$this->ec2_private_key = $aws["aws_ec2_private_key"];
 			$this->ec2_cert = $aws["aws_ec2_cert"];
 			$this->ec2_region = $aws["aws_ec2_region"];
 			$this->ec2_ssh_key = $aws["aws_ec2_ssh_key"];
+			$this->access_key = $aws["aws_access_key"];
+			$this->secret_access_key = $aws["aws_secret_access_key"];
+
 		}
 		return $this;
 	}

@@ -36,13 +36,17 @@ switch ($aws_command) {
         // -> aws_locations
         // aws_id INT(5)
         // aws_account_name VARCHAR(20)
+        // aws_account_number VARCHAR(20)
         // aws_java_home VARCHAR(255)
         // aws_ec2_home VARCHAR(255)
+        // aws_ami_home VARCHAR(255)
         // aws_ec2_private_key VARCHAR(255)
         // aws_ec2_cert VARCHAR(255)
         // aws_ec2_region VARCHAR(255)
         // aws_ec2_ssh_key VARCHAR(255)
-        $create_aws_table = "create table openqrm_aws(aws_id INT(5), aws_account_name VARCHAR(20), aws_java_home VARCHAR(255), aws_ec2_home VARCHAR(255), aws_ec2_private_key VARCHAR(255), aws_ec2_cert VARCHAR(255), aws_ec2_region VARCHAR(255), aws_ec2_ssh_key VARCHAR(255))";
+        // aws_access_key VARCHAR(255)
+        // aws_secret_access_key VARCHAR(255)
+        $create_aws_table = "create table openqrm_aws(aws_id INT(5), aws_account_name VARCHAR(20), aws_account_number VARCHAR(20), aws_java_home VARCHAR(255), aws_ec2_home VARCHAR(255), aws_ami_home VARCHAR(255), aws_ec2_private_key VARCHAR(255), aws_ec2_cert VARCHAR(255), aws_ec2_region VARCHAR(255), aws_ec2_ssh_key VARCHAR(255), aws_access_key VARCHAR(255), aws_secret_access_key VARCHAR(255))";
         $db=openqrm_get_db_connection();
         $recordSet = &$db->Execute($create_aws_table);
 

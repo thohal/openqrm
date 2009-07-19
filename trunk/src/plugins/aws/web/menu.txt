@@ -7,4 +7,5 @@
 ...|About|plugins/aws/aws-about.php
 ...|AWS Accounts|plugins/aws/aws-setup.php
 ...|Import from EC2|plugins/aws/aws-import.php
+...|Export to EC2|plugins/aws/aws-export.php
 ...|AWS-Console|https://console.aws.amazon.com/ec2/|AWS-Console||_BLANK

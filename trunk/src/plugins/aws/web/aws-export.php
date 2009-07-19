@@ -71,7 +71,7 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '', $step, $aws_id) {
 	if($url == '') {
 		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&step='.$step.'&aws_id='.$aws_id;
 	}
-	// using meta refresh because of the java-script in the header	
+	// using meta refresh because of the java-script in the header
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
@@ -113,58 +113,44 @@ if(htmlobject_request('action') != '') {
             if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
                     show_progressbar();
-                    $aws = new aws();
-                    $aws->get_instance_by_id($id);
-                    $aws_java_home = $aws->java_home;
-                    $aws_ec2_home = $aws->ec2_home;
-                    $aws_ec2_private_key = $aws->ec2_private_key;
-                    $aws_ec2_cert = $aws->ec2_cert;
-                    $aws_ec2_region = $aws->ec2_region;
-                    
-                    // remove current log
-                    $describe_instances = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aws/web/aws-stat/".$id.".ec2_describe_instances.log";
-                    if (file_exists($describe_instances)) {
-                        unlink($describe_instances);
-                    }
-                    // send command
-                    $aws_run_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aws/bin/openqrm-aws describe_instances -i ".$id." -j ".$aws_java_home." -e ".$aws_ec2_home." -p ".$aws_ec2_private_key." -c ".$aws_ec2_cert." -u ".$aws_ec2_region;
-                    $openqrm_server->send_command($aws_run_command);
-                    // and wait for the resulting statfile
-                    if (!wait_for_statfile($describe_instances)) {
-                        $redir_msg = "Error during ec2-describe-instances command on AWS ! Please check the AWS Account configuration";
-                    } else {
-                        $redir_msg = "Displaying active instances on AWS";
-                    }
                     redirect($redir_msg, '', '', 2, $id);
                     break;
                 }
             }
 			break;
 
-		case 'get':
+		case 'next':
             if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
-                    $instance_id = $id;
+                    $image_id = $id;
                     $aws_id = htmlobject_request('aws_id');
                     $step=3;
                     break;
                 }
+                break;
             }
+            $redir_msg = "No Server Image selected. Skipping export ...";
+            redirect($redir_msg, '', '', 1, 0);
 			break;
 
-		case 'put':
-            if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $image_id = $id;
-                    $instance_id = htmlobject_request('instance_id');
-                    $aws_id = htmlobject_request('aws_id');
-                    $step=4;
-                    break;
-                }
+		case 'export':
+            $image_id = htmlobject_request('image_id');
+            $aws_id = htmlobject_request('aws_id');
+            $aws_ami_name = htmlobject_request('aws_ami_name');
+            $aws_ami_size = htmlobject_request('aws_ami_size');
+            $aws_ami_arch = htmlobject_request('aws_ami_arch');
+            $step=4;
+            if (!strlen($image_id)) {
+                $step=1;
+                $redir_msg = "No Server Image selected. Skipping export ...";
+                redirect($redir_msg, '', '', 1, 0);
+            }
+            if (strlen($aws_ami_name) < 8) {
+                $step=1;
+                $redir_msg = "AMI Name empty or too short (min. 8 character). Skipping export ...";
+                redirect($redir_msg, '', '', 1, 0);
             }
 			break;
-
-
 
 	}
 }
@@ -179,7 +165,8 @@ function aws_select_account() {
 	global $thisfile;
 
 	$table = new htmlobject_db_table('aws_id');
-	$arHead = array();
+
+    $arHead = array();
 
 	$arHead['aws_id'] = array();
 	$arHead['aws_id']['title'] ='Id';
@@ -195,7 +182,7 @@ function aws_select_account() {
 
 	$aws_count=1;
 	$aws_tmp = new aws();
-	$aws_array = $aws_tmp->display_overview(0, $table->limit, $table->sort, $table->order);
+	$aws_array = $aws_tmp->display_overview(0, $table->limit, "aws_id", $table->order);
 
 	$arBody = array();
 	foreach ($aws_array as $index => $aws_db) {
@@ -242,98 +229,7 @@ function aws_select_account() {
 
 
 
-function aws_select_instance($aws_id) {
-	global $OPENQRM_USER;
-	global $OPENQRM_SERVER_BASE_DIR;
-	global $thisfile;
-
-	$aws = new aws();
-	$aws->get_instance_by_id($aws_id);
-	$aws_account_name = $aws->account_name;
-	$describe_instances = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aws/web/aws-stat/".$aws_id.".ec2_describe_instances.log";
-
-	$table = new htmlobject_db_table('instance_id');
-	$arHead = array();
-
-	$arHead['instance_id'] = array();
-	$arHead['instance_id']['title'] ='Id';
-
-	$arHead['instance_hostname'] = array();
-	$arHead['instance_hostname']['title'] ='Hostname';
-
-    $arHead['instance_ami'] = array();
-	$arHead['instance_ami']['title'] ='AMI';
-
-    $arHead['instance_state'] = array();
-	$arHead['instance_state']['title'] ='State';
-
-	$instance_count=1;
-	$arBody = array();
-    // be sure it is there, otherwise wait for it
-    if (!wait_for_statfile($describe_instances)) {
-        $redir_msg = "Error getting informations from AWS ! Please check the Event-Log";
-        redirect($redir_msg, '', '', '', '');
-    }
-	if (file_exists($describe_instances)) {
-		$aws_conf_content=file($describe_instances);
-		foreach ($aws_conf_content as $value => $image) {
-			$instance_parameter = explode("@", $image);
-			$instance_type = $instance_parameter[0];
-			$instance_id = $instance_parameter[1];
-			$instance_hostname = $instance_parameter[2];
-			$instance_ami = $instance_parameter[3];
-			$instance_state = $instance_parameter[5];
-
-            $arBody[] = array(
-                'instance_id' => "$instance_id",
-                'instance_ami' => "$instance_ami  <input type=\"hidden\" name=\"aws_id\" value=\"$aws_id\">",
-                'instance_hostname' => "$instance_hostname",
-                'instance_state' => "$instance_state",
-            );
-            $instance_count++;
-		}
-	} else {
-        $redir_msg = "Could not connect to AWS using account $aws_account_name ! Please check the Event-Log";
-        redirect($redir_msg, '', '', '', '');
-
-	}
-
-	$table->id = 'Tabelle';
-	$table->css = 'htmlobject_table';
-	$table->border = 1;
-	$table->cellspacing = 0;
-	$table->cellpadding = 3;
-	$table->form_action = $thisfile;
-	$table->identifier_type = "radio";
-	$table->sort = '';
-	$table->head = $arHead;
-	$table->body = $arBody;
-	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('get');
-		$table->identifier = 'instance_id';
-	}
-	$table->max = $instance_count;
-    // are there any active aws instances ? if not give a hint
-    if ($instance_count == 1) {
-        $aws_start_instance_hint = "<h4>There are no active AWS EC2 Instances available";
-        $aws_start_instance_hint .= "<br>You can launch EC2 Instances via the <a href=\"https://console.aws.amazon.com/ec2/\" target=\"_BLANK\"><strong>AWS Web-Concole</strong></a></h4>";
-    }
-
-   // set template
-	$t = new Template_PHPLIB();
-	$t->debug = false;
-	$t->setFile('tplfile', './tpl/' . 'aws-get.tpl.php');
-	$t->setVar(array(
-		'aws_get_table' => $table->get_string(),
-        'aws_start_instance_hint' => $aws_start_instance_hint,
-	));
-	$disp =  $t->parse('out', 'tplfile');
-	return $disp;
-}
-
-
-
-function image_storage_select($instance_id, $aws_id) {
+function image_storage_select($aws_id) {
 
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_BASE_DIR;
@@ -385,7 +281,7 @@ function image_storage_select($instance_id, $aws_id) {
 				'image_name' => $image_db["image_name"],
 				'image_version' => $image_db["image_version"],
 				// use the image_type to transport image_id + aws_id
-				'image_type' => "$image_deployment->description  <input type=\"hidden\" name=\"aws_id\" value=\"$aws_id\"><input type=\"hidden\" name=\"instance_id\" value=\"$instance_id\">",
+				'image_type' => "$image_deployment->description  <input type=\"hidden\" name=\"aws_id\" value=\"$aws_id\">",
 				'image_comment' => $image_db["image_comment"],
 			);
             $image_count++;
@@ -408,17 +304,16 @@ function image_storage_select($instance_id, $aws_id) {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('put');
+		$table->bottom = array('next');
 		$table->identifier = 'image_id';
 	}
 	$table->max = count($image_array);
     // set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
-	$t->setFile('tplfile', './tpl/' . 'aws-put.tpl.php');
+	$t->setFile('tplfile', './tpl/' . 'aws-export.tpl.php');
 	$t->setVar(array(
 		'image_put_table' => $table->get_string(),
-        'instance_id' => $instance_id,
         'create_image_hint' => $create_image_hint,
 	));
 	$disp =  $t->parse('out', 'tplfile');
@@ -429,7 +324,43 @@ function image_storage_select($instance_id, $aws_id) {
 
 
 
-function aws_final($image_id, $instance_id, $aws_id) {
+
+
+function aws_ami_setup($image_id, $aws_id) {
+
+	global $OPENQRM_USER;
+	global $OPENQRM_SERVER_BASE_DIR;
+	global $thisfile;
+
+    $hidden_aws_id = "<input type=\"hidden\" name=\"aws_id\" value=\"$aws_id\">";
+    $hidden_image_id = "<input type=\"hidden\" name=\"image_id\" value=\"$image_id\">";
+    $aws_ami_name = htmlobject_input('aws_ami_name', array("value" => htmlobject_request('aws_ami_name'), "label" => 'AMI Name'), 'text', 20);
+    $aws_ami_size = "AMI Size <select name=\"aws_ami_size\" size=\"1\"><option value=\"500\">500 MB</option><option value=\"1000\">1 GB</option><option value=\"2000\">2 GB</option><option value=\"5000\">5 GB</option><option value=\"10000\">10 GB</option></select>";
+    $aws_ami_arch = "AMI Arch <select name=\"aws_ami_arch\" size=\"1\"><option value=\"x86_64\">x86_64</option><option value=\"i386\">i386</option></select>";
+
+    // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'aws-export-setup.tpl.php');
+	$t->setVar(array(
+        'thisfile' => $thisfile,
+		'hidden_aws_id' => $hidden_aws_id,
+		'hidden_image_id' => $hidden_image_id,
+		'aws_ami_name' => $aws_ami_name,
+		'aws_ami_size' => $aws_ami_size,
+		'aws_ami_arch' => $aws_ami_arch,
+        'submit_save' => htmlobject_input('action', array("value" => 'export', "label" => 'export'), 'submit'),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
+
+}
+
+
+
+
+
+function aws_export_final($image_id, $aws_id, $aws_ami_name, $aws_ami_size, $aws_ami_arch) {
 	global $openqrm_server;
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_BASE_DIR;
@@ -439,11 +370,17 @@ function aws_final($image_id, $instance_id, $aws_id) {
 	$aws = new aws();
 	$aws->get_instance_by_id($aws_id);
     $aws_java_home = $aws->java_home;
+    $aws_account_number = $aws->account_number;
     $aws_ec2_home = $aws->ec2_home;
+    $aws_ami_home = $aws->ami_home;
     $aws_ec2_private_key = $aws->ec2_private_key;
     $aws_ec2_cert = $aws->ec2_cert;
     $aws_ec2_region = $aws->ec2_region;
     $aws_ec2_ssh_key = $aws->ec2_ssh_key;
+    $aws_access_key = $aws->access_key;
+    $aws_secret_access_key = $aws->secret_access_key;
+
+    $aws_s3_bucket = $aws_ami_name;
 
     $image = new image();
     $image->get_instance_by_id($image_id);
@@ -453,14 +390,14 @@ function aws_final($image_id, $instance_id, $aws_id) {
     $resource->get_instance_by_id($storage->resource_id);
     $image_store = $resource->ip.":".$image->rootdevice;
     // send command
-    $aws_run_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aws/bin/openqrm-aws import_instance -i ".$aws_id." -j ".$aws_java_home." -e ".$aws_ec2_home." -p ".$aws_ec2_private_key." -c ".$aws_ec2_cert." -u ".$aws_ec2_region." -k ".$aws_ec2_ssh_key." -x ".$instance_id." -s ".$image_store;
+    $aws_run_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aws/bin/openqrm-aws export_image -i ".$aws_id." -j ".$aws_java_home." -e ".$aws_ec2_home." -a ".$aws_ami_home." -p ".$aws_ec2_private_key." -c ".$aws_ec2_cert." -u ".$aws_ec2_region." -k ".$aws_ec2_ssh_key." -s ".$image_store." -m ".$aws_ami_size." -n ".$aws_ami_name." -r ".$aws_ami_arch." -b ".$aws_s3_bucket." -w ".$aws_account_number." -y ".$aws_access_key." -z ".$aws_secret_access_key;
     // send command
 	$openqrm_server->send_command($aws_run_command);
 
     // set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
-	$t->setFile('tplfile', './tpl/' . 'aws-final.tpl.php');
+	$t->setFile('tplfile', './tpl/' . 'aws-export-final.tpl.php');
 	$t->setVar(array(
         'image_id' => $image_id,
         'image_name' => $image->name,
@@ -472,23 +409,22 @@ function aws_final($image_id, $instance_id, $aws_id) {
 }
 
 
-
 $output = array();
 switch ($step) {
 	case 1:
-		$output[] = array('label' => 'AWS EC2 Import', 'value' => aws_select_account());
+		$output[] = array('label' => 'AWS EC2 Export', 'value' => aws_select_account());
 		break;
 	case 2:
-		$output[] = array('label' => 'AWS EC2 Import', 'value' => aws_select_instance($aws_id));
+		$output[] = array('label' => 'AWS EC2 Export', 'value' => image_storage_select($aws_id));
 		break;
 	case 3:
-		$output[] = array('label' => 'AWS EC2 Import', 'value' => image_storage_select($instance_id, $aws_id));
+		$output[] = array('label' => 'AWS EC2 Export', 'value' => aws_ami_setup($image_id, $aws_id));
 		break;
 	case 4:
-		$output[] = array('label' => 'AWS EC2 Import', 'value' => aws_final($image_id, $instance_id, $aws_id));
+		$output[] = array('label' => 'AWS EC2 Export', 'value' => aws_export_final($image_id, $aws_id, $aws_ami_name, $aws_ami_size, $aws_ami_arch));
 		break;
 	default:
-		$output[] = array('label' => 'AWS EC2 Import', 'value' => aws_select_account());
+		$output[] = array('label' => 'AWS EC2 Export', 'value' => aws_select_account());
 		break;
 }
 

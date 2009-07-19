@@ -114,16 +114,35 @@ if(htmlobject_request('action') != '') {
 		case 'save':
             show_progressbar();
             $aws_account_name = htmlobject_request('aws_account_name');
+            $aws_account_number = htmlobject_request('aws_account_number');
             $aws_java_home = htmlobject_request('aws_java_home');
             $aws_ec2_home = htmlobject_request('aws_ec2_home');
+            $aws_ami_home = htmlobject_request('aws_ami_home');
             $aws_ec2_private_key = htmlobject_request('aws_ec2_private_key');
             $aws_ec2_cert = htmlobject_request('aws_ec2_cert');
             $aws_ec2_url = htmlobject_request('aws_ec2_url');
             $aws_ec2_ssh_key = htmlobject_request('aws_ec2_ssh_key');
+            $aws_access_key = htmlobject_request('aws_access_key');
+            $aws_secret_access_key = htmlobject_request('aws_secret_access_key');
 
             // check user input
             if (!strlen($aws_account_name)) {
                 $redir_msg = "AWS account name empty. Not creating new account entry <br>";
+                redirect($redir_msg, '', '');
+                exit(0);
+            }
+            if (!strlen($aws_account_number)) {
+                $redir_msg = "AWS account number empty. Not creating new account entry <br>";
+                redirect($redir_msg, '', '');
+                exit(0);
+            }
+            if (!strlen($aws_access_key)) {
+                $redir_msg = "AWS access key empty. Not creating new account entry <br>";
+                redirect($redir_msg, '', '');
+                exit(0);
+            }
+            if (!strlen($aws_secret_access_key)) {
+                $redir_msg = "AWS secret access key empty. Not creating new account entry <br>";
                 redirect($redir_msg, '', '');
                 exit(0);
             }
@@ -134,6 +153,11 @@ if(htmlobject_request('action') != '') {
             }
             if (!is_dir($aws_ec2_home)) {
                 $redir_msg = "EC2 Home is not a directory. Not creating new account entry <br>";
+                redirect($redir_msg, '', '');
+                exit(0);
+            }
+            if (!is_dir($aws_ami_home)) {
+                $redir_msg = "AMI Tools dir is not a directory. Not creating new account entry <br>";
                 redirect($redir_msg, '', '');
                 exit(0);
             }
@@ -170,12 +194,17 @@ if(htmlobject_request('action') != '') {
             $fields = array();
             $fields["aws_id"] = openqrm_db_get_free_id('aws_id', $aws->_db_table);
             $fields['aws_account_name'] = $aws_account_name;
+            $fields['aws_account_number'] = $aws_account_number;
             $fields['aws_java_home'] = $aws_java_home;
             $fields['aws_ec2_home'] = $aws_ec2_home;
+            $fields['aws_ami_home'] = $aws_ami_home;
             $fields['aws_ec2_private_key'] = $aws_ec2_private_key;
             $fields['aws_ec2_cert'] = $aws_ec2_cert;
             $fields['aws_ec2_region'] = $aws_ec2_region;
             $fields['aws_ec2_ssh_key'] = $aws_ec2_ssh_key;
+            $fields['aws_access_key'] = $aws_access_key;
+            $fields['aws_secret_access_key'] = $aws_secret_access_key;
+
             $aws->add($fields);
             $redir_msg = "Created new AWS account configuration <br>";
             redirect($redir_msg, '', '');
@@ -251,11 +280,15 @@ function aws_setup_account() {
 
     // create new aws account
     $aws_account_name = htmlobject_input('aws_account_name', array("value" => htmlobject_request('aws_account_name'), "label" => 'Account Name'), 'text', 20);
+    $aws_account_number = htmlobject_input('aws_account_number', array("value" => htmlobject_request('aws_account_number'), "label" => 'Account Number'), 'text', 20);
     $aws_java_home = htmlobject_input('aws_java_home', array("value" => htmlobject_request('aws_java_home'), "label" => 'Java Home (dir)'), 'text', 255);
     $aws_ec2_home = htmlobject_input('aws_ec2_home', array("value" => htmlobject_request('aws_ec2_home'), "label" => 'EC2 Home (dir)'), 'text', 255);
+    $aws_ami_home = htmlobject_input('aws_ami_home', array("value" => htmlobject_request('aws_ami_home'), "label" => 'AMI Tools (dir)'), 'text', 255);
     $aws_ec2_private_key = htmlobject_input('aws_ec2_private_key', array("value" => htmlobject_request('aws_ec2_private_key'), "label" => 'AWS Private key (file)'), 'text', 255);
     $aws_ec2_cert = htmlobject_input('aws_ec2_cert', array("value" => htmlobject_request('aws_ec2_cert'), "label" => 'AWS Certificate (file)'), 'text', 255);
     $aws_ec2_ssh_key = htmlobject_input('aws_ec2_ssh_key', array("value" => htmlobject_request('aws_ec2_ssh_key'), "label" => 'SSH-Key (file)'), 'text', 255);
+    $aws_access_key = htmlobject_input('aws_access_key', array("value" => htmlobject_request('aws_access_key'), "label" => 'Access key (string)'), 'text', 255);
+    $aws_secret_access_key = htmlobject_input('aws_secret_access_key', array("value" => htmlobject_request('aws_secret_access_key'), "label" => 'Secret Access key (string)'), 'text', 255);
     $aws_ec2_url = "AWS Region <select name=\"aws_ec2_url\" size=\"1\"><option value=\"EU_WEST_1\">EU-WEST-1</option><option value=\"US_EAST_1\">US-EAST-1</option></select>";
 
 
@@ -267,11 +300,15 @@ function aws_setup_account() {
         'thisfile' => $thisfile,
 		'aws_table' => $table->get_string(),
 		'aws_account_name' => $aws_account_name,
+		'aws_account_number' => $aws_account_number,
 		'aws_java_home' => $aws_java_home,
 		'aws_ec2_home' => $aws_ec2_home,
+		'aws_ami_home' => $aws_ami_home,
 		'aws_ec2_private_key' => $aws_ec2_private_key,
 		'aws_ec2_cert' => $aws_ec2_cert,
 		'aws_ec2_ssh_key' => $aws_ec2_ssh_key,
+		'aws_access_key' => $aws_access_key,
+		'aws_secret_access_key' => $aws_secret_access_key,
 		'aws_ec2_url' => $aws_ec2_url,
         'submit_save' => htmlobject_input('action', array("value" => 'save', "label" => 'save'), 'submit'),
 	));
