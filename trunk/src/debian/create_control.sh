@@ -11,8 +11,20 @@ for SRC_DIR in `find ../plugins -mindepth 1 -maxdepth 1 -type d -not -name ".svn
 		echo "Depends: \${shlibs:Depends}, \${misc:Depends}, openqrm, ${OPENQRM_PLUGIN_DEPENDENCIES}" >> control.new
 		echo "Description: This openQRM plugin integrates ${PLUGINNAME}" >> control.new
 		echo " ${OPENQRM_PLUGIN_DESCRIPTION}" >> control.new
+
+		echo "usr/lib/openqrm/plugins/${PLUGINNAME}" > openqrm-plugin-${PLUGINNAME}.install
+
+		echo "#!/bin/bash" > openqrm-plugin-${PLUGINNAME}.postinst
+		echo "# this is the openqrm-plugin-${PLUGINNAME} postinstall script" >> openqrm-plugin-${PLUGINNAME}.postinst
+		echo "ln -s /usr/lib/openqrm/plugins/${PLUGINNAME}/etc/init.d/openqrm-plugin-${PLUGINNAME} /etc/init.d/openqrm-plugin-${PLUGINNAME}" >> openqrm-plugin-${PLUGINNAME}.postinst
+		echo "mkdir -p /var/www/openqrm/base/plugins/${PLUGINNAME}" >> openqrm-plugin-${PLUGINNAME}.postinst
+
+		echo "#!/bin/bash" > openqrm-plugin-${PLUGINNAME}.prerm
+		echo "# this is the openqrm-plugin-${PLUGINNAME} preremove script" >> openqrm-plugin-${PLUGINNAME}.prerm
+		echo "/etc/init.d/openqrm-plugin-${PLUGINNAME} stop" >> openqrm-plugin-${PLUGINNAME}.prerm
+		echo "rm /etc/init.d/openqrm-plugin-${PLUGINNAME}" >> openqrm-plugin-${PLUGINNAME}.prerm
+		echo "rm -fr /var/www/openqrm/base/plugins/${PLUGINNAME}" >> openqrm-plugin-${PLUGINNAME}.prerm
+
 	fi
 done
-
-
 
