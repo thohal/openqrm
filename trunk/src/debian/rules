@@ -12,13 +12,14 @@ include /usr/share/cdbs/1/rules/simple-patchsys.mk
 
 
 # Uncomment this to turn on verbose mode.
-# export DH_VERBOSE=1
+export DH_VERBOSE=1
 
 
 configure:: configure-stamp
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
+	cd $(CURDIR)/debian && sh create_control.sh && cd $(CURDIR)
 
 	touch configure-stamp
 
