@@ -7,6 +7,9 @@ check out latest version from svn.
 update changelog ( e.g.: dch -i)
 build package ( e.g.: debuild)
 
+Packages of openqrm plugins will be created automatically.
+
+
 ATTN for svn upload:
 
 run the following command to remove all binaries and unneccesary files from the debian directory:
@@ -25,4 +28,4 @@ Openqrm plugins will - in future - create symlinks to /etc/<plugins-name>.
 
 
 
- -- Martin ALfke <tuxmea@users.sourceforge.net>  Thu, 01 May 2008 00:53:04 +0200
+ -- Martin Alfke <tuxmea@users.sourceforge.net>  Thu, 01 May 2008 00:53:04 +0200
