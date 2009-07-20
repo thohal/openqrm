@@ -17,176 +17,177 @@ Depends: openqrm, openqrm-plugin-lvm-storage, openqrm-plugin-local-server, openq
 Description: <insert up to 60 chars description>
  <insert long description, indented with spaces>
 
+
 Package: openqrm-plugin-lvm-storage
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, aoetools, open-iscsi
-Description: The lvm-storage plugin transforms a standard Linux-box into a rapid-fast-cloning storage-server
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-nagios2
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, nagios2, nagios-images, nagios-plugins, postfix
-Description: The nagios2-plugin automatically monitors the systems and services managed by the openQRM-server.
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-local-server
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
-Description: The local-server-plugin provides an integration for already existing, local-installed systems in openQRM.
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-highavailability
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
-Description: The highavailability-plugin automatically provides high-availability for the appliances managed by openQRM.
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-local-storage
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
-Description: The Local-storage plugin adds support to deploy server-images to local-harddisk on the resources to openQRM.
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-tftpd
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, tftpd-hpa
-Description: The tftpd-plugin automatically manages to upload kernels to the resources (servers) managed by openQRM.
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-vmware-server
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
-Description: This openQRM plugin integrates the VMware-server virtualization technology.
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-netapp-storage
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, open-iscsi, expect
-Description: The NetApp-storage plugin integrates NetApp-Filer Storage systems into openQRM.
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-dhcpd
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, dhcp3-server
-Description: The dhcpd-plugin automatically manages your ip-address assignment and network-boot environemnt for the rapid-deployment features of openQRM.
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-nfs-storage
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
-Description: This openQRM plugin integrates NFS storage server and features the capability to boot resources directly from the NFS-storage.
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-iscsi-storage
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, open-iscsi
-Description: This openQRM plugin integrates Iscsi storage server and features the capability to boot resources directly from the Iscsi-Target.
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-sshterm
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, ajaxterm
-Description: The sshterm-plugin integrates ajaxterm into openQRM and provides a secure login to the openQRM-server and the managed resources through the Web-interface.
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-xen
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
-Description: This openQRM plugin integrates the Xen virtualization technology.
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-aoe-storage
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, aoetools
-Description: This openQRM plugin integrates Aoe/Coraid storage server and features the capability to boot resources directly from the Aoe-storage.
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-citrix
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
-Description: This openQRM plugin integrates citrix
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-cloud
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, aoetools
-Description: This openQRM plugin integrates cloud
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-dns
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, bind9
-Description: This openQRM plugin integrates dns
- <insert long description, indented with spaces>
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server, aoetools, open-iscsi
+Description: This openQRM plugin integrates lvm-storage
+ The lvm-storage plugin transforms a standard Linux-box into a rapid-fast-cloning storage-server
 
 Package: openqrm-plugin-image-shelf
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server, screen
 Description: This openQRM plugin integrates image-shelf
- <insert long description, indented with spaces>
+ This openQRM provides an easy way to add pre-made server-images to openQRM.
 
-Package: openqrm-plugin-kvm
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
-Description: This openQRM plugin integrates kvm
- <insert long description, indented with spaces>
+Package: openqrm-plugin-dhcpd
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, dhcp3-server, openqrm-server
+Description: This openQRM plugin integrates dhcpd
+ The dhcpd-plugin automatically manages your ip-address assignment and network-boot environemnt for the rapid-deployment features of openQRM.
 
-Package: openqrm-plugin-puppet
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, puppetmaster, subversion-tools
-Description: This openQRM plugin integrates puppet
- <insert long description, indented with spaces>
-
-Package: openqrm-plugin-vmware-esx
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
-Description: This openQRM plugin integrates vmware-esx
- <insert long description, indented with spaces>
+Package: openqrm-plugin-citrix
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server, stunnel
+Description: This openQRM plugin integrates citrix
+ The Citrix plugin manages Citrix-Xen server.
 
 Package: openqrm-plugin-vmware-server2
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server, screen
 Description: This openQRM plugin integrates vmware-server2
- <insert long description, indented with spaces>
+ This openQRM plugin integrates the VMware-server2 virtualization technology.
 
-Package: openqrm-plugin-windows
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm
-Description: This openQRM plugin integrates windows
- <insert long description, indented with spaces>
+Package: openqrm-plugin-dns
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, bind9, openqrm-server
+Description: This openQRM plugin integrates dns
+ The dns-plugin automatically manages ip-address to hostname resolving for the entire openQRM-network.
+
+Package: openqrm-plugin-xen
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server, screen
+Description: This openQRM plugin integrates xen
+ This openQRM plugin integrates the Xen virtualization technology.
+
+Package: openqrm-plugin-tftpd
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, tftpd-hpa, openqrm-server
+Description: This openQRM plugin integrates tftpd
+ The tftpd-plugin automatically manages to upload kernels to the resources (servers) managed by openQRM.
 
 Package: openqrm-plugin-nagios3
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, nagios3, nagios-images, nagios-plugins
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, nagios-images, nagios-plugins, nmap, screen, postfix, openqrm-server
 Description: This openQRM plugin integrates nagios3
- <insert long description, indented with spaces>
+ The nagios3-plugin automatically monitors the systems and services managed by the openQRM-server.
 
-Package: openqrm-plugin-linuxcoe
+Package: openqrm-plugin-nagios2
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, screen
-Description: This openQRM plugin integrates linuxcoe
- This openQRM provides fully automatic installations via LinuxCOE.
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, nagios-images, nagios-plugins, nmap, screen, postfix, openqrm-server
+Description: This openQRM plugin integrates nagios2
+ The nagios2-plugin automatically monitors the systems and services managed by the openQRM-server.
 
-Package: openqrm-plugin-zabbix
+Package: openqrm-plugin-windows
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, screen, zabbix-server-mysql, zabbix-frontend-php, zabbix-agent
-Description: This openQRM plugin integrates zabbix
- The zabbix-plugin automatically monitors the systems and services managed by the openQRM-server.
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server,samba
+Description: This openQRM plugin integrates windows
+ The Windows plugin manages Windows-Server.
 
-Package: openqrm-plugin-equallogic-storage
+Package: openqrm-plugin-sshterm
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, screen, open-iscsi
-Description: This openQRM plugin integrates equallogic storage
- This openQRM plugin integrates Iscsi storage server and features the capability to boot resources directly from the Iscsi-Target.
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openssl, screen, openqrm-server
+Description: This openQRM plugin integrates sshterm
+ The sshterm-plugin integrates ajaxterm into openQRM and provides a secure login to the openQRM-server and the managed resources through the Web-interface.
+
+Package: openqrm-plugin-kvm
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server
+Description: This openQRM plugin integrates kvm
+ This openQRM plugin integrates the KVM virtualization technology.
 
 Package: openqrm-plugin-solx86
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, screen
-Description: This openQRM plugin integrates solaris x86 clients
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server
+Description: This openQRM plugin integrates solx86
  The solx86-plugin provides an integration for already existing, local-installed openSolaris/Solaris X86 systems in openQRM.
+
+Package: openqrm-plugin-vmware-server
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server
+Description: This openQRM plugin integrates vmware-server
+ This openQRM plugin integrates the VMware-server virtualization technology.
+
+Package: openqrm-plugin-cloud
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server, screen
+Description: This openQRM plugin integrates cloud
+ The openQRM cloud-plugin provides a fully automated request and provisioning deployment-cycle.
+
+Package: openqrm-plugin-iscsi-storage
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server, open-iscsi
+Description: This openQRM plugin integrates iscsi-storage
+ This openQRM plugin integrates Iscsi storage server and features the capability to boot resources directly from the Iscsi-Target.
+
+Package: openqrm-plugin-puppet
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server, screen, puppetmaster, subversion
+Description: This openQRM plugin integrates puppet
+ The openQRM puppet-plugin provides an fully automated configuration management for the appliances.
+
+Package: openqrm-plugin-local-storage
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server
+Description: This openQRM plugin integrates local-storage
+ The Local-storage plugin adds support to deploy server-images to local-harddisk on the resources to openQRM.
+
+Package: openqrm-plugin-linuxcoe
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server, screen
+Description: This openQRM plugin integrates linuxcoe
+ This openQRM provides fully automatic installations via LinuxCOE.
+
+Package: openqrm-plugin-local-server
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server
+Description: This openQRM plugin integrates local-server
+ The local-server-plugin provides an integration for already existing, local-installed systems in openQRM.
+
+Package: openqrm-plugin-highavailability
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server
+Description: This openQRM plugin integrates highavailability
+ The highavailability-plugin automatically provides high-availability for the appliances managed by openQRM.
 
 Package: openqrm-plugin-zfs-storage
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, screen, open-iscsi
-Description: This openQRM plugin integrates zfs storage
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server, open-iscsi
+Description: This openQRM plugin integrates zfs-storage
  This openQRM plugin integrates ZFS storage server and features the capability to boot from the ZFS Iscsi-Target.
+
+Package: openqrm-plugin-netapp-storage
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server, open-iscsi, expect
+Description: This openQRM plugin integrates netapp-storage
+ The NetApp-storage plugin integrates NetApp-Filer Storage systems into openQRM.
+
+Package: openqrm-plugin-nfs-storage
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server
+Description: This openQRM plugin integrates nfs-storage
+ This openQRM plugin integrates NFS storage server and features the capability to boot resources directly from the NFS-storage.
+
+Package: openqrm-plugin-equallogic-storage
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server, open-iscsi
+Description: This openQRM plugin integrates equallogic-storage
+ This openQRM plugin integrates Iscsi storage server and features the capability to boot resources directly from the Iscsi-Target.
+
+Package: openqrm-plugin-vmware-esx
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server, screen
+Description: This openQRM plugin integrates vmware-esx
+ This openQRM plugin integrates the VMware-ESX virtualization technology.
+
+Package: openqrm-plugin-zabbix
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server
+Description: This openQRM plugin integrates zabbix
+ The zabbix-plugin automatically monitors the systems and services managed by the openQRM-server.
+
+Package: openqrm-plugin-aoe-storage
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, openqrm-server, aoetools
+Description: This openQRM plugin integrates aoe-storage
+ This openQRM plugin integrates Aoe/Coraid storage server and features the capability to boot resources directly from the Aoe-storage.

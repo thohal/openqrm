@@ -1,0 +1,19 @@
+Source: openqrm
+Section: admin
+Priority: extra
+Maintainer: Thomas Halinka <mail@thohal.de>, Martin Alfke <martin@ppcnux.de>
+Build-Depends: debhelper (>= 5), make, gcc, libpci-dev, portmap, rsync, zlib1g-dev, wget, tar, bzip2, cdbs, patch
+Standards-Version: 3.7.2
+
+Package: openqrm
+Architecture: i386
+Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client-5.0, syslinux 
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>
+
+Package: openqrm-entire
+Architecture: i386
+Depends: openqrm, openqrm-plugin-lvm-storage, openqrm-plugin-local-server, openqrm-plugin-highavailability, openqrm-plugin-local-storage, openqrm-plugin-tftpd, openqrm-plugin-vmware-server, openqrm-plugin-netapp-storage, openqrm-plugin-dhcpd, openqrm-plugin-nfs-storage, openqrm-plugin-iscsi-storage, openqrm-plugin-sshterm, openqrm-plugin-xen, openqrm-plugin-aoe-storage, openqrm-plugin-citrix, openqrm-plugin-cloud, openqrm-plugin-dns, openqrm-plugin-image-shelf, openqrm-plugin-kvm, openqrm-plugin-puppet, openqrm-plugin-vmware-esx, openqrm-plugin-vmware-server2, openqrm-plugin-windows, openqrm-plugin-linuxcoe
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>
+

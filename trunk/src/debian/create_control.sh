@@ -28,3 +28,5 @@ for SRC_DIR in `find ../plugins -mindepth 1 -maxdepth 1 -type d -not -name ".svn
 	fi
 done
 
+mv control.new control
+
