@@ -17,7 +17,7 @@ function openqrm_plugin_dhcpd_start() {
             /usr/sbin/dhcpd3 -cf $OPENQRM_PLUGIN_DHCPD_CONF 2>&1
     		RET=$?
         else
-            return 0
+            RET=0
         fi
 	elif [ -x /usr/sbin/dhcpd ]; then
 		/usr/sbin/dhcpd -cf $OPENQRM_PLUGIN_DHCPD_CONF -lf $OPENQRM_PLUGIN_DHCPD_LEASE_DIR/dhcpd.leases 2>&1
