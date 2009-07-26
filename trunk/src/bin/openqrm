@@ -9,6 +9,14 @@ fi
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 
 
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+
+
 function openqrm_usage() {
 	echo
 	echo "Usage:"

@@ -1,0 +1,7 @@
+#!/bin/bash
+# uninstall the openQRM service
+
+/usr/sbin/update-rc.d -f openqrm-server remove
+/etc/init.d/openqrm-server stop
+rm -f /etc/init.d/openqrm-server
+

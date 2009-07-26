@@ -53,6 +53,8 @@ function openqrm_plugin_sshterm_init() {
     if ! grep ^openqrm /etc/passwd 1>/dev/null; then
         useradd -d /home/openqrm -s /bin/bash -m openqrm
     fi
+    # unpack pound component
+    tar -C $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/pound -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/pound/pound.tgz
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sshterm
 	# link the boot-service

@@ -110,6 +110,15 @@ function openqrm_server_create_kernel() {
 		return 1
 	fi
 
+    # take udev from kernel-location
+	rm -rf $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/etc/udev
+	cp -aR $OPENQRM_SERVER_KERNEL_LOCATION/etc/udev $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/etc/
+	# and /lib/udev
+	rm -rf $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/lib/udev
+	cp -aR $OPENQRM_SERVER_KERNEL_LOCATION/lib/udev $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/lib/
+	# take the initial console device
+	cp -aR $OPENQRM_SERVER_KERNEL_LOCATION/dev/console $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/dev/
+
 	# creating the initrd file
 	if [ "$OPENQRM_SERVER_KERNEL_TYPE" == "ext2" ]; then
 		echo "Creating the initrd as $OPENQRM_SERVER_KERNEL_TYPE"

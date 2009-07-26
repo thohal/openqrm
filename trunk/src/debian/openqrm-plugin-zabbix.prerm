@@ -1,5 +1,0 @@
-#!/bin/bash
-# this is the openqrm-plugin-zabbix preremove script
-/etc/init.d/openqrm-plugin-zabbix stop
-rm /etc/init.d/openqrm-plugin-zabbix
-rm -fr /var/www/openqrm/base/plugins/zabbix

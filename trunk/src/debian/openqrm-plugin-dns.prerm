@@ -1,5 +1,0 @@
-#!/bin/bash
-# this is the openqrm-plugin-dns preremove script
-/etc/init.d/openqrm-plugin-dns stop
-rm /etc/init.d/openqrm-plugin-dns
-rm -fr /var/www/openqrm/base/plugins/dns

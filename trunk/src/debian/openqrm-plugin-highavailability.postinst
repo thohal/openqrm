@@ -1,4 +1,0 @@
-#!/bin/bash
-# this is the openqrm-plugin-highavailability postinstall script
-ln -s /usr/lib/openqrm/plugins/highavailability/etc/init.d/openqrm-plugin-highavailability /etc/init.d/openqrm-plugin-highavailability
-mkdir -p /var/www/openqrm/base/plugins/highavailability

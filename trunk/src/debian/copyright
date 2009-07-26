@@ -1,23 +1,25 @@
-This package was debianized by Thomas Halinka <mail@thohal.de> on
+This package was debianized by Matthias Rechenburg <matt@openqrm.com> and Thomas Halinka <mail@thohal.de> on
 Thu, 01 May 2008 00:53:04 +0200.
 
-It was downloaded from <url://hier.und.da.example.com>
+It was downloaded from <url://www.openqrm.org>
 
-Upstream Author(s): 
-
-    <likewise for another author>
-	Das geht dich nen Scheiss an
 Copyright: 
 
-    <Copyright (C) YYYY Name OfAuthor>
-    <likewise for another author>
+    <Copyright (C) 2009 Matthias Rechenburg>
 
 License:
 
-    <Put the license of the package here indented by 4 spaces>
+    GPL-2
 
 The Debian packaging is (C) 2008, Thomas Halinka <mail@thohal.de> and
-is licensed under the GPL, see `/usr/share/common-licenses/GPL'.
+is licensed under the GPL-2, see `/usr/share/common-licenses/GPL-2'.
 
-# Please also look if there are files or directories which have a
-# different copyright/license attached and list them here.
+Please also look if there are files or directories which have a different 
+copyright/license attached and list them here :
+usr/lib/openqrm/plugins/cloud/cloud-portal/web/user/js/development-bundle/GPL-LICENSE.txt
+usr/lib/openqrm/plugins/cloud/cloud-portal/web/user/js/development-bundle/MIT-LICENSE.txt
+usr/lib/openqrm/plugins/idoit/web/app/src/classes/libraries/phpmailer/LICENSE
+usr/lib/openqrm/plugins/idoit/web/app/src/tools/js/scriptaculous/MIT-LICENSE
+usr/lib/openqrm/web/base/js/jquery/development-bundle/GPL-LICENSE.txt
+usr/lib/openqrm/web/base/js/jquery/development-bundle/MIT-LICENSE.txt
+

@@ -1,0 +1,8 @@
+#!/bin/bash
+# init the openQRM service
+
+rm -f /etc/init.d/openqrm-server
+ln -sf /usr/lib/openqrm/etc/init.d/openqrm-server /etc/init.d/openqrm-server
+/usr/sbin/update-rc.d openqrm-server defaults
+/etc/init.d/openqrm-server start
+

@@ -1,4 +1,0 @@
-#!/bin/bash
-# this is the openqrm-plugin-kvm postinstall script
-ln -s /usr/lib/openqrm/plugins/kvm/etc/init.d/openqrm-plugin-kvm /etc/init.d/openqrm-plugin-kvm
-mkdir -p /var/www/openqrm/base/plugins/kvm

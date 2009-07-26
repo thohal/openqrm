@@ -1,8 +1,16 @@
-openqrm (4.5-1~mea1) stable; urgency=low
+openqrm (4.5-2) stable; urgency=low
 
+  [ Matthias Rechenburg ]
+  * Initial release (Closes: #278559) 
+
+  [ Martin Alfke ]
   * New upstream version
 
- -- Martin Alfke <tuxmea@users.sourceforge.net>  Mon, 06 Jul 2009 17:00:38 +0200
+  [ Matthias Rechenburg ]
+  * Enhanced ubuntu/debian build system
+
+
+ -- Matthias Rechenburg <matt@openqrm.com>  Sun, 26 Jul 2009 16:26:10 +0200
 
 openqrm (4.3-1.1mea5.1) unstable; urgency=low
 
@@ -45,7 +53,7 @@ openqrm (4.3-1.1mea1) unstable; urgency=low
 
 openqrm (4.3-1) unstable; urgency=low
 
-  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+  * Initial packaging
 
  -- Thomas Halinka <mail@thohal.de>  Thu, 01 May 2008 00:53:04 +0200
 

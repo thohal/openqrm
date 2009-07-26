@@ -1,1 +1,2 @@
+MAILTO=""
 */5 * * * * root @@OPENQRM_SERVER_BASE_DIR@@/openqrm/plugins/nagios2/bin/openqrm-nagios-manager map

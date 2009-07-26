@@ -5,17 +5,12 @@ export OPENQRM_SERVER_CONF=$(shell pwd)/../etc/openqrm-server.conf
 configure:
 
 compile:
-	LDFLAGS=-static make openqrm-exec-port-monitor
-	. $(OPENQRM_SERVER_CONF) &&  mkdir -p $$OPENQRM_BUILD_TMP_DIR/openqrm-build/exec-port-monitor
-	. $(OPENQRM_SERVER_CONF) &&  mv openqrm-exec-port-monitor $$OPENQRM_BUILD_TMP_DIR/openqrm-build/exec-port-monitor/
-	
 
 install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/sbin
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-execd $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-exec $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-cmd-queue $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
-	. $(OPENQRM_SERVER_CONF) && cp -a $$OPENQRM_BUILD_TMP_DIR/openqrm-build/exec-port-monitor/openqrm-exec-port-monitor $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-monitord $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-postencode.py $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-crypt.pl $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/

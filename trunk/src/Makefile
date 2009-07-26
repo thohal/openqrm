@@ -22,6 +22,27 @@ install:
 	@. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm
 	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm"`; do cd $$SRC_DIR && make install -s && cd ..; done
 	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_pack_default_initrd_template
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *.php | xargs chmod -x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *.tpl | xargs chmod -x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *.css | xargs chmod -x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *.conf | xargs chmod -x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *.png | xargs chmod -x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *.gif | xargs chmod -x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *.jpg | xargs chmod -x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *.spec | xargs chmod -x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *configuration.template | xargs chmod -x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *deb.control | xargs chmod -x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name openqrm-pxelinux | xargs chmod -x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *.spec | xargs chmod -x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *-functions | xargs chmod +x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *-hook | xargs chmod +x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *-deployment | xargs chmod +x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *-vm | xargs chmod +x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name root-mount* | xargs chmod +x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *-maintenance | xargs chmod +x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *-ifup | xargs chmod +x
+	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *commit.tmpl | xargs chmod +x
+
 
 start: check
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make start' as root" && exit 1)

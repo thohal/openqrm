@@ -1,5 +1,0 @@
-#!/bin/bash
-# this is the openqrm-plugin-xen preremove script
-/etc/init.d/openqrm-plugin-xen stop
-rm /etc/init.d/openqrm-plugin-xen
-rm -fr /var/www/openqrm/base/plugins/xen

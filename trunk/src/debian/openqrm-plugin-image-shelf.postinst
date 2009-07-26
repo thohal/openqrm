@@ -1,4 +1,0 @@
-#!/bin/bash
-# this is the openqrm-plugin-image-shelf postinstall script
-ln -s /usr/lib/openqrm/plugins/image-shelf/etc/init.d/openqrm-plugin-image-shelf /etc/init.d/openqrm-plugin-image-shelf
-mkdir -p /var/www/openqrm/base/plugins/image-shelf

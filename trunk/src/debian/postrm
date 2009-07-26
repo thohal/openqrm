@@ -1,0 +1,4 @@
+#!/bin/bash
+# uninstall openQRM
+
+rm -rf /usr/lib/openqrm
