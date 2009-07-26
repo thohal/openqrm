@@ -42,7 +42,7 @@ clean::
 	# Add here commands to clean up after the build process.
 	#dh_clean
 	-$(MAKE) clean
- 
+
 	dh_clean
 
 install: build

@@ -1,4 +1,6 @@
 #!/bin/bash
 # uninstall openQRM
+set -e
 
+rm -f `find /etc/ -name *openqrm-server*`
 rm -rf /usr/lib/openqrm
