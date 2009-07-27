@@ -120,11 +120,12 @@ case "$VMWARE_SERVER_COMMAND" in
         openqrm_post_event 0 "openqrm-vmware-server" 5 "openqrm-vmware-server" "Creating VMware vm $VMWARE_SERVER_VM_NAME -> $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx"
 		# creating the vmx
 		mkdir -p $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/
+        echo '#!/usr/bin/vmware' > $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
 		cat $OPENQRM_VMWARE_SERVER_VM_TEMPLATE |	\
 			sed -e "s/@@VMWARE_SERVER_VM_NAME@@/$VMWARE_SERVER_VM_NAME/g" |	\
 			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$VMWARE_SERVER_VM_RAM/g"	|   \
 			sed -e "s/@@VMWARE_SERVER_VM_MAC@@/$VMWARE_SERVER_VM_MAC/g"	\
-			> $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
+			>> $OPENQRM_VM_DIR/$VMWARE_SERVER_VM_NAME/$VMWARE_SERVER_VM_NAME.vmx
 
 		# disk + swap
 		if [ "$VMWARE_SERVER_VM_DISK" != "" ]; then

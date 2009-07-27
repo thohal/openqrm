@@ -1,4 +1,3 @@
-#!/usr/bin/vmware
 config.version = "8"
 virtualHW.version = "4"
 scsi0.present = "TRUE"

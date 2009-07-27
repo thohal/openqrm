@@ -180,11 +180,12 @@ case "$VMWARE_ESX_COMMAND" in
 		# creating the vmx
 
 		mkdir -p /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/
+        echo '#!/usr/bin/vmware' > /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx
 		cat $OPENQRM_VMWARE_ESX_VM_TEMPLATE |	\
 			sed -e "s/@@VMWARE_ESX_VM_NAME@@/$VMWARE_ESX_VM_NAME/g" |	\
 			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$VMWARE_ESX_VM_RAM/g" |	\
 			sed -e "s/@@VMWARE_ESX_VM_MAC@@/$VMWARE_ESX_VM_MAC/g"	\
-			> /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx
+			>> /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx
 		# creating the dir first for the eventual disk
 		$OPENQRM_ESX_CMD "mkdir -p $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/"
 
