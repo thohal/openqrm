@@ -189,7 +189,7 @@ function openqrm_server_manage_kernel() {
 	case "$1" in
 		add)
 			echo "openQRM-server: Adding kernel $OPENQRM_SERVER_KERNEL_NAME version $OPENQRM_SERVER_KERNEL_VERSION" | logger
-			if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/kernel/kernel-action.php?kernel_command=new_kernel&kernel_name=$OPENQRM_SERVER_KERNEL_NAME&kernel_version=$OPENQRM_SERVER_KERNEL_VERSION"; then
+			if ! wget -O /dev/null --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/kernel/kernel-action.php?kernel_command=new_kernel&kernel_name=$OPENQRM_SERVER_KERNEL_NAME&kernel_version=$OPENQRM_SERVER_KERNEL_VERSION"; then
 				echo "ERROR: Could not add kernel $OPENQRM_SERVER_KERNEL_NAME to the openQRM-server!" | logger
 				return 1
 			fi
@@ -197,7 +197,7 @@ function openqrm_server_manage_kernel() {
 			;;
 		remove)
 			echo "openQRM-server: Removing kernel $OPENQRM_SERVER_KERNEL_NAME" | logger
-			if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/kernel/kernel-action.php?kernel_command=remove_by_name&kernel_name=$OPENQRM_SERVER_KERNEL_NAME"; then
+			if ! wget -O /dev/null --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/kernel/kernel-action.php?kernel_command=remove_by_name&kernel_name=$OPENQRM_SERVER_KERNEL_NAME"; then
 				echo "ERROR: Could not remove kernel $OPENQRM_SERVER_KERNEL_NAME to the openQRM-server!" | logger
 				return 1
 			fi
