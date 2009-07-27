@@ -85,7 +85,10 @@ function openqrm_plugin_kvm_server_init() {
     cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_EXTERNAL_BRIDGE/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-ext
     cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_BRIDGE@@/$OPENQRM_PLUGIN_KVM_EXTERNAL_BRIDGE/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-ext
     chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/*
-	
+    # create kvm-stat dir
+    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/web/kvm-stat
+    chmod -R 755 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/web/kvm-stat
+
 }
 
 USER=$2
