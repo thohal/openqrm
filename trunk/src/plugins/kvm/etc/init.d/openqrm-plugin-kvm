@@ -87,7 +87,7 @@ function openqrm_plugin_kvm_server_init() {
     chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/*
     # create kvm-stat dir
     mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/web/kvm-stat
-    chmod -R 755 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/web/kvm-stat
+    chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/web/kvm-stat
 
 }
 

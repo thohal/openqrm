@@ -57,7 +57,8 @@ function openqrm_plugin_vmware_server2_init() {
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/vmware-server2
 	# link the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/web/boot-service-vmware-server2.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-vmware-server2.tgz
-	
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/web/vmware-server2-stat
+    chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/web/vmware-server2-stat
 }
 
 USER=$2

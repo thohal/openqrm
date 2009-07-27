@@ -69,6 +69,9 @@ function openqrm_plugin_xen_init() {
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/xen
 	# link the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web/boot-service-xen.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-xen.tgz
+    # create stat dir
+    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web/xen-stat
+    chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web/xen-stat
 
 }
 
