@@ -1,3 +1,4 @@
 # We use a non-standard dir to make HA more easy:
 openqrm binary: image-file-in-usr-lib
-
+# The static binaries are part of the initrd
+openqrm binary: statically-linked-binary

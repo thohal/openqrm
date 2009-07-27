@@ -1,7 +1,7 @@
-openqrm (4.5-2) stable; urgency=low
+openqrm (4.5-2) karmic; urgency=low
 
   [ Matthias Rechenburg ]
-  * Initial release (Closes: #278559) 
+  * Initial release (LP: #278559) 
 
   [ Martin Alfke ]
   * New upstream version
@@ -9,8 +9,7 @@ openqrm (4.5-2) stable; urgency=low
   [ Matthias Rechenburg ]
   * Enhanced ubuntu/debian build system
 
-
- -- Matthias Rechenburg <matt@openqrm.com>  Sun, 26 Jul 2009 16:26:10 +0200
+ -- Matthias Rechenburg <matt@openqrm.com>  Mon, 27 Jul 2009 13:41:08 +0200
 
 openqrm (4.3-1.1mea5.1) unstable; urgency=low
 

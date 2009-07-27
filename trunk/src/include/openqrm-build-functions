@@ -493,14 +493,10 @@ function openqrm_pack_default_initrd_template() {
 	cd $CURRENT_DIR
 	# copy dropbear
 	mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/sbin $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin
-    tar -C $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/ -czvf $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/dropbear.tgz dropbear
-    tar -C $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/ -czvf $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dbclient.tgz dbclient
-    tar -C $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/ -czvf $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dropbearconvert.tgz dropbearconvert
-    tar -C $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/ -czvf $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dropbearkey.tgz dropbearkey
-	#cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/dropbear $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
-	#cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/dbclient $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/
-	#cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/dropbearconvert $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/
-	#cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/dropbearkey $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/
+	cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/dropbear $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
+	cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/dbclient $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/
+	cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/dropbearconvert $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/
+	cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/dropbearkey $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/
 }
 
 

@@ -168,10 +168,6 @@ function openqrm_server_init() {
 	case "$OPENQRM_EXECUTION_LAYER" in
 		dropbear)
 			# init the openQRM exec-mechanism via dropbear
-            tar -C $OPENQRM_SERVER_BASE_DIR/openqrm/sbin -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/dropbear.tgz
-            tar -C $OPENQRM_SERVER_BASE_DIR/openqrm/bin -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/bin/dbclient.tgz
-            tar -C $OPENQRM_SERVER_BASE_DIR/openqrm/bin -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/bin/dropbearconvert.tgz
-            tar -C $OPENQRM_SERVER_BASE_DIR/openqrm/bin -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/bin/dropbearkey.tgz
 			/bin/rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear
 			mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/
 			$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dropbearkey -t rsa -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key
