@@ -1,18 +1,11 @@
-This package was debianized by Matthias Rechenburg <matt@openqrm.com> and Thomas Halinka <mail@thohal.de> on
-Thu, 01 May 2008 00:53:04 +0200.
-
-It was downloaded from <url://www.openqrm.org>
-
-Copyright: 
-
-    <Copyright (C) 2009 Matthias Rechenburg>
-
-License:
-
-    GPL-2
-
-The Debian packaging is (C) 2008, Thomas Halinka <mail@thohal.de> and
-is licensed under the GPL-2, see `/usr/share/common-licenses/GPL-2'.
+Format-Specification: http://wiki.debian.org/Proposals/CopyrightFormat?action=recall&rev=143
+Upstream-Name: openQRM
+Upstream-Source: http://www.openqrm.org
+Files: *
+Copyright: Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+License: GPL-2
+ On Debian systems the full text of the GNU General Public License can be found
+ in the `/usr/share/common-licenses/GPL-2' file.
 
 Please also look if there are files or directories which have a different 
 copyright/license attached and list them here :
