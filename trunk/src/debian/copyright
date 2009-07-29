@@ -7,6 +7,9 @@ License: GPL-2
  On Debian systems the full text of the GNU General Public License can be found
  in the `/usr/share/common-licenses/GPL-2' file.
 
+This package was debianized by Matthias Rechenburg <matt@openqrm.com>,
+Martin Alfke <martin@ppcnux.de> and Thomas Halinka <mail@thohal.de>.
+
 Please also look if there are files or directories which have a different 
 copyright/license attached and list them here :
 usr/lib/openqrm/plugins/cloud/cloud-portal/web/user/js/development-bundle/GPL-LICENSE.txt
