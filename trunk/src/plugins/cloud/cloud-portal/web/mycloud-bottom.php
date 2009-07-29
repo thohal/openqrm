@@ -1,5 +1,4 @@
-<?php
-
+<!--
 /*
   This file is part of openQRM.
 
@@ -17,7 +16,7 @@
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
-?>
+-->
 <br>
 &nbsp;&nbsp;&nbsp;<font size="2" face="Arial">This Cloud-Portal is brought to you by <a href="http://openqrm.sourceforge.net/" target="_BLANK">openQRM</a>, the open-source data-center management platform</font>
 <br>

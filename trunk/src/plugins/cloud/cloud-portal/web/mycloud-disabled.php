@@ -1,5 +1,4 @@
-<?php
-
+<!--
 /*
   This file is part of openQRM.
 
@@ -17,7 +16,7 @@
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
-?>
+-->
 <br>
 &nbsp;&nbsp;&nbsp;<b>This Cloud-Portal is currently in maintenance mode. Please try again later.</b><br>
 <br>
