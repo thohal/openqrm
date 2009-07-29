@@ -1,5 +1,4 @@
-<?php
-
+<!--
 /*
   This file is part of openQRM.
 
@@ -17,7 +16,7 @@
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
-?>
+-->
 <h1><img border=0 src="/openqrm/base/plugins/citrix/img/plugin.png"> Citrix-XenServer plugin</h1>
 <strong>This plugin is tested with Citrix XenServer 5.5.0</strong>
 <br>

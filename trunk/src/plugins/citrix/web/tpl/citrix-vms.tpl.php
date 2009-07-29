@@ -1,5 +1,4 @@
-<?php
-
+<!--
 /*
   This file is part of openQRM.
 
@@ -17,7 +16,7 @@
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
-?>
+-->
 <style>
 .htmlobject_tab_box {
 	width:700px;

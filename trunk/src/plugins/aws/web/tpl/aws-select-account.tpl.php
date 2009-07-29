@@ -1,5 +1,4 @@
-<?php
-
+<!--
 /*
   This file is part of openQRM.
 
@@ -17,7 +16,7 @@
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
-?>
+-->
 <h1>Select an AWS Account</h1>
 <h4>Please select an Amazon AWS account from the list below</h4>
 {aws_table}

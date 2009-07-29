@@ -1,4 +1,4 @@
-<?php
+<!--
 /*
   This file is part of openQRM.
 
@@ -16,7 +16,7 @@
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
-?>
+-->
 <form action="{formaction}" method="GET">
 <h1>Select AOE-storage</h1>
 <h4>Please select an Aoe Storage Server from the list below</h4>

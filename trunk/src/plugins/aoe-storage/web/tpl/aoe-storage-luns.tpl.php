@@ -1,4 +1,4 @@
-<?php
+<!--
 /*
   This file is part of openQRM.
 
@@ -16,7 +16,7 @@
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
-?>
+-->
 <h1>AOE Volumes on storage {storage_name}</h1>
 {lun_table}
 <form action="{formaction}" method="GET">

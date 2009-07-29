@@ -1,5 +1,4 @@
-<?php
-
+<!--
 /*
   This file is part of openQRM.
 
@@ -17,8 +16,7 @@
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
-?>
-
+-->
 <h1><img border=0 src="/openqrm/base/plugins/aws/img/plugin.png"> AWS plugin</h1>
 The aws-plugin provides an integration with the Amazon WebService (AWS) and provides
  a seamless migration-path "from" and "to" AWS.

@@ -1,5 +1,4 @@
-<?php
-
+<!--
 /*
   This file is part of openQRM.
 
@@ -17,7 +16,7 @@
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
-?>
+-->
 <h1>Select openQRM Image</h1>
 <h4>Select an (NFS-) Image to 'put' the AMI of EC2 Instance {instance_id} on</h4>
 {image_put_table}

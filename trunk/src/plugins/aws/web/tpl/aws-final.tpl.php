@@ -1,5 +1,4 @@
-<?php
-
+<!--
 /*
   This file is part of openQRM.
 
@@ -17,7 +16,7 @@
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
-?>
+-->
 <h1>Executing AWS EC2 Import</h1>
 <br>
 openQRM is now importing AWS EC2 instance <strong>{instance_id}</strong>

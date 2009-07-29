@@ -1,5 +1,4 @@
-<?php
-
+<!--
 /*
   This file is part of openQRM.
 
@@ -17,7 +16,7 @@
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
-?>
+-->
 <h1>Select AWS Instance</h1>
 <h4>Select an AWS Instance to import into openQRM</h4>
 {aws_get_table}

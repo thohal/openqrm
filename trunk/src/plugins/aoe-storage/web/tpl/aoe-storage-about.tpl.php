@@ -1,4 +1,4 @@
-<?php
+<!--
 /*
   This file is part of openQRM.
 
@@ -16,7 +16,8 @@
 
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
-?>
+-->
+
 <h1><img border=0 src="/openqrm/base/plugins/aoe-storage/img/plugin.png"> Aoe-storage plugin</h1>
 <br>
 The Aoe-storage plugin integrates Aoe/Coraid Storage into openQRM.
