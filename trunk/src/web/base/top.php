@@ -1,4 +1,22 @@
 <?php
+/*
+  This file is part of openQRM.
+
+    openQRM is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License version 2
+    as published by the Free Software Foundation.
+
+    openQRM is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+*/
+
 // error_reporting(E_ALL);
 $thisfile = basename($_SERVER['PHP_SELF']);
 require_once('include/htmlobject.inc.php');
@@ -23,7 +41,7 @@ require_once('include/user.inc.php');
 <script type="text/javascript">
 
 /***********************************************
-* Local Time script- © Dynamic Drive (http://www.dynamicdrive.com)
+* Local Time script Dynamic Drive (http://www.dynamicdrive.com)
 * This notice MUST stay intact for legal use
 * Visit http://www.dynamicdrive.com/ for this script and 100s more.
 ***********************************************/
