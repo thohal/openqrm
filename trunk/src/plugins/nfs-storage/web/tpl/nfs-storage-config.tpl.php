@@ -1,3 +1,22 @@
+<!--
+/*
+  This file is part of openQRM.
+
+    openQRM is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License version 2
+    as published by the Free Software Foundation.
+
+    openQRM is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+*/
+-->
 <h1>NFS Volumes on storage {storage_name}</h1>
 In case the NFS Storage server is not managed by openQRM please use this form to
  manually create the list of exported paths to server-images on the NFS Storage server.

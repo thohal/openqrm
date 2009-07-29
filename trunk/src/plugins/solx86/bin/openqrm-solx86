@@ -1,8 +1,24 @@
 #!/bin/bash
-
 # This script integrates a local (existing) server into openQRM
 # The system then can (should) be set to netboot to gain the full
 # advantages and flexibility of the openQRM management platform
+#
+# This file is part of openQRM.
+#
+# openQRM is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2
+# as published by the Free Software Foundation.
+#
+# openQRM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+#
 OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
 SOLARIS_DEPENDENCIES="top,SUNWtop,base:python,SUNWPython,base:expect,SUNWexpect,base:dropbear,dropbear,contrib"
 OLDIFS=$IFS
