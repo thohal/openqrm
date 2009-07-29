@@ -29,7 +29,7 @@ if [ -x "/sbin/rpc.statd" ]; then
 fi
 
 
-OPENQRM_INITRD_COMPONENTS="$OPENQRM_INITRD_COMPONENTS /bin/bash /usr/bin/rsync /sbin/modprobe /sbin/depmod /sbin/insmod /sbin/lsmod /sbin/mke2fs /sbin/sfdisk /sbin/udevd /lib/udev/vol_id"
+OPENQRM_INITRD_COMPONENTS="$OPENQRM_INITRD_COMPONENTS /bin/bash /usr/bin/rsync /sbin/modprobe /sbin/depmod /sbin/insmod /sbin/lsmod /sbin/mke2fs /sbin/sfdisk /sbin/udevd"
 OPENQRM_INITRD_DIRECTORIES="bin etc etc/rc.d/init.d etc/sysconfig etc/X11 lib lib/modules lib/i686 loopfs mnt old_root proc sys sysroot usr usr/lib usr/bin usr/sbin var var/lock var/lock/subsys var/log var/run /var/lib /var/lib/nfs /var/lib/nfs/statd"
 
 # colorize/emphasize terminal output
@@ -298,11 +298,11 @@ function openqrm_create_default_initrd_template() {
                 export OPENQRM_MAKE_TARGET=libkudzu.a
             	openqrm_compile_from_source kudzu-knoppix
             else
-                echo "ERROR: It seems libkudzu.a could not be compiled correctly !"
-                echo "ERROR: It seems libkudzu.a could not be compiled correctly !" > /dev/stderr
-                echo "ERROR: Please capture the error messages and post it to the openQRM maillinglist."
-                echo "ERROR: Please capture the error messages and post it to the openQRM maillinglist." > /dev/stderr
+                echo "!! Trying to patch kudzu-knoppix. Assuming newer kernel version in fakeroot ...."
                 sleep 10
+                OPENQRM_PRE_MAKE="cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/kudzu-knoppix/kudzu-knoppix-$OPENQRM_SOURCE_VERSION/ddcprobe/; patch -p0 -i $OPENQRM_SOURCE_DIR/etc/build.conf/kudzu-knoppix-lrmi.patch; cd -"
+                export OPENQRM_MAKE_TARGET=libkudzu.a
+            	openqrm_compile_from_source kudzu-knoppix
             fi
         fi
         if [ ! -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/kudzu-knoppix/kudzu-knoppix-$OPENQRM_SOURCE_VERSION/libkudzu.a ]; then
@@ -368,6 +368,25 @@ function openqrm_create_default_initrd_template() {
 			fi
 		done
 	done
+    # take vol_id or blkid
+    if [ -x  /lib/udev/vol_id ]; then
+        UDEV_UTIL="/lib/udev/vol_id"
+    elif [ -x /sbin/blkid ]; then
+        UDEV_UTIL="/sbin/blkid"
+    fi
+    cp -a $UDEV_UTIL $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin
+    echo "Adding $UDEV_UTIL to default initrd-template"
+    for LIB in `openqrm_build_find_libs $UDEV_UTIL`; do
+        LIB=`echo $LIB | cut -d'-' -f1 | cut -d'.' -f1`
+        if [ "$LIB" != "/lib/" ]; then
+            cp -af $LIB""* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
+        fi
+    done
+    if [ "$UDEV_UTIL" == "/sbin/blkid" ]; then
+        cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/blkid $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/vol_id
+    fi
+
+
 	# fix reboot for the initrd -> reboot -f (it's simply faster)
 	rm -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/reboot
 	cat >> $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/reboot << EOF
