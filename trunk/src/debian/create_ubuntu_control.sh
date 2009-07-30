@@ -18,6 +18,27 @@
 #
 
 
+for SRC_DIR in `find ../plugins -mindepth 1 -maxdepth 1 -type d -not -name ".svn"`; do
+	if [ ! -f $SRC_DIR/deprecated ]; then
+		PLUGINNAME=`echo $SRC_DIR | cut -d / -f 3`
+		. $SRC_DIR/etc/openqrm-plugin-${PLUGINNAME}.conf
+        for SINGLE_PLUGIN_DEPENDENCY in `echo ${OPENQRM_PLUGIN_DEPENDENCIES}`; do
+            SINGLE_PLUGIN_DEPENDENCY=`echo ${SINGLE_PLUGIN_DEPENDENCY} | sed -e "s/,//g" | awk {' print $1 '}`
+            if [ "${SINGLE_PLUGIN_DEPENDENCY}" != "openqrm-server" ]; then
+                if ! echo ${ALL_PLUGINS_DEPENDENCIES} | grep ${SINGLE_PLUGIN_DEPENDENCY} 1>/dev/null; then
+                    ALL_PLUGINS_DEPENDENCIES="${ALL_PLUGINS_DEPENDENCIES}, ${SINGLE_PLUGIN_DEPENDENCY}"
+                fi
+            fi
+        done
+
+	fi
+done
+# add plugin dependencies to control file
+cat control.ubuntu.in | sed -e "s/@@PLUGIN_DEPENDENCIES@@/${ALL_PLUGINS_DEPENDENCIES}/g" > control
+
+
+exit 0
+
 
 cat control.in > control.new
 for SRC_DIR in `find ../plugins -mindepth 1 -maxdepth 1 -type d -not -name ".svn"`; do

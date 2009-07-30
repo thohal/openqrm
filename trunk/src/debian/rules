@@ -19,7 +19,12 @@ configure:: configure-stamp
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
-	cd $(CURDIR)/debian && sh create_control.sh && cd $(CURDIR)
+	if [ `cat /etc/apt/sources.list | grep ubuntu | wc -l` -lt 1 ]; then \
+		cd $(CURDIR)/debian && sh create_control.sh && cd $(CURDIR); \
+	else \
+		cd $(CURDIR)/debian && sh create_ubuntu_control.sh && cd $(CURDIR); \
+	fi
+
 
 	touch configure-stamp
 
@@ -42,6 +47,8 @@ clean::
 	# Add here commands to clean up after the build process.
 	#dh_clean
 	-$(MAKE) clean
+	cp debian/control.in debian/control
+	rm debian/openqrm-plugin*
 
 	dh_clean
 

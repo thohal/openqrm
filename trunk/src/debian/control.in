@@ -2,12 +2,12 @@ Source: openqrm
 Section: admin
 Priority: extra
 Maintainer: Matthias Rechenburg <matt@openqrm.com>, Thomas Halinka <mail@thohal.de>, Martin Alfke <martin@ppcnux.de>
-Build-Depends: debhelper (>= 5), make (>= 3.8), gcc (>=4), libpci-dev, portmap, rsync, zlib1g-dev, wget, tar(>=1.20), bzip2, cdbs, patch, unzip, sudo, module-init-tools, udev, quilt, dh_lintian (>= 6.0.7~)
+Build-Depends: debhelper(>= 5), make(>= 3.8), gcc(>=4), libpci-dev, portmap, rsync, zlib1g-dev, wget, tar(>=1.20), bzip2, cdbs, patch, unzip, sudo, module-init-tools, udev, quilt, lintian
 Standards-Version: 3.7.2
 
 Package: openqrm
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client-5.0, syslinux, ash, python@@PLUGIN_DEPENDENCIES@@
+Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client-5.0, syslinux, ash, python
 Description: A Cloud Computing Platform
  A Cloud Computing and Data-Center Management Platform
 
