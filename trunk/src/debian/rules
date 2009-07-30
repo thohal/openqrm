@@ -25,7 +25,7 @@ clean::
 
 	-$(MAKE) clean
 	cp debian/control.in debian/control
-	rm debian/openqrm-plugin*
+	if [ -e openqrm-plugin-* ]; then rm debian/openqrm-plugin*; fi
 
 	dh_clean
 
