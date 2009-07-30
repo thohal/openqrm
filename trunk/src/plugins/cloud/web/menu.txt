@@ -33,4 +33,4 @@
 ...|Admin Demo|plugins/cloud/soap/cloudadmin-soap-example-client.php
 ...|User WebService|plugins/cloud/soap/soap-user.php
 ...|User Demo|/cloud-portal/user/soap/clouduser-soap-example-client.php
-...|API|plugins/cloud/soap/openqrm-soap-api/index.html|||_BLANK
+...|API|http://www.openqrm-ng.net/downloads/plugins/cloud/openqrm-soap-api/|||_BLANK

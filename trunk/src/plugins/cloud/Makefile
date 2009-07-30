@@ -22,7 +22,6 @@ export OPENQRM_SERVER_CONF=$(shell pwd)/../../etc/openqrm-server.conf
 configure:
 
 compile:
-	../../make-assistant openqrm_cache_or_download openqrm-cloud-soap-api etc/build.conf/openqrm-cloud-soap-api.conf
 
 install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc
@@ -74,9 +73,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/vcd
 	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/user/vcd/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/vcd/
 	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/user/vcd/*.css $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/vcd/
-	. $(OPENQRM_SERVER_CONF) && . etc/build.conf/openqrm-cloud-soap-api.conf && if ! tar -C $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/soap/ -xzf $$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-cloud-soap-api/openqrm-cloud-soap-api-$$OPENQRM_SOURCE_VERSION.tgz 2>/dev/null; then tar -C $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web/soap/ -xzf ../../$$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-cloud-soap-api/openqrm-cloud-soap-api-$$OPENQRM_SOURCE_VERSION.tgz; fi
 	. $(OPENQRM_SERVER_CONF) && cp web/soap/soap-user.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap/
-	. $(OPENQRM_SERVER_CONF) && . etc/build.conf/openqrm-cloud-soap-api.conf && if ! tar -C $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap/ -xzf $$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-cloud-soap-api/openqrm-cloud-soap-api-$$OPENQRM_SOURCE_VERSION.tgz 2>/dev/null; then tar -C $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap/ -xzf ../../$$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-cloud-soap-api/openqrm-cloud-soap-api-$$OPENQRM_SOURCE_VERSION.tgz; fi
 
 
 uninstall:

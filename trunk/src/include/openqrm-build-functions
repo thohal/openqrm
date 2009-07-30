@@ -211,8 +211,8 @@ function openqrm_cache_or_download() {
 				" and try again."
 			exit 1
 		fi
+    	cd $CURRENT_DIR
 	fi
-	cp -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/$OPENQRM_SOURCE_COMPONENT_NAME/source/$OPENQRM_SOURCE_COMPONENT_FILE $OPENQRM_BUILD_TMP_DIR/openqrm-build/$OPENQRM_SOURCE_COMPONENT_NAME/
 	cd $CURRENT_DIR
 }
 
@@ -243,11 +243,10 @@ function openqrm_compile_from_source() {
 		cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/$OPENQRM_SOURCE_COMPONENT_NAME/
 		OPENQRM_SOURCE_COMPONENT_FILE_TYPE=`echo $OPENQRM_SOURCE_COMPONENT_FILE | sed -e "s/.*\.//g"`
 		if [ "$OPENQRM_SOURCE_COMPONENT_FILE_TYPE" == "bz2" ]; then
-			tar -xjf $OPENQRM_SOURCE_COMPONENT_FILE
+			tar -xjf source/$OPENQRM_SOURCE_COMPONENT_FILE
 		else
-			tar -xzf $OPENQRM_SOURCE_COMPONENT_FILE
+			tar -xzf source/$OPENQRM_SOURCE_COMPONENT_FILE
 		fi
-		rm -f $OPENQRM_SOURCE_COMPONENT_FILE
 		cd $OPENQRM_SOURCE_COMPONENT_NAME-$OPENQRM_SOURCE_VERSION
 
 		# configure
@@ -343,7 +342,7 @@ function openqrm_create_default_initrd_template() {
 
 	OPENQRM_SOURCE_HWSETUP_FILE=`basename $OPENQRM_SOURCE_DOWNLOAD`
 	OPENQRM_SOURCE_HWSETUP_DIR="$OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/hwsetup-$OPENQRM_SOURCE_VERSION/"
-	tar -C $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/ -xzf $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/$OPENQRM_SOURCE_HWSETUP_FILE
+	tar -C $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/ -xzf $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/source/$OPENQRM_SOURCE_HWSETUP_FILE
 	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/hwsetup-$OPENQRM_SOURCE_VERSION
 	cc -I$OPENQRM_SOURCE_KUDZU_DIR -DBLACKLIST -Wall -fPIC -O2 -s -o hwsetup hwsetup.c -L$OPENQRM_SOURCE_KUDZU_DIR -lkudzu -lpci -lz
 	cd $CURRENT_DIR
@@ -543,7 +542,7 @@ function openqrm_get_adodb() {
 		CURRENT_DIR=`pwd`
 		openqrm_cache_or_download adodb
 		cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/adodb/
-		tar -xzf adodb*.tgz
+		tar -xzf source/adodb*.tgz
 		cd $CURRENT_DIR
 	fi
 }
@@ -564,7 +563,7 @@ function openqrm_get_api_docu() {
 	CURRENT_DIR=`pwd`
 	openqrm_cache_or_download openqrm-api-docu
 	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-api-docu/
-	tar -xzf openqrm-api-docu-$OPENQRM_SERVER_VERSION.tgz
+	tar -xzf source/openqrm-api-docu-$OPENQRM_SERVER_VERSION.tgz
 	cd $CURRENT_DIR
 }
 
@@ -584,7 +583,7 @@ function openqrm_get_jquery_bundle() {
 	CURRENT_DIR=`pwd`
 	openqrm_cache_or_download jquery
 	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/jquery/
-	tar -xzf jquery-$JQUERY_VERSION.tgz
+	tar -xzf source/jquery-$JQUERY_VERSION.tgz
 	cd $CURRENT_DIR
 }
 
@@ -616,7 +615,7 @@ function openqrm_get_js_interface() {
     rm -rf "$OPENQRM_BUILD_TMP_DIR/openqrm-build/js-interface/interface $INTERFACE_VERSION"
     rm -rf "$OPENQRM_BUILD_TMP_DIR/openqrm-build/js-interface/interface_$INTERFACE_VERSION"
 	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/js-interface/
-	unzip -q interface_$INTERFACE_VERSION.zip
+	unzip -q source/interface_$INTERFACE_VERSION.zip
     for f in *; do mv "$f" `echo $f | tr ' ' '_'` 2>/dev/null; done
 	cd $CURRENT_DIR
 }
@@ -631,6 +630,56 @@ function openqrm_install_js_interface() {
 	mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/js
 	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/js-interface/interface_$INTERFACE_VERSION/interface.js $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/js/
 }
+
+
+
+# function to create a debian/ubuntu source package
+function openqrm_create_deb_source() {
+    CDIR=`pwd`
+    TMPBUILD_DIR=`mktemp -d /tmp/deb_source.XXXXXXXXXX` || exit 1
+    mkdir -p $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION
+    cp -aR * $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION/
+    cd $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION/
+    # remove the sshterm plugin for now
+    rm -rf plugins/sshterm
+    # remove nagios2 for now, ubuntu and latest debian already have nagios3
+    rm -rf plugins/nagios2
+    # windows is still in work
+    rm -rf plugins/windows
+    # linux-vserver is deprecated
+    rm -rf plugins/linux-vserver
+    # remove svn dirs
+    rm -rf `find -name .svn `
+    ./fill-build-cache
+    cp -aR ../buildtmp thirdparty
+    if [ "$GPGKEY" != "" ]; then
+        dpkg-buildpackage -S -sa -rfakeroot -k$GPGKEY
+    else
+        dpkg-buildpackage -S -sa -rfakeroot
+    fi
+    cd $CDIR
+    mv -f $TMPBUILD_DIR/openqrm_* ../
+    rm -rf $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION
+    rm -rf $TMPBUILD_DIR/buildtmp
+    rmdir $TMPBUILD_DIR
+}
+
+
+# function to create a debian/ubuntu binary package via pbuilder
+function openqrm_pbuilder() {
+    CDIR=`pwd`
+    PACKAGE_DESCRIPTION="openqrm_$OPENQRM_SERVER_VERSION-2.dsc"
+    if [ ! -f "../$PACKAGE_DESCRIPTION" ]; then
+        openqrm_create_deb_source
+    fi
+    cd ..
+    sudo pbuilder build openqrm_4.5-2.dsc
+    echo
+    echo "Packaging finished. Please find the created packages in /var/cache/pbuilder/result"
+    ls -lh /var/cache/pbuilder/result/openqrm*
+    cd $CDIR
+}
+
 
 
 

@@ -44,7 +44,7 @@
                 <a href="soap/soap-user.php" target="_BLANK"><b>SOAP-WebService for the Cloud User</b></a>
                 <br>
                 <br>
-                <a href="soap/openqrm-soap-api/index.html" target="_BLANK"><b>API for the Cloud SOAP-WebService</b></a>
+                <a href="http://www.openqrm-ng.net/downloads/plugins/cloud/openqrm-soap-api/" target="_BLANK"><b>API for the Cloud SOAP-WebService</b></a>
                 <br>
                 <br>
 

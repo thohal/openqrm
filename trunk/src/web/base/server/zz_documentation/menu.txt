@@ -26,4 +26,3 @@
 ...|Quick Start|server/zz_documentation/quickstart.php
 ..|Plugins|server/zz_documentation/plugins.php
 ..|Development|server/zz_documentation/development.php
-..|API-Documentation|server/zz_documentation/api/index.html

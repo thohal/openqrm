@@ -22,13 +22,13 @@ export OPENQRM_SERVER_CONF=$(shell pwd)/etc/openqrm-server.conf
 export OPENQRM_SOURCE_DIR=$(shell pwd)
 
 all: buildrequirements configure compile initrd
-	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm"`; do cd $$SRC_DIR && make all -s && cd ..; done
+	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm" -not -name "thirdparty"`; do cd $$SRC_DIR && make all -s && cd ..; done
 
 configure:
-	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm"`; do cd $$SRC_DIR && make configure -s && cd ..; done
+	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm" -not -name "thirdparty"`; do cd $$SRC_DIR && make configure -s && cd ..; done
 
 compile:
-	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm"`; do cd $$SRC_DIR && make -s && cd ..; done
+	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm" -not -name "thirdparty"`; do cd $$SRC_DIR && make -s && cd ..; done
 
 initrd:
 	@chmod +x make-assistant
@@ -37,7 +37,7 @@ initrd:
 install:
 	@chmod +x make-assistant
 	@. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm
-	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm"`; do cd $$SRC_DIR && make install -s && cd ..; done
+	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm" -not -name "thirdparty"`; do cd $$SRC_DIR && make install -s && cd ..; done
 	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_pack_default_initrd_template
 	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *.php | xargs chmod -x
 	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *.css | xargs chmod -x
@@ -75,10 +75,10 @@ uninstall: stop
 	@. $(OPENQRM_SERVER_CONF) && rmdir $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm
 
 clean:
-	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm"`; do cd $$SRC_DIR && make clean -s && cd ..; done
+	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm" -not -name "thirdparty"`; do cd $$SRC_DIR && make clean -s && cd ..; done
 
 realclean:	clean
-	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm"`; do cd $$SRC_DIR && make realclean -s && cd ..; done
+	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm" -not -name "thirdparty"`; do cd $$SRC_DIR && make realclean -s && cd ..; done
 
 package: all
 	@chmod +x make-assistant
@@ -92,6 +92,14 @@ reinstall:
 	sudo make install -s
 	sudo make start -s
 
+debsource:
+	@chmod +x make-assistant
+	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_create_deb_source
+
+pbuilder:
+	@chmod +x make-assistant
+	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_pbuilder
+
 check:
 	@chmod +x make-assistant
 	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_check_requirements
@@ -99,7 +107,7 @@ check:
 buildrequirements:
 	@chmod +x make-assistant
 	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_check_build_requirements
-	
+	if [ -d ./thirdparty ]; then mkdir -p ../buildtmp; cp -aR ./thirdparty/* ../buildtmp/; fi
 
 
 .PHONY: all configure compile install start uninstall clean realclean reinstall package check initrd buildrequirements

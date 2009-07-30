@@ -17,20 +17,26 @@
 # Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 #
 
+if [ -f plugins/sshterm/etc/build.conf/sshterm-component.conf ]; then
+    PLUGIN_CONFS="plugins/kvm/etc/build.conf/kvm-nic-bios.conf plugins/sshterm/etc/build.conf/sshterm-component.conf"
+else
+    PLUGIN_CONFS="plugins/kvm/etc/build.conf/kvm-nic-bios.conf"
+fi
+
 export OPENQRM_SERVER_BASE_DIR=`dirname $0`
 export OPENQRM_SOURCE_DIR=$OPENQRM_SERVER_BASE_DIR
 . include/openqrm-functions
 . include/openqrm-build-functions
 
-for COMPONENT_CONFIG in `find etc/build.conf/ -name *.conf | grep -v initrd` ; do
+for COMPONENT_CONFIG in `find etc/build.conf/ -type f -name *.conf | grep -v initrd` ; do
 	COMPONENT=`basename $COMPONENT_CONFIG`
 	COMPONENT=`echo $COMPONENT | cut -d'.' -f1`
 	echo "Checking $COMPONENT"
 	openqrm_cache_or_download $COMPONENT $COMPONENT_CONFIG
 done
-#for COMPONENT_CONFIG in `find plugins/ -name *.conf` ; do
-#	COMPONENT=`basename $COMPONENT_CONFIG`
-#	COMPONENT=`echo $COMPONENT | cut -d'.' -f1`
-#	echo "Checking $COMPONENT"
-#	openqrm_cache_or_download $COMPONENT $COMPONENT_CONFIG
-#done
+for COMPONENT_CONFIG in $PLUGIN_CONFS; do
+	COMPONENT=`basename $COMPONENT_CONFIG`
+	COMPONENT=`echo $COMPONENT | cut -d'.' -f1`
+	echo "Checking $COMPONENT"
+	openqrm_cache_or_download $COMPONENT $COMPONENT_CONFIG
+done
