@@ -5,7 +5,7 @@ export DH_VERBOSE=1
 configure:: configure-stamp
 configure-stamp:
 	dh_testdir
-	if [ `cat /etc/apt/sources.list | grep ubuntu | wc -l` -lt 1 ]; then \
+	if [ `dpkg -l | grep ubuntu-keyring | wc -l` -lt 1 ]; then \
 		cd $(CURDIR)/debian && sh create_control.sh && cd $(CURDIR); \
 	else \
 		cd $(CURDIR)/debian && sh create_ubuntu_control.sh && cd $(CURDIR); \
