@@ -100,7 +100,9 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	global $thisfile;
 	if($url == '') {
 		$url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
-	}
+	} else {
+        $url = $url.'?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab;
+    }
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
@@ -296,15 +298,38 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$user_fields['cu_id'] = openqrm_db_get_free_id('cu_id', $CLOUD_USER_TABLE);
 			// enabled by default
 			$user_fields['cu_status'] = 1;
-			// check how many ccunits to give for a new user
+			$username = $user_fields['cu_name'];
+			$password = $user_fields['cu_password'];
+            $useremail = $user_fields['cu_email'];
+            $userlastmname = $user_fields['cu_lastname'];
+            $userforename = $user_fields['cu_forename'];
+            if (!strlen($username)) {
+                $strMsg = "Username is empty. Not adding new user";
+                redirect($strMsg, 'tab0', "cloud-user.php");
+            }
+            if (!strlen($password)) {
+                $strMsg = "Password is empty. Not adding new user";
+                redirect($strMsg, 'tab0', "cloud-user.php");
+            }
+            if (!strlen($useremail)) {
+                $strMsg = "User email is empty. Not adding new user";
+                redirect($strMsg, 'tab0', "cloud-user.php");
+            }
+            if (!strlen($userlastmname)) {
+                $strMsg = "Users lastname is empty. Not adding new user";
+                redirect($strMsg, 'tab0', "cloud-user.php");
+            }
+            if (!strlen($userforename)) {
+                $strMsg = "User forename is empty. Not adding new user";
+                redirect($strMsg, 'tab0', "cloud-user.php");
+            }
+            // check how many ccunits to give for a new user
 			$cc_conf = new cloudconfig();
 			$cc_auto_give_ccus = $cc_conf->get_value(12);  // 12 is auto_give_ccus
 			$user_fields['cu_ccunits'] = $cc_auto_give_ccus;
 			$cl_user = new clouduser();
 			$cl_user->add($user_fields);
 			// add user to htpasswd
-			$username = $user_fields['cu_name'];
-			$password = $user_fields['cu_password'];
 			$cloud_htpasswd = "$CloudDir/user/.htpasswd";
 			if (file_exists($cloud_htpasswd)) {
 				$openqrm_server_command="htpasswd -b $CloudDir/user/.htpasswd $username $password";
