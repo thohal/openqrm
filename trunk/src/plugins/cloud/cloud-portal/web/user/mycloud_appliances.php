@@ -205,13 +205,13 @@ function my_cloud_appliances() {
 		$resource_icon_default="/cloud-portal/img/resource.png";
 		$active_state_icon="/cloud-portal/img/active.png";
 		$inactive_state_icon="/cloud-portal/img/idle.png";
+		$starting_state_icon="/cloud-portal/img/starting.png";
 		if ($appliance->stoptime == 0 || $appliance_resources == 0)  {
 			$state_icon=$active_state_icon;
 		} else {
 			$state_icon=$inactive_state_icon;
             $sshterm_login = false;
 		}
-
 		// state
 		$cloud_appliance = new cloudappliance();
 		$cloud_appliance->get_instance_by_appliance_id($appliance->id);
@@ -220,12 +220,21 @@ function my_cloud_appliances() {
 				$cloudappliance_state = "paused";
                 $sshterm_login = false;
                 $show_pause_button = false;
+                $show_unpause_button = true;
 				break;
 			case 1:
 				$cloudappliance_state = "active";
                 $show_pause_button = true;
 				break;
 		}
+        // use resource-state in case of a starting appliance
+        $resource->get_instance_by_id($appliance->resources);
+        if (strcmp($resource->state, "active")) {
+			$state_icon=$starting_state_icon;
+            $sshterm_login = false;
+            $show_pause_button = false;
+            $show_unpause_button = false;
+        }
 
 		$kernel = new kernel();
 		$kernel->get_instance_by_id($appliance_db["appliance_kernelid"]);
@@ -247,10 +256,11 @@ function my_cloud_appliances() {
         if ($show_pause_button) {
             $cloudappliance_action .= "<input type=\"image\" name=\"action\" value=\"pause\" src=\"../img/pause.png\" alt=\"Pause\">";
             $cloudappliance_action .= "<input type=\"image\" name=\"action\" value=\"restart\" src=\"../img/restart.png\" alt=\"Restart\">";
-        } else {
+        }
+        if ($show_unpause_button) {
             $cloudappliance_action .= "<input type=\"image\" name=\"action\" value=\"unpause\" src=\"../img/unpause.png\" alt=\"Un-Pause\">";
         }
-
+        $appliance_comment = $appliance_db["appliance_comment"];
 		$arBody[] = array(
 			'appliance_state' => "<img src=$state_icon>",
 			'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default><input type=hidden name=\"currenttab\" value=\"tab2\">",
@@ -260,7 +270,7 @@ function my_cloud_appliances() {
 			'appliance_imageid' => $image->name,
 			'appliance_resources' => "$appliance_resources_str",
 			'appliance_type' => $appliance_virtualization_type,
-			'appliance_comment' => $appliance_db["appliance_comment"],
+			'appliance_comment' => "<input type=text name=\"appliance_comment[$appliance->id]\" value=\"$appliance_comment\"><input type=hidden name=\"currenttab\" value=\"tab3\">",
 			'appliance_cloud_state' => $cloudappliance_state,
 			'appliance_cloud_action' => $cloudappliance_action,
 		);
@@ -276,9 +286,9 @@ function my_cloud_appliances() {
 	$table->head = $arHead;
 	$table->body = $arBody;
     if ($sshterm_enabled) {
-    	$table->bottom = array('login', 'pause', 'unpause', 'restart');
+    	$table->bottom = array('login', 'pause', 'unpause', 'restart', 'comment');
     } else {
-        $table->bottom = array('pause', 'unpause', 'restart');
+        $table->bottom = array('pause', 'unpause', 'restart', 'comment');
     }
 	$table->identifier = 'appliance_id';
 	$table->max = 1000;

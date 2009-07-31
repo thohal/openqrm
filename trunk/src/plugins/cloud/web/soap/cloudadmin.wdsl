@@ -117,6 +117,13 @@
   <part name='Result' type='xsd:string'/>
 </message>
 
+<message name='CloudApplianceCommentRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudApplianceCommentResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
 <message name='KernelGetListRequest'>
   <part name='Result' type='xsd:string'/>
 </message>
@@ -227,6 +234,11 @@
   <operation name='CloudApplianceCommand'>
     <input message='tns:CloudApplianceCommandRequest'/>
     <output message='tns:CloudApplianceCommandResponse'/>
+  </operation>
+
+  <operation name='CloudApplianceComment'>
+    <input message='tns:CloudApplianceCommentRequest'/>
+    <output message='tns:CloudApplianceCommentResponse'/>
   </operation>
 
   <operation name='KernelGetList'>
@@ -440,6 +452,18 @@
 
   <operation name='CloudApplianceCommand'>
     <soap:operation soapAction='urn:localhost-cloud#CloudApplianceCommand'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='CloudApplianceComment'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudApplianceComment'/>
     <input>
       <soap:body use='encoded' namespace='urn:localhost-cloud'
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>

@@ -138,6 +138,19 @@ switch ($action) {
 		echo "Registered Cloud appliance command  restart on appliance id $cloudappliance_id : $res<br>";
         break;
 
+	case 'appliance_comment':
+        $cloudappliance_id = $request_fields['cr_cloudappliance_id'];
+        $updated_appliance_comment_array = $request_fields['cr_appliance_comment'];
+        $updated_appliance_comment = $updated_appliance_comment_array[$cloudappliance_id];
+        $appliance_comment_parameters = "user,".$cloud_user.",".$cloud_password.",".$request_fields['cr_cloudappliance_id'].",".$updated_appliance_comment;
+        try {
+            $res = $client->CloudApplianceComment($appliance_comment_parameters);
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
+		echo "Updated comment of Cloud appliance id $cloudappliance_id : $res<br>";
+        break;
+
 
 
 
@@ -384,8 +397,8 @@ try {
     echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
 
-echo "<form action=$thisfile method=post>";
 foreach($cloudappliance_list as $ca_id) {
+    echo "<form action=$thisfile method=post>";
     // de-provision the appliance / set appliance status
     echo "<nobr><pre>";
     $cloudappliancegetdetails_parameter = "user,$cloud_user,$cloud_password,$ca_id";
@@ -396,17 +409,19 @@ foreach($cloudappliance_list as $ca_id) {
 // ######################### Cloud sshterm example ##############################
         $cloudappliance_ip = $cloudappliance_array['cloud_appliance_ip'];
         echo "<input type=hidden name='cr_cloudappliance_ip' value=\"$cloudappliance_ip\">";
-        echo "ssh-login exmaple <input type=submit name='action' value='login'>";
+        echo "ssh-login example <input type=submit name='action' value='login'>";
 // ######################### Cloud sshterm example ##############################
         echo "<br>";
 // ######################### Cloud appliance command example ##############################
         $cloudappliance_id = $cloudappliance_array['id'];
         echo "<input type=hidden name='cr_cloudappliance_id' value=\"$cloudappliance_id\">";
-        echo "pause exmaple <input type=submit name='action' value='appliance_pause'>";
+        echo "pause example <input type=submit name='action' value='appliance_pause'>";
         echo "<br>";
-        echo "pause exmaple <input type=submit name='action' value='appliance_unpause'>";
+        echo "pause example <input type=submit name='action' value='appliance_unpause'>";
         echo "<br>";
-        echo "pause exmaple <input type=submit name='action' value='appliance_restart'>";
+        echo "pause example <input type=submit name='action' value='appliance_restart'>";
+        echo "<br>";
+        echo "update comment <input type=text name='cr_appliance_comment[$cloudappliance_id]' value='$cloudappliance_array[appliance_comment]'><input type=submit name='action' value='appliance_comment'>";
         echo "<br>";
 
     } catch (Exception $e) {
@@ -414,10 +429,10 @@ foreach($cloudappliance_list as $ca_id) {
     }
     echo "</pre></nobr>";
     echo "<br>";
+    echo "</form>";
 }
 
 
-echo "</form>";
 
 
 

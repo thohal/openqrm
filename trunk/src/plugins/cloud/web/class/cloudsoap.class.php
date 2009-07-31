@@ -56,6 +56,21 @@ global $CLOUD_REQUEST_TABLE;
 global $event;
 
 
+// check for allowed chars
+function is_allowed_character($text) {
+	for ($i = 0; $i<strlen($text); $i++) {
+		if (!ctype_alpha($text[$i])) {
+			if (!ctype_digit($text[$i])) {
+				if (!ctype_space($text[$i])) {
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+
+
 class cloudsoap {
 
 
@@ -869,6 +884,82 @@ class cloudsoap {
         return 0;
 	}
 
+
+
+
+	//--------------------------------------------------
+	/**
+	* updates Cloud appliance comment
+	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password,cloud-appliance-id
+	* @return int 0 for success, 1 for failure
+	*/
+	//--------------------------------------------------
+	function CloudApplianceComment($method_parameters) {
+		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$ca_id = $parameter_array[3];
+		$ca_comment = $parameter_array[4];
+        // check all user input
+        for ($i = 0; $i <= 4; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudApplianceComment", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return 1;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 5) {
+            $event->log("cloudsoap->CloudApplianceComment", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return 1;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudApplianceComment", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return 1;
+        }
+        $cr_appliance = new cloudappliance();
+        $cr_appliance->get_instance_by_id($ca_id);
+        // get the request to check for the user
+        $cr = new cloudrequest();
+        $cr->get_instance_by_id($cr_appliance->cr_id);
+        $cl_user = new clouduser();
+        $cl_user->get_instance_by_id($cr->cu_id);
+        switch ($mode) {
+            case 'user':
+                if (strcmp($username, $cl_user->name)) {
+                    $event->log("cloudsoap->CloudApplianceComment", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to execute a Cloud-command on behalf of Cloud User $cl_user->name!", "", "", 0, 0, 0);
+                    return 1;
+                }
+                break;
+        }
+        $updated_appliance_comment_check = trim($ca_comment);
+        // remove any non-violent characters
+        $updated_appliance_comment_check = str_replace(" ", "", $updated_appliance_comment_check);
+        $updated_appliance_comment_check = str_replace(".", "", $updated_appliance_comment_check);
+        $updated_appliance_comment_check = str_replace(",", "", $updated_appliance_comment_check);
+        $updated_appliance_comment_check = str_replace("-", "", $updated_appliance_comment_check);
+        $updated_appliance_comment_check = str_replace("_", "", $updated_appliance_comment_check);
+        $updated_appliance_comment_check = str_replace("(", "", $updated_appliance_comment_check);
+        $updated_appliance_comment_check = str_replace(")", "", $updated_appliance_comment_check);
+        $updated_appliance_comment_check = str_replace("/", "", $updated_appliance_comment_check);
+        if(!is_allowed_character($updated_appliance_comment_check)){
+            $event->log("cloudsoap->CloudApplianceComment", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "New comment of Cloud appliance $ca_id contains spedcial characters. Skippting update", "", "", 0, 0, 0);
+            return 1;
+        }
+
+        $update_appliance = new appliance();
+        $ar_request = array(
+            'appliance_comment' => "$ca_comment",
+        );
+        $update_appliance->update($cr_appliance->appliance_id, $ar_request);
+        $event->log("cloudsoap->CloudApplianceComment", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Updating comment of Cloud appliance $ca_id", "", "", 0, 0, 0);
+        return 0;
+	}
 
 
 

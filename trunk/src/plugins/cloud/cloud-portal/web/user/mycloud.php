@@ -132,6 +132,21 @@ function check_is_number($param, $value) {
 	}
 }
 
+// check for allowed chars
+function is_allowed_char($text) {
+	for ($i = 0; $i<strlen($text); $i++) {
+		if (!ctype_alpha($text[$i])) {
+			if (!ctype_digit($text[$i])) {
+				if (!ctype_space($text[$i])) {
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+
+
 function check_param($param, $value) {
 	if (!strlen($value)) {
 		$strMsg = "$param is empty <br>";
@@ -449,17 +464,17 @@ if (htmlobject_request('action') != '') {
                     // check if no other command is currently running
                     if ($cloud_appliance_restart->cmd != 0) {
                         $strMsg = "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
-                        redirect($strMsg, tab2);
+                        redirect($strMsg, tab3);
                         continue;
                     }
                     // check that state is active
                     if ($cloud_appliance_restart->state == 1) {
                         $cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "restart");
                         $strMsg = "Registered Cloud appliance $id for restart<br>";
-                        redirect($strMsg, tab2);
+                        redirect($strMsg, tab3);
                     } else {
                         $strMsg = "Can only restart Cloud appliance $id if it is in active state<br>";
-                        redirect($strMsg, tab2);
+                        redirect($strMsg, tab3);
                         continue;
                     }
                 }
@@ -502,7 +517,7 @@ if (htmlobject_request('action') != '') {
                     // check if no other command is currently running
                     if ($cloud_appliance_restart->cmd != 0) {
                         $strMsg = "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
-                        redirect($strMsg, tab2);
+                        redirect($strMsg, tab3);
                         continue;
                     }
                     // check that state is active
@@ -520,10 +535,10 @@ if (htmlobject_request('action') != '') {
                         $armail->var_array = $arr;
                         $armail->send();
 
-                        redirect($strMsg, tab2);
+                        redirect($strMsg, tab3);
                     } else {
                         $strMsg = "Can only pause Cloud appliance $id if it is in active state<br>";
-                        redirect($strMsg, tab2);
+                        redirect($strMsg, tab3);
                         continue;
                     }
                 }
@@ -566,7 +581,7 @@ if (htmlobject_request('action') != '') {
                     // check if no other command is currently running
                     if ($cloud_appliance_restart->cmd != 0) {
                         $strMsg = "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
-                        redirect($strMsg, tab2);
+                        redirect($strMsg, tab3);
                         continue;
                     }
                     // check if it is in state paused
@@ -585,10 +600,10 @@ if (htmlobject_request('action') != '') {
                         $armail->send();
 
                         $strMsg = "Registered Cloud appliance $id to start (unpause)<br>";
-                        redirect($strMsg, tab2);
+                        redirect($strMsg, tab3);
                     } else {
                         $strMsg = "Can only unpause Cloud appliance $id if it is in paused state<br>";
-                        redirect($strMsg, tab2);
+                        redirect($strMsg, tab3);
                         continue;
                     }
                 }
@@ -663,10 +678,10 @@ if (htmlobject_request('action') != '') {
                 <?php
 
                                 $strMsg = "Login to Cloud appliance $id<br>";
-                                redirect($strMsg, tab2);
+                                redirect($strMsg, tab3);
                             } else {
                                 $strMsg = "Can only login to Cloud appliance $id if it is in active state<br>";
-                                redirect($strMsg, tab2);
+                                redirect($strMsg, tab3);
                                 continue;
                             }
                         }
@@ -674,6 +689,68 @@ if (htmlobject_request('action') != '') {
                 }
             }
 			break;
+
+
+
+		case 'comment':
+			if (isset($_REQUEST['identifier'])) {
+                foreach($_REQUEST['identifier'] as $id) {
+                    // only allow our appliance to be restarted
+                    $clouduser = new clouduser();
+                    $clouduser->get_instance_by_name($auth_user);
+
+                    $cloudreq_array = array();
+                    $cloudreq = new cloudrequest();
+                    $cloudreq_array = $cloudreq->get_all_ids();
+                    $my_appliances = array();
+                    // build an array of our appliance id's
+                    foreach ($cloudreq_array as $cr) {
+                        $cl_tmp_req = new cloudrequest();
+                        $cr_id = $cr['cr_id'];
+                        $cl_tmp_req->get_instance_by_id($cr_id);
+                        if ($cl_tmp_req->cu_id == $clouduser->id) {
+                            // we have found one of our own request, check if we have an appliance-id != 0
+                            if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
+                                $one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
+                                foreach ($one_app_id_arr as $aid) {
+                                    $my_appliances[] .= $aid;
+                                }
+                            }
+                        }
+                    }
+                    // is it ours ?
+                    if (!in_array($id, $my_appliances)) {
+                        continue;
+                    }
+
+                    $updated_appliance_comment_arr = htmlobject_request('appliance_comment');
+                    $updated_appliance_comment = $updated_appliance_comment_arr["$id"];
+                    $updated_appliance_comment_check = trim($updated_appliance_comment);
+                    // remove any non-violent characters
+                    $updated_appliance_comment_check = str_replace(" ", "", $updated_appliance_comment_check);
+                    $updated_appliance_comment_check = str_replace(".", "", $updated_appliance_comment_check);
+                    $updated_appliance_comment_check = str_replace(",", "", $updated_appliance_comment_check);
+                    $updated_appliance_comment_check = str_replace("-", "", $updated_appliance_comment_check);
+                    $updated_appliance_comment_check = str_replace("_", "", $updated_appliance_comment_check);
+                    $updated_appliance_comment_check = str_replace("(", "", $updated_appliance_comment_check);
+                    $updated_appliance_comment_check = str_replace(")", "", $updated_appliance_comment_check);
+                    $updated_appliance_comment_check = str_replace("/", "", $updated_appliance_comment_check);
+                    if(!is_allowed_char($updated_appliance_comment_check)){
+                        $strMsg = "Comment contains special characters, skipping update <br>";
+                        redirect($strMsg, tab3);
+                        exit(0);
+                    }
+                    $cloud_appliance = new appliance();
+                    $ar_request = array(
+                        'appliance_comment' => "$updated_appliance_comment",
+                    );
+                    $cloud_appliance->update($id, $ar_request);
+                    $strMsg .= "Upated comment for Cloud appliance $id $updated_appliance_comment<br>";
+                }
+            }
+            redirect($strMsg, tab3);
+			break;
+
 
 // ######################## end of cloud-appliance actions #####################
 
