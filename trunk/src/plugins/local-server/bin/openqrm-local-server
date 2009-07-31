@@ -62,8 +62,21 @@ function openqrm_integrate_local_server() {
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
 	
 	echo "Getting openqrm-client package"
-	cd /
-	wget -q "http://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.tgz"
+    # run default openqrm-client boot-service
+    KERNEL_ARCH=`uname -m`
+    if echo $KERNEL_ARCH | grep i.*86 1>/dev/null; then
+        # i386
+        OPENQRM_CLIENT_ARCH=i386
+    else
+        OPENQRM_CLIENT_ARCH=$KERNEL_ARCH
+    fi
+    echo "Getting openqrm-client package $OPENQRM_CLIENT_ARCH"
+    cd /
+    if ! wget -q -O openqrm-client.tgz "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.$OPENQRM_CLIENT_ARCH.tgz"; then
+        rm -f openqrm-client.tgz
+        echo "WARNING: Failed to get the openqrm-client package arch $OPENQRM_CLIENT_ARCH ! Using default one ..."
+        wget -q -O openqrm-client.tgz "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.tgz"
+    fi
 	tar -xzf openqrm-client.tgz
 	rm -f openqrm-client.tgz
 	ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client /etc/init.d/openqrm-client
