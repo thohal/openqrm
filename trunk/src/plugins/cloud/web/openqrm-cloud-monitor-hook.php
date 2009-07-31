@@ -185,7 +185,9 @@ function openqrm_cloud_monitor() {
 // aoe-deployment
 // zfs-storage
 // netapp-storage
-	
+// equallogic-storage
+
+
 		// lvm-iscsi-storage
 		if (!strcmp($image_type, "lvm-nfs-deployment")) {
 			$full_vol_name=$image_rootdevice;
@@ -276,6 +278,26 @@ function openqrm_cloud_monitor() {
                 $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
     			$output = shell_exec($image_remove_clone_cmd);
             }
+
+
+		// equallogic-storage
+		} else if (!strcmp($image_type, "equallogic")) {
+			$equallogic_volume_name=basename($image_rootdevice);
+            // get the password for the equallogic-filer
+            $eq_storage = new equallogic_storage();
+            $eq_storage->get_instance_by_storage_id($storage->id);
+            if (!strlen($eq_storage->storage_id)) {
+                $strMsg = "Equallogic Storage server $storage->id not configured yet<br>";
+    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", $strMsg, "", "", 0, 0, 0);
+            } else {
+                $eq_storage_ip = $resource_ip;
+                $eq_user = $eq_storage->storage_user;
+                $eq_password = $eq_storage->storage_password;
+                $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage remove -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip";
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+    			$output = shell_exec($image_remove_clone_cmd);
+            }
+
 
 
         // not supported yet
@@ -647,6 +669,7 @@ function openqrm_cloud_monitor() {
 // aoe-deployment
 // zfs-storage
 // netapp-storage
+// equallogic-storage
 	
 					// lvm-nfs-storage
 					if (!strcmp($image_type, "lvm-nfs-deployment")) {
@@ -864,7 +887,45 @@ function openqrm_cloud_monitor() {
 
                         }
 
-	
+
+                    // equallogic-storage
+                    // since the equallogic storage is not really good at cloning/snapshotting
+                    // we use regular disks + install-from-nfs !
+                    } else if (!strcmp($image_type, "equallogic")) {
+                        $equallogic_volume_name=basename($image_rootdevice);
+                        // get the password for the equallogic-filer
+                        $eq_storage = new equallogic_storage();
+                        $eq_storage->get_instance_by_storage_id($storage->id);
+                        if (!strlen($eq_storage->storage_id)) {
+                            $strMsg = "Equallogic Storage server $storage->id not configured yet<br>";
+                            $event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", $strMsg, "", "", 0, 0, 0);
+                        } else {
+                            // generate a new image password for the clone
+                            $image->get_instance_by_id($image_id);
+                            $image_password = $image->generatePassword(14);
+                            $image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
+                            $eq_storage_ip = $resource_ip;
+                            $eq_user = $eq_storage->storage_user;
+                            $eq_password = $eq_storage->storage_password;
+                            // set default snapshot size
+                            $disk_size=5000;
+                            if (strlen($cr->disk_req)) {
+                                $disk_size=$cr->disk_req;
+                            }
+                            $image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage add -n $equallogic_volume_name -m $disk_size -u $eq_user -p $eq_password -e $eq_storage_ip";
+                            $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_clone_cmd", "", "", 0, 0, 0);
+                            $output = shell_exec($image_clone_cmd);
+                            // update the image rootdevice parameter
+                            $clone_image_root_device = str_replace($equallogic_volume_name, $image_clone_name, $image_rootdevice);
+                            $ar_image_update = array(
+                                'image_rootdevice' => $clone_image_root_device,
+                            );
+                            $image->update($image_id, $ar_image_update);
+
+                        }
+
+
+
 					} else {
 						$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to clone the image from type $image_type.", "", "", 0, 0, 0);
 						$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types are lvm-nfs-deployment, nfs-deployment, lvm-iscsi-deployment, iscsi-deployment, lvm-aoe-deployment and aoe-deployment.", "", "", 0, 0, 0);
