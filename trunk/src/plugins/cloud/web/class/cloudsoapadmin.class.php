@@ -64,6 +64,8 @@ if (!strstr($OPENQRM_USER->role, "administrator")) {
 	exit();
 }
 
+
+
 class cloudsoapadmin extends cloudsoap {
 
 
@@ -163,6 +165,7 @@ class cloudsoapadmin extends cloudsoap {
             $event->log("cloudsoap->CloudUserCreate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud method only available in admin mode", "", "", 0, 0, 0);
             return;
         }
+        // user input checking
         if (!strlen($clouduser_name)) {
             $event->log("cloudsoap->CloudUserCreate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud user name is empty. Not adding new user.", "", "", 0, 0, 0);
             return;
@@ -175,6 +178,14 @@ class cloudsoapadmin extends cloudsoap {
             $event->log("cloudsoap->CloudUserCreate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud user email is empty. Not adding new user.", "", "", 0, 0, 0);
             return;
         }
+        // email valid ?
+        $cloud_email = new clouduser();
+        if (!$cloud_email->checkEmail($clouduser_email)) {
+            $event->log("cloudsoap->CloudUserCreate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud user email address is invalid. Not adding new user.", "", "", 0, 0, 0);
+            return;
+        }
+
+        // username free ?
         $cl_user = new clouduser();
         if (!$cl_user->is_name_free($clouduser_name)) {
             $event->log("cloudsoap->CloudUserCreate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name already exists in the Cloud. Not adding !", "", "", 0, 0, 0);

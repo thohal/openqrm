@@ -108,6 +108,49 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 }
 
 
+// functions to check user input
+function is_allowed($text) {
+	for ($i = 0; $i<strlen($text); $i++) {
+		if (!ctype_alpha($text[$i])) {
+			if (!ctype_digit($text[$i])) {
+				if (!ctype_space($text[$i])) {
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+
+
+
+function check_param($param, $value) {
+	global $c_error;
+	if (!strlen($value)) {
+		$strMsg = "$param is empty <br>";
+		$c_error = 1;
+		redirect($strMsg, 'tab0', "cloud-user.php");
+		exit(0);
+	}
+	// remove whitespaces
+	$value = trim($value);
+	// remove any non-violent characters
+	$value = str_replace(".", "", $value);
+	$value = str_replace(",", "", $value);
+	$value = str_replace("-", "", $value);
+	$value = str_replace("_", "", $value);
+	$value = str_replace("(", "", $value);
+	$value = str_replace(")", "", $value);
+	$value = str_replace("/", "", $value);
+	if(!is_allowed($value)){
+		$strMsg = "$param contains special characters <br>";
+		$c_error = 1;
+		redirect($strMsg, 'tab0', "cloud-user.php");
+		exit(0);
+	}
+}
+
+
 // main
 $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Processing cloud command $cloud_command", "", "", 0, 0, 0);
 
@@ -300,78 +343,100 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$user_fields['cu_status'] = 1;
 			$username = $user_fields['cu_name'];
 			$password = $user_fields['cu_password'];
-            $useremail = $user_fields['cu_email'];
-            $userlastmname = $user_fields['cu_lastname'];
-            $userforename = $user_fields['cu_forename'];
-            if (!strlen($username)) {
-                $strMsg = "Username is empty. Not adding new user";
-                redirect($strMsg, 'tab0', "cloud-user.php");
-            }
-            if (!strlen($password)) {
-                $strMsg = "Password is empty. Not adding new user";
-                redirect($strMsg, 'tab0', "cloud-user.php");
-            }
-            if (!strlen($useremail)) {
-                $strMsg = "User email is empty. Not adding new user";
-                redirect($strMsg, 'tab0', "cloud-user.php");
-            }
-            if (!strlen($userlastmname)) {
-                $strMsg = "Users lastname is empty. Not adding new user";
-                redirect($strMsg, 'tab0', "cloud-user.php");
-            }
-            if (!strlen($userforename)) {
-                $strMsg = "User forename is empty. Not adding new user";
-                redirect($strMsg, 'tab0', "cloud-user.php");
-            }
-            // check how many ccunits to give for a new user
-			$cc_conf = new cloudconfig();
-			$cc_auto_give_ccus = $cc_conf->get_value(12);  // 12 is auto_give_ccus
-			$user_fields['cu_ccunits'] = $cc_auto_give_ccus;
-			$cl_user = new clouduser();
-			$cl_user->add($user_fields);
-			// add user to htpasswd
-			$cloud_htpasswd = "$CloudDir/user/.htpasswd";
-			if (file_exists($cloud_htpasswd)) {
-				$openqrm_server_command="htpasswd -b $CloudDir/user/.htpasswd $username $password";
-			} else {
-				$openqrm_server_command="htpasswd -c -b $CloudDir/user/.htpasswd $username $password";
+			$c_error = 0;
+			// checks
+			check_param("Username", $user_fields['cu_name']);
+			check_param("Password", $user_fields['cu_password']);
+			check_param("Lastname", $user_fields['cu_lastname']);
+			check_param("Forename", $user_fields['cu_forename']);
+			check_param("Street", $user_fields['cu_street']);
+			check_param("City", $user_fields['cu_city']);
+			check_param("Country", $user_fields['cu_country']);
+			check_param("Phone", $user_fields['cu_phone']);
+
+			// email valid ?
+			$cloud_email = new clouduser();
+			if (!$cloud_email->checkEmail($user_fields['cu_email'])) {
+				$strMsg = "Email address is invalid. <br>";
+				$c_error = 1;
+				redirect($strMsg, 'tab0', "cloud-user.php");
+				exit(0);
 			}
-			$output = shell_exec($openqrm_server_command);
 
-			// set user permissions and limits, set to 0 (infinite) by default
-			$cloud_user_limit = new clouduserlimits();
-			$cloud_user_limits_fields['cl_id'] = openqrm_db_get_free_id('cl_id', $cloud_user_limit->_db_table);
-			$cloud_user_limits_fields['cl_cu_id'] = $user_fields['cu_id'];
-			$cloud_user_limits_fields['cl_resource_limit'] = 0;
-			$cloud_user_limits_fields['cl_memory_limit'] = 0;
-			$cloud_user_limits_fields['cl_disk_limit'] = 0;
-			$cloud_user_limits_fields['cl_cpu_limit'] = 0;
-			$cloud_user_limits_fields['cl_network_limit'] = 0;
-			$cloud_user_limit->add($cloud_user_limits_fields);
-
-			// send mail to user
-			// get admin email
-			$cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
-			// get external name
-			$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
-			if (!strlen($external_portal_name)) {
-				$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
+			// password min 6 characters
+			if (strlen($user_fields['cu_password'])<6) {
+				$strMsg .= "Password must be at least 6 characters long <br>";
+				$c_error = 1;
+				redirect($strMsg, 'tab0', "cloud-user.php");
+				exit(0);
 			}
-			$email = $user_fields['cu_email'];
-			$forename = $user_fields['cu_forename'];
-			$lastname = $user_fields['cu_lastname'];
-			$rmail = new cloudmailer();
-			$rmail->to = "$email";
-			$rmail->from = "$cc_admin_email";
-			$rmail->subject = "openQRM Cloud: Your account has been created";
-			$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/welcome_new_cloud_user.mail.tmpl";
-			$arr = array('@@USER@@'=>"$username", '@@PASSWORD@@'=>"$password", '@@EXTERNALPORTALNAME@@'=>"$external_portal_name", '@@FORENAME@@'=>"$forename", '@@LASTNAME@@'=>"$lastname", '@@CLOUDADMIN@@'=>"$cc_admin_email");
-			$rmail->var_array = $arr;
-			$rmail->send();
+			// username min 4 characters
+			if (strlen($user_fields['cu_name'])<4) {
+				$strMsg .= "Username must be at least 4 characters long <br>";
+				$c_error = 1;
+				redirect($strMsg, 'tab0', "cloud-user.php");
+				exit(0);
+			}
+			// does username already exists ?
+			$c_user = new clouduser();
+			if (!$c_user->is_name_free($user_fields['cu_name'])) {
+				$uname = $user_fields['cu_name'];
+				$strMsg .= "A user with the name $uname already exist. Please choose another username <br>";
+				$c_error = 1;
+				redirect($strMsg, 'tab0', "cloud-user.php");
+				exit(0);
+			}
 
-			$strMsg = "Added user $usecrname";
-			redirect($strMsg, 'tab0', "cloud-user.php");
+            if ($c_error == 0) {
+                // check how many ccunits to give for a new user
+                $cc_conf = new cloudconfig();
+                $cc_auto_give_ccus = $cc_conf->get_value(12);  // 12 is auto_give_ccus
+                $user_fields['cu_ccunits'] = $cc_auto_give_ccus;
+                $cl_user = new clouduser();
+                $cl_user->add($user_fields);
+                // add user to htpasswd
+                $cloud_htpasswd = "$CloudDir/user/.htpasswd";
+                if (file_exists($cloud_htpasswd)) {
+                    $openqrm_server_command="htpasswd -b $CloudDir/user/.htpasswd $username $password";
+                } else {
+                    $openqrm_server_command="htpasswd -c -b $CloudDir/user/.htpasswd $username $password";
+                }
+                $output = shell_exec($openqrm_server_command);
 
+                // set user permissions and limits, set to 0 (infinite) by default
+                $cloud_user_limit = new clouduserlimits();
+                $cloud_user_limits_fields['cl_id'] = openqrm_db_get_free_id('cl_id', $cloud_user_limit->_db_table);
+                $cloud_user_limits_fields['cl_cu_id'] = $user_fields['cu_id'];
+                $cloud_user_limits_fields['cl_resource_limit'] = 0;
+                $cloud_user_limits_fields['cl_memory_limit'] = 0;
+                $cloud_user_limits_fields['cl_disk_limit'] = 0;
+                $cloud_user_limits_fields['cl_cpu_limit'] = 0;
+                $cloud_user_limits_fields['cl_network_limit'] = 0;
+                $cloud_user_limit->add($cloud_user_limits_fields);
+
+                // send mail to user
+                // get admin email
+                $cc_admin_email = $cc_conf->get_value(1);  // 1 is admin_email
+                // get external name
+                $external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
+                if (!strlen($external_portal_name)) {
+                    $external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
+                }
+                $email = $user_fields['cu_email'];
+                $forename = $user_fields['cu_forename'];
+                $lastname = $user_fields['cu_lastname'];
+                $rmail = new cloudmailer();
+                $rmail->to = "$email";
+                $rmail->from = "$cc_admin_email";
+                $rmail->subject = "openQRM Cloud: Your account has been created";
+                $rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/welcome_new_cloud_user.mail.tmpl";
+                $arr = array('@@USER@@'=>"$username", '@@PASSWORD@@'=>"$password", '@@EXTERNALPORTALNAME@@'=>"$external_portal_name", '@@FORENAME@@'=>"$forename", '@@LASTNAME@@'=>"$lastname", '@@CLOUDADMIN@@'=>"$cc_admin_email");
+                $rmail->var_array = $arr;
+                $rmail->send();
+
+                $strMsg = "Added user $usecrname";
+                redirect($strMsg, 'tab0', "cloud-user.php");
+            }
 			break;
 
 
