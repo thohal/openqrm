@@ -184,6 +184,22 @@ function add($clouduser_fields) {
 }
 
 
+// updates clouduser in the database
+function update($clouduser_id, $clouduser_fields) {
+	global $CLOUD_USER_TABLE;
+	global $event;
+	if (!is_array($clouduser_fields)) {
+		$event->log("update", $_SERVER['REQUEST_TIME'], 2, "clouduser.class.php", "Unable to update clouduser $clouduser_id", "", "", 0, 0, 0);
+		return 1;
+	}
+	$db=openqrm_get_db_connection();
+	unset($clouduser_fields["clouduser_id"]);
+	$result = $db->AutoExecute($CLOUD_USER_TABLE, $clouduser_fields, 'UPDATE', "cu_id = $clouduser_id");
+	if (! $result) {
+		$event->log("update", $_SERVER['REQUEST_TIME'], 2, "clouduser.class.php", "Failed updating clouduser $clouduser_id", "", "", 0, 0, 0);
+	}
+}
+
 
 // removes clouduser from the database
 function remove($clouduser_id) {

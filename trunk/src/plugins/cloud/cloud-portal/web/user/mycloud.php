@@ -64,6 +64,7 @@ require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
 // inclde the mycloud parts
 require_once "./mycloudrequests.php";
 require_once "./mycloud_appliances.php";
+require_once "./mycloudaccount.php";
 
 
 global $OPENQRM_SERVER_BASE_DIR;
