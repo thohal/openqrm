@@ -125,6 +125,7 @@ if (htmlobject_request('account_command') != '') {
 
 		case 'Update':
 			$c_error = 0;
+            $cu_id = $user_fields['cu_id'];
 			// checks
 			check_update_param("Lastname", $user_fields['cu_lastname'], 1);
 			check_update_param("Forename", $user_fields['cu_forename'], 1);
@@ -134,9 +135,19 @@ if (htmlobject_request('account_command') != '') {
 			check_update_param("Phone", $user_fields['cu_phone'], 1);
 
             // right username ?
+            $cloud_user = new clouduser();
+            $cloud_user->get_instance_by_id($cu_id);
+            $db_user = $cloud_user->name;
             $auth_user = $_SERVER['PHP_AUTH_USER'];
             $post_user = $user_fields['cu_name'];
             if (strcmp($auth_user, $post_user)) {
+				$strMsg = "Unauthorized access ! <br>";
+				$c_error = 1;
+				redirectit($strMsg, tab4, "mycloud.php");
+				exit(0);
+            }
+            echo "!! dbuser $db_user <br>";
+            if (strcmp($auth_user, $db_user)) {
 				$strMsg = "Unauthorized access ! <br>";
 				$c_error = 1;
 				redirectit($strMsg, tab4, "mycloud.php");
@@ -169,7 +180,6 @@ if (htmlobject_request('account_command') != '') {
             }
 
             if ($c_error == 0) {
-                $cu_id = $user_fields['cu_id'];
                 unset($user_fields['cu_id']);
                 unset($user_fields['cu_name']);
                 $cloud_user = new clouduser();
