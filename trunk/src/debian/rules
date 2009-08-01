@@ -5,11 +5,7 @@ export DH_VERBOSE=1
 configure:: configure-stamp
 configure-stamp:
 	dh_testdir
-	if [ `dpkg -l | grep ubuntu-keyring | wc -l` -lt 1 ]; then \
-		cd $(CURDIR)/debian && sh create_control.sh && cd $(CURDIR); \
-	else \
-		cd $(CURDIR)/debian && sh create_ubuntu_control.sh && cd $(CURDIR); \
-	fi
+	cd $(CURDIR)/debian && sh create_ubuntu_control.sh && cd $(CURDIR); \
 	touch configure-stamp
 
 build: build-stamp
@@ -24,7 +20,6 @@ clean::
 	rm -fr $(CURDIR)/debian/openqrm-ng
 
 	-$(MAKE) clean
-	cp debian/control.in debian/control
 	if [ -e openqrm-plugin-* ]; then rm debian/openqrm-plugin*; fi
 
 	dh_clean
