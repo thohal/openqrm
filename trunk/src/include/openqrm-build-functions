@@ -668,7 +668,7 @@ function openqrm_create_deb_source() {
 # function to create a debian/ubuntu binary package via pbuilder
 function openqrm_pbuilder() {
     CDIR=`pwd`
-    PACKAGE_DESCRIPTION="openqrm_$OPENQRM_SERVER_VERSION-2-ubuntu.dsc"
+    PACKAGE_DESCRIPTION="openqrm_$OPENQRM_SERVER_VERSION-2ubuntu.dsc"
     if [ ! -f "../$PACKAGE_DESCRIPTION" ]; then
         openqrm_create_deb_source
     fi
