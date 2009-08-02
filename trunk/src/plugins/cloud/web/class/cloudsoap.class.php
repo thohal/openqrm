@@ -262,6 +262,73 @@ class cloudsoap {
 
 	//--------------------------------------------------
 	/**
+	* get Details of a Cloud user
+	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password,cloud-user-name
+	* @return array clouduser limits
+	*/
+	//--------------------------------------------------
+    function CloudUserGetDetails($method_parameters) {
+		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$clouduser_name = $parameter_array[3];
+        // check all user input
+        for ($i = 0; $i <= 3; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudUserGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 4) {
+            $event->log("cloudsoap->CloudUserGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudUserGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        $cl_user = new clouduser();
+        if ($cl_user->is_name_free($clouduser_name)) {
+            $event->log("cloudsoap->CloudUserGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud !", "", "", 0, 0, 0);
+            return;
+        }
+       // check that in user mode the username is the same as the cloud_username
+        switch ($mode) {
+            case 'user':
+                if (strcmp($username, $clouduser_name)) {
+                    $event->log("cloudsoap->CloudUserGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to gather the Limits informations of Cloud User $clouduser_name  !", "", "", 0, 0, 0);
+                    return;
+                }
+                break;
+        }
+        // return the user limits
+        $event->log("cloudsoap->CloudUserGetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing Cloud Limits for Cloud Users $clouduser_name", "", "", 0, 0, 0);
+        $cl_user->get_instance_by_name($clouduser_name);
+        $cloud_user_array = array();
+        $cloud_user_array['id'] = $cl_user->id;
+        $cloud_user_array['name'] = $cl_user->name;
+        $cloud_user_rray['lastname'] = $cl_user->lastname;
+        $cloud_user_array['forename'] = $cl_user->forename;
+        $cloud_user_array['email'] = $cl_user->email;
+        $cloud_user_array['street'] = $cl_user->street;
+        $cloud_user_array['city'] = $cl_user->city;
+        $cloud_user_array['country'] = $cl_user->country;
+        $cloud_user_array['phone'] = $cl_user->phone;
+        $cloud_user_array['status'] = $cl_user->status;
+        $cloud_user_array['ccunits'] = $cl_user->ccunits;
+        return $cloud_user_array;
+	}
+
+
+	//--------------------------------------------------
+	/**
 	* Get the Cloud Users CCUs
 	* @access public
 	* @param string $method_parameters
@@ -318,7 +385,7 @@ class cloudsoap {
 
 	//--------------------------------------------------
 	/**
-	* Set the Cloud Users CCUs
+	* Get the Cloud Users Limits
 	* @access public
 	* @param string $method_parameters
 	*  -> mode,user-name,user-password,cloud-user-name

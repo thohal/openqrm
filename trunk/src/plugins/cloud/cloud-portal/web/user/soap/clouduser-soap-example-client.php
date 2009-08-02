@@ -354,9 +354,25 @@ try {
 
 echo "<br>";
 
+
 // ######################### Get Cloud Users limits ############################
 
+echo "<hr>";
 
+echo "<h4>Cloud User Details</h4>";
+$cloudusergetdetails_parameter = "user,$cloud_user,$cloud_password,$cloud_user";
+try {
+    $cloud_user_details = $client->CloudUserGetDetails($cloudusergetdetails_parameter);
+    echo "Cloud Details for User $cloud_user :";
+    echo "<pre>";
+    print_r($cloud_user_details);
+    echo "</pre><br>";
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
+}
+
+
+// ######################### Get Cloud Users limits ############################
 
 echo "<hr>";
 

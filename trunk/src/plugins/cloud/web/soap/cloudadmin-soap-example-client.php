@@ -159,7 +159,7 @@ switch ($action) {
 		echo "Created Cloud User ID : $res<br>";
 		break;
 
-	// ######################### cloud Create User example #####################
+	// ######################### cloud Remove User example #####################
 	case 'userremove':
         $remove_user_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_username'];
         try {
@@ -508,7 +508,31 @@ try {
 
 echo "<br>";
 
-// ######################### Get Cloud Users limits ############################
+
+// ######################### Remove Cloud User #################################
+
+echo "<hr>";
+
+echo "<h4>Cloud User Details</h4>";
+// get a list of cloud users
+$usergetlist_parameter = "admin,$openqrm_user,$openqrm_password";
+try {
+    $cloud_user_list = $client->CloudUserGetList($usergetlist_parameter);
+    foreach($cloud_user_list as $cloud_user) {
+        $cloudusergetdetails_parameter = "admin,$openqrm_user,$openqrm_password,$cloud_user";
+        $cloud_user_details = $client->CloudUserGetDetails($cloudusergetdetails_parameter);
+        echo "Cloud Details for User $cloud_user :";
+        echo "<pre>";
+        print_r($cloud_user_details);
+        echo "</pre><br>";
+    }
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
+}
+
+
+
+// ######################### Set Cloud Users limits ############################
 
 
 

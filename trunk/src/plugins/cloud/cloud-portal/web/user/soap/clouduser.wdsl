@@ -19,6 +19,13 @@
   <part name='Result' type='xsd:string'/>
 </message>
 
+<message name='CloudUserGetDetailsRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudUserGetDetailsResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
 <message name='CloudUserGetCCUsRequest'>
   <part name='symbol' type='xsd:string'/>
 </message>
@@ -117,6 +124,11 @@
     <output message='tns:CloudDeProvisionResponse'/>
   </operation>
 
+  <operation name='CloudUserGetDetails'>
+    <input message='tns:CloudUserGetDetailsRequest'/>
+    <output message='tns:CloudUserGetDetailsResponse'/>
+  </operation>
+
   <operation name='CloudUserGetCCUs'>
     <input message='tns:CloudUserGetCCUsRequest'/>
     <output message='tns:CloudUserGetCCUsResponse'/>
@@ -200,6 +212,18 @@
 
   <operation name='CloudDeProvision'>
     <soap:operation soapAction='urn:localhost-cloud#CloudDeProvision'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='CloudUserGetDetails'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudUserGetDetails'/>
     <input>
       <soap:body use='encoded' namespace='urn:localhost-cloud'
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
