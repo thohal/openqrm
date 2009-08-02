@@ -267,6 +267,15 @@ function check_all_image_authentication() {
 						$event->log("check_all_image_authentication", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "Found deployment type $deployment_type handling the stop deployment auth hook.", "", "", 0, 0, $resource_id);
 						require_once "$storage_auth_hook";
 						storage_auth_deployment_stop($image->id);
+
+                        $image->get_instance_by_id($ia_auth->image_id);
+                        $image_name = $image->name;
+                        $image_id = $image->id;
+                        // remove all install from or transfer to deployment parameters
+                        $image->set_deployment_parameters("IMAGE_INSTALL_FROM_NFS", "");
+                        $image->set_deployment_parameters("IMAGE_TRANSFER_TO_NFS", "");
+                        $image->set_deployment_parameters("IMAGE_INSTALL_FROM_LOCAL", "");
+                        $image->set_deployment_parameters("IMAGE_TRANSFER_TO_LOCAL", "");
 						// remove image_authentication
 						$ia_auth->remove($ia_auth_id);
 					}
