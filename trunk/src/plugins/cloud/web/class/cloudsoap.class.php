@@ -314,7 +314,7 @@ class cloudsoap {
         $cloud_user_array = array();
         $cloud_user_array['id'] = $cl_user->id;
         $cloud_user_array['name'] = $cl_user->name;
-        $cloud_user_rray['lastname'] = $cl_user->lastname;
+        $cloud_user_array['lastname'] = $cl_user->lastname;
         $cloud_user_array['forename'] = $cl_user->forename;
         $cloud_user_array['email'] = $cl_user->email;
         $cloud_user_array['street'] = $cl_user->street;
@@ -324,6 +324,77 @@ class cloudsoap {
         $cloud_user_array['status'] = $cl_user->status;
         $cloud_user_array['ccunits'] = $cl_user->ccunits;
         return $cloud_user_array;
+	}
+
+	//--------------------------------------------------
+	/**
+	* set Details of a Cloud user
+	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password,cloud-user-name,lastname,forename,email,street,city,country,phone
+	* @return int 0 for success, 1 for failure
+	*/
+	//--------------------------------------------------
+    function CloudUserSetDetails($method_parameters) {
+		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$clouduser_name = $parameter_array[3];
+        $clouduser_lastname = $parameter_array[4];
+        $clouduser_forename = $parameter_array[5];
+        $clouduser_email = $parameter_array[6];
+        $clouduser_street = $parameter_array[7];
+        $clouduser_city = $parameter_array[8];
+        $clouduser_country = $parameter_array[9];
+        $clouduser_phone = $parameter_array[10];
+
+        // check all user input
+        for ($i = 0; $i <= 11; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudUserSetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return 1;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 11) {
+            $event->log("cloudsoap->CloudUserSetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return 1;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudUserSetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return 1;
+        }
+        $cl_user = new clouduser();
+        if ($cl_user->is_name_free($clouduser_name)) {
+            $event->log("cloudsoap->CloudUserSetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud !", "", "", 0, 0, 0);
+            return 1;
+        }
+       // check that in user mode the username is the same as the cloud_username
+        switch ($mode) {
+            case 'user':
+                if (strcmp($username, $clouduser_name)) {
+                    $event->log("cloudsoap->CloudUserSetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to gather the Limits informations of Cloud User $clouduser_name  !", "", "", 0, 0, 0);
+                    return 1;
+                }
+                break;
+        }
+        // set user details
+        $event->log("cloudsoap->CloudUserSetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing Cloud Limits for Cloud Users $clouduser_name", "", "", 0, 0, 0);
+        $cl_user->get_instance_by_name($clouduser_name);
+        $cloud_user_array = array();
+        $cloud_user_array['cu_lastname'] = $clouduser_lastname;
+        $cloud_user_array['cu_forename'] = $clouduser_forename;
+        $cloud_user_array['cu_email'] = $clouduser_email;
+        $cloud_user_array['cu_street'] = $clouduser_street;
+        $cloud_user_array['cu_city'] = $clouduser_city;
+        $cloud_user_array['cu_country'] = $clouduser_country;
+        $cloud_user_array['cu_phone'] = $clouduser_phone;
+        $cl_user->update($cl_user->id, $cloud_user_array);
+        return 0;
 	}
 
 

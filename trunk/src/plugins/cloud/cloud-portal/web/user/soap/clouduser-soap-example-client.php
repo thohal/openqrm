@@ -151,7 +151,15 @@ switch ($action) {
 		echo "Updated comment of Cloud appliance id $cloudappliance_id : $res<br>";
         break;
 
-
+	case 'update_user':
+        $cloud_user_upate_parameters = "user,".$cloud_user.",".$cloud_password.",".$cloud_user.",".$request_fields['cr_user_lastname'].",".$request_fields['cr_user_forename'].",".$request_fields['cr_user_email'].",".$request_fields['cr_user_street'].",".$request_fields['cr_user_city'].",".$request_fields['cr_user_country'].",".$request_fields['cr_user_phone'];
+        try {
+            $res = $client->CloudUserSetDetails($cloud_user_upate_parameters);
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
+		echo "Updated Cloud User Details of $cloud_user : $res<br>";
+        break;
 
 
 }
@@ -355,7 +363,7 @@ try {
 echo "<br>";
 
 
-// ######################### Get Cloud Users limits ############################
+// ######################### Get Cloud Users details ############################
 
 echo "<hr>";
 
@@ -367,6 +375,41 @@ try {
     echo "<pre>";
     print_r($cloud_user_details);
     echo "</pre><br>";
+
+    echo "<hr>";
+    echo "<h4>Update Cloud User Details</h4>";
+
+    $cr_user_lastname = $cloud_user_details['lastname'];
+    $cr_user_forename = $cloud_user_details['forename'];
+    $cr_user_email = $cloud_user_details['email'];
+    $cr_user_street = $cloud_user_details['street'];
+    $cr_user_city = $cloud_user_details['city'];
+    $cr_user_country = $cloud_user_details['country'];
+    $cr_user_phone = $cloud_user_details['phone'];
+
+    echo "<form action=$thisfile method=post>";
+    echo "<p>";
+
+    echo "Lastname <input type=text name='cr_user_lastname' value=\"$cr_user_lastname\">";
+    echo "<br>";
+    echo "Forename <input type=text name='cr_user_forename' value=\"$cr_user_forename\">";
+    echo "<br>";
+    echo "Email <input type=text name='cr_user_email' value=\"$cr_user_email\">";
+    echo "<br>";
+    echo "Street <input type=text name='cr_user_street' value=\"$cr_user_street\">";
+    echo "<br>";
+    echo "City <input type=text name='cr_user_city' value=\"$cr_user_city\">";
+    echo "<br>";
+    echo "Country <input type=text name='cr_user_country' value=\"$cr_user_country\">";
+    echo "<br>";
+    echo "Phone <input type=text name='cr_user_phone' value=\"$cr_user_phone\">";
+    echo "<br>";
+    echo "<input type=hidden name='action' value='update_user'>";
+    echo "<input type=submit value='Update'>";
+    echo "</p>";
+    echo "</form>";
+
+
 } catch (Exception $e) {
     echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
