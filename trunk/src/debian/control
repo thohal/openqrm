@@ -7,6 +7,7 @@ Standards-Version: 3.7.2
 
 Package: openqrm
 Architecture: any
+Maintainer: Ubuntu MOTU Developers <ubuntu-motu@lists.ubuntu.com>
 Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client-5.0, syslinux, ash, python, tftpd-hpa, stunnel, dhcp3-server, screen, nagios-images, nagios-plugins, nmap, postfix, libxml-simple-perl, open-iscsi, aoetools, openssl, rsync, expect, puppetmaster, subversion, bind9
 Description: A Cloud Computing Platform
  A Cloud Computing and Data-Center Management Platform
