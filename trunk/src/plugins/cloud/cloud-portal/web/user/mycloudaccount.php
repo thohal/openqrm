@@ -39,6 +39,7 @@ require_once "$RootDir/plugins/cloud/class/clouduserslimits.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudrequest.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudtransaction.class.php";
 
 global $OPENQRM_SERVER_BASE_DIR;
 $refresh_delay=5;
@@ -293,6 +294,19 @@ function mycloud_account() {
 	$cloud_user_limits = $cloud_user_limits."</ul>";
 	$cloud_user_limits = $cloud_user_limits."<br><br>";
 
+    // last transactions
+    $ct = new cloudtransaction();
+    $ct_arr = $ct->get_transactions_per_user($cu_id, 10);
+    $cloud_user_transactions = "<ul type=\"disc\">";
+    foreach ($ct_arr as $ct_id_ar) {
+        $ct_id = $ct_id_ar['ct_id'];
+        $d_ct = new cloudtransaction();
+        $d_ct->get_instance_by_id($ct_id);
+        $d_ct_time = date('Y/m/d H:i:s', $d_ct->time);
+        $cloud_user_transactions .= "<li>$d_ct_time : -$d_ct->ccu_charge CCUs -- $d_ct->reason</li>";
+    }
+    $cloud_user_transactions .= "</ul>";
+    $cloud_user_transactions .= "<br><br>";
 
 	//------------------------------------------------------------ set template
 	$t = new Template_PHPLIB();
@@ -314,6 +328,7 @@ function mycloud_account() {
         'cu_country_input' => $cu_country_input,
         'cu_phone_input' => $cu_phone_input,
 		'cloud_global_limits' => $cloud_global_limits,
+		'cloud_transactions' => $cloud_user_transactions,
 		'cloud_user_limits' => $cloud_user_limits,
         'cu_ccunits' => $cu_ccunits,
 	));

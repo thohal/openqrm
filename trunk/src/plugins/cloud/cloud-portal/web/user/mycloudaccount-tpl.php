@@ -64,12 +64,6 @@
 
 	<div style="float:right;">
 		<div style="padding: 10px 10px 0 10px;">
-		&nbsp;&nbsp;&nbsp;
-		</div>
-	</div>
-
-	<div style="float:right;">
-		<div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
         <b><u>Cloud Computing Units</u></b>
         <br>
         <br>
@@ -79,7 +73,16 @@
 		</div>
 	</div>
 
-
+	<div style="float:right;">
+		<div style="padding: 10px 10px 0 10px;">
+        <b><u>Cloud Billing Transactions (last 10)</u></b>
+        <br>
+        <br>
+        {cloud_transactions}
+        <br>
+        <br>
+		</div>
+	</div>
 
 <div style="clear:both;line-height:0px;">&#160;</div>
 </div>
