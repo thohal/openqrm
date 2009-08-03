@@ -259,6 +259,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
             // ct_cr_id INT(5)
             // ct_cu_id INT(5)
             // ct_ccu_charge INT(5)
+            // ct_ccu_balance INT(5)
             // ct_reason VARCHAR(20)
             // ct_comment VARCHAR(255)
 
@@ -271,7 +272,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$create_cloud_image = "create table cloud_image(ci_id INT(5), ci_cr_id INT(5), ci_image_id INT(5), ci_appliance_id INT(5), ci_resource_id INT(5), ci_state INT(5))";
 			$create_cloud_appliance = "create table cloud_appliance(ca_id INT(5), ca_appliance_id INT(5), ca_cr_id INT(5), ca_cmd INT(5), ca_state INT(5))";
 			$create_cloud_nat = "create table cloud_nat(cn_id INT(5), cn_internal_net VARCHAR(50), cn_external_net VARCHAR(50))";
-			$create_cloud_transaction = "create table cloud_transaction(ct_id INT(5), ct_time VARCHAR(50), ct_cr_id INT(5), ct_cu_id INT(5), ct_ccu_charge INT(5), ct_reason VARCHAR(20), ct_comment VARCHAR(255))";
+			$create_cloud_transaction = "create table cloud_transaction(ct_id INT(5), ct_time VARCHAR(50), ct_cr_id INT(5), ct_cu_id INT(5), ct_ccu_charge INT(5), ct_ccu_balance INT(5), ct_reason VARCHAR(20), ct_comment VARCHAR(255))";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($create_cloud_requests);
 			$recordSet = &$db->Execute($create_cloud_users);

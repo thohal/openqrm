@@ -337,7 +337,7 @@ function cloud_manager() {
 		$table->bottom = array('reload', 'details', 'approve', 'cancel', 'deny', 'delete', 'deprovision');
 		$table->identifier = 'cr_id';
 	}
-    $table->max = 1000;
+    $table->max = $request_count;
 	return $disp.$table->get_string();
 }
 

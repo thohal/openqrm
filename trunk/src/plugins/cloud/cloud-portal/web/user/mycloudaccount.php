@@ -273,7 +273,6 @@ function mycloud_account() {
 	$cloud_global_limits = $cloud_global_limits."<li>Max Network Interfaces : $max_network_interfaces</li>";
 	$cloud_global_limits = $cloud_global_limits."<li>Max Appliance per User : $max_apps_per_user</li>";
 	$cloud_global_limits = $cloud_global_limits."</ul>";
-	$cloud_global_limits = $cloud_global_limits."<br><br>";
 
     // user limits
     $cloud_user = new clouduser();
@@ -292,7 +291,6 @@ function mycloud_account() {
 	$cloud_user_limits = $cloud_user_limits."<li>Max Memory : $cloud_user_memory_limit</li>";
 	$cloud_user_limits = $cloud_user_limits."<li>Max CPU's : $cloud_user_cpu_limit</li>";
 	$cloud_user_limits = $cloud_user_limits."</ul>";
-	$cloud_user_limits = $cloud_user_limits."<br><br>";
 
     // last transactions
     $ct = new cloudtransaction();
@@ -302,8 +300,8 @@ function mycloud_account() {
         $ct_id = $ct_id_ar['ct_id'];
         $d_ct = new cloudtransaction();
         $d_ct->get_instance_by_id($ct_id);
-        $d_ct_time = date('Y/m/d H:i:s', $d_ct->time);
-        $cloud_user_transactions .= "<li>$d_ct_time : -$d_ct->ccu_charge CCUs -- $d_ct->reason</li>";
+        $d_ct_time = date('y/m/d H:i:s', $d_ct->time);
+        $cloud_user_transactions .= "<li><small>$d_ct_time<br>-$d_ct->ccu_charge CCUs -- $d_ct->ccu_balance -- $d_ct->reason</small></li>";
     }
     $cloud_user_transactions .= "</ul>";
     $cloud_user_transactions .= "<br><br>";

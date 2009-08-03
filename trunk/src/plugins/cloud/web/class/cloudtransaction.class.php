@@ -48,6 +48,7 @@ class cloudtransaction {
     var $cr_id = '';
     var $cu_id = '';
     var $ccu_charge = '';
+    var $ccu_balance = '';
     var $reason = '';
     var $comment = '';
 
@@ -100,6 +101,7 @@ function get_instance($id, $cr_id) {
 		$this->cr_id = $cloudtransaction["ct_cr_id"];
 		$this->cu_id = $cloudtransaction["ct_cu_id"];
 		$this->ccu_charge = $cloudtransaction["ct_ccu_charge"];
+		$this->ccu_balance = $cloudtransaction["ct_ccu_balance"];
 		$this->reason = $cloudtransaction["ct_reason"];
 		$this->comment = $cloudtransaction["ct_comment"];
 	}
@@ -177,7 +179,7 @@ function remove($cloudtransaction_id) {
 
 
 // function to push a new transaction to the stack
-function push($cr_id, $cu_id, $ccu_charge, $reason, $comment) {
+function push($cr_id, $cu_id, $ccu_charge, $ccu_balance, $reason, $comment) {
 	global $CLOUD_TRANSACTION_TABLE;
 	global $event;
     $transaction_fields['ct_id'] = openqrm_db_get_free_id('ct_id', $this->_db_table);
@@ -185,10 +187,11 @@ function push($cr_id, $cu_id, $ccu_charge, $reason, $comment) {
     $transaction_fields['ct_cr_id'] = $cr_id;
     $transaction_fields['ct_cu_id'] = $cu_id;
     $transaction_fields['ct_ccu_charge'] = $ccu_charge;
+    $transaction_fields['ct_ccu_balance'] = $ccu_balance;
     $transaction_fields['ct_reason'] = $reason;
     $transaction_fields['ct_comment'] = $comment;
     $new_ct_id = $transaction_fields['ct_id'];
-    $event->log("push", $_SERVER['REQUEST_TIME'], 2, "cloudtransaction.class.php", "Pushing new transaction $new_ct_id to the database", "", "", 0, 0, 0);
+    $event->log("push", $_SERVER['REQUEST_TIME'], 5, "cloudtransaction.class.php", "Pushing new transaction $new_ct_id to the database", "", "", 0, 0, 0);
     $this->add($transaction_fields);
 }
 

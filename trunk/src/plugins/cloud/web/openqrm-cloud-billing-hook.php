@@ -49,6 +49,7 @@ require_once "$RootDir/plugins/cloud/class/cloudiptables.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudvm.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudtransaction.class.php";
 
 
 
@@ -70,7 +71,9 @@ function openqrm_custom_cloud_billing($cr_id, $cu_id, $basic_costs, $cu_ccunits)
     // basic calculation
     $new_cu_ccunits = $cu_ccunits-$basic_costs;
     $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-billing-hook", "Applying basic charge $new_cu_ccunits = $cu_ccunits-$basic_costs for request ID $cr_id", "", "", 0, 0, 0);
-
+    // transaction logging
+    $ct = new cloudtransaction();
+    $ct->push($cr_id, $cu_id, $basic_costs, $new_cu_ccunits, "Basic Cloud billing", "Basic CCU charge for a Cloud appliance");
 
     return $new_cu_ccunits;
 }

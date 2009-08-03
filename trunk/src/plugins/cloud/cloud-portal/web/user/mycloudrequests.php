@@ -161,7 +161,7 @@ function my_cloud_manager() {
 	$table->body = $arBody;
 	$table->bottom = array('reload', 'deprovision', 'extend');
 	$table->identifier = 'cr_id';
-    $table->max = 1000;
+    $table->max = $request_count;
 	return $disp.$table->get_string();
 }
 
