@@ -146,7 +146,6 @@ if (htmlobject_request('account_command') != '') {
 				redirectit($strMsg, tab4, "mycloud.php");
 				exit(0);
             }
-            echo "!! dbuser $db_user <br>";
             if (strcmp($auth_user, $db_user)) {
 				$strMsg = "Unauthorized access ! <br>";
 				$c_error = 1;

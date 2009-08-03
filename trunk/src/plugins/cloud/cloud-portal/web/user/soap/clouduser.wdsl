@@ -33,6 +33,13 @@
   <part name='Result' type='xsd:string'/>
 </message>
 
+<message name='CloudUserSetPasswordRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudUserSetPasswordResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
 <message name='CloudUserGetCCUsRequest'>
   <part name='symbol' type='xsd:string'/>
 </message>
@@ -139,6 +146,11 @@
   <operation name='CloudUserSetDetails'>
     <input message='tns:CloudUserSetDetailsRequest'/>
     <output message='tns:CloudUserSetDetailsResponse'/>
+  </operation>
+
+  <operation name='CloudUserSetPassword'>
+    <input message='tns:CloudUserSetPasswordRequest'/>
+    <output message='tns:CloudUserSetPasswordResponse'/>
   </operation>
 
   <operation name='CloudUserGetCCUs'>
@@ -248,6 +260,18 @@
 
   <operation name='CloudUserSetDetails'>
     <soap:operation soapAction='urn:localhost-cloud#CloudUserSetDetails'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='CloudUserSetPassword'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudUserSetPassword'/>
     <input>
       <soap:body use='encoded' namespace='urn:localhost-cloud'
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>

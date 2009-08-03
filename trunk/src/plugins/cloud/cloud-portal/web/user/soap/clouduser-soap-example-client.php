@@ -161,6 +161,16 @@ switch ($action) {
 		echo "Updated Cloud User Details of $cloud_user : $res<br>";
         break;
 
+	case 'update_password':
+        $cloud_user_upate_pass_parameters = "user,".$cloud_user.",".$cloud_password.",".$cloud_user.",".$request_fields['cr_user_password'];
+        try {
+            $res = $client->CloudUserSetPassword($cloud_user_upate_pass_parameters);
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
+		echo "Updated Password of Cloud User $cloud_user : $res<br>";
+        break;
+
 
 }
 
@@ -387,6 +397,8 @@ try {
     $cr_user_country = $cloud_user_details['country'];
     $cr_user_phone = $cloud_user_details['phone'];
 
+// ######################### Set Cloud Users details ############################
+
     echo "<form action=$thisfile method=post>";
     echo "<p>";
 
@@ -406,6 +418,17 @@ try {
     echo "<br>";
     echo "<input type=hidden name='action' value='update_user'>";
     echo "<input type=submit value='Update'>";
+    echo "</p>";
+    echo "</form>";
+
+// ######################### Set Cloud Users password ############################
+
+    echo "<form action=$thisfile method=post>";
+    echo "<p>";
+
+    echo "Password <input type=text name='cr_user_password' value=\"\">";
+    echo "<input type=hidden name='action' value='update_password'>";
+    echo "<input type=submit value='Set Password'>";
     echo "</p>";
     echo "</form>";
 

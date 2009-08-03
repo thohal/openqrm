@@ -309,7 +309,7 @@ class cloudsoap {
                 break;
         }
         // return the user limits
-        $event->log("cloudsoap->CloudUserGetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing Cloud Limits for Cloud Users $clouduser_name", "", "", 0, 0, 0);
+        $event->log("cloudsoap->CloudUserGetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing Details for Cloud Users $clouduser_name", "", "", 0, 0, 0);
         $cl_user->get_instance_by_name($clouduser_name);
         $cloud_user_array = array();
         $cloud_user_array['id'] = $cl_user->id;
@@ -326,7 +326,8 @@ class cloudsoap {
         return $cloud_user_array;
 	}
 
-	//--------------------------------------------------
+
+    //--------------------------------------------------
 	/**
 	* set Details of a Cloud user
 	* @access public
@@ -383,7 +384,7 @@ class cloudsoap {
                 break;
         }
         // set user details
-        $event->log("cloudsoap->CloudUserSetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing Cloud Limits for Cloud Users $clouduser_name", "", "", 0, 0, 0);
+        $event->log("cloudsoap->CloudUserSetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Setting details for Cloud Users $clouduser_name", "", "", 0, 0, 0);
         $cl_user->get_instance_by_name($clouduser_name);
         $cloud_user_array = array();
         $cloud_user_array['cu_lastname'] = $clouduser_lastname;
@@ -394,6 +395,79 @@ class cloudsoap {
         $cloud_user_array['cu_country'] = $clouduser_country;
         $cloud_user_array['cu_phone'] = $clouduser_phone;
         $cl_user->update($cl_user->id, $cloud_user_array);
+        return 0;
+	}
+
+
+    //--------------------------------------------------
+	/**
+	* set Password of a Cloud user
+	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password,cloud-user-name,new-password
+	* @return int 0 for success, 1 for failure
+	*/
+	//--------------------------------------------------
+    function CloudUserSetPassword($method_parameters) {
+		global $event;
+        global $CloudDir;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$clouduser_name = $parameter_array[3];
+        $clouduser_password = $parameter_array[4];
+
+        // check all user input
+        for ($i = 0; $i <= 5; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudUserSetPassword", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return 1;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 5) {
+            $event->log("cloudsoap->CloudUserSetPassword", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return 1;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudUserSetPassword", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return 1;
+        }
+        $cl_user = new clouduser();
+        if ($cl_user->is_name_free($clouduser_name)) {
+            $event->log("cloudsoap->CloudUserSetPassword", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud !", "", "", 0, 0, 0);
+            return 1;
+        }
+        // min 6 chars long
+        $plen = strlen($clouduser_password);
+        if ($plen < 6) {
+            $event->log("cloudsoap->CloudUserSetPassword", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud password must be at least 6 characters long !", "", "", 0, 0, 0);
+            return 1;
+        }
+       // check that in user mode the username is the same as the cloud_username
+        switch ($mode) {
+            case 'user':
+                if (strcmp($username, $clouduser_name)) {
+                    $event->log("cloudsoap->CloudUserSetPassword", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to gather the Limits informations of Cloud User $clouduser_name  !", "", "", 0, 0, 0);
+                    return 1;
+                }
+                break;
+        }
+        // set user details
+        $event->log("cloudsoap->CloudUserSetPassword", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Updateing password for Cloud Users $clouduser_name", "", "", 0, 0, 0);
+        $cl_user->get_instance_by_name($clouduser_name);
+        $cloud_user_array = array();
+        $cloud_user_array['cu_password'] = $clouduser_password;
+        $cl_user->update($cl_user->id, $cloud_user_array);
+        // remove old user
+        $openqrm_server_command="htpasswd -D $CloudDir/user/.htpasswd $clouduser_name";
+        $output = shell_exec($openqrm_server_command);
+        // create new + new password
+        $openqrm_server_command="htpasswd -b $CloudDir/user/.htpasswd $clouduser_name $clouduser_password";
+        $output = shell_exec($openqrm_server_command);
         return 0;
 	}
 
