@@ -89,6 +89,20 @@
   <part name='Result' type='xsd:string'/>
 </message>
 
+<message name='CloudPushTransactionRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudPushTransactionResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
+<message name='CloudUserGetTransactionsRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudUserGetTransactionsResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
 <message name='CloudRequestGetListRequest'>
   <part name='symbol' type='xsd:string'/>
 </message>
@@ -235,6 +249,16 @@
   <operation name='CloudUserGetLimits'>
     <input message='tns:CloudUserGetLimitsRequest'/>
     <output message='tns:CloudUserGetLimitsResponse'/>
+  </operation>
+
+  <operation name='CloudPushTransaction'>
+    <input message='tns:CloudPushTransactionRequest'/>
+    <output message='tns:CloudPushTransactionResponse'/>
+  </operation>
+
+  <operation name='CloudUserGetTransactions'>
+    <input message='tns:CloudUserGetTransactionsRequest'/>
+    <output message='tns:CloudUserGetTransactionsResponse'/>
   </operation>
 
   <operation name='CloudRequestGetList'>
@@ -440,6 +464,30 @@
 
   <operation name='CloudUserGetLimits'>
     <soap:operation soapAction='urn:localhost-cloud#CloudUserGetLimits'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='CloudPushTransaction'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudPushTransaction'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='CloudUserGetTransactions'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudUserGetTransactions'/>
     <input>
       <soap:body use='encoded' namespace='urn:localhost-cloud'
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>

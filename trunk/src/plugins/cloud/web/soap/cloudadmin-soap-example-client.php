@@ -247,6 +247,15 @@ switch ($action) {
 		echo "Updated comment of Cloud appliance id $cloudappliance_id : $res<br>";
         break;
 
+	case 'push':
+        $transaction_parameters = "admin,".$openqrm_user.",".$openqrm_password.",".$request_fields['cr_username'].",".$request_fields['cr_id'].",".$request_fields['cr_ccu_charge'].",".$request_fields['cr_ccu_balance'].",".$request_fields['cr_reason'].",".$request_fields['cr_comment'];
+        try {
+            $res = $client->CloudPushTransaction($transaction_parameters);
+        } catch (Exception $e) {
+            $res = $e->getMessage();
+        }
+		echo "Added Cloud transaction : $res<br>";
+        break;
 
 }
 
@@ -609,6 +618,68 @@ foreach($cloud_user_list as $cloud_user) {
     echo "</tr></table>";
     echo "</form>";
 }
+
+
+
+
+// ######################### Add a Cloud Transaction ###########################
+
+
+
+echo "<hr>";
+
+echo "<h4>Add Cloud Transactions</h4>";
+echo "<form action=$thisfile method=post>";
+try {
+    $cloudusergetlist_parameter = "admin,$openqrm_user,$openqrm_password";
+    $cloud_user_list = $client->CloudUserGetList($cloudusergetlist_parameter);
+    echo ' User <select name="cr_username" size="1">';
+    foreach($cloud_user_list as $cloud_user) {
+        echo "<option value=\"$cloud_user\">$cloud_user</option>";
+    }
+    echo '</select>';
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
+}
+// get a list of all requests per user (or all if no username is given)
+$cloudrequestgetlist_parameter = "admin,$openqrm_user,$openqrm_password,";
+try {
+    $cloudrequest_list = $client->CloudRequestGetList($cloudrequestgetlist_parameter);
+    echo ' CR <select name="cr_id" size="1">';
+    foreach($cloudrequest_list as $cloud_req) {
+        echo "<option value=\"$cloud_req\">$cloud_req</option>";
+    }
+    echo '</select>';
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
+}
+
+echo "<table border=1><tr><td>";
+
+echo 'CCU-Charge</td><td><select name="cr_ccu_charge" size="1">';
+echo "<option value=1>1</option>";
+echo "<option value=2>2</option>";
+echo "<option value=3>3</option>";
+echo "<option value=4>4</option>";
+echo "<option value=5>5</option>";
+echo "<option value=5>10</option>";
+echo '</select></td></tr><tr><td>';
+
+// CCU-balance needs to be calculated, here we go with a static example
+echo 'CCU-Balance</td><td><select name="cr_ccu_balance" size="1">';
+echo "<option value=\"10\">10</option>";
+echo "<option value=\"50\">50</option>";
+echo "<option value=\"100\">100</option>";
+echo "<option value=\"1000\">1000</option>";
+echo '</select></td></tr><tr><td>';
+
+echo "Reason</td><td><input type=text name='cr_reason' value=\"\">";
+echo '</td></tr><tr><td>';
+echo "Comment</td><td><input type=text name='cr_comment' value=\"\">";
+echo "</td></tr><tr><td></td><td><input type=submit name='action' value='push'></td>";
+
+echo "</tr></table>";
+echo "</form>";
 
 
 

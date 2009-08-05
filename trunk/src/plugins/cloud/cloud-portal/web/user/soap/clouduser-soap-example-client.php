@@ -455,6 +455,26 @@ try {
 }
 
 
+echo "<hr><br>";
+
+
+// ######################### Get Cloud Users Transactions ############################
+
+echo "<hr>";
+
+echo "<h4>Cloud User Transactions</h4>";
+$cloudusergettransaction_parameter = "user,$cloud_user,$cloud_password,$cloud_user,5";
+try {
+    $clouduser_details = $client->CloudUserGetTransactions($cloudusergettransaction_parameter);
+    echo "Last 5 Cloud Transactions for User $cloud_user :";
+    echo "<pre>";
+    print_r($clouduser_details);
+    echo "</pre><br>";
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
+}
+
+
 echo "</tr></table>";
 echo "</form>";
 
@@ -462,7 +482,6 @@ echo "</form>";
 
 // ######################### form Cloud User end ###############################
 echo "<hr><br>";
-
 
 
 // ######################### Cloud appliance method example ##############################

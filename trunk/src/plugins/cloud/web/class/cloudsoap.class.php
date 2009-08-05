@@ -45,6 +45,7 @@ require_once "$RootDir/plugins/cloud/class/cloudiptables.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudvm.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudtransaction.class.php";
 
 // only if puppet is available
 if (file_exists("$RootDir/plugins/puppet/class/puppet.class.php")) {
@@ -589,6 +590,73 @@ class cloudsoap {
         $cloud_user_limits_array['network_limit'] = $clouduser_limit->network_limit;
         return $cloud_user_limits_array;
 	}
+
+
+	//--------------------------------------------------
+	/**
+	* Get the Cloud Users transactions
+	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password,cloud-user-name,max
+	* @return array clouduser transactions
+	*/
+	//--------------------------------------------------
+    function CloudUserGetTransactions($method_parameters) {
+		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$clouduser_name = $parameter_array[3];
+		$max_transactions = $parameter_array[4];
+        // check all user input
+        for ($i = 0; $i <= 4; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudUserGetTransactions", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 5) {
+            $event->log("cloudsoap->CloudUserGetTransactions", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudUserGetTransactions", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        $cl_user = new clouduser();
+        if ($cl_user->is_name_free($clouduser_name)) {
+            $event->log("cloudsoap->CloudUserGetTransactions", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud !", "", "", 0, 0, 0);
+            return;
+        }
+       // check that in user mode the username is the same as the cloud_username
+        switch ($mode) {
+            case 'user':
+                if (strcmp($username, $clouduser_name)) {
+                    $event->log("cloudsoap->CloudUserGetTransactions", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to gather the Limits informations of Cloud User $clouduser_name  !", "", "", 0, 0, 0);
+                    return;
+                }
+                break;
+        }
+        // return the users transaction array
+        $event->log("cloudsoap->CloudUserGetTransactions", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing Cloud Limits for Cloud Users $clouduser_name", "", "", 0, 0, 0);
+        $cl_user->get_instance_by_name($clouduser_name);
+        $ct = new cloudtransaction();
+        $cloud_user_transaction_id_array = $ct->get_transactions_per_user($cl_user->id, $max_transactions);
+        $cloud_user_transaction_array = array();
+        foreach ($cloud_user_transaction_id_array as $ct) {
+            $t_ct = new cloudtransaction();
+            $t_ct->get_instance_by_id($ct['ct_id']);
+            $t_ct_time = date('y/m/d H:i:s', $t_ct->time);
+            $t_arr = array("id" => $t_ct->id, "time" => $t_ct_time, "charge" => $t_ct->ccu_charge, "balance" => $t_ct->ccu_balance, "reason" => $t_ct->reason, "comment" => $t_ct->comment);
+            $cloud_user_transaction_array[] = $t_arr;
+        }
+        return $cloud_user_transaction_array;
+	}
+
 
 // ######################### cloud request methods #############################
 

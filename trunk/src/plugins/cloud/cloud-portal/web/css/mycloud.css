@@ -76,6 +76,15 @@ a:hover {
     padding: 10px;
 }
 
+#cloud_transactions {
+    position: absolute;
+    left: 650px;
+    top: 375px;
+    width: 130px;
+    height: 10px;
+    float:right;
+}
+
 #submit {
     position: relative;
     left: 90px;

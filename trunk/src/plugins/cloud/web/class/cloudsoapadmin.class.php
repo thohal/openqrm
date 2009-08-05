@@ -45,6 +45,7 @@ require_once "$RootDir/plugins/cloud/class/cloudiptables.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudvm.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudtransaction.class.php";
 
 // only if puppet is available
 if (file_exists("$RootDir/plugins/puppet/class/puppet.class.php")) {
@@ -369,7 +370,6 @@ class cloudsoapadmin extends cloudsoap {
         $disk_limit = $parameter_array[6];
         $cpu_limit = $parameter_array[7];
         $network_limit = $parameter_array[8];
-        $cloud_user_limits_fields['cl_network_limit'] = $parameter_array[5];
         // check all user input
         for ($i = 0; $i <= 8; $i++) {
             if(!$this->check_param($parameter_array[$i])) {
@@ -412,6 +412,68 @@ class cloudsoapadmin extends cloudsoap {
         return 0;
 	}
 
+
+
+
+// ######################### cloud transaction methods #############################
+
+
+
+	//--------------------------------------------------
+	/**
+	* Add a new Cloud Tranaction on behalf of a Users + CR
+	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password,cloud-user-name,cr_id,ccu_charge,ccu_balance,reason,comment
+	* @return int 0 for success, 1 for error
+	*/
+	//--------------------------------------------------
+    function CloudPushTransaction($method_parameters) {
+		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$clouduser_name = $parameter_array[3];
+        $cr_id = $parameter_array[4];
+        $ccu_charge = $parameter_array[5];
+        $ccu_balance = $parameter_array[6];
+        $reason = $parameter_array[7];
+        $comment = $parameter_array[8];
+        // check all user input
+        for ($i = 0; $i <= 8; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudPushTransaction", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 9) {
+                $event->log("cloudsoap->CloudPushTransaction", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+                return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudPushTransaction", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        // check for admin
+        if (strcmp($mode, "admin")) {
+            $event->log("cloudsoap->CloudPushTransaction", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud method only available in admin mode", "", "", 0, 0, 0);
+            return;
+        }
+        $cl_user = new clouduser();
+        if ($cl_user->is_name_free($clouduser_name)) {
+            $event->log("cloudsoap->CloudPushTransaction", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User name $clouduser_name does not exists in the Cloud !", "", "", 0, 0, 0);
+            return 1;
+        }
+        $cl_user->get_instance_by_name($clouduser_name);
+        $event->log("cloudsoap->CloudPushTransaction", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Setting Cloud Limits for Cloud Users $clouduser_name", "", "", 0, 0, 0);
+        $ct = new cloudtransaction();
+        $ct->push($cr_id, $cl_user->id, $ccu_charge, $ccu_balance, $reason, $comment);
+        return 0;
+	}
 
 
 
