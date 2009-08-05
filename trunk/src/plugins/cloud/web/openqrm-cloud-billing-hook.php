@@ -70,6 +70,9 @@ function openqrm_custom_cloud_billing($cr_id, $cu_id, $basic_costs, $cu_ccunits)
 
     // basic calculation
     $new_cu_ccunits = $cu_ccunits-$basic_costs;
+    if ($new_cu_ccunits < 0) {
+        $new_cu_ccunits = 0;
+    }
     $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-billing-hook", "Applying basic charge $new_cu_ccunits = $cu_ccunits-$basic_costs for request ID $cr_id", "", "", 0, 0, 0);
     // transaction logging
     $ct = new cloudtransaction();
