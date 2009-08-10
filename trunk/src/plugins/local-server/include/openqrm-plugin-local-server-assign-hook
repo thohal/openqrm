@@ -31,14 +31,18 @@ function local_server_assign_hook() {
 	local OPENQRM_RESOURCE_MAC=`echo $OPENQRM_RESOURCE_PXELINUXCFG_FILE | sed -e "s/01-//g" | sed -e "s/-/:/g"`
 
 	if ! echo $OPENQRM_KERNEL_NAME | grep default 1>/dev/null; then
-		echo "local-server-plugin: Running assign hook with $OPENQRM_RESOURCE_ID $OPENQRM_KERNEL_NAME $OPENQRM_RESOURCE_PXELINUXCFG_FILE"
-		echo "local-server-plugin: Running assign hook with $OPENQRM_RESOURCE_ID $OPENQRM_KERNEL_NAME $OPENQRM_RESOURCE_PXELINUXCFG_FILE" | logger
+        if [ "$OPENQRM_KERNEL_NAME" == "resource$OPENQRM_RESOURCE_ID" ]; then
+            echo "local-server-plugin: Running assign hook with $OPENQRM_RESOURCE_ID $OPENQRM_KERNEL_NAME $OPENQRM_RESOURCE_PXELINUXCFG_FILE"
+            echo "local-server-plugin: Running assign hook with $OPENQRM_RESOURCE_ID $OPENQRM_KERNEL_NAME $OPENQRM_RESOURCE_PXELINUXCFG_FILE" | logger
 
-		# get more infos about the resource
-		openqrm_get_resource_parameter $OPENQRM_RESOURCE_MAC
-		if [ "$resource_capabilities" == "local-server" ]; then
-			openqrm_server_set_boot local $resource_id $resource_mac $resource_ip
-		fi
+            # get more infos about the resource
+            openqrm_get_resource_parameter $OPENQRM_RESOURCE_MAC
+            if [ "$resource_capabilities" == "local-server" ]; then
+                openqrm_server_set_boot local $resource_id $resource_mac $resource_ip
+            fi
+        else
+            echo "local-server-plugin: Resource $OPENQRM_RESOURCE_ID netbooting. Skipping local-assign" | logger
+        fi
 	fi
 
 }
