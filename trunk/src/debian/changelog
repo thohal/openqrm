@@ -1,4 +1,4 @@
-openqrm (4.5-2ubuntu) karmic; urgency=low
+openqrm (4.5-0ubuntu1) karmic; urgency=low
 
   [ Matthias Rechenburg ]
   * Initial release (LP: #278559) 
@@ -9,7 +9,20 @@ openqrm (4.5-2ubuntu) karmic; urgency=low
   [ Matthias Rechenburg ]
   * Enhanced ubuntu/debian build system
 
- -- Matthias Rechenburg <matt@openqrm.com>  Sat, 01 Aug 2009 03:59:27 +0200
+  [ Matthias Rechenburg ]
+  * Updated package name to 4.5-0ubuntu1
+  * Added original source package openqrm_4.5.orig.tar.gz
+  * Enhanced extended package description
+  * Set debhelper dependency to (>= 6.0.7~)
+  * Set standards version to 3.8.2
+  * Better make commands in rules file
+  * Fixed wrong filename in debian/patches/series
+  * Removed lintian-override for diff-contains-svn-control-dir
+  * Added lintian-override for package-contains-empty-directory
+  * Added "#DEBHELPER#" token to debian/{post,pre}*
+  * Adapted standard way to stop/start of a service
+
+ -- Matthias Rechenburg <matt@openqrm.com>  Tue, 11 Aug 2009 15:05:55 +0200
 
 openqrm (4.3-1.1mea5.1) unstable; urgency=low
 

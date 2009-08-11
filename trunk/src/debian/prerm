@@ -2,5 +2,12 @@
 # uninstall the openQRM service
 set -e
 
-service openqrm-server stop
+if [ -x "/etc/init.d/openqrm-server" ]; then
+    if [ -x /usr/sbin/invoke-rc.d ]; then
+        invoke-rc.d openqrm-server stop ||true
+    else
+        /etc/init.d/openqrm-server stop ||true
+    fi
+fi
+#DEBHELPER#
 

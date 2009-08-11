@@ -4,5 +4,12 @@ set -e
 
 rm -f /etc/init.d/openqrm-server
 ln -sf /usr/lib/openqrm/etc/init.d/openqrm-server /etc/init.d/openqrm-server
-service openqrm-server start
+if [ -x "/etc/init.d/openqrm-server" ]; then
+    if [ -x /usr/sbin/invoke-rc.d ]; then
+        invoke-rc.d openqrm-server start ||true
+    else
+        /etc/init.d/openqrm-server start ||true
+    fi
+fi
+#DEBHELPER#
 

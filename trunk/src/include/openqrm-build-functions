@@ -637,9 +637,9 @@ function openqrm_install_js_interface() {
 function openqrm_create_deb_source() {
     CDIR=`pwd`
     TMPBUILD_DIR=`mktemp -d /tmp/deb_source.XXXXXXXXXX` || exit 1
-    mkdir -p $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION-2
-    cp -aR * $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION-2/
-    cd $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION-2/
+    mkdir -p $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION
+    cp -aR * $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION/
+    cd $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION/
     # remove the sshterm plugin for now
     rm -rf plugins/sshterm
     # remove nagios2 for now, ubuntu and latest debian already have nagios3
@@ -652,6 +652,13 @@ function openqrm_create_deb_source() {
     rm -rf `find -name .svn `
     ./fill-build-cache
     cp -aR ../buildtmp thirdparty
+    # prepare openqrm_[version].orig.tar.gz
+    cd $TMPBUILD_DIR/
+    mv $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION/debian .
+    tar -czf openqrm_$OPENQRM_SERVER_VERSION.orig.tar.gz openqrm-$OPENQRM_SERVER_VERSION
+    mv $TMPBUILD_DIR/debian openqrm-$OPENQRM_SERVER_VERSION/
+    # build the source package
+    cd openqrm-$OPENQRM_SERVER_VERSION
     if [ "$GPGKEY" != "" ]; then
         dpkg-buildpackage -S -sa -rfakeroot -k$GPGKEY
     else
@@ -659,7 +666,7 @@ function openqrm_create_deb_source() {
     fi
     cd $CDIR
     mv -f $TMPBUILD_DIR/openqrm_* ../
-    rm -rf $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION-2
+    rm -rf $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION
     rm -rf $TMPBUILD_DIR/buildtmp
     rmdir $TMPBUILD_DIR
 }
@@ -668,12 +675,13 @@ function openqrm_create_deb_source() {
 # function to create a debian/ubuntu binary package via pbuilder
 function openqrm_pbuilder() {
     CDIR=`pwd`
-    PACKAGE_DESCRIPTION="openqrm_$OPENQRM_SERVER_VERSION-2ubuntu.dsc"
+    UBUNTU_VERSION=`cat debian/changelog | grep ^"openqrm.*(" | head -n 1 | awk {' print $2 '} | sed -e "s/(//g" | sed -e "s/)//g" | cut -d'-' -f 2`
+    PACKAGE_DESCRIPTION="openqrm_$OPENQRM_SERVER_VERSION-$UBUNTU_VERSION.dsc"
     if [ ! -f "../$PACKAGE_DESCRIPTION" ]; then
         openqrm_create_deb_source
     fi
     cd ..
-    sudo pbuilder build openqrm_4.5-2ubuntu.dsc
+    sudo pbuilder build openqrm_4.5-$UBUNTU_VERSION.dsc
     echo
     echo "Packaging finished. Please find the created packages in /var/cache/pbuilder/result"
     ls -lh /var/cache/pbuilder/result/openqrm*

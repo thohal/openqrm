@@ -110,8 +110,8 @@ function openqrm_server_init() {
 	if [ -f /etc/debian_version ]; then
         if ! ps ax | grep apache2 | grep -v grep 1>/dev/null; then
             $OPENQRM_WEBSERVER_INIT start
-            update-rc.d openqrm defaults
         fi
+        update-rc.d openqrm-server defaults
 	elif [ -f /etc/redhat-release ]; then
         if ! ps ax | grep httpd | grep -v grep 1>/dev/null; then
             $OPENQRM_WEBSERVER_INIT start
@@ -388,7 +388,9 @@ function openqrm_server_uninstall() {
 			rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/var
 			;;
 	esac
-    update-rc.d -f openqrm remove
+	if [ -f /etc/debian_version ]; then
+        update-rc.d -f openqrm-server remove
+    fi
 	echo "Uninstallation of openQRM-server finished"
 }
 

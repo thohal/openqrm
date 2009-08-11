@@ -5,7 +5,6 @@ export DH_VERBOSE=1
 configure:: configure-stamp
 configure-stamp:
 	dh_testdir
-	cd $(CURDIR)/debian && sh create_ubuntu_control.sh && cd $(CURDIR); \
 	touch configure-stamp
 
 build: build-stamp
@@ -19,7 +18,7 @@ clean::
 	rm -f build-stamp configure-stamp
 	rm -fr $(CURDIR)/debian/openqrm-ng
 
-	-$(MAKE) clean
+	[ ! -f Makefile ] || $(MAKE) clean
 	if [ -e openqrm-plugin-* ]; then rm debian/openqrm-plugin*; fi
 
 	dh_clean
@@ -30,7 +29,7 @@ install: build
 	dh_clean -k 
 	dh_installdirs
 
-	$(MAKE) install DESTINATION_DIR=$(CURDIR)/debian/openqrm-ng
+	[ ! -f Makefile ] || $(MAKE) install DESTINATION_DIR=$(CURDIR)/debian/openqrm-ng
 
 binary-indep: build install
 

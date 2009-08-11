@@ -1,4 +1,4 @@
 # We build from svn source - openqrm is working hard
 # to become a Debian/Ubuntu native package
-openqrm source: diff-contains-svn-control-dir
-
+# intentional empty dirs
+openqrm source: package-contains-empty-directory

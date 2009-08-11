@@ -2,12 +2,11 @@ Source: openqrm
 Section: admin
 Priority: extra
 Maintainer: Ubuntu MOTU Developers <ubuntu-motu@lists.ubuntu.com>
-Build-Depends: debhelper (>= 5), make (>= 3.8), gcc (>=4), libpci-dev, portmap, rsync, zlib1g-dev, wget, tar(>=1.20), bzip2, cdbs, patch, unzip, sudo, module-init-tools, udev, quilt, lintian
-Standards-Version: 3.7.2
+Build-Depends: debhelper (>= 6.0.7~), make (>= 3.8), gcc (>=4), libpci-dev, portmap, rsync, zlib1g-dev, wget, tar(>=1.20), bzip2, cdbs, patch, unzip, sudo, module-init-tools, udev, quilt, lintian
+Standards-Version: 3.8.2
 
 Package: openqrm
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client-5.0, syslinux, ash, python, tftpd-hpa, stunnel, dhcp3-server, screen, nagios-images, nagios-plugins, nmap, postfix, libxml-simple-perl, open-iscsi, aoetools, openssl, rsync, expect, puppetmaster, subversion, bind9
-Description: A Cloud Computing Platform
- A Cloud Computing and Data-Center Management Platform
-
+Description: Cloud Computing Platform
+ A plug-able Cloud Computing solution for VM-Management, Monitoring and HA

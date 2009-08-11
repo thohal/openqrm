@@ -4,3 +4,5 @@ openqrm binary: image-file-in-usr-lib
 openqrm binary: statically-linked-binary
 # license files from third-party components are listed in the copyright file
 openqrm binary: extra-license-file
+# intentional empty dirs
+openqrm binary: package-contains-empty-directory
