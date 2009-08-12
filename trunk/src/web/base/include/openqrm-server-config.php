@@ -17,7 +17,11 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 
-$OPENQRM_BASE_DIR=dirname(dirname(dirname(dirname(readlink("/etc/init.d/openqrm-server")))));
+if ((file_exists("/etc/init.d/openqrm")) && (is_link("/etc/init.d/openqrm"))) {
+    $OPENQRM_BASE_DIR=dirname(dirname(dirname(dirname(readlink("/etc/init.d/openqrm")))));
+} else {
+    $OPENQRM_BASE_DIR="/usr/lib";
+}
 $OPENQRM_SERVER_CONFIG_FILE="$OPENQRM_BASE_DIR/openqrm/etc/openqrm-server.conf";
 
 

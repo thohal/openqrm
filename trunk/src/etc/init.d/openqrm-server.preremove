@@ -18,5 +18,5 @@
 # Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 #
 
-/etc/init.d/openqrm-server stop
-/etc/init.d/openqrm-server uninstall
+/etc/init.d/openqrm stop
+/etc/init.d/openqrm uninstall

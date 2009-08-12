@@ -1,5 +1,4 @@
-#!/bin/bash
-# this is the postinstall script for the packaging stage
+# defaults file for openQRM
 #
 # This file is part of openQRM.
 #
@@ -17,7 +16,5 @@
 #
 # Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 #
+OPENQRM_SERVER_BASE_DIR="/usr/lib"
 
-chmod +x /usr/lib/openqrm/etc/init.d/openqrm
-ln -sf /usr/lib/openqrm/etc/init.d/openqrm /etc/init.d/openqrm
-/etc/init.d/openqrm start

@@ -21,7 +21,7 @@ To start run :
 
 	make start
 
--> this basically just runs "/etc/init.d/openqrm-server start"
+-> this basically just runs "/etc/init.d/openqrm start"
 -> installation phase is not needed any more and got eliminated
 -> initialization happens automatically on first-start
 -> initialization automatically checks for runtime-requirements

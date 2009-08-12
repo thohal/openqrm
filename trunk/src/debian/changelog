@@ -22,7 +22,12 @@ openqrm (4.5-0ubuntu1) karmic; urgency=low
   * Added "#DEBHELPER#" token to debian/{post,pre}*
   * Adapted standard way to stop/start of a service
 
- -- Matthias Rechenburg <matt@openqrm.com>  Tue, 11 Aug 2009 15:05:55 +0200
+  [ Matthias Rechenburg ]
+  * Added debian/openqrm.init init script
+  * Cleaned up build dependencies
+  * Fixed postinst/postrm/prerm
+
+ -- Matthias Rechenburg <matt@openqrm.com>  Wed, 12 Aug 2009 17:59:11 +0200
 
 openqrm (4.3-1.1mea5.1) unstable; urgency=low
 
