@@ -1,0 +1,165 @@
+#!/bin/bash
+# init script for the openQRM collectd-plugin
+#
+# This file is part of openQRM.
+#
+# openQRM is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2
+# as published by the Free Software Foundation.
+#
+# openQRM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+#
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/include/openqrm-plugin-collectd-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/etc/openqrm-plugin-collectd.conf
+openqrm_server_get_config
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+
+COLLECTD_CONF="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/etc/collectd.conf"
+COLLECTD_DATA_DIR="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/data"
+
+function openqrm_plugin_collectd_start() {
+	echo "Starting the openQRM collectd-plugin"
+	kill -9 `ps ax | grep collectd | grep -v openqrm | grep -v grep | awk {' print $1 '}` 2>/dev/null
+	openqrm_chkconfig del collectd
+    # start collectd
+	if /usr/sbin/collectdmon -P /var/run/collectdmon.pid -- -C $COLLECTD_CONF; then
+        touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/collectd/.running
+    fi
+}
+
+
+function openqrm_plugin_collectd_stop() {
+	echo "Stopping the openQRM collectd-plugin"
+	/etc/init.d/collectd stop
+	# be sure it is stopped
+	kill `ps ax | grep collectd | grep -v openqrm | grep -v grep | awk {' print $1 '}` 2>/dev/null
+    # be sure it is gone
+	kill -9 `ps ax | grep collectd | grep -v openqrm | grep -v grep | awk {' print $1 '}` 2>/dev/null
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/collectd/.running
+}
+
+function openqrm_plugin_collectd_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "collectd: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "collectd: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM collectd-plugin"
+	openqrm_plugin_collectd_stop
+
+	# remove from cron
+	rm -f /etc/cron.d/openqrm-collectd-graph
+	if [ -x /etc/init.d/cron ]; then
+        /etc/init.d/cron reload
+	elif [ -x /etc/init.d/crond ]; then
+        /etc/init.d/crond reload
+    else
+    	echo "Could not find cron init script in /etc/init.d/. Please reload cron manually!"
+    fi
+
+    # remove data dir
+    rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/data
+    rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/collectd
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-collectd.tgz
+	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/etc/collectd
+}
+
+function openqrm_plugin_collectd_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "collectd: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "collectd: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+
+	# the collectd plugin depends on dns working so it needs the dns plugin available+enabled
+	# collectd needs a hostname name. This we get from the dns-plugin config
+	if [ ! -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/openqrm-plugin-dns.conf ]; then
+		echo "ERROR: The openQRM collectd-plugin depends on the dns-plugin. Please enable the dns-plugin first!"
+		openqrm_post_event 0 "collectd-plugin" 3 "collectd-plugin" "The openQRM collectd-plugin depends on the dns-plugin. Please enable the dns-plugin first!"
+		exit 1
+	fi
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/openqrm-plugin-dns.conf
+	echo "Initializing the openQRM collectd-plugin"
+
+    # prepare collectd server config
+    mkdir -p $COLLECTD_DATA_DIR
+    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/etc/templates/openqrm-collectd.conf | \
+        sed -e "s/@@MODE@@/Listen/g" |  \
+        sed -e "s#@@COLLECTD_DATA_DIR@@#$COLLECTD_DATA_DIR#g" |  \
+        sed -e "s#@@OPENQRM_HOSTNAME@@#openqrm#g" |  \
+        sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$OPENQRM_SERVER_IP_ADDRESS/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/etc/collectd.conf
+
+	# create cron job which will update the graphs
+	cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/etc/cron.d/openqrm-collectd-graph.cron | \
+		sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > /etc/cron.d/openqrm-collectd-graph
+	if [ -x /etc/init.d/cron ]; then
+        /etc/init.d/cron reload
+	elif [ -x /etc/init.d/crond ]; then
+        /etc/init.d/crond reload
+    else
+    	echo "Could not find cron init script in /etc/init.d/. Please reload cron manually!"
+    fi
+    # create/clean existing stats
+    rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs
+    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/collectd
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/boot-service-collectd.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-collectd.tgz
+}
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_collectd_start
+		;;
+	stop)
+		openqrm_plugin_collectd_stop
+		;;
+	restart)
+		openqrm_plugin_collectd_stop
+		sleep 1
+		openqrm_plugin_collectd_start
+		;;
+	init)
+		openqrm_plugin_collectd_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_collectd_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+

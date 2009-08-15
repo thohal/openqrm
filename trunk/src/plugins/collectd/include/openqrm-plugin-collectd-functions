@@ -1,0 +1,71 @@
+#!/bin/bash
+# this is the functions file for the collectd-plugin
+#
+# This file is part of openQRM.
+#
+# openQRM is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2
+# as published by the Free Software Foundation.
+#
+# openQRM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+#
+COLLECTD_MANAGER_LOCK_FILE=/var/run/openqrm/collectd-plugin.lock
+COLLECTD_MANAGER_LOCK_DELAY=5
+COLLECTD_MANAGER_LOCK_RETRY=100
+COLLECTD_MANAGER_LOCK_TIMEOUT=500
+################ common collectd functions
+
+# logs for collectd
+function collectd_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "collectd plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function collectd_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $COLLECTD_MANAGER_LOCK_FILE` ]; then
+		mkdir -p `dirname $COLLECTD_MANAGER_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $COLLECTD_MANAGER_LOCK_DELAY -r $COLLECTD_MANAGER_LOCK_RETRY -l $COLLECTD_MANAGER_LOCK_TIMEOUT $COLLECTD_MANAGER_LOCK_FILE
+				RET=$?
+				collectd_log collectd_manager_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $COLLECTD_MANAGER_LOCK_FILE
+				RET=$?
+				collectd_log collectd_manager_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			collectd_log collectd_manager_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ collectd functions
+
+
+
+
+
+

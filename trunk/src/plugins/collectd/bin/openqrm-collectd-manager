@@ -1,0 +1,114 @@
+#!/bin/bash
+# this script automatically manages collectd
+#
+# This file is part of openQRM.
+#
+# openQRM is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2
+# as published by the Free Software Foundation.
+#
+# openQRM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+#
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/include/openqrm-plugin-collectd-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/etc/openqrm-plugin-collectd.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+openqrm_server_get_config
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+export LANG=C
+CURRENT_DIR=`pwd`
+
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+
+if ! which screen 1>/dev/null; then
+	echo "ERROR: The 'screen' utility is not installed! Please install and try again."
+	image_shelf_log "ERROR: The 'screen' utility is not installed! Please install and try again."
+	exit 6
+fi
+
+# the collectd plugin depends on dns working so it needs the dns plugin available+enabled
+# collectd autosigning needs a domain name. This we get from the dns-plugin config
+if [ ! -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/openqrm-plugin-dns.conf ]; then
+	echo "ERROR: The openQRM collectd-plugin depends on the dns-plugin. Please enable the dns-plugin first!"
+	openqrm_post_event 0 "collectd-plugin" 3 "collectd-plugin" "The openQRM collectd-plugin depends on the dns-plugin. Please enable the dns-plugin first!"
+	exit 1
+fi
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/openqrm-plugin-dns.conf
+
+function collectd_manager_usage() {
+	echo "Usage : $0 graph"
+	echo "      : $0 remove <appliance-name> [now/later]"
+	exit 1
+}
+
+
+# re-run in background via screen
+if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+	export RUN_IN_BACKGROUND=true
+	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+	screen -dmS $SCREEN_NAME $0 $@
+	exit	
+fi
+
+COLLECTD_MANAGER_COMMAND=$1
+
+# main
+case "$COLLECTD_MANAGER_COMMAND" in 
+	graph)
+        collectd_lock aquire
+        for APPLIANCE_NAME in `ls $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/data/`; do
+            collectd_log openqrm-collectd-manager "Creating graphs for Appliance $APPLIANCE_NAME"
+            rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs/$APPLIANCE_NAME.work
+            mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs/$APPLIANCE_NAME.work/data-snapshot/
+            cp -a `find $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/data/$APPLIANCE_NAME/ -name *.rrd` $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs/$APPLIANCE_NAME.work/data-snapshot/
+            cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs/$APPLIANCE_NAME.work
+            $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/bin/collectd2html.pl --data-dir=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs/$APPLIANCE_NAME.work/data-snapshot/ --host=$APPLIANCE_NAME | logger
+            ln -sf $APPLIANCE_NAME.html index.html
+            rm -rf data-snapshot/
+            cd $CURRENT_DIR
+            rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs/$APPLIANCE_NAME
+            mv $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs/$APPLIANCE_NAME.work $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs/$APPLIANCE_NAME
+        done
+		collectd_lock release
+		;;
+	remove)
+        APPLIANCE_NAME=$2
+        WHEN=$3
+        if [ "$APPLIANCE_NAME" == "" ]; then
+            collectd_log openqrm-collectd-manager "Got empty appliance name. Not removing ..."
+        fi
+        if [ "$WHEN" == "later" ]; then
+            # wait until the appliance is fully stopped
+            sleep 60
+        fi
+        collectd_lock aquire
+        collectd_log openqrm-collectd-manager "Removing data and graphs for Appliance $APPLIANCE_NAME"
+        # remove data
+        rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/data/$APPLIANCE_NAME
+        # remove graphs
+        rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs/$APPLIANCE_NAME
+		collectd_lock release
+		;;
+	*)
+		echo "ERROR: Free commandline arguments are not allowed"
+		collectd_manager_usage
+		exit 6
+		;;
+esac
+
