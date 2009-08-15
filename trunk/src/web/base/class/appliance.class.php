@@ -152,6 +152,7 @@ function is_id_free($appliance_id) {
 function add($appliance_fields) {
 	global $APPLIANCE_INFO_TABLE;
 	global $event;
+	global $RootDir;
 	if (!is_array($appliance_fields)) {
 		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", "Appliance_field not well defined", "", "", 0, 0, 0);
 		return 1;
@@ -164,7 +165,45 @@ function add($appliance_fields) {
 	$result = $db->AutoExecute($APPLIANCE_INFO_TABLE, $appliance_fields, 'INSERT');
 	if (! $result) {
 		$event->log("add", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", "Failed adding new appliance to database", "", "", 0, 0, 0);
-	}
+	} else {
+        $appliance_id = $appliance_fields['appliance_id'];
+        // add appliance hook
+        $this->get_instance_by_id($appliance_id);
+        // fill in the rest of the appliance info in the array for the plugin hook
+        $appliance_fields["appliance_id"]=$this->id;
+        $appliance_fields["appliance_name"]=$this->name;
+        $appliance_fields["appliance_kernelid"]=$this->kernelid;
+        $appliance_fields["appliance_imageid"]=$this->imageid;
+        $appliance_fields["appliance_cpunumber"]=$this->cpunumber;
+        $appliance_fields["appliance_cpuspeed"]=$this->cpuspeed;
+        $appliance_fields["appliance_cpumodel"]=$this->cpumodel;
+        $appliance_fields["appliance_memtotal"]=$this->memtotal;
+        $appliance_fields["appliance_swaptotal"]=$this->swaptotal;
+        $appliance_fields["appliance_capabilities"]=$this->capabilities;
+        $appliance_fields["appliance_cluster"]=$this->cluster;
+        $appliance_fields["appliance_ssi"]=$this->ssi;
+        $appliance_fields["appliance_resources"]=$this->resources;
+        $appliance_fields["appliance_highavailable"]=$this->highavailable;
+        $appliance_fields["appliance_virtual"]=$this->virtual;
+        $appliance_fields["appliance_virtualization"]=$this->virtualization;
+        $appliance_fields["appliance_virtualization_host"]=$this->virtualization_host;
+        $appliance_fields["appliance_comment"]=$this->comment;
+        $appliance_fields["appliance_event"]=$this->event;
+        // start the hook
+        $plugin = new plugin();
+        $enabled_plugins = $plugin->enabled();
+        foreach ($enabled_plugins as $index => $plugin_name) {
+            $plugin_start_appliance_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-appliance-hook.php";
+            if (file_exists($plugin_start_appliance_hook)) {
+                $event->log("add", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found plugin $plugin_name handling add-appliance event.", "", "", 0, 0, $resource->id);
+                require_once "$plugin_start_appliance_hook";
+                $appliance_function="openqrm_"."$plugin_name"."_appliance";
+                $appliance_function=str_replace("-", "_", $appliance_function);
+                $appliance_function("add", $appliance_fields);
+            }
+        }
+
+    }
 }
 
 
@@ -188,6 +227,45 @@ function update($appliance_id, $appliance_fields) {
 // removes appliance from the database
 function remove($appliance_id) {
 	global $APPLIANCE_INFO_TABLE;
+	global $RootDir;
+	global $event;
+	// remove appliance hook
+    $this->get_instance_by_id($appliance_id);
+	// fill in the rest of the appliance info in the array for the plugin hook
+	$appliance_fields["appliance_id"]=$this->id;
+	$appliance_fields["appliance_name"]=$this->name;
+	$appliance_fields["appliance_kernelid"]=$this->kernelid;
+	$appliance_fields["appliance_imageid"]=$this->imageid;
+	$appliance_fields["appliance_cpunumber"]=$this->cpunumber;
+	$appliance_fields["appliance_cpuspeed"]=$this->cpuspeed;
+	$appliance_fields["appliance_cpumodel"]=$this->cpumodel;
+	$appliance_fields["appliance_memtotal"]=$this->memtotal;
+	$appliance_fields["appliance_swaptotal"]=$this->swaptotal;
+	$appliance_fields["appliance_capabilities"]=$this->capabilities;
+	$appliance_fields["appliance_cluster"]=$this->cluster;
+	$appliance_fields["appliance_ssi"]=$this->ssi;
+	$appliance_fields["appliance_resources"]=$this->resources;
+	$appliance_fields["appliance_highavailable"]=$this->highavailable;
+	$appliance_fields["appliance_virtual"]=$this->virtual;
+	$appliance_fields["appliance_virtualization"]=$this->virtualization;
+	$appliance_fields["appliance_virtualization_host"]=$this->virtualization_host;
+	$appliance_fields["appliance_comment"]=$this->comment;
+	$appliance_fields["appliance_event"]=$this->event;
+	// start the hook
+	$plugin = new plugin();
+	$enabled_plugins = $plugin->enabled();
+	foreach ($enabled_plugins as $index => $plugin_name) {
+		$plugin_start_appliance_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-appliance-hook.php";
+		if (file_exists($plugin_start_appliance_hook)) {
+			$event->log("remove", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found plugin $plugin_name handling remove-appliance event.", "", "", 0, 0, $resource->id);
+			require_once "$plugin_start_appliance_hook";
+			$appliance_function="openqrm_"."$plugin_name"."_appliance";
+            $appliance_function=str_replace("-", "_", $appliance_function);
+			$appliance_function("remove", $appliance_fields);
+		}
+	}
+
+    // remove from db
 	$db=openqrm_get_db_connection();
 	$rs = $db->Execute("delete from $APPLIANCE_INFO_TABLE where appliance_id=$appliance_id");
 }
@@ -195,7 +273,45 @@ function remove($appliance_id) {
 // removes appliance from the database by appliance_name
 function remove_by_name($appliance_name) {
 	global $APPLIANCE_INFO_TABLE;
-	$db=openqrm_get_db_connection();
+	global $RootDir;
+	global $event;
+	// remove appliance hook
+    $this->get_instance_by_name($appliance_name);
+	// fill in the rest of the appliance info in the array for the plugin hook
+	$appliance_fields["appliance_id"]=$this->id;
+	$appliance_fields["appliance_name"]=$this->name;
+	$appliance_fields["appliance_kernelid"]=$this->kernelid;
+	$appliance_fields["appliance_imageid"]=$this->imageid;
+	$appliance_fields["appliance_cpunumber"]=$this->cpunumber;
+	$appliance_fields["appliance_cpuspeed"]=$this->cpuspeed;
+	$appliance_fields["appliance_cpumodel"]=$this->cpumodel;
+	$appliance_fields["appliance_memtotal"]=$this->memtotal;
+	$appliance_fields["appliance_swaptotal"]=$this->swaptotal;
+	$appliance_fields["appliance_capabilities"]=$this->capabilities;
+	$appliance_fields["appliance_cluster"]=$this->cluster;
+	$appliance_fields["appliance_ssi"]=$this->ssi;
+	$appliance_fields["appliance_resources"]=$this->resources;
+	$appliance_fields["appliance_highavailable"]=$this->highavailable;
+	$appliance_fields["appliance_virtual"]=$this->virtual;
+	$appliance_fields["appliance_virtualization"]=$this->virtualization;
+	$appliance_fields["appliance_virtualization_host"]=$this->virtualization_host;
+	$appliance_fields["appliance_comment"]=$this->comment;
+	$appliance_fields["appliance_event"]=$this->event;
+	// start the hook
+	$plugin = new plugin();
+	$enabled_plugins = $plugin->enabled();
+	foreach ($enabled_plugins as $index => $plugin_name) {
+		$plugin_start_appliance_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-appliance-hook.php";
+		if (file_exists($plugin_start_appliance_hook)) {
+			$event->log("remove", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found plugin $plugin_name handling remove-appliance event.", "", "", 0, 0, $resource->id);
+			require_once "$plugin_start_appliance_hook";
+			$appliance_function="openqrm_"."$plugin_name"."_appliance";
+            $appliance_function=str_replace("-", "_", $appliance_function);
+			$appliance_function("remove", $appliance_fields);
+		}
+	}
+
+    $db=openqrm_get_db_connection();
 	$rs = $db->Execute("delete from $APPLIANCE_INFO_TABLE where appliance_name='$appliance_name'");
 }
 

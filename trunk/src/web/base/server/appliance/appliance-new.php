@@ -67,6 +67,8 @@ function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 if(htmlobject_request('action') != '') {
 $strMsg = '';
 $openqrm_server = new openqrm_server();
+$OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
+global $OPENQRM_SERVER_IP_ADDRESS;
 
 	switch (htmlobject_request('action')) {
 		case 'save':
