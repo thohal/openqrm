@@ -37,10 +37,20 @@ if [ "$resource_image" == "idle" ]; then
 	exit 0
 fi
 
+# set the hostname early :)
+hostname $appliance_name
+
 # also do not run before the real init of the rootfs
 # if we have this file /etc/initrd-devices.conf we are still in the initrd
 if [ -f /etc/initrd-devices.conf ]; then
 	exit 0
+fi
+if [ -f /etc/debian_version ]; then
+	echo "$appliance_name" > /etc/hostname
+elif [ -f /etc/redhat-release ]; then
+	sed -i -e "s#HOSTNAME=.*#HOSTNAME=$appliance_name#g" /etc/sysconfig/network
+elif [ -f /etc/SuSE-release ]; then
+	echo "$appliance_name" > /etc/HOSTNAME
 fi
 
 

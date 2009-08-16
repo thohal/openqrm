@@ -27,6 +27,7 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PW
 openqrm_server_get_config
 export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 export LANG=C
+THISDIR=`pwd`
 
 # let only root run this script
 WHOAMI=`whoami`
@@ -43,6 +44,8 @@ fi
 
 function cloud_manager_usage() {
 	echo "Usage : $0 enable-ssl"
+    echo "      : $0 setup-graph <cloud-appliancename> <cloud-username> <cloud-userpassword> "
+    echo "      : $0 remove-graph <cloud-appliancename> <cloud-username>"
 	exit 1
 }
 
@@ -61,7 +64,41 @@ function cloud_manager_usage() {
 CLOUD_MANAGER_COMMAND=$1
 case "$CLOUD_MANAGER_COMMAND" in 
 
+
+	setup-graph)
+        CLOUD_APPLIANCE=$2
+        CLOUD_USER=$3
+        CLOUD_PASS=$4
+        cloud_manager_log openqrm-cloud-manager "Setting up access to collectd graphs for user $CLOUD_USER with password $CLOUD_PASS to appliance $CLOUD_APPLIANCE"
+        CLOUD_USER_HTPASSWD="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER/.htpasswd"
+        if [ -f "$CLOUD_USER_HTPASSWD" ]; then
+            htpasswd -b $CLOUD_USER_HTPASSWD $CLOUD_USER $CLOUD_PASS
+        else
+            mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER
+            cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/httpd/openqrm-user-htaccess.conf |   \
+                sed -e "s#@@CLOUD_USER@@#$CLOUD_USER#g" |   \
+                sed -e "s#@@OPENQRM_WEBSERVER_DOCUMENT_ROOT@@#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER/.htaccess
+           htpasswd -c -b $CLOUD_USER_HTPASSWD $CLOUD_USER $CLOUD_PASS
+        fi
+        cd $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER
+        ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/web/graphs/$CLOUD_APPLIANCE .
+        cd $THISDIR
+		;;
+
+	remove-graph)
+        CLOUD_APPLIANCE=$2
+        CLOUD_USER=$3
+        CLOUD_PASS=$4
+        cloud_manager_log openqrm-cloud-manager "Removing access to collectd graphs for user $CLOUD_USER to appliance $CLOUD_APPLIANCE"
+        rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/users/$CLOUD_USER/$CLOUD_APPLIANCE
+		;;
+
+
+
+
+
 	enable-ssl)
+        # TODO
 		PRIVATE_KEY=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/ssl/private/private.key
 		CERTIFICATE_FILE=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/ssl/cerst/openqrm.crt
 		VALID_DAYS=3650

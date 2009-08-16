@@ -61,7 +61,9 @@ function my_cloud_appliances() {
 	global $thisfile;
 	global $auth_user;
     global $RootDir;
+    global $DocRoot;
     $sshterm_enabled = false;
+    $collectd_graph_enabled = false;
 
     // check if to show sshterm-login
     $cc_conf = new cloudconfig();
@@ -72,8 +74,15 @@ function my_cloud_appliances() {
             $sshterm_enabled = true;
         }
     }
+    // collectd enabled ?
+    $show_collectd_graph = $cc_conf->get_value(19);	// show_collectd_graph
+    if (!strcmp($show_collectd_graph, "true")) {
+        if (file_exists("$RootDir/plugins/collectd/.running")) {
+            $collectd_graph_enabled = true;
+        }
+    }
 
-	$appliance_tmp = new appliance();
+    $appliance_tmp = new appliance();
 	$table = new htmlobject_db_table('appliance_id');
 
 	$disp = '<h1>My Cloud Appliances</h1>';
@@ -260,6 +269,18 @@ function my_cloud_appliances() {
         if ($show_unpause_button) {
             $cloudappliance_action .= "<input type=\"image\" name=\"action\" value=\"unpause\" src=\"../img/unpause.png\" alt=\"Un-Pause\">";
         }
+        if ($collectd_graph_enabled) {
+            $collectd_graph_link="/cloud-portal/user/users/".$clouduser->name."/".$appliance->name."/index.html";
+            if (file_exists($DocRoot.$collectd_graph_link)) {
+                $cloudappliance_action .= "<a href=\"$collectd_graph_link\" target=\"_BLANK\">";
+                $cloudappliance_action .= "<img src=\"../img/graphs.png\" border=\"0\" width=\"25\" height=\"25\" alt=\"System Graphs\" title=\"System Graphs\">";
+                $cloudappliance_action .= "</a>";
+            } else {
+                $cloudappliance_action .= "<img src=\"../img/progress.gif\" border=\"0\" width=\"25\" height=\"25\" alt=\"Collecting Data, Graphs will be available soon\" title=\"Collecting Data, Graphs will be available soon\">";
+            }
+        }
+
+
         $appliance_comment = $appliance_db["appliance_comment"];
 		$arBody[] = array(
 			'appliance_state' => "<img src=$state_icon>",

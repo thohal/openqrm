@@ -1089,8 +1089,32 @@ function openqrm_cloud_monitor() {
 				$rmail_admin->var_array = $arr;
 				$rmail_admin->send();
 
-				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Provisioning resource no. $cr_resource_number request ID $cr_id finished", "", "", 0, 0, 0);
 
+				// ################################## setup access to collectd graphs ####################
+
+				// check if collectd is enabled
+				$collectd_conf = new cloudconfig();
+				$show_collectd_graphs = $collectd_conf->get_value(19);	// show_collectd_graphs
+				if (!strcmp($show_collectd_graphs, "true")) {
+					// is collectd enabled ?
+					if (file_exists("$RootDir/plugins/collectd/.running")) {
+						// check if we have a collectd config in the request
+						$collectd_appliance = $appliance->name;
+                        $collectd_debug = "Setting up access to the collectd graphs of appliance $collectd_appliance for Cloud user $cu_name";
+                        $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", $collectd_debug, "", "", 0, 0, 0);
+                        // here we still have the valid user object, get the password
+                        $cu_pass = $cu->password;
+                        // send command to the openQRM-server
+                        $setup_collectd = $OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/cloud/bin/openqrm-cloud-manager setup-graph $collectd_appliance $cu_name $cu_pass";
+                        $openqrm_server->send_command($setup_collectd);
+
+					}
+				}
+
+
+				// ################################## provision finished ####################
+
+				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Provisioning resource no. $cr_resource_number request ID $cr_id finished", "", "", 0, 0, 0);
 				sleep(10);
 			}
 	
@@ -1347,7 +1371,29 @@ function openqrm_cloud_monitor() {
 				$arr = array('@@ID@@'=>"$cr_id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$stop", '@@IP@@'=>"$resource_external_ip", '@@RESNUMBER@@'=>"$deprovision_resource_number");
 				$rmail->var_array = $arr;
 				$rmail->send();
-		
+
+
+				// ################################## setup access to collectd graphs ####################
+
+				// check if collectd is enabled
+				$collectd_conf = new cloudconfig();
+				$show_collectd_graphs = $collectd_conf->get_value(19);	// show_collectd_graphs
+				if (!strcmp($show_collectd_graphs, "true")) {
+					// is collectd enabled ?
+					if (file_exists("$RootDir/plugins/collectd/.running")) {
+						// check if we have a collectd config in the request
+						$collectd_appliance = $appliance->name;
+                        $collectd_debug = "Removing access to the collectd graphs of appliance $collectd_appliance for Cloud user $cu_name";
+                        $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", $collectd_debug, "", "", 0, 0, 0);
+                        // send command to the openQRM-server
+                        $remove_collectd = $OPENQRM_SERVER_BASE_DIR."/openqrm/plugins/cloud/bin/openqrm-cloud-manager remove-graph $collectd_appliance $cu_name";
+                        $openqrm_server->send_command($remove_collectd);
+					}
+				}
+
+    			// ################################## finsihed de-provision ####################
+
+
 				// we cannot remove the appliance here because its image is still in use
 				// and the appliance (id) is needed for the removal
 				// so the image-remove mechanism also cares to remove the appliance

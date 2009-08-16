@@ -88,7 +88,7 @@ function my_cloud_manager() {
 	// db select
     $request_count=0;
 	$cl_request = new cloudrequest();
-	$request_array = $cl_request->display_overview($table->offset, 1000, 'cr_id', 'ASC');
+	$request_array = $cl_request->display_overview($table->offset, 1000, 'cr_id', 'DESC');
 	foreach ($request_array as $index => $cr) {
 		// user name
 		$cu_tmp = new clouduser();
