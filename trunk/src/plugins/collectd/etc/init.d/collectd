@@ -68,11 +68,13 @@ function collectd_start() {
         sed -e "s/@@MODE@@/Server/g" |  \
         sed -e "s#@@COLLECTD_DATA_DIR@@#$COLLECTD_DATA_DIR#g" |  \
         sed -e "s#@@OPENQRM_HOSTNAME@@#$appliance_name#g" |  \
-        sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$resource_openqrmserver/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/collectd/etc/collectd.conf
+        sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$resource_openqrmserver/g" > $COLLECTD_CONF
 
     # start collectd
-	if /usr/sbin/collectdmon -P /var/run/collectdmon.pid -- -C $COLLECTD_CONF; then
-    	echo "ERROR: Could not start collectd"
+	if ! /usr/sbin/collectdmon -P /var/run/collectdmon.pid -- -C $COLLECTD_CONF 1>/dev/null 2>&1; then
+        if ! /usr/sbin/collectd -C $COLLECTD_CONF; then
+            echo "ERROR: Could not start collectd"
+        fi
     fi
 }
 
@@ -82,9 +84,9 @@ function collectd_stop() {
 	if [ -x /etc/init.d/collectd ]; then
 		/etc/init.d/collectd stop
 	fi
-	kill `ps ax | grep collectd | grep -v openqrm | grep -v grep | awk {' print $1 '}` 2>/dev/null
+	kill `ps ax | grep collectd.conf | grep -v grep | awk {' print $1 '}` 2>/dev/null
     # be sure it is gone
-	kill -9 `ps ax | grep collectd | grep -v openqrm | grep -v grep | awk {' print $1 '}` 2>/dev/null
+	kill -9 `ps ax | grep collectd.conf | grep -v grep | awk {' print $1 '}` 2>/dev/null
 }
 
 
