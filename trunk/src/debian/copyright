@@ -10,12 +10,30 @@ License: GPL-2
 This package was debianized by Matthias Rechenburg <matt@openqrm.com>,
 Martin Alfke <martin@ppcnux.de> and Thomas Halinka <mail@thohal.de>.
 
-Please also look if there are files or directories which have a different 
-copyright/license attached and list them here :
-usr/lib/openqrm/plugins/cloud/cloud-portal/web/user/js/development-bundle/GPL-LICENSE.txt
-usr/lib/openqrm/plugins/cloud/cloud-portal/web/user/js/development-bundle/MIT-LICENSE.txt
-usr/lib/openqrm/plugins/idoit/web/app/src/classes/libraries/phpmailer/LICENSE
-usr/lib/openqrm/plugins/idoit/web/app/src/tools/js/scriptaculous/MIT-LICENSE
-usr/lib/openqrm/web/base/js/jquery/development-bundle/GPL-LICENSE.txt
-usr/lib/openqrm/web/base/js/jquery/development-bundle/MIT-LICENSE.txt
+Included components with with a separated license :
+
+Jquery - GPL2 / MIT
+usr/lib/openqrm/plugins/cloud/cloud-portal/web/user/js/development-bundle/*
+usr/lib/openqrm/web/base/js/jquery/development-bundle/*
+
+Interface - GPL2 / MIT
+usr/lib/openqrm/plugins/cloud/cloud-portal/web/user/js/interface.js
+
+Busybox - GPL2
+usr/lib/openqrm/etc/templates/openqrm-initrd-default.tgz
+
+Hwdata-knoppix - GPL2 / XFree86
+usr/lib/openqrm/etc/templates/openqrm-initrd-default.tgz
+
+Hwsetup - GPL2
+usr/lib/openqrm/etc/templates/openqrm-initrd-default.tgz
+
+Kudzu-knoppix - GPL2
+usr/lib/openqrm/etc/templates/openqrm-initrd-default.tgz
+
+Dropbear - MIT
+usr/lib/openqrm/bin/dbclient
+usr/lib/openqrm/bin/dropbearconvert
+usr/lib/openqrm/bin/dropbearkey
+usr/lib/openqrm/sbin/dropbear
 

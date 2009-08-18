@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+
+# uninstall the openQRM Server
+rm -f /etc/openqrm
+rm -rf /usr/share/openqrm
+/etc/init.d/openqrm uninstall
+
+#DEBHELPER#
+

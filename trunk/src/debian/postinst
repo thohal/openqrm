@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+
+# init the openQRM Server
+ln -sf /usr/lib/openqrm/etc /etc/openqrm
+mkdir -p /usr/share/openqrm
+ln -sf /usr/lib/openqrm/web /usr/share/openqrm/web
+ln -sf /usr/lib/openqrm/plugins /usr/share/openqrm/plugins
+ln -sf /usr/lib/openqrm/include /usr/share/openqrm/include
+ln -sf /usr/lib/openqrm/bin /usr/share/openqrm/bin
+ln -sf /usr/lib/openqrm/sbin /usr/share/openqrm/sbin
+ln -sf /usr/lib/openqrm/tftpboot /usr/share/openqrm/tftpboot
+/etc/init.d/openqrm init
+
+#DEBHELPER#
+

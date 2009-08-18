@@ -2,75 +2,7 @@ openqrm (4.5-0ubuntu1) karmic; urgency=low
 
   [ Matthias Rechenburg ]
   * Initial release (LP: #278559) 
-
-  [ Martin Alfke ]
-  * New upstream version
-
-  [ Matthias Rechenburg ]
   * Enhanced ubuntu/debian build system
 
-  [ Matthias Rechenburg ]
-  * Updated package name to 4.5-0ubuntu1
-  * Added original source package openqrm_4.5.orig.tar.gz
-  * Enhanced extended package description
-  * Set debhelper dependency to (>= 6.0.7~)
-  * Set standards version to 3.8.2
-  * Better make commands in rules file
-  * Fixed wrong filename in debian/patches/series
-  * Removed lintian-override for diff-contains-svn-control-dir
-  * Added lintian-override for package-contains-empty-directory
-  * Added "#DEBHELPER#" token to debian/{post,pre}*
-  * Adapted standard way to stop/start of a service
-
-  [ Matthias Rechenburg ]
-  * Added debian/openqrm.init init script
-  * Cleaned up build dependencies
-  * Fixed postinst/postrm/prerm
-
- -- Matthias Rechenburg <matt@openqrm.com>  Wed, 12 Aug 2009 17:59:11 +0200
-
-openqrm (4.3-1.1mea5.1) unstable; urgency=low
-
-  * new patch for lenny dependency on libpci-dev
-
- -- Martin Alfke <tuxmea@users.sourceforge.net>  Tue, 24 Feb 2009 04:46:47 +0100
-
-openqrm (4.3-1.1mea5) unstable; urgency=low
-
-  * Non-maintainer upload.
-  * added postinst scripts to plugins, modified prerm scripts
-
- -- Martin Alfke <tuxmea@users.sourceforge.net>  Wed, 14 Jan 2009 11:18:50 +0100
-
-openqrm (4.3-1.1mea4) unstable; urgency=low
-
-  * added new missing packages
-
- -- Martin Alfke <tuxmea@users.sourceforge.net>  Thu, 08 Jan 2009 17:50:54 +0100
-
-openqrm (4.3-1.1mea3) unstable; urgency=low
-
-  * new control file
-
- -- Martin Alfke <martin@ppcnux.de>  Thu, 08 Jan 2009 14:39:27 +0100
-
-openqrm (4.3-1.1mea2) unstable; urgency=low
-
-  * changed to cdbs
-  * added dependencies for lenny
-
- -- Martin Alfke <martin@ppcnux.de>  Thu, 08 Jan 2009 13:50:36 +0100
-
-openqrm (4.3-1.1mea1) unstable; urgency=low
-
-  * Non-maintainer upload.
-  * first binary package
-
- -- Martin Alfke <martin@ppcnux.de>  Thu, 08 Jan 2009 13:35:52 +0100
-
-openqrm (4.3-1) unstable; urgency=low
-
-  * Initial packaging
-
- -- Thomas Halinka <mail@thohal.de>  Thu, 01 May 2008 00:53:04 +0200
+ -- Matthias Rechenburg <matt@openqrm.com>  Tue, 18 Aug 2009 15:45:31 +0200
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# openqrm	openQRM-server init script
+# openqrm	openQRM Server init script
 #
 # chkconfig: 2345 98 24
 # description: openQRM is the next generation Linux Data Center management
@@ -11,8 +11,8 @@
 # Required-Stop: $local_fs $network $remote_fs
 # Default-Start:  2 3 4 5
 # Default-Stop: 0 1 6
-# Short-Description: openQRM-server init script
-# Description: openQRM-server init script
+# Short-Description: openQRM Server init script
+# Description: openQRM Server init script
 ### END INIT INFO
 
 #
@@ -41,6 +41,7 @@ mkdir -p $(dirname $LOCKFILE)
 # a new line for sed
 NEWLINE='
 '
+. /lib/lsb/init-functions
 
 # static basedir for ubuntu/debian packaging
 if [ -f /etc/default/openqrm ]; then
@@ -53,15 +54,23 @@ export OPENQRM_SERVER_BASE_DIR
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
-. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions
-
 
 # functions
 
 
+function stop_exec_subsystem() {
+    killall dropbear 1>/dev/null 2>&1
+    killall openqrm-cmd-queue 1>/dev/null 2>&1
+    # in case killall is not available
+    kill `ps ax | grep dropbear | grep -v grep | grep openqrm | awk {' print $1 '}` 2>/dev/null
+    kill `ps ax | grep openqrm-cmd-queue | grep -v grep | awk {' print $1 '}` 2>/dev/null
+}
+
+
+
 function openqrm_server_init() {
 
-	echo "First startup detected. Running initialization."
+	log_begin_msg "First startup detected. Running initialization."
     /bin/rm -f ${LOCKFILE}
 	# make sure to have all enabled plugins stopped and uninstalled
 	if [ -d $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/ ]; then
@@ -77,69 +86,29 @@ function openqrm_server_init() {
 
 	# need to copy pxelinux.0 to the tftpboot dir
 	# sym-linking it does not work because the tftpd-server does not support symlinks
+    log_begin_msg "Preparing $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0"
     if [ ! -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0 ]; then
         if [ -f /usr/lib/syslinux/pxelinux.0 ]; then
             cp -a /usr/lib/syslinux/pxelinux.0 $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0
         elif [ -f /usr/share/syslinux/pxelinux.0 ]; then
             cp -a /usr/share/syslinux/pxelinux.0 $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0
         else
-            echo "ERROR: Could not find syslinux pxelinux.0 file!"
-            echo "       Please copy it manually to $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/"
-            echo "       and try again ..."
-            exit 1
+            log_end_msg 1
+            return 1
         fi
     fi
 
     # make sure apache and db are up
-	if [ -f /etc/debian_version ]; then
-        if ! ps ax | grep apache2 | grep -v grep 1>/dev/null; then
-            $OPENQRM_WEBSERVER_INIT start
-        fi
-	elif [ -f /etc/redhat-release ]; then
-        if ! ps ax | grep httpd | grep -v grep 1>/dev/null; then
-            $OPENQRM_WEBSERVER_INIT start
-        fi
-	elif [ -f /etc/SuSE-release ]; then
-        if ! ps ax | grep apache | grep -v grep 1>/dev/null; then
-            $OPENQRM_WEBSERVER_INIT start
-        fi
-	fi
+    if ! ps ax | grep apache2 | grep -v grep 1>/dev/null; then
+        $OPENQRM_WEBSERVER_INIT start
+    fi
 
 	# link the web application directory to the documentroot
 	HTPASSWD="htpasswd"
-	if [ -f /etc/debian_version ]; then
-		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
-		# the default apache config normally does not allow to override the authconfig (needed for basic auth)
-		# so we allow it for the openqrm directory
-		cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/apache2/conf.d/openqrm-httpd.conf
-	elif [ -f /etc/redhat-release ]; then
-		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
-		cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/httpd/conf.d/openqrm-httpd.conf
-	elif [ -f /etc/SuSE-release ]; then
-		HTPASSWD="htpasswd2"
-		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
-		cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/apache2/conf.d/openqrm-httpd.conf
-		# we need a special treatment for suse to allow followsymlinks in the default-setup
-		DEFAULT_CONF=/etc/apache2/default-server.conf
-		NEW_CONF=/etc/apache2/default-server.conf.new
-		if [ -f $DEFAULT_CONF ]; then
-			if grep Options $DEFAULT_CONF | grep -v "#" | head -n1 | grep None 1>/dev/null; then
-				echo "Need to allow FollowSymLinks in default-server.conf"
-				OLD_IFS=$IFS
-				IFS=$NEWLINE
-				for LINE in `cat $DEFAULT_CONF`; do
-					if echo $LINE | grep -v '#' | grep Options | grep None 1>/dev/null; then
-						echo "  Options FollowSymLinks" >> $NEW_CONF
-					else
-						echo $LINE >> $NEW_CONF
-					fi
-				done
-		        IFS=$OLD_IFS
-		        cp -f $DEFAULT_CONF $DEFAULT_CONF.org
-		        mv -f $NEW_CONF $DEFAULT_CONF
-			fi
-		fi
-	fi
+    ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
+    # the default apache config normally does not allow to override the authconfig (needed for basic auth)
+    # so we allow it for the openqrm directory
+    cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/apache2/conf.d/openqrm-httpd.conf
 	$OPENQRM_WEBSERVER_INIT reload
 
 	# create the .htaccess file
@@ -164,7 +133,6 @@ function openqrm_server_init() {
     ln -sf openqrm-client.tgz openqrm-client.$OPENQRM_CLIENT_ARCH.tgz
     cd - 1>/dev/null
 
-
     # init and start the remote execution layer
 	case "$OPENQRM_EXECUTION_LAYER" in
 		dropbear)
@@ -174,7 +142,6 @@ function openqrm_server_init() {
 			$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dropbearkey -t rsa -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key
 			# allow the webserver user to read it
 			chmod 600 $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key
-
 			# create authorized_keys
 			PUBLIC_KEY=`$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dropbearkey -y -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key | grep ssh`
 			if [ ! -d /root/.ssh ]; then
@@ -194,34 +161,23 @@ function openqrm_server_init() {
 			# create the comman-queue dir
 			mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/var/spool/
 			chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/var/spool
-
+            stop_exec_subsystem
 			# start the openqrm-execd daemon
+            log_daemon_msg "Starting openQRM Exec-subsystem"
 			$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/dropbear -p $OPENQRM_EXEC_PORT -r $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key
 			# start the openqrm-cmd-queue
+            log_daemon_msg "Starting openQRM Command-Queue"
 			$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-cmd-queue &
-
 			;;
 		*)
-			echo "ERROR: Un-supported command execution layer $openqrm_execution_layer ! Exiting."
+			log_failure_msg "Un-supported command execution layer $openqrm_execution_layer ! Exiting."
 			return 1
 			;;
 	esac
 
     # create unconfigured file containing a list of available network cards to setup openQRM on
     ifconfig -a | grep -v inet6  | grep -B1 inet | grep -i link | grep -v lo | awk {' print $1 '} > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured
-    echo
-    if [ "$OPENQRM_SERVER_IP_ADDRESS" != "" ]; then
-        echo "Please configure your openQRM Server at : http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/"
-    else
-        echo "Please configure your openQRM Server at : http://[server-ip-address]/openqrm/"
-    fi
-    echo
-    echo "-> User : openqrm"
-    echo "-> Password : openqrm"
-    echo
-    echo "Please make sure to change the default password after startup !"
-    echo
-    sleep 2
+    log_end_msg 0
 }
 
 
@@ -233,24 +189,18 @@ function openqrm_server_init_config() {
     RESTORE_LAST_STATE=$1
 
     if [ -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured ]; then
-        echo "NOTICE: Initialyzing the openQRM Database ..."
-        echo "NOTICE: Initialyzing the openQRM Database ..." | logger
-
+        log_begin_msg "Initialyzing the openQRM Database"
 
         # initialyze the database
         chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions
         if ! $OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions init; then
-            echo "ERROR: Could not initialyze the openQRM Database !"
-            echo "       Please check your Database-configuration"
-            echo "ERROR: Could not initialyze the openQRM Database !" | logger
-            echo "       Please check your Database-configuration" | logger
+            log_end_msg 1
             return -1
         fi
 
         # check if we should restore the last state
         if [ "$RESTORE_LAST_STATE" == "restore" ]; then
-            echo "NOTICE: Restoring last openQRM state backup ..."
-            echo "NOTICE: Restoring last openQRM state backup ..." | logger
+            log_begin_msg "Restoring last openQRM state backup"
             # check if backups are not locked
             if [ ! -f $OPENQRM_SERVER_STATE_DIR/locked ]; then
                 if [ "$OPENQRM_RESTORE_STATE" != "false" ]; then
@@ -258,66 +208,49 @@ function openqrm_server_init_config() {
                     LAST_SERVER_STATE_BACKUP=`ls -tr $OPENQRM_SERVER_STATE_DIR/uninstall-* 2>/dev/null | tail -n1 | sed -s "s/\.tgz//g"`
                     if [ "$LAST_SERVER_STATE_BACKUP" != "" ]; then
                         LAST_SERVER_STATE_BACKUP=`basename $LAST_SERVER_STATE_BACKUP`
-                        echo "NOTICE: Found backup of last openQRM-server state $LAST_SERVER_STATE_BACKUP, restoring it"
-                        echo "NOTICE: Found backup of last openQRM-server state $LAST_SERVER_STATE_BACKUP, restoring it" | logger
+                        log_begin_msg "Found backup of last openQRM Server state $LAST_SERVER_STATE_BACKUP, restoring it"
                         openqrm_server_state restore $LAST_SERVER_STATE_BACKUP
                     fi
                 fi
             else
-                echo "NOTICE: Found openQRM-server state backups locked by $OPENQRM_SERVER_STATE_DIR/locked"
-                echo "        To enable automatic state restore please remove this lockfile."
-                echo "NOTICE: Skipping openQRM-server state restore"
-                echo "NOTICE: Found openQRM-server state backups locked by $OPENQRM_SERVER_STATE_DIR/locked" | logger
-                echo "NOTICE: Skipping openQRM-server state restore" | logger
+                log_warning_msg "Found openQRM Server state backups locked by $OPENQRM_SERVER_STATE_DIR/locked"
             fi
         else
-            echo "NOTICE: Skipping openQRM state restore ..."
-            echo "NOTICE: Skipping openQRM state restore ..." | logger
+            log_begin_msg "NOTICE: Skipping openQRM state restore"
         fi
+        log_end_msg 0
 
         # create $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default
-        echo "NOTICE: Creating default PXE-configuration"
-        echo "NOTICE: Creating default PXE-configuration" | logger
+        log_begin_msg "Creating default PXE-configuration"
         mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/
         openqrm_server_create_pxe_config -1 default default
+        log_end_msg 0
 
         # add automatic startup to init
         openqrm_chkconfig add openqrm
 
-        # here we create + add the default kernel+kernel-version to the openQRM-server
+        # here we create + add the default kernel+kernel-version to the openQRM Server
         # via the kernel-action.form. If this returns bad something is wrong
         DEFAULT_KERNEL_VERSION=`uname -r`
-        echo "NOTICE: Creating the default kernel version $DEFAULT_KERNEL_VERSION"
-        echo "NOTICE: Creating the default kernel version $DEFAULT_KERNEL_VERSION" | logger
-        if [ -f /etc/debian_version ]; then
-            INITRD_TYPE="initramfs"
-        elif [ -f /etc/SuSE-release ]; then
-            INITRD_TYPE="initramfs"
-        elif [ -f /etc/fedora-release ]; then
-            INITRD_TYPE="initramfs"
-        else
-            INITRD_TYPE="ext2"
-        fi
+        log_begin_msg "Creating the default kernel version $DEFAULT_KERNEL_VERSION"
+        INITRD_TYPE="initramfs"
         openqrm_server_create_kernel default $DEFAULT_KERNEL_VERSION / $INITRD_TYPE
         if ! openqrm_server_manage_kernel add openqrm openqrm default $DEFAULT_KERNEL_VERSION; then
-            echo "ERROR: Could not add the default kernel!"
-            echo "         Please check your Apache-configuration according openQRM"
-            echo "ERROR: Could not add the default kernel! Please check your Apache-configuration according openQRM" | logger
+            log_end_msg 1
             return -1
         fi
+        log_end_msg 0
 
         # remove configure lock
         rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured
 
         # (re-) start
         $0 start
-        echo "NOTICE: Successfully initialyzed and started the openQRM Server"
-        echo "NOTICE: Successfully initialyzed and started the openQRM Server" | logger
+        log_success_msg "Successfully initialyzed and started the openQRM Server"
         return 0
 
     else
-        echo "NOTICE: This openQRM Server is already configured. Skipping re-init"
-        echo "NOTICE: This openQRM Server is already configured. Skipping re-init" | logger
+        log_warning_msg "This openQRM Server is already configured. Skipping re-init"
         return 0
     fi
 
@@ -329,7 +262,7 @@ function openqrm_server_init_config() {
 
 function openqrm_server_uninstall() {
 
-	echo "Uninstalling openQRM-server ver. $OPENQRM_SERVER_VERSION"
+	log_begin_msg "Uninstalling openQRM Server ver. $OPENQRM_SERVER_VERSION"
 
 	# backup state
     chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions
@@ -346,24 +279,15 @@ function openqrm_server_uninstall() {
 	# drop db
 	$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions drop
 
-	# remove automatic startup
-	openqrm_chkconfig del openqrm
-	rm -f /etc/init.d/openqrm
-
 	# removing the apache web + config
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
-	if [ -f /etc/debian_version ]; then
-		rm -f /etc/apache2/conf.d/openqrm-httpd.conf
-	elif [ -f /etc/redhat-release ]; then
-		rm -f /etc/httpd/conf.d/openqrm-httpd.conf
-	elif [ -f /etc/SuSE-release ]; then
-		rm -f /etc/apache2/conf.d/openqrm-httpd.conf
-	fi
+    rm -f /etc/apache2/conf.d/openqrm-httpd.conf
 	$OPENQRM_WEBSERVER_INIT reload
 
-	# remove default file to re-init at next startup
+	# remove default file
 	rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default
 
+    stop_exec_subsystem
 	case "$OPENQRM_EXECUTION_LAYER" in
 		dropbear)
 			# remove dropbear key
@@ -371,73 +295,73 @@ function openqrm_server_uninstall() {
 			rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/var
 			;;
 	esac
-	echo "Uninstallation of openQRM-server finished"
+	log_end_msg 0
 }
 
 
 function openqrm_server_start() {
 
 	if [ -f ${LOCKFILE} ]; then
-		echo "openQRM-server ver. $OPENQRM_SERVER_VERSION is already running"
+		log_failure_msg "openQRM Server ver. $OPENQRM_SERVER_VERSION is already running"
         return 1
     fi
     # check if we are at first-startup, if yes do initialization
-    if [ ! -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default ]; then
+    if [ ! -f /etc/apache2/conf.d/openqrm-httpd.conf ]; then
         openqrm_server_init
     fi
     if [ -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured ]; then
-        echo "Skipping startup. This openQRM-server ver. $OPENQRM_SERVER_VERSION is not configured yet."
+        if [ "$OPENQRM_SERVER_IP_ADDRESS" != "" ]; then
+            log_success_msg "Please configure your openQRM Server at : http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/"
+        else
+            log_success_msg "Please configure your openQRM Server at : http://[server-ip-address]/openqrm/"
+        fi
+        log_success_msg "-> User : openqrm"
+        log_success_msg "-> Password : openqrm"
+        sleep 2
+        log_end_msg 0
+
     else
-        echo "Starting the openQRM-server ver. $OPENQRM_SERVER_VERSION"
+        log_begin_msg "Starting the openQRM Server ver. $OPENQRM_SERVER_VERSION"
         # check openqrm-interface
         ifconfig "$OPENQRM_SERVER_INTERFACE" | grep inet 1>/dev/null 2>&1 || \
             { echo "Interface $OPENQRM_SERVER_INTERFACE is down. Please configure and activate it and try again"; return 1; }
         CONFIGURED_IP=$(cat $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default | grep "openqrm=" | sed -e "s/.*openqrm=//" | awk {' print $1 '})
         if [ "$OPENQRM_SERVER_IP_ADDRESS" != "$CONFIGURED_IP" ]; then
-            echo -e "Interface $OPENQRM_SERVER_INTERFACE has the wrong ip-configuration.\n" \
-                  "       The openQRM-server is configured to have the ip-address $CONFIGURED_IP\n" \
-                  "       but the interface $OPENQRM_SERVER_INTERFACE is running with the ip-address $OPENQRM_SERVER_IP_ADDRESS"
             # create lockfile again to forcre re-configuration
             ifconfig -a | grep -v inet6  | grep -B1 inet | grep -i link | grep -v lo | awk {' print $1 '} > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured
-            echo
-            if [ "$OPENQRM_SERVER_IP_ADDRESS" != "" ]; then
-                echo "Please re-configure your openQRM Server at : http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/"
-            else
-                echo "Please re-configure your openQRM Server at : http://[server-ip-address]/openqrm/"
-            fi
-            echo
-            sleep 2
+            log_failure_msg "Interface $OPENQRM_SERVER_INTERFACE has the wrong ip-configuration"
+            log_end_msg 1
             return 1
         fi
 
         # start the execution layer
         case "$OPENQRM_EXECUTION_LAYER" in
             dropbear)
-                killall dropbear 1>/dev/null 2>&1
-                killall openqrm-cmd-queue 1>/dev/null 2>&1
+                stop_exec_subsystem
                 # start the openqrm-execd daemon
                 $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/dropbear -p $OPENQRM_EXEC_PORT -r $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key
                 # start the openqrm-cmd-queue
                 $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-cmd-queue &
                 ;;
             *)
-                echo "ERROR: Un-supported command execution layer $openqrm_execution_layer ! Exiting."
-                return 1
+                log_failure_msg "ERROR: Un-supported command execution layer $openqrm_execution_layer ! Exiting."
+                log_end_msg 1
                 ;;
         esac
 
         # and the monitoring infra-structure
         $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-monitord &
+        log_end_msg 0
 
         # start all enabled plugins
-        echo "Starting enabled openQRM-server plugins"
+        log_begin_msg "Starting enabled openQRM Server plugins"
         for OPENQRM_PLUGIN in `ls $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/`; do
             if [ -x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN ]; then
                 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN start
             fi
         done
-
         touch ${LOCKFILE}
+        log_end_msg 0
     fi
 
 }
@@ -446,46 +370,45 @@ function openqrm_server_start() {
 function openqrm_server_stop() {
 
 	if [ ! -f ${LOCKFILE} ]; then
-		echo "openQRM-server ver. $OPENQRM_SERVER_VERSION is not running"
+		log_warning_msg "openQRM Server ver. $OPENQRM_SERVER_VERSION is not running"
     else
         # stop all enabled plugins
-        echo "Stopping enabled openQRM-server plugins"
+        log_begin_msg "Stopping enabled openQRM Server plugins"
         for OPENQRM_PLUGIN in `ls $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/`; do
             if [ -x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN ]; then
                 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN stop
             fi
         done
+        log_end_msg 0
 
-        echo "Stopping the openQRM-server ver. $OPENQRM_SERVER_VERSION"
-
+        log_begin_msg "Stopping the openQRM Server ver. $OPENQRM_SERVER_VERSION"
         case "$OPENQRM_EXECUTION_LAYER" in
             dropbear)
-                killall dropbear 1>/dev/null 2>&1
-                killall openqrm-cmd-queue 1>/dev/null 2>&1
+                stop_exec_subsystem
                 ;;
             openqrm-execd)
                 killall openqrm-exec-port-monitor 1>/dev/null 2>&1
                 killall openqrm-execd 1>/dev/null 2>&1
                 ;;
             *)
-                echo "ERROR: Un-supported command execution layer $openqrm_execution_layer ! Exiting."
+                log_end_msg 1
                 return 1
                 ;;
         esac
-
         killall openqrm-monitord 1>/dev/null 2>&1
         /bin/rm -f ${LOCKFILE}
+        log_end_msg 0
     fi
 }
 
 
 function openqrm_server_status() {
 	if [ -f ${LOCKFILE} ]; then
-		echo "openQRM-server ver. $OPENQRM_SERVER_VERSION is running"
-        exit 0
+		log_success_msg "openQRM Server ver. $OPENQRM_SERVER_VERSION is running"
+        return 0
 	else
-		echo "openQRM-server ver. $OPENQRM_SERVER_VERSION is not running"
-        exit 3
+		log_failure_msg "openQRM Server ver. $OPENQRM_SERVER_VERSION is not running"
+        return 3
 	fi
 }
 
