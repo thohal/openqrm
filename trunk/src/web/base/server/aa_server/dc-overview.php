@@ -180,12 +180,15 @@ if(htmlobject_request('action') != '') {
             // divide with number of active resources, appliances + storages
             if ($resources_active != 0) {
                 $dc_load_overall = $dc_load_overall/$resources_active;
+                $dc_load_overall = number_format($dc_load_overall, 2, '.', '');
             }
             if ($appliance_active != 0) {
                 $appliance_load_overall = $appliance_load_overall/$appliance_active;
+                $appliance_load_overall = number_format($appliance_load_overall, 2, '.', '');
             }
             if ($storage_active != 0) {
                 $storage_load_overall = $storage_load_overall/$storage_active;
+                $storage_load_overall = number_format($storage_load_overall, 2, '.', '');
             }
 
             
