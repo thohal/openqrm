@@ -36,7 +36,7 @@ openQRM is the next generation data-center management platform.
 make
 
 %install
-mkdir -p $RPM_BUILD_ROOT/usr/lib
+mkdir -p $RPM_BUILD_ROOT/usr/share
 make install DESTINATION_DIR=$RPM_BUILD_ROOT
 
 %post
@@ -45,12 +45,12 @@ make install DESTINATION_DIR=$RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-/usr/lib/openqrm/bin
-/usr/lib/openqrm/etc
-/usr/lib/openqrm/include
-/usr/lib/openqrm/sbin
-/usr/lib/openqrm/tftpboot
-/usr/lib/openqrm/web
+/usr/share/openqrm/bin
+/usr/share/openqrm/etc
+/usr/share/openqrm/include
+/usr/share/openqrm/sbin
+/usr/share/openqrm/tftpboot
+/usr/share/openqrm/web
 
 #%clean
 #make clean
@@ -64,10 +64,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-aoe-storage
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/aoe-storage
+/usr/share/openqrm/plugins/aoe-storage
 
 %post plugin-aoe-storage
-ln -s /usr/lib/openqrm/plugins/aoe-storage/etc/init.d/openqrm-plugin-aoe-storage /etc/init.d/openqrm-plugin-aoe-storage
+ln -s /usr/share/openqrm/plugins/aoe-storage/etc/init.d/openqrm-plugin-aoe-storage /etc/init.d/openqrm-plugin-aoe-storage
 mkdir -p /var/www/openqrm/base/plugins/aoe-storage
 
 %preun plugin-aoe-storage
@@ -83,10 +83,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-citrix
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/citrix
+/usr/share/openqrm/plugins/citrix
 
 %post plugin-citrix
-ln -s /usr/lib/openqrm/plugins/citrix/etc/init.d/openqrm-plugin-citrix /etc/init.d/openqrm-plugin-citrix
+ln -s /usr/share/openqrm/plugins/citrix/etc/init.d/openqrm-plugin-citrix /etc/init.d/openqrm-plugin-citrix
 mkdir -p /var/www/openqrm/base/plugins/citrix
 
 %preun plugin-citrix
@@ -102,10 +102,10 @@ Requires: openqrm, screen
 openQRM is the next generation data-center management platform.
 %files plugin-cloud
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/cloud
+/usr/share/openqrm/plugins/cloud
 
 %post plugin-cloud
-ln -s /usr/lib/openqrm/plugins/cloud/etc/init.d/openqrm-plugin-cloud /etc/init.d/openqrm-plugin-cloud
+ln -s /usr/share/openqrm/plugins/cloud/etc/init.d/openqrm-plugin-cloud /etc/init.d/openqrm-plugin-cloud
 mkdir -p /var/www/openqrm/base/plugins/cloud
 
 %preun plugin-cloud
@@ -121,10 +121,10 @@ Requires: openqrm, dhcp
 openQRM is the next generation data-center management platform.
 %files plugin-dhcpd
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/dhcpd
+/usr/share/openqrm/plugins/dhcpd
 
 %post plugin-dhcpd
-ln -s /usr/lib/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd /etc/init.d/openqrm-plugin-dhcpd
+ln -s /usr/share/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd /etc/init.d/openqrm-plugin-dhcpd
 mkdir -p /var/www/openqrm/base/plugins/dhcpd
 
 %preun plugin-dhcpd
@@ -140,10 +140,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-dns
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/dns
+/usr/share/openqrm/plugins/dns
 
 %post plugin-dns
-ln -s /usr/lib/openqrm/plugins/dns/etc/init.d/openqrm-plugin-dns /etc/init.d/openqrm-plugin-dns
+ln -s /usr/share/openqrm/plugins/dns/etc/init.d/openqrm-plugin-dns /etc/init.d/openqrm-plugin-dns
 mkdir -p /var/www/openqrm/base/plugins/dns
 
 %preun plugin-dns
@@ -158,10 +158,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-highavailability
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/highavailability
+/usr/share/openqrm/plugins/highavailability
 
 %post plugin-highavailability
-ln -s /usr/lib/openqrm/plugins/highavailability/etc/init.d/openqrm-plugin-highavailability /etc/init.d/openqrm-plugin-highavailability
+ln -s /usr/share/openqrm/plugins/highavailability/etc/init.d/openqrm-plugin-highavailability /etc/init.d/openqrm-plugin-highavailability
 mkdir -p /var/www/openqrm/base/plugins/highavailability
 
 %preun plugin-highavailability
@@ -177,10 +177,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-image-shelf
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/image-shelf
+/usr/share/openqrm/plugins/image-shelf
 
 %post plugin-image-shelf
-ln -s /usr/lib/openqrm/plugins/image-shelf/etc/init.d/openqrm-plugin-image-shelf /etc/init.d/openqrm-plugin-image-shelf
+ln -s /usr/share/openqrm/plugins/image-shelf/etc/init.d/openqrm-plugin-image-shelf /etc/init.d/openqrm-plugin-image-shelf
 mkdir -p /var/www/openqrm/base/plugins/image-shelf
 
 %preun plugin-image-shelf
@@ -196,10 +196,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-iscsi-storage
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/iscsi-storage
+/usr/share/openqrm/plugins/iscsi-storage
 
 %post plugin-iscsi-storage
-ln -s /usr/lib/openqrm/plugins/iscsi-storage/etc/init.d/openqrm-plugin-iscsi-storage /etc/init.d/openqrm-plugin-iscsi-storage
+ln -s /usr/share/openqrm/plugins/iscsi-storage/etc/init.d/openqrm-plugin-iscsi-storage /etc/init.d/openqrm-plugin-iscsi-storage
 mkdir -p /var/www/openqrm/base/plugins/iscsi/storage
 
 %preun plugin-iscsi-storage
@@ -215,10 +215,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-kvm
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/kvm
+/usr/share/openqrm/plugins/kvm
 
 %post plugin-kvm
-ln -s /usr/lib/openqrm/plugins/kvm/etc/init.d/openqrm-plugin-kvm /etc/init.d/openqrm-plugin-kvm
+ln -s /usr/share/openqrm/plugins/kvm/etc/init.d/openqrm-plugin-kvm /etc/init.d/openqrm-plugin-kvm
 mkdir -p /var/www/openqrm/base/plugins/kvm
 
 %preun plugin-kvm
@@ -234,10 +234,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-linux-vserver
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/linux-vserver
+/usr/share/openqrm/plugins/linux-vserver
 
 %post plugin-linux-vserver
-ln -s /usr/lib/openqrm/plugins/linux-vserver/etc/init.d/openqrm-plugin-linux-vserver /etc/init.d/openqrm-plugin-linux-vserver
+ln -s /usr/share/openqrm/plugins/linux-vserver/etc/init.d/openqrm-plugin-linux-vserver /etc/init.d/openqrm-plugin-linux-vserver
 mkdir -p /var/www/openqrm/base/plugins/linux-vserver
 
 %preun plugin-linux-vserver
@@ -253,10 +253,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-local-server
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/local-server
+/usr/share/openqrm/plugins/local-server
 
 %post plugin-local-server
-ln -s /usr/lib/openqrm/plugins/local-server/etc/init.d/openqrm-plugin-local-server /etc/init.d/openqrm-plugin-local-server
+ln -s /usr/share/openqrm/plugins/local-server/etc/init.d/openqrm-plugin-local-server /etc/init.d/openqrm-plugin-local-server
 mkdir -p /var/www/openqrm/base/plugins/local-server
 
 %preun plugin-local-server
@@ -272,10 +272,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-local-storage
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/local-storage
+/usr/share/openqrm/plugins/local-storage
 
 %post plugin-local-storage
-ln -s /usr/lib/openqrm/plugins/local-storage/etc/init.d/openqrm-plugin-local-storage /etc/init.d/openqrm-plugin-local-storage
+ln -s /usr/share/openqrm/plugins/local-storage/etc/init.d/openqrm-plugin-local-storage /etc/init.d/openqrm-plugin-local-storage
 mkdir -p /var/www/openqrm/base/plugins/local-storage
 
 %preun plugin-local-storage
@@ -291,10 +291,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-lvm-storage
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/lvm-storage
+/usr/share/openqrm/plugins/lvm-storage
 
 %post plugin-lvm-storage
-ln -s /usr/lib/openqrm/plugins/lvm-storage/etc/init.d/openqrm-plugin-lvm-storage /etc/init.d/openqrm-plugin-lvm-storage
+ln -s /usr/share/openqrm/plugins/lvm-storage/etc/init.d/openqrm-plugin-lvm-storage /etc/init.d/openqrm-plugin-lvm-storage
 mkdir -p /var/www/openqrm/base/plugins/lvm-storage
 
 %preun plugin-lvm-storage
@@ -310,10 +310,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-nagios2
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/nagios2
+/usr/share/openqrm/plugins/nagios2
 
 %post plugin-nagios2
-ln -s /usr/lib/openqrm/plugins/nagios2/etc/init.d/openqrm-plugin-nagios2 /etc/init.d/openqrm-plugin/nagios2
+ln -s /usr/share/openqrm/plugins/nagios2/etc/init.d/openqrm-plugin-nagios2 /etc/init.d/openqrm-plugin/nagios2
 mkdir -p /var/www/openqrm/base/plugins/nagios2
 
 %preun plugin-nagios2
@@ -329,10 +329,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-nagios3
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/nagios3
+/usr/share/openqrm/plugins/nagios3
 
 %post plugin-nagios3
-ln -s /usr/lib/openqrm/plugins/nagios3/etc/init.d/openqrm-plugin-nagios3 /etc/init.d/openqrm-plugin/nagios3
+ln -s /usr/share/openqrm/plugins/nagios3/etc/init.d/openqrm-plugin-nagios3 /etc/init.d/openqrm-plugin/nagios3
 mkdir -p /var/www/openqrm/base/plugins/nagios3
 
 %preun plugin-nagios3
@@ -348,10 +348,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-netapp-storage
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/netapp-storage
+/usr/share/openqrm/plugins/netapp-storage
 
 %post plugin-netapp-storage
-ln -s /usr/lib/openqrm/plugins/netapp-storage/etc/init.d/openqrm-plugin-netapp-storage /etc/init.d/openqrm-plugin-netapp-storage
+ln -s /usr/share/openqrm/plugins/netapp-storage/etc/init.d/openqrm-plugin-netapp-storage /etc/init.d/openqrm-plugin-netapp-storage
 mkdir -p /var/www/openqrm/base/plugins/netapp-storage
 
 %preun plugin-netapp-storage
@@ -367,10 +367,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-nfs-storage
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/nfs-storage
+/usr/share/openqrm/plugins/nfs-storage
 
 %post plugin-nfs-storage
-ln -s /usr/lib/openqrm/plugins/nfs-storage/etc/init.d/openqrm-plugin-nfs-storage /etc/init.d/openqrm-plugin-nfs-storage
+ln -s /usr/share/openqrm/plugins/nfs-storage/etc/init.d/openqrm-plugin-nfs-storage /etc/init.d/openqrm-plugin-nfs-storage
 mkdir -p /var/www/openqrm/base/plugins/nfs-storage
 
 %preun plugin-nfs-storage
@@ -386,10 +386,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-puppet
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/puppet
+/usr/share/openqrm/plugins/puppet
 
 %post plugin-puppet
-ln -s /usr/lib/openqrm/plugins/puppet/etc/init.d/openqrm-plugin-puppet /etc/init.d/openqrm-plugin-puppet
+ln -s /usr/share/openqrm/plugins/puppet/etc/init.d/openqrm-plugin-puppet /etc/init.d/openqrm-plugin-puppet
 mkdir -p /var/www/openqrm/base/plugins/puppet
 
 %preun plugin-puppet
@@ -405,10 +405,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-sshterm
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/sshterm
+/usr/share/openqrm/plugins/sshterm
 
 %post plugin-sshterm
-ln -s /usr/lib/openqrm/plugins/sshterm/etc/init.d/openqrm-plugin-sshterm /etc/init.d/openqrm-plugin-sshterm
+ln -s /usr/share/openqrm/plugins/sshterm/etc/init.d/openqrm-plugin-sshterm /etc/init.d/openqrm-plugin-sshterm
 mkdir -p /var/www/openqrm/base/plugins/sshterm
 
 %preun plugin-sshterm
@@ -424,10 +424,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-tftpd
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/tftpd
+/usr/share/openqrm/plugins/tftpd
 
 %post plugin-tftpd
-ln -s /usr/lib/openqrm/plugins/tftpd/etc/init.d/openqrm-plugin-tftpd
+ln -s /usr/share/openqrm/plugins/tftpd/etc/init.d/openqrm-plugin-tftpd
 mkdir -p /var/www/openqrm/base/plugins/tftpd
 
 %preun plugin-tftpd
@@ -443,10 +443,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-vmware-esx
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/vmware-esx
+/usr/share/openqrm/plugins/vmware-esx
 
 %post plugin-vmware-esx
-ln -s /usr/lib/openqrm/plugins/vmware-esx/etc/init.d/openqrm-plugin-vmware-esx /etc/init.d/openqrm-plugin-vmware-esx
+ln -s /usr/share/openqrm/plugins/vmware-esx/etc/init.d/openqrm-plugin-vmware-esx /etc/init.d/openqrm-plugin-vmware-esx
 mkdir -p /var/www/openqrm/base/plugins/vmware-esx
 
 %preun plugin-vmware-esx
@@ -462,10 +462,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-vmware-server
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/vmware-server
+/usr/share/openqrm/plugins/vmware-server
 
 %post plugin-vmware-server
-ln -s /usr/lib/openqrm/plugins/vmware-server/etc/init.d/openqrm-plugin-vmware-server /etc/init.d/openqrm-vmware-server
+ln -s /usr/share/openqrm/plugins/vmware-server/etc/init.d/openqrm-plugin-vmware-server /etc/init.d/openqrm-vmware-server
 mkdir -p /etc/init.d/openqrm/base/plugins/vmware-server
 
 %preun plugin-vmware-server
@@ -481,10 +481,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-vmware-server2
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/vmware-server2
+/usr/share/openqrm/plugins/vmware-server2
 
 %post plugin-vmware-server2
-ln -s /usr/lib/openqrm/plugins/vmware-server2/etc/init.d/openqrm-plugin-vmware-server2 /etc/init.d/openqrm-vmware-server2
+ln -s /usr/share/openqrm/plugins/vmware-server2/etc/init.d/openqrm-plugin-vmware-server2 /etc/init.d/openqrm-vmware-server2
 mkdir -p /etc/init.d/openqrm/base/plugins/vmware-server2
 
 %preun plugin-vmware-server2
@@ -500,10 +500,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files plugin-windows
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/windows
+/usr/share/openqrm/plugins/windows
 
 %post plugin-windows
-ln -s /usr/lib/openqrm/plugins/windows/etc/init.d/openqrm-plugin-windows /etc/init.d/openqrm-windows
+ln -s /usr/share/openqrm/plugins/windows/etc/init.d/openqrm-plugin-windows /etc/init.d/openqrm-windows
 mkdir -p /etc/init.d/openqrm/base/plugins/windows
 
 %preun plugin-windows
@@ -519,10 +519,10 @@ Requires: openqrm
 openQRM is the next generation data-center management platform.
 %files  plugin-xen
 %defattr(-,root,root)
-/usr/lib/openqrm/plugins/xen
+/usr/share/openqrm/plugins/xen
 
 %post plugin-xen
-ln -s /usr/lib/openqrm/plugins/xen/etc/init.d/openqrm-plugin-xen /etc/init.d/openqrm-plugin-xen
+ln -s /usr/share/openqrm/plugins/xen/etc/init.d/openqrm-plugin-xen /etc/init.d/openqrm-plugin-xen
 mkdir -p /etc/init.d/openqrm/base/plugins/xen
 
 %preun plugin-xen

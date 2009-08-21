@@ -70,14 +70,21 @@ function initialize_database() {
 	# add the db maintenance to cron
 	cat $OPENQRM_DATABASE_MAINTENANCE | sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" > /etc/cron.daily/$OPENQRM_DATABASE_MAINTENANCE_FNAME
 	chmod +x /etc/cron.daily/$OPENQRM_DATABASE_MAINTENANCE_FNAME
-	if [ -x /etc/init.d/cron ]; then
-        /etc/init.d/cron reload
-	elif [ -x /etc/init.d/crond ]; then
-        /etc/init.d/crond reload
+    if [ -x "/etc/init.d/cron" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d cron reload || exit $?
+        else
+            /etc/init.d/cron reload || exit $?
+        fi
+	elif [ -x "/etc/init.d/crond" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d crond reload || exit $?
+        else
+            /etc/init.d/crond reload || exit $?
+        fi
     else
     	echo "Could not find cron init script in /etc/init.d/. Please reload cron manually!"
     fi
-
 	return $RET
 }
 
@@ -121,10 +128,18 @@ function drop_database() {
 
 	# remove maintenance cron job
 	rm -f /etc/cron.daily/$OPENQRM_DATABASE_MAINTENANCE_FNAME
-	if [ -x /etc/init.d/cron ]; then
-        /etc/init.d/cron reload
-	elif [ -x /etc/init.d/crond ]; then
-        /etc/init.d/crond reload
+    if [ -x "/etc/init.d/cron" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d cron reload || exit $?
+        else
+            /etc/init.d/cron reload || exit $?
+        fi
+	elif [ -x "/etc/init.d/crond" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d crond reload || exit $?
+        else
+            /etc/init.d/crond reload || exit $?
+        fi
     else
     	echo "Could not find cron init script in /etc/init.d/. Please reload cron manually!"
     fi

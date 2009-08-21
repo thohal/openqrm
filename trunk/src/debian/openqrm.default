@@ -16,5 +16,5 @@
 #
 # Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 #
-OPENQRM_SERVER_BASE_DIR="/usr/lib"
+OPENQRM_SERVER_BASE_DIR="/usr/share"
 

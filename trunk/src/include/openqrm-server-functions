@@ -39,7 +39,7 @@ OPENQRM_SERVER_LINUXRC="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-l
 OPENQRM_MAX_INITRD_SIZE=128000
 OPENQRM_DEFAULT_RAM_DISK_BLOCK_SIZE=1024
 # static directory define for the server state backups
-OPENQRM_SERVER_STATE_DIR="/var/spool/openqrm"
+OPENQRM_SERVER_STATE_DIR="/var/spool/openqrm-state"
 # which files/dirs to backup/restore (base only, plugin need to care about their bacukp/restore themselves)
 OPENQRM_SERVER_STATE_FILES="$OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 	$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates//openqrm-initrd-default.tgz	\

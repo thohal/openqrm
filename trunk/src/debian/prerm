@@ -1,10 +1,13 @@
 #!/bin/bash
 set -e
 
-# uninstall the openQRM Server
-rm -f /etc/openqrm
-rm -rf /usr/share/openqrm
-/etc/init.d/openqrm uninstall
+if [ -x "/etc/init.d/openqrm" ]; then
+	if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+		invoke-rc.d openqrm uninstall || exit $?
+	else
+		/etc/init.d/openqrm uninstall || exit $?
+	fi
+fi
 
 #DEBHELPER#
 

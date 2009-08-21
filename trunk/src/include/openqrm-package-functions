@@ -209,12 +209,12 @@ function openqrm_package() {
 				mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE
 
 				# set postinst + prerm
-				OPENQRM_PACKAGE_POSTINSTALL="sh /usr/lib/openqrm/etc/init.d/openqrm-server.postinstall"
-				OPENQRM_PACKAGE_PREREMOVE="sh /usr/lib/openqrm/etc/init.d/openqrm-server.preremove"
+				OPENQRM_PACKAGE_POSTINSTALL="sh /usr/share/openqrm/etc/init.d/openqrm-server.postinstall"
+				OPENQRM_PACKAGE_PREREMOVE="sh /usr/share/openqrm/etc/init.d/openqrm-server.preremove"
 
 				if [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server" ]; then
 					# set if we want to just build openqrm-server without any plugins
-					OPENQRM_BUILD_POSTINSTALL="rm -rf \$RPM_BUILD_ROOT/usr/lib/openqrm/plugins/*"
+					OPENQRM_BUILD_POSTINSTALL="rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/*"
 				else
 					# we want to have the entire openQRM in one package
 					# so we need to sum up the server + plugin dependencies
@@ -283,11 +283,11 @@ function openqrm_package() {
 				mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE
 
 				# set postinst + prerm
-				OPENQRM_PACKAGE_POSTINSTALL="sh /usr/lib/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/etc/init.d/openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT.postinstall"
-				OPENQRM_PACKAGE_PREREMOVE="sh /usr/lib/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/etc/init.d/openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT.preremove"
+				OPENQRM_PACKAGE_POSTINSTALL="sh /usr/share/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/etc/init.d/openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT.postinstall"
+				OPENQRM_PACKAGE_PREREMOVE="sh /usr/share/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/etc/init.d/openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT.preremove"
 
 				# set if files should include openqrm-server or just a plugin
-				OPENQRM_BUILD_POSTINSTALL="mkdir -p \$RPM_BUILD_ROOT/opt_plugin/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT \&\& cp -aR \$RPM_BUILD_ROOT/usr/lib/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/* \$RPM_BUILD_ROOT/opt_plugin/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/ \&\& rm -rf \$RPM_BUILD_ROOT/usr/lib \&\& mv \$RPM_BUILD_ROOT/opt_plugin \$RPM_BUILD_ROOT/usr/lib"
+				OPENQRM_BUILD_POSTINSTALL="mkdir -p \$RPM_BUILD_ROOT/opt_plugin/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT \&\& cp -aR \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/* \$RPM_BUILD_ROOT/opt_plugin/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/ \&\& rm -rf \$RPM_BUILD_ROOT/usr/share \&\& mv \$RPM_BUILD_ROOT/opt_plugin \$RPM_BUILD_ROOT/usr/share"
 
 				# create spec file from template
 				cat $OPENQRM_PACKAGE_TMP_DIR/packageroot/$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-rpm.spec |	\

@@ -71,7 +71,7 @@ This should give you a directory listing.
 Now integrate the ESX server by running the following command :
 <br>
 <br>
-<i>/usr/lib/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx init -i [ip-address-of-the-esx-server]</i>
+<i>/usr/share/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx init -i [ip-address-of-the-esx-server]</i>
 <br>
 <br>
 This procedure will ask for a valid openQRM username and password.

@@ -1,1 +1,3 @@
-usr/lib/openqrm
+usr/share/openqrm
+etc/openqrm
+var/spool/openqrm

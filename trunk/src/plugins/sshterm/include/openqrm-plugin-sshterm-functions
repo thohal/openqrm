@@ -58,8 +58,8 @@ function create_pound_config() {
     # pound does not provide any commandline parameters to configure
     # which config file to use. This is a static compile options.
     # -> the static compiled pound within the openqrm-plugin-sshterm-comptonents.tgz
-    #    have set the sysconfig directive to /usr/lib/openqrm/plugins/sshterm/etc/
-    POUND_CONFIG="/usr/lib/openqrm/plugins/sshterm/etc/pound.cfg"
+    #    have set the sysconfig directive to /usr/share/openqrm/plugins/sshterm/etc/
+    POUND_CONFIG="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/etc/pound.cfg"
     cat $POUND_CONFIG_TEMPLATE |    \
         sed -e "s#@@AJAXTERM_REVERSE_PROXY_PORT@@#$OPENQRM_PLUGIN_AJAXTERM_REVERSE_PROXY_PORT#g" |    \
         sed -e "s#@@POUND_PEM_CERT@@#$POUND_PEM_CERT#g"  \

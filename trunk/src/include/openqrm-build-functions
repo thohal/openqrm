@@ -523,15 +523,21 @@ EOF
 function openqrm_pack_default_initrd_template() {
 	# pack
 	CURRENT_DIR=`pwd`
+	OPENQRM_SOURCE_DIR_FULL_PATH=`cd $OPENQRM_SOURCE_DIR && pwd && cd $CURRENT_DIR`
+    mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/sbin $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin
 	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
-	tar -czf $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-default.tgz *
+    if grep debianized $OPENQRM_SOURCE_DIR_FULL_PATH/etc/Makefile 1>/dev/null; then
+        # on debian/ubuntu we have a runtime dependency on dropbear
+        tar -czf $DESTINATION_DIR/etc/openqrm/templates/openqrm-initrd-default.tgz *
+    else
+        tar -czf $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-default.tgz *
+        # copy dropbear
+        cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/dropbear $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
+        cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/dbclient $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/
+        cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/dropbearconvert $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/
+        cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/dropbearkey $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/
+    fi
 	cd $CURRENT_DIR
-	# copy dropbear
-	mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/sbin $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin
-	cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/dropbear $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
-	cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/dbclient $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/
-	cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/dropbearconvert $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/
-	cp -af $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/dropbearkey $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/bin/
 }
 
 
@@ -640,6 +646,10 @@ function openqrm_create_deb_source() {
     mkdir -p $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION
     cp -aR * $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION/
     cd $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION/
+    # use the Makefile.debian for etc, bin + sbin
+    mv -f bin/Makefile.debian bin/Makefile
+    mv -f etc/Makefile.debian etc/Makefile
+    mv -f sbin/Makefile.debian sbin/Makefile
     # remove the sshterm plugin for now
     rm -rf plugins/sshterm
     # remove the sshterm plugin for now
@@ -650,10 +660,17 @@ function openqrm_create_deb_source() {
     rm -rf plugins/windows
     # linux-vserver is deprecated
     rm -rf plugins/linux-vserver
+    # remove empty puppet repo dir, empty tftpboot
+    rm -rf plugins/puppet/etc/default/files
+    rm -rf tftpboot
     # remove svn dirs
     rm -rf `find -name .svn `
-    ./fill-build-cache
-    cp -aR ../buildtmp thirdparty
+    if [ ! -d ~/openqrm-thirdparty-cache ]; then
+        ./fill-build-cache
+        cp -aR ../buildtmp thirdparty
+    else
+        cp -aR ~/openqrm-thirdparty-cache thirdparty
+    fi
     # prepare openqrm_[version].orig.tar.gz
     cd $TMPBUILD_DIR/
     mv $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION/debian .

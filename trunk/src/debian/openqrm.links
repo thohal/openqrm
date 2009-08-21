@@ -1,0 +1,15 @@
+etc/openqrm usr/share/openqrm/etc
+usr/bin/openqrm usr/share/openqrm/bin/openqrm
+usr/bin/openqrm-cmd usr/share/openqrm/bin/openqrm-cmd
+usr/bin/openqrm-create-plugin usr/share/openqrm/bin/openqrm-create-plugin
+usr/bin/dbclient usr/share/openqrm/bin/dbclient
+usr/lib/dropbear/dropbearconvert usr/share/openqrm/bin/dropbearconvert
+usr/bin/dropbearkey usr/share/openqrm/bin/dropbearkey
+usr/sbin/openqrm-cmd-queue usr/share/openqrm/sbin/openqrm-cmd-queue
+usr/sbin/openqrm-crypt.pl usr/share/openqrm/sbin/openqrm-crypt.pl
+usr/sbin/openqrm-exec usr/share/openqrm/sbin/openqrm-exec
+usr/sbin/openqrm-execd usr/share/openqrm/sbin/openqrm-execd
+usr/sbin/openqrm-monitord usr/share/openqrm/sbin/openqrm-monitord
+usr/sbin/openqrm-postencode.py usr/share/openqrm/sbin/openqrm-postencode.py
+usr/sbin/dropbear usr/share/openqrm/sbin/dropbear
+var/spool/openqrm usr/share/openqrm/var/spool

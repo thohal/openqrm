@@ -18,6 +18,14 @@
 # Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 #
 
-chmod +x /usr/lib/openqrm/etc/init.d/openqrm
-ln -sf /usr/lib/openqrm/etc/init.d/openqrm /etc/init.d/openqrm
-/etc/init.d/openqrm start
+chmod +x /usr/share/openqrm/etc/init.d/openqrm
+ln -sf /usr/share/openqrm/etc/init.d/openqrm /etc/init.d/openqrm
+
+if [ -x "/etc/init.d/openqrm" ]; then
+	if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+		invoke-rc.d openqrm start || exit $?
+	else
+		/etc/init.d/openqrm start || exit $?
+	fi
+fi
+

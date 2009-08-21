@@ -110,7 +110,7 @@ function documentation_development() {
 	$disp = $disp."<br>";
 	$disp = $disp."<b>How to create an openQRM plugin</b>";
 	$disp = $disp."<br>";
-	$disp = $disp."To make plugin-creation easy please find a 'openqrm-create-plugin' script in the openQRM's bin directory (default /usr/lib/openqrm/bin/openqrm-create-plugin).";
+	$disp = $disp."To make plugin-creation easy please find a 'openqrm-create-plugin' script in the openQRM's bin directory (default /usr/share/openqrm/bin/openqrm-create-plugin).";
 	$disp = $disp."<br>";
 	$disp = $disp."This script requires 2 commandline parameter :";
 	$disp = $disp."<br>";

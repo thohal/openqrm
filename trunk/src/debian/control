@@ -7,7 +7,7 @@ Standards-Version: 3.8.2
 
 Package: openqrm
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client-5.0, syslinux, ash, python, tftpd-hpa, stunnel, dhcp3-server, screen, nagios-images, nagios-plugins, nmap, postfix, libxml-simple-perl, open-iscsi, aoetools, openssl, rsync, expect, puppetmaster, subversion, bind9
+Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client-5.0, syslinux, dropbear, ash, python, tftpd-hpa, stunnel, dhcp3-server, screen, nagios-images, nagios-plugins, nmap, postfix, libxml-simple-perl, open-iscsi, aoetools, openssl, rsync, expect, puppetmaster, subversion, bind9
 Description: Cloud Computing Platform
  openQRM is a fully automated, rapid deployment system including
  VM-Management, Monitoring, High-Availability and Storage-Management.

@@ -47,7 +47,7 @@ NEWLINE='
 if [ -f /etc/default/openqrm ]; then
     . /etc/default/openqrm
 else
-    OPENQRM_SERVER_BASE_DIR="/usr/lib"
+    OPENQRM_SERVER_BASE_DIR="/usr/share"
 fi
 export OPENQRM_SERVER_BASE_DIR
 # get the openqrm-server configuration + functions
@@ -87,6 +87,7 @@ function openqrm_server_init() {
 	# need to copy pxelinux.0 to the tftpboot dir
 	# sym-linking it does not work because the tftpd-server does not support symlinks
     log_begin_msg "Preparing $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0"
+    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot
     if [ ! -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0 ]; then
         if [ -f /usr/lib/syslinux/pxelinux.0 ]; then
             cp -a /usr/lib/syslinux/pxelinux.0 $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0
@@ -158,9 +159,6 @@ function openqrm_server_init() {
 			fi
 			# and put it in the boot-service dir for the resources to download
 			echo "$PUBLIC_KEY" > $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-server-public-rsa-key
-			# create the comman-queue dir
-			mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/var/spool/
-			chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/var/spool
             stop_exec_subsystem
 			# start the openqrm-execd daemon
             log_daemon_msg "Starting openQRM Exec-subsystem"

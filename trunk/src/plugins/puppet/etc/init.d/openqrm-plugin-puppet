@@ -128,6 +128,7 @@ function openqrm_plugin_puppet_init() {
 	fi
 	# create the svn dir
 	rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet
+    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/default/files
 	svnadmin create $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet
 	svn import -q $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/default/ file://$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/puppet/etc/puppet/ -m "initial import"
 	# and import to /etc/puppet

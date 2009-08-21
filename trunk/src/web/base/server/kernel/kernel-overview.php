@@ -147,7 +147,7 @@ function kernel_form() {
 	$disp = $disp."<br>";
 	$disp = $disp."New kernels should be added on the openqrm server with the following command:<br>";
     $disp = $disp."<br>";
-	$disp = $disp."<br>/usr/lib/openqrm/bin/openqrm kernel add -n name -v version -u username -p password [-l location] [-i initramfs/ext2] [-t path-to-initrd-template-file]<br>";
+	$disp = $disp."<br>/usr/share/openqrm/bin/openqrm kernel add -n name -v version -u username -p password [-l location] [-i initramfs/ext2] [-t path-to-initrd-template-file]<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<b>name</b> can be any identifier as long as it has no spaces or other special characters; it is used as part of the filename.<br>";
 	$disp = $disp."<b>version</b> should be the version for the kernel you want to install. If the filenames are called vmlinuz-2.6.26-2-amd64 then 2.6.26-2-amd64 is the version of this kernel.<br>";
@@ -157,7 +157,7 @@ function kernel_form() {
 	$disp = $disp."<b>path-to-initrd-template-file</b> is an optional parameter to specify a non-default openqrm initrd template.<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."Example:<br>";
-	$disp = $disp."/usr/lib/openqrm/bin/openqrm kernel add -n openqrm-kernel-1 -v 2.6.29 -u openqrm -p openqrm -i initramfs -l /<br>";
+	$disp = $disp."/usr/share/openqrm/bin/openqrm kernel add -n openqrm-kernel-1 -v 2.6.29 -u openqrm -p openqrm -i initramfs -l /<br>";
 	$disp = $disp."<br>";
  	return $disp;
 }

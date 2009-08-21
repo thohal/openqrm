@@ -58,7 +58,7 @@ openQRM then will create every first (virtual) network-card for the KVM vms on t
 <br>
 After having a network-bridge configured openQRM should be installed
  on the internal bridge-interface (by default br0). This can be done by setting the openQRM management
- network-interface in /usr/lib/openqrm/etc/openqrm-server.conf to br0 before initalyzing openQRM.
+ network-interface in /usr/share/openqrm/etc/openqrm-server.conf to br0 before initalyzing openQRM.
 <br>
 <br>
 <br>

@@ -60,7 +60,7 @@ function documentation_quickstart() {
 	$disp = $disp."<br>";
 	$disp = $disp."<b>Kernel creation</b>";
 	$disp = $disp."<br>";
-	$disp = $disp."'Kernels' for resources and appliances managed by the the openQRM-server can be created using the 'openqrm' client located in the bin directory (/usr/lib/openqrm/bin/openqrm by default).";
+	$disp = $disp."'Kernels' for resources and appliances managed by the the openQRM-server can be created using the 'openqrm' client located in the bin directory (/usr/share/openqrm/bin/openqrm by default).";
 	$disp = $disp."<br>";
 	$disp = $disp."Adding a kernel to openQRM :";
 	$disp = $disp."<br>";

@@ -24,7 +24,7 @@ echo "%build"; \
 echo "make"; \
 echo ""; \
 echo "%install"; \
-echo "mkdir -p $RPM_BUILD_ROOT/usr/lib"; \
+echo "mkdir -p $RPM_BUILD_ROOT/usr/share"; \
 echo "make install DESTINATION_DIR=$RPM_BUILD_ROOT"; \
 echo ""; \
 echo "%post"; \
@@ -33,12 +33,12 @@ echo "%preun"; \
 echo ""; \
 echo "%files"; \
 echo "%defattr(-,root,root)"; \
-echo "/usr/lib/openqrm/bin"; \
-echo "/usr/lib/openqrm/etc"; \
-echo "/usr/lib/openqrm/include"; \
-echo "/usr/lib/openqrm/sbin"; \
-echo "/usr/lib/openqrm/tftpboot"; \
-echo "/usr/lib/openqrm/web"; \
+echo "/usr/share/openqrm/bin"; \
+echo "/usr/share/openqrm/etc"; \
+echo "/usr/share/openqrm/include"; \
+echo "/usr/share/openqrm/sbin"; \
+echo "/usr/share/openqrm/tftpboot"; \
+echo "/usr/share/openqrm/web"; \
 echo ""; \
 echo "#%clean"; \
 echo "#make clean"; \
@@ -54,10 +54,10 @@ for name in `ls ../plugins | grep -v Makefile`;  do \
 	echo "$OPENQRM_PLUGIN_DESCRIPTION"; \
 	echo "%files "$name; \
 	echo "%defattr(-,root,root)"; \
-	echo "/usr/lib/openqrm/"$name; \
+	echo "/usr/share/openqrm/"$name; \
 	echo ""; \
 	echo "%post plugin-$name"; \
-	echo "ln -s /usr/lib/openqrm/plugins/$name/etc/init.d/openqrm-plugin-$name /etc/init.d/openqrm-plugin-$name"; \
+	echo "ln -s /usr/share/openqrm/plugins/$name/etc/init.d/openqrm-plugin-$name /etc/init.d/openqrm-plugin-$name"; \
 	echo "mkdir -p /etc/init.d/openqrm/base/plugins/$name"; \
 	echo ""; \
 	echo "%preun plugin-$name"; \
