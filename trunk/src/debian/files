@@ -1,0 +1,4 @@
+usr/bin/openqrm
+usr/bin/openqrm-cmd
+usr/bin/openqrm-create-plugin
+usr/sbin/openqrm-cmd-queue

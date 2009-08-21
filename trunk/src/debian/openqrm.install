@@ -1,2 +1,11 @@
 usr/share/openqrm
 etc/openqrm
+usr/bin/openqrm
+usr/bin/openqrm-cmd
+usr/bin/openqrm-create-plugin
+usr/sbin/openqrm-cmd-queue
+usr/sbin/openqrm-crypt.pl
+usr/sbin/openqrm-exec
+usr/sbin/openqrm-execd
+usr/sbin/openqrm-monitord
+usr/sbin/openqrm-postencode.py
