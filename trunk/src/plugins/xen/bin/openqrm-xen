@@ -37,7 +37,7 @@ elif [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
 	OPENQRM_INTERFACE=`ifconfig | grep -i $resource_mac | grep :oq | cut -d':' -f1`
 
 fi
-OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
+OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode"
 OPENQRM_XEN_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/templates/openqrm-xen-vm"
 # the directory to keep the vm files for vms created by openQRM
 OPENQRM_VM_DIR="/var/lib/xen/openqrm/"

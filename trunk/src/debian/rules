@@ -19,8 +19,6 @@ clean::
 	rm -fr $(CURDIR)/debian/openqrm-ng
 
 	[ ! -f Makefile ] || $(MAKE) clean
-	if [ -e openqrm-plugin-* ]; then rm debian/openqrm-plugin*; fi
-
 	dh_clean
 
 install: build
@@ -43,7 +41,7 @@ binary-arch: build install
 	dh_installmenu
 	dh_installdebconf	
 	dh_installinit
-	dh_installman
+	dh_installman -A debian/man/*
 	dh_lintian
 	dh_link
 	dh_strip

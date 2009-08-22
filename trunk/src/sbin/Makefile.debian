@@ -31,8 +31,8 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-exec $(DESTINATION_DIR)/usr/sbin/
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-cmd-queue $(DESTINATION_DIR)/usr/sbin/
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-monitord $(DESTINATION_DIR)/usr/sbin/
-	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-postencode.py $(DESTINATION_DIR)/usr/sbin/
-	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-crypt.pl $(DESTINATION_DIR)/usr/sbin/
+	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-postencode $(DESTINATION_DIR)/usr/sbin/
+	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-crypt $(DESTINATION_DIR)/usr/sbin/
 	. $(OPENQRM_SERVER_CONF) && chmod +x $(DESTINATION_DIR)/usr/sbin/openqrm*
 	. $(OPENQRM_SERVER_CONF) && rm -rf $(DESTINATION_DIR)/var/spool/openqrm
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)/var/spool/openqrm

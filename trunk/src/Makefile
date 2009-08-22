@@ -56,12 +56,12 @@ install:
 	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *-maintenance | xargs -r chmod +x
 	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *-ifup | xargs -r chmod +x
 	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm -name *commit.tmpl | xargs -r chmod +x
-	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)/etc/openqrm -name *.conf | xargs -r chmod -x
-	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)/etc/openqrm -name *deb.control | xargs -r chmod -x
-	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)/etc/openqrm -name openqrm-pxelinux | xargs -r chmod -x
-	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)/etc/openqrm -name *.spec | xargs -r chmod -x
-	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)/etc/openqrm -name *-functions | xargs -r chmod +x
-	@. $(OPENQRM_SERVER_CONF) && find $(DESTINATION_DIR)/etc/openqrm -name *-maintenance | xargs -r chmod +x
+	@. $(OPENQRM_SERVER_CONF) && if [ -d $(DESTINATION_DIR)/etc/openqrm ]; then find $(DESTINATION_DIR)/etc/openqrm -name *.conf | xargs -r chmod -x; fi
+	@. $(OPENQRM_SERVER_CONF) && if [ -d $(DESTINATION_DIR)/etc/openqrm ]; then find $(DESTINATION_DIR)/etc/openqrm -name *deb.control | xargs -r chmod -x; fi
+	@. $(OPENQRM_SERVER_CONF) && if [ -d $(DESTINATION_DIR)/etc/openqrm ]; then find $(DESTINATION_DIR)/etc/openqrm -name openqrm-pxelinux | xargs -r chmod -x; fi
+	@. $(OPENQRM_SERVER_CONF) && if [ -d $(DESTINATION_DIR)/etc/openqrm ]; then find $(DESTINATION_DIR)/etc/openqrm -name *.spec | xargs -r chmod -x; fi
+	@. $(OPENQRM_SERVER_CONF) && if [ -d $(DESTINATION_DIR)/etc/openqrm ]; then find $(DESTINATION_DIR)/etc/openqrm -name *-functions | xargs -r chmod +x; fi
+	@. $(OPENQRM_SERVER_CONF) && if [ -d $(DESTINATION_DIR)/etc/openqrm ]; then find $(DESTINATION_DIR)/etc/openqrm -name *-maintenance | xargs -r chmod +x; fi
 
 
 start: check

@@ -44,8 +44,8 @@ NEWLINE='
 . /lib/lsb/init-functions
 
 # static basedir for ubuntu/debian packaging
-if [ -f /etc/default/openqrm ]; then
-    . /etc/default/openqrm
+if [ -f /etc/default/openqrm-entire ]; then
+    . /etc/default/openqrm-entire
 else
     OPENQRM_SERVER_BASE_DIR="/usr/share"
 fi

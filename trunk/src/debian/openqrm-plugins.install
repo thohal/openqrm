@@ -1,0 +1,11 @@
+usr/share/openqrm/plugins/citrix
+usr/share/openqrm/plugins/equallogic-storage
+usr/share/openqrm/plugins/linuxcoe
+usr/share/openqrm/plugins/local-storage
+usr/share/openqrm/plugins/netapp-storage
+usr/share/openqrm/plugins/solx86
+usr/share/openqrm/plugins/vmware-esx
+usr/share/openqrm/plugins/vmware-server
+usr/share/openqrm/plugins/vmware-server2
+usr/share/openqrm/plugins/zabbix
+usr/share/openqrm/plugins/zfs-storage

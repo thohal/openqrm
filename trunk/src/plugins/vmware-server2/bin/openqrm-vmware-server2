@@ -34,7 +34,7 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 fi
 export LANG=C
-OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
+OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode"
 OPENQRM_VMWARE_SERVER_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/etc/templates/openqrm-vmware-server2-vm"
 OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY="sleep 5"
 VMWARE_VIM_CMD="vmware-vim-cmd ${VMWARE_VIM_CMD_ARGS}"

@@ -9,5 +9,12 @@ if [ -x "/etc/init.d/openqrm" ]; then
 	fi
 fi
 
+if [ -x "/etc/init.d/openqrm-entire" ]; then
+	if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+		invoke-rc.d openqrm-entire init || exit $?
+	else
+		/etc/init.d/openqrm-entire init || exit $?
+	fi
+fi
 #DEBHELPER#
 

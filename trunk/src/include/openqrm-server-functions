@@ -248,7 +248,7 @@ function openqrm_server_set_image_password() {
 	OPENQRM_IMAGE_ID=$1
 	OPENQRM_IMAGE_PASSWORD=$2
 	echo "openQRM-server: Setting root-password for image $OPENQRM_IMAGE_ID" | logger
-	$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-crypt.pl $OPENQRM_IMAGE_PASSWORD > $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth/iauth.$OPENQRM_IMAGE_ID
+	$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-crypt $OPENQRM_IMAGE_PASSWORD > $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth/iauth.$OPENQRM_IMAGE_ID
 	chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth/iauth.$OPENQRM_IMAGE_ID
 }
 

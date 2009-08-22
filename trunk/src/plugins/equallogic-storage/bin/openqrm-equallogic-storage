@@ -21,7 +21,7 @@
 OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
 OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/include/openqrm-plugin-equallogic-storage-functions
-OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode.py"
+OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode"
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 OPENQRM_SERVER_IP=localhost
 resource_id=0

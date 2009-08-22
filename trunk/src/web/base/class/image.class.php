@@ -545,7 +545,7 @@ var $_event;
 	*/
 	//--------------------------------------------------
 	function set_root_password($id, $passwd) {
-		$CMD="$this->_base_dir/openqrm/sbin/openqrm-crypt.pl $passwd > $this->_base_dir/openqrm/web/action/image-auth/iauth.$id";
+		$CMD="$this->_base_dir/openqrm/sbin/openqrm-crypt $passwd > $this->_base_dir/openqrm/web/action/image-auth/iauth.$id";
 		exec($CMD);
 	}
 
