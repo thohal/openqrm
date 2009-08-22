@@ -40,3 +40,8 @@ for COMPONENT_CONFIG in $PLUGIN_CONFS; do
 	echo "Checking $COMPONENT"
 	openqrm_cache_or_download $COMPONENT $COMPONENT_CONFIG
 done
+
+
+
+
+

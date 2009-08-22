@@ -55,6 +55,18 @@ License: GPL2
 X-Comment: On Debian GNU/Linux systems, the complete text of the
  GNU General Public License can be found in /usr/share/common-licenses/GPL-2
 
+Files: thirdparty/openqrm-build/kudzu-knoppix/source/kudzu-knoppix_1.1.67-2.tar.gz
+License: GPL2
+X-Comment: On Debian GNU/Linux systems, the complete text of the
+ GNU General Public License can be found in /usr/share/common-licenses/GPL-2
+
+Files: plugins/cloud/cloud-portal/web/js/datetimepicker.js
+Copyright: Copyright (c) 2003 TengYong Ng <contact@rainforestnet.com>
+X-Comment: License text from the file header:
+ "Permission given to use and modify this script in ANY kind of
+ applications if header lines are left unchanged."
+
+
 
 Additional license texts :
 

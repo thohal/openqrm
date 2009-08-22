@@ -671,6 +671,8 @@ function openqrm_create_deb_source() {
     else
         cp -aR ~/openqrm-thirdparty-cache thirdparty
     fi
+    # remove adodb since we use the native package on ubuntu/debian
+    rm -rf thirdparty/openqrm-build/adodb
     # prepare openqrm_[version].orig.tar.gz
     cd $TMPBUILD_DIR/
     mv $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION/debian .

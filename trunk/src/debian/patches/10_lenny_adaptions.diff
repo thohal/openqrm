@@ -1,3 +1,8 @@
+#
+# Ubuntu: https://bugs.launchpad.net/ubuntu/+bug/278559
+# Upstream: http://sourceforge.net/projects/openqrm/
+# Description: different package name libpci-dev for dependendy pciutils-dev
+#
 --- a/etc/openqrm-server.conf
 +++ b/etc/openqrm-server.conf
 @@ -80,7 +80,7 @@

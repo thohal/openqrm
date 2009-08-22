@@ -1,8 +1,7 @@
 openqrm (4.5-0ubuntu1) karmic; urgency=low
 
   [ Matthias Rechenburg ]
-  * Initial release (LP: #278559) 
-  * Enhanced ubuntu/debian build system
+  * Initial release (LP: #278559)
 
- -- Matthias Rechenburg <matt@openqrm.com>  Tue, 18 Aug 2009 15:45:31 +0200
+ -- Matthias Rechenburg <matt@openqrm.com>  Sat, 22 Aug 2009 16:45:04 +0200
 
