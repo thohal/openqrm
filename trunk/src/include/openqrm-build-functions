@@ -600,12 +600,18 @@ function openqrm_install_jquery_bundle() {
 	mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/js/jquery
 	mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/css/jquery
 	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/jquery/jquery-$JQUERY_VERSION/* $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/js/jquery/
+    # exclude .txt files
+    rm -f $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/js/jquery/development-bundle/*.txt
+    # css
     rm -rf $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/js/jquery/css
 	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/jquery/jquery-$JQUERY_VERSION/css/* $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/css/jquery/
     # also install it for the cloud plugin
 	mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/js
 	mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/css
 	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/jquery/jquery-$JQUERY_VERSION/* $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/js/
+    # exclude .txt files
+    rm -f $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/js/development-bundle/*.txt
+    # css
     rm -rf $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/js/css
 	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/jquery/jquery-$JQUERY_VERSION/css/* $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/css/
 }

@@ -84,14 +84,7 @@ function openqrm_chkconfig() {
 	elif [ -x /usr/sbin/update-rc.d ] ; then
 		# according to manuals, update-rc.d does nothing if links already exist
 		if [ $action == "add" ] ; then
-			local -a chkconfig_spec=($(grep 'chkconfig:' /etc/init.d/${service} | cut -d ':' -f2- ))
-
-			if [[ -n "${chkconfig_spec[0]}" &&  "${chkconfig_spec[0]}" != '-' ]]; then
-				local runlevels="$(echo ${chkconfig_spec[0]} | sed 's/\(.\)/\1 /g')"
-				args="start ${chkconfig_spec[1]} $runlevels . stop ${chkconfig_spec[2]} 0 1 6 ."
-			fi
-			unset IFS
-			update-rc.d ${service}  $args
+			update-rc.d ${service}  defaults
 		elif [ $action == "del" ] ; then
 			update-rc.d -f ${service} remove 1>/dev/null 2>&1
 		fi

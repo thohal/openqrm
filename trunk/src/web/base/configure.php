@@ -250,9 +250,9 @@ if(htmlobject_request('action') != '') {
             $cmd_token = md5(uniqid(rand(), true));
             // restore last backup ?
             if ($oqc_db_restore == 1) {
-                $config_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec -i 127.0.0.1 -t $cmd_token -c \"/etc/init.d/openqrm init_config restore\"";
+                $config_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec -i 127.0.0.1 -t $cmd_token -c \"$OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm init_config restore\"";
             } else {
-                $config_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec -i 127.0.0.1 -t $cmd_token -c \"/etc/init.d/openqrm init_config\"";
+                $config_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec -i 127.0.0.1 -t $cmd_token -c \"$OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm init_config\"";
             }
             shell_exec($config_command);
             if (!wait_for_fileremoval("./unconfigured")) {

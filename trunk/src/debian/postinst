@@ -1,20 +1,138 @@
-#!/bin/bash
+#!/bin/sh
+# openQRM postinstall script
+#
+# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+#
+# This is free software; you may redistribute it and/or modify
+# it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2,
+# or (at your option) any later version.
+#
+# This is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License with
+# the Debian operating system, in /usr/share/common-licenses/GPL;  if
+# not, write to the Free Software Foundation, Inc., 59 Temple Place,
+# Suite 330, Boston, MA 02111-1307 USA
+
+NAME="openqrm"
+DESC="openQRM Cloud Computing Platform"
+LOGDIR=/var/log/$NAME
+LANG=C
+. /lib/lsb/init-functions
+
+if [ -f /etc/default/$NAME ] ; then
+    . /etc/default/$NAME
+else
+    OPENQRM_SERVER_BASE_DIR="/usr/share"
+fi
+export OPENQRM_SERVER_BASE_DIR
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+
 set -e
 
-if [ -x "/etc/init.d/openqrm" ]; then
-	if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-		invoke-rc.d openqrm init || exit $?
-	else
-		/etc/init.d/openqrm init || exit $?
-	fi
-fi
 
-if [ -x "/etc/init.d/openqrm-entire" ]; then
-	if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-		invoke-rc.d openqrm-entire init || exit $?
-	else
-		/etc/init.d/openqrm-entire init || exit $?
-	fi
-fi
+case "$1" in
+    configure)
+        # copy pxelinux.0, tftdp does not support sym-linking it
+        mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot
+        if [ ! -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0 ]; then
+            if [ -f /usr/lib/syslinux/pxelinux.0 ]; then
+                cp -a /usr/lib/syslinux/pxelinux.0 $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0
+            elif [ -f /usr/share/syslinux/pxelinux.0 ]; then
+                cp -a /usr/share/syslinux/pxelinux.0 $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0
+            else
+                log_failure_msg "Cannot find pxelinux.0 on this system"
+                exit 1
+            fi
+        fi
+        # make sure apache is up + running
+        if ! ps ax | grep apache2 | grep -v grep 1>/dev/null; then
+            $OPENQRM_WEBSERVER_INIT start
+        fi
+
+        # link the web application directory to the documentroot
+        ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
+
+        # the default apache config normally does not allow to override the authconfig (needed for basic auth)
+        # so we allow it for the openqrm directory
+        cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > /etc/apache2/conf.d/openqrm-httpd.conf
+        $OPENQRM_WEBSERVER_INIT reload
+
+        # create the .htaccess file
+        cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-htaccess.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htaccess
+
+        # create the default admin user
+        htpasswd -bc $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd openqrm openqrm
+        chmod 666 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd
+
+        # create the image-auth dir
+        mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth
+        chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth
+
+        # create the openqrm-client link in the right arch
+        KERNEL_ARCH=`uname -m`
+        if echo $KERNEL_ARCH | grep i.*86 1>/dev/null; then
+            # i386
+            OPENQRM_CLIENT_ARCH=i386
+        else
+            OPENQRM_CLIENT_ARCH=$KERNEL_ARCH
+        fi
+        cd $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/
+        ln -sf openqrm-client.tgz openqrm-client.$OPENQRM_CLIENT_ARCH.tgz
+        cd - 1>/dev/null
+
+        # init and start the remote execution layer
+        chmod -R 777 /var/spool/openqrm
+        rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear
+        mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/
+        $OPENQRM_SERVER_BASE_DIR/openqrm/bin/dropbearkey -t rsa -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key
+
+        # allow the webserver user to read it
+        chmod 600 $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key
+
+        # create authorized_keys
+        PUBLIC_KEY=`$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dropbearkey -y -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key | grep ssh`
+        if [ ! -d /root/.ssh ]; then
+            mkdir /root/.ssh
+        fi
+        if [ ! -f /root/.ssh/authorized_keys ]; then
+            echo "$PUBLIC_KEY" > /root/.ssh/authorized_keys
+        else
+            OPENQRM_HOST=`echo $PUBLIC_KEY | awk {' print $3 '}`
+            if grep $OPENQRM_HOST /root/.ssh/authorized_keys 1>/dev/null; then
+                sed -i -e "s#.*$OPENQRM_HOST.*##g" /root/.ssh/authorized_keys
+            fi
+            echo "$PUBLIC_KEY" >> /root/.ssh/authorized_keys
+        fi
+        # and put it in the boot-service dir for the resources to download
+        echo "$PUBLIC_KEY" > $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-server-public-rsa-key
+        kill `ps ax | grep dropbear | grep -v grep | grep openqrm | awk {' print $1 '}` 2>/dev/null || true
+        kill `ps ax | grep openqrm-cmd-queue | grep -v grep | awk {' print $1 '}` 2>/dev/null || true
+
+        # start the openqrm-execd daemon
+        $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/dropbear -p $OPENQRM_EXEC_PORT -r $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key
+        # start the openqrm-cmd-queue
+        $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-cmd-queue &
+
+        # create unconfigured file containing a list of available network cards to setup openQRM on
+        ifconfig -a | grep -v inet6  | grep -B1 inet | grep -i link | grep -v lo | awk {' print $1 '} > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured
+
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+
 #DEBHELPER#
 
+exit 0

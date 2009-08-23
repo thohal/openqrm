@@ -22,9 +22,10 @@ if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
 	OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../..
 	OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
 fi
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
-
+export OPENQRM_SERVER_BASE_DIR
 
 # let only root run this script
 WHOAMI=`whoami`
@@ -48,6 +49,9 @@ function openqrm_usage() {
 	echo "`basename $0` state restore -n <name>"
 	echo "`basename $0` state remove -n <name>"
 	echo "`basename $0` state list"
+	echo
+	echo "- Managing server-configuration -"
+	echo "`basename $0` init_config [restore]"
 	echo
 
 
@@ -243,11 +247,92 @@ case "$1" in
 			list)
 				openqrm_server_state list
 				;;
-
-
-
 		esac
 		;;
+
+
+
+	init_config)
+		shift
+        RESTORE_LAST_STATE=$1
+
+        if [ -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured ]; then
+            echo "Initialyzing the openQRM Database"
+
+            # initialyze the database
+            chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions
+            if ! $OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions init; then
+                echo "Initialyzing the openQRM Database failed !"
+                exit -1
+            fi
+
+            # check if we should restore the last state
+            if [ "$RESTORE_LAST_STATE" == "restore" ]; then
+                echo "Restoring last openQRM state backup"
+                # check if backups are not locked
+                if [ ! -f $OPENQRM_SERVER_STATE_DIR/locked ]; then
+                    if [ "$OPENQRM_RESTORE_STATE" != "false" ]; then
+                        # check if there is a server state to restore
+                        LAST_SERVER_STATE_BACKUP=`ls -tr $OPENQRM_SERVER_STATE_DIR/uninstall-* 2>/dev/null | tail -n1 | sed -s "s/\.tgz//g"`
+                        if [ "$LAST_SERVER_STATE_BACKUP" != "" ]; then
+                            LAST_SERVER_STATE_BACKUP=`basename $LAST_SERVER_STATE_BACKUP`
+                            echo "Found backup of last openQRM Server state $LAST_SERVER_STATE_BACKUP, restoring it"
+                            openqrm_server_state restore $LAST_SERVER_STATE_BACKUP
+                        fi
+                    fi
+                else
+                    echo "Found openQRM Server state backups locked by $OPENQRM_SERVER_STATE_DIR/locked"
+                fi
+            fi
+
+            # create $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default
+            echo "Creating default PXE-configuration"
+            mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/
+            openqrm_server_create_pxe_config -1 default default
+
+            # add automatic startup to init
+            openqrm_chkconfig add openqrm
+
+            # here we create + add the default kernel+kernel-version to the openQRM Server
+            # via the kernel-action.form. If this returns bad something is wrong
+            DEFAULT_KERNEL_VERSION=`uname -r`
+            echo "Creating the default kernel version $DEFAULT_KERNEL_VERSION"
+            INITRD_TYPE="initramfs"
+            openqrm_server_create_kernel default $DEFAULT_KERNEL_VERSION / $INITRD_TYPE
+            if ! openqrm_server_manage_kernel add openqrm openqrm default $DEFAULT_KERNEL_VERSION; then
+                echo "Could not create/add the default kernel ! Initialization failed !"
+                exit -1
+            fi
+
+            # remove configure lock
+            rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured
+
+            # start monitoring subsystem and plugins
+            if [ -x /usr/bin/screen.real ]; then
+                RUNSCREEN="/usr/bin/screen.real"
+            else
+                RUNSCREEN=`which screen`
+            fi
+            SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+            $RUNSCREEN -dmS $SCREEN_NAME $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-monitord
+            if [ -d $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/ ]; then
+                for OPENQRM_PLUGIN in `ls $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/`; do
+                    if [ -x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN ]; then
+                        $RUNSCREEN -dmS $OPENQRM_PLUGIN $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN start
+                    fi
+                done
+            fi
+            echo "Successfully initialyzed and started the openQRM Server"
+            exit 0
+
+        else
+            echo "This openQRM Server is already configured. Skipping re-init"
+            exit 0
+        fi
+
+
+		;;
+
 
 
 	*)
