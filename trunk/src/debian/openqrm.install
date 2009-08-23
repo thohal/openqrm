@@ -27,3 +27,4 @@ usr/sbin/openqrm-exec
 usr/sbin/openqrm-execd
 usr/sbin/openqrm-monitord
 usr/sbin/openqrm-postencode
+var/spool/openqrm

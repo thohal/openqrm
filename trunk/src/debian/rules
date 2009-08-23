@@ -41,7 +41,7 @@ binary-arch: build install
 	dh_installmenu
 	dh_installdebconf	
 	dh_installinit
-	dh_installman -A debian/man/*
+	dh_installman
 	dh_lintian
 	dh_link
 	dh_strip

@@ -6,15 +6,6 @@ Build-Depends: debhelper (>= 6.0.7~), libpci-dev, portmap, rsync, zlib1g-dev, wg
 Standards-Version: 3.8.2
 Homepage: http://www.openqrm.org
 
-Package: openqrm
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client, syslinux, dropbear, python, tftpd-hpa, dhcp3-server, screen, nagios-images, nagios-plugins, nmap, default-mta | mail-transport-agent, libxml-simple-perl, open-iscsi, aoetools, openssl, rsync, expect, puppetmaster, subversion, bind9
-Conflicts: openqrm-entire, apparmor
-Description: Cloud Computing Platform
- openQRM is a fully automated, rapid deployment system including
- VM-Management, Monitoring, High-Availability and Storage-Management.
- It provides a plug-able open-source Cloud Computing platform.
-
 Package: openqrm-entire
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client, syslinux, dropbear, ash, python, tftpd-hpa, stunnel, dhcp3-server, screen, nagios-images, nagios-plugins, nmap, default-mta | mail-transport-agent, libxml-simple-perl, open-iscsi, aoetools, openssl, rsync, expect, puppetmaster, subversion, bind9
@@ -35,3 +26,11 @@ Description: Cloud Computing Platform
  It provides a plug-able open-source Cloud Computing platform.
  This package contains additional openQRM plugins.
 
+Package: openqrm
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client, syslinux, dropbear, python, tftpd-hpa, dhcp3-server, screen, nagios-images, nagios-plugins, nmap, default-mta | mail-transport-agent, libxml-simple-perl, open-iscsi, aoetools, openssl, rsync, expect, puppetmaster, subversion, bind9
+Conflicts: openqrm-entire, apparmor
+Description: Cloud Computing Platform
+ openQRM is a fully automated, rapid deployment system including
+ VM-Management, Monitoring, High-Availability and Storage-Management.
+ It provides a plug-able open-source Cloud Computing platform.
