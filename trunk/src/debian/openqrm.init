@@ -56,7 +56,7 @@ else
 fi
 export OPENQRM_SERVER_BASE_DIR
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
-
+export OPENQRM_WEBSERVER_DOCUMENT_ROOT
 
 set -e
 
@@ -114,7 +114,8 @@ start_server() {
             rm -f ${LOCKFILE}
             return 1
         fi
-        CONFIGURED_IP=$(cat $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default | grep "openqrm=" | sed -e "s/.*openqrm=//" | awk {' print $1 '})
+        CONFIGURED_IP=`cat $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default | grep "openqrm=" | sed -e "s/.*openqrm=//" | awk {' print $1 '}`
+        OPENQRM_SERVER_IP_ADDRESS=`ifconfig $OPENQRM_SERVER_INTERFACE | grep inet | grep -v inet6 | cut -d':' -f2 | awk {' print $1 '} | head -n 1`
         if [ "$OPENQRM_SERVER_IP_ADDRESS" != "$CONFIGURED_IP" ]; then
             ifconfig -a | grep -v inet6  | grep -B1 inet | grep -i link | grep -v lo | awk {' print $1 '} > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured
             log_failure_msg "Interface $OPENQRM_SERVER_INTERFACE has the wrong ip-configuration"
