@@ -112,6 +112,25 @@ function openqrm_plugin_dhcpd_init() {
 		sed -e "s/OPENQRM_PLUGIN_DHCPD_IP_RANGE_LAST/$OPENQRM_PLUGIN_DHCPD_IP_RANGE_LAST/g"	\
 		> $OPENQRM_PLUGIN_DHCPD_CONF
 
+	# enable apparmor if needed
+    if [ -f /etc/apparmor.d/usr.sbin.dhcpd3 ]; then
+        if ! grep openQRM /etc/apparmor.d/usr.sbin.dhcpd3 1>/dev/null; then
+            cat /etc/apparmor.d/usr.sbin.dhcpd3 |
+            sed -i -e "s#}##g" /etc/apparmor.d/usr.sbin.dhcpd3
+            echo "  # openQRM" >> /etc/apparmor.d/usr.sbin.dhcpd3
+            echo "  /usr/share/openqrm/plugins/dhcpd/** rw," >> /etc/apparmor.d/usr.sbin.dhcpd3
+            echo "}" >> /etc/apparmor.d/usr.sbin.dhcpd3
+            echo >> /etc/apparmor.d/usr.sbin.dhcpd3
+            if [ -x "/etc/init.d/apparmor" ]; then
+                if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+                    invoke-rc.d apparmor reload || exit $?
+                else
+                    /etc/init.d/apparmor reload || exit $?
+                fi
+            fi
+        fi
+    fi
+
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dhcpd
 
@@ -122,6 +141,19 @@ function openqrm_plugin_dhcpd_init() {
 function openqrm_plugin_dhcpd_uninstall() {
 	echo "Uninstalling the openQRM dhcpd-plugin"
 	openqrm_plugin_dhcpd_stop
+
+    # remove apparmor setup
+    if [ -f /etc/apparmor.d/usr.sbin.dhcpd3 ]; then
+        sed -i -e "s#.*openQRM.*##g" /etc/apparmor.d/usr.sbin.dhcpd3
+        sed -i -e "s#.*openqrm.*##g" /etc/apparmor.d/usr.sbin.dhcpd3
+        if [ -x "/etc/init.d/apparmor" ]; then
+            if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+                invoke-rc.d apparmor reload || exit $?
+            else
+                /etc/init.d/apparmor reload || exit $?
+            fi
+        fi
+    fi
 	# unlinking the web dir
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dhcpd
 }
