@@ -81,11 +81,12 @@ case "$1" in
         else
             OPENQRM_CLIENT_ARCH=$KERNEL_ARCH
         fi
+        THISDIR=`pwd`
         cd $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/
         ln -sf openqrm-client.tgz openqrm-client.$OPENQRM_CLIENT_ARCH.tgz
-        cd - 1>/dev/null
+        cd $THISDIR
 
-        # init and start the remote execution layer
+        # init the remote execution layer
         chmod -R 777 /var/spool/openqrm
         rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear
         mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/
@@ -97,7 +98,7 @@ case "$1" in
         # create authorized_keys
         PUBLIC_KEY=`$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dropbearkey -y -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key | grep ssh`
         if [ ! -d /root/.ssh ]; then
-            mkdir /root/.ssh
+            mkdir -p /root/.ssh
         fi
         if [ ! -f /root/.ssh/authorized_keys ]; then
             echo "$PUBLIC_KEY" > /root/.ssh/authorized_keys
@@ -110,13 +111,6 @@ case "$1" in
         fi
         # and put it in the boot-service dir for the resources to download
         echo "$PUBLIC_KEY" > $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-server-public-rsa-key
-        kill `ps ax | grep dropbear | grep -v grep | grep openqrm | awk {' print $1 '}` 2>/dev/null || true
-        kill `ps ax | grep openqrm-cmd-queue | grep -v grep | awk {' print $1 '}` 2>/dev/null || true
-
-        # start the openqrm-execd daemon
-        $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/dropbear -p $OPENQRM_EXEC_PORT -r $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key
-        # start the openqrm-cmd-queue
-        $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-cmd-queue &
 
         # create unconfigured file containing a list of available network cards to setup openQRM on
         ifconfig -a | grep -v inet6  | grep -B1 inet | grep -i link | grep -v lo | awk {' print $1 '} > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured

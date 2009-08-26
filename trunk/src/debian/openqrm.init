@@ -92,7 +92,7 @@ running() {
 }
 
 start_server() {
-    stop_exec_subsystem
+    stop_exec_subsystem_force
     if ! $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/dropbear -p $OPENQRM_EXEC_PORT -r $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key; then
         log_failure_msg "Could not start openQRM exec-subsystem!"
         stop_exec_subsystem_force

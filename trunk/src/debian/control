@@ -8,7 +8,7 @@ Homepage: http://www.openqrm.org
 
 Package: openqrm-entire
 Architecture: any
-Depends: openqrm, openqrm-plugins
+Depends: ${misc:Depends}, openqrm, openqrm-plugins
 Description: Cloud Computing Platform
  openQRM is a fully automated, rapid deployment system including
  VM-Management, Monitoring, High-Availability and Storage-Management.
