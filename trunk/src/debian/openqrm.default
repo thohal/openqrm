@@ -18,3 +18,5 @@
 #
 OPENQRM_SERVER_BASE_DIR="/usr/share"
 
+# write-able dir for e.g. tftpboot
+OPENQRM_SERVER_WRITEABLE_DIR="/var/lib"

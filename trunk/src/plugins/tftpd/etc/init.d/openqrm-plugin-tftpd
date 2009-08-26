@@ -18,6 +18,12 @@
 # Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 #
 
+if [ -f /etc/default/openqrm ] ; then
+    . /etc/default/openqrm
+else
+    OPENQRM_SERVER_WRITEABLE_DIR=$OPENQRM_SERVER_BASE_DIR
+fi
+
 OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
@@ -32,7 +38,7 @@ function openqrm_plugin_tftpd_start() {
 	openqrm_plugin_tftpd_update_pmtu
 
 	# start tftp service
-	/usr/sbin/in.tftpd -l -s $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/
+	/usr/sbin/in.tftpd -l -s $OPENQRM_SERVER_WRITEABLE_DIR/openqrm/tftpboot/
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/tftpd/.running
 }
 
