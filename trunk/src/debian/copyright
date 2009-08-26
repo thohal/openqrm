@@ -27,7 +27,7 @@ X-Comment: On Debian GNU/Linux systems, the complete text of the
 Files: thirdparty/openqrm-build/hwdata-knoppix/source/hwdata-knoppix_0.172-5.tar.gz
 License: GPL-2 / XFree86
 Copyright: Copyright 2002 Red Hat, Inc.
-Copyright: Klaus Knopper <knoppix@knopper.net>
+           Klaus Knopper <knoppix@knopper.net>
 X-Comment: On Debian GNU/Linux systems, the complete text of the
  GNU General Public License can be found in /usr/share/common-licenses/GPL-2
 X-Comment: The XFree86 license text is included below
@@ -48,7 +48,7 @@ X-Comment: The MIT license text is included below
 Files: thirdparty/openqrm-build/dropbear/source/dropbear-0.52.tar.gz
 License: MIT
 Copyright: Copyright (c) 2002-2008 Matt Johnston
-Copyright: Portions copyright (c) 2004 Mihnea Stoenescu
+           Portions copyright (c) 2004 Mihnea Stoenescu
 X-Comment: The MIT license text is included below
 
 Files: thirdparty/openqrm-build/js-interface/source/interface_1.2.zip
@@ -79,13 +79,13 @@ X-Comment: License text from the file header:
 Files: plugins/nagios3/bin/nmap2nagios-ng.pl
 License: Perl/Artistic
 Copyright: Copyright (c) 2001-2002 Todd A. Green
-Copyright: Copyright (c) 2008 Michel Sigloch
+           Copyright (c) 2008 Michel Sigloch
 X-Comment: On Debian GNU/Linux systems, the complete text of the
  Artistic License can be found in /usr/share/common-licenses/Artistic
 
 Files: web/base/class/*.php
 Copyright: Copyright (c) 2009, Alexander Kuballa <akuballa@users.sourceforge.net>
-Copyright: Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+           Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 
 
 
