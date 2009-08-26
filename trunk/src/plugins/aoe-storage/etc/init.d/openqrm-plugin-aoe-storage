@@ -33,8 +33,12 @@ function openqrm_plugin_aoe_storage_start() {
 	echo "Starting the openQRM aoe-storage-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aoe-storage/.running
 	mkdir -p /var/run/vblade/
-	if [ -x /etc/init.d/vblade ]; then
-		/etc/init.d/vblade start
+    if [ -x "/etc/init.d/vblade" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d vblade start || exit $?
+        else
+            /etc/init.d/vblade start || exit $?
+        fi
 	else
 		if [ -f $VBLADECONF ]; then
 			if which vbladed 1>/dev/null; then
@@ -59,11 +63,15 @@ function openqrm_plugin_aoe_storage_start() {
 function openqrm_plugin_aoe_storage_stop() {
 	echo "Stopping the openQRM aoe-storage-plugin"
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/aoe-storage/.running
-	if [ -x /etc/init.d/vblade ]; then
-		/etc/init.d/vblade stop 1>/dev/null 2>&1
-		for VPID in `ps ax | grep vblade | grep -v grep | awk {' print $1 '}`; do
-			kill $VPID
-		done
+    if [ -x "/etc/init.d/vblade" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d vblade stop || exit $?
+        else
+            /etc/init.d/vblade stop || exit $?
+            for VPID in `ps ax | grep vblade | grep -v grep | awk {' print $1 '}`; do
+                kill $VPID
+            done
+        fi
 	else
 		if [ -f $VBLADECONF ]; then
 			echo "Stopping vblades ..."

@@ -53,7 +53,13 @@ function openqrm_plugin_tftpd_init() {
 	echo "Initializing the openQRM tftpd-plugin"
 	# make sure tftp is not running already
 	if [ -f /etc/debian_version ]; then
-		/etc/init.d/tftpd-hpa stop
+        if [ -x "/etc/init.d/tftpd-hpa" ]; then
+            if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+                invoke-rc.d tftpd-hpa stop || exit $?
+            else
+                /etc/init.d/tftpd-hpa stop || exit $?
+            fi
+        fi
 		update-rc.d -f tftpd-hpa remove
 		# inetd ?
 		if [ -f /etc/inetd.conf ]; then
@@ -65,7 +71,13 @@ function openqrm_plugin_tftpd_init() {
 	if [ -f /etc/xinetd.d/tftp ]; then
 		sed -i -e "s/disable.*/disable = yes/" /etc/xinetd.d/tftp
 		sed -i -e "s/Disable.*/Disable = yes/" /etc/xinetd.d/tftp
-		/etc/init.d/xinetd restart
+        if [ -x "/etc/init.d/xinetd" ]; then
+            if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+                invoke-rc.d xinetd restart || exit $?
+            else
+                /etc/init.d/xinetd restart || exit $?
+            fi
+        fi
 	fi
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/tftpd/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/tftpd

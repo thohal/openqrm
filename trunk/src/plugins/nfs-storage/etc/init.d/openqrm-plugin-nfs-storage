@@ -30,30 +30,54 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 function openqrm_plugin_nfs_storage_start() {
 	echo "Starting the openQRM nfs-storage-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nfs-storage/.running
-	if [ -x /etc/init.d/nfs-kernel-server ]; then
-		/etc/init.d/nfs-kernel-server start
-	fi
-	if [ -x /etc/init.d/nfs ]; then
-		/etc/init.d/nfs start
-	fi
-	if [ -x /etc/init.d/nfslock ]; then
-		/etc/init.d/nfslock start
-	fi
+    if [ -x "/etc/init.d/nfs-kernel-server" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d nfs-kernel-server start || exit $?
+        else
+            /etc/init.d/nfs-kernel-server start || exit $?
+        fi
+    fi
+    if [ -x "/etc/init.d/nfs" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d nfs start || exit $?
+        else
+            /etc/init.d/nfs start || exit $?
+        fi
+    fi
+    if [ -x "/etc/init.d/nfslock" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d nfslock start || exit $?
+        else
+            /etc/init.d/nfslock start || exit $?
+        fi
+    fi
 }
 
 
 function openqrm_plugin_nfs_storage_stop() {
 	echo "Stopping the openQRM nfs-storage-plugin"
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/nfs-storage/.running
-	if [ -x /etc/init.d/nfs-kernel-server ]; then
-		/etc/init.d/nfs-kernel-server stop
-	fi
-	if [ -x /etc/init.d/nfs ]; then
-		/etc/init.d/nfs stop
-	fi
-	if [ -x /etc/init.d/nfslock ]; then
-		/etc/init.d/nfslock stop
-	fi
+    if [ -x "/etc/init.d/nfs-kernel-server" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d nfs-kernel-server stop || exit $?
+        else
+            /etc/init.d/nfs-kernel-server stop || exit $?
+        fi
+    fi
+    if [ -x "/etc/init.d/nfs" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d nfs stop || exit $?
+        else
+            /etc/init.d/nfs stop || exit $?
+        fi
+    fi
+    if [ -x "/etc/init.d/nfslock" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d nfslock stop || exit $?
+        else
+            /etc/init.d/nfslock stop || exit $?
+        fi
+    fi
 }
 
 function openqrm_plugin_nfs_storage_uninstall() {

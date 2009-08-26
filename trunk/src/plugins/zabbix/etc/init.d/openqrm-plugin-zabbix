@@ -31,22 +31,31 @@ function openqrm_plugin_zabbix_start() {
 	echo "Starting the openQRM zabbix-plugin"
 	openqrm_plugin_zabbix_stop 1>/dev/null 2>&1
     # start server
-	if [ -x /etc/init.d/zabbix-server ]; then
-		/etc/init.d/zabbix-server start
+
+    if [ -x "/etc/init.d/zabbix-server" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d zabbix-server start || exit $?
+        else
+            /etc/init.d/zabbix-server start || exit $?
+        fi
     elif [ -x /etc/init.d/zabbix ]; then
-		/etc/init.d/zabbix start 1>/dev/null 2>&1
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d zabbix start || exit $?
+        else
+            /etc/init.d/zabbix start || exit $?
+        fi
 	else
 		zabbix_manager_lock release
 		openqrm_post_event 0 "openqrm_plugin_zabbix_start" 3 "openqrm-plugin-zabbix" "Could not start Zabbix-server. Init script not found !."
 		exit 1
 	fi
     # start agent
-	if [ -x /etc/init.d/zabbix-agent ]; then
-		/etc/init.d/zabbix-agent start
-	else
-		zabbix_manager_lock release
-		openqrm_post_event 0 "openqrm_plugin_zabbix_start" 3 "openqrm-plugin-zabbix" "Could not start Zabbix-agent. Init script not found !."
-		exit 1
+    if [ -x "/etc/init.d/zabbix-agent" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d zabbix-agent start || exit $?
+        else
+            /etc/init.d/zabbix-agent start || exit $?
+        fi
 	fi
 
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/zabbix/.running
@@ -56,17 +65,25 @@ function openqrm_plugin_zabbix_start() {
 
 function openqrm_plugin_zabbix_stop() {
 	echo "Stopping the openQRM zabbix-plugin"
-	if [ -x /etc/init.d/zabbix-agent ]; then
-		/etc/init.d/zabbix-agent stop
-	else
-		zabbix_manager_lock release
-		openqrm_post_event 0 "openqrm_plugin_zabbix_stop" 3 "openqrm-plugin-zabbix" "Could not stop Zabbix-agent. Init script not found !."
+    if [ -x "/etc/init.d/zabbix-agent" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d zabbix-agent stop || exit $?
+        else
+            /etc/init.d/zabbix-agent stop || exit $?
+        fi
 	fi
-
-	if [ -x /etc/init.d/zabbix-server ]; then
-		/etc/init.d/zabbix-server stop
-	elif [ -x /etc/init.d/zabbix ]; then
-		/etc/init.d/zabbix stop
+    if [ -x "/etc/init.d/zabbix-server" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d zabbix-server stop || exit $?
+        else
+            /etc/init.d/zabbix-server stop || exit $?
+        fi
+    elif [ -x /etc/init.d/zabbix ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d zabbix stop || exit $?
+        else
+            /etc/init.d/zabbix stop || exit $?
+        fi
 	else
 		zabbix_manager_lock release
 		openqrm_post_event 0 "openqrm_plugin_zabbix_stop" 3 "openqrm-plugin-zabbix" "Could not stop Zabbix-server. Init script not found !."

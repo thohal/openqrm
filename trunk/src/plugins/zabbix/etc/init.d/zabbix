@@ -56,8 +56,12 @@ function zabbix_start() {
     fi
 
     # start agent
-	if [ -x /etc/init.d/zabbix-agent ]; then
-		/etc/init.d/zabbix-agent start
+    if [ -x "/etc/init.d/zabbix-agent" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d zabbix-agent start || exit $?
+        else
+            /etc/init.d/zabbix-agent start || exit $?
+        fi
 	else
     	echo "ERROR: Cloud not start the Zabbix-agent !"
 	fi
@@ -67,9 +71,13 @@ function zabbix_start() {
 
 function zabbix_stop() {
 	echo "Stopping the openQRM zabbix plugin"
-    # start agent
-	if [ -x /etc/init.d/zabbix-agent ]; then
-		/etc/init.d/zabbix-agent stop
+    # stop agent
+    if [ -x "/etc/init.d/zabbix-agent" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d zabbix-agent stop || exit $?
+        else
+            /etc/init.d/zabbix-agent stop || exit $?
+        fi
 	else
     	echo "ERROR: Cloud not stop the Zabbix-agent !"
 	fi

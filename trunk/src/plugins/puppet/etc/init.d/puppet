@@ -64,9 +64,13 @@ function puppet_start() {
 
 function puppet_stop() {
 	echo "Stopping the openQRM puppet-plugin"
-	if [ -x /etc/init.d/puppet ]; then
-		/etc/init.d/puppet stop
-	fi
+    if [ -x "/etc/init.d/puppet" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d puppet stop || exit $?
+        else
+            /etc/init.d/puppet stop || exit $?
+        fi
+    fi
 	kill -9 `ps ax | grep puppetd | grep -v grep | awk {' print $1 '}` 2>/dev/null
 }
 
