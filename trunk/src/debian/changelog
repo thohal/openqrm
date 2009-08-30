@@ -1,7 +1,7 @@
-openqrm (4.5-0ubuntu1) karmic; urgency=low
+openqrm (4.6~beta1-0ubuntu1) karmic; urgency=low
 
   [ Matthias Rechenburg ]
   * Initial release (LP: #278559)
 
- -- Matthias Rechenburg <matt@openqrm.com>  Sat, 22 Aug 2009 16:45:04 +0200
+ -- Matthias Rechenburg <matt@openqrm.com>  Thu, 27 Aug 2009 01:51:05 +0200
 
