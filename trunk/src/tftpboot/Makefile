@@ -26,6 +26,7 @@ compile:
 install:
 
 uninstall:
+	@. $(OPENQRM_SERVER_CONF) && rm -rf $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot
 
 clean:
 
