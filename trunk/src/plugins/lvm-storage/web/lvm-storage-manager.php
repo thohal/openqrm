@@ -65,12 +65,14 @@ $lvm_volume_group = htmlobject_request('lvm_volume_group');
 $lvm_lun_name=htmlobject_request('lvm_lun_name');
 $lvm_lun_snap_name=htmlobject_request('lvm_lun_snap_name');
 $lvm_lun_snap_size=htmlobject_request('lvm_lun_snap_size');
+$lvm_lun_resize=htmlobject_request('lvm_lun_resize');
 
 $action=htmlobject_request('action');
 global $lvm_storage_id;
 global $lvm_volume_group;
 global $lvm_lun_name;
 global $lvm_lun_snap_name;
+global $lvm_lun_resize;
 
 $refresh_delay=1;
 $refresh_loop_max=20;
@@ -440,6 +442,64 @@ if(htmlobject_request('redirect') != 'yes') {
                 }
                 break;
 
+
+
+
+            case 'resize':
+                show_progressbar();
+                if (!strlen($lvm_lun_name)) {
+                    $redir_msg = "Got emtpy logical volume name. Not resizing ...";
+                    redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
+                    exit(0);
+                } else if (!validate_input($lvm_lun_name, 'string')) {
+                    $redir_msg = "Got invalid logical volume name. Not resizing ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
+                    redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
+                    exit(0);
+                }
+                if (!strlen($lvm_lun_resize)) {
+                    $lvm_lun_resize=5000;
+                } else if (!validate_input($lvm_lun_resize, 'number')) {
+                    $redir_msg = "Got invalid logical volume resize value. Not resizing ...";
+                    redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
+                    exit(0);
+                }
+                // generate a new password
+                $image = new image();
+                $lvm_chap_password = $image->generatePassword(14);
+                // snap
+                $storage = new storage();
+                $storage->get_instance_by_id($lvm_storage_id);
+                $storage_resource = new resource();
+                $storage_resource->get_instance_by_id($storage->resource_id);
+                $deployment = new deployment();
+                $deployment->get_instance_by_id($storage->type);
+                // in case of lvm-iscsi we have to send a password when adding a lun
+                if (!strcmp($deployment->type, "lvm-iscsi-deployment")) {
+                    $image = new image();
+                    // generate a password for the image
+                    $image_password = $image->generatePassword(12);
+                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage resize -n $lvm_lun_name -v $lvm_volume_group -t $deployment->type -m $lvm_lun_resize -i $image_password -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                } else {
+                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage resize -n $lvm_lun_name -v $lvm_volume_group -t $deployment->type -m $lvm_lun_resize -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                }
+                // remove current stat file
+                $storage_resource_id = $storage_resource->id;
+                $statfile="storage/".$storage_resource_id.".".$lvm_volume_group.".lv.stat";
+                if (file_exists($statfile)) {
+                    unlink($statfile);
+                }
+                // send command
+                $storage_resource->send_command($storage_resource->ip, $resource_command);
+                // and wait for the resulting statfile
+                if (!wait_for_statfile($statfile)) {
+                    $redir_msg = "Error during resizing volume $lvm_lun_name on Volume Group $lvm_volume_group ! Please check the Event-Log";
+                } else {
+                    $redir_msg = "Resized volume $lvm_lun_name on Volume Group $lvm_volume_group";
+                }
+                redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
+                break;
+
+
         }
 	}
 }
@@ -764,6 +824,9 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
 	$arHead['lvm_lun_lsize'] = array();
 	$arHead['lvm_lun_lsize']['title'] ='LSize';
 
+	$arHead['lvm_lun_rsize'] = array();
+	$arHead['lvm_lun_rsize']['title'] ='Resize (+ MB)';
+
 	$arHead['lvm_lun_snap'] = array();
 	$arHead['lvm_lun_snap']['title'] ='Clone (name + size)';
 
@@ -801,6 +864,16 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
             $lvm_lun_vol = trim(substr($lvm_line_first_at_removed, 0, $second_at_pos-1));
             $lvm_lun_attr = trim(substr($lvm_line_second_at_removed, 0, $third_at_pos-1));
             $lvm_lun_lsize = trim(substr($lvm_line_third_at_removed, 0, $fourth_at_pos-1));
+
+            // build the resize input
+            $lvm_lun_rsize = "<form action=\"$thisfile\" method=\"GET\">";
+            $lvm_lun_rsize .= "<input type='hidden' name='lvm_storage_id' value=$lvm_storage_id>";
+            $lvm_lun_rsize .= "<input type='hidden' name='lvm_volume_group' value=$lvm_volume_group>";
+            $lvm_lun_rsize .= "<input type='hidden' name='lvm_lun_name' value=$lvm_lun_name>";
+            $lvm_lun_rsize .= "<input type='text' name='lvm_lun_resize' value='' size='5' maxlength='10'> MB ";
+            $lvm_lun_rsize .= "<input type='submit' name='action' value='resize'>";
+            $lvm_lun_rsize .= "</form>";
+
             // build the snap-shot input
             $lvm_lun_snap = "<form action=\"$thisfile\" method=\"GET\">";
             $lvm_lun_snap .= "<input type='hidden' name='lvm_storage_id' value=$lvm_storage_id>";
@@ -816,6 +889,7 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
                 'lvm_lun_name' => $lvm_lun_name,
                 'lvm_lun_attr' => $lvm_lun_attr,
                 'lvm_lun_lsize' => $lvm_lun_lsize,
+                'lvm_lun_rsize' => $lvm_lun_rsize,
                 'lvm_lun_snap' => $lvm_lun_snap,
             );
             $lvm_lun_count++;
@@ -913,6 +987,9 @@ if(htmlobject_request('action') != '') {
             $output[] = array('label' => $lvm_volume_group, 'value' => lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group));
 			break;
 
+        case 'resize':
+            $output[] = array('label' => $lvm_volume_group, 'value' => lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group));
+			break;
 
 
 	}

@@ -50,7 +50,7 @@ if [ "$WHOAMI" != "root" ]; then
 fi
 
 function lvm_storage_usage() {
-	echo "Usage : $0 add/remove/snap/list <-n image-name> <-v volume-group> <-t lvm-nfs-deployment/lvm-iscsi-deployment/lvm-aoe-deployment>"
+	echo "Usage : $0 add/remove/snap/list/resize <-n image-name> <-v volume-group> <-t lvm-nfs-deployment/lvm-iscsi-deployment/lvm-aoe-deployment>"
 	echo "             [-m size in MB]"
 	echo "             [-s image-snapshot-name]"
 	echo "             (for lvm-iscsi-deployment : <-i authidentifier>)"
@@ -155,8 +155,8 @@ else
 fi
 # load required lvm modules if needed
 if ! grep dm_mod /proc/modules 1>/dev/null; then
-	modprobe dm-mod 1>/dev/null
-	modprobe dm-snapshot 1>/dev/null
+	modprobe dm-mod 1>/dev/null 2>&1
+	modprobe dm-snapshot 1>/dev/null 2>&1
 	# give time to settle
 	sleep 2
 fi
@@ -418,6 +418,55 @@ case "$LVM_COMMAND" in
 		rm -f $STORAGE_STATUS_TMP
 		rm -f $STORAGE_STATUS_TMP.post
 		;;
+
+
+	resize)
+		if [ "$LVM_IMAGE_SIZE" == "" ]; then
+			LVM_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
+			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
+		fi
+		export LVM_IMAGE_SIZE
+		echo "Resizing logical volume $LVM_IMAGE_NAME + size $LVM_IMAGE_SIZE MB using volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
+        lvresize -L +$LVM_IMAGE_SIZE /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+
+		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
+			echo "Detected Iscsi-image. Running resize2fs on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
+			check_iscsi_target
+			lvm_storage_lock aquire
+			manage_iscsi remove
+            e2fsck -f -y /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+            resize2fs -fp /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+			manage_iscsi add snap $LVM_IMAGE_AUTH
+			lvm_storage_lock release
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
+			# if it is lvm-nfs deployment we can resize the fs immediately
+			echo "Detected NFS-image. Running resize2fs on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
+			lvm_storage_lock aquire
+			manage_nfs remove
+            e2fsck -f -y /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+            resize2fs -fp /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+			manage_nfs add snap $OPENQRM_SERVER_IP
+			lvm_storage_lock release
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
+			echo "Detected Aoe-image. Running resize2fs on /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME"
+			check_vblade
+			lvm_storage_lock aquire
+			manage_vblade remove
+            e2fsck -f -y /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+            resize2fs -fp /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+			manage_vblade add snap
+			lvm_storage_lock release
+		fi
+
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP -t $LVM_IMAGE_TYPE
+		fi
+
+		;;
+
+
+
 	*)
 		lvm_storage_usage
 		;;
