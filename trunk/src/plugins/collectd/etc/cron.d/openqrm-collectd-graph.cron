@@ -17,4 +17,4 @@
 #
 MAILTO=""
 PATH="/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/sbin:/usr/local/bin:/usr/X11R6/bin"
-*/2 * * * * root @@OPENQRM_SERVER_BASE_DIR@@/openqrm/plugins/collectd/bin/openqrm-collectd-manager graph
+*/15 * * * * root @@OPENQRM_SERVER_BASE_DIR@@/openqrm/plugins/collectd/bin/openqrm-collectd-manager graph
