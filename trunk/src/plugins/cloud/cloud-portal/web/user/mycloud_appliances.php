@@ -37,6 +37,7 @@ require_once "$RootDir/plugins/cloud/class/clouduser.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudrequest.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudiptables.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudnat.class.php";
@@ -108,19 +109,13 @@ function my_cloud_appliances() {
 	$arHead['appliance_name'] = array();
 	$arHead['appliance_name']['title'] ='Name';
 
-	$arHead['appliance_kernelid'] = array();
-	$arHead['appliance_kernelid']['title'] ='Kernel';
+	$arHead['appliance_config'] = array();
+	$arHead['appliance_config']['title'] ='Configuration';
 
-	$arHead['appliance_imageid'] = array();
-	$arHead['appliance_imageid']['title'] ='Image';
+	$arHead['appliance_disk_size'] = array();
+	$arHead['appliance_disk_size']['title'] ='Disk(MB)';
 
-	$arHead['appliance_resources'] = array();
-	$arHead['appliance_resources']['title'] ='Resource <small>[ip]</small>';
-
-	$arHead['appliance_type'] = array();
-	$arHead['appliance_type']['title'] ='Type';
-
-	$arHead['appliance_comment'] = array();
+    $arHead['appliance_comment'] = array();
 	$arHead['appliance_comment']['title'] ='Comment';
 
 	$arHead['appliance_cloud_state'] = array();
@@ -252,6 +247,11 @@ function my_cloud_appliances() {
 		$virtualization = new virtualization();
 		$virtualization->get_instance_by_id($appliance_db["appliance_virtualization"]);
 		$appliance_virtualization_type=$virtualization->name;
+        // image disk size
+        $cloud_image = new cloudimage();
+        $cloud_image->get_instance_by_image_id($image->id);
+        $cloud_image_disk_size = $cloud_image->disk_size;
+
 
         // prepare actions
         $cloudappliance_action = "";
@@ -279,6 +279,8 @@ function my_cloud_appliances() {
                 $cloudappliance_action .= "<img src=\"../img/progress.gif\" border=\"0\" width=\"25\" height=\"25\" alt=\"Collecting Data, Graphs will be available soon\" title=\"Collecting Data, Graphs will be available soon\">";
             }
         }
+        // format image column
+        $config_column = "<b>Kernel:</b> ".$kernel->name."</br><b>Image:</b> ".$image->name."<br><b>Type:</b> ".$appliance_virtualization_type."<br><b>IP:</b>".$appliance_resources_str;
 
 
         $appliance_comment = $appliance_db["appliance_comment"];
@@ -287,10 +289,8 @@ function my_cloud_appliances() {
 			'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default><input type=hidden name=\"currenttab\" value=\"tab2\">",
 			'appliance_id' => $appliance_db["appliance_id"],
 			'appliance_name' => $appliance_db["appliance_name"],
-			'appliance_kernelid' => $kernel->name,
-			'appliance_imageid' => $image->name,
-			'appliance_resources' => "$appliance_resources_str",
-			'appliance_type' => $appliance_virtualization_type,
+			'appliance_config' => $config_column,
+			'appliance_disk_size' => "<input type=text name=\"appliance_disk_resize[$appliance->id]\" value=\"$cloud_image_disk_size\" size=4><input type=hidden name=\"currenttab\" value=\"tab3\">",
 			'appliance_comment' => "<input type=text name=\"appliance_comment[$appliance->id]\" value=\"$appliance_comment\"><input type=hidden name=\"currenttab\" value=\"tab3\">",
 			'appliance_cloud_state' => $cloudappliance_state,
 			'appliance_cloud_action' => $cloudappliance_action,
@@ -307,9 +307,9 @@ function my_cloud_appliances() {
 	$table->head = $arHead;
 	$table->body = $arBody;
     if ($sshterm_enabled) {
-    	$table->bottom = array('login', 'pause', 'unpause', 'restart', 'comment');
+    	$table->bottom = array('login', 'pause', 'unpause', 'restart', 'comment', 'resize');
     } else {
-        $table->bottom = array('pause', 'unpause', 'restart', 'comment');
+        $table->bottom = array('pause', 'unpause', 'restart', 'comment', 'resize');
     }
 	$table->identifier = 'appliance_id';
 	$table->max = 1000;

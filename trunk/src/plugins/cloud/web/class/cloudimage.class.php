@@ -48,8 +48,31 @@ var $cr_id = '';
 var $image_id = '';
 var $appliance_id = '';
 var $resource_id = '';
+var $disk_size = '';
+var $disk_rsize = '';
 var $state = '';
 
+	//--------------------------------------------------
+	/**
+	* Constructor
+	*/
+	//--------------------------------------------------
+	function cloudimage() {
+		$this->init();
+	}
+
+	//--------------------------------------------------
+	/**
+	* init storage environment
+	* @access public
+	*/
+	//--------------------------------------------------
+	function init() {
+		global $CLOUD_IMAGE_TABLE, $OPENQRM_SERVER_BASE_DIR;
+		$this->_event = new event();
+		$this->_db_table = $CLOUD_IMAGE_TABLE;
+		$this->_base_dir = $OPENQRM_SERVER_BASE_DIR;
+	}
 
 // ---------------------------------------------------------------------------------
 // methods to create an instance of a cloudimage object filled from the db
@@ -75,6 +98,8 @@ function get_instance($id, $image_id) {
 		$this->image_id = $cloudimage["ci_image_id"];
 		$this->appliance_id = $cloudimage["ci_appliance_id"];
 		$this->resource_id = $cloudimage["ci_resource_id"];
+		$this->disk_size = $cloudimage["ci_disk_size"];
+		$this->disk_rsize = $cloudimage["ci_disk_rsize"];
 		$this->state = $cloudimage["ci_state"];
 	}
 	return $this;
@@ -143,6 +168,23 @@ function remove($cloudimage_id) {
 }
 
 
+// updates a cloudimage
+function update($ci_id, $ci_fields) {
+    global $CLOUD_IMAGE_TABLE;
+    global $event;
+    if ($ci_id < 0 || ! is_array($ci_fields)) {
+        $this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "cloudimage.class.php", "Unable to update Cloudimage $ci_id", "", "", 0, 0, 0);
+        return 1;
+    }
+    $db=openqrm_get_db_connection();
+    unset($ci_fields["ci_id"]);
+    $result = $db->AutoExecute($this->_db_table, $ci_fields, 'UPDATE', "ci_id = $ci_id");
+    if (! $result) {
+        $this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "cloudimage.class.php", "Failed updating Cloudimage $ci_id", "", "", 0, 0, 0);
+    }
+}
+
+
 
 // sets the state of a cloudimage
 function set_state($cloudimage_id, $state_str) {
@@ -155,6 +197,9 @@ function set_state($cloudimage_id, $state_str) {
 			break;
 		case "active":
 			$cloudimage_state = 1;
+			break;
+		case "resizing":
+			$cloudimage_state = 2;
 			break;
 	}
 	$db=openqrm_get_db_connection();

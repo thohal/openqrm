@@ -60,6 +60,8 @@ require_once "$RootDir/plugins/cloud/class/clouduserslimits.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudrequest.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudirlc.class.php";
 
 // inclde the mycloud parts
 require_once "./mycloudrequests.php";
@@ -747,6 +749,98 @@ if (htmlobject_request('action') != '') {
                     );
                     $cloud_appliance->update($id, $ar_request);
                     $strMsg .= "Upated comment for Cloud appliance $id $updated_appliance_comment<br>";
+                }
+            }
+            redirect($strMsg, tab3);
+			break;
+
+
+
+		case 'resize':
+			if (isset($_REQUEST['identifier'])) {
+                foreach($_REQUEST['identifier'] as $id) {
+                    // only allow our appliance to be restarted
+                    $clouduser = new clouduser();
+                    $clouduser->get_instance_by_name($auth_user);
+
+                    $cloudreq_array = array();
+                    $cloudreq = new cloudrequest();
+                    $cloudreq_array = $cloudreq->get_all_ids();
+                    $my_appliances = array();
+                    // build an array of our appliance id's
+                    foreach ($cloudreq_array as $cr) {
+                        $cl_tmp_req = new cloudrequest();
+                        $cr_id = $cr['cr_id'];
+                        $cl_tmp_req->get_instance_by_id($cr_id);
+                        if ($cl_tmp_req->cu_id == $clouduser->id) {
+                            // we have found one of our own request, check if we have an appliance-id != 0
+                            if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
+                                $one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
+                                foreach ($one_app_id_arr as $aid) {
+                                    $my_appliances[] .= $aid;
+                                }
+                            }
+                        }
+                    }
+                    // is it ours ?
+                    if (!in_array($id, $my_appliances)) {
+                        continue;
+                    }
+
+                    $new_disk_size_arr = htmlobject_request('appliance_disk_resize');
+                    $new_disk_size = $new_disk_size_arr["$id"];
+                    $new_disk_size = trim($new_disk_size);
+                    if (!strlen($new_disk_size)) {
+                        $strMsg = "New Disk size is empty. Not resizing ... <br>";
+                        redirect($strMsg, tab3);
+                        exit(0);
+                    }
+                    // check resize
+                    $appliance = new appliance();
+                    $appliance->get_instance_by_id($id);
+                    $image = new image();
+                    $image->get_instance_by_id($appliance->imageid);
+                    $cloud_image = new cloudimage();
+                    $cloud_image->get_instance_by_image_id($image->id);
+                    $cloud_image_current_disk_size = $cloud_image->disk_size;
+                    if ($cloud_image_current_disk_size == $new_disk_size) {
+                        $strMsg = "New Disk size is equal current Disk size. Not resizing ... <br>";
+                        redirect($strMsg, tab3);
+                        exit(0);
+                    }
+                    if ($cloud_image_current_disk_size > $new_disk_size) {
+                        $strMsg = "New Disk size is needs to be greater current Disk size. Not resizing ... <br>";
+                        redirect($strMsg, tab3);
+                        exit(0);
+                    }
+
+                    $cloud_appliance_resize = new cloudappliance();
+                    $cloud_appliance_resize->get_instance_by_appliance_id($id);
+                    // check if no other command is currently running
+                    if ($cloud_appliance_resize->cmd != 0) {
+                        $strMsg = "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
+                        redirect($strMsg, tab3);
+                        continue;
+                    }
+                    // check that state is active
+                    if ($cloud_appliance_resize->state != 1) {
+                        $strMsg = "Can only resize Cloud appliance $id if it is in active state<br>";
+                        redirect($strMsg, tab3);
+                        continue;
+                    }
+                    $additional_disk_space = $new_disk_size - $cloud_image_current_disk_size;
+                    // put the new size in the cloud_image
+                    $cloudi_request = array(
+                        'ci_disk_rsize' => "$new_disk_size",
+                    );
+                    $cloud_image->update($cloud_image->id, $cloudi_request);
+                    // create a new cloud-image resize-live-cycle
+                    $cloudirlc = new cloudirlc();
+                    $cirlc_fields['cd_id'] = openqrm_db_get_free_id('cd_id', $cloudirlc->_db_table);
+                    $cirlc_fields['cd_appliance_id'] = $id;
+                    $cirlc_fields['cd_state'] = '1';
+                    $cloudirlc->add($cirlc_fields);
+                    $strMsg .= "Resizing disk for Cloud appliance $id : $cloud_image_current_disk_size + $additional_disk_space = $new_disk_size<br>";
                 }
             }
             redirect($strMsg, tab3);
