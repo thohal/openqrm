@@ -180,21 +180,24 @@ function openqrm_cloud_monitor() {
         // resize ?
 		if ($ci_state == 2) {
 
+            // calculate the resize
+            $resize_value = $ci->disk_rsize - $ci->disk_size;
+
 // storage dependency for resize !
 // currently supported storage types are
 // lvm-nfs-deployment
 // lvm-iscsi-deployment
 // lvm-aoe-deployment
 
-            // lvm-iscsi-storage
+            // lvm-nfs-storage
             if (!strcmp($image_type, "lvm-nfs-deployment")) {
                 $full_vol_name=$image_rootdevice;
                 $vol_dir=dirname($full_vol_name);
                 $vol=str_replace("/", "", $vol_dir);
                 $image_location_name=basename($full_vol_name);
-                $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage remove -n $image_location_name -v $vol -t lvm-nfs-deployment";
-                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
-//                $resource->send_command($resource_ip, $image_remove_clone_cmd);
+                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage resize -n $image_location_name -v $vol -m $resize_value -t lvm-nfs-deployment";
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
+                $resource->send_command($resource_ip, $image_resize_cmd);
 
             // lvm-iscsi-storage
             } else if (!strcmp($image_type, "lvm-iscsi-deployment")) {
@@ -204,9 +207,9 @@ function openqrm_cloud_monitor() {
                 $root_device=substr($image_rootdevice, $ident_separate);
                 $image_location=dirname($root_device);
                 $image_location_name=basename($image_location);
-                $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage remove -n $image_location_name -v $volume_group -t lvm-iscsi-deployment";
-                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
-//                $resource->send_command($resource_ip, $image_remove_clone_cmd);
+                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage resize -n $image_location_name -v $volume_group -m $resize_value -t lvm-iscsi-deployment";
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
+                $resource->send_command($resource_ip, $image_resize_cmd);
 
             // lvm-aoe-storage
             } else if (!strcmp($image_type, "lvm-aoe-deployment")) {
@@ -217,9 +220,9 @@ function openqrm_cloud_monitor() {
                 $ident_separate2=strpos($image_rootdevice_rest, ":");
                 $image_location_name=substr($image_rootdevice_rest, 0, $ident_separate2);
                 $root_device=substr($image_rootdevice_rest, $ident_separate2+1);
-                $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage remove -n $image_location_name -v $volume_group -t lvm-aoe-deployment";
-                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
-//                $resource->send_command($resource_ip, $image_remove_clone_cmd);
+                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage resize -n $image_location_name -v $volume_group -m $resize_value -t lvm-aoe-deployment";
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
+                $resource->send_command($resource_ip, $image_resize_cmd);
 
             // equallogic-storage
             } else if (!strcmp($image_type, "equallogic")) {
@@ -1799,12 +1802,21 @@ function openqrm_cloud_monitor() {
                 $cloud_im->get_instance_by_image_id($appliance->imageid);
                 $cloud_im->set_state($cloud_im->id, "resizing");
                 $cd->set_state($cd_id, "resizing");
-				break;
+                break;
 
             case 3:
 				// resizing
     			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudirlc", "(RESIZING) Resize live-cycle of Appliance $cd_appliance_id", "", "", 0, 0, 0);
-//                $cd->set_state($cd_id, "end_resize");
+                // remove any existing image-authentication to avoid kicking the auth into the resize phase
+                $cloud_app_resize = new cloudappliance();
+                $cloud_app_resize->get_instance_by_appliance_id($cd_appliance_id);
+                $appliance = new appliance();
+                $appliance->get_instance_by_id($cloud_app_resize->appliance_id);
+                $image_auth = new image_authentication();
+                $image_auth->get_instance_by_image_id($appliance->imageid);
+                $image_auth->remove($image_auth->id);
+
+                $cd->set_state($cd_id, "end_resize");
 				break;
 
            case 4:
