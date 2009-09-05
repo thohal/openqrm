@@ -46,17 +46,19 @@ function kvm_start() {
 	if [ ! -d /usr/share/kvm/ ]; then
 		mkdir -p /usr/share/kvm
 	fi
-	if [ -f /usr/share/kvm/pxe-e1000.bin ] && [ ! -f /usr/share/kvm/pxe-e1000.bin.openqrm-backup ]; then
-		cp -f /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-e1000.bin.openqrm-backup
-	fi
-	if [ -f /usr/share/kvm/pxe-rtl8139.bin ] && [ ! -f /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup ]; then
-		cp -f /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup
-	fi
-    if [ -f /usr/share/kvm/pxe-virtio.bin ] && [ ! -f /usr/share/kvm/pxe-virtio.bin.openqrm-backup ]; then
-        cp -f /usr/share/kvm/pxe-virtio.bin /usr/share/kvm/pxe-virtio.bin.openqrm-backup
+    if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.1.tgz ]; then
+        if [ -f /usr/share/kvm/pxe-e1000.bin ] && [ ! -f /usr/share/kvm/pxe-e1000.bin.openqrm-backup ]; then
+            cp -f /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-e1000.bin.openqrm-backup
+        fi
+        if [ -f /usr/share/kvm/pxe-rtl8139.bin ] && [ ! -f /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup ]; then
+            cp -f /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup
+        fi
+        if [ -f /usr/share/kvm/pxe-virtio.bin ] && [ ! -f /usr/share/kvm/pxe-virtio.bin.openqrm-backup ]; then
+            cp -f /usr/share/kvm/pxe-virtio.bin /usr/share/kvm/pxe-virtio.bin.openqrm-backup
+        fi
+        tar -C /usr/share/kvm/ -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.1.tgz
+        chown root:root /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-virtio.bin
     fi
-	tar -C /usr/share/kvm/ -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.1.tgz
-	chown root:root /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-virtio.bin
 
 	# be sure to have the tun device
 	if [ ! -f /dev/tun ]; then

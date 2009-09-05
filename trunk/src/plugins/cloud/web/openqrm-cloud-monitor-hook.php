@@ -1822,6 +1822,12 @@ function openqrm_cloud_monitor() {
            case 4:
 				// end_resize
     			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudirlc", "(END_RESIZE) Resize live-cycle of Appliance $cd_appliance_id", "", "", 0, 0, 0);
+                $cd->set_state($cd_id, "unpause");
+                break;
+
+			case 5:
+				// unpause
+    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudirlc", "(UNPAUSE) Resize live-cycle of Appliance $cd_appliance_id", "", "", 0, 0, 0);
                 // unpause appliance
                 $cloud_app_resize = new cloudappliance();
                 $cloud_app_resize->get_instance_by_appliance_id($cd_appliance_id);
@@ -1837,12 +1843,6 @@ function openqrm_cloud_monitor() {
                     'ci_disk_rsize' => "",
                 );
                 $cloud_im->update($cloud_im->id, $ar_cl_image_update);
-                $cd->set_state($cd_id, "unpause");
-                break;
-
-			case 5:
-				// unpause
-    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudirlc", "(UNPAUSE) Resize live-cycle of Appliance $cd_appliance_id", "", "", 0, 0, 0);
                 $cd->set_state($cd_id, "remove");
 				break;
 		}
