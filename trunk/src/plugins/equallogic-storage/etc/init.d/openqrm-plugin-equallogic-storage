@@ -62,6 +62,7 @@ function openqrm_plugin_equallogic_storage_uninstall() {
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.equallogic
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.equallogic.php
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-equallogic-storage.tgz
+    rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/eq-resize.default.tgz
 
 	# remove only if lvm-storage is not enabled
 	if ! ls $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins | grep lvm-storage 1>/dev/null 2>&1; then
@@ -102,6 +103,31 @@ function openqrm_plugin_equallogic_storage_init() {
 	if [ ! -x $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/iscsiadm ]; then
 		cp -f `which iscsiadm` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
 	fi
+
+    # resize components for the default kernel
+    RESIZE_TMP_DIR=`mktemp -d /tmp/XXXXXXXXXX` || exit 1
+    mkdir -p $RESIZE_TMP_DIR/sbin $RESIZE_TMP_DIR/lib
+    if [ -x "/sbin/e2fsck" ]; then
+        cp -a /sbin/e2fsck $RESIZE_TMP_DIR/sbin/
+        RESIZE_COMPONENTS=true
+    fi
+    if [ -x "/sbin/resize2fs" ]; then
+        cp -a /sbin/resize2fs $RESIZE_TMP_DIR/sbin/
+        RESIZE_COMPONENTS=true
+    fi
+    if [ "$RESIZE_COMPONENTS" == "true" ]; then
+        THIS_DIR=`pwd`
+        # copy libs
+        cp -a $KERNEL_LOCATION/lib/libe2p.* $RESIZE_TMP_DIR/lib/
+        cp -a $KERNEL_LOCATION/lib/libext2fs.* $RESIZE_TMP_DIR/lib/
+        cd $RESIZE_TMP_DIR/
+        rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/eq-resize.default.tgz
+        tar -czf $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/eq-resize.default.tgz *
+        cd $THIS_DIR
+    fi
+    rm -rf $RESIZE_TMP_DIR/sbin $RESIZE_TMP_DIR/lib
+    rmdir $RESIZE_TMP_DIR
+
 	# creating the tables
 	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/equallogic-storage/equallogic-storage-action.php?equallogic_storage_command=init"; then
 		equallogic_storage_storage_log uninstall "ERROR: Could not initialyze the EqualLogic-Storage-plugin tables in the database!"

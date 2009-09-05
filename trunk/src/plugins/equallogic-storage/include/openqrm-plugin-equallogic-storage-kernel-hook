@@ -40,5 +40,34 @@ function equallogic_storage_kernel_hook() {
         echo "equallogic-storage-plugin: Found iscsiadm at $KERNEL_LOCATION/sbin/iscsiadm. Coping to $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsiadm.$KERNEL_NAME" | logger
     fi
 
+    # get e2fsc + resize2fs
+    RESIZE_COMPONENTS=false
+    RESIZE_TMP_DIR=`mktemp -d /tmp/XXXXXXXXXX` || exit 1
+    mkdir -p $RESIZE_TMP_DIR/sbin $RESIZE_TMP_DIR/lib
+    if [ -x "$KERNEL_LOCATION/sbin/e2fsck" ]; then
+        cp -a $KERNEL_LOCATION/sbin/e2fsck $RESIZE_TMP_DIR/sbin/
+        RESIZE_COMPONENTS=true
+        echo "equallogic-storage-plugin: Found e2fsck at $KERNEL_LOCATION/sbin/e2fsck. Coping ..."
+        echo "equallogic-storage-plugin: Found e2fsck at $KERNEL_LOCATION/sbin/e2fsck. Coping ..." | logger
+    fi
+    if [ -x "$KERNEL_LOCATION/sbin/resize2fs" ]; then
+        cp -a $KERNEL_LOCATION/sbin/resize2fs $RESIZE_TMP_DIR/sbin/
+        RESIZE_COMPONENTS=true
+        echo "equallogic-storage-plugin: Found resize2fs at $KERNEL_LOCATION/sbin/resize2fs. Coping ..."
+        echo "equallogic-storage-plugin: Found resize2fs at $KERNEL_LOCATION/sbin/resize2fs. Coping ..." | logger
+    fi
+    if [ "$RESIZE_COMPONENTS" == "true" ]; then
+        THIS_DIR=`pwd`
+        # copy libs
+        cp -a $KERNEL_LOCATION/lib/libe2p.* $RESIZE_TMP_DIR/lib/
+        cp -a $KERNEL_LOCATION/lib/libext2fs.* $RESIZE_TMP_DIR/lib/
+        cd $RESIZE_TMP_DIR/
+        rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/eq-resize.$KERNEL_NAME.tgz
+        tar -czf $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/eq-resize.$KERNEL_NAME.tgz *
+        cd $THIS_DIR
+    fi
+    rm -rf $RESIZE_TMP_DIR/sbin $RESIZE_TMP_DIR/lib
+    rmdir $RESIZE_TMP_DIR
+
 }
 
