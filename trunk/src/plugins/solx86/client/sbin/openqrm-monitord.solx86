@@ -87,7 +87,7 @@ function find_cpu_model() {
 
 # mem_total
 function find_mem_total() {
-	current_mem_total=`top -n | grep Memory | grep phys | grep swap | awk {' print $2 '} | sed -e "s/[A-Z]//g"`
+	current_mem_total=`top -n | grep Memory | grep phys | awk {' print $2 '} | sed -e "s/[A-Z]//g"`
 	if [ -z "current_mem_total" ]; then
 		current_mem_total=0
 	fi
@@ -95,7 +95,7 @@ function find_mem_total() {
 
 # mem_used
 function find_mem_used() {
-	current_mem_free=`top -n | grep Memory | grep phys | grep swap | awk {' print $5 '} | sed -e "s/[A-Z]//g"`
+	current_mem_free=`top -n | grep Memory | grep phys | awk {' print $5 '} | sed -e "s/[A-Z]//g"`
     current_mem_used=$(( $current_mem_total - $current_mem_free ))
 	if [ -z "$current_mem_used" ]; then
 		current_mem_used=0

@@ -133,6 +133,13 @@ node.session.iscsi.InitialR2T = No
 node.session.iscsi.ImmediateData = Yes
 node.session.iscsi.FirstBurstLength = 262144
 node.session.iscsi.MaxBurstLength = 16776192
+node.conn[0].iscsi.MaxRecvDataSegmentLength = 262144
+node.conn[0].iscsi.MaxXmitDataSegmentLength = 262144
+node.session.cmds_max = 1024
+node.session.queue_depth = 128
+node.session.err_timeo.abort_timeout = 15
+node.session.err_timeo.lu_reset_timeout = 20
+node.session.iscsi.FastAbort = No
 node.conn[0].iscsi.MaxRecvDataSegmentLength = 65536
 
 node.session.auth.authmethod = CHAP

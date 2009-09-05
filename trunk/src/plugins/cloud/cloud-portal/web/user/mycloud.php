@@ -759,6 +759,14 @@ if (htmlobject_request('action') != '') {
 		case 'resize':
 			if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
+                    // disk-resize enabled ?
+                    $cd_config = new cloudconfig();
+                    $show_disk_resize = $cd_config->get_value(20);	// show_disk_resize
+                    if (!strcmp($show_disk_resize, "false")) {
+                        $strMsg = "Disk resize is disabled! Not resizing ... <br>";
+                        redirect($strMsg, tab3);
+                        exit(0);
+                    }
                     // only allow our appliance to be restarted
                     $clouduser = new clouduser();
                     $clouduser->get_instance_by_name($auth_user);

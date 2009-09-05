@@ -42,8 +42,8 @@ fi
 
 
 function zfs_storage_usage() {
-	echo "Usage : $0 add/remove/snap <-n image-name> <-i image-password> <-z zpoolname>"
-	echo "             [-m size in MB]"
+	echo "Usage : $0 add/remove/snap/resize <-n image-name> <-i image-password> <-z zpoolname>"
+	echo "             [-m size in GB]"
 	echo "             [-s image-snapshot-name]"
 	echo "        $0 auth <-r image-rootdevice> <-i image-password>"
 	echo "        $0 post_zpools <-u username> <-p password>"
@@ -320,6 +320,31 @@ case "$ZFS_COMMAND" in
 			$0 post_luns -z $ZFS_ZPOOL_NAME -u $ZFS_OPENQRM_USERNAME -p $ZFS_OPENQRM_PASSWORD
 		fi
 		;;
+
+
+	resize)
+		if [ "$ZFS_ZPOOL_NAME" == "" ]; then
+			zfs_storage_usage
+		fi
+		if [ "$ZFS_IMAGE_SIZE" == "" ]; then
+			zfs_storage_usage
+		fi
+		export ZFS_IMAGE_SIZE
+		zfs_log "Resizing ZFS iSCSI Lun $ZFS_IMAGE_NAME with size $ZFS_IMAGE_SIZE GB on zpool $ZFS_ZPOOL_NAME"
+		zfs_storage_lock aquire
+        if ! zfs set volsize=$ZFS_IMAGE_SIZE""G $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME; then
+            zfs_log "ERROR: openQRM zfs-storage plugin could not resize ZFS iSCSI Lun $ZFS_ZPOOL_NAME/$ZFS_IMAGE_NAME"
+    		zfs_storage_lock release
+            exit 1
+        fi
+
+		zfs_storage_lock release
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$ZFS_OPENQRM_USERNAME" != "" ] && [ "$ZFS_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_luns -z $ZFS_ZPOOL_NAME -u $ZFS_OPENQRM_USERNAME -p $ZFS_OPENQRM_PASSWORD
+		fi
+		;;
+
 
 	auth)
 		zfs_log "Authenticating ISCSI Lun for image rootdevice $ZFS_IMAGE_ROOTDEVICE"

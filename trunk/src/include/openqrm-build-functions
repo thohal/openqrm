@@ -649,9 +649,10 @@ function openqrm_install_js_interface() {
 function openqrm_create_deb_source() {
     CDIR=`pwd`
     TMPBUILD_DIR=`mktemp -d /tmp/deb_source.XXXXXXXXXX` || exit 1
-    mkdir -p $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION
-    cp -aR * $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION/
-    cd $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION/
+    OPENQRM_UBUNTU_VERSION=`cat debian/changelog | grep ^"openqrm.*(" | head -n 1 | awk {' print $2 '} | sed -e "s/(//g" | sed -e "s/)//g" | cut -d'-' -f1`
+    mkdir -p $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION
+    cp -aR * $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION/
+    cd $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION/
     # use the Makefile.debian for etc, bin + sbin
     mv -f bin/Makefile.debian bin/Makefile
     mv -f etc/Makefile.debian etc/Makefile
@@ -714,11 +715,11 @@ function openqrm_create_deb_source() {
     rm -rf thirdparty/openqrm-build/adodb
     # prepare openqrm_[version].orig.tar.gz
     cd $TMPBUILD_DIR/
-    mv $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION/debian .
-    tar -czf openqrm_$OPENQRM_SERVER_VERSION.orig.tar.gz openqrm-$OPENQRM_SERVER_VERSION
-    mv $TMPBUILD_DIR/debian openqrm-$OPENQRM_SERVER_VERSION/
+    mv $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION/debian .
+    tar -czf openqrm_$OPENQRM_UBUNTU_VERSION.orig.tar.gz openqrm-$OPENQRM_UBUNTU_VERSION
+    mv $TMPBUILD_DIR/debian openqrm-$OPENQRM_UBUNTU_VERSION/
     # build the source package
-    cd openqrm-$OPENQRM_SERVER_VERSION
+    cd openqrm-$OPENQRM_UBUNTU_VERSION
     if [ "$GPGKEY" != "" ]; then
         dpkg-buildpackage -S -sa -rfakeroot -k$GPGKEY
     else
@@ -726,7 +727,7 @@ function openqrm_create_deb_source() {
     fi
     cd $CDIR
     mv -f $TMPBUILD_DIR/openqrm_* ../
-    rm -rf $TMPBUILD_DIR/openqrm-$OPENQRM_SERVER_VERSION
+    rm -rf $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION
     rm -rf $TMPBUILD_DIR/buildtmp
     rmdir $TMPBUILD_DIR
 }

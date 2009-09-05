@@ -65,6 +65,7 @@ function my_cloud_appliances() {
     global $DocRoot;
     $sshterm_enabled = false;
     $collectd_graph_enabled = false;
+    $disk_resize_enabled = false;
 
     // check if to show sshterm-login
     $cc_conf = new cloudconfig();
@@ -81,6 +82,11 @@ function my_cloud_appliances() {
         if (file_exists("$RootDir/plugins/collectd/.running")) {
             $collectd_graph_enabled = true;
         }
+    }
+    // disk-resize enabled ?
+    $show_disk_resize = $cc_conf->get_value(20);	// show_disk_resize
+    if (!strcmp($show_disk_resize, "true")) {
+        $disk_resize_enabled = true;
     }
 
     $appliance_tmp = new appliance();
@@ -279,9 +285,14 @@ function my_cloud_appliances() {
                 $cloudappliance_action .= "<img src=\"../img/progress.gif\" border=\"0\" width=\"25\" height=\"25\" alt=\"Collecting Data, Graphs will be available soon\" title=\"Collecting Data, Graphs will be available soon\">";
             }
         }
+        // disk-resize ?
+        if ($disk_resize_enabled) {
+            $cloud_appliance_disk_size = "<input type=text name=\"appliance_disk_resize[$appliance->id]\" value=\"$cloud_image_disk_size\" size=4><input type=hidden name=\"currenttab\" value=\"tab3\">";
+        } else {
+            $cloud_appliance_disk_size = "$cloud_image_disk_size";
+        }
         // format image column
         $config_column = "<b>Kernel:</b> ".$kernel->name."</br><b>Image:</b> ".$image->name."<br><b>Type:</b> ".$appliance_virtualization_type."<br><b>IP:</b>".$appliance_resources_str;
-
 
         $appliance_comment = $appliance_db["appliance_comment"];
 		$arBody[] = array(
@@ -290,7 +301,7 @@ function my_cloud_appliances() {
 			'appliance_id' => $appliance_db["appliance_id"],
 			'appliance_name' => $appliance_db["appliance_name"],
 			'appliance_config' => $config_column,
-			'appliance_disk_size' => "<input type=text name=\"appliance_disk_resize[$appliance->id]\" value=\"$cloud_image_disk_size\" size=4><input type=hidden name=\"currenttab\" value=\"tab3\">",
+			'appliance_disk_size' => $cloud_appliance_disk_size,
 			'appliance_comment' => "<input type=text name=\"appliance_comment[$appliance->id]\" value=\"$appliance_comment\"><input type=hidden name=\"currenttab\" value=\"tab3\">",
 			'appliance_cloud_state' => $cloudappliance_state,
 			'appliance_cloud_action' => $cloudappliance_action,
@@ -306,12 +317,15 @@ function my_cloud_appliances() {
 	$table->form_action = $thisfile;
 	$table->head = $arHead;
 	$table->body = $arBody;
+    $command_array = array('pause', 'unpause', 'restart', 'comment');
     if ($sshterm_enabled) {
-    	$table->bottom = array('login', 'pause', 'unpause', 'restart', 'comment', 'resize');
-    } else {
-        $table->bottom = array('pause', 'unpause', 'restart', 'comment', 'resize');
+    	$command_array[] = 'login';
     }
-	$table->identifier = 'appliance_id';
+    if ($disk_resize_enabled) {
+    	$command_array[] = 'resize';
+    }
+    $table->bottom = $command_array;
+    $table->identifier = 'appliance_id';
 	$table->max = 1000;
 	#$table->limit = 10;
 	
