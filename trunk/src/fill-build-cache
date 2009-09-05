@@ -20,7 +20,7 @@
 if [ -f plugins/sshterm/etc/build.conf/sshterm-component.conf ]; then
     PLUGIN_CONFS="plugins/kvm/etc/build.conf/kvm-nic-bios.conf plugins/sshterm/etc/build.conf/sshterm-component.conf"
 else
-    PLUGIN_CONFS=""
+    PLUGIN_CONFS="plugins/kvm/etc/build.conf/kvm-nic-bios.conf"
 fi
 
 export OPENQRM_SERVER_BASE_DIR=`dirname $0`
