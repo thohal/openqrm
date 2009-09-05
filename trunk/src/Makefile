@@ -71,9 +71,11 @@ start: check
 	@/etc/init.d/openqrm start
 
 stop:
+	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make stop' as root" && exit 1)
 	@if [ -x /etc/init.d/openqrm ]; then /etc/init.d/openqrm stop; fi
 
 uninstall: stop
+	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make uninstall' as root" && exit 1)
 	@. $(OPENQRM_SERVER_CONF) && if [ ! -d $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm ]; then echo "openQRM not installed"; exit 1; fi
 	@if [ -x /etc/init.d/openqrm ]; then /etc/init.d/openqrm uninstall; fi
 	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm"`; do cd $$SRC_DIR && make uninstall -s && cd ..; done
@@ -85,7 +87,8 @@ clean:
 realclean:	clean
 	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm" -not -name "thirdparty"`; do cd $$SRC_DIR && make realclean -s && cd ..; done
 
-package: all
+rpm: all
+	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make rpm' as root" && exit 1)
 	@chmod +x make-assistant
 	@. $(OPENQRM_SERVER_CONF) && DESTINATION_DIR=$$OPENQRM_PACKAGE_TMP_DIR/packageroot make install
 	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_package
@@ -101,7 +104,8 @@ debsource:
 	@chmod +x make-assistant
 	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_create_deb_source
 
-pbuilder:
+deb:
+	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make deb' as root" && exit 1)
 	@chmod +x make-assistant
 	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_pbuilder
 
@@ -115,5 +119,5 @@ buildrequirements:
 	if [ -d ./thirdparty ]; then mkdir -p ../buildtmp; cp -aR ./thirdparty/* ../buildtmp/; fi
 
 
-.PHONY: all configure compile install start uninstall clean realclean reinstall package check initrd buildrequirements
+.PHONY: all configure compile install start uninstall clean realclean reinstall rpm deb debsource check initrd buildrequirements
 
