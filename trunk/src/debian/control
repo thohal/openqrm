@@ -17,7 +17,7 @@ Description: Cloud Computing Platform
 
 Package: openqrm-plugins
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, ash, stunnel, expect
+Depends: ${shlibs:Depends}, ${misc:Depends}, openqrm, stunnel, expect
 Description: Cloud Computing Platform
  openQRM is a fully automated, rapid deployment system including
  VM-Management, Monitoring, High-Availability and Storage-Management.
