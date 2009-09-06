@@ -112,6 +112,7 @@ function openqrm_build_find_libs() {
 #
 function openqrm_check_build_requirements() {
 	echo "Checking requirements for the compilation phase"
+    export FORCE_INSTALL=true
 	# check which command to use for checking the requirements
 	if [ -f /etc/debian_version ]; then
 		OPENQRM_PACKAGE_TYPE=deb

@@ -93,7 +93,7 @@ function openqrm_check_requirements() {
 		print_error "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins does not exist. Run make check after installing openQRM!"
 		return 1
 	fi
-
+    export FORCE_INSTALL=true
 	# check which dependencies to use
 	if [ -f /etc/debian_version ]; then
 		print_message "Checking the requirements for Debian/Ubuntu based systems ..."
