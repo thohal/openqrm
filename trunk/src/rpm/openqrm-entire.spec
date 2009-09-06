@@ -22,6 +22,8 @@ Release: OPENQRM_PACKAGE_DISTRIBUTION
 License: GPL
 Group: Networking/Admin
 Source: OPENQRM_PACKAGE_NAME-OPENQRM_PACKAGE_VERSION.tgz
+Prefix: /
+BuildRoot: /tmp/openqrm-packaging/OPENQRM_PACKAGE_NAME
 Requires : openqrm, openqrm-plugins
 %description
 openQRM is the next generation data-center management platform.
@@ -36,7 +38,7 @@ openQRM is the next generation data-center management platform.
 
 %install
 mkdir -p $RPM_BUILD_ROOT/usr/share/openqrm
-echo "This is a META rpm-package containing openqrm + all available pluings" > /usr/share/openqrm/README.openqrm-entire
+echo "This is a META rpm-package containing openqrm + all available pluings" > $RPM_BUILD_ROOT/usr/share/openqrm/README.openqrm-entire
 
 %post
 %preun
