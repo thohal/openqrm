@@ -1,5 +1,4 @@
 
-This directory holds a work-in-progress spec file for transiting 
-the current make packages solution into a single spec file.
+This directory holds the spec file templates for rpm package building
 
 ----
