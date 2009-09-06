@@ -31,7 +31,6 @@ fi
 
 function openqrm_plugin_nagios3_start() {
 	echo "Starting the openQRM nagios3-plugin"
-	openqrm_plugin_nagios3_stop 1>/dev/null 2>&1
     # for debian/ubuntu we starting also ndoutils
     if [ -f /etc/debian_version ]; then
         if [ -x "/etc/init.d/ndoutils" ]; then

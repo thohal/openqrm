@@ -658,7 +658,6 @@ function openqrm_create_deb_source() {
     mv -f etc/Makefile.debian etc/Makefile
     mv -f sbin/Makefile.debian sbin/Makefile
     mv -f plugins/aoe-storage/Makefile.debian plugins/aoe-storage/Makefile
-
     mv -f plugins/aws/Makefile.debian plugins/aws/Makefile
     mv -f plugins/citrix/Makefile.debian plugins/citrix/Makefile
     mv -f plugins/cloud/Makefile.debian plugins/cloud/Makefile
@@ -736,13 +735,12 @@ function openqrm_create_deb_source() {
 # function to create a debian/ubuntu binary package via pbuilder
 function openqrm_pbuilder() {
     CDIR=`pwd`
-    UBUNTU_VERSION=`cat debian/changelog | grep ^"openqrm.*(" | head -n 1 | awk {' print $2 '} | sed -e "s/(//g" | sed -e "s/)//g"`
-    PACKAGE_DESCRIPTION="openqrm_$OPENQRM_SERVER_VERSION-$UBUNTU_VERSION.dsc"
+    PACKAGE_DESCRIPTION="openqrm_$OPENQRM_SERVER_VERSION.dsc"
     if [ ! -f "../$PACKAGE_DESCRIPTION" ]; then
         openqrm_create_deb_source
     fi
     cd ..
-    sudo pbuilder build openqrm_$UBUNTU_VERSION.dsc
+    pbuilder build openqrm_$OPENQRM_SERVER_VERSION.dsc
     echo
     echo "Packaging finished. Please find the created packages in /var/cache/pbuilder/result"
     ls -lh /var/cache/pbuilder/result/openqrm*

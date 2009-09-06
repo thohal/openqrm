@@ -29,7 +29,15 @@ $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 $re=str_replace("'", "", $re);
 $re=str_replace("\\", "", $re);
 
-header("Location: http://$OPENQRM_SERVER_IP_ADDRESS/nagios3/$re");
+if (file_exists("/etc/debian_version")) {
+    $nagios_web="nagios3";
+} else if (file_exists("/etc/redhat-release")) {
+    $nagios_web="nagios";
+} else {
+    $nagios_web="nagios";
+}
+
+header("Location: http://$OPENQRM_SERVER_IP_ADDRESS/$nagios_web/$re");
 
 
 ?>
