@@ -82,9 +82,8 @@ case "$NAGIOS_CHECK_CMD" in
         # fix check_dig in generated config
         sed -i -e "s#check_dig#check_dig!google.com#" $NAGIOS_GENERATED_CONF
 		cd $CURRENTDIR
-
-
-		if nagios3 -v $NAGIOS_ETC_DIRECTORY/nagios.cfg; then
+        # check if the new config is valid
+		if $NAGIOS_BINARY -v $NAGIOS_ETC_DIRECTORY/nagios.cfg; then
 			if [ -x /etc/init.d/nagios3 ]; then
 				/etc/init.d/nagios3 restart
 			elif [ -x /etc/init.d/nagios ]; then
@@ -115,8 +114,20 @@ case "$NAGIOS_CHECK_CMD" in
                 echo "" >> $NAGIOS_ETC_DIRECTORY/nagios.cfg
                 echo "# added by openQRM" >> $NAGIOS_ETC_DIRECTORY/nagios.cfg
                 echo "cfg_dir=$NAGIOS_ETC_DIRECTORY/conf.d" >> $NAGIOS_ETC_DIRECTORY/nagios.cfg
-
             fi
+
+            # on centos we have to check that check_dig + check_mysql are defined
+            # check_dig
+            if ! grep -r check_dig $NAGIOS_ETC_DIRECTORY/* 1>/dev/null; then
+                echo "-> Adding check_dig Nagios definition ..."
+                cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/etc/templates/openqrm_check_dig.centos.template $NAGIOS_ETC_DIRECTORY/conf.d/openqrm_check_dig.cfg
+            fi
+            # check_myslq
+            if ! grep -r check_mysql $NAGIOS_ETC_DIRECTORY/* 1>/dev/null; then
+                echo "-> Adding check_mysql Nagios definition ..."
+                cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/nagios3/etc/templates/openqrm_check_mysql.centos.template $NAGIOS_ETC_DIRECTORY/conf.d/openqrm_check_mysql.cfg
+            fi
+
         elif [ -f /etc/SuSE-release ]; then
             NAGIOS3_PACKAGE_DEPENDENCIES=""
 			openqrm_post_event 0 "init" 5 "openqrm-nagios-manager" "Auto-setup of ndoutils is not supported for SUSE based distributions, skipping..."
