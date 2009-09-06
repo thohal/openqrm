@@ -497,7 +497,12 @@ EOF
             echo
         fi
 		vmware_esx_lock aquire
-		scp $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx-monitord $VMWARE_ESX_HOST_IP:/bin/ | logger
+        # we have to add the chebang later to not depend on ash for packaging
+        echo "#\!/bin/ash" > /tmp/openqrm-vmware-esx-monitord
+        sed -i -e "s#\\\##g" /tmp/openqrm-vmware-esx-monitord
+        cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx-monitord >> /tmp/openqrm-vmware-esx-monitord
+		scp /tmp/openqrm-vmware-esx-monitord $VMWARE_ESX_HOST_IP:/bin/ | logger
+        rm -f /tmp/openqrm-vmware-esx-monitord
 		$OPENQRM_ESX_CMD "chmod +x /bin/openqrm-vmware-esx-monitord"
 		$OPENQRM_ESX_BACKGROUND_CMD "/bin/openqrm-vmware-esx-monitord start $OPENQRM_SERVER_IP_ADDRESS $VMWARE_ESX_HOST_IP $OPENQRM_USERNAME $OPENQRM_PASSWORD"
         $OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY

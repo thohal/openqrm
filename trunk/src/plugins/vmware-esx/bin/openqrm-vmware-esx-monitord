@@ -1,4 +1,3 @@
-#!/bin/ash
 # this is a very much stripped down openQRM monitor daemon
 #
 # This file is part of openQRM.
