@@ -162,169 +162,285 @@ function openqrm_check_requirements() {
 
 
 
-function openqrm_package() {
+function openqrm_rpm_package() {
 
-	if [ -f /etc/debian_version ]; then
-		OPENQRM_PACKAGE_TYPE=deb
-	else
-		OPENQRM_PACKAGE_TYPE=rpm
-	fi
-	print_message "Creating $OPENQRM_PACKAGE_TYPE packages for openQRM-server ver. $OPENQRM_SERVER_VERSION for $OPENQRM_PACKAGE_DISTRIBUTION"
+    # this is only rpm packaging, debian package are build with the standard debian package tools
+    PLUGINS_IN_OPENQRM_PACKAGE="aoe-storage aws cloud dhcpd dns highavailability image-shelf iscsi-storage kvm local-server lvm-storage nagios3 nfs-storage puppet tftpd xen"
+    PLUGINS_IN_PLUGINS_PACKAGE="citrix equallogic-storage linuxcoe local-storage netapp-storage solx86 vmware-esx vmware-server vmware-server2 zabbix zfs-storage"
+    OPENQRM_PACKAGE_ARCHITECTURE=` uname -i`
+    if [ -f /etc/redhat-release ]; then
+        OPENQRM_PACKAGE_SUB_DIR="redhat"
+    elif [ -f /etc/SuSE-release ]; then
+        OPENQRM_PACKAGE_SUB_DIR="packages"
+    fi
 
-	# which components to build
-	OPENQRM_PACKAGE_COMPONENT_LIST=`ls $OPENQRM_SOURCE_DIR/plugins | grep -v Makefile`
-	OPENQRM_PACKAGE_COMPONENT_LIST="openqrm-server-entire openqrm-server "`echo $OPENQRM_PACKAGE_COMPONENT_LIST | sed -e "s/\n//g"`
-	print_message "Packing the following components: $OPENQRM_PACKAGE_COMPONENT_LIST"
+    # openqrm package ##########################################################
 
-	########################## RPM PACKAGING ##########################
+    OPENQRM_PACKAGE_NAME="openqrm"
+    # set postinst + prerm
+    OPENQRM_PACKAGE_POSTINSTALL="sh /usr/share/openqrm/etc/init.d/openqrm-server.postinstall"
+    OPENQRM_PACKAGE_PREREMOVE="sh /usr/share/openqrm/etc/init.d/openqrm-server.preremove"
+    # static deps
+    OPENQRM_PACKAGE_DEPENDENCIES="httpd, php, php-mysql, mysql, syslinux, screen, procmail, rsync, expect, dhcp, bind, iscsi-initiator-utils, nagios, nagios-plugins, nagios-plugins-nrpe, nagios-devel, perl-XML-Simple, perl-XML-Parser, nmap, puppet-server, subversion, tftp-server"
+    # and build postbuild
+    for PLUGIN_DEP in $PLUGINS_IN_PLUGINS_PACKAGE; do
+        OPENQRM_BUILD_POSTINSTALL="$OPENQRM_BUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/$PLUGIN_DEP;"
+    done
 
-	# decide on rpm or deb package
-	if [ "$OPENQRM_PACKAGE_TYPE" == "rpm" ]; then
+#    for PLUGIN_DEP in $PLUGINS_IN_OPENQRM_PACKAGE; do
+#        # we need to sum up the server + plugin dependencies
+#        . $OPENQRM_PACKAGE_TMP_DIR/packageroot/$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$PLUGIN_DEP/etc/openqrm-plugin-$PLUGIN_DEP"".conf
+#        PLUGIN_DEPS_WITHOUT_SERVER=`echo $OPENQRM_PLUGIN_DEPENDENCIES | sed -e "s/,openqrm-server//g" | sed -e "s/, openqrm-server//g"  | sed -e "s/openqrm-server,//g"  | sed -e "s/openqrm-server ,//g" | sed -e "s/openqrm-server//g"`
+#        if [ "$PLUGIN_DEPS_WITHOUT_SERVER" != "" ]; then
+#            ALL_PLUGIN_DEPENDENCIES="$ALL_PLUGIN_DEPENDENCIES $PLUGIN_DEPS_WITHOUT_SERVER, "
+#        fi
+#    done
+#    OPENQRM_PACKAGE_DEPENDENCIES=`echo "$OPENQRM_SERVER_DEPENDENCIES, $ALL_PLUGIN_DEPENDENCIES"`
+#    OPENQRM_PACKAGE_DEPENDENCIES=`echo $OPENQRM_PACKAGE_DEPENDENCIES | sed -e 's/,$//'`
 
-		OPENQRM_PACKAGE_ARCHITECTURE=` uname -i`
-		for OPENQRM_PACKAGE_COMPONENT in $OPENQRM_PACKAGE_COMPONENT_LIST; do
+    # clean up
+    rm -rf /usr/src/$OPENQRM_PACKAGE_SUB_DIR/BUILD/buildtmp /usr/src/$OPENQRM_PACKAGE_SUB_DIR/BUILD/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION
+    # create the source package
+    rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION
+    mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION
+    cp -aR * $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION/
+    rm -rf `find $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION/ -name .svn`
+    # include the thirdparty source packages
+    if [ ! -d ~/openqrm-thirdparty-cache ]; then
+        ./fill-build-cache
+        cp -aR ../buildtmp $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION/thirdparty
+    else
+        cp -aR ~/openqrm-thirdparty-cache $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION/thirdparty
+    fi
+    rm -f /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION.tgz
+    tar -C $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/ -czf /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION.tgz $OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION/
 
-			print_message "Starting rpm packaging for $OPENQRM_PACKAGE_COMPONENT"
-			# check if to package the openqrm-server or plugins
-			if [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server" ] || [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server-entire" ]; then
-				# we package the server (without any plugins)
-				print_message "Packaging the openQRM-server"
-				if [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server-entire" ]; then
-					# we use the same package name for the entire rpm
-					OPENQRM_PACKAGE_NAME=openqrm-server
-				else
-					OPENQRM_PACKAGE_NAME=$OPENQRM_PACKAGE_COMPONENT
-				fi
+    # create spec file from template
+    cat rpm/openqrm.spec |	\
+        sed -e "s/OPENQRM_PACKAGE_NAME/$OPENQRM_PACKAGE_NAME/g" |	\
+        sed -e "s/OPENQRM_PACKAGE_VERSION/$OPENQRM_SERVER_VERSION/g" |	\
+        sed -e "s/OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_PACKAGE_ARCHITECTURE/g" |	\
+        sed -e "s/OPENQRM_PACKAGE_DISTRIBUTION/$OPENQRM_PACKAGE_DISTRIBUTION/g" |	\
+        sed -e "s/OPENQRM_PACKAGE_DEPENDENCIES/$OPENQRM_PACKAGE_DEPENDENCIES/g" |	\
+        sed -e "s/OPENQRM_SERVER_BUILD_REQUIREMENTS/$OPENQRM_SERVER_BUILD_REQUIREMENTS/g" |	\
+        sed -e "s#OPENQRM_BUILD_POSTINSTALL#$OPENQRM_BUILD_POSTINSTALL#g" |	\
+        sed -e "s#OPENQRM_PACKAGE_POSTINSTALL#$OPENQRM_PACKAGE_POSTINSTALL#g" |	\
+        sed -e "s#OPENQRM_PACKAGE_PREREMOVE#$OPENQRM_PACKAGE_PREREMOVE#g"	\
+        > /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/$OPENQRM_PACKAGE_NAME.spec
 
-				# set the server dependencies / decide on redhat or suse dependencies
-				OPENQRM_PACKAGE_DEPENDENCIES=$OPENQRM_SERVER_DEPENDENCIES
-				if [ -f /etc/redhat-release ]; then
-					OPENQRM_PACKAGE_SUB_DIR="redhat"
-				elif [ -f /etc/SuSE-release ]; then
-					OPENQRM_PACKAGE_SUB_DIR="packages"
-				fi
+    rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging
+    mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME
+    # build the rpm package
+    rpmbuild -ba /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/$OPENQRM_PACKAGE_NAME.spec
 
-				# (re-)create the package tmp dir
-				rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE
-				mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE
 
-				# set postinst + prerm
-				OPENQRM_PACKAGE_POSTINSTALL="sh /usr/share/openqrm/etc/init.d/openqrm-server.postinstall"
-				OPENQRM_PACKAGE_PREREMOVE="sh /usr/share/openqrm/etc/init.d/openqrm-server.preremove"
+    # openqrm-plugins package ##################################################
 
-				if [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server" ]; then
-					# set if we want to just build openqrm-server without any plugins
-					OPENQRM_BUILD_POSTINSTALL="rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/*"
-				else
-					# we want to have the entire openQRM in one package
-					# so we need to sum up the server + plugin dependencies
-					for PLUGIN_DEP in `ls $OPENQRM_SOURCE_DIR/plugins | grep -v Makefile`; do
-						. $OPENQRM_PACKAGE_TMP_DIR/packageroot/$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$PLUGIN_DEP/etc/openqrm-plugin-$PLUGIN_DEP"".conf
-						PLUGIN_DEPS_WITHOUT_SERVER=`echo $OPENQRM_PLUGIN_DEPENDENCIES | sed -e "s/,openqrm-server//g" | sed -e "s/, openqrm-server//g"  | sed -e "s/openqrm-server,//g"  | sed -e "s/openqrm-server ,//g" | sed -e "s/openqrm-server//g"`
-						if [ "$PLUGIN_DEPS_WITHOUT_SERVER" != "" ]; then
-							ALL_PLUGIN_DEPENDENCIES="$ALL_PLUGIN_DEPENDENCIES $PLUGIN_DEPS_WITHOUT_SERVER, "
-						fi
-					done
-					OPENQRM_PACKAGE_DEPENDENCIES=`echo "$OPENQRM_SERVER_DEPENDENCIES, $ALL_PLUGIN_DEPENDENCIES"`
-					OPENQRM_PACKAGE_DEPENDENCIES=`echo $OPENQRM_PACKAGE_DEPENDENCIES | sed -e 's/,$//'`
-				fi
-				# create spec file from template
-				cat $OPENQRM_PACKAGE_TMP_DIR/packageroot/$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-rpm.spec |	\
-					sed -e "s/OPENQRM_PACKAGE_NAME/$OPENQRM_PACKAGE_NAME/g" |	\
-					sed -e "s/OPENQRM_PACKAGE_VERSION/$OPENQRM_SERVER_VERSION/g" |	\
-					sed -e "s/OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_PACKAGE_ARCHITECTURE/g" |	\
-					sed -e "s/OPENQRM_PACKAGE_DISTRIBUTION/$OPENQRM_PACKAGE_DISTRIBUTION/g" |	\
-					sed -e "s/OPENQRM_PACKAGE_DEPENDENCIES/$OPENQRM_PACKAGE_DEPENDENCIES/g" |	\
-					sed -e "s#OPENQRM_BUILD_POSTINSTALL#$OPENQRM_BUILD_POSTINSTALL#g" |	\
-					sed -e "s#OPENQRM_PACKAGE_POSTINSTALL#$OPENQRM_PACKAGE_POSTINSTALL#g" |	\
-					sed -e "s#OPENQRM_PACKAGE_PREREMOVE#$OPENQRM_PACKAGE_PREREMOVE#g"	\
-					> $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_PACKAGE_NAME.spec
-				# for suse
-				cp -f  $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_PACKAGE_NAME.spec /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/$OPENQRM_PACKAGE_NAME.spec
+    OPENQRM_PACKAGE_NAME="openqrm-plugins"
+    # set postinst + prerm
+    OPENQRM_PACKAGE_POSTINSTALL=""
+    OPENQRM_PACKAGE_PREREMOVE=""
+    # static deps
+    OPENQRM_PACKAGE_DEPENDENCIES="openqrm, stunnel, expect"
+    # and build postbuild
+    for PLUGIN_DEP in $PLUGINS_IN_OPENQRM_PACKAGE; do
+        OPENQRM_BUILD_POSTINSTALL="$OPENQRM_BUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/$PLUGIN_DEP;"
+    done
+    OPENQRM_BUILD_POSTINSTALL="$OPENQRM_BUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/bin;"
+    OPENQRM_BUILD_POSTINSTALL="$OPENQRM_BUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/etc;"
+    OPENQRM_BUILD_POSTINSTALL="$OPENQRM_BUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/include;"
+    OPENQRM_BUILD_POSTINSTALL="$OPENQRM_BUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/sbin;"
+    OPENQRM_BUILD_POSTINSTALL="$OPENQRM_BUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/tftpboot;"
+    OPENQRM_BUILD_POSTINSTALL="$OPENQRM_BUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/var;"
+    OPENQRM_BUILD_POSTINSTALL="$OPENQRM_BUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/web;"
 
-				# create the source package
-				rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/openqrm-server-$OPENQRM_SERVER_VERSION
-				mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/openqrm-server-$OPENQRM_SERVER_VERSION
-				cp -aR ../src/* $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/openqrm-server-$OPENQRM_SERVER_VERSION/
-				rm -rf `find $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/openqrm-server-$OPENQRM_SERVER_VERSION/ -name .svn`
-				rm -f /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/openqrm-server-$OPENQRM_SERVER_VERSION.tgz
-				tar -C $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/ -czf /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/openqrm-server-$OPENQRM_SERVER_VERSION.tgz openqrm-server-$OPENQRM_SERVER_VERSION/
-				rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/openqrm-server-$OPENQRM_SERVER_VERSION
-				# build the rpm package
-				rpmbuild -bb $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_PACKAGE_NAME.spec
-				# here we rename the entire package
-				if [ "$OPENQRM_PACKAGE_COMPONENT" == "openqrm-server-entire" ]; then
-					if [ -f /etc/SuSE-release ]; then
-						# somehow suse build with i586 arch
-						OPENQRM_PACKAGE_ARCHITECTURE=i586
-					fi
-					mv /usr/src/$OPENQRM_PACKAGE_SUB_DIR/RPMS/$OPENQRM_PACKAGE_ARCHITECTURE/openqrm-server-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE.rpm /usr/src/$OPENQRM_PACKAGE_SUB_DIR/RPMS/$OPENQRM_PACKAGE_ARCHITECTURE/openqrm-server-entire-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE.rpm
-				fi
+    # clean up
+    rm -rf /usr/src/$OPENQRM_PACKAGE_SUB_DIR/BUILD/buildtmp /usr/src/$OPENQRM_PACKAGE_SUB_DIR/BUILD/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION
+    # create the source package
+    rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION
+    mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION
+    cp -aR * $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION/
+    rm -rf `find $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION/ -name .svn`
+    # include the thirdparty source packages
+    if [ ! -d ~/openqrm-thirdparty-cache ]; then
+        ./fill-build-cache
+        cp -aR ../buildtmp $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION/thirdparty
+    else
+        cp -aR ~/openqrm-thirdparty-cache $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION/thirdparty
+    fi
+    rm -f /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION.tgz
+    tar -C $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/ -czf /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION.tgz $OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION/
 
-			else
+    # create spec file from template
+    cat rpm/openqrm.spec |	\
+        sed -e "s/OPENQRM_PACKAGE_NAME/$OPENQRM_PACKAGE_NAME/g" |	\
+        sed -e "s/OPENQRM_PACKAGE_VERSION/$OPENQRM_SERVER_VERSION/g" |	\
+        sed -e "s/OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_PACKAGE_ARCHITECTURE/g" |	\
+        sed -e "s/OPENQRM_PACKAGE_DISTRIBUTION/$OPENQRM_PACKAGE_DISTRIBUTION/g" |	\
+        sed -e "s/OPENQRM_PACKAGE_DEPENDENCIES/$OPENQRM_PACKAGE_DEPENDENCIES/g" |	\
+        sed -e "s/OPENQRM_SERVER_BUILD_REQUIREMENTS/$OPENQRM_SERVER_BUILD_REQUIREMENTS/g" |	\
+        sed -e "s#OPENQRM_BUILD_POSTINSTALL#$OPENQRM_BUILD_POSTINSTALL#g" |	\
+        sed -e "s#OPENQRM_PACKAGE_POSTINSTALL#$OPENQRM_PACKAGE_POSTINSTALL#g" |	\
+        sed -e "s#OPENQRM_PACKAGE_PREREMOVE#$OPENQRM_PACKAGE_PREREMOVE#g"	\
+        > /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/$OPENQRM_PACKAGE_NAME.spec
 
-				# we package a plugin
-				print_message "Packaging the openQRM plugin-$OPENQRM_PACKAGE_COMPONENT"
-				OPENQRM_PACKAGE_NAME=openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT
+    rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging
+    mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME
+    # build the rpm package
+    rpmbuild -ba /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/$OPENQRM_PACKAGE_NAME.spec
 
-				# get the plugin configuration
-				. $OPENQRM_PACKAGE_TMP_DIR/packageroot/$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/etc/$OPENQRM_PACKAGE_NAME"".conf
+    rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging
 
-				# set the server dependencies / decide on redhat or suse dependencies
-				OPENQRM_PACKAGE_DEPENDENCIES=$OPENQRM_PLUGIN_DEPENDENCIES
-				if [ -f /etc/redhat-release ]; then
-					OPENQRM_PACKAGE_SUB_DIR="redhat"
-				elif [ -f /etc/SuSE-release ]; then
-					OPENQRM_PACKAGE_SUB_DIR="packages"
-				fi
 
-				# (re-)create the package tmp dir
-				rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE
-				mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE
 
-				# set postinst + prerm
-				OPENQRM_PACKAGE_POSTINSTALL="sh /usr/share/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/etc/init.d/openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT.postinstall"
-				OPENQRM_PACKAGE_PREREMOVE="sh /usr/share/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/etc/init.d/openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT.preremove"
+    # openqrm-plugins package ##################################################
 
-				# set if files should include openqrm-server or just a plugin
-				OPENQRM_BUILD_POSTINSTALL="mkdir -p \$RPM_BUILD_ROOT/opt_plugin/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT \&\& cp -aR \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/* \$RPM_BUILD_ROOT/opt_plugin/openqrm/plugins/$OPENQRM_PACKAGE_COMPONENT/ \&\& rm -rf \$RPM_BUILD_ROOT/usr/share \&\& mv \$RPM_BUILD_ROOT/opt_plugin \$RPM_BUILD_ROOT/usr/share"
+    OPENQRM_PACKAGE_NAME="openqrm-entire"
 
-				# create spec file from template
-				cat $OPENQRM_PACKAGE_TMP_DIR/packageroot/$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-rpm.spec |	\
-					sed -e "s/OPENQRM_PACKAGE_NAME/$OPENQRM_PACKAGE_NAME/g" |	\
-					sed -e "s/OPENQRM_PACKAGE_VERSION/$OPENQRM_PLUGIN_VERSION/g" |	\
-					sed -e "s/OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_PACKAGE_ARCHITECTURE/g" |	\
-					sed -e "s/OPENQRM_PACKAGE_DISTRIBUTION/$OPENQRM_PACKAGE_DISTRIBUTION/g" |	\
-					sed -e "s/OPENQRM_PACKAGE_DEPENDENCIES/$OPENQRM_PACKAGE_DEPENDENCIES/g" |	\
-					sed -e "s#OPENQRM_BUILD_POSTINSTALL#$OPENQRM_BUILD_POSTINSTALL#g" |	\
-					sed -e "s#OPENQRM_PACKAGE_POSTINSTALL#$OPENQRM_PACKAGE_POSTINSTALL#g" |	\
-					sed -e "s#OPENQRM_PACKAGE_PREREMOVE#$OPENQRM_PACKAGE_PREREMOVE#g"	\
-					> $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_PACKAGE_NAME.spec
-				# for suse
-				cp -f  $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_PACKAGE_NAME.spec /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/$OPENQRM_PACKAGE_NAME.spec
+    # clean up
+    rm -rf /usr/src/$OPENQRM_PACKAGE_SUB_DIR/BUILD/buildtmp /usr/src/$OPENQRM_PACKAGE_SUB_DIR/BUILD/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION
+    # create the source package
+    rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION
+    mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION
+    cp -aR * $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION/
+    rm -rf `find $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION/ -name .svn`
+    # include the thirdparty source packages
+    if [ ! -d ~/openqrm-thirdparty-cache ]; then
+        ./fill-build-cache
+        cp -aR ../buildtmp $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION/thirdparty
+    else
+        cp -aR ~/openqrm-thirdparty-cache $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION/thirdparty
+    fi
+    rm -f /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION.tgz
+    tar -C $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/ -czf /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION.tgz $OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION/
 
-				# create the source package
-				rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT-$OPENQRM_PLUGIN_VERSION
-				mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT-$OPENQRM_PLUGIN_VERSION
-				cp -aR ../src/* $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT-$OPENQRM_PLUGIN_VERSION/
-				rm -rf `find $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT-$OPENQRM_PLUGIN_VERSION/ -name CVS`
-				rm -f /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT-$OPENQRM_PLUGIN_VERSION.tgz
-				tar -C $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/ -czf /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT-$OPENQRM_PLUGIN_VERSION.tgz openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT-$OPENQRM_PLUGIN_VERSION/
-				rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/source/openqrm-plugin-$OPENQRM_PACKAGE_COMPONENT-$OPENQRM_SERVER_VERSION
+    # create spec file from template
+    cat rpm/openqrm-entire.spec |	\
+        sed -e "s/OPENQRM_PACKAGE_NAME/$OPENQRM_PACKAGE_NAME/g" |	\
+        sed -e "s/OPENQRM_PACKAGE_VERSION/$OPENQRM_SERVER_VERSION/g" |	\
+        sed -e "s/OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_PACKAGE_ARCHITECTURE/g" |	\
+        sed -e "s/OPENQRM_PACKAGE_DISTRIBUTION/$OPENQRM_PACKAGE_DISTRIBUTION/g" \
+        > /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/$OPENQRM_PACKAGE_NAME.spec
 
-				# build the deb package
-				rpmbuild -bb $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME-$OPENQRM_PLUGIN_VERSION-$OPENQRM_PACKAGE_DISTRIBUTION.$OPENQRM_PACKAGE_ARCHITECTURE/$OPENQRM_PACKAGE_NAME.spec
+    rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging
+    mkdir -p $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging/$OPENQRM_PACKAGE_NAME
 
-			fi
+    # build the rpm package
+    rpmbuild -ba /usr/src/$OPENQRM_PACKAGE_SUB_DIR/SOURCES/$OPENQRM_PACKAGE_NAME.spec
 
-		done
+    rm -rf $OPENQRM_PACKAGE_TMP_DIR/openqrm-packaging
 
-	else
-		print_error "package type $OPENQRM_PACKAGE_TYPE not supported yet"
-		exit 1
-	fi
 
 }
+
+
+
+
+
+
+# function to create a debian/ubuntu source package
+function openqrm_create_deb_source() {
+    CDIR=`pwd`
+    TMPBUILD_DIR=`mktemp -d /tmp/deb_source.XXXXXXXXXX` || exit 1
+    OPENQRM_UBUNTU_VERSION=`cat debian/changelog | grep ^"openqrm.*(" | head -n 1 | awk {' print $2 '} | sed -e "s/(//g" | sed -e "s/)//g" | cut -d'-' -f1`
+    mkdir -p $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION
+    cp -aR * $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION/
+    cd $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION/
+    # use the Makefile.debian for etc, bin + sbin
+    mv -f bin/Makefile.debian bin/Makefile
+    mv -f etc/Makefile.debian etc/Makefile
+    mv -f sbin/Makefile.debian sbin/Makefile
+    mv -f plugins/aoe-storage/Makefile.debian plugins/aoe-storage/Makefile
+    mv -f plugins/aws/Makefile.debian plugins/aws/Makefile
+    mv -f plugins/citrix/Makefile.debian plugins/citrix/Makefile
+    mv -f plugins/cloud/Makefile.debian plugins/cloud/Makefile
+    mv -f plugins/collectd/Makefile.debian plugins/collectd/Makefile
+    mv -f plugins/dhcpd/Makefile.debian plugins/dhcpd/Makefile
+    mv -f plugins/dns/Makefile.debian plugins/dns/Makefile
+    mv -f plugins/equallogic-storage/Makefile.debian plugins/equallogic-storage/Makefile
+    mv -f plugins/highavailability/Makefile.debian plugins/highavailability/Makefile
+    mv -f plugins/image-shelf/Makefile.debian plugins/image-shelf/Makefile
+    mv -f plugins/iscsi-storage/Makefile.debian plugins/iscsi-storage/Makefile
+    mv -f plugins/kvm/Makefile.debian plugins/kvm/Makefile
+    mv -f plugins/linux-vserver/Makefile.debian plugins/linux-vserver/Makefile
+    mv -f plugins/linuxcoe/Makefile.debian plugins/linuxcoe/Makefile
+    mv -f plugins/local-server/Makefile.debian plugins/local-server/Makefile
+    mv -f plugins/local-storage/Makefile.debian plugins/local-storage/Makefile
+    mv -f plugins/lvm-storage/Makefile.debian plugins/lvm-storage/Makefile
+    mv -f plugins/nagios2/Makefile.debian plugins/nagios2/Makefile
+    mv -f plugins/nagios3/Makefile.debian plugins/nagios3/Makefile
+    mv -f plugins/netapp-storage/Makefile.debian plugins/netapp-storage/Makefile
+    mv -f plugins/nfs-storage/Makefile.debian plugins/nfs-storage/Makefile
+    mv -f plugins/puppet/Makefile.debian plugins/puppet/Makefile
+    mv -f plugins/solx86/Makefile.debian plugins/solx86/Makefile
+    mv -f plugins/sshterm/Makefile.debian plugins/sshterm/Makefile
+    mv -f plugins/tftpd/Makefile.debian plugins/tftpd/Makefile
+    mv -f plugins/vmware-esx/Makefile.debian plugins/vmware-esx/Makefile
+    mv -f plugins/vmware-server/Makefile.debian plugins/vmware-server/Makefile
+    mv -f plugins/vmware-server2/Makefile.debian plugins/vmware-server2/Makefile
+    mv -f plugins/windows/Makefile.debian plugins/windows/Makefile
+    mv -f plugins/xen/Makefile.debian plugins/xen/Makefile
+    mv -f plugins/zabbix/Makefile.debian plugins/zabbix/Makefile
+    mv -f plugins/zfs-storage/Makefile.debian plugins/zfs-storage/Makefile
+    # remove the sshterm plugin for now
+    rm -rf plugins/sshterm
+    # remove the sshterm plugin for now
+    rm -rf plugins/collectd
+    # remove nagios2 for now, ubuntu and latest debian already have nagios3
+    rm -rf plugins/nagios2
+    # windows is still in work
+    rm -rf plugins/windows
+    # linux-vserver is deprecated
+    rm -rf plugins/linux-vserver
+    # remove empty puppet repo dir, empty tftpboot
+    rm -rf plugins/puppet/etc/default/files
+    rm -rf tftpboot
+    # remove svn dirs
+    rm -rf `find -name .svn `
+    if [ ! -d ~/openqrm-thirdparty-cache ]; then
+        ./fill-build-cache
+        cp -aR ../buildtmp thirdparty
+    else
+        cp -aR ~/openqrm-thirdparty-cache thirdparty
+    fi
+    # remove adodb since we use the native package on ubuntu/debian
+    rm -rf thirdparty/openqrm-build/adodb
+    # prepare openqrm_[version].orig.tar.gz
+    cd $TMPBUILD_DIR/
+    mv $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION/debian .
+    tar -czf openqrm_$OPENQRM_UBUNTU_VERSION.orig.tar.gz openqrm-$OPENQRM_UBUNTU_VERSION
+    mv $TMPBUILD_DIR/debian openqrm-$OPENQRM_UBUNTU_VERSION/
+    # build the source package
+    cd openqrm-$OPENQRM_UBUNTU_VERSION
+    if [ "$GPGKEY" != "" ]; then
+        dpkg-buildpackage -S -sa -rfakeroot -k$GPGKEY
+    else
+        dpkg-buildpackage -S -sa -rfakeroot
+    fi
+    cd $CDIR
+    mv -f $TMPBUILD_DIR/openqrm_* ../
+    rm -rf $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION
+    rm -rf $TMPBUILD_DIR/buildtmp
+    rmdir $TMPBUILD_DIR
+}
+
+
+# function to create a debian/ubuntu binary package via pbuilder
+function openqrm_pbuilder() {
+    CDIR=`pwd`
+    PACKAGE_DESCRIPTION="openqrm_$OPENQRM_SERVER_VERSION.dsc"
+    if [ ! -f "../$PACKAGE_DESCRIPTION" ]; then
+        openqrm_create_deb_source
+    fi
+    cd ..
+    pbuilder build openqrm_$OPENQRM_SERVER_VERSION.dsc
+    echo
+    echo "Packaging finished. Please find the created packages in /var/cache/pbuilder/result"
+    ls -lh /var/cache/pbuilder/result/openqrm*
+    cd $CDIR
+}
+
+
 
 
 

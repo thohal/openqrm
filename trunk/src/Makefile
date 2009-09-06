@@ -87,11 +87,10 @@ clean:
 realclean:	clean
 	@for SRC_DIR in `find -mindepth 1 -maxdepth 1 -type d -not -name ".svn" -not -name "debian" -not -name "rpm" -not -name "thirdparty"`; do cd $$SRC_DIR && make realclean -s && cd ..; done
 
-rpm: all
+rpm:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make rpm' as root" && exit 1)
 	@chmod +x make-assistant
-	@. $(OPENQRM_SERVER_CONF) && DESTINATION_DIR=$$OPENQRM_PACKAGE_TMP_DIR/packageroot make install
-	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_package
+	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_rpm_package
 
 reinstall: 
 	sudo make uninstall -s
