@@ -503,7 +503,7 @@ case "$KVM_COMMAND" in
         fi
         case "$KVM_VM_BOOT" in
             local)
-                echo "KVM_VM_BOOT=\"-boot nc\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/boot
+                echo "KVM_VM_BOOT=\"-boot c\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/boot
                 ;;
             net)
                 echo "KVM_VM_BOOT=\"-boot nc\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/boot
