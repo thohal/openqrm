@@ -28,7 +28,7 @@ export OPENQRM_SOURCE_DIR
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/include/openqrm-plugin-linuxcoe-functions
 
 LCOE_BASE_VERSION="4"
-LCOE_SUB_VERSION="1"
+LCOE_SUB_VERSION="2"
 SD_BASE_VERSION="4"
 LCOE_BASE="linuxcoe-sd-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION.tar.gz"
 LCOE_DOCS="linuxcoe-sd-docs-$LCOE_BASE_VERSION.$LCOE_SUB_VERSION.tar.gz"
@@ -41,37 +41,22 @@ LCOE_ISO_IMAGES="CentOS-4-i386-iso.tar	\
 	CentOS-4-x86_64-iso.tar	\
 	CentOS-5-i386-iso.tar	\
 	CentOS-5-x86_64-iso.tar	\
-	Debian-3.1-hppa-iso.tar	\
-	Debian-3.1-i386-iso.tar	\
-	Debian-3.1-ia64-iso.tar	\
 	Debian-Etch-i386-iso.tar	\
-	Debian-Etch-ia64-iso.tar	\
 	Debian-Etch-x86_64-iso.tar	\
 	Debian-Lenny-i386-iso.tar	\
 	Debian-Lenny-x86_64-iso.tar	\
 	Fedora-10-i386-iso.tar	\
 	Fedora-10-x86_64-iso.tar	\
-	Fedora-7-i386-iso.tar	\
-	Fedora-7-i386-usbboot.img	\
-	Fedora-7-x86_64-iso.tar	\
-	Fedora-7-x86_64-usbboot.img	\
-	Fedora-8-i386-iso.tar	\
-	Fedora-8-i386-usbboot.img	\
-	Fedora-8-x86_64-iso.tar	\
-	Fedora-8-x86_64-usbboot.img	\
+	Fedora-11-i386-iso.tar	\
+	Fedora-11-x86_64-iso.tar	\
 	Fedora-9-i386-iso.tar	\
 	Fedora-9-x86_64-iso.tar	\
-	Ubuntu-Dapper-i386-iso.tar	\
-	Ubuntu-Edgy-i386-iso.tar	\
-	Ubuntu-Feisty-i386-iso.tar	\
-	Ubuntu-Feisty-x86_64-iso.tar	\
-	Ubuntu-Gutsy-i386-iso.tar	\
-	Ubuntu-Gutsy-x86_64-iso.tar	\
 	Ubuntu-Hardy-i386-iso.tar	\
 	Ubuntu-Hardy-x86_64-iso.tar	\
 	Ubuntu-Intrepid-i386-iso.tar	\
-	Ubuntu-Intrepid-x86_64-iso.tar"
-
+	Ubuntu-Intrepid-x86_64-iso.tar  \
+	Ubuntu-Jaunty-i386-iso.tar	\
+	Ubuntu-Jaunty-x86_64-iso.tar"
 
 # disabled for now
 #OpenSUSE-10.2-i386-iso.tar
@@ -97,8 +82,8 @@ UBUNTU_NETINSTALLER_I386_INTREPID="http://de.archive.ubuntu.com/ubuntu/dists/int
 UBUNTU_NETINSTALLER_X86_64_INTREPID="http://de.archive.ubuntu.com/ubuntu/dists/intrepid/main/installer-amd64/current/images/netboot/netboot.tar.gz"
 UBUNTU_NETINSTALLER_I386_HARDY="http://de.archive.ubuntu.com/ubuntu/dists/hardy/main/installer-i386/current/images/netboot/netboot.tar.gz"
 UBUNTU_NETINSTALLER_X86_64_HARDY="http://de.archive.ubuntu.com/ubuntu/dists/hardy/main/installer-amd64/current/images/netboot/netboot.tar.gz"
-UBUNTU_NETINSTALLER_I386_GUTSY="http://de.archive.ubuntu.com/ubuntu/dists/gutsy/main/installer-i386/current/images/netboot/netboot.tar.gz"
-UBUNTU_NETINSTALLER_X86_64_GUTSY="http://de.archive.ubuntu.com/ubuntu/dists/gutsy/main/installer-amd64/current/images/netboot/netboot.tar.gz"
+UBUNTU_NETINSTALLER_I386_JAUNTY="http://de.archive.ubuntu.com/ubuntu/dists/jaunty/main/installer-i386/current/images/netboot/netboot.tar.gz"
+UBUNTU_NETINSTALLER_X86_64_JAUNTY="http://de.archive.ubuntu.com/ubuntu/dists/jaunty/main/installer-amd64/current/images/netboot/netboot.tar.gz"
 
 # for centos we need the pxeboot images
 CENTOS4_NETINSTALLER_I386_KERNEL="http://mirror.fraunhofer.de/centos.org/4/os/i386/images/pxeboot/vmlinuz"
@@ -111,14 +96,6 @@ CENTOS5_NETINSTALLER_X86_64_KERNEL="http://mirror.fraunhofer.de/centos.org/5/os/
 CENTOS5_NETINSTALLER_X86_64_INITRD="http://mirror.fraunhofer.de/centos.org/5/os/x86_64/images/pxeboot/initrd.img"
 
 # fedora netboot images
-FEDORA_7_NETINSTALLER_I386_KERNEL="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/7/Fedora/i386/os/images/pxeboot/vmlinuz"
-FEDORA_7_NETINSTALLER_I386_INITRD="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/7/Fedora/i386/os/images/pxeboot/initrd.img"
-FEDORA_7_NETINSTALLER_X86_64_KERNEL="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/7/Fedora/x86_64/os/images/pxeboot/vmlinuz"
-FEDORA_7_NETINSTALLER_X86_64_INITRD="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/7/Fedora/x86_64/os/images/pxeboot/initrd.img"
-FEDORA_8_NETINSTALLER_I386_KERNEL="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/8/Fedora/i386/os/images/pxeboot/vmlinuz"
-FEDORA_8_NETINSTALLER_I386_INITRD="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/8/Fedora/i386/os/images/pxeboot/initrd.img"
-FEDORA_8_NETINSTALLER_X86_64_KERNEL="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/8/Fedora/x86_64/os/images/pxeboot/vmlinuz"
-FEDORA_8_NETINSTALLER_X86_64_INITRD="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/8/Fedora/x86_64/os/images/pxeboot/initrd.img"
 FEDORA_9_NETINSTALLER_I386_KERNEL="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/9/Fedora/i386/os/images/pxeboot/vmlinuz"
 FEDORA_9_NETINSTALLER_I386_INITRD="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/9/Fedora/i386/os/images/pxeboot/initrd.img"
 FEDORA_9_NETINSTALLER_X86_64_KERNEL="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/9/Fedora/x86_64/os/images/pxeboot/vmlinuz"
@@ -127,7 +104,10 @@ FEDORA_10_NETINSTALLER_I386_KERNEL="http://mirror.fraunhofer.de/download.fedora.
 FEDORA_10_NETINSTALLER_I386_INITRD="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/10/Fedora/i386/os/images/pxeboot/initrd.img"
 FEDORA_10_NETINSTALLER_X86_64_KERNEL="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/10/Fedora/x86_64/os/images/pxeboot/vmlinuz"
 FEDORA_10_NETINSTALLER_X86_64_INITRD="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/10/Fedora/x86_64/os/images/pxeboot/initrd.img"
-
+FEDORA_11_NETINSTALLER_I386_KERNEL="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/11/Fedora/i386/os/images/pxeboot/vmlinuz"
+FEDORA_11_NETINSTALLER_I386_INITRD="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/11/Fedora/i386/os/images/pxeboot/initrd.img"
+FEDORA_11_NETINSTALLER_X86_64_KERNEL="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/11/Fedora/x86_64/os/images/pxeboot/vmlinuz"
+FEDORA_11_NETINSTALLER_X86_64_INITRD="http://mirror.fraunhofer.de/download.fedora.redhat.com/fedora/linux/releases/11/Fedora/x86_64/os/images/pxeboot/initrd.img"
 
 if ! which screen 1>/dev/null; then
 	linuxcoe_log "ERROR: The 'screen' utility is not installed! Please install and try again."
@@ -174,6 +154,7 @@ function lcoe_download_if_needed() {
 function lco_prepare() {
 
 	# install os deps autoconf, automake, perl
+    export FORCE_INSTALL=true
 	openqrm_install_os_dependency autoconf
 	openqrm_install_os_dependency automake
 	#openqrm_install_os_dependency perl
@@ -227,11 +208,11 @@ function lco_prepare() {
 	tar -C  $LCOE_INSTALL_TMP/install/ubuntu/hardy/i386 -xzf $LCOE_INSTALL_TMP/download/netboot-i386-hardy.tar.gz
 	tar -C  $LCOE_INSTALL_TMP/install/ubuntu/hardy/x86_64 -xzf $LCOE_INSTALL_TMP/download/netboot-x86_64-hardy.tar.gz
 
-	lcoe_download_if_needed $UBUNTU_NETINSTALLER_I386_GUTSY netboot-i386-gutsy.tar.gz
-	lcoe_download_if_needed $UBUNTU_NETINSTALLER_X86_64_GUTSY netboot-x86_64-gutsy.tar.gz
-	mkdir -p $LCOE_INSTALL_TMP/install/ubuntu/gutsy/i386 $LCOE_INSTALL_TMP/install/ubuntu/gutsy/x86_64
-	tar -C  $LCOE_INSTALL_TMP/install/ubuntu/gutsy/i386 -xzf $LCOE_INSTALL_TMP/download/netboot-i386-gutsy.tar.gz
-	tar -C  $LCOE_INSTALL_TMP/install/ubuntu/gutsy/x86_64 -xzf $LCOE_INSTALL_TMP/download/netboot-x86_64-gutsy.tar.gz
+	lcoe_download_if_needed $UBUNTU_NETINSTALLER_I386_JAUNTY netboot-i386-jaunty.tar.gz
+	lcoe_download_if_needed $UBUNTU_NETINSTALLER_X86_64_JAUNTY netboot-x86_64-jaunty.tar.gz
+	mkdir -p $LCOE_INSTALL_TMP/install/ubuntu/jaunty/i386 $LCOE_INSTALL_TMP/install/ubuntu/jaunty/x86_64
+	tar -C  $LCOE_INSTALL_TMP/install/ubuntu/jaunty/i386 -xzf $LCOE_INSTALL_TMP/download/netboot-i386-jaunty.tar.gz
+	tar -C  $LCOE_INSTALL_TMP/install/ubuntu/jaunty/x86_64 -xzf $LCOE_INSTALL_TMP/download/netboot-x86_64-jaunty.tar.gz
 
 	/bin/cp -aR $LCOE_INSTALL_TMP/install/ubuntu $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/
 
@@ -256,14 +237,6 @@ function lco_prepare() {
 	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-x86_64-centos5.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/centos/5/x86_64/
 
 	# and the fedora netboot kernel + initrds
-	lcoe_download_if_needed $FEDORA_7_NETINSTALLER_I386_KERNEL vmlinuz-i386-fedora7
-	lcoe_download_if_needed $FEDORA_7_NETINSTALLER_I386_INITRD initrd-i386-fedora7.img
-	lcoe_download_if_needed $FEDORA_7_NETINSTALLER_X86_64_KERNEL vmlinuz-x86_64-fedora7
-	lcoe_download_if_needed $FEDORA_7_NETINSTALLER_X86_64_INITRD initrd-x86_64-fedora7.img
-	lcoe_download_if_needed $FEDORA_8_NETINSTALLER_I386_KERNEL vmlinuz-i386-fedora8
-	lcoe_download_if_needed $FEDORA_8_NETINSTALLER_I386_INITRD initrd-i386-fedora8.img
-	lcoe_download_if_needed $FEDORA_8_NETINSTALLER_X86_64_KERNEL vmlinuz-x86_64-fedora8
-	lcoe_download_if_needed $FEDORA_8_NETINSTALLER_X86_64_INITRD initrd-x86_64-fedora8.img
 	lcoe_download_if_needed $FEDORA_9_NETINSTALLER_I386_KERNEL vmlinuz-i386-fedora9
 	lcoe_download_if_needed $FEDORA_9_NETINSTALLER_I386_INITRD initrd-i386-fedora9.img
 	lcoe_download_if_needed $FEDORA_9_NETINSTALLER_X86_64_KERNEL vmlinuz-x86_64-fedora9
@@ -272,17 +245,11 @@ function lco_prepare() {
 	lcoe_download_if_needed $FEDORA_10_NETINSTALLER_I386_INITRD initrd-i386-fedora10.img
 	lcoe_download_if_needed $FEDORA_10_NETINSTALLER_X86_64_KERNEL vmlinuz-x86_64-fedora10
 	lcoe_download_if_needed $FEDORA_10_NETINSTALLER_X86_64_INITRD initrd-x86_64-fedora10.img
+	lcoe_download_if_needed $FEDORA_11_NETINSTALLER_I386_KERNEL vmlinuz-i386-fedora11
+	lcoe_download_if_needed $FEDORA_11_NETINSTALLER_I386_INITRD initrd-i386-fedora11.img
+	lcoe_download_if_needed $FEDORA_11_NETINSTALLER_X86_64_KERNEL vmlinuz-x86_64-fedora11
+	lcoe_download_if_needed $FEDORA_11_NETINSTALLER_X86_64_INITRD initrd-x86_64-fedora11.img
 
-	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/7/i386 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/7/x86_64
-	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-i386-fedora7 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/7/i386/
-	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-i386-fedora7.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/7/i386/
-	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-x86_64-fedora7 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/7/x86_64/
-	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-x86_64-fedora7.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/7/x86_64/
-	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/8/i386 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/8/x86_64
-	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-i386-fedora8 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/8/i386/
-	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-i386-fedora8.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/8/i386/
-	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-x86_64-fedora8 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/8/x86_64/
-	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-x86_64-fedora8.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/8/x86_64/
 	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/9/i386 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/9/x86_64
 	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-i386-fedora9 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/9/i386/
 	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-i386-fedora9.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/9/i386/
@@ -293,7 +260,11 @@ function lco_prepare() {
 	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-i386-fedora10.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/10/i386/
 	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-x86_64-fedora10 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/10/x86_64/
 	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-x86_64-fedora10.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/10/x86_64/
-	
+	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/11/i386 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/11/x86_64
+	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-i386-fedora11 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/11/i386/
+	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-i386-fedora11.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/11/i386/
+	/bin/cp -f $LCOE_INSTALL_TMP/download/vmlinuz-x86_64-fedora11 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/11/x86_64/
+	/bin/cp -f $LCOE_INSTALL_TMP/download/initrd-x86_64-fedora11.img $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/fedora/11/x86_64/
 
 
 }
