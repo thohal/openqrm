@@ -51,6 +51,8 @@ function openqrm_plugin_local_server_uninstall() {
 	openqrm_plugin_local_server_stop
 	openqrm_server_remove_deployment_type $USERNAME $PASSWORD local-server
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-server
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.local-server
+
 }
 
 function openqrm_plugin_local_server_init() {
@@ -68,6 +70,9 @@ function openqrm_plugin_local_server_init() {
 	openqrm_server_add_deployment_type $USERNAME $PASSWORD local-server local-server "Local-installed server" local-server "Local-installed server"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-server/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-server
+	chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-server/web/root-mount.local-server
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-server/web/root-mount.local-server $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/root-mount.local-server
+
 }
 
 USER=$2
