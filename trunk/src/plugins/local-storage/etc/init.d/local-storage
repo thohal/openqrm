@@ -73,7 +73,7 @@ function local_storage_start() {
             # grab all disks
             for HARD_DISK in `cat /proc/partitions | grep -v major | sed -e '/^$/d' | awk {' print $4 '} | grep -v [0-9]`; do
                 echo "local-storage: Processing device /dev/$HARD_DISK"
-                INAME="/mnt/"$LOCAL_STORAGE_INAME"_x_"$HARD_DISK"_ping.img.gz"
+                INAME="/mnt/"$LOCAL_STORAGE_INAME"_x_"$HARD_DISK"_ping.img"
                 BSNAME="/mnt/"$LOCAL_STORAGE_INAME"_x_"$HARD_DISK"_bs.img"
                 rm -f $INAME
                 nice -n 19 dd if=/dev/$HARD_DISK | gzip -9 > $INAME

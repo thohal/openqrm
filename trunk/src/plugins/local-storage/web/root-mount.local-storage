@@ -38,6 +38,9 @@ if [ "$IMAGE_NFS_MOUNT_OPTIONS" != "" ]; then
 	IMAGE_NFS_MOUNT_OPTIONS=",$IMAGE_NFS_MOUNT_OPTIONS"
 fi
 
+# blocksize for the transfer for performance tuning
+DD_BLOCKSIZE=1024
+
 #######################################################################
 # required functions ##################################################
 #######################################################################
@@ -66,10 +69,12 @@ function mount_rootfs() {
         # grab all disks
         for HARD_DISK in `cat /proc/partitions | grep -v major | sed -e '/^$/d' | awk {' print $4 '} | grep -v [0-9]`; do
             echo "local-storage: Processing device /dev/$HARD_DISK"
-            INAME="/mnt/"$image_name"_x_"$HARD_DISK"_ping.img.gz"
+            INAME="/mnt/"$image_name"_x_"$HARD_DISK"_ping.img"
             BSNAME="/mnt/"$image_name"_x_"$HARD_DISK"_bs.img"
             rm -f $INAME $BSNAME
-            nice -n 19 dd if=/dev/$HARD_DISK | gzip -9 > $INAME
+            dd if=/dev/$HARD_DISK of=$INAME bs=$DD_BLOCKSIZE
+            # gzip is too slow
+            # nice -n 19 dd if=/dev/$HARD_DISK | gzip -9 > $INAME
             dd if=/dev/$HARD_DISK of=$BSNAME bs=512 count=1
         done
         echo "local-storage: Umounting image-store"
@@ -78,7 +83,7 @@ function mount_rootfs() {
         # send token to the openQRM server to stop the grab-appliance
         echo "local-storage: Sending 'grab-complete' to the openQRM server"
         if ! wget -q "http://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=grab-complete&token=$LOCAL_STORAGE_GRAB"; then
-            echo "local-storage: Error sending 'grab-complete' to the openQRM server"
+            echo "local-storage: Sending 'grab-complete' to the openQRM server"
             /bin/bash
         fi
         # wait for reboot
@@ -88,13 +93,15 @@ function mount_rootfs() {
     elif [ "$LOCAL_STORAGE_DEPLOYMENT" != "" ]; then
         # restore -> active deployment
         echo "local-storage: Starting restore of $image_name"
-        for PING_IMAGE in `ls /mnt/$image_name_x_*_ping.img.gz`; do
+        for PING_IMAGE in `ls /mnt/$image_name_x_*_ping.img`; do
             FP_INAME=$image_name"_x_"
-            LP_INAME="_ping.img.gz"
+            LP_INAME="_ping.img"
             LP_BSNAME="_bs.img"
             PING_DEV=`echo $PING_IMAGE | sed -e "s/.*$FP_INAME//g" | sed -e "s/$LP_INAME//g"`
             echo "local-storage: Restoring $PING_IMAGE to /dev/$PING_DEV"
-            nice -n 19 gzip -cd $PING_IMAGE | dd of=/dev/$PING_DEV
+            dd if=$PING_IMAGE of=/dev/$PING_DEV bs=$DD_BLOCKSIZE
+            # gzip is too slow
+            # nice -n 19 gzip -cd $PING_IMAGE | dd of=/dev/$PING_DEV
             # and the bootsector too
             BSNAME=`echo $PING_IMAGE | sed -e "s/$LP_INAME/$LP_BSNAME/g"`
             dd if=$BSNAME of=/dev/$PING_DEV bs=512 count=1
