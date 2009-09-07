@@ -26,6 +26,8 @@ export OPENQRM_SERVER_BASE_DIR=$resource_basedir
 export OPENQRM_SOURCE_DIR="$resource_basedir/openqrm/"
 . $resource_basedir/openqrm/include/openqrm-package-functions
 
+# blocksize for the transfer for performance tuning
+DD_BLOCKSIZE=1024
 
 function local_storage_start() {
 	local_storage_stop 1>/dev/null 2>&1
@@ -76,11 +78,13 @@ function local_storage_start() {
                 INAME="/mnt/"$LOCAL_STORAGE_INAME"_x_"$HARD_DISK"_ping.img"
                 BSNAME="/mnt/"$LOCAL_STORAGE_INAME"_x_"$HARD_DISK"_bs.img"
                 rm -f $INAME
-                nice -n 19 dd if=/dev/$HARD_DISK | gzip -9 > $INAME
+                dd if=/dev/$HARD_DISK of=$INAME bs=$DD_BLOCKSIZE
+                # gzip is too slow
+                # nice -n 19 dd if=/dev/$HARD_DISK | gzip -9 > $INAME
                 echo "local-storage: Saving the MBR of /dev/$HARD_DISK"
                 dd if=/dev/$HARD_DISK of=$BSNAME bs=512 count=1
                 echo "local-storage: Cleaning device /dev/$HARD_DISK"
-                nice -n 19 dd if=/dev/zero of=/dev/$HARD_DISK 2> /local-storage.err
+                dd if=/dev/zero of=/dev/$HARD_DISK 2> /local-storage.err
                 rm -f /local-storage.err
             done
             echo "local-storage: Umounting image-store"
