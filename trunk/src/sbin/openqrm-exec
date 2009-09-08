@@ -48,7 +48,14 @@ while [ $# -ne 0 ]; do
 	esac
 	shift
 done
-
+# checks
+if [ "$RESOURCE_IP" == "0.0.0.0" ]; then
+    echo "openQRM-exec ERROR: Not running command on invalid ip address 0.0.0.0" | logger
+fi
+if [ "$RESOURCE_IP" == "" ]; then
+    echo "openQRM-exec ERROR: Not running command on empty ip address" | logger
+fi
+# run
 FULL_COMMAND="$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dbclient -I $DB_IDLE -K $DB_TIMEOUT -y -i $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key -p $OPENQRM_EXEC_PORT root@$RESOURCE_IP \"$OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm-cmd $OPENQRM_COMMAND\""
 # echo "openQRM engine (as $WHOAMI) queuing : $FULL_COMMAND" | logger
 echo "$FULL_COMMAND" >> $OPENQRM_COMMAND_QUEUE.$COMMAND_TOKEN

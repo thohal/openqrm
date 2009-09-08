@@ -37,6 +37,12 @@ SEQ=1
 RETRY=5
 RETRY_DELAY=20
 
+function cmd_queue_log() {
+    local PRIO=$1
+    shift
+    local CQLOG=$@
+    echo "openQRM-cmd-queu $PRIO : $CQLOG" | logger
+}
 
 cd $OPENQRM_COMMAND_QUEUE
 while (true); do
@@ -46,53 +52,57 @@ while (true); do
 		OPENQRM_COMMAND=`cat $OPENQRM_COMMAND_FILE`
 		./$OPENQRM_COMMAND_FILE 2>ouput.$COMMAND_TOKEN
 		COMMAND_RES=$?
-		echo "openQRM-cmd-queu: Running command with token $COMMAND_TOKEN : $OPENQRM_COMMAND" | logger
+		cmd_queue_log NOTICE "Running $COMMAND_TOKEN : $OPENQRM_COMMAND"
 		if [ "$COMMAND_RES" != "0" ]; then
 			# put it in the failed queue
 			mv -f $OPENQRM_COMMAND_FILE failed-cmd.1.$COMMAND_TOKEN
 			OPENQRM_COMMAND_OUTPUT=`cat ouput.$COMMAND_TOKEN`
-			echo "openQRM-cmd-queu: ERROR while running command with token $FAILED_COMMAND_TOKEN : $OPENQRM_COMMAND  ----- $OPENQRM_COMMAND_OUTPUT" | logger
+			cmd_queue_log WARNING "Command with token $FAILED_COMMAND_TOKEN failed : $OPENQRM_COMMAND  ----- $OPENQRM_COMMAND_OUTPUT"
 		else
 			rm -f $OPENQRM_COMMAND_FILE
 		fi
 		rm -f ouput.$COMMAND_TOKEN
-	
 	done
 	SEQ=$(( SEQ + 1 ))
 
 	# check the failed queue
 	if [ "$SEQ" == "$RETRY_DELAY" ]; then
-
 		for FAILED_OPENQRM_COMMAND_FILE in `ls -t failed-cmd* 2>/dev/null`; do
 			chmod +x $FAILED_OPENQRM_COMMAND_FILE
 			FAILED_COMMAND_RETRY_COUNT=`echo $FAILED_OPENQRM_COMMAND_FILE | cut -d'.' -f2`
 			FAILED_COMMAND_TOKEN=`echo $FAILED_OPENQRM_COMMAND_FILE | cut -d'.' -f3`
 			FAILED_OPENQRM_COMMAND=`cat $FAILED_OPENQRM_COMMAND_FILE`
 
-			if [ "$FAILED_COMMAND_RETRY_COUNT" == "$RETRY" ]; then
-				echo "openQRM-cmd-queu: ERROR Command with token $FAILED_COMMAND_TOKEN failed after $RETRY. tries : $FAILED_OPENQRM_COMMAND" | logger
-				openqrm_post_event 0 "base-engine" 2 "openqrm-cmd-queue" "ERROR executing command with token $FAILED_COMMAND_TOKEN : $FAILED_OPENQRM_COMMAND"
-				rm -f $FAILED_OPENQRM_COMMAND_FILE
-			else
-				echo "openQRM-cmd-queu: Running Command with token $FAILED_COMMAND_TOKEN $FAILED_COMMAND_RETRY_COUNT. retry : $FAILED_OPENQRM_COMMAND" | logger
-				./$FAILED_OPENQRM_COMMAND_FILE 2>ouput.$FAILED_COMMAND_TOKEN
-				FAILED_COMMAND_RES=$?
-				if [ "$FAILED_COMMAND_RES" != "0" ]; then
-					# put it in the failed queue
-					FAILED_COMMAND_RETRY_COUNT=$(( FAILED_COMMAND_RETRY_COUNT + 1 ))
-					FAILED_OPENQRM_COMMAND_OUTPUT=`cat ouput.$FAILED_COMMAND_TOKEN`
-					mv -f $FAILED_OPENQRM_COMMAND_FILE failed-cmd.$FAILED_COMMAND_RETRY_COUNT.$FAILED_COMMAND_TOKEN
-					echo "openQRM-cmd-queu: ERROR executing command with token $FAILED_COMMAND_TOKEN $FAILED_COMMAND_RETRY_COUNT. retry : $FAILED_OPENQRM_COMMAND ----- $FAILED_OPENQRM_COMMAND_OUTPUT" | logger
-				else
-					rm -f $FAILED_OPENQRM_COMMAND_FILE
-				fi
-				rm -f ouput.$FAILED_COMMAND_TOKEN
-			fi
-		
+            cmd_queue_log NOTICE "$FAILED_COMMAND_RETRY_COUNT. retry for Command $FAILED_COMMAND_TOKEN : $FAILED_OPENQRM_COMMAND"
+            ./$FAILED_OPENQRM_COMMAND_FILE 2>ouput.$FAILED_COMMAND_TOKEN
+            FAILED_COMMAND_RES=$?
+            if [ "$FAILED_COMMAND_RES" != "0" ]; then
+                FAILED_OPENQRM_COMMAND_OUTPUT=`cat ouput.$FAILED_COMMAND_TOKEN`
+                if [ "$FAILED_COMMAND_RETRY_COUNT" == "$RETRY" ]; then
+                    # too many retries, remove the cmd and log the error + debug
+                    cmd_queue_log ERROR "Command $FAILED_COMMAND_TOKEN failed for $RETRY. retries : $FAILED_OPENQRM_COMMAND"
+                    openqrm_post_event 0 "base-engine" 2 "openqrm-cmd-queue" "ERROR running token $FAILED_COMMAND_TOKEN"
+                    # move to event errors for debug
+                    if [ ! -d "$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/event/errors" ]; then
+                        mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/event/errors
+                        chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/event/errors
+                    fi
+                    mv -f $FAILED_OPENQRM_COMMAND_FILE $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/event/errors/$FAILED_COMMAND_TOKEN.cmd
+                    mv -f ouput.$FAILED_COMMAND_TOKEN $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/event/errors/$FAILED_COMMAND_TOKEN.out
+                    chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/web/base/server/event/errors/$FAILED_COMMAND_TOKEN.*
+                else
+                    # put it in the failed queue again
+                    NEXT_FAILED_COMMAND_RETRY_COUNT=$(( FAILED_COMMAND_RETRY_COUNT + 1 ))
+                    mv -f $FAILED_OPENQRM_COMMAND_FILE failed-cmd.$NEXT_FAILED_COMMAND_RETRY_COUNT.$FAILED_COMMAND_TOKEN
+                    cmd_queue_log WARNING "$FAILED_COMMAND_RETRY_COUNT. retry failed for Command $FAILED_COMMAND_TOKEN : $FAILED_OPENQRM_COMMAND ----- $FAILED_OPENQRM_COMMAND_OUTPUT"
+                fi
+            else
+                rm -f $FAILED_OPENQRM_COMMAND_FILE
+            fi
+            rm -f ouput.$FAILED_COMMAND_TOKEN
 		done
 		SEQ=1
 	fi
-
 	sleep $OPENQRM_QUEUEING_DELAY
 done
 
