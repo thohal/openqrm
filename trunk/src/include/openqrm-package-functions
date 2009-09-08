@@ -382,10 +382,6 @@ function openqrm_create_deb_source() {
     mv -f plugins/xen/Makefile.debian plugins/xen/Makefile
     mv -f plugins/zabbix/Makefile.debian plugins/zabbix/Makefile
     mv -f plugins/zfs-storage/Makefile.debian plugins/zfs-storage/Makefile
-    # remove the sshterm plugin for now
-    rm -rf plugins/sshterm
-    # remove the sshterm plugin for now
-    rm -rf plugins/collectd
     # remove nagios2 for now, ubuntu and latest debian already have nagios3
     rm -rf plugins/nagios2
     # windows is still in work
