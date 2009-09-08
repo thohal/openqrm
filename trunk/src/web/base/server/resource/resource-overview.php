@@ -211,7 +211,13 @@ function resource_display() {
 				// find out what should be preselected
             	$virtualization = new virtualization();
 				$virtualization->get_instance_by_id($resource->vtype);
-				$resource_type = "<nobr>".$virtualization->name." on Res. ".$resource->vhostid."</nobr>";
+                if ($resource->id == $resource->vhostid) {
+                    // physical system
+    				$resource_type = "<nobr>".$virtualization->name."</nobr>";
+                } else {
+                    // vm
+    				$resource_type = "<nobr>".$virtualization->name." on Res. ".$resource->vhostid."</nobr>";
+                }
 			} else {
 				$resource_type = "Unknown";
 			}
