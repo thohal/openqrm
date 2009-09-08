@@ -17,3 +17,4 @@
 #
 .|Events
 ..|Event List|server/event/event-overview.php
+..|Error Events|server/event/event-overview.php?currenttab=tab1
