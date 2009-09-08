@@ -103,6 +103,8 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			// add to openQRM database
 			$resource_fields["resource_id"]=$new_resource_id;
 			$resource_fields["resource_localboot"]=0;
+            $resource_fields["resource_vtype"]=1;
+            $resource_fields["resource_vhostid"]=$new_resource_id;
 			$resource->add($resource_fields);
 			// set lastgood to -1 to prevent automatic checking the state
 			$resource_fields["resource_lastgood"]=-1;
