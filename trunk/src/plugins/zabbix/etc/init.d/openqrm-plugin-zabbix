@@ -47,7 +47,6 @@ function openqrm_plugin_zabbix_start() {
 	else
 		zabbix_manager_lock release
 		openqrm_post_event 0 "openqrm_plugin_zabbix_start" 3 "openqrm-plugin-zabbix" "Could not start Zabbix-server. Init script not found !."
-		exit 1
 	fi
     # start agent
     if [ -x "/etc/init.d/zabbix-agent" ]; then
@@ -100,8 +99,6 @@ function openqrm_plugin_zabbix_init() {
     ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zabbix/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/zabbix
     # link the boot-service
     ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/zabbix/web/boot-service-zabbix.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-zabbix.tgz
-
-
 	return 0
 }
 
