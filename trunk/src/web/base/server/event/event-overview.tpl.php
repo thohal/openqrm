@@ -57,6 +57,8 @@ a:hover
 <body>
 <div id="eventlist">
 
+<h1>Event List</h1>
+
 {event_table}
 
 </div>

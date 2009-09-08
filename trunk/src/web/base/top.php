@@ -100,7 +100,7 @@ new showLocalTime("timecontainer", "server-php", 0, "xx")
 
 
 <div class="top">
-<a id="Event_box" href="server/event/event-overview.php" target="MainFrame">Error(s) <span id="events_critical"></span></a>
+<a id="Event_box" href="server/event/event-overview.php?currenttab=tab1" target="MainFrame">Error(s) <span id="events_critical"></span></a>
 <a id="Docu_box" href="server/zz_documentation/introduction.php" target="MainFrame">Documentation</a>
 <a id="Login_box" href="server/user/user.php" target="MainFrame"><?php echo OPENQRM_USER_NAME; ?></a>
 <div class="floatbreaker">&#160;</div>
