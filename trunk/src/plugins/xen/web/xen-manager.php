@@ -682,7 +682,7 @@ function xen_display($appliance_id) {
     $table1->head = $arHead1;
     $table1->body = $arBody1;
     if ($OPENQRM_USER->role == "administrator") {
-        $table1->bottom = array('start', 'stop', 'restart', 'remove', 'migrate');
+        $table1->bottom = array('start', 'stop', 'reboot', 'remove', 'migrate');
         $table1->identifier = 'xen_vm_name';
     }
     $table1->max = count($registerd_vms);
