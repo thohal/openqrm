@@ -88,7 +88,7 @@ function openqrm_client_start() {
     chmod 666 /dev/null
     if [ ! -f /dev/tty ]; then
         cd /dev
-        ln -sf tty0 tty
+        mknod tty c 5 0
         cd
     fi
 
