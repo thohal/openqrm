@@ -92,13 +92,18 @@ running() {
 }
 
 start_server() {
+    if [ -x /usr/bin/screen.real ]; then
+        RUNSCREEN="/usr/bin/screen.real"
+    else
+        RUNSCREEN=`which screen`
+    fi
     stop_exec_subsystem_force
     if ! $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/dropbear -p $OPENQRM_EXEC_PORT -r $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key; then
         log_failure_msg "Could not start openQRM exec-subsystem!"
         stop_exec_subsystem_force
         return 1
     fi
-    $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-cmd-queue &
+    $RUNSCREEN -dmS cmdqueue $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-cmd-queue
     touch ${LOCKFILE}
 
     if [ -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured ]; then
@@ -123,7 +128,7 @@ start_server() {
             rm -f ${LOCKFILE}
             return 1
         fi
-        $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-monitord &
+        $RUNSCREEN -dmS monitord $OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-monitord
         for OPENQRM_PLUGIN in `ls $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/`; do
             if [ -x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN ]; then
                 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$OPENQRM_PLUGIN/etc/init.d/openqrm-plugin-$OPENQRM_PLUGIN start
