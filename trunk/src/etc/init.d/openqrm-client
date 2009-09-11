@@ -105,9 +105,11 @@ function openqrm_client_start() {
 			fi
 			if [ ! -d /root/.ssh ]; then
 				mkdir -p /root/.ssh
+				chmod 700 /root/.ssh
 			fi
 			if [ ! -f /root/.ssh/authorized_keys ]; then
 				mv -f openqrm-server-public-rsa-key /root/.ssh/authorized_keys
+				chmod 600 /root/.ssh/authorized_keys
 			else
 				OPENQRM_HOST=`cat openqrm-server-public-rsa-key | awk {' print $3 '}`
 				if grep $OPENQRM_HOST /root/.ssh/authorized_keys 1>/dev/null; then
@@ -115,6 +117,7 @@ function openqrm_client_start() {
 				fi
 				cat openqrm-server-public-rsa-key >> /root/.ssh/authorized_keys
 				rm -f openqrm-server-public-rsa-key
+				chmod 600 /root/.ssh/authorized_keys
 			fi
 			$resource_basedir/openqrm/sbin/dropbear -p $resource_execdport -r $resource_basedir/openqrm/etc/dropbear/dropbear_rsa_host_key
 			;;
