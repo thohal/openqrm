@@ -86,7 +86,7 @@ function openqrm_client_start() {
 	umount /initrd/ 1>/dev/null 2>&1
 	grep -q "/initrd" /proc/mounts && umount /initrd
     chmod 666 /dev/null
-    if [ ! -f /dev/tty ]; then
+    if [ ! -e /dev/tty ]; then
         cd /dev
         mknod tty c 5 0
         cd
