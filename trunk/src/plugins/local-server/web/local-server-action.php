@@ -36,6 +36,8 @@ require_once "$RootDir/class/appliance.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/class/event.class.php";
 require_once "$RootDir/class/openqrm_server.class.php";
+require_once "$RootDir/include/htmlobject.inc.php";
+
 global $IMAGE_INFO_TABLE;
 global $DEPLOYMENT_INFO_TABLE;
 global $KERNEL_INFO_TABLE;
@@ -48,11 +50,13 @@ if ($OPENQRM_USER->role != "administrator") {
 	exit();
 }
 
-$local_server_command = $_REQUEST["local_server_command"];
-$local_server_id = $_REQUEST["local_server_id"];
-$local_server_root_device = $_REQUEST["local_server_root_device"];
-$local_server_root_device_type = $_REQUEST["local_server_root_device_type"];
-$local_server_kernel_version = $_REQUEST["local_server_kernel_version"];
+
+$local_server_command = htmlobject_request('local_server_command');
+$local_server_id = htmlobject_request('local_server_id');
+$local_server_root_device = htmlobject_request('local_server_root_device');
+$local_server_root_device_type = htmlobject_request('local_server_root_device_type');
+$local_server_kernel_version = htmlobject_request('local_server_kernel_version');
+$local_server_name = htmlobject_request('local_server_name');
 
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
@@ -98,7 +102,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 			// create appliance
 			$next_appliance_id=openqrm_db_get_free_id('appliance_id', $APPLIANCE_INFO_TABLE);
 			$appliance_fields["appliance_id"]=$next_appliance_id;
-			$appliance_fields["appliance_name"]="resource$local_server_id";
+			$appliance_fields["appliance_name"]=$local_server_name;
 			$appliance_fields["appliance_kernelid"]=$kernel_fields["kernel_id"];
 			$appliance_fields["appliance_imageid"]=$image_fields["image_id"];
 			$appliance_fields["appliance_resources"]="$local_server_id";
@@ -137,7 +141,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 		case 'remove':
 			// remove appliance
 			$appliance = new appliance();
-			$appliance->remove_by_name("resource$local_server_id");
+			$appliance->remove_by_name($local_server_name);
 			// remove kernel
 			$kernel = new kernel();
 			$kernel->remove_by_name("resource$local_server_id");

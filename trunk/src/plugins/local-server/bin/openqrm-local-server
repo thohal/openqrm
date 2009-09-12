@@ -27,19 +27,14 @@ export LC_ALL=C
 
 
 function usage() {
-        echo "Usage : $0 integrate -u <user> -p <password> -q <ip-address-of-openQRM-server> [-i <network-interface>]"
-        echo "        $0 remove -u <user> -p <password> -q <ip-address-of-openQRM-server>"
+        echo "Usage : $0 integrate -u <user> -p <password> -q <ip-address-of-openQRM-server> [ -n <hostname> ] [-i <network-interface>]"
+        echo "        $0 remove -u <user> -p <password> -q <ip-address-of-openQRM-server> [ -n <hostname> ]"
 }
 
 
 function openqrm_integrate_local_server() {
-	local USER=$1
-	local PASSWORD=$2
-	local OPENQRM_SERVER=$3
-	local INTERFACE=$4
 	echo "Integrating system to openQRM-server at $OPENQRM_SERVER"
 	mkdir -p `dirname $OPENQRM_RESOURCE_PARAMETER_FILE`
-	
 	if [ "$INTERFACE" == "" ]; then
 		echo "Which network-interface to use for the integration ?"
 		ifconfig | cut -d' ' -f1 | sed '/^$/d' | grep -v lo
@@ -50,6 +45,12 @@ function openqrm_integrate_local_server() {
 	if ! ifconfig $INTERFACE 1>/dev/null; then
 		echo "ERROR: Interface $INTERFACE does not exists !"
 		exit 1
+	fi
+    # name
+	if [ "$APPLIANCE_NAME" == "" ]; then
+		echo "Please give a name for this system"
+		echo -n "-> : "
+		read APPLIANCE_NAME
 	fi
 	local resource_id=-1
 	local resource_ip=`ifconfig $INTERFACE | grep "inet " | cut -d':' -f2 | cut -d' ' -f1`
@@ -83,39 +84,49 @@ function openqrm_integrate_local_server() {
 	export OPENQRM_SERVER_BASE_DIR=$resource_basedir
 	. $resource_basedir/openqrm/include/openqrm-functions
 	openqrm_chkconfig add openqrm-client
-	$resource_basedir/openqrm/etc/init.d/openqrm-client start
 	
 	# gather some more details to create the appliance on the openQRM-server
 	local_server_root_device=`mount | grep ' / ' | awk {' print $1 '}`
 	local_server_root_device_type=`mount | grep ' / ' | awk {' print $5 '}`
 	local_server_kernel_version=`uname -r`
+    local_server_name=$APPLIANCE_NAME
 	
 	# now we send the local-integration signal to create
 	# the local-server storage, image and appliance
-	if ! wget -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "http://$OPENQRM_SERVER/openqrm/base/plugins/local-server/local-server-action.php?local_server_command=integrate&local_server_id=$resource_id&local_server_root_device=$local_server_root_device&local_server_root_device_type=$local_server_root_device_type&local_server_kernel_version=$local_server_kernel_version"; then
+	if ! wget -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "http://$OPENQRM_SERVER/openqrm/base/plugins/local-server/local-server-action.php?local_server_command=integrate&local_server_id=$resource_id&local_server_root_device=$local_server_root_device&local_server_root_device_type=$local_server_root_device_type&local_server_kernel_version=$local_server_kernel_version&local_server_name=$APPLIANCE_NAME"; then
 		echo "ERROR: Could not create the appliance resource$resouce_id on the openQRM-server!"
 		sleep 2
 		echo "NOTCIE: Removing the system from openQRM because of errors !"
 		openqrm_remove_local_server $USER $PASSWORD $OPENQRM_SERVER
 		return 1
 	fi
+    sleep 2
 	
-	
+    # re-get parameters
+    rm -f $OPENQRM_RESOURCE_PARAMETER_FILE
+	wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
+    # start the openQRM client late to get the new hostname from openQRM
+	$resource_basedir/openqrm/etc/init.d/openqrm-client start
 	
 }
 
 function openqrm_remove_local_server() {
-	local USER=$1
-	local PASSWORD=$2
-	local OPENQRM_SERVER=$3
 	echo "Removing system from openQRM-server at $OPENQRM_SERVER"
+    if [ ! -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+        echo "NOTICE: This system is not integrated with openQRM"
+        exit 1
+    fi
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
-
+    # name
+	if [ "$APPLIANCE_NAME" == "" ]; then
+		echo "Please give the appliance name of this system"
+		echo -n "-> : "
+		read APPLIANCE_NAME
+	fi
 	# try to remove components from the local-server appliance
-	if ! wget -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "http://$OPENQRM_SERVER/openqrm/base/plugins/local-server/local-server-action.php?local_server_command=remove&local_server_id=$resource_id"; then
+	if ! wget -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "http://$OPENQRM_SERVER/openqrm/base/plugins/local-server/local-server-action.php?local_server_command=remove&local_server_id=$resource_id&local_server_name=$APPLIANCE_NAME"; then
 		echo "WARNING: Could not remove the appliance resource$resouce_id from the openQRM-server!"
 	fi
-
 	# remove system from openQRM
 	if ! wget -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "http://$OPENQRM_SERVER/openqrm/base/server/resource/resource-action.php?resource_command=remove&resource_id=$resource_id&resource_mac=$resource_mac"; then
 		echo "ERROR: Could not remove system from the openQRM-server!"
@@ -153,6 +164,9 @@ case "$1" in
 				-i)
 					INTERFACE=$2
 					;;			
+				-n)
+					APPLIANCE_NAME=$2
+					;;
 			esac
 			shift
 		done
@@ -171,7 +185,12 @@ case "$1" in
 			usage
 			exit 1
 		fi
-		openqrm_integrate_local_server $USER $PASSWORD $OPENQRM_SERVER $INTERFACE
+        export USER
+        export PASSWORD
+        export OPENQRM_SERVER
+        export INTERFACE
+        export APPLIANCE_NAME
+		openqrm_integrate_local_server
 		;;
 
 	remove)
@@ -191,6 +210,9 @@ case "$1" in
 				-q)
 					OPENQRM_SERVER=$2
 					;;			
+				-n)
+					APPLIANCE_NAME=$2
+					;;
 			esac
 			shift
 		done
@@ -209,6 +231,10 @@ case "$1" in
 			usage
 			exit 1
 		fi
+        export USER
+        export PASSWORD
+        export OPENQRM_SERVER
+        export APPLIANCE_NAME
 		openqrm_remove_local_server $USER $PASSWORD $OPENQRM_SERVER
 		;;
 
