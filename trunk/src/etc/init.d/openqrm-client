@@ -138,7 +138,9 @@ function openqrm_client_start() {
 		done
 	fi
 	# start openqrm-monitord
-	$resource_basedir/openqrm/sbin/openqrm-monitord &
+    if [ ! -d /tmp ]; then mkdir -p /tmp; fi
+    nohup $resource_basedir/openqrm/sbin/openqrm-monitord 1>/tmp/openqrm-monitord.out 2>&1 &
+    rm -f /tmp/openqrm-monitord.out
 	openqrm_post_event $resource_id "openqrm-client" 5 openqrm_client_start "Resource $resource_id fully started"
 	touch ${LOCKFILE}
 }
