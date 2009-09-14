@@ -33,15 +33,15 @@ function openqrm_plugin_iscsi_storage_start() {
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-storage/.running
     if [ -x "/etc/init.d/iscsi-target" ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsi-target start || exit $?
+            invoke-rc.d iscsi-target start
         else
-            /etc/init.d/iscsi-target start || exit $?
+            /etc/init.d/iscsi-target start
         fi
     elif [ -x /etc/init.d/iscsitarget ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsitarget start || exit $?
+            invoke-rc.d iscsitarget start
         else
-            /etc/init.d/iscsitarget start || exit $?
+            /etc/init.d/iscsitarget start
         fi
     fi
 }
@@ -52,15 +52,15 @@ function openqrm_plugin_iscsi_storage_stop() {
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-storage/.running
     if [ -x "/etc/init.d/iscsi-target" ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsi-target stop || exit $?
+            invoke-rc.d iscsi-target stop
         else
-            /etc/init.d/iscsi-target stop || exit $?
+            /etc/init.d/iscsi-target stop
         fi
     elif [ -x /etc/init.d/iscsitarget ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsitarget stop || exit $?
+            invoke-rc.d iscsitarget stop
         else
-            /etc/init.d/iscsitarget stop || exit $?
+            /etc/init.d/iscsitarget stop
         fi
     fi
 }

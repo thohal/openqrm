@@ -38,9 +38,9 @@ function openqrm_plugin_lvm-storage_start() {
 	mkdir -p /var/run/vblade/
     if [ -x "/etc/init.d/vblade" ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d vblade start || exit $?
+            invoke-rc.d vblade start
         else
-            /etc/init.d/vblade start || exit $?
+            /etc/init.d/vblade start
         fi
 	else
 		if [ -f $VBLADECONF ]; then
@@ -63,36 +63,36 @@ function openqrm_plugin_lvm-storage_start() {
 	
     if [ -x "/etc/init.d/nfs-kernel-server" ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfs-kernel-server start || exit $?
+            invoke-rc.d nfs-kernel-server start
         else
-            /etc/init.d/nfs-kernel-server start || exit $?
+            /etc/init.d/nfs-kernel-server start
         fi
     fi
     if [ -x "/etc/init.d/nfs" ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfs start || exit $?
+            invoke-rc.d nfs start
         else
-            /etc/init.d/nfs start || exit $?
+            /etc/init.d/nfs start
         fi
     fi
     if [ -x "/etc/init.d/nfslock" ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfslock start || exit $?
+            invoke-rc.d nfslock start
         else
-            /etc/init.d/nfslock start || exit $?
+            /etc/init.d/nfslock start
         fi
     fi
     if [ -x "/etc/init.d/iscsi-target" ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsi-target start || exit $?
+            invoke-rc.d iscsi-target start
         else
-            /etc/init.d/iscsi-target start || exit $?
+            /etc/init.d/iscsi-target start
         fi
     elif [ -x /etc/init.d/iscsitarget ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsitarget start || exit $?
+            invoke-rc.d iscsitarget start
         else
-            /etc/init.d/iscsitarget start || exit $?
+            /etc/init.d/iscsitarget start
         fi
     fi
 
@@ -107,9 +107,9 @@ function openqrm_plugin_lvm-storage_stop() {
 	# aoe
     if [ -x "/etc/init.d/vblade" ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d vblade stop || exit $?
+            invoke-rc.d vblade stop
         else
-            /etc/init.d/vblade stop || exit $?
+            /etc/init.d/vblade stop
             for VPID in `ps ax | grep vblade | grep -v grep | awk {' print $1 '}`; do
                 kill $VPID
             done
@@ -136,36 +136,36 @@ function openqrm_plugin_lvm-storage_stop() {
 
     if [ -x "/etc/init.d/nfs-kernel-server" ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfs-kernel-server stop || exit $?
+            invoke-rc.d nfs-kernel-server stop
         else
-            /etc/init.d/nfs-kernel-server stop || exit $?
+            /etc/init.d/nfs-kernel-server stop
         fi
     fi
     if [ -x "/etc/init.d/nfs" ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfs stop || exit $?
+            invoke-rc.d nfs stop
         else
-            /etc/init.d/nfs stop || exit $?
+            /etc/init.d/nfs stop
         fi
     fi
     if [ -x "/etc/init.d/nfslock" ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d nfslock stop || exit $?
+            invoke-rc.d nfslock stop
         else
-            /etc/init.d/nfslock stop || exit $?
+            /etc/init.d/nfslock stop
         fi
     fi
     if [ -x "/etc/init.d/iscsi-target" ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsi-target stop || exit $?
+            invoke-rc.d iscsi-target stop
         else
-            /etc/init.d/iscsi-target stop || exit $?
+            /etc/init.d/iscsi-target stop
         fi
     elif [ -x /etc/init.d/iscsitarget ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-            invoke-rc.d iscsitarget stop || exit $?
+            invoke-rc.d iscsitarget stop
         else
-            /etc/init.d/iscsitarget stop || exit $?
+            /etc/init.d/iscsitarget stop
         fi
     fi
 
