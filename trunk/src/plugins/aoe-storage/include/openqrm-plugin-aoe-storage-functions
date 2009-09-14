@@ -26,7 +26,12 @@ AOE_MGMT_LOCK_DELAY=5
 AOE_MGMT_LOCK_RETRY=100
 AOE_MGMT_LOCK_TIMEOUT=500
 AOE_STORAGE_SERVER_IMAGE_DIRECTORY="/coraid"
-
+# which screen binary to use
+if [ -x /usr/bin/screen.real ]; then
+    RUNSCREEN="/usr/bin/screen.real"
+else
+    RUNSCREEN=`which screen`
+fi
 
 ################ common aoe-storage functions
 
@@ -118,7 +123,7 @@ function manage_aoe() {
 			sed -i '/^$/d' $VBLADECONF
 			# start vbladed
 			SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-			screen -dmS $SCREEN_NAME vblade -m $AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME
+			$RUNSCREEN -dmS $SCREEN_NAME vblade -m $AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME
 			;;
 
 		auth)
@@ -136,7 +141,7 @@ function manage_aoe() {
 				sync			
 				# start vbladed
 				SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-				screen -dmS $SCREEN_NAME vblade -m $AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_IMAGE_ROOTDEVICE_PATH
+				$RUNSCREEN -dmS $SCREEN_NAME vblade -m $AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_IMAGE_ROOTDEVICE_PATH
 			fi
 			;;
 

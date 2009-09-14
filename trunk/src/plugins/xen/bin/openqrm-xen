@@ -63,7 +63,12 @@ if [ "$OPENQRM_INTERFACE" == "" ]; then
 		exit 1
 	fi
 fi
-
+# which screen binary to use
+if [ -x /usr/bin/screen.real ]; then
+    RUNSCREEN="/usr/bin/screen.real"
+else
+    RUNSCREEN=`which screen`
+fi
 
 
 function xen_usage() {
@@ -371,7 +376,7 @@ case "$XEN_COMMAND" in
         xen_generate_vm_config $XEN_VM_NAME
         # start it
 		SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-		if screen -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg; then
+		if $RUNSCREEN -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg; then
             openqrm_post_event 0 "create" 5 "openqrm-xen" "Created and started Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
         else
             openqrm_post_event 0 "create" 3 "openqrm-xen" "Could not create Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
@@ -388,7 +393,7 @@ case "$XEN_COMMAND" in
 		xen_lock aquire
 		echo "Starting Xen vm $XEN_VM_NAME"
 		SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-		if screen -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg; then
+		if $RUNSCREEN -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg; then
             openqrm_post_event 0 "create" 5 "openqrm-xen" "Created and started Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
         else
             openqrm_post_event 0 "create" 3 "openqrm-xen" "Could not create Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
@@ -755,7 +760,7 @@ case "$XEN_COMMAND" in
         xen_generate_vm_config $XEN_VM_NAME
         # start it
 		SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-		if screen -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg; then
+		if $RUNSCREEN -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg; then
            openqrm_post_event 0 "setboot" 5 "openqrm-xen" "Re-started Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"
         else
             openqrm_post_event 0 "setboot" 3 "openqrm-xen" "Could not re-start Xen vm $XEN_VM_NAME -> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$XEN_VM_NAME.cfg"

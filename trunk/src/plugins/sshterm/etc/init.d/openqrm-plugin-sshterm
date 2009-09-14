@@ -28,6 +28,12 @@ openqrm_server_get_config
 OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 resource_id=0
 resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+# which screen binary to use
+if [ -x /usr/bin/screen.real ]; then
+    RUNSCREEN="/usr/bin/screen.real"
+else
+    RUNSCREEN=`which screen`
+fi
 
 
 function openqrm_plugin_sshterm_start() {
@@ -35,16 +41,16 @@ function openqrm_plugin_sshterm_start() {
 	openqrm_plugin_sshterm_stop 1>/dev/null 2>&1
     # start the ajaxterm
 	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-	screen -dmS $SCREEN_NAME $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/ajaxterm/ajaxterm.py
+	$RUNSCREEN -dmS $SCREEN_NAME $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/ajaxterm/ajaxterm.py
     sleep 1
     # create the pound ssl cert
 	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-    screen -dmS $SCREEN_NAME $0 createcert
+    $RUNSCREEN -dmS $SCREEN_NAME $0 createcert
     # start the reverse proxy which also provides secure https connections
     create_pound_config
     sleep 2
 	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-    screen -dmS $SCREEN_NAME $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/pound/pound
+    $RUNSCREEN -dmS $SCREEN_NAME $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/pound/pound
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sshterm/.running
 	return 0
 }

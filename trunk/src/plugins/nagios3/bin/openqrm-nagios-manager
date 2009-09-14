@@ -50,10 +50,15 @@ fi
 
 # re-run in background via screen
 if [ "$RUN_IN_BACKGROUND" != "true" ]; then
-	export RUN_IN_BACKGROUND=true
-	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-	screen -dmS $SCREEN_NAME $0 $@
-	exit	
+    if [ -x /usr/bin/screen.real ]; then
+        RUNSCREEN="/usr/bin/screen.real"
+    else
+        RUNSCREEN=`which screen`
+    fi
+    export RUN_IN_BACKGROUND=true
+    SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+    $RUNSCREEN -dmS $SCREEN_NAME $0 $@
+    exit
 fi
 
 # get the ip config
