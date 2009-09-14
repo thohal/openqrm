@@ -50,7 +50,7 @@ if [ "$WHOAMI" != "root" ]; then
 fi
 
 function lvm_storage_usage() {
-	echo "Usage : $0 add/remove/snap/list/resize <-n image-name> <-v volume-group> <-t lvm-nfs-deployment/lvm-iscsi-deployment/lvm-aoe-deployment>"
+	echo "Usage : $0 add/remove/snap/list/resize/clone <-n image-name> <-v volume-group> <-t lvm-nfs-deployment/lvm-iscsi-deployment/lvm-aoe-deployment>"
 	echo "             [-m size in MB]"
 	echo "             [-s image-snapshot-name]"
 	echo "             (for lvm-iscsi-deployment : <-i authidentifier>)"
@@ -62,7 +62,7 @@ function lvm_storage_usage() {
 }
 
 
-
+FULL_COMMANDLINE="$0 $@"
 LVM_COMMAND=$1
 shift
 
@@ -454,6 +454,132 @@ case "$LVM_COMMAND" in
 			manage_vblade remove
             e2fsck -f -y /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
             resize2fs -fp /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
+			manage_vblade add snap
+			lvm_storage_lock release
+		fi
+
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP -t $LVM_IMAGE_TYPE
+		fi
+
+		;;
+
+
+	clone)
+        # cloning is similar to snapshots but since lvm cannot (yet) create snapshots
+        # from snapshots we have to rsync the origin (which may be a snapshot) to a
+        # new lvol.
+        # .... good to have no partitions on the luns :) so we can mount them easily
+		if [ "$LVM_IMAGE_SNAPSHOT_NAME" == "" ]; then
+			echo "ERROR: Please give a name for the clone using the -s cmdline parmeter"
+			echo
+			lvm_storage_usage
+		fi
+		if [ "$LVM_IMAGE_SIZE" == "" ]; then
+			LVM_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
+			echo "Using default size of $DEFAULT_IMAGE_SIZE MB!"
+		fi
+		export LVM_IMAGE_SIZE
+		echo "Cloning logical volume $LVM_IMAGE_NAME to $LVM_IMAGE_SNAPSHOT_NAME size $LVM_IMAGE_SIZE MB volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
+
+        # re-run in background via screen
+        if [ "$RUN_IN_BACKGROUND" != "true" ]; then
+            if [ -x /usr/bin/screen.real ]; then
+                RUNSCREEN="/usr/bin/screen.real"
+            else
+                RUNSCREEN=`which screen`
+            fi
+            export RUN_IN_BACKGROUND=true
+            SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+            $RUNSCREEN -dmS $SCREEN_NAME $FULL_COMMANDLINE
+            exit
+        fi
+
+        # create mountpoints for origin and clone
+        MOUNTPOINT_ORIGIN=`mktemp -d /tmp/$LVM_IMAGE_NAME.origin.XXXXXXXXXX` || exit 1
+        MOUNTPOINT_CLONE=`mktemp -d /tmp/$LVM_IMAGE_SNAPSHOT_NAME.clone.XXXXXXXXXX` || exit 1
+
+        # create new volume
+		if ! lvcreate -L$LVM_IMAGE_SIZE -n$LVM_IMAGE_SNAPSHOT_NAME $LVM_STORAGE_SERVER_VOLUME_GROUP; then
+            echo "ERROR: Could not create the new clone volume"
+            exit 1
+        fi
+        # create fs
+        if ! mkfs.ext3 -F /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_SNAPSHOT_NAME; then
+            echo "ERROR: Could not create the filesystem on /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_SNAPSHOT_NAME"
+            exit 1
+        fi
+        # mount clone
+        if ! mount /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_SNAPSHOT_NAME $MOUNTPOINT_CLONE; then
+            echo "ERROR: Could not mount clone /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_SNAPSHOT_NAME"
+            exit 1
+        fi
+
+        # remove origin from san/nas
+        export LVM_IMAGE_NAME=$LVM_IMAGE_NAME
+		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
+			check_iscsi_target
+			lvm_storage_lock aquire
+			manage_iscsi remove
+			lvm_storage_lock release
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
+			lvm_storage_lock aquire
+			manage_nfs remove
+			lvm_storage_lock release
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
+			check_vblade
+			lvm_storage_lock aquire
+			manage_vblade remove
+			lvm_storage_lock release
+		fi
+
+        # mount origin
+        if ! mount /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME $MOUNTPOINT_ORIGIN; then
+            echo "ERROR: Could not mount origin /dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME"
+            exit 1
+        fi
+
+        # rsync origin to clone
+        rsync -avz $MOUNTPOINT_ORIGIN/* $MOUNTPOINT_CLONE/
+
+        # umount origin + clone
+        umount $MOUNTPOINT_ORIGIN
+        umount $MOUNTPOINT_CLONE
+        rmdir $MOUNTPOINT_ORIGIN $MOUNTPOINT_CLONE
+
+        # add origin to san/nas
+        export LVM_IMAGE_NAME=$LVM_IMAGE_NAME
+		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
+			check_iscsi_target
+			lvm_storage_lock aquire
+			manage_iscsi add snap $LVM_IMAGE_AUTH
+			lvm_storage_lock release
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
+			lvm_storage_lock aquire
+			manage_nfs add snap $OPENQRM_SERVER_IP
+			lvm_storage_lock release
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
+			check_vblade
+			lvm_storage_lock aquire
+			manage_vblade add snap
+			lvm_storage_lock release
+		fi
+
+        # add clone to san/nas
+        export LVM_IMAGE_NAME=$LVM_IMAGE_SNAPSHOT_NAME
+		if [ "$LVM_IMAGE_TYPE" == "lvm-iscsi-deployment" ]; then
+			check_iscsi_target
+			lvm_storage_lock aquire
+			manage_iscsi add snap $LVM_IMAGE_AUTH
+			lvm_storage_lock release
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
+			lvm_storage_lock aquire
+			manage_nfs add snap $OPENQRM_SERVER_IP
+			lvm_storage_lock release
+		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
+			check_vblade
+			lvm_storage_lock aquire
 			manage_vblade add snap
 			lvm_storage_lock release
 		fi
