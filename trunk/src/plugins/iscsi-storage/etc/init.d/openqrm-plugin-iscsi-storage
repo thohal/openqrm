@@ -31,26 +31,38 @@ function openqrm_plugin_iscsi_storage_start() {
 	openqrm_plugin_iscsi_storage_stop 1>/dev/null 2>&1
 	echo "Starting the openQRM iscsi-storage-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-storage/.running
-	if [ -x /etc/init.d/iscsi-target ]; then
-		nohup /etc/init.d/iscsi-target start
-	elif [ -x /etc/init.d/iscsitarget ]; then
-		nohup /etc/init.d/iscsitarget start
-	else
-		echo "ERROR: Coud not find the iscsi-target init script !" | logger
-	fi
+    if [ -x "/etc/init.d/iscsi-target" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d iscsi-target start || exit $?
+        else
+            /etc/init.d/iscsi-target start || exit $?
+        fi
+    elif [ -x /etc/init.d/iscsitarget ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d iscsitarget start || exit $?
+        else
+            /etc/init.d/iscsitarget start || exit $?
+        fi
+    fi
 }
 
 
 function openqrm_plugin_iscsi_storage_stop() {
 	echo "Stopping the openQRM iscsi-storage-plugin"
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/iscsi-storage/.running
-	if [ -x /etc/init.d/iscsi-target ]; then
-		nohup /etc/init.d/iscsi-target stop
-	elif [ -x /etc/init.d/iscsitarget ]; then
-		nohup /etc/init.d/iscsitarget stop
-	else
-		echo "ERROR: Coud not find the iscsi-target init script !" | logger
-	fi
+    if [ -x "/etc/init.d/iscsi-target" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d iscsi-target stop || exit $?
+        else
+            /etc/init.d/iscsi-target stop || exit $?
+        fi
+    elif [ -x /etc/init.d/iscsitarget ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d iscsitarget stop || exit $?
+        else
+            /etc/init.d/iscsitarget stop || exit $?
+        fi
+    fi
 }
 
 function openqrm_plugin_iscsi_storage_uninstall() {

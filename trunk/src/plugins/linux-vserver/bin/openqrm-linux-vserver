@@ -258,7 +258,8 @@ EOF
 			exit 1
 		fi
 		# start as idle
-		nohup vserver $LINUX_VSERVER_VM_NAME start &
+		nohup vserver $LINUX_VSERVER_VM_NAME start 1>/tmp/openqrm-$LINUX_VSERVER_VM_NAME.out 2>&1 &
+        rm -f /tmp/openqrm-$LINUX_VSERVER_VM_NAME.out
 		# restart openqrm-exec
 		linux_vserver_restart_exec
 		linux_vserver_lock release
@@ -297,7 +298,8 @@ EOF
 			fi
 			bind_sshd $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME $resource_ip
 		fi
-		nohup vserver $LINUX_VSERVER_VM_NAME start &
+		nohup vserver $LINUX_VSERVER_VM_NAME start 1>/tmp/openqrm-$LINUX_VSERVER_VM_NAME.out 2>&1 &
+        rm -f /tmp/openqrm-$LINUX_VSERVER_VM_NAME.out
 		# restart openqrm-exec
 		linux_vserver_restart_exec
 		linux_vserver_lock release
@@ -323,7 +325,8 @@ EOF
 	reboot)
 		linux_vserver_lock aquire
 		echo "Rebooting Linux-VServer vm $LINUX_VSERVER_VM_NAME"
-		nohup vserver $LINUX_VSERVER_VM_NAME restart &
+		nohup vserver $LINUX_VSERVER_VM_NAME restart 1>/tmp/openqrm-$LINUX_VSERVER_VM_NAME.out 2>&1 &
+        rm -f /tmp/openqrm-$LINUX_VSERVER_VM_NAME.out
 		linux_vserver_restart_exec
 		linux_vserver_lock release
 		;;
