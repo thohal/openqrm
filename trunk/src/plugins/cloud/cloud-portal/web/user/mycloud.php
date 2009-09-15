@@ -62,6 +62,7 @@ require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudirlc.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudiplc.class.php";
 
 // inclde the mycloud parts
 require_once "./mycloudrequests.php";
@@ -849,6 +850,91 @@ if (htmlobject_request('action') != '') {
                     $cirlc_fields['cd_state'] = '1';
                     $cloudirlc->add($cirlc_fields);
                     $strMsg .= "Resizing disk for Cloud appliance $id : $cloud_image_current_disk_size + $additional_disk_space = $new_disk_size<br>";
+                }
+            }
+            redirect($strMsg, tab3);
+			break;
+
+
+
+		case 'private':
+			if (isset($_REQUEST['identifier'])) {
+                foreach($_REQUEST['identifier'] as $id) {
+                    // disk-resize enabled ?
+                    $cp_config = new cloudconfig();
+                    $show_private_image = $cp_config->get_value(21);	// show_private_image
+                    if (!strcmp($show_private_image, "false")) {
+                        $strMsg = "Private-Image is disabled! Skipping ... <br>";
+                        redirect($strMsg, tab3);
+                        exit(0);
+                    }
+                    // only allow our appliance to be restarted
+                    $clouduser = new clouduser();
+                    $clouduser->get_instance_by_name($auth_user);
+
+                    $cloudreq_array = array();
+                    $cloudreq = new cloudrequest();
+                    $cloudreq_array = $cloudreq->get_all_ids();
+                    $my_appliances = array();
+                    // build an array of our appliance id's
+                    foreach ($cloudreq_array as $cr) {
+                        $cl_tmp_req = new cloudrequest();
+                        $cr_id = $cr['cr_id'];
+                        $cl_tmp_req->get_instance_by_id($cr_id);
+                        if ($cl_tmp_req->cu_id == $clouduser->id) {
+                            // we have found one of our own request, check if we have an appliance-id != 0
+                            if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
+                                $one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
+                                foreach ($one_app_id_arr as $aid) {
+                                    $my_appliances[] .= $aid;
+                                }
+                            }
+                        }
+                    }
+                    // is it ours ?
+                    if (!in_array($id, $my_appliances)) {
+                        continue;
+                    }
+
+                    // check private
+                    $appliance = new appliance();
+                    $appliance->get_instance_by_id($id);
+                    $image = new image();
+                    $image->get_instance_by_id($appliance->imageid);
+                    $cloud_image = new cloudimage();
+                    $cloud_image->get_instance_by_image_id($image->id);
+                    $cloud_image_current_disk_size = $cloud_image->disk_size;
+                    $cloud_appliance_resize = new cloudappliance();
+                    $cloud_appliance_resize->get_instance_by_appliance_id($id);
+                    // check if no other command is currently running
+                    if ($cloud_appliance_resize->cmd != 0) {
+                        $strMsg = "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
+                        redirect($strMsg, tab3);
+                        continue;
+                    }
+                    // check that state is active
+                    if ($cloud_appliance_resize->state != 1) {
+                        $strMsg = "Can only create a private image from Cloud appliance $id if it is in active state<br>";
+                        redirect($strMsg, tab3);
+                        continue;
+                    }
+                    // put the size + clone name in the cloud_image
+                    $private_image_name = str_replace("cloud", "private", $image->name);
+                    $cloudi_request = array(
+                        'ci_disk_rsize' => $cloud_image_current_disk_size,
+                        'ci_clone_name' => $private_image_name,
+                    );
+                    $cloud_image->update($cloud_image->id, $cloudi_request);
+
+                    // create a new cloud-image private-live-cycle
+                    $cloudiplc = new cloudiplc();
+                    $ciplc_fields['cp_id'] = openqrm_db_get_free_id('cp_id', $cloudiplc->_db_table);
+                    $ciplc_fields['cp_appliance_id'] = $id;
+                    $ciplc_fields['cp_cu_id'] = $clouduser->id;
+                    $ciplc_fields['cp_state'] = '1';
+                    $ciplc_fields['cp_start_private'] = $_SERVER['REQUEST_TIME'];
+                    $cloudiplc->add($ciplc_fields);
+                    $strMsg .= "Creating a private image $private_image_name from Cloud appliance $id<br>";
                 }
             }
             redirect($strMsg, tab3);

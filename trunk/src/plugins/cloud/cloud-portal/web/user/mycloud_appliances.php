@@ -66,6 +66,7 @@ function my_cloud_appliances() {
     $sshterm_enabled = false;
     $collectd_graph_enabled = false;
     $disk_resize_enabled = false;
+    $private_image_enabled = false;
 
     // check if to show sshterm-login
     $cc_conf = new cloudconfig();
@@ -87,6 +88,11 @@ function my_cloud_appliances() {
     $show_disk_resize = $cc_conf->get_value(20);	// show_disk_resize
     if (!strcmp($show_disk_resize, "true")) {
         $disk_resize_enabled = true;
+    }
+    // private-image enabled ?
+    $show_private_image = $cc_conf->get_value(21);	// show_private_image
+    if (!strcmp($show_private_image, "true")) {
+        $private_image_enabled = true;
     }
 
     $appliance_tmp = new appliance();
@@ -324,6 +330,10 @@ function my_cloud_appliances() {
     if ($disk_resize_enabled) {
     	$command_array[] = 'resize';
     }
+    if ($private_image_enabled) {
+    	$command_array[] = 'private';
+    }
+
     $table->bottom = $command_array;
     $table->identifier = 'appliance_id';
 	$table->max = 1000;

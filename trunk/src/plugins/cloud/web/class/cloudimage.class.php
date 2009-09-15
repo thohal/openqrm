@@ -50,6 +50,7 @@ var $appliance_id = '';
 var $resource_id = '';
 var $disk_size = '';
 var $disk_rsize = '';
+var $clone_name = '';
 var $state = '';
 
 	//--------------------------------------------------
@@ -100,6 +101,7 @@ function get_instance($id, $image_id) {
 		$this->resource_id = $cloudimage["ci_resource_id"];
 		$this->disk_size = $cloudimage["ci_disk_size"];
 		$this->disk_rsize = $cloudimage["ci_disk_rsize"];
+		$this->clone_name = $cloudimage["ci_clone_name"];
 		$this->state = $cloudimage["ci_state"];
 	}
 	return $this;
@@ -200,6 +202,9 @@ function set_state($cloudimage_id, $state_str) {
 			break;
 		case "resizing":
 			$cloudimage_state = 2;
+			break;
+		case "private":
+			$cloudimage_state = 3;
 			break;
 	}
 	$db=openqrm_get_db_connection();

@@ -46,6 +46,7 @@ require_once "$RootDir/plugins/cloud/class/cloudvm.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudirlc.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudiplc.class.php";
 
 // custom billing hook, please fill in your custom-billing function 
 require_once "$RootDir/plugins/cloud/openqrm-cloud-billing-hook.php";
@@ -254,6 +255,89 @@ function openqrm_cloud_monitor() {
 
 		}
 // storage dependency resize !
+
+
+
+        // private ?
+		if ($ci_state == 3) {
+
+            // calculate the resize
+            $private_disk = $ci->disk_rsize;
+            $private_image_name = $ci->clone_name;
+
+// storage dependency for private !
+// currently supported storage types are
+// lvm-nfs-deployment
+// lvm-iscsi-deployment
+// lvm-aoe-deployment
+
+            // lvm-nfs-storage
+            if (!strcmp($image_type, "lvm-nfs-deployment")) {
+                $full_vol_name=$image_rootdevice;
+                $vol_dir=dirname($full_vol_name);
+                $vol=str_replace("/", "", $vol_dir);
+                $image_location_name=basename($full_vol_name);
+                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage clone -n $image_location_name -s $private_image_name -v $vol -m $private_disk -t lvm-nfs-deployment";
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
+                $resource->send_command($resource_ip, $image_resize_cmd);
+
+            // lvm-iscsi-storage
+            } else if (!strcmp($image_type, "lvm-iscsi-deployment")) {
+                // parse the volume group info in the identifier
+                $ident_separate=strpos($image_rootdevice, ":");
+                $volume_group=substr($image_rootdevice, 0, $ident_separate);
+                $root_device=substr($image_rootdevice, $ident_separate);
+                $image_location=dirname($root_device);
+                $image_location_name=basename($image_location);
+                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage clone -n $image_location_name -s $private_image_name -v $volume_group -m $private_disk -t lvm-iscsi-deployment";
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
+                $resource->send_command($resource_ip, $image_resize_cmd);
+
+            // lvm-aoe-storage
+            } else if (!strcmp($image_type, "lvm-aoe-deployment")) {
+                // parse the volume group info in the identifier
+                $ident_separate=strpos($image_rootdevice, ":");
+                $volume_group=substr($image_rootdevice, 0, $ident_separate);
+                $image_rootdevice_rest=substr($image_rootdevice, $ident_separate+1);
+                $ident_separate2=strpos($image_rootdevice_rest, ":");
+                $image_location_name=substr($image_rootdevice_rest, 0, $ident_separate2);
+                $root_device=substr($image_rootdevice_rest, $ident_separate2+1);
+                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage clone -n $image_location_name -s $private_image_name -v $volume_group -m $private_disk -t lvm-aoe-deployment";
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
+                $resource->send_command($resource_ip, $image_resize_cmd);
+
+            // equallogic-storage
+            } else if (!strcmp($image_type, "equallogic")) {
+                $equallogic_volume_name=basename($image_rootdevice);
+                // get the password for the equallogic-filer
+                $eq_storage = new equallogic_storage();
+                $eq_storage->get_instance_by_storage_id($storage->id);
+                if (!strlen($eq_storage->storage_id)) {
+                    $strMsg = "Equallogic Storage server $storage->id not configured yet<br>";
+                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", $strMsg, "", "", 0, 0, 0);
+                } else {
+                    $eq_storage_ip = $resource_ip;
+                    $eq_user = $eq_storage->storage_user;
+                    $eq_password = $eq_storage->storage_password;
+                    $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage clone -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip";
+                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+//                    $output = shell_exec($image_remove_clone_cmd);
+                }
+
+
+
+            // not supported yet
+            } else {
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to create a private image type $image_type.", "", "", 0, 0, 0);
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types for resize are lvm-nfs-deployment, lvm-iscsi-deployment, lvm-aoe-deployment.", "", "", 0, 0, 0);
+            }
+            // re-set the cloudimage state to active
+            $ci->set_state($ci->id, "active");
+
+		}
+// storage dependency private !
+
+
 
 
         // remove ?
@@ -1764,7 +1848,7 @@ function openqrm_cloud_monitor() {
 
 	$cirlc = new cloudirlc();
 	$cirlc_list = $cirlc->get_all_ids();
-    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudirlc", "(!!!!!!) Resize live-cycle check", "", "", 0, 0, 0);
+    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudirlc", "Resize live-cycle check", "", "", 0, 0, 0);
 
 	foreach($cirlc_list as $cdlist) {
 		$cd_id = $cdlist['cd_id'];
@@ -1848,6 +1932,108 @@ function openqrm_cloud_monitor() {
 		}
 	}
 	// ##################### end cloudimage-resize-live-cycle ##################
+
+
+
+	// ##################### start cloudimage-private-live-cycle ################
+
+    $estimated_clone_time = 300;
+
+	$ciplc = new cloudiplc();
+	$ciplc_list = $ciplc->get_all_ids();
+    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "Private live-cycle check", "", "", 0, 0, 0);
+
+	foreach($ciplc_list as $cplist) {
+		$cp_id = $cplist['cp_id'];
+		$cp = new cloudiplc();
+		$cp->get_instance_by_id($cp_id);
+		$cp_appliance_id = $cp->appliance_id;
+		$cp_state = $cp->state;
+
+		switch ($cp_state) {
+			case 0:
+				// remove
+                $cp->remove($cp_id);
+    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(REMOVE) Private live-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
+				break;
+
+            case 1:
+				// pause
+    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(PAUSE) Private live-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
+                $cloud_app_private = new cloudappliance();
+                $cloud_app_private->get_instance_by_appliance_id($cp_appliance_id);
+                $cloud_app_private->set_cmd($cloud_app_private->id, "stop");
+                $cloud_app_private->set_state($cloud_app_private->id, "paused");
+                $cp->set_state($cp_id, "start_private");
+				break;
+
+            case 2:
+				// start_private
+    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(START_PRIVATE) Private live-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
+                // set the cloudimage to state resize
+                $cloud_app_private = new cloudappliance();
+                $cloud_app_private->get_instance_by_appliance_id($cp_appliance_id);
+                $appliance = new appliance();
+                $appliance->get_instance_by_id($cloud_app_private->appliance_id);
+                $cloud_im = new cloudimage();
+                $cloud_im->get_instance_by_image_id($appliance->imageid);
+                $cloud_im->set_state($cloud_im->id, "private");
+                $cp->set_state($cp_id, "cloning");
+                break;
+
+            case 3:
+				// cloning
+    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(CLONING) Private live-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
+                // remove any existing image-authentication to avoid kicking the auth into the private phase
+                $cloud_app_private = new cloudappliance();
+                $cloud_app_private->get_instance_by_appliance_id($cp_appliance_id);
+                $appliance = new appliance();
+                $appliance->get_instance_by_id($cloud_app_private->appliance_id);
+                $image_auth = new image_authentication();
+                $image_auth->get_instance_by_image_id($appliance->imageid);
+                $image_auth->remove($image_auth->id);
+                $cp->set_state($cp_id, "end_private");
+				break;
+
+           case 4:
+				// end_private
+                $start_private = $cp->start_private;
+                $current_time = $_SERVER['REQUEST_TIME'];
+                $private_runtime = $current_time - $start_private;
+                if ($private_runtime > $estimated_clone_time) {
+                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(END_PRIVATE) Finish of private live-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
+                    $cp->set_state($cp_id, "unpause");
+                } else {
+                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(END_PRIVATE) Awaiting to finish private live-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
+                }
+                break;
+
+			case 5:
+				// unpause
+    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(UNPAUSE) Private live-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
+                // unpause appliance
+                $cloud_app_private = new cloudappliance();
+                $cloud_app_private->get_instance_by_appliance_id($cp_appliance_id);
+                $cloud_app_private->set_cmd($cloud_app_private->id, "start");
+                $cloud_app_private->set_state($cloud_app_private->id, "active");
+                // set new disk size in cloudimage
+                $appliance = new appliance();
+                $appliance->get_instance_by_id($cloud_app_private->appliance_id);
+                $cloud_im = new cloudimage();
+                $cloud_im->get_instance_by_image_id($appliance->imageid);
+                $ar_cl_image_update = array(
+                    'ci_disk_rsize' => "",
+                    'ci_clone_name' => "",
+                );
+                $cloud_im->update($cloud_im->id, $ar_cl_image_update);
+                $cp->set_state($cp_id, "remove");
+				break;
+		}
+	}
+	// ##################### end cloudimage-resize-live-cycle ##################
+
+
+
 
 
 
