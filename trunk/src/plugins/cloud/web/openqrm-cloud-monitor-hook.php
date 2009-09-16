@@ -47,6 +47,7 @@ require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudirlc.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudiplc.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudprivateimage.class.php";
 
 // custom billing hook, please fill in your custom-billing function 
 require_once "$RootDir/plugins/cloud/openqrm-cloud-billing-hook.php";
@@ -264,6 +265,7 @@ function openqrm_cloud_monitor() {
             // calculate the resize
             $private_disk = $ci->disk_rsize;
             $private_image_name = $ci->clone_name;
+            $private_success = false;
 
 // storage dependency for private !
 // currently supported storage types are
@@ -280,6 +282,9 @@ function openqrm_cloud_monitor() {
                 $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage clone -n $image_location_name -s $private_image_name -v $vol -m $private_disk -t lvm-nfs-deployment";
                 $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
                 $resource->send_command($resource_ip, $image_resize_cmd);
+                // set the storage specific image root_device parameter
+    			$clone_image_fields["image_rootdevice"] = "/".$vol."/".$private_image_name;
+                $private_success = true;
 
             // lvm-iscsi-storage
             } else if (!strcmp($image_type, "lvm-iscsi-deployment")) {
@@ -292,6 +297,9 @@ function openqrm_cloud_monitor() {
                 $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage clone -n $image_location_name -s $private_image_name -v $volume_group -m $private_disk -t lvm-iscsi-deployment";
                 $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
                 $resource->send_command($resource_ip, $image_resize_cmd);
+                // set the storage specific image root_device parameter
+    			$clone_image_fields["image_rootdevice"] = str_replace($image_location_name, $private_image_name, $image->rootdevice);
+                $private_success = true;
 
             // lvm-aoe-storage
             } else if (!strcmp($image_type, "lvm-aoe-deployment")) {
@@ -305,6 +313,9 @@ function openqrm_cloud_monitor() {
                 $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage clone -n $image_location_name -s $private_image_name -v $volume_group -m $private_disk -t lvm-aoe-deployment";
                 $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
                 $resource->send_command($resource_ip, $image_resize_cmd);
+                // set the storage specific image root_device parameter
+    			$clone_image_fields["image_rootdevice"] = str_replace($image_location_name, $private_image_name, $image->rootdevice);
+                $private_success = true;
 
             // equallogic-storage
             } else if (!strcmp($image_type, "equallogic")) {
@@ -322,8 +333,11 @@ function openqrm_cloud_monitor() {
                     $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage clone -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip";
                     $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
 //                    $output = shell_exec($image_remove_clone_cmd);
-                }
 
+                    // set the storage specific image root_device parameter
+        			$clone_image_fields["image_rootdevice"] = str_replace($equallogic_volume_name, $private_image_name, $image->rootdevice);
+                    $private_success = true;
+                }
 
 
             // not supported yet
@@ -331,6 +345,27 @@ function openqrm_cloud_monitor() {
                 $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to create a private image type $image_type.", "", "", 0, 0, 0);
                 $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types for resize are lvm-nfs-deployment, lvm-iscsi-deployment, lvm-aoe-deployment.", "", "", 0, 0, 0);
             }
+
+            // here we logical create the image in openQRM, we have all data available
+            // the private image relation will be created after this step in the private lc
+            if ($private_success) {
+                $clone_image = new image();
+                $clone_image_fields["image_id"]=openqrm_db_get_free_id('image_id', $clone_image->_db_table);
+                $clone_image_fields["image_name"] = $ci->clone_name;
+                $clone_image_fields["image_version"] = "Private Cloud";
+                $clone_image_fields["image_type"] = "lvm-nfs-deployment";
+                $clone_image_fields["image_rootfstype"] = $image->rootfstype;
+                $clone_image_fields["image_storageid"] = $image->storageid;
+                $clone_image_fields["image_deployment_parameter"] = $image->deployment_parameter;
+                // !! we create the private image as non-shared
+                // this will prevent cloning when it is requested
+                $clone_image_fields["image_isshared"] = 0;
+                $clone_image_fields["image_comment"] = $image->comment;
+                $clone_image_fields["image_capabilities"] = $image->capabilities;
+                $clone_image->add($clone_image_fields);
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Created new private Cloud image $ci->clone_name", "", "", 0, 0, 0);
+            }
+
             // re-set the cloudimage state to active
             $ci->set_state($ci->id, "active");
 
@@ -1937,7 +1972,7 @@ function openqrm_cloud_monitor() {
 
 	// ##################### start cloudimage-private-live-cycle ################
 
-    $estimated_clone_time = 300;
+    $estimated_clone_time = 600;
 
 	$ciplc = new cloudiplc();
 	$ciplc_list = $ciplc->get_all_ids();
@@ -2011,16 +2046,38 @@ function openqrm_cloud_monitor() {
 			case 5:
 				// unpause
     			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(UNPAUSE) Private live-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
-                // unpause appliance
+                // get the cloudappliance
                 $cloud_app_private = new cloudappliance();
                 $cloud_app_private->get_instance_by_appliance_id($cp_appliance_id);
-                $cloud_app_private->set_cmd($cloud_app_private->id, "start");
-                $cloud_app_private->set_state($cloud_app_private->id, "active");
-                // set new disk size in cloudimage
+                // get the real appliance
                 $appliance = new appliance();
                 $appliance->get_instance_by_id($cloud_app_private->appliance_id);
+                // get the cloudimage
                 $cloud_im = new cloudimage();
                 $cloud_im->get_instance_by_image_id($appliance->imageid);
+
+                // here we create the private cloud image in openQRM after the clone procedure
+                $private_cloud_image = new cloudprivateimage();
+                // get image_id
+                $pimage = new image();
+                $pimage->get_instance_by_name($cloud_im->clone_name);
+                // get cu_id
+                $crequest = new cloudrequest();
+                $crequest->get_instance_by_id($cloud_app_private->cr_id);
+                $cuser = new clouduser();
+                $cuser->get_instance_by_id($crequest->cu_id);
+                // create array for add
+                $private_cloud_image_fields["co_id"]=openqrm_db_get_free_id('co_id', $private_cloud_image->_db_table);
+                $private_cloud_image_fields["co_image_id"] = $pimage->id;
+                $private_cloud_image_fields["co_cu_id"] = $cuser->id;
+                $private_cloud_image_fields["co_state"] = 1;
+                $private_cloud_image->add($private_cloud_image_fields);
+
+                // unpause appliance
+                $cloud_app_private->set_cmd($cloud_app_private->id, "start");
+                $cloud_app_private->set_state($cloud_app_private->id, "active");
+
+                // array for updating the cloudimage
                 $ar_cl_image_update = array(
                     'ci_disk_rsize' => "",
                     'ci_clone_name' => "",

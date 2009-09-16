@@ -48,6 +48,9 @@ var $appliance_id = '';
 var $cu_id = '';
 var $state = '';
 var $start_private = '';
+var $_db_table;
+var $_base_dir;
+var $_event;
 
 
 	//--------------------------------------------------

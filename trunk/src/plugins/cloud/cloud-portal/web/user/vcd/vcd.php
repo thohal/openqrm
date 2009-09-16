@@ -38,6 +38,7 @@ require_once "$RootDir/plugins/cloud/class/clouduserslimits.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudrequest.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudconfig.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudprivateimage.class.php";
 
 global $OPENQRM_SERVER_BASE_DIR;
 $refresh_delay=5;
@@ -328,6 +329,7 @@ function my_cloud_create_request() {
 	global $RootDir;
 
 	$cl_user = new clouduser();
+    $cl_user->get_instance_by_name("$auth_user");
 	$cl_user_list = array();
 	$cl_user_list = $cl_user->get_list();
 	$cl_user_count = count($cl_user_list);
@@ -365,12 +367,26 @@ function my_cloud_create_request() {
 		$iname = $list['label'];
 		$iid = $list['value'];
 		if (!strstr($iname, ".cloud_")) {
-            if ($image_count == 0) {
-                $image_list .= "\"$iname\"";
+            // check for private
+    		if (strstr($iname, ".private_")) {
+                $priv_image = new cloudprivateimage();
+                $priv_image->get_instance_by_image_id($iid);
+                if ($cl_user->id == $priv_image->cu_id) {
+                    if ($image_count == 0) {
+                        $image_list .= "\"$iname\"";
+                    } else {
+                        $image_list .= ", \"$iname\"";
+                    }
+                    $image_count++;
+                }
             } else {
-                $image_list .= ", \"$iname\"";
+                if ($image_count == 0) {
+                    $image_list .= "\"$iname\"";
+                } else {
+                    $image_list .= ", \"$iname\"";
+                }
+                $image_count++;
             }
-            $image_count++;
 		}
 	}
 

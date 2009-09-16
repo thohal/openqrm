@@ -46,6 +46,9 @@ class cloudirlc {
 var $id = '';
 var $appliance_id = '';
 var $state = '';
+var $_db_table;
+var $_base_dir;
+var $_event;
 
 	//--------------------------------------------------
 	/**
