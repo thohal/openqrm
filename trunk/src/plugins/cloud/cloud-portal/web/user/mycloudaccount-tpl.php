@@ -88,6 +88,7 @@
         <a href="mycloudtransactions.php" target="_BLANK"><small>(all Cloud transactions)</small></a>
 	</div>
 
+</div>
 
 {currenttab}
 </form>

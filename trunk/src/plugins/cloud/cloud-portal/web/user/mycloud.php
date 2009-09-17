@@ -68,6 +68,7 @@ require_once "$RootDir/plugins/cloud/class/cloudiplc.class.php";
 require_once "./mycloudrequests.php";
 require_once "./mycloud_appliances.php";
 require_once "./mycloudaccount.php";
+require_once "./mycloudimages.php";
 
 
 global $OPENQRM_SERVER_BASE_DIR;
@@ -991,7 +992,8 @@ if ($cloudu->status == 1) {
 	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab2\">Cloud Request</a>", 'value' => my_cloud_create_request());
 	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab3\">Cloud Appliances</a>", 'value' => my_cloud_appliances());
 	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab4\">My Account</a>", 'value' => mycloud_account());
-	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab5\">Help</a>", 'value' => mycloud_documentation());
+	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab5\">My Images</a>", 'value' => mycloud_images());
+	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab6\">Help</a>", 'value' => mycloud_documentation());
 	$output[] = array('label' => "<a href=\"/cloud-portal/mycloud-logout.php\">Logout</a>", 'value' => "");
 } else {
 	$output[] = array('label' => 'Your account has been disabled', 'value' => my_cloud_account_disabled());

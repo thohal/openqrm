@@ -46,6 +46,7 @@ class cloudprivateimage {
 var $id = '';
 var $image_id = '';
 var $cu_id = '';
+var $comment = '';
 var $state = '';
 var $_db_table;
 var $_base_dir;
@@ -97,6 +98,7 @@ function get_instance($id, $image_id) {
 		$this->id = $cloudprivateimage["co_id"];
 		$this->image_id = $cloudprivateimage["co_image_id"];
 		$this->cu_id = $cloudprivateimage["co_cu_id"];
+		$this->comment = $cloudprivateimage["co_comment"];
 		$this->state = $cloudprivateimage["co_state"];
 	}
 	return $this;
@@ -164,6 +166,23 @@ function remove($cloudprivateimage_id) {
 	$rs = $db->Execute("delete from $CLOUD_PRIVATE_IMAGE_TABLE where co_id=$cloudprivateimage_id");
 }
 
+
+
+// updates a cloudprivateimage
+function update($cloudprivateimage_id, $ci_fields) {
+	global $CLOUD_PRIVATE_IMAGE_TABLE;
+    global $event;
+    if ($cloudprivateimage_id < 0 || ! is_array($ci_fields)) {
+        $this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "cloudprivateimage.class.php", "Unable to update Cloudimage $cloudprivateimage_id", "", "", 0, 0, 0);
+        return 1;
+    }
+    $db=openqrm_get_db_connection();
+    unset($ci_fields["co_id"]);
+    $result = $db->AutoExecute($CLOUD_PRIVATE_IMAGE_TABLE, $ci_fields, 'UPDATE', "co_id = $cloudprivateimage_id");
+    if (! $result) {
+        $this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "cloudprivateimage.class.php", "Failed updating cloudprivateimage $cloudprivateimage_id", "", "", 0, 0, 0);
+    }
+}
 
 
 // sets the state of a cloudprivateimage

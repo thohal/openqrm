@@ -148,16 +148,18 @@ function openqrm_cloud_monitor() {
 			continue;
 		}
 		// resource active (idle) again ?
-		$ci_resource = new resource();
-		$ci_resource->get_instance_by_id($ci_resource_id);
-		if (strcmp($ci_resource->state, "active")) {
-			// not yet active again
-			continue;
-		}
-		if ($ci_resource->imageid != 1) {
-			// not yet idle
-			continue;
-		}
+        if ($ci_resource_id > 0) {
+            $ci_resource = new resource();
+            $ci_resource->get_instance_by_id($ci_resource_id);
+            if (strcmp($ci_resource->state, "active")) {
+                // not yet active again
+                continue;
+            }
+            if ($ci_resource->imageid != 1) {
+                // not yet idle
+                continue;
+            }
+        }
 
 		// get image definition
 		$image = new image();
@@ -528,8 +530,10 @@ function openqrm_cloud_monitor() {
             // remove the image in openQRM
             $image->remove($ci_image_id);
             // remove the appliance
-            $rapp = new appliance();
-            $rapp->remove($ci_appliance_id);
+            if ($ci_appliance_id > 0) {
+                $rapp = new appliance();
+                $rapp->remove($ci_appliance_id);
+            }
             // remove the image in the cloud
             $ci->remove($ci_id);
             $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Removing the cloned image $ci_image_id and the appliance $ci_appliance_id !", "", "", 0, 0, 0);
