@@ -35,7 +35,7 @@ require_once "$RootDir/include/htmlobject.inc.php";
 
 function dns_about() {
 	global $OPENQRM_SERVER_BASE_DIR;
-	$disp = "<h1><img border=0 src=\"/openqrm/base/plugins/dns/img/plugin.png\"> Dhcpd plugin</h1>";
+	$disp = "<h1><img border=0 src=\"/openqrm/base/plugins/dns/img/plugin.png\"> DNS plugin</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."The dns-plugin automatically manages ip-address to hostname resolving via bind/named for the entire openQRM network.";
 	$disp = $disp." It configures the hostname/ip entries for the dns database and reloads the name-sever during start/stop of an appliance.";
