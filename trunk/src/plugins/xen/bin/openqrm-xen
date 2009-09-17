@@ -494,10 +494,12 @@ case "$XEN_COMMAND" in
 
         # gather informations from the not active xen vms
         for cfg in `ls $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/*.cfg 2>/dev/null`; do
-            VML_NAME=`basename $cfg | cut -d'.' -f1`
+            VML_NAME=`basename $cfg | sed -e 's#.cfg$##g'`
             XEN_VM_BASE_DIR=$OPENQRM_VM_DIR/$VML_NAME
             # running ?
             if ps ax | grep qemu-dm | grep xen | grep $VML_NAME > /dev/null; then
+                VM_ONLINE=1
+            elif xm list |grep $VML_NAME > /dev/null; then
                 VM_ONLINE=1
             else
                 VM_ONLINE=0
@@ -511,8 +513,8 @@ case "$XEN_COMMAND" in
                 echo "1@$VML_NAME""@""$VM_MEMORY""@""$VM_MAC1""@""$VM_BRIDGE1""@""$VM_VNC""@""$VM_ONLINE" >> $VM_LIST_TMP
             else
                 VM_MEMORY=`cat $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$VML_NAME.cfg | grep ^memory | cut -d'=' -f2 | sed -e "s/ //g" | sed -e "s/\"//g"`
-                VM_MAC1=`cat $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$VML_NAME.cfg | grep ^vif | grep mac | sed -e "s/.*mac=//g" | cut -d',' -f1
-`               VM_BRIDGE1=`cat $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$VML_NAME.cfg | grep ^vif | grep mac | sed -e "s/.*bridge=//g" | cut -d'"' -f1`
+                VM_MAC1=`cat $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$VML_NAME.cfg | grep ^vif | grep mac | sed -e "s/.*mac=[[:space:]]*\([0-9a-fA-F:]\+\).*/\1/g"`
+                VM_BRIDGE1=`cat $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$VML_NAME.cfg | grep ^vif | grep mac | sed -e "s/.*bridge=[[:space:]]*\([[:alnum:]]\+\).*/\1/g"`
                 VM_VNC="n.a."
                 echo "0@$VML_NAME""@""$VM_MEMORY""@""$VM_MAC1""@""$VM_BRIDGE1""@""$VM_VNC""@""$VM_ONLINE" >> $VM_LIST_TMP
             fi
