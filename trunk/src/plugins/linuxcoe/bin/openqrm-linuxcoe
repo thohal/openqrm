@@ -162,7 +162,9 @@ function lco_prepare() {
     export FORCE_INSTALL=true
 	openqrm_install_os_dependency autoconf
 	openqrm_install_os_dependency automake
-	#openqrm_install_os_dependency perl
+    openqrm_install_os_dependency sudo
+    openqrm_install_os_dependency mkisofs
+    #openqrm_install_os_dependency perl
 
 	# download needed ?
 	lcoe_download_if_needed $LCOE_DOWNLOAD/$LCOE_BASE
