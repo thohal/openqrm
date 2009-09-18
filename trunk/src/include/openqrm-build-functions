@@ -388,7 +388,7 @@ function openqrm_create_default_initrd_template() {
 
 	# create default udhcpc script
 	mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/usr/share/udhcpc
-	cat >> $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/usr/share/udhcpc/default.script << EOF
+	cat > $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/usr/share/udhcpc/default.script << EOF
 #!/bin/sh
 # udhcpc script edited by Tim Riker <Tim@Rikers.org>
 # changed by infernix <infernix@infernix.net>: we don't need to do resolv.conf again
