@@ -385,6 +385,11 @@ function openqrm_create_default_initrd_template() {
 			fi
 		done
 	done
+
+	# copy default udhcpc script
+	mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/usr/share/udhcpc
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/busybox/busybox-$OPENQRM_SOURCE_VERSION/examples/udhcp/simple.script $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/usr/share/udhcpc/default.script 
+
     # take vol_id or blkid
     if [ -x  /lib/udev/vol_id ]; then
         UDEV_UTIL="/lib/udev/vol_id"
