@@ -417,6 +417,7 @@ case "\$1" in
 esac
 exit 0
 EOF
+	chmod 755 $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/usr/share/udhcpc/default.script
 
     # take vol_id or blkid
     if [ -x  /lib/udev/vol_id ]; then
