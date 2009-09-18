@@ -231,7 +231,7 @@ function manage_iscsi() {
 			;;
 		remove)
 			sed -i -e "s#.*$LVM_IMAGE_NAME.*##g" $IETDCONF
-			TID_TO_REMOVE=`cat /proc/net/iet/volume | grep "name:$LVM_IMAGE_NAME" | cut -d':' -f2 | awk {' print $1 '}`
+			TID_TO_REMOVE=`cat /proc/net/iet/volume | grep "name:$LVM_IMAGE_NAME$" | cut -d':' -f2 | awk {' print $1 '}`
 			OPEN_SESSION=`cat /proc/net/iet/session | grep -w ^tid:$TID_TO_REMOVE -A1 | grep sid: | cut -d':' -f2 | awk {' print $1 '}`
 			if [ "$OPEN_SESSION" != "" ]; then
 				# first remove active session (does not support multiple sessions yet)
@@ -263,7 +263,7 @@ function manage_iscsi() {
 			IMAGE_AUTHNAME=`echo $LVM_IMAGE_ROOTDEVICE | cut -d'/' -f3`
 			sed -i -e "s#IncomingUser $IMAGE_AUTHNAME .*#IncomingUser $IMAGE_AUTHNAME $IMAGE_PASS#g" $IETDCONF
 			sed -i '/^$/d' $IETDCONF
-			TID_TO_AUTH=`cat /proc/net/iet/volume | grep "name:$IMAGE_AUTHNAME" | cut -d':' -f2 | awk {' print $1 '}`
+			TID_TO_AUTH=`cat /proc/net/iet/volume | grep "name:$IMAGE_AUTHNAME$" | cut -d':' -f2 | awk {' print $1 '}`
 			if [ "$TID_TO_AUTH" == "" ]; then
 				lvm_storage_log lvm-storage-functions "ERROR: lvm-iscsi could not find target $IMAGE_AUTHNAME to update the authentication !"
 				lvm_storage_lock release
