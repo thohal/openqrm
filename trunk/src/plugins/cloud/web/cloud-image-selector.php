@@ -83,9 +83,14 @@ if (htmlobject_request('redirect') != 'yes') {
                         $cloud_private_image = new cloudprivateimage();
                         $cloud_private_image->get_instance_by_image_id($id);
                         if (strlen($cloud_private_image->cu_id)) {
-                            // update
-                            $private_cloud_image_fields["co_cu_id"] = $private_cu_id;
-                            $cloud_private_image->update($cloud_private_image->id, $private_cloud_image_fields);
+                            if ($private_cu_id == -1) {
+                                // remove from table
+                                $cloud_private_image->remove($cloud_private_image->id);
+                            } else {
+                                // update
+                                $private_cloud_image_fields["co_cu_id"] = $private_cu_id;
+                                $cloud_private_image->update($cloud_private_image->id, $private_cloud_image_fields);
+                            }
 
                         } else {
                             // create
