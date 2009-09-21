@@ -26,13 +26,6 @@
   <part name='Result' type='xsd:string'/>
 </message>
 
-<message name='CloudRequestExtendRequest'>
-  <part name='symbol' type='xsd:string'/>
-</message>
-<message name='CloudRequestExtendResponse'>
-  <part name='Result' type='xsd:string'/>
-</message>
-
 <message name='CloudUserSetDetailsRequest'>
   <part name='symbol' type='xsd:string'/>
 </message>
@@ -79,6 +72,13 @@
   <part name='symbol' type='xsd:string'/>
 </message>
 <message name='CloudRequestGetDetailsResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
+<message name='CloudRequestExtendRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudRequestExtendResponse'>
   <part name='Result' type='xsd:string'/>
 </message>
 

@@ -502,7 +502,7 @@ function cloud_create_request() {
 	//------------------------------------------------------------ set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
-	$t->setFile('tplfile', './' . 'cloud-request-tpl.php');
+	$t->setFile('tplfile', './tpl/' . 'cloud-request-tpl.php');
 	$t->setVar(array(
 		'formaction' => 'cloud-action.php',
 		'currentab' => htmlobject_input('currenttab', array("value" => 'tab0', "label" => ''), 'hidden'),

@@ -82,6 +82,15 @@ function check_allowed_input($text) {
 	return true;
 }
 
+// private-image enabled ?
+$private_image_enabled = false;
+$cp_conf = new cloudconfig();
+$show_private_image = $cp_conf->get_value(21);	// show_private_image
+if (!strcmp($show_private_image, "true")) {
+    $private_image_enabled = true;
+}
+global $private_image_enabled;
+
 
 
 // check if we got some actions to do
@@ -97,6 +106,11 @@ if (htmlobject_request('action') != '') {
                     $cp_user->get_instance_by_name("$auth_user");
                     if ($cp_user->id != $pimage->cu_id) {
                         $strMsg = "Private image $id is not owned by $auth_user  $cp_user->id  ! Skipping ... <br>";
+                        redirect2image($strMsg, tab5, "mycloud.php");
+                        exit(0);
+                    }
+                    if (!$private_image_enabled) {
+                        $strMsg = "Private image feature is not enabled in this Cloud ! Skipping ... <br>";
                         redirect2image($strMsg, tab5, "mycloud.php");
                         exit(0);
                     }
@@ -131,6 +145,11 @@ if (htmlobject_request('action') != '') {
                     $cp_user->get_instance_by_name("$auth_user");
                     if ($cp_user->id != $pimage->cu_id) {
                         $strMsg = "Private image $id is not owned by $auth_user  $cp_user->id  ! Skipping ... <br>";
+                        redirect2image($strMsg, tab5, "mycloud.php");
+                        exit(0);
+                    }
+                    if (!$private_image_enabled) {
+                        $strMsg = "Private image feature is not enabled in this Cloud ! Skipping ... <br>";
                         redirect2image($strMsg, tab5, "mycloud.php");
                         exit(0);
                     }
@@ -181,9 +200,15 @@ function mycloud_images() {
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $thisfile;
 	global $auth_user;
+    global $private_image_enabled;
+
+    if (!$private_image_enabled) {
+        $strMsg = "<strong>Private image feature is not enabled in this Cloud !</strong>";
+        return $strMsg;
+        exit(0);
+    }
 
 	$table = new htmlobject_db_table('co_id');
-
 	$arHead = array();
 
     $arHead['image_icon'] = array();

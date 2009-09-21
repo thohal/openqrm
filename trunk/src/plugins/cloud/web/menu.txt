@@ -24,6 +24,8 @@
 ..|Cloud User|plugins/cloud/cloud-user.php
 ..|Cloud Requests|plugins/cloud/cloud-manager.php
 ..|Cloud Config|plugins/cloud/cloud-config.php
+..|Cloud Selector
+...|Image|plugins/cloud/cloud-image-selector.php
 ..|Cloud IpGroups|plugins/cloud/cloud-ipgroup-manager.php
 ..|Cloud NAT|plugins/cloud/cloud-nat-manager.php
 ..|Cloud Mail|plugins/cloud/cloud-mailer.php
