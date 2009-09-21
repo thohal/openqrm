@@ -26,6 +26,13 @@
   <part name='Result' type='xsd:string'/>
 </message>
 
+<message name='CloudRequestExtendRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudRequestExtendResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
 <message name='CloudUserSetDetailsRequest'>
   <part name='symbol' type='xsd:string'/>
 </message>
@@ -183,6 +190,11 @@
   <operation name='CloudRequestGetDetails'>
     <input message='tns:CloudRequestGetDetailsRequest'/>
     <output message='tns:CloudRequestGetDetailsResponse'/>
+  </operation>
+
+  <operation name='CloudRequestExtend'>
+    <input message='tns:CloudRequestExtendRequest'/>
+    <output message='tns:CloudRequestExtendResponse'/>
   </operation>
 
   <operation name='CloudApplianceGetList'>
@@ -344,6 +356,18 @@
 
   <operation name='CloudRequestGetDetails'>
     <soap:operation soapAction='urn:localhost-cloud#CloudRequestGetDetails'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='CloudRequestExtend'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudRequestExtend'/>
     <input>
       <soap:body use='encoded' namespace='urn:localhost-cloud'
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>

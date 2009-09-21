@@ -749,6 +749,7 @@ class cloudsoap {
 	}
 
 
+
 	//--------------------------------------------------
 	/**
 	* Gets details for a Cloud request
@@ -861,6 +862,68 @@ class cloudsoap {
 
         return $cloudrequest_details;
 	}
+
+
+
+
+
+	//--------------------------------------------------
+	/**
+	* Extends a Cloud request
+	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password,cloud-request-id
+	* @return array cloudrequest-parameters
+	*/
+	//--------------------------------------------------
+	function CloudRequestExtend($method_parameters) {
+		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$cr_id = $parameter_array[3];
+		$extent = $parameter_array[4];
+        // check all user input
+        for ($i = 0; $i <= 4; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudRequestExtend", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 5) {
+            $event->log("cloudsoap->CloudRequestExtend", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudRequestExtend", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        $cr_request = new cloudrequest();
+        $cr_request->get_instance_by_id($cr_id);
+        $cl_user = new clouduser();
+        $cl_user->get_instance_by_id($cr_request->cu_id);
+        switch ($mode) {
+            case 'user':
+                if (strcmp($username, $cl_user->name)) {
+                    $event->log("cloudsoap->CloudRequestExtend", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to get Details of Cloud User $cl_user->name!", "", "", 0, 0, 0);
+                    return;
+                }
+                break;
+        }
+
+        $event->log("cloudsoap->CloudRequestExtend", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Extending Cloud request $cr_id", "", "", 0, 0, 0);
+
+        // you may have to do some date-to-timestamps on the $extent
+
+        $cr_request->extend_stop_time($cr_request, $extent);
+        return 0;
+	}
+
+
 
 
 
