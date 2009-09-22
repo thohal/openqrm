@@ -80,6 +80,7 @@ if (htmlobject_request('redirect') != 'yes') {
                         $strMsg .= "Setting image $pimage->name to $private_name ( $private_cu_id )....<br>";
 
                         // check if existing, if not create, otherwise update
+                        unset($cloud_private_image);
                         $cloud_private_image = new cloudprivateimage();
                         $cloud_private_image->get_instance_by_image_id($id);
                         if (strlen($cloud_private_image->cu_id)) {
@@ -90,17 +91,20 @@ if (htmlobject_request('redirect') != 'yes') {
                                 // update
                                 $private_cloud_image_fields["co_cu_id"] = $private_cu_id;
                                 $cloud_private_image->update($cloud_private_image->id, $private_cloud_image_fields);
+                                unset($private_cloud_image_fields);
                             }
 
                         } else {
                             // create
-                            // create array for add
-                            $private_cloud_image_fields["co_id"]=openqrm_db_get_free_id('co_id', $cloud_private_image->_db_table);
-                            $private_cloud_image_fields["co_image_id"] = $id;
-                            $private_cloud_image_fields["co_cu_id"] = $private_cu_id;
-                            $private_cloud_image_fields["co_state"] = 1;
-                            $cloud_private_image->add($private_cloud_image_fields);
-
+                            if ($private_cu_id >= 0) {
+                                // create array for add
+                                $private_cloud_image_fields["co_id"]=openqrm_db_get_free_id('co_id', $cloud_private_image->_db_table);
+                                $private_cloud_image_fields["co_image_id"] = $id;
+                                $private_cloud_image_fields["co_cu_id"] = $private_cu_id;
+                                $private_cloud_image_fields["co_state"] = 1;
+                                $cloud_private_image->add($private_cloud_image_fields);
+                                unset($private_cloud_image_fields);
+                            }
                         }
 
 
@@ -131,7 +135,7 @@ function cloud_image_selector() {
         exit(0);
     }
 
-	$table = new htmlobject_db_table('co_id');
+	$table = new htmlobject_table_identifiers_checked('co_id');
 	$arHead = array();
 
 	$arHead['co_id'] = array();
@@ -174,14 +178,16 @@ function cloud_image_selector() {
         // is a private image already ?
         $private_image = new cloudprivateimage();
         $private_image->get_instance_by_image_id($image->id);
-        if ($private_image->cu_id > 0) {
-            $cloud_user = new clouduser();
-            $cloud_user->get_instance_by_id($private_image->cu_id);
-            $pi_selected = $cloud_user->id;
-        } else if ($private_image->cu_id == -1) {
-            $pi_selected = -1;
-        } else if ($private_image->cu_id == 0) {
-             $pi_selected = 0;
+        if (strlen($private_image->cu_id)) {
+            if ($private_image->cu_id > 0) {
+                $cloud_user = new clouduser();
+                $cloud_user->get_instance_by_id($private_image->cu_id);
+                $pi_selected = $cloud_user->id;
+            } else if ($private_image->cu_id == 0) {
+                 $pi_selected = 0;
+            } else {
+                $pi_selected = -1;
+            }
         } else {
             $pi_selected = -1;
         }

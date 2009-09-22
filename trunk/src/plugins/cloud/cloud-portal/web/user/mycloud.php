@@ -63,6 +63,7 @@ require_once "$RootDir/plugins/cloud/class/cloudmailer.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudirlc.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudiplc.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudprivateimage.class.php";
 
 // inclde the mycloud parts
 require_once "./mycloudrequests.php";
@@ -382,6 +383,27 @@ if (htmlobject_request('action') != '') {
 				redirect($strMsg, "tab1");
 				exit(0);
 			}
+            // private image ? if yes do not clone it
+            $show_private_image = $cc_disk_conf->get_value(21);	// show_private_image
+            if (!strcmp($show_private_image, "true")) {
+                $piid = $request_fields['cr_image_id'];
+                $private_cu_image = new cloudprivateimage();
+                $private_cu_image->get_instance_by_image_id($piid);
+                if (strlen($private_cu_image->cu_id)) {
+                    if ($private_cu_image->cu_id > 0) {
+                        $cl_user = new clouduser();
+                        $cl_user->get_instance_by_name($auth_user);
+                        if ($private_cu_image->cu_id == $cl_user->id) {
+                            // set to non-shared !
+                            $request_fields['cr_shared_req']=0;
+                        } else {
+                            $strMsg .="Unauthorized request of private Cloud image! Skipping ...<br>";
+                            redirect($strMsg, "tab1");
+                            exit(0);
+                        }
+                    }
+                }
+            }
 
 			check_param("Quantity", $request_fields['cr_resource_quantity']);
 			check_param("Kernel Id", $request_fields['cr_kernel_id']);

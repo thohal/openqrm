@@ -269,6 +269,30 @@ if (htmlobject_request('action') != '') {
                     $image_get_id->get_instance_by_name($serverimage);
                     $image_id = $image_get_id->id;
 
+                    // private image ? if yes do not clone it
+                    $show_private_image = $cc_disk_conf->get_value(21);	// show_private_image
+                    if (!strcmp($show_private_image, "true")) {
+                        $private_cu_image = new cloudprivateimage();
+                        $private_cu_image->get_instance_by_image_id($image_id);
+                        if (strlen($private_cu_image->cu_id)) {
+                            if ($private_cu_image->cu_id > 0) {
+                                if ($private_cu_image->cu_id == $request_user_id) {
+                                    // set to non-shared !
+                                    $request_fields['cr_shared_req']=0;
+                                } else {
+                                    // unauthorized access !
+                                    exit(false);
+                                }
+                            } else {
+                                $request_fields['cr_shared_req']=1;
+                            }
+                        } else {
+                            $request_fields['cr_shared_req']=1;
+                        }
+                    } else {
+                        $request_fields['cr_shared_req']=1;
+                    }
+
                     // adding everything to the request_fields array
         			$request_fields['cr_cu_id'] = $request_user_id;
                     $request_fields['cr_resource_quantity'] = $quantity;
@@ -278,7 +302,6 @@ if (htmlobject_request('action') != '') {
                     $request_fields['cr_network_req'] = $network;
 					$request_fields['cr_puppet_groups'] = $puppet_groups;
                     $request_fields['cr_ha_req']=$highavailable;
-                    $request_fields['cr_shared_req']=1;
                     $request_fields['cr_start'] = $cr_start;
                     $request_fields['cr_stop'] = $cr_stop;
                     $request_fields['cr_resource_type_req'] = $virtualization_id;
@@ -362,24 +385,45 @@ function my_cloud_create_request() {
 	array_shift($image_list_tmp);
 	array_shift($image_list_tmp);
     $image_count=0;
-	// do not show the image-clones from other requests
-	foreach($image_list_tmp as $list) {
-		$iname = $list['label'];
-		$iid = $list['value'];
-		if (!strstr($iname, ".cloud_")) {
-            // check for private
-    		if (strstr($iname, ".private_")) {
-                $priv_image = new cloudprivateimage();
-                $priv_image->get_instance_by_image_id($iid);
-                if ($cl_user->id == $priv_image->cu_id) {
-                    if ($image_count == 0) {
-                        $image_list .= "\"$iname\"";
-                    } else {
-                        $image_list .= ", \"$iname\"";
-                    }
-                    $image_count++;
+    // check if private image feature is enabled
+    $cc_conf = new cloudconfig();
+    $show_private_image = $cc_conf->get_value(21);	// show_private_image
+    if (!strcmp($show_private_image, "true")) {
+        // private image feature enabled
+        $private_cimage = new cloudprivateimage();
+        $private_image_list = $private_cimage->get_all_ids();
+        foreach ($private_image_list as $index => $cpi) {
+    		$cpi_id = $cpi["co_id"];
+            $priv_image = new cloudprivateimage();
+            $priv_image->get_instance_by_id($cpi_id);
+            if ($cl_user->id == $priv_image->cu_id) {
+                $priv_im = new image();
+                $priv_im->get_instance_by_id($priv_image->image_id);
+                if ($image_count == 0) {
+                    $image_list .= "\"$priv_im->name\"";
+                } else {
+                    $image_list .= ", \"$priv_im->name\"";
                 }
-            } else {
+                $image_count++;
+            } else if ($priv_image->cu_id == 0) {
+                $priv_im = new image();
+                $priv_im->get_instance_by_id($priv_image->image_id);
+                if ($image_count == 0) {
+                    $image_list .= "\"$priv_im->name\"";
+                } else {
+                    $image_list .= ", \"$priv_im->name\"";
+                }
+                $image_count++;
+            }
+        }
+
+    } else {
+        // private image feature is not enabled
+        // do not show the image-clones from other requests
+        foreach($image_list_tmp as $list) {
+            $iname = $list['label'];
+            $iid = $list['value'];
+            if (!strstr($iname, ".cloud_")) {
                 if ($image_count == 0) {
                     $image_list .= "\"$iname\"";
                 } else {
@@ -387,8 +431,8 @@ function my_cloud_create_request() {
                 }
                 $image_count++;
             }
-		}
-	}
+        }
+    }
 
 	$virtualization = new virtualization();
 	$virtualization_list = array();

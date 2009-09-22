@@ -305,6 +305,8 @@ function my_cloud_create_request() {
 	$cl_user_list = $cl_user->get_list();
 	$cl_user_count = count($cl_user_list);
 
+    $cc_conf = new cloudconfig();
+
 	$kernel = new kernel();
 	$kernel_list = array();
 	$kernel_list = $kernel->get_list();
@@ -320,32 +322,46 @@ function my_cloud_create_request() {
 	//print_r($image_list);
 	array_shift($image_list_tmp);
 	array_shift($image_list_tmp);
-	// do not show the image-clones from other requests
-    // only show private images belonging to the user
-	foreach($image_list_tmp as $list) {
-		$iname = $list['label'];
-		$iid = $list['value'];
-		if (!strstr($iname, ".cloud_")) {
-            // check for private
-    		if (strstr($iname, ".private_")) {
-                $priv_image = new cloudprivateimage();
-                $priv_image->get_instance_by_image_id($iid);
-                if ($cl_user->id == $priv_image->cu_id) {
-        			$image_list[] = array("value" => $iid, "label" => $iname);
-                }
-            } else {
-    			$image_list[] = array("value" => $iid, "label" => $iname);
+    // check if private image feature is enabled
+    $show_private_image = $cc_conf->get_value(21);	// show_private_image
+    if (!strcmp($show_private_image, "true")) {
+        // private image feature enabled
+        $private_cimage = new cloudprivateimage();
+        $private_image_list = $private_cimage->get_all_ids();
+        foreach ($private_image_list as $index => $cpi) {
+    		$cpi_id = $cpi["co_id"];
+            $priv_image = new cloudprivateimage();
+            $priv_image->get_instance_by_id($cpi_id);
+            if ($cl_user->id == $priv_image->cu_id) {
+                $priv_im = new image();
+                $priv_im->get_instance_by_id($priv_image->image_id);
+                $image_list[] = array("value" => $priv_im->id, "label" => $priv_im->name);
+            } else if ($priv_image->cu_id == 0) {
+                $priv_im = new image();
+                $priv_im->get_instance_by_id($priv_image->image_id);
+                $image_list[] = array("value" => $priv_im->id, "label" => $priv_im->name);
             }
-		}
-	}
-	$image_count = count($image_list);
+        }
+
+    } else {
+        // private image feature is not enabled
+        // do not show the image-clones from other requests
+        foreach($image_list_tmp as $list) {
+            $iname = $list['label'];
+            $iid = $list['value'];
+            if (!strstr($iname, ".cloud_")) {
+                $image_list[] = array("value" => $iid, "label" => $iname);
+            }
+        }
+    }
+    $image_count = count($image_list);
+
 
 	$virtualization = new virtualization();
 	$virtualization_list = array();
 	$virtualization_list_select = array();
 	$virtualization_list = $virtualization->get_list();
 	// check if to show physical system type
-	$cc_conf = new cloudconfig();
 	$cc_request_physical_systems = $cc_conf->get_value(4);	// request_physical_systems
 	if (!strcmp($cc_request_physical_systems, "false")) {
 		array_shift($virtualization_list);
@@ -359,7 +375,6 @@ function my_cloud_create_request() {
 	}
 	// prepare the array for the resource_quantity select
 	$max_resources_per_cr_select = array();
-	$cc_conf = new cloudconfig();
 	$cc_max_resources_per_cr = $cc_conf->get_value(6);	// max_resources_per_cr
 	for ($mres = 1; $mres <= $cc_max_resources_per_cr; $mres++) {
 		$max_resources_per_cr_select[] = array("value" => $mres, "label" => $mres);
@@ -426,7 +441,6 @@ function my_cloud_create_request() {
 		}
 	}
 	// check for default-clone-on-deploy
-	$cc_conf = new cloudconfig();
 	$cc_default_clone_on_deploy = $cc_conf->get_value(5);	// default_clone_on_deploy
 	if (!strcmp($cc_default_clone_on_deploy, "true")) {
 		$clone_on_deploy = "<input type=hidden name='cr_shared_req' value='on'>";
