@@ -379,11 +379,19 @@ function openqrm_cloud_monitor() {
 
         // remove ?
 		if ($ci_state == 0) {
+            $physical_remove = false;
             // only remove physically if the cr was set to shared
             $ci_cr = new cloudrequest();
             $ci_cr->get_instance_by_id($ci->cr_id);
             if ($ci_cr->shared_req == 1) {
+                $physical_remove = true;
+            }
+            // or if the remove request came from a user for a private image
+            if ($ci_cr->id == 0) {
+                $physical_remove = true;
+            }
 
+            if ($physical_remove) {
 // storage dependency remove !
 // currently supported storage types are 
 // lvm-nfs-deployment
