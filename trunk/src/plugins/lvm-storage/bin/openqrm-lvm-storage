@@ -576,6 +576,7 @@ case "$LVM_COMMAND" in
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-nfs-deployment" ]; then
 			lvm_storage_lock aquire
 			manage_nfs add snap $OPENQRM_SERVER_IP
+            manage_fstab add
 			lvm_storage_lock release
 		elif [ "$LVM_IMAGE_TYPE" == "lvm-aoe-deployment" ]; then
 			check_vblade
