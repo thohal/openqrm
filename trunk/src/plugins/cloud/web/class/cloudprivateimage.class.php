@@ -43,14 +43,14 @@ global $event;
 
 class cloudprivateimage {
 
-var $id = '';
-var $image_id = '';
-var $cu_id = '';
-var $comment = '';
-var $state = '';
-var $_db_table;
-var $_base_dir;
-var $_event;
+    var $id = '';
+    var $image_id = '';
+    var $cu_id = '';
+    var $comment = '';
+    var $state = '';
+    var $_db_table;
+    var $_base_dir;
+    var $_event;
 
 	//--------------------------------------------------
 	/**
@@ -273,13 +273,6 @@ function display_overview($offset, $limit, $sort, $order) {
 	}
 	return $cloudprivateimage_array;
 }
-
-
-
-
-
-
-
 
 
 // ---------------------------------------------------------------------------------

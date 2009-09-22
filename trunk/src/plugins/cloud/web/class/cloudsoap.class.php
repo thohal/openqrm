@@ -46,6 +46,7 @@ require_once "$RootDir/plugins/cloud/class/cloudvm.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudtransaction.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudprivateimage.class.php";
 
 // only if puppet is available
 if (file_exists("$RootDir/plugins/puppet/class/puppet.class.php")) {
@@ -185,13 +186,32 @@ class cloudsoap {
 		$virtualization->get_instance_by_name($virtualization_name);
 		$virtualization_id = $virtualization->id;
 		$request_fields['cr_resource_type_req'] = $virtualization_id;
-		// check for clone-on-deploy
-		$cc_default_clone_on_deploy = $cc_conf->get_value(5);	// default_clone_on_deploy
-		if (!strcmp($cc_default_clone_on_deploy, "true")) {
+
+        // private image ? if yes do not clone it
+        $cc_soap_conf = new cloudconfig();
+        $show_private_image = $cc_soap_conf->get_value(21);	// show_private_image
+        if (!strcmp($show_private_image, "true")) {
+            $private_cu_image = new cloudprivateimage();
+            $private_cu_image->get_instance_by_image_id($image_id);
+            if (strlen($private_cu_image->cu_id)) {
+                if ($private_cu_image->cu_id > 0) {
+                    if ($private_cu_image->cu_id == $cl_user->id) {
+                        // set to non-shared !
+                        $request_fields['cr_shared_req']=0;
+                    } else {
+                        $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Unauthorized request of private Cloud image from Cloud User $cloud_username ! Not adding the request.", "", "", 0, 0, 0);
+                        return;
+                    }
+                } else {
+        			$request_fields['cr_shared_req'] = 1;
+                }
+            } else {
+    			$request_fields['cr_shared_req'] = 1;
+            }
+        } else {
 			$request_fields['cr_shared_req'] = 1;
-		} else {
-			$request_fields['cr_shared_req'] = 0;
-		}
+        }
+
 		// get next free id
 		$request_fields['cr_id'] = openqrm_db_get_free_id('cr_id', $CLOUD_REQUEST_TABLE);
 		// add request
@@ -1391,16 +1411,57 @@ class cloudsoap {
             return;
         }
 		$event->log("cloudsoap->ImageGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available images", "", "", 0, 0, 0);
-		$image = new image();
-		$image_list = $image->get_list();
-		$image_name_list = array();
-		foreach($image_list as $images) {
-			$image_name_list[] = $images['label'];
-		}
-		// remove openqrm and idle image
-		array_splice($image_name_list, 0, 1);
-		array_splice($image_name_list, 0, 1);
-		return $image_name_list;
+
+        $pcloud_user = new clouduser();
+        $pcloud_user->get_instance_by_name($username);
+
+        // check if private image feature is enabled
+        $image_name_list = array();
+        $cc_so_conf = new cloudconfig();
+        $show_private_image = $cc_so_conf->get_value(21);	// show_private_image
+        if (!strcmp($show_private_image, "true")) {
+            // private image feature enabled
+            $private_cimage = new cloudprivateimage();
+            $private_image_list = $private_cimage->get_all_ids();
+            foreach ($private_image_list as $index => $cpi) {
+                $cpi_id = $cpi["co_id"];
+                $priv_image = new cloudprivateimage();
+                $priv_image->get_instance_by_id($cpi_id);
+                // show all images in admin mode
+                if (!strcmp($mode, "admin")) {
+                    $image = new image();
+                    $image_list = $image->get_list();
+                    foreach($image_list as $images) {
+                        $image_name_list[] = $images['label'];
+                    }
+                    // remove openqrm and idle image
+                    array_splice($image_name_list, 0, 1);
+                    array_splice($image_name_list, 0, 1);
+                } else {
+                    if ($pcloud_user->id == $priv_image->cu_id) {
+                        $priv_im = new image();
+                        $priv_im->get_instance_by_id($priv_image->image_id);
+                        $image_name_list[] = $priv_im->name;
+                    } else if ($priv_image->cu_id == 0) {
+                        $priv_im = new image();
+                        $priv_im->get_instance_by_id($priv_image->image_id);
+                        $image_name_list[] = $priv_im->name;
+                    }
+                }
+            }
+
+        } else {
+            // private image feature disabled
+            $image = new image();
+            $image_list = $image->get_list();
+            foreach($image_list as $images) {
+                $image_name_list[] = $images['label'];
+            }
+            // remove openqrm and idle image
+            array_splice($image_name_list, 0, 1);
+            array_splice($image_name_list, 0, 1);
+        }
+        return $image_name_list;
 	}
 
 
