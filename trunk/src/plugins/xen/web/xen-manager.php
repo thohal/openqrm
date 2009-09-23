@@ -507,7 +507,7 @@ function xen_display($appliance_id) {
             $xen_name_fivth_at_removed = substr($xen_name_fourth_at_removed, $fivth_at_pos, strlen($xen_name_fourth_at_removed)-$fivth_at_pos);
             $sixth_at_pos = strpos($xen_name_fivth_at_removed, "@");
             $sixth_at_pos++;
-            $xen_name_sixth_at_removed = substr($xen_name_fivth_at_removed, $sixth_at_pos, strlen($xen_name_fivth_at_removed)-$fivth_at_pos);
+            $xen_name_sixth_at_removed = substr($xen_name_fivth_at_removed, $sixth_at_pos, strlen($xen_name_fivth_at_removed)-$sixth_at_pos);
             $seventh_at_pos = strpos($xen_name_sixth_at_removed, "@");
             $seventh_at_pos++;
 
