@@ -154,7 +154,7 @@ function my_cloud_manager() {
 	$table->body = $arBody;
 	$table->bottom = array('reload', 'deprovision', 'extend');
 	$table->identifier = 'cr_id';
-    $table->max = $request_count;
+    $table->max = count($cl_request);
 	return $disp.$table->get_string();
 }
 
@@ -201,71 +201,68 @@ function my_cloud_extend_request($cr_id) {
 
 	$arBody = array();
 
-	// db select
 	$cl_request = new cloudrequest();
-	$request_array = $cl_request->display_overview(0, 1000, 'cr_id', 'DESC');
-	foreach ($request_array as $index => $cr) {
+    $cl_request->get_instance_by_id($cr_id);
 
-		// only display one request
-		$db_cr_id = $cr["cr_id"];
-		if ($db_cr_id != $cr_id) {
-			continue;
-		}
+    $cl_user = new clouduser();
+    $cl_user->get_instance_by_name($auth_user);
 
-		// status
-		$cr_status = $cr["cr_status"];
-		switch ($cr_status) {
-			case '1':
-				$cr_status_disp="New";
-				break;
-			case '2':
-				$cr_status_disp="Approved";
-				break;
-			case '3':
-				$cr_status_disp="Active";
-				break;
-			case '4':
-				$cr_status_disp="Denied";
-				break;
-			case '5':
-				$cr_status_disp="Deprovisioned";
-				break;
-			case '6':
-				$cr_status_disp="Done";
-				break;
-			// status not-enough resources, some resources may already be deployed
-			// so we show the state active to the user
-			case '7':
-				$cr_status_disp="Active";
-				break;
-		}
-		// format time
-		$timestamp=$cr["cr_request_time"];
-		$cr_request_time = date("d-m-Y H-i", $timestamp);
-		$timestamp=$cr["cr_start"];
-		$cr_start = date("d-m-Y H-i", $timestamp);
-		$timestamp=$cr["cr_stop"];
-		$cr_stop = date("d-m-Y H-i", $timestamp);
-		$cr_resource_quantity = $cr["cr_resource_quantity"];
-		// preprare a calendar to let the user extend the request
-		$cr_stop_input="<input id=\"extend_cr_stop\" type=\"text\" name=\"extend_cr_stop\" value=\"$cr_stop\" size=\"20\" maxlength=\"20\">";
-		$cal="$cr_stop_input Extend <a href=\"javascript:NewCal('extend_cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
-		$cal = $cal."<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
-		$cal = $cal."</a>";
+    if ($cl_request->cu_id != $cl_user->id) {
+        exit(1);
+    }
 
+    // status
+    $cr_status = $cl_request->status;
+    switch ($cr_status) {
+        case '1':
+            $cr_status_disp="New";
+            break;
+        case '2':
+            $cr_status_disp="Approved";
+            break;
+        case '3':
+            $cr_status_disp="Active";
+            break;
+        case '4':
+            $cr_status_disp="Denied";
+            break;
+        case '5':
+            $cr_status_disp="Deprovisioned";
+            break;
+        case '6':
+            $cr_status_disp="Done";
+            break;
+        // status not-enough resources, some resources may already be deployed
+        // so we show the state active to the user
+        case '7':
+            $cr_status_disp="Active";
+            break;
+    }
+    // format time
+    $timestamp=$cr["cr_request_time"];
+    $cr_request_time = date("d-m-Y H-i", $timestamp);
+    $timestamp=$cr["cr_start"];
+    $cr_start = date("d-m-Y H-i", $timestamp);
+    $timestamp=$cr["cr_stop"];
+    $cr_stop = date("d-m-Y H-i", $timestamp);
+    $cr_resource_quantity = $cl_request->resource_quantity;
+    // preprare a calendar to let the user extend the request
+    $cr_stop_input="<input id=\"extend_cr_stop\" type=\"text\" name=\"extend_cr_stop\" value=\"$cr_stop\" size=\"20\" maxlength=\"20\">";
+    $cal="$cr_stop_input Extend <a href=\"javascript:NewCal('extend_cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
+    $cal = $cal."<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+    $cal = $cal."</a>";
 
-		// fill the array for the table
-		$arBody[] = array(
-			'cr_id' => $cr["cr_id"],
-			'cr_cu_name' => $cu_tmp->name,
-			'cr_status' => $cr_status_disp,
-			'cr_request_time' => $cr_request_time,
-			'cr_start' => $cr_start,
-			'cr_stop' => $cal,
-			'cr_resource_quantity' => $cr_resource_quantity,
-			'cr_appliance_id' => $cr["cr_appliance_id"],
-		);
-	}
+    // fill the array for the table
+    $arBody[] = array(
+        'cr_id' => $cr_id,
+        'cr_cu_name' => $cl_user->name,
+        'cr_status' => $cr_status_disp,
+        'cr_request_time' => $cr_request_time,
+        'cr_start' => $cr_start,
+        'cr_stop' => $cal,
+        'cr_resource_quantity' => $cr_resource_quantity,
+        'cr_appliance_id' => $cl_request->appliance_id,
+    );
 
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
@@ -278,7 +275,7 @@ function my_cloud_extend_request($cr_id) {
 	$table->body = $arBody;
 	$table->bottom = array('update');
 	$table->identifier = 'cr_id';
-    $table->max = 1000;
+    $table->max = 1;
 	return $disp.$table->get_string();
 }
 

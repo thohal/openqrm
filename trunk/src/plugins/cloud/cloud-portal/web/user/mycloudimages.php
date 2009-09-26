@@ -208,7 +208,7 @@ function mycloud_images() {
         exit(0);
     }
 
-	$table = new htmlobject_db_table('co_id');
+	$table = new htmlobject_db_table('co_id', 'DESC');
 	$arHead = array();
 
     $arHead['image_icon'] = array();
@@ -230,27 +230,24 @@ function mycloud_images() {
 
     $cl_user = new clouduser();
     $cl_user->get_instance_by_name("$auth_user");
-
     $private_image = new cloudprivateimage();
-	$private_image_array = $private_image->display_overview($table->offset, $table->limit, "co_id", $table->order);
-	foreach ($private_image_array as $index => $private_image_db) {
+	$private_image_array = $private_image->display_overview_per_user($cl_user->id, $table->sort, $table->order);
+
+    foreach ($private_image_array as $index => $private_image_db) {
 		$private_image_t = new cloudprivateimage();
 		$private_image_t->get_instance_by_id($private_image_db["co_id"]);
-        // check if authuser is the owner of this image
-        if ($cl_user->id == $private_image_t->cu_id) {
-            // get the image name
-            $pimage = new image();
-            $pimage->get_instance_by_id($private_image_t->image_id);
-            $pco_id = $private_image_db["co_id"];
-            $pcomment = $private_image_db["co_comment"];
-            $arBody[] = array(
-                'image_icon' => "<img width=16 height=16 src=$active_state_icon><input type=hidden name=\"currenttab\" value=\"tab5\">",
-                'co_id' => $pco_id,
-                'image_name' => $pimage->name,
-                'co_comment' => "<input type=text name=\"image_comment[$pco_id]\" value=\"$pcomment\">",
-            );
-            $private_image_count++;
-        }
+        // get the image name
+        $pimage = new image();
+        $pimage->get_instance_by_id($private_image_t->image_id);
+        $pco_id = $private_image_db["co_id"];
+        $pcomment = $private_image_db["co_comment"];
+        $arBody[] = array(
+            'image_icon' => "<img width=16 height=16 src=$active_state_icon><input type=hidden name=\"currenttab\" value=\"tab5\">",
+            'co_id' => $pco_id,
+            'image_name' => $pimage->name,
+            'co_comment' => "<input type=text name=\"image_comment[$pco_id]\" value=\"$pcomment\">",
+        );
+        $private_image_count++;
     }
 
 	$table->id = 'Tabelle';
@@ -261,9 +258,10 @@ function mycloud_images() {
 	$table->form_action = $thisfile;
 	$table->head = $arHead;
 	$table->body = $arBody;
+    $table->sort = "";
     $table->bottom = array('remove', 'comment');
     $table->identifier = 'co_id';
-	$table->max = $private_image_count;
+	$table->max = count($private_image);
 
 
 	//------------------------------------------------------------ set template
@@ -271,6 +269,8 @@ function mycloud_images() {
 	$t->debug = false;
 	$t->setFile('tplfile', './' . 'mycloudimages-tpl.php');
 	$t->setVar(array(
+        'thisfile' => $thisfile,
+        'currentab' => htmlobject_input('currenttab', array("value" => 'tab5', "label" => ''), 'hidden'),
         'private_image_table' => $table->get_string(),
 	));
 	$disp =  $t->parse('out', 'tplfile');

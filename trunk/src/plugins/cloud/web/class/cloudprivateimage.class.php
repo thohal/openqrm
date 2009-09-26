@@ -255,6 +255,27 @@ function get_all_ids() {
 
 
 
+// displays the cloudprivateimage-overview per clouduser
+function display_overview_per_user($cu_id, $sort, $order) {
+	global $CLOUD_PRIVATE_IMAGE_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$recordSet = &$db->SelectLimit("select * from $CLOUD_PRIVATE_IMAGE_TABLE where co_cu_id=$cu_id order by $sort $order", -1, 0);
+	$cloudprivateimage_array = array();
+	if (!$recordSet) {
+		$event->log("display_overview_per_user", $_SERVER['REQUEST_TIME'], 2, "cloudprivateimage.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	} else {
+		while (!$recordSet->EOF) {
+			array_push($cloudprivateimage_array, $recordSet->fields);
+			$recordSet->MoveNext();
+		}
+		$recordSet->Close();
+	}
+	return $cloudprivateimage_array;
+}
+
+
+
 // displays the cloudprivateimage-overview
 function display_overview($offset, $limit, $sort, $order) {
 	global $CLOUD_PRIVATE_IMAGE_TABLE;
@@ -273,6 +294,7 @@ function display_overview($offset, $limit, $sort, $order) {
 	}
 	return $cloudprivateimage_array;
 }
+
 
 
 // ---------------------------------------------------------------------------------

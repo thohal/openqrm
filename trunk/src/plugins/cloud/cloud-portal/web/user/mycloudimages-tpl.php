@@ -19,6 +19,8 @@
 -->
 
 <h1>My Private Cloud Images</h1>
-
+<form action="{thisfile}">
+{currentab}
 {private_image_table}
 
+</form>

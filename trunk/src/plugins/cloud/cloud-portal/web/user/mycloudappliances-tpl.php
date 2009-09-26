@@ -19,14 +19,15 @@
 -->
 
 <h1>My Cloud Appliances</h1>
-Please use the username 'openqrm' instead of 'root' when login in via the Web-SSH-Login !
-<br>
-(then run 'su' or 'sudo' to grant full permissions)
-<br>
-<br>
 
 <form action="{thisfile}">
 {currentab}
 {cloud_appliance_table}
 
 </form>
+<br>
+<br>
+Please use the username 'openqrm' instead of 'root' when login in via the Web-SSH-Login !
+<br>
+(then run 'su' or 'sudo' to grant full permissions)
+<br>
