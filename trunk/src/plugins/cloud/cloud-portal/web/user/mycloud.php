@@ -437,7 +437,7 @@ if (htmlobject_request('action') != '') {
 			if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
                     $cloud_appliance_restart = new cloudappliance();
-                    $cloud_appliance_restart->get_instance_by_appliance_id($id);
+                    $cloud_appliance_restart->get_instance_by_id($id);
                     // is it ours ?
                     $cl_request = new cloudrequest();
                     $cl_request->get_instance_by_id($cloud_appliance_restart->cr_id);
@@ -469,7 +469,7 @@ if (htmlobject_request('action') != '') {
 			if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
                     $cloud_appliance_pause = new cloudappliance();
-                    $cloud_appliance_pause->get_instance_by_appliance_id($id);
+                    $cloud_appliance_pause->get_instance_by_id($id);
                     // is it ours ?
                     $cl_request = new cloudrequest();
                     $cl_request->get_instance_by_id($cloud_appliance_pause->cr_id);
@@ -511,7 +511,7 @@ if (htmlobject_request('action') != '') {
 			if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
                     $cloud_appliance_unpause = new cloudappliance();
-                    $cloud_appliance_unpause->get_instance_by_appliance_id($id);
+                    $cloud_appliance_unpause->get_instance_by_id($id);
                     // is it ours ?
                     $cl_request = new cloudrequest();
                     $cl_request->get_instance_by_id($cloud_appliance_unpause->cr_id);
@@ -566,7 +566,7 @@ if (htmlobject_request('action') != '') {
                         $clouduser->get_instance_by_name($auth_user);
                         foreach($_REQUEST['identifier'] as $id) {
                             $cloud_appliance_login = new cloudappliance();
-                            $cloud_appliance_login->get_instance_by_appliance_id($id);
+                            $cloud_appliance_login->get_instance_by_id($id);
                             // is it ours ?
                             $cl_request = new cloudrequest();
                             $cl_request->get_instance_by_id($cloud_appliance_login->cr_id);
@@ -613,7 +613,7 @@ if (htmlobject_request('action') != '') {
 			if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
                     $cloud_appliance_comment = new cloudappliance();
-                    $cloud_appliance_comment->get_instance_by_appliance_id($id);
+                    $cloud_appliance_comment->get_instance_by_id($id);
                     // is it ours ?
                     $cl_request = new cloudrequest();
                     $cl_request->get_instance_by_id($cloud_appliance_comment->cr_id);
@@ -665,7 +665,7 @@ if (htmlobject_request('action') != '') {
 			if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
                     $cloud_appliance_resize = new cloudappliance();
-                    $cloud_appliance_resize->get_instance_by_appliance_id($id);
+                    $cloud_appliance_resize->get_instance_by_id($id);
                     // is it ours ?
                     $cl_request = new cloudrequest();
                     $cl_request->get_instance_by_id($cloud_appliance_resize->cr_id);
@@ -741,7 +741,7 @@ if (htmlobject_request('action') != '') {
 			if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
                     $cloud_appliance_private = new cloudappliance();
-                    $cloud_appliance_private->get_instance_by_appliance_id($id);
+                    $cloud_appliance_private->get_instance_by_id($id);
                     // is it ours ?
                     $cl_request = new cloudrequest();
                     $cl_request->get_instance_by_id($cloud_appliance_private->cr_id);
