@@ -369,6 +369,27 @@ function extend_stop_time($cloudrequest_id, $stop_time) {
 
 
 
+// displays the cloudrequest-overview per user
+function display_overview_per_user($cu_id, $sort, $order) {
+	global $CLOUD_REQUEST_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$recordSet = &$db->SelectLimit("select * from $CLOUD_REQUEST_TABLE where cr_cu_id=$cu_id order by $sort $order", -1, 0);
+	$cloudrequest_array = array();
+	if (!$recordSet) {
+		$event->log("display_overview_per_user", $_SERVER['REQUEST_TIME'], 2, "cloudrequest.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	} else {
+		while (!$recordSet->EOF) {
+			array_push($cloudrequest_array, $recordSet->fields);
+			$recordSet->MoveNext();
+		}
+		$recordSet->Close();
+	}		
+	return $cloudrequest_array;
+}
+
+
+
 // displays the cloudrequest-overview
 function display_overview($offset, $limit, $sort, $order) {
 	global $CLOUD_REQUEST_TABLE;
@@ -384,11 +405,9 @@ function display_overview($offset, $limit, $sort, $order) {
 			$recordSet->MoveNext();
 		}
 		$recordSet->Close();
-	}		
+	}
 	return $cloudrequest_array;
 }
-
-
 
 
 

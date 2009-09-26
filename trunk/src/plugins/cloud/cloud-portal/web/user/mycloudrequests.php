@@ -55,7 +55,7 @@ function my_cloud_manager() {
 	global $OPENQRM_USER;
 	global $thisfile;
 	global $auth_user;
-	$table = new htmlobject_db_table('cr_id');
+	$table = new htmlobject_db_table('cr_id', 'DESC');
 
 	$disp = "<h1>My Cloud Requests</h1>";
 	$arHead = array();
@@ -63,8 +63,8 @@ function my_cloud_manager() {
 	$arHead['cr_id'] = array();
 	$arHead['cr_id']['title'] ='ID';
 
-	$arHead['cr_cu_name'] = array();
-	$arHead['cr_cu_name']['title'] ='User';
+	$arHead['cr_cu_id'] = array();
+	$arHead['cr_cu_id']['title'] ='User';
 
 	$arHead['cr_status'] = array();
 	$arHead['cr_status']['title'] ='Status';
@@ -87,20 +87,12 @@ function my_cloud_manager() {
 	$arBody = array();
 
 	// db select
+    $cl_user = new clouduser();
+    $cl_user->get_instance_by_name($auth_user);
     $request_count=0;
 	$cl_request = new cloudrequest();
-	$request_array = $cl_request->display_overview($table->offset, 1000, 'cr_id', 'DESC');
+	$request_array = $cl_request->display_overview_per_user($cl_user->id, $table->sort, $table->order);
 	foreach ($request_array as $index => $cr) {
-		// user name
-		$cu_tmp = new clouduser();
-		$cu_tmp_id = $cr["cr_cu_id"];
-		$cu_tmp->get_instance_by_id($cu_tmp_id);
-
-		// only display our own requests
-		if (strcmp($cu_tmp->name, $auth_user)) {
-			continue;
-		}
-
         $request_count++;
     	// status
 		$cr_status = $cr["cr_status"];
@@ -141,7 +133,7 @@ function my_cloud_manager() {
 		// fill the array for the table
 		$arBody[] = array(
 			'cr_id' => $cr["cr_id"],
-			'cr_cu_name' => $cu_tmp->name,
+			'cr_cu_id' => $cl_user->name,
 			'cr_status' => $cr_status_disp,
 			'cr_request_time' => $cr_request_time,
 			'cr_start' => $cr_start,
@@ -211,7 +203,7 @@ function my_cloud_extend_request($cr_id) {
 
 	// db select
 	$cl_request = new cloudrequest();
-	$request_array = $cl_request->display_overview(0, 1000, 'cr_id', 'ASC');
+	$request_array = $cl_request->display_overview(0, 1000, 'cr_id', 'DESC');
 	foreach ($request_array as $index => $cr) {
 
 		// only display one request

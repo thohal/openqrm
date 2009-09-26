@@ -224,7 +224,7 @@ function cloud_manager() {
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $thisfile;
-	$table = new htmlobject_db_table('cr_id');
+	$table = new htmlobject_db_table('cr_id', 'DESC');
 
 	$cc_conf = new cloudconfig();
 	// get external name
@@ -243,8 +243,8 @@ function cloud_manager() {
 	$arHead['cr_id'] = array();
 	$arHead['cr_id']['title'] ='ID';
 
-	$arHead['cr_cu_name'] = array();
-	$arHead['cr_cu_name']['title'] ='User';
+	$arHead['cr_cu_id'] = array();
+	$arHead['cr_cu_id']['title'] ='User';
 
 	$arHead['cr_status'] = array();
 	$arHead['cr_status']['title'] ='Status';
@@ -269,7 +269,7 @@ function cloud_manager() {
 	// db select
     $request_count=0;
 	$cl_request = new cloudrequest();
-	$request_array = $cl_request->display_overview($table->offset, $table->limit, 'cr_id', 'DESC');
+	$request_array = $cl_request->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($request_array as $index => $cr) {
         $request_count++;
 		// user name
@@ -314,7 +314,7 @@ function cloud_manager() {
 		// fill the array for the table
 		$arBody[] = array(
 			'cr_id' => $cr["cr_id"],
-			'cr_cu_name' => $cu_tmp->name,
+			'cr_cu_id' => $cu_tmp->name,
 			'cr_status' => $cr_status_disp,
 			'cr_request_time' => $cr_request_time,
 			'cr_start' => $cr_start,
@@ -337,7 +337,7 @@ function cloud_manager() {
 		$table->bottom = array('reload', 'details', 'approve', 'cancel', 'deny', 'delete', 'deprovision');
 		$table->identifier = 'cr_id';
 	}
-    $table->max = $request_count;
+    $table->max = $cl_request->get_count();
 	return $disp.$table->get_string();
 }
 

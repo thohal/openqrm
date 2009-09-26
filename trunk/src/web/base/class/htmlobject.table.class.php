@@ -413,7 +413,9 @@ var $sort_params;
 * @access public
 * @var enum $order possible values [ASC, DESC]
 */
-var $order = 'ASC';
+var $order = '';
+var $dorder = 'ASC';
+
 /**
 * use array_sort to sort output 
 * @access public
@@ -525,7 +527,7 @@ var $_var_prefix;
 	* @param string $var_prefix  prefix for posted vars
 	*/
 	//----------------------------------------------------------------------------------------
-	function htmlobject_table_builder($sort = '', $order = '', $limit = '', $offset = '', $var_prefix = 'table_') {
+	function htmlobject_table_builder($sort = '', $orderr = '', $limit = '', $offset = '', $var_prefix = 'table_') {
 
 		$this->_var_prefix = $var_prefix;		
 	
@@ -554,10 +556,11 @@ var $_var_prefix;
 		
 		if($this->get_request($this->_var_prefix.'order') != '') {
 			$this->order = $this->get_request($this->_var_prefix.'order');
-		}
-		if($order != '' && $this->order == '') {
-			$this->order = $order;
-		}
+		} else if($orderr != '') {
+			$this->order = $orderr;
+        } else {
+            $this->order = $this->dorder;
+        }
 		if($this->get_request($this->_var_prefix.'sort') != '') {
 			$this->sort = $this->get_request($this->_var_prefix.'sort');
 		}
