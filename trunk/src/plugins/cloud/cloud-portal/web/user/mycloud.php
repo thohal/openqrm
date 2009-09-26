@@ -176,58 +176,25 @@ if (htmlobject_request('action') != '') {
 
 // ######################## end of cloud-request actions #####################
 
-
-         /*
-        case 'delete':
-			if (isset($_REQUEST['identifier'])) {
-				foreach($_REQUEST['identifier'] as $id) {
-					$cr_request = new cloudrequest();
-					$cr_request->get_instance_by_id($id);
-	
-					// only allow to delete requests which are not provisioned yet
-					if (($cr_request->status == 3) || ($cr_request->status == 5)) {
-						$strMsg="Request cannot be removed when in state active or deprovisioned <br>";
-						continue;				
-					}
-	
-					// mail user before removing
-					$cr_cu_id = $cr_request->cu_id;
-					$cl_user = new clouduser();
-					$cl_user->get_instance_by_id($cr_cu_id);
-					$cu_name = $cl_user->name;
-					$cu_email = $cl_user->email;
-					$cu_forename = $cl_user->forename;
-					$cu_lastname = $cl_user->lastname;
-					$rmail = new cloudmailer();
-					$rmail->to = "$cu_email";
-					$rmail->from = "$cc_admin_email";
-					$rmail->subject = "openQRM Cloud: Your request $id has been removed";
-					$rmail->template = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/mail/delete_cloud_request.mail.tmpl";
-					$arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname");
-					$rmail->var_array = $arr;
-					$rmail->send();
-	
-					$cr_request->remove($id);
-	
-					$strMsg .= "Removed Cloud request $id <br>";
-				}
-				redirect($strMsg);					
-			}
-			break;
-             *
-             */
+// here the identifier array is a cloudrequest
 
 		case 'deprovision':
+            // get the user
+            $clouduser = new clouduser();
+            $clouduser->get_instance_by_name($auth_user);
 			if (isset($_REQUEST['identifier'])) {
 				foreach($_REQUEST['identifier'] as $id) {
 					$cr_request = new cloudrequest();
 					$cr_request->get_instance_by_id($id);
+                    // is it ours ?
+					if ($cr_request->cu_id != $clouduser->id) {
+						continue;
+					}
 					// only allow to deprovision if cr is in state active or no-res
 					if (($cr_request->status != 3) && ($cr_request->status != 7)) {
 						$strMsg .="Request only can be deprovisioned when in state active <br>";
 						continue;				
 					}
-	
 					// mail user before deprovisioning
 					$cr_cu_id = $cr_request->cu_id;
 					$cl_user = new clouduser();
@@ -274,10 +241,17 @@ if (htmlobject_request('action') != '') {
 
 
 		case 'update':
+            // get the user
+            $clouduser = new clouduser();
+            $clouduser->get_instance_by_name($auth_user);
 			if (isset($_REQUEST['identifier'])) {
 				foreach($_REQUEST['identifier'] as $id) {
 					$cr_request = new cloudrequest();
 					$cr_request->get_instance_by_id($id);
+                    // is it ours ?
+					if ($cr_request->cu_id != $clouduser->id) {
+						continue;
+					}
 					$cr_stop=$_REQUEST['extend_cr_stop'];
 					$new_stop_timestmp=date_to_timestamp($cr_stop);
 					// only allow to extend requests which are not deprovisioned or done
@@ -454,104 +428,64 @@ if (htmlobject_request('action') != '') {
 
 // ######################## start of cloud-appliance actions #####################
 
+// here the identifier is a cloudappliance !
 
 		case 'restart':
+            // get the user
+            $clouduser = new clouduser();
+            $clouduser->get_instance_by_name($auth_user);
 			if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
-                    // only allow our appliance to be restarted
-                    $clouduser = new clouduser();
-                    $clouduser->get_instance_by_name($auth_user);
-
-                    $cloudreq_array = array();
-                    $cloudreq = new cloudrequest();
-                    $cloudreq_array = $cloudreq->get_all_ids();
-                    $my_appliances = array();
-                    // build an array of our appliance id's
-                    foreach ($cloudreq_array as $cr) {
-                        $cl_tmp_req = new cloudrequest();
-                        $cr_id = $cr['cr_id'];
-                        $cl_tmp_req->get_instance_by_id($cr_id);
-                        if ($cl_tmp_req->cu_id == $clouduser->id) {
-                            // we have found one of our own request, check if we have an appliance-id != 0
-                            if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
-                                $one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
-                                foreach ($one_app_id_arr as $aid) {
-                                    $my_appliances[] .= $aid;
-                                }
-                            }
-                        }
-                    }
-                    // is it ours ?
-                    if (!in_array($id, $my_appliances)) {
-                        continue;
-                    }
-
                     $cloud_appliance_restart = new cloudappliance();
                     $cloud_appliance_restart->get_instance_by_appliance_id($id);
+                    // is it ours ?
+                    $cl_request = new cloudrequest();
+                    $cl_request->get_instance_by_id($cloud_appliance_restart->cr_id);
+                    if ($cl_request->cu_id != $clouduser->id) {
+                        continue;
+                    }
                     // check if no other command is currently running
                     if ($cloud_appliance_restart->cmd != 0) {
-                        $strMsg = "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
-                        redirect($strMsg, tab3);
+                        $strMsg .= "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
                         continue;
                     }
                     // check that state is active
                     if ($cloud_appliance_restart->state == 1) {
                         $cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "restart");
-                        $strMsg = "Registered Cloud appliance $id for restart<br>";
-                        redirect($strMsg, tab3);
+                        $strMsg .= "Registered Cloud appliance $id for restart<br>";
                     } else {
-                        $strMsg = "Can only restart Cloud appliance $id if it is in active state<br>";
-                        redirect($strMsg, tab3);
+                        $strMsg .= "Can only restart Cloud appliance $id if it is in active state<br>";
                         continue;
                     }
                 }
+                redirect($strMsg, tab3);
             }
 			break;
 
 		case 'pause':
+            // get the user
+            $clouduser = new clouduser();
+            $clouduser->get_instance_by_name($auth_user);
 			if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
-                    // only allow our appliance to be restarted
-                    $clouduser = new clouduser();
-                    $clouduser->get_instance_by_name($auth_user);
-
-                    $cloudreq_array = array();
-                    $cloudreq = new cloudrequest();
-                    $cloudreq_array = $cloudreq->get_all_ids();
-                    $my_appliances = array();
-                    // build an array of our appliance id's
-                    foreach ($cloudreq_array as $cr) {
-                        $cl_tmp_req = new cloudrequest();
-                        $cr_id = $cr['cr_id'];
-                        $cl_tmp_req->get_instance_by_id($cr_id);
-                        if ($cl_tmp_req->cu_id == $clouduser->id) {
-                            // we have found one of our own request, check if we have an appliance-id != 0
-                            if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
-                                $one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
-                                foreach ($one_app_id_arr as $aid) {
-                                    $my_appliances[] .= $aid;
-                                }
-                            }
-                        }
-                    }
+                    $cloud_appliance_pause = new cloudappliance();
+                    $cloud_appliance_pause->get_instance_by_appliance_id($id);
                     // is it ours ?
-                    if (!in_array($id, $my_appliances)) {
+                    $cl_request = new cloudrequest();
+                    $cl_request->get_instance_by_id($cloud_appliance_pause->cr_id);
+                    if ($cl_request->cu_id != $clouduser->id) {
                         continue;
                     }
-
-                    $cloud_appliance_restart = new cloudappliance();
-                    $cloud_appliance_restart->get_instance_by_appliance_id($id);
                     // check if no other command is currently running
-                    if ($cloud_appliance_restart->cmd != 0) {
-                        $strMsg = "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
-                        redirect($strMsg, tab3);
+                    if ($cloud_appliance_pause->cmd != 0) {
+                        $strMsg .= "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
                         continue;
                     }
                     // check that state is active
-                    if ($cloud_appliance_restart->state == 1) {
-                        $cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "stop");
-                        $cloud_appliance_restart->set_state($cloud_appliance_restart->id, "paused");
-                        $strMsg = "Registered Cloud appliance $id to stop (pause)<br>";
+                    if ($cloud_appliance_pause->state == 1) {
+                        $cloud_appliance_pause->set_cmd($cloud_appliance_pause->id, "stop");
+                        $cloud_appliance_pause->set_state($cloud_appliance_pause->id, "paused");
+                        $strMsg .= "Registered Cloud appliance $id to stop (pause)<br>";
                         // send mail to cloud-admin
                         $armail = new cloudmailer();
                         $armail->to = "$cc_admin_email";
@@ -561,60 +495,38 @@ if (htmlobject_request('action') != '') {
                         $arr = array('@@USER@@'=>"$clouduser->name", '@@CLOUD_APPLIANCE_ID@@'=>"$id");
                         $armail->var_array = $arr;
                         $armail->send();
-
-                        redirect($strMsg, tab3);
                     } else {
-                        $strMsg = "Can only pause Cloud appliance $id if it is in active state<br>";
-                        redirect($strMsg, tab3);
+                        $strMsg .= "Can only pause Cloud appliance $id if it is in active state<br>";
                         continue;
                     }
                 }
+                redirect($strMsg, tab3);
             }
 			break;
 
 		case 'unpause':
+            // get the user
+            $clouduser = new clouduser();
+            $clouduser->get_instance_by_name($auth_user);
 			if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
-                    // only allow our appliance to be restarted
-                    $clouduser = new clouduser();
-                    $clouduser->get_instance_by_name($auth_user);
-
-                    $cloudreq_array = array();
-                    $cloudreq = new cloudrequest();
-                    $cloudreq_array = $cloudreq->get_all_ids();
-                    $my_appliances = array();
-                    // build an array of our appliance id's
-                    foreach ($cloudreq_array as $cr) {
-                        $cl_tmp_req = new cloudrequest();
-                        $cr_id = $cr['cr_id'];
-                        $cl_tmp_req->get_instance_by_id($cr_id);
-                        if ($cl_tmp_req->cu_id == $clouduser->id) {
-                            // we have found one of our own request, check if we have an appliance-id != 0
-                            if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
-                                $one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
-                                foreach ($one_app_id_arr as $aid) {
-                                    $my_appliances[] .= $aid;
-                                }
-                            }
-                        }
-                    }
+                    $cloud_appliance_unpause = new cloudappliance();
+                    $cloud_appliance_unpause->get_instance_by_appliance_id($id);
                     // is it ours ?
-                    if (!in_array($id, $my_appliances)) {
+                    $cl_request = new cloudrequest();
+                    $cl_request->get_instance_by_id($cloud_appliance_unpause->cr_id);
+                    if ($cl_request->cu_id != $clouduser->id) {
                         continue;
                     }
-
-                    $cloud_appliance_restart = new cloudappliance();
-                    $cloud_appliance_restart->get_instance_by_appliance_id($id);
                     // check if no other command is currently running
-                    if ($cloud_appliance_restart->cmd != 0) {
-                        $strMsg = "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
-                        redirect($strMsg, tab3);
+                    if ($cloud_appliance_unpause->cmd != 0) {
+                        $strMsg .= "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
                         continue;
                     }
                     // check if it is in state paused
-                    if ($cloud_appliance_restart->state == 0) {
-                        $cloud_appliance_restart->set_cmd($cloud_appliance_restart->id, "start");
-                        $cloud_appliance_restart->set_state($cloud_appliance_restart->id, "active");
+                    if ($cloud_appliance_unpause->state == 0) {
+                        $cloud_appliance_unpause->set_cmd($cloud_appliance_unpause->id, "start");
+                        $cloud_appliance_unpause->set_state($cloud_appliance_unpause->id, "active");
 
                         // send mail to cloud-admin
                         $armail = new cloudmailer();
@@ -626,14 +538,13 @@ if (htmlobject_request('action') != '') {
                         $armail->var_array = $arr;
                         $armail->send();
 
-                        $strMsg = "Registered Cloud appliance $id to start (unpause)<br>";
-                        redirect($strMsg, tab3);
+                        $strMsg .= "Registered Cloud appliance $id to start (unpause)<br>";
                     } else {
-                        $strMsg = "Can only unpause Cloud appliance $id if it is in paused state<br>";
-                        redirect($strMsg, tab3);
+                        $strMsg .= "Can only unpause Cloud appliance $id if it is in paused state<br>";
                         continue;
                     }
                 }
+                redirect($strMsg, tab3);
             }
 			break;
 
@@ -646,44 +557,22 @@ if (htmlobject_request('action') != '') {
                 if (!strcmp($show_sshterm_login, "true")) {
                     // is sshterm plugin enabled + started ?
                     if (file_exists("$RootDir/plugins/sshterm/.running")) {
-
-
                         // get the parameters from the plugin config file
                         $OPENQRM_PLUGIN_SSHTERM_CONFIG_FILE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/etc/openqrm-plugin-sshterm.conf";
                         $store = openqrm_parse_conf($OPENQRM_PLUGIN_SSHTERM_CONFIG_FILE);
                         extract($store);
-
+                        // get the user
+                        $clouduser = new clouduser();
+                        $clouduser->get_instance_by_name($auth_user);
                         foreach($_REQUEST['identifier'] as $id) {
-                            // only allow our appliance to be restarted
-                            $clouduser = new clouduser();
-                            $clouduser->get_instance_by_name($auth_user);
-
-                            $cloudreq_array = array();
-                            $cloudreq = new cloudrequest();
-                            $cloudreq_array = $cloudreq->get_all_ids();
-                            $my_appliances = array();
-                            // build an array of our appliance id's
-                            foreach ($cloudreq_array as $cr) {
-                                $cl_tmp_req = new cloudrequest();
-                                $cr_id = $cr['cr_id'];
-                                $cl_tmp_req->get_instance_by_id($cr_id);
-                                if ($cl_tmp_req->cu_id == $clouduser->id) {
-                                    // we have found one of our own request, check if we have an appliance-id != 0
-                                    if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
-                                        $one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
-                                        foreach ($one_app_id_arr as $aid) {
-                                            $my_appliances[] .= $aid;
-                                        }
-                                    }
-                                }
-                            }
-                            // is it ours ?
-                            if (!in_array($id, $my_appliances)) {
-                                continue;
-                            }
-
                             $cloud_appliance_login = new cloudappliance();
                             $cloud_appliance_login->get_instance_by_appliance_id($id);
+                            // is it ours ?
+                            $cl_request = new cloudrequest();
+                            $cl_request->get_instance_by_id($cloud_appliance_login->cr_id);
+                            if ($cl_request->cu_id != $clouduser->id) {
+                                continue;
+                            }
                             // check that state is active
                             if ($cloud_appliance_login->state == 1) {
                                 $sshterm_login_ip_arr = htmlobject_request('sshterm_login_ip');
@@ -703,15 +592,13 @@ if (htmlobject_request('action') != '') {
                             open_sshterm("<?php echo $redirect_url; ?>");
                             </script>
                 <?php
-
-                                $strMsg = "Login to Cloud appliance $id<br>";
-                                redirect($strMsg, tab3);
+                                $strMsg .= "Login to Cloud appliance $id<br>";
                             } else {
-                                $strMsg = "Can only login to Cloud appliance $id if it is in active state<br>";
-                                redirect($strMsg, tab3);
+                                $strMsg .= "Can only login to Cloud appliance $id if it is in active state<br>";
                                 continue;
                             }
                         }
+                        redirect($strMsg, tab3);
                     }
                 }
             }
@@ -720,36 +607,19 @@ if (htmlobject_request('action') != '') {
 
 
 		case 'comment':
+            // get the user
+            $clouduser = new clouduser();
+            $clouduser->get_instance_by_name($auth_user);
 			if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
-                    // only allow our appliance to be restarted
-                    $clouduser = new clouduser();
-                    $clouduser->get_instance_by_name($auth_user);
-
-                    $cloudreq_array = array();
-                    $cloudreq = new cloudrequest();
-                    $cloudreq_array = $cloudreq->get_all_ids();
-                    $my_appliances = array();
-                    // build an array of our appliance id's
-                    foreach ($cloudreq_array as $cr) {
-                        $cl_tmp_req = new cloudrequest();
-                        $cr_id = $cr['cr_id'];
-                        $cl_tmp_req->get_instance_by_id($cr_id);
-                        if ($cl_tmp_req->cu_id == $clouduser->id) {
-                            // we have found one of our own request, check if we have an appliance-id != 0
-                            if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
-                                $one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
-                                foreach ($one_app_id_arr as $aid) {
-                                    $my_appliances[] .= $aid;
-                                }
-                            }
-                        }
-                    }
+                    $cloud_appliance_comment = new cloudappliance();
+                    $cloud_appliance_comment->get_instance_by_appliance_id($id);
                     // is it ours ?
-                    if (!in_array($id, $my_appliances)) {
+                    $cl_request = new cloudrequest();
+                    $cl_request->get_instance_by_id($cloud_appliance_comment->cr_id);
+                    if ($cl_request->cu_id != $clouduser->id) {
                         continue;
                     }
-
                     $updated_appliance_comment_arr = htmlobject_request('appliance_comment');
                     $updated_appliance_comment = $updated_appliance_comment_arr["$id"];
                     $updated_appliance_comment_check = trim($updated_appliance_comment);
@@ -763,101 +633,77 @@ if (htmlobject_request('action') != '') {
                     $updated_appliance_comment_check = str_replace(")", "", $updated_appliance_comment_check);
                     $updated_appliance_comment_check = str_replace("/", "", $updated_appliance_comment_check);
                     if(!is_allowed_char($updated_appliance_comment_check)){
-                        $strMsg = "Comment contains special characters, skipping update <br>";
-                        redirect($strMsg, tab3);
-                        exit(0);
+                        $strMsg .= "Comment for Cloud appliance $id contains special characters, skipping update <br>";
+                        continue;
                     }
-                    $cloud_appliance = new appliance();
+                    // here we update the real appliance according the cloudappliance->appliance_id
+                    $appliance = new appliance();
                     $ar_request = array(
                         'appliance_comment' => "$updated_appliance_comment",
                     );
-                    $cloud_appliance->update($id, $ar_request);
+                    $appliance->update($cloud_appliance_comment->appliance_id, $ar_request);
                     $strMsg .= "Upated comment for Cloud appliance $id $updated_appliance_comment<br>";
                 }
+                redirect($strMsg, tab3);
             }
-            redirect($strMsg, tab3);
 			break;
 
 
 
 		case 'resize':
+            // disk-resize enabled ?
+            $cd_config = new cloudconfig();
+            $show_disk_resize = $cd_config->get_value(20);	// show_disk_resize
+            if (!strcmp($show_disk_resize, "false")) {
+                $strMsg = "Disk resize is disabled! Not resizing ... <br>";
+                redirect($strMsg, tab3);
+                exit(0);
+            }
+            // get the user
+            $clouduser = new clouduser();
+            $clouduser->get_instance_by_name($auth_user);
 			if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
-                    // disk-resize enabled ?
-                    $cd_config = new cloudconfig();
-                    $show_disk_resize = $cd_config->get_value(20);	// show_disk_resize
-                    if (!strcmp($show_disk_resize, "false")) {
-                        $strMsg = "Disk resize is disabled! Not resizing ... <br>";
-                        redirect($strMsg, tab3);
-                        exit(0);
-                    }
-                    // only allow our appliance to be restarted
-                    $clouduser = new clouduser();
-                    $clouduser->get_instance_by_name($auth_user);
-
-                    $cloudreq_array = array();
-                    $cloudreq = new cloudrequest();
-                    $cloudreq_array = $cloudreq->get_all_ids();
-                    $my_appliances = array();
-                    // build an array of our appliance id's
-                    foreach ($cloudreq_array as $cr) {
-                        $cl_tmp_req = new cloudrequest();
-                        $cr_id = $cr['cr_id'];
-                        $cl_tmp_req->get_instance_by_id($cr_id);
-                        if ($cl_tmp_req->cu_id == $clouduser->id) {
-                            // we have found one of our own request, check if we have an appliance-id != 0
-                            if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
-                                $one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
-                                foreach ($one_app_id_arr as $aid) {
-                                    $my_appliances[] .= $aid;
-                                }
-                            }
-                        }
-                    }
+                    $cloud_appliance_resize = new cloudappliance();
+                    $cloud_appliance_resize->get_instance_by_appliance_id($id);
                     // is it ours ?
-                    if (!in_array($id, $my_appliances)) {
+                    $cl_request = new cloudrequest();
+                    $cl_request->get_instance_by_id($cloud_appliance_resize->cr_id);
+                    if ($cl_request->cu_id != $clouduser->id) {
                         continue;
                     }
-
+                    // check user input
                     $new_disk_size_arr = htmlobject_request('appliance_disk_resize');
                     $new_disk_size = $new_disk_size_arr["$id"];
                     $new_disk_size = trim($new_disk_size);
                     if (!strlen($new_disk_size)) {
-                        $strMsg = "New Disk size is empty. Not resizing ... <br>";
-                        redirect($strMsg, tab3);
-                        exit(0);
+                        $strMsg .= "New Disk size for Cloud appliance $id is empty. Not resizing ... <br>";
+                        continue;
                     }
                     // check resize
                     $appliance = new appliance();
-                    $appliance->get_instance_by_id($id);
+                    $appliance->get_instance_by_id($cloud_appliance_resize->appliance_id);
                     $image = new image();
                     $image->get_instance_by_id($appliance->imageid);
                     $cloud_image = new cloudimage();
                     $cloud_image->get_instance_by_image_id($image->id);
                     $cloud_image_current_disk_size = $cloud_image->disk_size;
                     if ($cloud_image_current_disk_size == $new_disk_size) {
-                        $strMsg = "New Disk size is equal current Disk size. Not resizing ... <br>";
-                        redirect($strMsg, tab3);
-                        exit(0);
+                        $strMsg .= "New Disk size Cloud appliance $id is equal current Disk size. Not resizing ... <br>";
+                        continue;
                     }
                     if ($cloud_image_current_disk_size > $new_disk_size) {
-                        $strMsg = "New Disk size is needs to be greater current Disk size. Not resizing ... <br>";
-                        redirect($strMsg, tab3);
-                        exit(0);
+                        $strMsg .= "New Disk size Cloud appliance $id needs to be greater current Disk size. Not resizing ... <br>";
+                        continue;
                     }
-
-                    $cloud_appliance_resize = new cloudappliance();
-                    $cloud_appliance_resize->get_instance_by_appliance_id($id);
                     // check if no other command is currently running
                     if ($cloud_appliance_resize->cmd != 0) {
-                        $strMsg = "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
-                        redirect($strMsg, tab3);
+                        $strMsg .= "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
                         continue;
                     }
                     // check that state is active
                     if ($cloud_appliance_resize->state != 1) {
-                        $strMsg = "Can only resize Cloud appliance $id if it is in active state<br>";
-                        redirect($strMsg, tab3);
+                        $strMsg .= "Can only resize Cloud appliance $id if it is in active state<br>";
                         continue;
                     }
                     $additional_disk_space = $new_disk_size - $cloud_image_current_disk_size;
@@ -866,7 +712,7 @@ if (htmlobject_request('action') != '') {
                         'ci_disk_rsize' => "$new_disk_size",
                     );
                     $cloud_image->update($cloud_image->id, $cloudi_request);
-                    // create a new cloud-image resize-live-cycle
+                    // create a new cloud-image resize-live-cycle / using cloudappliance id
                     $cloudirlc = new cloudirlc();
                     $cirlc_fields['cd_id'] = openqrm_db_get_free_id('cd_id', $cloudirlc->_db_table);
                     $cirlc_fields['cd_appliance_id'] = $id;
@@ -874,71 +720,50 @@ if (htmlobject_request('action') != '') {
                     $cloudirlc->add($cirlc_fields);
                     $strMsg .= "Resizing disk for Cloud appliance $id : $cloud_image_current_disk_size + $additional_disk_space = $new_disk_size<br>";
                 }
+                redirect($strMsg, tab3);
             }
-            redirect($strMsg, tab3);
 			break;
 
 
 
 		case 'private':
+            // disk-resize enabled ?
+            $cp_config = new cloudconfig();
+            $show_private_image = $cp_config->get_value(21);	// show_private_image
+            if (!strcmp($show_private_image, "false")) {
+                $strMsg = "Private-Image is disabled! Skipping ... <br>";
+                redirect($strMsg, tab3);
+                exit(0);
+            }
+            // get the user
+            $clouduser = new clouduser();
+            $clouduser->get_instance_by_name($auth_user);
 			if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $id) {
-                    // disk-resize enabled ?
-                    $cp_config = new cloudconfig();
-                    $show_private_image = $cp_config->get_value(21);	// show_private_image
-                    if (!strcmp($show_private_image, "false")) {
-                        $strMsg = "Private-Image is disabled! Skipping ... <br>";
-                        redirect($strMsg, tab3);
-                        exit(0);
-                    }
-                    // only allow our appliance to be restarted
-                    $clouduser = new clouduser();
-                    $clouduser->get_instance_by_name($auth_user);
-
-                    $cloudreq_array = array();
-                    $cloudreq = new cloudrequest();
-                    $cloudreq_array = $cloudreq->get_all_ids();
-                    $my_appliances = array();
-                    // build an array of our appliance id's
-                    foreach ($cloudreq_array as $cr) {
-                        $cl_tmp_req = new cloudrequest();
-                        $cr_id = $cr['cr_id'];
-                        $cl_tmp_req->get_instance_by_id($cr_id);
-                        if ($cl_tmp_req->cu_id == $clouduser->id) {
-                            // we have found one of our own request, check if we have an appliance-id != 0
-                            if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
-                                $one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
-                                foreach ($one_app_id_arr as $aid) {
-                                    $my_appliances[] .= $aid;
-                                }
-                            }
-                        }
-                    }
+                    $cloud_appliance_private = new cloudappliance();
+                    $cloud_appliance_private->get_instance_by_appliance_id($id);
                     // is it ours ?
-                    if (!in_array($id, $my_appliances)) {
+                    $cl_request = new cloudrequest();
+                    $cl_request->get_instance_by_id($cloud_appliance_private->cr_id);
+                    if ($cl_request->cu_id != $clouduser->id) {
                         continue;
                     }
-
                     // check private
                     $appliance = new appliance();
-                    $appliance->get_instance_by_id($id);
+                    $appliance->get_instance_by_id($cloud_appliance_private->appliance_id);
                     $image = new image();
                     $image->get_instance_by_id($appliance->imageid);
                     $cloud_image = new cloudimage();
                     $cloud_image->get_instance_by_image_id($image->id);
                     $cloud_image_current_disk_size = $cloud_image->disk_size;
-                    $cloud_appliance_resize = new cloudappliance();
-                    $cloud_appliance_resize->get_instance_by_appliance_id($id);
                     // check if no other command is currently running
-                    if ($cloud_appliance_resize->cmd != 0) {
-                        $strMsg = "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
-                        redirect($strMsg, tab3);
+                    if ($cloud_appliance_private->cmd != 0) {
+                        $strMsg .= "Another command is already registerd for Cloud appliance $id. Please wait until it got executed<br>";
                         continue;
                     }
                     // check that state is active
-                    if ($cloud_appliance_resize->state != 1) {
-                        $strMsg = "Can only create a private image from Cloud appliance $id if it is in active state<br>";
-                        redirect($strMsg, tab3);
+                    if ($cloud_appliance_private->state != 1) {
+                        $strMsg .= "Can only create a private image from Cloud appliance $id if it is in active state<br>";
                         continue;
                     }
                     // put the size + clone name in the cloud_image
@@ -950,8 +775,7 @@ if (htmlobject_request('action') != '') {
                         'ci_clone_name' => $private_image_name,
                     );
                     $cloud_image->update($cloud_image->id, $cloudi_request);
-
-                    // create a new cloud-image private-live-cycle
+                    // create a new cloud-image private-live-cycle / using the cloudappliance id
                     $cloudiplc = new cloudiplc();
                     $ciplc_fields['cp_id'] = openqrm_db_get_free_id('cp_id', $cloudiplc->_db_table);
                     $ciplc_fields['cp_appliance_id'] = $id;
@@ -961,8 +785,8 @@ if (htmlobject_request('action') != '') {
                     $cloudiplc->add($ciplc_fields);
                     $strMsg .= "Creating a private image $private_image_name from Cloud appliance $id<br>";
                 }
+                redirect($strMsg, tab3);
             }
-            redirect($strMsg, tab3);
 			break;
 
 

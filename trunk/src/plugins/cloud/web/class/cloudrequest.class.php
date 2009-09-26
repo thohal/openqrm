@@ -210,7 +210,7 @@ function get_all_ids() {
 	$db=openqrm_get_db_connection();
 	$rs = $db->Execute($query);
 	if (!$rs)
-		$event->log("get_list", $_SERVER['REQUEST_TIME'], 2, "cloudrequest.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+		$event->log("get_all_ids", $_SERVER['REQUEST_TIME'], 2, "cloudrequest.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else
 	while (!$rs->EOF) {
 		$cloudrequest_list[] = $rs->fields;
@@ -219,6 +219,28 @@ function get_all_ids() {
 	return $cloudrequest_list;
 
 }
+
+
+// returns a list of all cloudrequest ids per clouduser
+function get_all_ids_per_user($cu_id) {
+	global $CLOUD_REQUEST_TABLE;
+	global $event;
+	$cloudrequest_list = array();
+	$query = "select cr_id from $CLOUD_REQUEST_TABLE where cr_cu_id=$cu_id";
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute($query);
+	if (!$rs)
+		$event->log("get_all_ids_per_user", $_SERVER['REQUEST_TIME'], 2, "cloudrequest.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	else
+	while (!$rs->EOF) {
+		$cloudrequest_list[] = $rs->fields;
+		$rs->MoveNext();
+	}
+	return $cloudrequest_list;
+
+}
+
+
 
 // returns the cost of a request (in cc_units)
 function get_cost() {

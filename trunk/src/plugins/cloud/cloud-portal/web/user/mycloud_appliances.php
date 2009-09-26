@@ -96,24 +96,14 @@ function my_cloud_appliances() {
     }
 
     $appliance_tmp = new appliance();
-	$table = new htmlobject_db_table('appliance_id');
-
-	$disp = '<h1>My Cloud Appliances</h1>';
-	$disp .= "Please use the username 'openqrm' instead of 'root' when login in";
-	$disp .= " via the Web-SSH-Login !";
-	$disp .= '<br>';
-	$disp .= "(then run 'su' or 'sudo' to grant full permissions)";
-	$disp .= '<br>';
-	$disp .= '<br>';
+	$table = new htmlobject_db_table('appliance_id', 'DESC');
 
 	$arHead = array();
 	$arHead['appliance_state'] = array();
 	$arHead['appliance_state']['title'] ='';
-	$arHead['appliance_state']['sortable'] = false;
 
 	$arHead['appliance_icon'] = array();
 	$arHead['appliance_icon']['title'] ='';
-	$arHead['appliance_icon']['sortable'] = false;
 
 	$arHead['appliance_id'] = array();
 	$arHead['appliance_id']['title'] ='ID';
@@ -137,44 +127,37 @@ function my_cloud_appliances() {
 	$arHead['appliance_cloud_action']['title'] ='Actions';
 
 	$arBody = array();
-	$appliance_array = $appliance_tmp->display_overview($table->offset, $table->limit, "appliance_id", $table->order);
 
-    // we need to find only the appliance from the user
+    // we need to find only the appliances from the user
 	$clouduser = new clouduser();
 	$clouduser->get_instance_by_name($auth_user);
 
 	$cloudreq_array = array();
 	$cloudreq = new cloudrequest();
-	$cloudreq_array = $cloudreq->get_all_ids();
+	$cloudreq_array = $cloudreq->get_all_ids_per_user($clouduser->id);
 	$my_appliances = array();
 	// build an array of our appliance id's
 	foreach ($cloudreq_array as $cr) {
 		$cl_tmp_req = new cloudrequest();
 		$cr_id = $cr['cr_id'];
 		$cl_tmp_req->get_instance_by_id($cr_id);
-		if ($cl_tmp_req->cu_id == $clouduser->id) {
-			// we have found one of our own request, check if we have an appliance-id != 0
-			if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
-				$one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
-				foreach ($one_app_id_arr as $aid) {
-					$my_appliances[] .= $aid;
-				}
-			}
-		}
+        if ((strlen($cl_tmp_req->appliance_id)) && ($cl_tmp_req->appliance_id != 0)) {
+            $one_app_id_arr = explode(",", $cl_tmp_req->appliance_id);
+            foreach ($one_app_id_arr as $aid) {
+                $my_appliances[] .= $aid;
+            }
+        }
 	}
 
-	foreach ($appliance_array as $index => $appliance_db) {
+    // now we go over all our appliances from the users request list
+	foreach ($my_appliances as $appid) {
 		$appliance = new appliance();
-		$appliance->get_instance_by_id($appliance_db["appliance_id"]);
+		$appliance->get_instance_by_id($appid);
 
-		// is it ours ?
-		if (!in_array($appliance->id, $my_appliances)) {
-			continue;
-		}
         $sshterm_login = false;
         $res_ip_loop = 0;
 		$resource = new resource();
-		$appliance_resources=$appliance_db["appliance_resources"];
+		$appliance_resources=$appliance->resources;
 		if ($appliance_resources >=0) {
 			// an appliance with a pre-selected resource
 			// get its ips from the iptables table
@@ -253,11 +236,11 @@ function my_cloud_appliances() {
         }
 
 		$kernel = new kernel();
-		$kernel->get_instance_by_id($appliance_db["appliance_kernelid"]);
+		$kernel->get_instance_by_id($appliance->kernelid);
 		$image = new image();
-		$image->get_instance_by_id($appliance_db["appliance_imageid"]);
+		$image->get_instance_by_id($appliance->imageid);
 		$virtualization = new virtualization();
-		$virtualization->get_instance_by_id($appliance_db["appliance_virtualization"]);
+		$virtualization->get_instance_by_id($appliance->virtualization);
 		$appliance_virtualization_type=$virtualization->name;
         // image disk size
         $cloud_image = new cloudimage();
@@ -269,7 +252,7 @@ function my_cloud_appliances() {
         $cloudappliance_action = "";
         if ($sshterm_enabled) {
             if ($sshterm_login) {
-                $cloudappliance_action .= "<input type=hidden name=\"sshterm_login_ip[$appliance->id]\" value=\"$sshterm_login_ip\">";
+                $cloudappliance_action .= "<input type=hidden name=\"sshterm_login_ip[$cloud_appliance->id]\" value=\"$sshterm_login_ip\">";
                 $cloudappliance_action .= "<input type=\"image\" name=\"action\" value=\"login\" src=\"../img/login.png\" alt=\"login\">";
             }
         }
@@ -293,22 +276,22 @@ function my_cloud_appliances() {
         }
         // disk-resize ?
         if ($disk_resize_enabled) {
-            $cloud_appliance_disk_size = "<input type=text name=\"appliance_disk_resize[$appliance->id]\" value=\"$cloud_image_disk_size\" size=4><input type=hidden name=\"currenttab\" value=\"tab3\">";
+            $cloud_appliance_disk_size = "<input type=text name=\"appliance_disk_resize[$cloud_appliance->id]\" value=\"$cloud_image_disk_size\" size=4><input type=hidden name=\"currenttab\" value=\"tab3\">";
         } else {
             $cloud_appliance_disk_size = "$cloud_image_disk_size";
         }
         // format image column
         $config_column = "<b>Kernel:</b> ".$kernel->name."</br><b>Image:</b> ".$image->name."<br><b>Type:</b> ".$appliance_virtualization_type."<br><b>IP:</b>".$appliance_resources_str;
 
-        $appliance_comment = $appliance_db["appliance_comment"];
+        $appliance_comment = $appliance->comment;
 		$arBody[] = array(
 			'appliance_state' => "<img src=$state_icon>",
-			'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default><input type=hidden name=\"currenttab\" value=\"tab2\">",
-			'appliance_id' => $appliance_db["appliance_id"],
-			'appliance_name' => $appliance_db["appliance_name"],
+			'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default><input type=hidden name=\"currenttab\" value=\"tab3\">",
+			'appliance_id' => $cloud_appliance->id,
+			'appliance_name' => $appliance->name,
 			'appliance_config' => $config_column,
 			'appliance_disk_size' => $cloud_appliance_disk_size,
-			'appliance_comment' => "<input type=text name=\"appliance_comment[$appliance->id]\" value=\"$appliance_comment\"><input type=hidden name=\"currenttab\" value=\"tab3\">",
+			'appliance_comment' => "<input type=text name=\"appliance_comment[$appliance->id]\" value=\"$appliance_comment\">",
 			'appliance_cloud_state' => $cloudappliance_state,
 			'appliance_cloud_action' => $cloudappliance_action,
 		);
@@ -323,6 +306,7 @@ function my_cloud_appliances() {
 	$table->form_action = $thisfile;
 	$table->head = $arHead;
 	$table->body = $arBody;
+    $table->sort = "";
     $command_array = array('pause', 'unpause', 'restart', 'comment');
     if ($sshterm_enabled) {
     	$command_array[] = 'login';
@@ -336,10 +320,19 @@ function my_cloud_appliances() {
 
     $table->bottom = $command_array;
     $table->identifier = 'appliance_id';
-	$table->max = 1000;
-	#$table->limit = 10;
-	
-	return $disp.$table->get_string();
+	$table->max = count($my_appliances);
+
+	//------------------------------------------------------------ set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './' . 'mycloudappliances-tpl.php');
+	$t->setVar(array(
+        'thisfile' => $thisfile,
+        'currentab' => htmlobject_input('currenttab', array("value" => 'tab3', "label" => ''), 'hidden'),
+        'cloud_appliance_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
 }
 
 
