@@ -149,7 +149,7 @@ function cloud_user_manager() {
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $thisfile;
-	$table = new htmlobject_db_table('cu_id');
+	$table = new htmlobject_db_table('cu_id', 'DESC');
 
 	$cc_conf = new cloudconfig();
 	// get external name
@@ -171,11 +171,11 @@ function cloud_user_manager() {
 	$arHead['cu_name'] = array();
 	$arHead['cu_name']['title'] ='Name';
 
-	$arHead['cu_fore_name'] = array();
-	$arHead['cu_fore_name']['title'] ='Fore name';
+	$arHead['cu_forename'] = array();
+	$arHead['cu_forename']['title'] ='Fore name';
 
-	$arHead['cu_last_name'] = array();
-	$arHead['cu_last_name']['title'] ='Last name';
+	$arHead['cu_lastname'] = array();
+	$arHead['cu_lastname']['title'] ='Last name';
 
 	$arHead['cu_email'] = array();
 	$arHead['cu_email']['title'] ='Email';
@@ -191,7 +191,7 @@ function cloud_user_manager() {
 	// db select
     $cl_user_count = 0;
 	$cl_user = new clouduser();
-	$user_array = $cl_user->display_overview($table->offset, $table->limit, 'cu_id', 'DESC');
+	$user_array = $cl_user->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($user_array as $index => $cu) {
 		$cu_status = $cu["cu_status"];
 		if ($cu_status == 1) {
@@ -232,7 +232,7 @@ function cloud_user_manager() {
 		$table->bottom = array('update', 'enable', 'disable', 'limits', 'delete');
 		$table->identifier = 'cu_id';
 	}
-	$table->max = 1000;
+	$table->max = $cl_user->get_count();
 	return $disp.$table->get_string();
 }
 
