@@ -241,7 +241,7 @@ function storage_display() {
 		$table->identifier_name = 'id';
 		$table->identifier = 'storage_id';
 	}
-	$table->max = count($arBody);
+	$table->max = $storage_tmp->get_count();
 	
 	return $disp.$table->get_string();
 }
