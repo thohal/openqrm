@@ -493,7 +493,7 @@ var $_event;
 	//--------------------------------------------------
 	function display_overview($offset, $limit, $sort, $order) {
 		$db=openqrm_get_db_connection();
-		$recordSet = &$db->SelectLimit("select * from $this->_db_table order by $sort $order", $limit, $offset);
+		$recordSet = &$db->SelectLimit("select * from $this->_db_table where image_id > 1 order by $sort $order", $limit, $offset);
 		$image_array = array();
 		if (!$recordSet) {
 			$this->_event->log("display_overview", $_SERVER['REQUEST_TIME'], 2, "image.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);

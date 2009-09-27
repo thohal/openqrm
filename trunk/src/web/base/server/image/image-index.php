@@ -177,7 +177,7 @@ function image_display() {
 	}
 
 	$arBody = array();
-	$image_array = $image_tmp->display_overview(1, $table->limit, $table->sort, $table->order);
+	$image_array = $image_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 	$image_icon = "/openqrm/base/img/image.png";
 
 	foreach ($image_array as $index => $image_db) {
@@ -218,7 +218,9 @@ function image_display() {
 		$table->identifier_name = 'id';
 		$table->identifier_disabled = array(1);
 	}
-	$table->max = count($image_array);
+        // do not show the openQRM server and idle image
+        $image_max = $image_tmp->get_count();
+	$table->max = $image_max-2;
 	#$table->limit = 10;
 	
 	return $disp.$table->get_string();
