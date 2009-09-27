@@ -105,7 +105,7 @@ function kernel_display() {
 	$arHead['kernel_capabilities']['title'] ='Capabilities';
 
 	$arBody = array();
-	$kernel_array = $kernel_tmp->display_overview(1, $table->limit, $table->sort, $table->order);
+	$kernel_array = $kernel_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 
 	$kernel_icon = "/openqrm/base/img/kernel.png";
 	foreach ($kernel_array as $index => $kernel_db) {
@@ -133,7 +133,8 @@ function kernel_display() {
 		$table->bottom = array('remove', 'edit', 'set-default');
 		$table->identifier = 'kernel_id';
 	}
-	$table->max = $kernel_tmp->get_count();
+        $kernel_max = $kernel_tmp->get_count();
+	$table->max = $kernel_max - 1;
 	#$table->limit = 10;
 	
 	return $disp.$table->get_string();

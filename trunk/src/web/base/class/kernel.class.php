@@ -196,7 +196,7 @@ function display_overview($offset, $limit, $sort, $order) {
 	global $KERNEL_INFO_TABLE;
 	global $event;
 	$db=openqrm_get_db_connection();
-	$recordSet = &$db->SelectLimit("select * from $KERNEL_INFO_TABLE order by $sort $order", $limit, $offset);
+	$recordSet = &$db->SelectLimit("select * from $KERNEL_INFO_TABLE where kernel_id > 0 order by $sort $order", $limit, $offset);
 	$kernel_array = array();
 	if (!$recordSet) {
 		$event->log("display_overview", $_SERVER['REQUEST_TIME'], 2, "kernel.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
