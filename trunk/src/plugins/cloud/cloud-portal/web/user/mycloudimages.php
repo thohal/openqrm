@@ -205,7 +205,6 @@ function mycloud_images() {
     if (!$private_image_enabled) {
         $strMsg = "<strong>Private image feature is not enabled in this Cloud !</strong>";
         return $strMsg;
-        exit(0);
     }
 
 	$table = new htmlobject_db_table('co_id', 'DESC');
@@ -231,8 +230,7 @@ function mycloud_images() {
     $cl_user = new clouduser();
     $cl_user->get_instance_by_name("$auth_user");
     $private_image = new cloudprivateimage();
-	$private_image_array = $private_image->display_overview_per_user($cl_user->id, $table->sort, $table->order);
-
+	$private_image_array = $private_image->display_overview_per_user($cl_user->id, $table->order);
     foreach ($private_image_array as $index => $private_image_db) {
 		$private_image_t = new cloudprivateimage();
 		$private_image_t->get_instance_by_id($private_image_db["co_id"]);

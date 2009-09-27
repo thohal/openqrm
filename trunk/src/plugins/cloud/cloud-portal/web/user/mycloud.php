@@ -829,7 +829,6 @@ if ((htmlobject_request('action') != '') && (isset($_REQUEST['identifier']))) {
 }
 
 
-
 $cloudu = new clouduser();
 $cloudu->get_instance_by_name($auth_user);
 if ($cloudu->status == 1) {
@@ -844,7 +843,6 @@ if ($cloudu->status == 1) {
 } else {
 	$output[] = array('label' => 'Your account has been disabled', 'value' => my_cloud_account_disabled());
 }
-
 
 echo htmlobject_tabmenu($output);
 
