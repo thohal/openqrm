@@ -61,42 +61,42 @@ $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 
 global $OPENQRM_SERVER_IP_ADDRESS;
 
-	// $event->log("$event_command", $_SERVER['REQUEST_TIME'], 5, "event-action", "Processing command $event_command for event $event_id", "", "", 0, 0, 0);
-	switch ($event_command) {
-		case 'new_event':
-			$event = new event();
-			$event_fields["event_id"]=openqrm_db_get_free_id('event_id', $EVENT_INFO_TABLE);
-			$event->add($event_fields);
-			break;
+// $event->log("$event_command", $_SERVER['REQUEST_TIME'], 5, "event-action", "Processing command $event_command for event $event_id", "", "", 0, 0, 0);
+switch ($event_command) {
+        case 'new_event':
+                $event = new event();
+                $event_fields["event_id"]=openqrm_db_get_free_id('event_id', $EVENT_INFO_TABLE);
+                $event->add($event_fields);
+                break;
 
-		case 'update':
-			$event = new event();
-			$event->update($event_id, $event_fields);
-			break;
+        case 'update':
+                $event = new event();
+                $event->update($event_id, $event_fields);
+                break;
 
-		case 'ack':
-			$event = new event();
-			$event_fields=array();
-			$event_fields["event_status"]=1;
-			$event->update($event_id, $event_fields);
-			break;
+        case 'ack':
+                $event = new event();
+                $event_fields=array();
+                $event_fields["event_status"]=1;
+                $event->update($event_id, $event_fields);
+                break;
 
-		case 'remove':
-			$event = new event();
-			$event->remove($event_id);
-			break;
+        case 'remove':
+                $event = new event();
+                $event->remove($event_id);
+                break;
 
-		case 'remove_by_name':
-			$event = new event();
-			$event->remove_by_name($event_name);
-			break;
+        case 'remove_by_name':
+                $event = new event();
+                $event->remove_by_name($event_name);
+                break;
 
-		default:
-			$event->log("$event_command", $_SERVER['REQUEST_TIME'], 4, "event-action", "No such event command ($event_command)", "", "", 0, 0, 0);
-			break;
+        default:
+                $event->log("$event_command", $_SERVER['REQUEST_TIME'], 4, "event-action", "No such event command ($event_command)", "", "", 0, 0, 0);
+                break;
 
 
-	}
+}
 ?>
 
 </body>
