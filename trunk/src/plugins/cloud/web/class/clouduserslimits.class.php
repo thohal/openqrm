@@ -191,10 +191,6 @@ class clouduserlimits {
 		$db=openqrm_get_db_connection();
 		unset($cl_fields["cl_id"]);
 		$result = $db->AutoExecute($this->_db_table, $cl_fields, 'UPDATE', "cl_id = $cl_id");
-
-			$this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "clouduserslimits.class.php", "!!! updating $this->_db_table", "", "", 0, 0, 0);
-
-
 		if (! $result) {
 			$this->_event->log("update", $_SERVER['REQUEST_TIME'], 2, "clouduserslimits.class.php", "Failed updating Cloud User limits $cl_id", "", "", 0, 0, 0);
 		}
