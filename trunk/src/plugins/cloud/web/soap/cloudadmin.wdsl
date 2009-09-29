@@ -166,6 +166,20 @@
   <part name='Result' type='xsd:string'/>
 </message>
 
+<message name='CloudApplianceResizeRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudApplianceResizeResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
+<message name='CloudAppliancePrivateRequest'>
+  <part name='symbol' type='xsd:string'/>
+</message>
+<message name='CloudAppliancePrivateResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
 <message name='KernelGetListRequest'>
   <part name='Result' type='xsd:string'/>
 </message>
@@ -311,6 +325,16 @@
   <operation name='CloudApplianceComment'>
     <input message='tns:CloudApplianceCommentRequest'/>
     <output message='tns:CloudApplianceCommentResponse'/>
+  </operation>
+
+  <operation name='CloudApplianceResize'>
+    <input message='tns:CloudApplianceResizeRequest'/>
+    <output message='tns:CloudApplianceResizeResponse'/>
+  </operation>
+
+  <operation name='CloudAppliancePrivate'>
+    <input message='tns:CloudAppliancePrivateRequest'/>
+    <output message='tns:CloudAppliancePrivateResponse'/>
   </operation>
 
   <operation name='KernelGetList'>
@@ -608,6 +632,30 @@
 
   <operation name='CloudApplianceComment'>
     <soap:operation soapAction='urn:localhost-cloud#CloudApplianceComment'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='CloudApplianceResize'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudApplianceResize'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='CloudAppliancePrivate'>
+    <soap:operation soapAction='urn:localhost-cloud#CloudAppliancePrivate'/>
     <input>
       <soap:body use='encoded' namespace='urn:localhost-cloud'
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>

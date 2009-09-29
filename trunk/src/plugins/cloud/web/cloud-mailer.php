@@ -179,12 +179,8 @@ function cloud_user_mailer() {
 		$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 	}
 
-	$disp = "<h1>Cloud Mailer for portal at <a href=\"$external_portal_name\">$external_portal_name</a></h1>";
-	$disp = $disp."<form action=\"$thisfile\" method=\"GET\">";
-	$disp = $disp."Send mail to Cloud User : ";
-    $disp = $disp."<select name=\"selected_user\">";
-    $disp = $disp."<option>all</option>";
-
+    $cloud_user_select = "<select name=\"selected_user\">";
+    $cloud_user_select .= "<option>all</option>";
     $sc_user = new clouduser();
     $sc_user_list = $sc_user->get_all_ids();
     foreach ($sc_user_list as $index => $id_list) {
@@ -195,38 +191,38 @@ function cloud_user_mailer() {
             $smail_user_lastname = $smail_user->lastname;
             $smail_user_email = $smail_user->email;
             $smail_user_name = $smail_user->name;
-            $disp = $disp."<option>$smail_user_name</option>";
+            $cloud_user_select .= "<option>$smail_user_name</option>";
         }
     }
+    $cloud_user_select .= "</select>";
+    $mailsubject = "<input type=\"text\" name=\"mailsubject\" value=\"$mailsubject\" size=\"40\" />";
+    $mailbody = "<textarea name=\"mailbody\" rows=\"10\" cols=\"50\">$mailbody</textarea>";
+    $hidden_vars = "<input type=\"hidden\" name=\"action\" value=\"send\" />";
 
+    $mailtype = "text<input type=\"radio\" name=\"mailtype\" value=\"text\" checked=\"checked\"/>";
+    $submit = "&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Send\" name=\"submit\" />";
 
-    $disp = $disp."</select><br>";
-
-    $disp = $disp."<input type=\"text\" name=\"mailsubject\" value=\"$mailsubject\" size=\"40\" />";
-	$disp = $disp."<br>";
-    $disp = $disp."<textarea name=\"mailbody\" rows=\"10\" cols=\"50\">$mailbody</textarea>";
-    $disp = $disp."<input type=\"hidden\" name=\"action\" value=\"send\" />";
-	$disp = $disp."<br>";
-//    $disp = $disp."html<input type=\"radio\" name=\"mailtype\" value=\"html\" checked=\"checked\" />";
-    $disp = $disp."text<input type=\"radio\" name=\"mailtype\" value=\"text\" checked=\"checked\"/>";
-    $disp = $disp."&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Send\" name=\"submit\" />";
-	$disp = $disp."<br>";
-	$disp = $disp."</form>";
-
-
-
-
-    
+	//------------------------------------------------------------ set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'cloud-mailer-tpl.php');
+	$t->setVar(array(
+        'thisfile' => $thisfile,
+        'cloud_user_select' => $cloud_user_select,
+        'mailsubject' => $mailsubject,
+        'mailbody' => $mailbody,
+        'mailtype' => $mailtype,
+        'submit' => $submit,
+        'hidden_vars' => $hidden_vars,
+        'external_portal_name' => $external_portal_name,
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
 
 
 
-
-
 $output = array();
-
-
 $output[] = array('label' => 'Cloud Mail', 'value' => cloud_user_mailer());
 echo htmlobject_tabmenu($output);
 ?>

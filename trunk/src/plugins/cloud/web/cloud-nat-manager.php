@@ -99,31 +99,7 @@ function cloud_nat_manager() {
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $thisfile;
-	$table = new htmlobject_db_table('ip_id');
-
-
-	$disp = "<h1>Cloud NAT (natural address translation)</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."This feature hels for openQRM Setups within a secured network which";
-	$disp = $disp." just allows one mac-address to be sent out. In this case please confiure";
-	$disp = $disp."post- and pre-routing to translate your internal Cloud network to the external";
-	$disp = $disp."ip-addresses via iptables. Then just put your internal and external network";
-	$disp = $disp."address in here, update the NAT table and enable the CloudNat features";
-	$disp = $disp."in the main CloudConfig.";
-	$disp = $disp."<br>";
-	$disp = $disp."Then all displays and mails containing the Cloud systems ip addresses";
-	$disp = $disp." will be mapped according the CloudNat setup below.";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-/*	$disp = $disp."<br>";
-	$disp = $disp."DEBUG ";
-    $ttt = new cloudnat();
-    $extip = $ttt->translate("192.168.88.22");
-    $disp = $disp."Translate = $extip";
-	$disp = $disp."<br>";
-*/
-	$disp = $disp."<br>";
+	$table = new htmlobject_table_identifiers_checked('ip_id');
 	$arHead = array();
 
 	$arHead['cn_id'] = array();
@@ -173,7 +149,16 @@ function cloud_nat_manager() {
 		$table->identifier = 'cn_id';
 	}
 	$table->max = 1;
-	return $disp.$table->get_string();
+
+	//------------------------------------------------------------ set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'cloud-nat-manager-tpl.php');
+	$t->setVar(array(
+		'cloud_nat_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
 }
 
 

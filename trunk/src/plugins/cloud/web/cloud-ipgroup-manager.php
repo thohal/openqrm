@@ -106,11 +106,6 @@ function cloud_ipgroup_manager() {
 		$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 	}
 	
-	$disp = "<h1>Cloud IpGroups for portal at <a href=\"$external_portal_name\">$external_portal_name</a></h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<b><a href=\"$thisfile?action=create\">Create new Cloud IpGroup</a></b>";
-	$disp = $disp."<br>";
 	$arHead = array();
 
 	$arHead['ig_id'] = array();
@@ -142,13 +137,14 @@ function cloud_ipgroup_manager() {
 
 	$arHead['ig_list'] = array();
 	$arHead['ig_list']['title'] ='';
+	$arHead['ig_list']['sortable'] = false;
 
 	$arBody = array();
 
 	// db select
 	$ig = new cloudipgroup();
 	$ig_array = array();
-	$ig_array = $ig->display_overview(0, 100, 'ig_id', 'ASC');
+	$ig_array = $ig->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($ig_array as $index => $ipg) {
 		$igid = $ipg["ig_id"];
 		$listlink = "<a href=\"cloud-iptables-manager.php?ig_id=$igid\">list</a>";
@@ -181,8 +177,20 @@ function cloud_ipgroup_manager() {
 		$table->bottom = array('load-ips', 'delete');
 		$table->identifier = 'ig_id';
 	}
-	$table->max = 100;
-	return $disp.$table->get_string();
+    $table->max = $ig->get_count();
+
+	//------------------------------------------------------------ set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'cloud-ipgroup-manager-tpl.php');
+	$t->setVar(array(
+        'thisfile' => $thisfile,
+        'external_portal_name' => $external_portal_name,
+		'cloud_ipgroup_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
+
 }
 
 
@@ -191,29 +199,29 @@ function cloud_create_ipgroup() {
 	global $OPENQRM_USER;
 	global $thisfile;
 
+    $ig_name = htmlobject_input('ig_name', array("value" => '[IpGroup-Name]', "label" => 'Name'), 'text', 20);
+	$ig_network = htmlobject_input('ig_network', array("value" => '[network-address]', "label" => 'Network'), 'text', 20);
+	$ig_subnet = htmlobject_input('ig_subnet', array("value" => '[subnet-mask]', "label" => 'Subnet'), 'text', 20);
+	$ig_gateway = htmlobject_input('ig_gateway', array("value" => '[gateway]', "label" => 'Gateway'), 'text', 20);
+	$ig_dns1 = htmlobject_input('ig_dns1', array("value" => '[fist-dns-server]', "label" => '1. DNS'), 'text', 20);
+	$ig_dns2 = htmlobject_input('ig_dns2', array("value" => '[second-dns-server]', "label" => '2. DNS'), 'text', 20);
+	$ig_domain = htmlobject_input('ig_domain', array("value" => '[domain-name]', "label" => 'Domain'), 'text', 20);
 
-	$disp = "<h1>Create new Cloud IpGroup</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<form action=$thisfile method=post>";
-	$disp = $disp.htmlobject_input('ig_name', array("value" => '[IpGroup-Name]', "label" => 'Name'), 'text', 20);
-	$disp = $disp.htmlobject_input('ig_network', array("value" => '[network-address]', "label" => 'Network'), 'text', 20);
-	$disp = $disp.htmlobject_input('ig_subnet', array("value" => '[subnet-mask]', "label" => 'Subnet'), 'text', 20);
-	$disp = $disp.htmlobject_input('ig_gateway', array("value" => '[gateway]', "label" => 'Gateway'), 'text', 20);
-	$disp = $disp.htmlobject_input('ig_dns1', array("value" => '[fist-dns-server]', "label" => '1. DNS'), 'text', 20);
-	$disp = $disp.htmlobject_input('ig_dns2', array("value" => '[second-dns-server]', "label" => '2. DNS'), 'text', 20);
-	$disp = $disp.htmlobject_input('ig_domain', array("value" => '[domain-name]', "label" => 'Domain'), 'text', 20);
-	$disp = $disp."<input type=hidden name='action' value='create_ipgroup'>";
-	$disp = $disp."<br>";
-	$disp = $disp."<input type=submit value='Create'>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."</form>";
-
-
-
+	//------------------------------------------------------------ set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'cloud-ipgroup-create-tpl.php');
+	$t->setVar(array(
+        'ig_name' => $ig_name,
+        'ig_network' => $ig_network,
+        'ig_subnet' => $ig_subnet,
+        'ig_gateway' => $ig_gateway,
+        'ig_dns1' => $ig_dns1,
+        'ig_dns2' => $ig_dns2,
+        'ig_domain' => $ig_domain,
+        'thisfile' => $thisfile,
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
 
@@ -227,26 +235,16 @@ function cloud_load_ipgroup($ipgroup) {
 	$ipg = new cloudipgroup();
 	$ipg->get_instance_by_id($ipgroup);
 
-	$disp = "<h1>Load ip-adresses into Cloud IpGroup $ipg->name</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<form action=$thisfile method=post>";
-	$disp = $disp."<table><tr><td>";
-	$disp = $disp."</td><td>";
-	$disp = $disp."Please cut-and-paste a block of ip-addresses for the IpGroup $ipg->name";
-	$disp = $disp." into the box on the right and click 'Load'. to activate them in the Cloud Ip-Pool.";
-	$disp = $disp."</td><td>";
-	$disp = $disp." <textarea name=\"cloud_ips\" cols=\"20\" rows=\"20\"></textarea>";
-	$disp = $disp."<input type=hidden name=ig_id value=$ipgroup>";
-	$disp = $disp."<input type=hidden name='action' value='load_ipgroup'>";
-	$disp = $disp."</td><td>";
-	$disp = $disp."</td></tr><tr><td>";
-	$disp = $disp."</td><td>";
-	$disp = $disp."</td><td>";
-	$disp = $disp."<input type=submit value='Load'>";
-	$disp = $disp."</td><td>";
-	$disp = $disp."</td></tr></table>";
-	$disp = $disp."</form>";
-
+	//------------------------------------------------------------ set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'cloud-ipgroup-import-tpl.php');
+	$t->setVar(array(
+        'ig_name' => $ipg->name,
+        'ipgroup' => $ipgroup,
+        'thisfile' => $thisfile,
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
 

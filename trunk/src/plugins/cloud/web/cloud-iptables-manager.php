@@ -97,10 +97,6 @@ function cloud_list_ipgroup($id) {
 	global $thisfile;
 	$table = new htmlobject_db_table('ip_id');
 
-	
-	$disp = "<h1>Cloud Ip-address for IpGroup $id</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 	$arHead = array();
 
 	$arHead['ip_id'] = array();
@@ -139,9 +135,11 @@ function cloud_list_ipgroup($id) {
 	$arBody = array();
 
 	// db select
+    $ig = new cloudipgroup();
+    $ig->get_instance_by_id($id);
 	$ip = new cloudiptables();
 	$ip_array = array();
-	$ip_array = $ip->display_overview(0, 255, 'ip_id', 'ASC');
+	$ip_array = $ip->display_overview_per_ipgroup($ig->ig_id, $table->sort, $table->order);
 	foreach ($ip_array as $index => $ipg) {
 		$ig_id = $ipg["ip_ig_id"];
 		$ig_id_post = "$ig_id<input type=\"hidden\" name=\"ig_id\" value=\"$ig_id\">";
@@ -173,8 +171,18 @@ function cloud_list_ipgroup($id) {
 		$table->bottom = array('activate', 'deactivate', 'delete');
 		$table->identifier = 'ip_id';
 	}
-	$table->max = 100;
-	return $disp.$table->get_string();
+	$table->max = count($ip_array);
+
+	//------------------------------------------------------------ set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'cloud-iptables-manager-tpl.php');
+	$t->setVar(array(
+		'cloud_ipgroup' => $ig->ig_name,
+		'cloud_iptable' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
 }
 
 

@@ -150,19 +150,12 @@ function cloud_user_manager() {
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $thisfile;
 	$table = new htmlobject_db_table('cu_id', 'DESC');
-
 	$cc_conf = new cloudconfig();
 	// get external name
 	$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
 	if (!strlen($external_portal_name)) {
 		$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 	}
-
-	$disp = "<h1>Cloud User Manager for portal at <a href=\"$external_portal_name\">$external_portal_name</a></h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<b><a href=\"$thisfile?action=create\">Create new Cloud User</a></b>";
-	$disp = $disp."<br>";
 	$arHead = array();
 
 	$arHead['cu_id'] = array();
@@ -233,45 +226,62 @@ function cloud_user_manager() {
 		$table->identifier = 'cu_id';
 	}
 	$table->max = $cl_user->get_count();
-	return $disp.$table->get_string();
+	//------------------------------------------------------------ set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'cloud-user-manager-tpl.php');
+	$t->setVar(array(
+        'thisfile' => $thisfile,
+        'external_portal_name' => $external_portal_name,
+		'cloud_user_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
 }
+
 
 
 function cloud_create_user() {
 
 	global $OPENQRM_USER;
+	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $thisfile;
-
-
-	$disp = "<h1>Create new Cloud User</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<form action='cloud-action.php' method=post>";
-	$disp = $disp.htmlobject_input('cu_name', array("value" => '', "label" => 'User name'), 'text', 20);
+	$cc_conf = new cloudconfig();
+	// get external name
+	$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
+	if (!strlen($external_portal_name)) {
+		$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
+	}
+	$cu_name = htmlobject_input('cu_name', array("value" => '', "label" => 'User name'), 'text', 20);
     // root password input plus generate password button
     $generate_pass = "Password&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input name=\"cu_password\" type=\"text\" id=\"cu_password\" value=\"\" size=\"10\" maxlength=\"10\">";
     $generate_pass .= "<input type=\"button\" name=\"gen\" value=\"generate\" onclick=\"this.form.cu_password.value=getPassword(10, false, true, true, true, false, true, true, true, false);\"><br>";
     // without generate pass button : $disp = $disp.htmlobject_input('cu_password', array("value" => '', "label" => 'Password'), 'text', 20);
-    $disp = $disp.$generate_pass;
-	$disp = $disp.htmlobject_input('cu_forename', array("value" => '', "label" => 'Fore name'), 'text', 50);
-	$disp = $disp.htmlobject_input('cu_lastname', array("value" => '', "label" => 'Last name'), 'text', 50);
-	$disp = $disp.htmlobject_input('cu_email', array("value" => '', "label" => 'Email'), 'text', 50);
-	$disp = $disp.htmlobject_input('cu_street', array("value" => '', "label" => 'Street+number'), 'text', 100);
-	$disp = $disp.htmlobject_input('cu_city', array("value" => '', "label" => 'City'), 'text', 100);
-	$disp = $disp.htmlobject_input('cu_country', array("value" => '', "label" => 'Country'), 'text', 100);
-	$disp = $disp.htmlobject_input('cu_phone', array("value" => '', "label" => 'Phone'), 'text', 100);
-
-	$disp = $disp."<input type=hidden name='cloud_command' value='create_user'>";
-	$disp = $disp."<br>";
-	$disp = $disp."<input type=submit value='Create'>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."</form>";
-
-
-
+	$cu_forename = htmlobject_input('cu_forename', array("value" => '', "label" => 'Fore name'), 'text', 50);
+	$cu_lastname = htmlobject_input('cu_lastname', array("value" => '', "label" => 'Last name'), 'text', 50);
+	$cu_email = htmlobject_input('cu_email', array("value" => '', "label" => 'Email'), 'text', 50);
+	$cu_street = htmlobject_input('cu_street', array("value" => '', "label" => 'Street+number'), 'text', 100);
+	$cu_city = htmlobject_input('cu_city', array("value" => '', "label" => 'City'), 'text', 100);
+	$cu_country = htmlobject_input('cu_country', array("value" => '', "label" => 'Country'), 'text', 100);
+	$cu_phone = htmlobject_input('cu_phone', array("value" => '', "label" => 'Phone'), 'text', 100);
+	//------------------------------------------------------------ set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'cloud-user-create-tpl.php');
+	$t->setVar(array(
+        'cu_name' => $cu_name,
+        'generate_pass' => $generate_pass,
+        'cu_forename' => $cu_forename,
+        'cu_lastname' => $cu_lastname,
+        'cu_email' => $cu_email,
+        'cu_street' => $cu_street,
+        'cu_city' => $cu_city,
+        'cu_country' => $cu_country,
+        'cu_phone' => $cu_phone,
+        'thisfile' => 'cloud-action.php',
+        'external_portal_name' => $external_portal_name,
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
 
@@ -294,27 +304,27 @@ function cloud_set_user_limits($cloud_user_id) {
 	$cpu_limit = $cloud_user_limit->cpu_limit;
 	$network_limit = $cloud_user_limit->network_limit;
 
-	$disp = "<h1>Set Cloud User Limits</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."Cloud Limits for User $cloud_user->name  (0 => infinite)";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<form action=$thisfile method=post>";
+	$cl_resource_limit = htmlobject_input('cl_resource_limit', array("value" => $resource_limit, "label" => 'Max Resource'), 'text', 20);
+	$cl_memory_limit = htmlobject_input('cl_memory_limit', array("value" => $memory_limit, "label" => 'Max Memory'), 'text', 20);
+	$cl_disk_limit = htmlobject_input('cl_disk_limit', array("value" => $disk_limit, "label" => 'Max Disk Space'), 'text', 20);
+	$cl_cpu_limit = htmlobject_input('cl_cpu_limit', array("value" => $cpu_limit, "label" => 'Max CPU'), 'text', 20);
+	$cl_network_limit = htmlobject_input('cl_network_limit', array("value" => $network_limit, "label" => 'Max NIC'), 'text', 20);
 
-	$disp = $disp.htmlobject_input('cl_resource_limit', array("value" => $resource_limit, "label" => 'Max Resource'), 'text', 20);
-	$disp = $disp.htmlobject_input('cl_memory_limit', array("value" => $memory_limit, "label" => 'Max Memory'), 'text', 20);
-	$disp = $disp.htmlobject_input('cl_disk_limit', array("value" => $disk_limit, "label" => 'Max Disk Space'), 'text', 20);
-	$disp = $disp.htmlobject_input('cl_cpu_limit', array("value" => $cpu_limit, "label" => 'Max CPU'), 'text', 20);
-	$disp = $disp.htmlobject_input('cl_network_limit', array("value" => $network_limit, "label" => 'Max NIC'), 'text', 20);
-
-	$disp = $disp."<input type=hidden name='cl_cu_id' value=$cloud_user_id>";
-	$disp = $disp."<input type=hidden name='action' value='limit'>";
-	$disp = $disp."<br>";
-	$disp = $disp."<input type=submit value='Set-Limits'>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."</form>";
-
+	//------------------------------------------------------------ set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'cloud-user-set-limit-tpl.php');
+	$t->setVar(array(
+        'cloud_user_id' => $cloud_user_id,
+        'cu_name' => $cu_name,
+        'cl_resource_limit' => $cl_resource_limit,
+        'cl_memory_limit' => $cl_memory_limit,
+        'cl_disk_limit' => $cl_disk_limit,
+        'cl_cpu_limit' => $cl_cpu_limit,
+        'cl_network_limit' => $cl_network_limit,
+        'thisfile' => $thisfile,
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
 

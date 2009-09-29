@@ -76,11 +76,6 @@ function cloud_config_manager() {
 	if (!strlen($external_portal_name)) {
 		$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 	}
-
-	$disp = "<h1>Cloud Configuration for portal at <a href=\"$external_portal_name\">$external_portal_name</a></h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 	$arHead = array();
 
 	$arHead['cc_id'] = array();
@@ -180,7 +175,16 @@ function cloud_config_manager() {
 		$table->bottom = array('update');
 	}
 	$table->max = 100;
-	return $disp.$table->get_string();
+	//------------------------------------------------------------ set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'cloud-config-tpl.php');
+	$t->setVar(array(
+        'external_portal_name' => $external_portal_name,
+		'cloud_config_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
 }
 
 

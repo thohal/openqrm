@@ -1,5 +1,6 @@
 
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+<link rel="stylesheet" type="text/css" href="cloud.css" />
 
 <?php
 /*
@@ -135,23 +136,24 @@ function cloud_image_selector() {
         exit(0);
     }
 
-	$table = new htmlobject_table_identifiers_checked('co_id');
+	$table = new htmlobject_table_identifiers_checked('image_id');
 	$arHead = array();
 
-	$arHead['co_id'] = array();
-	$arHead['co_id']['title'] ='ID';
+	$arHead['image_id'] = array();
+	$arHead['image_id']['title'] ='ID';
 
-	$arHead['co_image_name'] = array();
-	$arHead['co_image_name']['title'] ='Name';
+	$arHead['image_name'] = array();
+	$arHead['image_name']['title'] ='Name';
 
-	$arHead['co_image_version'] = array();
-	$arHead['co_image_version']['title'] ='Version';
+	$arHead['image_version'] = array();
+	$arHead['image_version']['title'] ='Version';
 
-	$arHead['co_image_type'] = array();
-	$arHead['co_image_type']['title'] ='Deployment type';
+	$arHead['image_type'] = array();
+	$arHead['image_type']['title'] ='Deployment type';
 
-	$arHead['co_selector'] = array();
-	$arHead['co_selector']['title'] ='Assign to';
+	$arHead['image_selector'] = array();
+	$arHead['image_selector']['title'] ='Assign to';
+	$arHead['image_selector']['sortable'] = false;
 
 	$arBody = array();
 
@@ -166,11 +168,7 @@ function cloud_image_selector() {
 	// db select
     $image_count = 0;
 	$image_list = new image();
-	$image_array = $image_list->display_overview($table->offset, $table->limit, 'image_id', $table->order);
-	// remove the openqrm + idle image from the list
-	//print_r($image_list);
-	array_shift($image_array);
-	array_shift($image_array);
+	$image_array = $image_list->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($image_array as $index => $im) {
 		$image_id = $im["image_id"];
         $image = new image();
@@ -193,11 +191,11 @@ function cloud_image_selector() {
         }
 
 		$arBody[] = array(
-			'co_id' => $image->id,
-			'co_image_name' => $image->name,
-			'co_image_version' => $image->version,
-			'co_image_type' => $image->type,
-			'co_selector' => htmlobject_select("cu_id[$image->id]", $cloud_user_arr, '', array($pi_selected)),
+			'image_id' => $image->id,
+			'image_name' => $image->name,
+			'image_version' => $image->version,
+			'image_type' => $image->type,
+			'image_selector' => htmlobject_select("cu_id[$image->id]", $cloud_user_arr, '', array($pi_selected)),
 		);
         $image_count++;
 	}
@@ -213,9 +211,9 @@ function cloud_image_selector() {
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('set');
-		$table->identifier = 'co_id';
+		$table->identifier = 'image_id';
 	}
-	$table->max = $image_count;
+    $table->max = $image_list->get_count();
 
 	//------------------------------------------------------------ set template
 	$t = new Template_PHPLIB();

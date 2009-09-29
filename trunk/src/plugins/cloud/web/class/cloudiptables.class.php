@@ -293,6 +293,27 @@ function get_ip_list_by_appliance($appliance_id) {
 
 
 // displays the cloudiptables-overview
+function display_overview_per_ipgroup($ig_id, $sort, $order) {
+	global $CLOUD_IPTABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$recordSet = &$db->SelectLimit("select * from $CLOUD_IPTABLE where ip_ig_id=$ig_id order by $sort $order", -1, 0);
+	$cloudiptables_array = array();
+	if (!$recordSet) {
+		$event->log("display_overview_per_ipgroup", $_SERVER['REQUEST_TIME'], 2, "cloudiptables.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	} else {
+		while (!$recordSet->EOF) {
+			array_push($cloudiptables_array, $recordSet->fields);
+			$recordSet->MoveNext();
+		}
+		$recordSet->Close();
+	}		
+	return $cloudiptables_array;
+}
+
+
+
+// displays the cloudiptables-overview
 function display_overview($offset, $limit, $sort, $order) {
 	global $CLOUD_IPTABLE;
 	global $event;
@@ -307,7 +328,7 @@ function display_overview($offset, $limit, $sort, $order) {
 			$recordSet->MoveNext();
 		}
 		$recordSet->Close();
-	}		
+	}
 	return $cloudiptables_array;
 }
 

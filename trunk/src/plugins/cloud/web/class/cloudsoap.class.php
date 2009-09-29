@@ -47,6 +47,9 @@ require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudtransaction.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudprivateimage.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudirlc.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudiplc.class.php";
+
 
 // only if puppet is available
 if (file_exists("$RootDir/plugins/puppet/class/puppet.class.php")) {
@@ -1255,7 +1258,7 @@ class cloudsoap {
 	* updates Cloud appliance comment
 	* @access public
 	* @param string $method_parameters
-	*  -> mode,user-name,user-password,cloud-appliance-id
+	*  -> mode,user-name,user-password,cloud-appliance-id,comment
 	* @return int 0 for success, 1 for failure
 	*/
 	//--------------------------------------------------
@@ -1325,6 +1328,208 @@ class cloudsoap {
 	}
 
 
+
+
+	//--------------------------------------------------
+	/**
+	* resizes Cloud appliance disk
+	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password,cloud-appliance-id,new-disk-size
+	* @return int 0 for success, 1 for failure
+	*/
+	//--------------------------------------------------
+	function CloudApplianceResize($method_parameters) {
+		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$ca_id = $parameter_array[3];
+		$ca_new_disk_size = $parameter_array[4];
+        // check all user input
+        for ($i = 0; $i <= 4; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudApplianceResize", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return 1;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 5) {
+            $event->log("cloudsoap->CloudApplianceResize", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return 1;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudApplianceResize", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return 1;
+        }
+        // disk-resize enabled ?
+        $cd_config = new cloudconfig();
+        $show_disk_resize = $cd_config->get_value(20);	// show_disk_resize
+        if (!strcmp($show_disk_resize, "false")) {
+            $event->log("cloudsoap->CloudApplianceResize", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Disk resize is disabled! Not resizing", "", "", 0, 0, 0);
+            return 1;
+        }
+        $cr_appliance = new cloudappliance();
+        $cr_appliance->get_instance_by_id($ca_id);
+        // get the request to check for the user
+        $cr = new cloudrequest();
+        $cr->get_instance_by_id($cr_appliance->cr_id);
+        $cl_user = new clouduser();
+        $cl_user->get_instance_by_id($cr->cu_id);
+        switch ($mode) {
+            case 'user':
+                if (strcmp($username, $cl_user->name)) {
+                    $event->log("cloudsoap->CloudApplianceResize", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to execute a Cloud-command on behalf of Cloud User $cl_user->name!", "", "", 0, 0, 0);
+                    return 1;
+                }
+                break;
+        }
+
+        // check resize
+        $appliance = new appliance();
+        $appliance->get_instance_by_id($cr_appliance->appliance_id);
+        $image = new image();
+        $image->get_instance_by_id($appliance->imageid);
+        $cloud_image = new cloudimage();
+        $cloud_image->get_instance_by_image_id($image->id);
+        $cloud_image_current_disk_size = $cloud_image->disk_size;
+        if ($cloud_image_current_disk_size == $ca_new_disk_size) {
+            $event->log("cloudsoap->CloudApplianceResize", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "New Disk size Cloud appliance $cr_appliance->id is equal current Disk size. Not resizing", "", "", 0, 0, 0);
+            return 1;
+        }
+        if ($cloud_image_current_disk_size > $ca_new_disk_size) {
+            $event->log("cloudsoap->CloudApplianceResize", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "New Disk size Cloud appliance $cr_appliance->id needs to be greater current Disk size. Not resizing", "", "", 0, 0, 0);
+            return 1;
+        }
+        // check if no other command is currently running
+        if ($cr_appliance->cmd != 0) {
+            $event->log("cloudsoap->CloudApplianceResize", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Another command is already registerd for Cloud appliance $cr_appliance->id", "", "", 0, 0, 0);
+            return 1;
+        }
+        // check that state is active
+        if ($cr_appliance->state != 1) {
+            $event->log("cloudsoap->CloudApplianceResize", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Can only resize Cloud appliance $cr_appliance->id if it is in active state", "", "", 0, 0, 0);
+            return 1;
+        }
+        $additional_disk_space = $ca_new_disk_size - $cloud_image_current_disk_size;
+        // put the new size in the cloud_image
+        $cloudi_request = array(
+            'ci_disk_rsize' => "$ca_new_disk_size",
+        );
+        $cloud_image->update($cloud_image->id, $cloudi_request);
+        // create a new cloud-image resize-live-cycle / using cloudappliance id
+        $cloudirlc = new cloudirlc();
+        $cirlc_fields['cd_id'] = openqrm_db_get_free_id('cd_id', $cloudirlc->_db_table);
+        $cirlc_fields['cd_appliance_id'] = $cr_appliance->id;
+        $cirlc_fields['cd_state'] = '1';
+        $cloudirlc->add($cirlc_fields);
+
+        $event->log("cloudsoap->CloudApplianceResize", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Updating comment of Cloud appliance $ca_id", "", "", 0, 0, 0);
+        return 0;
+	}
+
+
+
+
+	//--------------------------------------------------
+	/**
+	* creates a private image from an active Cloud appliance
+	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password,cloud-appliance-id
+	* @return int 0 for success, 1 for failure
+	*/
+	//--------------------------------------------------
+	function CloudAppliancePrivate($method_parameters) {
+		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$ca_id = $parameter_array[3];
+        // check all user input
+        for ($i = 0; $i <= 3; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->CloudAppliancePrivate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return 1;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 4) {
+            $event->log("cloudsoap->CloudAppliancePrivate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return 1;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->CloudAppliancePrivate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return 1;
+        }
+        // private-images enabled ?
+        $cp_config = new cloudconfig();
+        $show_private_image = $cp_config->get_value(21);	// show_private_image
+        if (!strcmp($show_private_image, "false")) {
+            $event->log("cloudsoap->CloudAppliancePrivate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Private-Image is disabled! Skipping", "", "", 0, 0, 0);
+            return 1;
+        }
+        $cr_appliance = new cloudappliance();
+        $cr_appliance->get_instance_by_id($ca_id);
+        // get the request to check for the user
+        $cr = new cloudrequest();
+        $cr->get_instance_by_id($cr_appliance->cr_id);
+        $cl_user = new clouduser();
+        $cl_user->get_instance_by_id($cr->cu_id);
+        switch ($mode) {
+            case 'user':
+                if (strcmp($username, $cl_user->name)) {
+                    $event->log("cloudsoap->CloudAppliancePrivate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $username is trying to execute a Cloud-command on behalf of Cloud User $cl_user->name!", "", "", 0, 0, 0);
+                    return 1;
+                }
+                break;
+        }
+
+        // check
+        $appliance = new appliance();
+        $appliance->get_instance_by_id($cr_appliance->appliance_id);
+        $image = new image();
+        $image->get_instance_by_id($appliance->imageid);
+        $cloud_image = new cloudimage();
+        $cloud_image->get_instance_by_image_id($image->id);
+        // check if no other command is currently running
+        if ($cr_appliance->cmd != 0) {
+            $event->log("cloudsoap->CloudAppliancePrivate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Another command is already registerd for Cloud appliance $cr_appliance->id", "", "", 0, 0, 0);
+            return 1;
+        }
+        // check that state is active
+        if ($cr_appliance->state != 1) {
+            $event->log("cloudsoap->CloudAppliancePrivate", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Can only resize Cloud appliance $cr_appliance->id if it is in active state", "", "", 0, 0, 0);
+            return 1;
+        }
+
+        // put the size + clone name in the cloud_image
+        $time_token = $_SERVER['REQUEST_TIME'];
+        $private_image_name = str_replace("cloud", "private", $image->name);
+        $private_image_name = $private_image_name."".$time_token;
+        $cloudi_request = array(
+            'ci_disk_rsize' => $cloud_image_current_disk_size,
+            'ci_clone_name' => $private_image_name,
+        );
+        $cloud_image->update($cloud_image->id, $cloudi_request);
+        // create a new cloud-image private-live-cycle / using the cloudappliance id
+        $cloudiplc = new cloudiplc();
+        $ciplc_fields['cp_id'] = openqrm_db_get_free_id('cp_id', $cloudiplc->_db_table);
+        $ciplc_fields['cp_appliance_id'] = $id;
+        $ciplc_fields['cp_cu_id'] = $cl_user->id;
+        $ciplc_fields['cp_state'] = '1';
+        $ciplc_fields['cp_start_private'] = $_SERVER['REQUEST_TIME'];
+        $cloudiplc->add($ciplc_fields);
+
+        $event->log("cloudsoap->CloudAppliancePrivate", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Creating a private image $private_image_name from Cloud appliance $id", "", "", 0, 0, 0);
+        return 0;
+	}
 
 
 // ######################### kernel methods ####################################
