@@ -77,12 +77,8 @@ function sshterm_start() {
     create_pound_config
     sleep 2
 	SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
-    $RUNSCREEN -dmS $SCREEN_NAME $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/pound/pound
-
-
+    $RUNSCREEN -dmS $SCREEN_NAME $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/pound/pound -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/etc/pound.cfg
 	return 0
-
-
 }
 
 
