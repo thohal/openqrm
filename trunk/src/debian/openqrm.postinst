@@ -28,7 +28,6 @@ if [ -f /etc/default/$NAME ] ; then
     . /etc/default/$NAME
 else
     OPENQRM_SERVER_BASE_DIR="/usr/share"
-    OPENQRM_SERVER_WRITEABLE_DIR=$OPENQRM_SERVER_BASE_DIR
 fi
 export OPENQRM_SERVER_BASE_DIR
 . $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
@@ -39,9 +38,7 @@ set -e
 case "$1" in
     configure)
         # copy pxelinux.0, tftdp does not support sym-linking it
-        mkdir -p $OPENQRM_SERVER_WRITEABLE_DIR/openqrm/tftpboot/boot
-        rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot
-        ln -sf $OPENQRM_SERVER_WRITEABLE_DIR/openqrm/tftpboot $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot
+        mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot
         if [ ! -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0 ]; then
             if [ -f /usr/lib/syslinux/pxelinux.0 ]; then
                 cp -a /usr/lib/syslinux/pxelinux.0 $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.0
@@ -69,15 +66,12 @@ case "$1" in
         cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-htaccess.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htaccess
 
         # create the default admin user
-        mkdir -p /var/lib/openqrm/web/base
-        htpasswd -bc /var/lib/openqrm/web/base/.htpasswd openqrm openqrm
-        chmod 666 /var/lib/openqrm/web/base/.htpasswd
-        ln -sf /var/lib/openqrm/web/base/.htpasswd $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd
+        htpasswd -bc $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd openqrm openqrm
+        chmod 666 $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htpasswd
 
         # create the image-auth dir
-        mkdir -p /var/lib/openqrm/web/action/image-auth
-        chmod 777 /var/lib/openqrm/web/action/image-auth
-        ln -sf /var/lib/openqrm/web/action/image-auth $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth
+        mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth
+        chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/web/action/image-auth
 
         # create the openqrm-client link in the right arch
         KERNEL_ARCH=`uname -m`
@@ -93,7 +87,8 @@ case "$1" in
         cd $THISDIR
 
         # init the remote execution layer
-        chmod -R 777 /var/spool/openqrm
+        mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/var/spool/
+        chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/var/spool
         rm -rf $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear
         mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/
         $OPENQRM_SERVER_BASE_DIR/openqrm/bin/dropbearkey -t rsa -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key

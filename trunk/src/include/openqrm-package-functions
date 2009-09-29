@@ -346,51 +346,12 @@ function openqrm_create_deb_source() {
     mkdir -p $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION
     cp -aR * $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION/
     cd $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION/
-    # use the Makefile.debian for etc, bin + sbin
-    mv -f bin/Makefile.debian bin/Makefile
-    mv -f etc/Makefile.debian etc/Makefile
-    mv -f sbin/Makefile.debian sbin/Makefile
-    mv -f plugins/aoe-storage/Makefile.debian plugins/aoe-storage/Makefile
-    mv -f plugins/aws/Makefile.debian plugins/aws/Makefile
-    mv -f plugins/citrix/Makefile.debian plugins/citrix/Makefile
-    mv -f plugins/cloud/Makefile.debian plugins/cloud/Makefile
-    mv -f plugins/collectd/Makefile.debian plugins/collectd/Makefile
-    mv -f plugins/dhcpd/Makefile.debian plugins/dhcpd/Makefile
-    mv -f plugins/dns/Makefile.debian plugins/dns/Makefile
-    mv -f plugins/equallogic-storage/Makefile.debian plugins/equallogic-storage/Makefile
-    mv -f plugins/highavailability/Makefile.debian plugins/highavailability/Makefile
-    mv -f plugins/image-shelf/Makefile.debian plugins/image-shelf/Makefile
-    mv -f plugins/iscsi-storage/Makefile.debian plugins/iscsi-storage/Makefile
-    mv -f plugins/kvm/Makefile.debian plugins/kvm/Makefile
-    mv -f plugins/linux-vserver/Makefile.debian plugins/linux-vserver/Makefile
-    mv -f plugins/linuxcoe/Makefile.debian plugins/linuxcoe/Makefile
-    mv -f plugins/local-server/Makefile.debian plugins/local-server/Makefile
-    mv -f plugins/local-storage/Makefile.debian plugins/local-storage/Makefile
-    mv -f plugins/lvm-storage/Makefile.debian plugins/lvm-storage/Makefile
-    mv -f plugins/nagios2/Makefile.debian plugins/nagios2/Makefile
-    mv -f plugins/nagios3/Makefile.debian plugins/nagios3/Makefile
-    mv -f plugins/netapp-storage/Makefile.debian plugins/netapp-storage/Makefile
-    mv -f plugins/nfs-storage/Makefile.debian plugins/nfs-storage/Makefile
-    mv -f plugins/puppet/Makefile.debian plugins/puppet/Makefile
-    mv -f plugins/solx86/Makefile.debian plugins/solx86/Makefile
-    mv -f plugins/sshterm/Makefile.debian plugins/sshterm/Makefile
-    mv -f plugins/tftpd/Makefile.debian plugins/tftpd/Makefile
-    mv -f plugins/vmware-esx/Makefile.debian plugins/vmware-esx/Makefile
-    mv -f plugins/vmware-server/Makefile.debian plugins/vmware-server/Makefile
-    mv -f plugins/vmware-server2/Makefile.debian plugins/vmware-server2/Makefile
-    mv -f plugins/windows/Makefile.debian plugins/windows/Makefile
-    mv -f plugins/xen/Makefile.debian plugins/xen/Makefile
-    mv -f plugins/zabbix/Makefile.debian plugins/zabbix/Makefile
-    mv -f plugins/zfs-storage/Makefile.debian plugins/zfs-storage/Makefile
     # remove nagios2 for now, ubuntu and latest debian already have nagios3
     rm -rf plugins/nagios2
     # windows is still in work
     rm -rf plugins/windows
     # linux-vserver is deprecated
     rm -rf plugins/linux-vserver
-    # remove empty puppet repo dir, empty tftpboot
-    rm -rf plugins/puppet/etc/default/files
-    rm -rf tftpboot
     # remove svn dirs
     rm -rf `find -name .svn `
     if [ ! -d ~/openqrm-thirdparty-cache ]; then
