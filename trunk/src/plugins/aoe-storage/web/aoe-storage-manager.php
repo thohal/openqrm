@@ -366,18 +366,19 @@ function aoe_select_storage() {
 
 	$arHead['storage_resource_ip'] = array();
 	$arHead['storage_resource_ip']['title'] ='Ip';
+	$arHead['storage_resource_ip']['sortable'] = false;
+
 
 	$arHead['storage_type'] = array();
 	$arHead['storage_type']['title'] ='Type';
 
 	$arHead['storage_comment'] = array();
 	$arHead['storage_comment']['title'] ='Comment';
-	$arHead['storage_comment']['sortable'] = false;
 
 	$storage_count=0;
 	$arBody = array();
 	$storage_tmp = new storage();
-	$storage_array = $storage_tmp->display_overview(0, 100, 'storage_id', 'ASC');
+	$storage_array = $storage_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($storage_array as $index => $storage_db) {
 		$storage = new storage();
 		$storage->get_instance_by_id($storage_db["storage_id"]);
@@ -422,7 +423,7 @@ function aoe_select_storage() {
 		$table->bottom = array('select');
 		$table->identifier = 'storage_id';
 	}
-	$table->max = $storage_count;
+    $table->max = $storage_tmp->get_count();
 
    // set template
 	$t = new Template_PHPLIB();
