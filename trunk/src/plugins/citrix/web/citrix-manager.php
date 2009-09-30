@@ -363,29 +363,32 @@ function citrix_server_select() {
 
 	global $OPENQRM_USER;
 	global $thisfile;
-	$table = new htmlobject_db_table('citrix_server_id');
+	$table = new htmlobject_db_table('appliance_id');
 
 	$arHead = array();
-	$arHead['citrix_server_state'] = array();
-	$arHead['citrix_server_state']['title'] ='';
+	$arHead['appliance_state'] = array();
+	$arHead['appliance_state']['title'] ='';
+	$arHead['appliance_state']['sortable'] = false;
 
-	$arHead['citrix_server_icon'] = array();
-	$arHead['citrix_server_icon']['title'] ='';
+	$arHead['appliance_icon'] = array();
+	$arHead['appliance_icon']['title'] ='';
+	$arHead['appliance_icon']['sortable'] = false;
 
-	$arHead['citrix_server_id'] = array();
-	$arHead['citrix_server_id']['title'] ='ID';
+	$arHead['appliance_id'] = array();
+	$arHead['appliance_id']['title'] ='ID';
 
-	$arHead['citrix_server_name'] = array();
-	$arHead['citrix_server_name']['title'] ='Name';
+	$arHead['appliance_name'] = array();
+	$arHead['appliance_name']['title'] ='Name';
 
-	$arHead['citrix_server_resource_id'] = array();
-	$arHead['citrix_server_resource_id']['title'] ='Res.ID';
+	$arHead['appliance_resources'] = array();
+	$arHead['appliance_resources']['title'] ='Res.ID';
 
-	$arHead['citrix_server_resource_ip'] = array();
-	$arHead['citrix_server_resource_ip']['title'] ='Ip';
+	$arHead['appliance_resource_ip'] = array();
+	$arHead['appliance_resource_ip']['title'] ='Ip';
+	$arHead['appliance_resource_ip']['sortable'] = false;
 
-	$arHead['citrix_server_comment'] = array();
-	$arHead['citrix_server_comment']['title'] ='Comment';
+	$arHead['appliance_comment'] = array();
+	$arHead['appliance_comment']['title'] ='Comment';
 
 	$citrix_server_count=0;
 	$arBody = array();
@@ -409,13 +412,13 @@ function citrix_server_select() {
 				$resource_icon_default=$citrix_server_icon;
 			}
 			$arBody[] = array(
-				'citrix_server_state' => "<img src=$state_icon>",
-				'citrix_server_icon' => "<img src=$resource_icon_default>",
-				'citrix_server_id' => $citrix_server_db["appliance_id"],
-				'citrix_server_name' => $citrix_server_db["appliance_name"],
-				'citrix_server_resource_id' => $citrix_server_resource->id,
-				'citrix_server_resource_ip' => $citrix_server_resource->ip,
-				'citrix_server_comment' => $citrix_server_db["appliance_comment"],
+				'appliance_state' => "<img src=$state_icon>",
+				'appliance_icon' => "<img src=$resource_icon_default>",
+				'appliance_id' => $citrix_server_db["appliance_id"],
+				'appliance_name' => $citrix_server_db["appliance_name"],
+				'appliance_resources' => $citrix_server_resource->id,
+				'appliance_resource_ip' => $citrix_server_resource->ip,
+				'appliance_comment' => $citrix_server_db["appliance_comment"],
 			);
 		}
 	}
@@ -430,7 +433,7 @@ function citrix_server_select() {
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('select');
-		$table->identifier = 'citrix_server_id';
+		$table->identifier = 'appliance_id';
 	}
 	$table->max = $citrix_server_count;
    // set template
@@ -453,29 +456,33 @@ function citrix_server_display($appliance_id) {
 	global $OPENQRM_USER;
 	global $thisfile;
 
-	$table = new htmlobject_table_identifiers_checked('citrix_server_id');
+	$table = new htmlobject_table_identifiers_checked('appliance_id');
 
 	$arHead = array();
-	$arHead['citrix_server_state'] = array();
-	$arHead['citrix_server_state']['title'] ='';
+	$arHead['appliance_state'] = array();
+	$arHead['appliance_state']['title'] ='';
+	$arHead['appliance_state']['sortable'] = false;
 
-	$arHead['citrix_server_icon'] = array();
-	$arHead['citrix_server_icon']['title'] ='';
+	$arHead['appliance_icon'] = array();
+	$arHead['appliance_icon']['title'] ='';
+	$arHead['appliance_icon']['sortable'] = false;
 
-	$arHead['citrix_server_id'] = array();
-	$arHead['citrix_server_id']['title'] ='ID';
+	$arHead['appliance_id'] = array();
+	$arHead['appliance_id']['title'] ='ID';
 
-	$arHead['citrix_server_name'] = array();
-	$arHead['citrix_server_name']['title'] ='Name';
+	$arHead['appliance_name'] = array();
+	$arHead['appliance_name']['title'] ='Name';
 
-	$arHead['citrix_server_resource_id'] = array();
-	$arHead['citrix_server_resource_id']['title'] ='Res.ID';
+	$arHead['appliance_resources'] = array();
+	$arHead['appliance_resources']['title'] ='Res.ID';
 
-	$arHead['citrix_server_resource_ip'] = array();
-	$arHead['citrix_server_resource_ip']['title'] ='Ip';
+	$arHead['appliance_resource_ip'] = array();
+	$arHead['appliance_resource_ip']['title'] ='Ip';
+	$arHead['appliance_resource_ip']['sortable'] = false;
 
-	$arHead['citrix_server_button'] = array();
-	$arHead['citrix_server_button']['title'] ='';
+	$arHead['appliance_button'] = array();
+	$arHead['appliance_button']['title'] ='';
+	$arHead['appliance_button']['sortable'] = false;
 
 	$citrix_server_count=1;
 	$arBody = array();
@@ -507,13 +514,13 @@ function citrix_server_display($appliance_id) {
 	// here we take the resource id as the identifier because
 	// we need to run commands on the resource ip
 	$arBody[] = array(
-		'citrix_server_state' => "<img src=$state_icon>",
-		'citrix_server_icon' => "<img src=$resource_icon_default>",
-		'citrix_server_id' => $citrix_server_tmp->id,
-		'citrix_server_name' => $citrix_server_tmp->name,
-		'citrix_server_resource_id' => $citrix_server_resource->id,
-		'citrix_server_resource_ip' => $citrix_server_resource->ip,
-		'citrix_server_button' => $citrix_server_button,
+		'appliance_state' => "<img src=$state_icon>",
+		'appliance_icon' => "<img src=$resource_icon_default>",
+		'appliance_id' => $citrix_server_tmp->id,
+		'appliance_name' => $citrix_server_tmp->name,
+		'appliance_resources' => $citrix_server_resource->id,
+		'appliance_resource_ip' => $citrix_server_resource->ip,
+		'appliance_button' => $citrix_server_button,
 	);
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
@@ -526,7 +533,7 @@ function citrix_server_display($appliance_id) {
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('refresh');
-		$table->identifier = 'citrix_server_id';
+		$table->identifier = 'appliance_id';
 	}
 	$table->max = $citrix_server_count;
 
@@ -538,27 +545,34 @@ function citrix_server_display($appliance_id) {
 	$arHead1 = array();
 	$arHead1['citrix_vm_state'] = array();
 	$arHead1['citrix_vm_state']['title'] ='State';
+	$arHead['citrix_vm_state']['sortable'] = false;
 
 	$arHead1['citrix_vm_res_id'] = array();
 	$arHead1['citrix_vm_res_id']['title'] ='Res.ID';
+	$arHead['citrix_vm_res_id']['sortable'] = false;
 
 	$arHead1['citrix_vm_id'] = array();
 	$arHead1['citrix_vm_id']['title'] ='VM-ID';
+	$arHead['citrix_vm_id']['sortable'] = false;
 
     $arHead1['citrix_vm_name'] = array();
 	$arHead1['citrix_vm_name']['title'] ='Name';
+	$arHead['citrix_vm_name']['sortable'] = false;
 
 	$arHead1['citrix_vm_mac'] = array();
 	$arHead1['citrix_vm_mac']['title'] ='MAC';
+	$arHead['citrix_vm_mac']['sortable'] = false;
 
     $arHead1['citrix_vm_ip'] = array();
 	$arHead1['citrix_vm_ip']['title'] ='IP';
+	$arHead['citrix_vm_ip']['sortable'] = false;
 
     $arHead1['citrix_vm_actions'] = array();
 	$arHead1['citrix_vm_actions']['title'] ='Actions';
+	$arHead['citrix_vm_actions']['sortable'] = false;
     $arBody1 = array();
 
-
+    $citrix_vm_count = 0;
     $arBody1 = array();
     $citrix_vm_list_file="citrix-stat/citrix-vm.lst.".$citrix_server_ip;
     if (file_exists($citrix_vm_list_file)) {
@@ -616,7 +630,7 @@ function citrix_server_display($appliance_id) {
                 $citrix_vm_actions= $citrix_vm_actions."<a href=\"$thisfile?identifier_table1[]=$citrix_vm_name&action_table1=stop&citrix_server_id=$appliance_id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"></a>&nbsp;";
                 $citrix_vm_actions = $citrix_vm_actions."<a href=\"$thisfile?identifier_table1[]=$citrix_vm_name&action_table1=reboot&citrix_server_id=$appliance_id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"></a>&nbsp;";
             }
-
+            $citrix_vm_count++;
             // add to table1
             $arBody1[] = array(
                 'citrix_vm_state' => "<img src=$citrix_vm_state_icon><input type='hidden' name='citrix_server_id' value=$appliance_id><input type='hidden' name='citrix_vm_mac_ar[$citrix_vm_name]' value=$citrix_vm_mac>",
