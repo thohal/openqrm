@@ -268,7 +268,7 @@ function aws_setup_account() {
 
 	$aws_count=1;
 	$aws_tmp = new aws();
-	$aws_array = $aws_tmp->display_overview(0, $table->limit, $table->sort, $table->order);
+	$aws_array = $aws_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 
 	$arBody = array();
 	foreach ($aws_array as $index => $aws_db) {
@@ -294,7 +294,7 @@ function aws_setup_account() {
 		$table->bottom = array('remove');
 		$table->identifier = 'aws_id';
 	}
-	$table->max = $aws_count;
+    $table->max = $aws_tmp->get_count();
 
     // create new aws account
     $aws_account_name = htmlobject_input('aws_account_name', array("value" => htmlobject_request('aws_account_name'), "label" => 'Account Name'), 'text', 20);

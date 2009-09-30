@@ -368,6 +368,26 @@ var $_event;
 
 	//--------------------------------------------------
 	/**
+	* get number of aws accounts
+	* @access public
+	* @return int
+	*/
+	//--------------------------------------------------
+	function get_count() {
+		$count=0;
+		$db=openqrm_get_db_connection();
+		$rs = $db->Execute("select count(aws_id) as num from $this->_db_table");
+		if (!$rs) {
+			$this->_event->log("get_count", $_SERVER['REQUEST_TIME'], 2, "aws.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+		} else {
+			$count = $rs->fields["num"];
+		}
+		return $count;
+	}
+
+
+	//--------------------------------------------------
+	/**
 	* get an array of awss
 	* @access public
 	* @param int $offset

@@ -213,7 +213,7 @@ function aws_select_account() {
 
 	$aws_count=1;
 	$aws_tmp = new aws();
-	$aws_array = $aws_tmp->display_overview(0, $table->limit, $table->sort, $table->order);
+	$aws_array = $aws_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 
 	$arBody = array();
 	foreach ($aws_array as $index => $aws_db) {
@@ -239,7 +239,7 @@ function aws_select_account() {
 		$table->bottom = array('select');
 		$table->identifier = 'aws_id';
 	}
-	$table->max = $aws_count;
+	$table->max = $aws_tmp->get_count();
     // is there at least one account setup already ?
     if ($aws_count == 1) {
         $aws_account_hint = "<h4>No AWS account configured yet.<br>Click <a href='aws-setup.php'><strong>here</strong></a> to setup an AWS account in openQRM</h4>";
@@ -385,7 +385,7 @@ function image_storage_select($instance_id, $aws_id) {
 	}
 
 	$arBody = array();
-	$image_array = $image_tmp->display_overview(1, $table->limit, $table->sort, $table->order);
+	$image_array = $image_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 	$image_icon = "/openqrm/base/img/image.png";
     $image_count = 1;
 	foreach ($image_array as $index => $image_db) {
@@ -429,7 +429,7 @@ function image_storage_select($instance_id, $aws_id) {
 		$table->bottom = array('put');
 		$table->identifier = 'image_id';
 	}
-	$table->max = count($image_array);
+	$table->max = $image_tmp->get_count();
     // set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
