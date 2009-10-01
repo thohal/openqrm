@@ -1149,7 +1149,7 @@ function openqrm_cloud_monitor() {
                             if (strlen($cr->disk_req)) {
                                 $disk_size=$cr->disk_req;
                             }
-                            $image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage add -n $equallogic_volume_name -m $disk_size -u $eq_user -p $eq_password -e $eq_storage_ip";
+                            $image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage add -n $image_clone_name -m $disk_size -u $eq_user -p $eq_password -e $eq_storage_ip";
                             $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_clone_cmd", "", "", 0, 0, 0);
                             $output = shell_exec($image_clone_cmd);
                             // update the image rootdevice parameter
