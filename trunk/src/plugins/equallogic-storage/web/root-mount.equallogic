@@ -255,7 +255,7 @@ EOF
         		echo "equallogic-storage: Mounted $IMAGE_ROOT_DEVICE rw"
             fi
         else
-            echo "ERROR: Could not mount $IMAGE_ROOT_DEVICE via aoe"
+            echo "ERROR: Could not mount $IMAGE_ROOT_DEVICE via iscsi"
             # give a shell for the admin
             /bin/bash
         fi
