@@ -1,4 +1,3 @@
-
 <?php
 /*
   This file is part of openQRM.
@@ -56,6 +55,12 @@ require_once "$RootDir/plugins/cloud/openqrm-cloud-billing-hook.php";
 $netapp_storage_class = "$RootDir/plugins/netapp-storage/class/netapp-storage-server.class.php";
 if (file_exists($netapp_storage_class)) {
     require_once $netapp_storage_class;
+}
+
+// special equallogic-storage classes, only if enabled
+$equallogic_storage_class = "$RootDir/plugins/equallogic-storage/class/equallogic-storage-server.class.php";
+if (file_exists($equallogic_storage_class)) {
+    require_once $equallogic_storage_class;
 }
 
 global $CLOUD_USER_TABLE;
