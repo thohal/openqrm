@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1>Cloud Mailer for Portal {external_portal_name}</h1>
+<h1>Cloud Mailer for Portal <a href={external_portal_name} target="_BLANK">{external_portal_name}</a></h1>
 <br>
 <form action={thisfile} method=post>
 

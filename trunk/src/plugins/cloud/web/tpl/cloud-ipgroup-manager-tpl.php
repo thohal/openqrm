@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1>Cloud IpGroups for portal at <a href={external_portal_name}>{external_portal_name}</a></h1>
+<h1>Cloud IpGroups for portal at <a href={external_portal_name} target="_BLANK">{external_portal_name}</a></h1>
 <br>
 <b><a href="{thisfile}?action=create">Create new Cloud IpGroup</a></b>
 
