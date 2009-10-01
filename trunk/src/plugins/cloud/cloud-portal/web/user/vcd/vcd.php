@@ -93,13 +93,9 @@ function check_param($param, $value, $empty) {
     return true;
 }
 
-$event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! got executed", "", "", 0, 0, 0);
-
 if (htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
         		case 'newvcd':
-
-                    $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! got executed with action newvcd", "", "", 0, 0, 0);
 
                     $kernel=$_GET["kernel"];
                     $systemtype=$_GET["systemtype"];
@@ -118,12 +114,10 @@ if (htmlobject_request('action') != '') {
                     $cr_stop = $_GET['cr_stop'];
                     $highavailable = $_GET['ha'];
 
-                    $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! parameters : systemtype $systemtype kernel $kernel serverimage $serverimage cpus $cpus memory $memory disk $disk network $network quantity $quantity application0 $application0 application1 $application1 application2 $application2 application3 $application3 cr_start $cr_start cr_stop $cr_stop", "", "", 0, 0, 0);
                     $request_user = new clouduser();
                     $request_user->get_instance_by_name("$auth_user");
                     // set user id
                     $request_user_id = $request_user->id;
-//                    $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! auth_user $auth_user cloud-user id $request_user_id", "", "", 0, 0, 0);
 
                     // check if billing is enabled
                     $cb_config = new cloudconfig();
@@ -133,13 +127,11 @@ if (htmlobject_request('action') != '') {
                             exit(false);
                         }
                     }
-  //                  $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! auth_user $auth_user cloud-user id $request_user_id passed ccu check", "", "", 0, 0, 0);
 
                     // parse start date
                     $cr_start = $cr_start/1000;
                     $cr_stop = $cr_stop/1000;
         			$nowstmp = $_SERVER['REQUEST_TIME'];
-                    $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! auth_user $auth_user start $cr_start stop $cr_stop", "", "", 0, 0, 0);
                     // check that the new stop time is later than the start time
                     if ($cr_stop < ($cr_start + 3600)) {
                         // $strMsg .="Request cannot be created with stop date before start.<br>Request duration must be at least 1 hour.<br>";
@@ -151,7 +143,6 @@ if (htmlobject_request('action') != '') {
                         // $strMsg .="Request duration must be at least 1 hour.<br>Not creating the request.<br>";
                         exit(false);
                     }
-//                    $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! auth_user $auth_user cloud-user id $request_user_id passed date checks", "", "", 0, 0, 0);
 
                     // check disk param
                     if (!check_is_number("Disk", $disk)) {
@@ -165,7 +156,6 @@ if (htmlobject_request('action') != '') {
                         // $strMsg .="Disk parameter must be <= $max_disk_size <br>";
                         exit(false);
                     }
-//                    $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! auth_user $auth_user cloud-user id $request_user_id passed disk size check : $disk_size", "", "", 0, 0, 0);
 
                     // check memory param
                     if (!check_is_number("RAM", $memory)) {
@@ -185,7 +175,6 @@ if (htmlobject_request('action') != '') {
                         exit(false);
                     }
 
-                    $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! auth_user $auth_user cloud-user id $request_user_id passed network check : $network", "", "", 0, 0, 0);
                     // additional checks
                     if (!check_param("Quantity", $quantity, true)) {
                             exit(false);
@@ -220,7 +209,6 @@ if (htmlobject_request('action') != '') {
                     if (!check_param("Application4", $application4, false)) {
                             exit(false);
                     }
-//                    $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! auth_user $auth_user cloud-user id $request_user_id passed addtional checks", "", "", 0, 0, 0);
 
                     // set the eventual selected puppet groups
                     $puppet_groups = "";
@@ -240,7 +228,6 @@ if (htmlobject_request('action') != '') {
                         $puppet_groups .= $application4.",";
                     }
                     $puppet_groups = rtrim($puppet_groups, ",");
- //                   $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! auth_user $auth_user cloud-user id $request_user_id puppetgroups $puppet_groups", "", "", 0, 0, 0);
 
                     // check user limits
                     $cloud_user_limit = new clouduserlimits();
@@ -249,7 +236,6 @@ if (htmlobject_request('action') != '') {
                     if (!$cloud_user_limit->check_limits($quantity, $memory_size, $disk_size, $cpus, $network)) {
                         exit(false);
                     }
- //                   $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! auth_user $auth_user cloud-user id $request_user_id passed user-limits check", "", "", 0, 0, 0);
 
                     // virtualization type
                     $virtualization = new virtualization();
@@ -329,7 +315,7 @@ if (htmlobject_request('action') != '') {
                     $rmail->var_array = $arr;
                     $rmail->send();
 
-                    $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "!!! auth_user $auth_user cloud-user id $request_user_id added new cloud request", "", "", 0, 0, 0);
+                    $event->log("openqrm-vcd", $_SERVER['REQUEST_TIME'], 5, "openqrm-vcd.php", "Clouduser $auth_user id $request_user_id added new cloud request", "", "", 0, 0, 0);
 
                     exit(true);
                     break;
