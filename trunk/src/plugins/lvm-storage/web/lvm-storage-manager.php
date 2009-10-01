@@ -21,6 +21,8 @@
     width: 400px;
     height: 20px;
 }
+
+
 </style>
 </head>
 <body>
@@ -373,6 +375,8 @@ if(htmlobject_request('redirect') != 'yes') {
 
 
             case 'snap':
+            case 'clone':
+                $lvm_action = htmlobject_request('action');
                 if (strlen($lvm_lun_snap_name)) {
                     show_progressbar();
                     if (!strlen($lvm_lun_name)) {
@@ -402,10 +406,7 @@ if(htmlobject_request('redirect') != 'yes') {
                         redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
                         exit(0);
                     }
-                    // generate a new password
-                    $image = new image();
-                    $lvm_chap_password = $image->generatePassword(14);
-                    // snap
+                    // snap/clone
                     $storage = new storage();
                     $storage->get_instance_by_id($lvm_storage_id);
                     $storage_resource = new resource();
@@ -417,9 +418,9 @@ if(htmlobject_request('redirect') != 'yes') {
                         $image = new image();
                         // generate a password for the image
                         $image_password = $image->generatePassword(12);
-                        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage snap -n $lvm_lun_name -v $lvm_volume_group -t $deployment->type -s $lvm_lun_snap_name -m $lvm_lun_snap_size -i $image_password -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage $lvm_action -n $lvm_lun_name -v $lvm_volume_group -t $deployment->type -s $lvm_lun_snap_name -m $lvm_lun_snap_size -i $image_password -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
                     } else {
-                        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage snap -n $lvm_lun_name -v $lvm_volume_group -t $deployment->type -s $lvm_lun_snap_name -m $lvm_lun_snap_size -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                        $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage $lvm_action -n $lvm_lun_name -v $lvm_volume_group -t $deployment->type -s $lvm_lun_snap_name -m $lvm_lun_snap_size -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
                     }
                     // remove current stat file
                     $storage_resource_id = $storage_resource->id;
@@ -437,7 +438,7 @@ if(htmlobject_request('redirect') != 'yes') {
                     }
                     redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
                 } else {
-                    $redir_msg = "Got empty snapshot name. Skipping clone procedure !";
+                    $redir_msg = "Got empty name. Skipping snapshot procedure !";
                     redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
                 }
                 break;
@@ -463,9 +464,6 @@ if(htmlobject_request('redirect') != 'yes') {
                     redirect_lvmgmt($redir_msg, $lvm_storage_id, $lvm_volume_group);
                     exit(0);
                 }
-                // generate a new password
-                $image = new image();
-                $lvm_chap_password = $image->generatePassword(14);
                 // snap
                 $storage = new storage();
                 $storage->get_instance_by_id($lvm_storage_id);
@@ -828,7 +826,7 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
 	$arHead['lvm_lun_rsize']['title'] ='Resize (+ MB)';
 
 	$arHead['lvm_lun_snap'] = array();
-	$arHead['lvm_lun_snap']['title'] ='Clone (name + size)';
+	$arHead['lvm_lun_snap']['title'] ='Snap/Clone (name + size)';
 
 	$arBody = array();
 	$lvm_lun_count=0;
@@ -881,16 +879,23 @@ function lvm_storage_lv_display($lvm_storage_id, $lvm_volume_group) {
             $lvm_lun_snap .= "<input type='hidden' name='lvm_lun_name' value=$lvm_lun_name>";
             $lvm_lun_snap .= "<input type='text' name='lvm_lun_snap_name' value='' size='10' maxlength='20'>";
             $lvm_lun_snap .= "<input type='text' name='lvm_lun_snap_size' value='' size='5' maxlength='10'> MB ";
-            $lvm_lun_snap .= "<input type='submit' name='action' value='snap'>";
+            // check if to show the snap button
+            if (!strstr($lvm_lun_attr, "swi")) {
+                $lvm_lun_snap .= "<input type='submit' name='action' value='snap'>";
+            } else {
+                $lvm_lun_snap .= "<input type='submit' name='action' value='snap' disabled='true'>";
+            }
+            $lvm_lun_snap .= "<input type='submit' name='action' value='clone'>";
             $lvm_lun_snap .= "</form>";
+
 
             $arBody[] = array(
                 'lvm_lun_icon' => "<img width=24 height=24 src=$storage_icon><input type='hidden' name='lvm_storage_id' value=$lvm_storage_id><input type='hidden' name='lvm_volume_group' value=$lvm_volume_group>",
                 'lvm_lun_name' => $lvm_lun_name,
                 'lvm_lun_attr' => $lvm_lun_attr,
                 'lvm_lun_lsize' => $lvm_lun_lsize,
-                'lvm_lun_rsize' => $lvm_lun_rsize,
-                'lvm_lun_snap' => $lvm_lun_snap,
+                'lvm_lun_rsize' => "<nobr>".$lvm_lun_rsize."</nobr>",
+                'lvm_lun_snap' => "<nobr>".$lvm_lun_snap."</nobr>",
             );
             $lvm_lun_count++;
 		}
@@ -1000,6 +1005,14 @@ if(htmlobject_request('action') != '') {
 	$output[] = array('label' => 'Select', 'value' => lvm_select_storage());
 }
 
+
+?>
+<style>
+    .htmlobject_tab_box {
+        width:800px;
+    }
+</style>
+<?php
 
 echo htmlobject_tabmenu($output);
 

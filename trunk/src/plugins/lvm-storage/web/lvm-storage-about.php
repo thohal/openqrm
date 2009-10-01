@@ -1,9 +1,11 @@
 
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+<link rel="stylesheet" type="text/css" href="lvm-storage.css" />
+
 <style>
-.htmlobject_tab_box {
-	width:700px;
-}
+    .htmlobject_tab_box {
+    	width:800px;
+    }
 </style>
 
 <?php
@@ -31,6 +33,7 @@
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/include/htmlobject.inc.php";
+
 
 function lvm_about() {
 	$t = new Template_PHPLIB();
