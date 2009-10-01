@@ -69,7 +69,7 @@ function send_command($server_command) {
 			// generate a random token for the cmd
 			$cmd_token = md5(uniqid(rand(), true));
 			$final_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec -i $OPENQRM_SERVER_IP_ADDRESS -t $cmd_token -c \"$server_command\"";
-			$event->log("send_command", $_SERVER['REQUEST_TIME'], 5, "openqrm_server.class.php", "Running : $final_command", "", "", 0, 0, 0);
+			// $event->log("send_command", $_SERVER['REQUEST_TIME'], 5, "openqrm_server.class.php", "Running : $final_command", "", "", 0, 0, 0);
 			shell_exec($final_command);
 			return true;
 			break;

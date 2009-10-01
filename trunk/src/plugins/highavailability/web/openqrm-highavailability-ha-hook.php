@@ -67,15 +67,15 @@ function openqrm_highavailability_ha_hook($resource_id) {
 	}
 	// log ha error, do not handle resources which are not in use for now
 	if ($resource_serves_appliance == 0) {
-		$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 5, "openqrm-highavailability-ha-hook.php", "Resource $resource_id does not serves an appliance. Not handling HA.", "", "", 0, 0, $resource_id);
+		$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 5, "openqrm-highavailability-ha-hook.php", "Not handling HA for idle Resource $resource_id.", "", "", 0, 0, $resource_id);
 		return;
 	}
 	// is the appliance HA at all ?
 	if ($appliance->highavailable <> 1) {	
-		$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 5, "openqrm-highavailability-ha-hook.php", "Appliance $appliance->id is in error but not marked as high-available. Not handling.", "", "", 0, 0, $resource_id);
+		$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 5, "openqrm-highavailability-ha-hook.php", "Appliance $appliance->id is in error but not marked as high-available.", "", "", 0, 0, $resource_id);
 		return;
 	}
-	$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 5, "openqrm-highavailability-ha-hook.php", "Resource $resource_id served appliance $appliance->id. Trying to find a new resource ...", "", "", 0, 0, $resource_id);
+	$event->log("openqrm_ha_hook", $_SERVER['REQUEST_TIME'], 5, "openqrm-highavailability-ha-hook.php", "Trying to find a new resource for $appliance->id", "", "", 0, 0, $resource_id);
 
 	// find new resource
 	$appliance_virtualization=$appliance->virtualization;
