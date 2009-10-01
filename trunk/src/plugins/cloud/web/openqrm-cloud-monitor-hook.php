@@ -241,9 +241,9 @@ function openqrm_cloud_monitor() {
                     $eq_storage_ip = $resource_ip;
                     $eq_user = $eq_storage->storage_user;
                     $eq_password = $eq_storage->storage_password;
-                    $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage remove -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip";
+                    $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage resize -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip -m $resize_value";
                     $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
-//                    $output = shell_exec($image_remove_clone_cmd);
+                    $output = shell_exec($image_remove_clone_cmd);
                 }
 
 
@@ -332,10 +332,9 @@ function openqrm_cloud_monitor() {
                     $eq_storage_ip = $resource_ip;
                     $eq_user = $eq_storage->storage_user;
                     $eq_password = $eq_storage->storage_password;
-                    $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage clone -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip";
+                    $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage clone -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip -s $private_image_name -m $private_disk";
                     $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
-//                    $output = shell_exec($image_remove_clone_cmd);
-
+                    $output = shell_exec($image_remove_clone_cmd);
                     // set the storage specific image root_device parameter
         			$clone_image_fields["image_rootdevice"] = str_replace($equallogic_volume_name, $private_image_name, $image->rootdevice);
                     $private_success = true;
