@@ -71,43 +71,22 @@ $strMsg = '';
 function nagios_display() {
 	global $OPENQRM_USER;
 	global $thisfile;
-
-
-	$disp = '<h1>Automatic Nagios configuration</h1>';
-	$disp .= '<br>';
-
-	$disp .= "<form action=\"$thisfile\" method=\"POST\">";
-	$disp .= '<br>';
-	$disp .= 'Click on the button below to automatic map the';
-	$disp .= '<br>';
-	$disp .= 'openQRM network into Nagios.';
-	$disp .= '<br>';
-	$disp .= '<br>';
-	$disp .= 'Please notice that generating the Nagios configuration';
-	$disp .= '<br>';
-	$disp .= ' will take some time.	You can check the status of this';
-	$disp .= '<br>';
-	$disp .= 'action in the <a href="../../server/event/event-overview.php">event-list</a>';
-	$disp .= '<br>';
-	$disp .= '<br>';
-	$disp .= "<input type='hidden' name='action' value='map'>";
-	$disp .= "<input type='submit' value='Map openQRM Network'>";
-	$disp .= '<br>';
-	$disp .= '<br>';
-	$disp .= '<br>';
-	$disp .= '<br>';
     if (file_exists(".automap")) {
-        $disp .= "<input type=\"image\" name=\"action\" value=\"disable_automap\" src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" alt=\"disable_automap\"> Disable automatic mapping of the openQRM Network";
+        $automap = "<input type=\"image\" name=\"action\" value=\"disable_automap\" src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" alt=\"disable_automap\"> Disable automatic mapping of the openQRM Network";
     } else {
-        $disp .= "<input type=\"image\" name=\"action\" value=\"enable_automap\" src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" alt=\"enable_automap\"> Enable automatic mapping of the openQRM Network";
+        $automap = "<input type=\"image\" name=\"action\" value=\"enable_automap\" src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" alt=\"enable_automap\"> Enable automatic mapping of the openQRM Network";
     }
-	$disp .= '<br>';
-	$disp .= '<br>';
-	$disp .= '<br>';
-	$disp .= '<br>';
-	$disp .= '</form>';
-
+	//------------------------------------------------------------ set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'nagios3-overview-tpl.php');
+	$t->setVar(array(
+		'thisfile' => $thisfile,
+		'automap' => $automap,
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
+
 }
 
 
