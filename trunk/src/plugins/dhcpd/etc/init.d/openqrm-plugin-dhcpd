@@ -118,7 +118,7 @@ function openqrm_plugin_dhcpd_init() {
             cat /etc/apparmor.d/usr.sbin.dhcpd3 |
             sed -i -e "s#}##g" /etc/apparmor.d/usr.sbin.dhcpd3
             echo "  # openQRM" >> /etc/apparmor.d/usr.sbin.dhcpd3
-            echo "  /usr/share/openqrm/plugins/dhcpd/** rw," >> /etc/apparmor.d/usr.sbin.dhcpd3
+            echo "  $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/** rw," >> /etc/apparmor.d/usr.sbin.dhcpd3
             if [ -d /etc/openqrm/plugins/dhcpd/ ]; then
                 echo "  /etc/openqrm/plugins/dhcpd/** rw," >> /etc/apparmor.d/usr.sbin.dhcpd3
             fi
