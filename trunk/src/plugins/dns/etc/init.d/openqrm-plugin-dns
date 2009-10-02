@@ -149,6 +149,28 @@ include "/etc/bind/named.conf.local";
 EOF
     fi
 
+	# enable apparmor if needed
+    if [ -f /etc/apparmor.d/usr.sbin.named ]; then
+        if ! grep openQRM /etc/apparmor.d/usr.sbin.named 1>/dev/null; then
+            cat /etc/apparmor.d/usr.sbin.named |
+            sed -i -e "s#}##g" /etc/apparmor.d/usr.sbin.named
+            echo "  # openQRM" >> /etc/apparmor.d/usr.sbin.named
+            echo "  $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/etc/** rw," >> /etc/apparmor.d/usr.sbin.named
+            if [ -d /etc/openqrm/plugins/dhcpd/ ]; then
+                echo "  /etc/openqrm/plugins/dns/** rw," >> /etc/apparmor.d/usr.sbin.named
+            fi
+            echo "}" >> /etc/apparmor.d/usr.sbin.named
+            echo >> /etc/apparmor.d/usr.sbin.named
+            if [ -x "/etc/init.d/apparmor" ]; then
+                if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+                    invoke-rc.d apparmor reload || exit $?
+                else
+                    /etc/init.d/apparmor reload || exit $?
+                fi
+            fi
+        fi
+    fi
+
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dns/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dns
 
@@ -183,6 +205,20 @@ function openqrm_plugin_dns_uninstall() {
             /bin/cp -f /etc/named.conf.include.openqrm-backup /etc/named.conf.include
         fi
     fi
+
+    # remove apparmor setup
+    if [ -f /etc/apparmor.d/usr.sbin.named ]; then
+        sed -i -e "s#.*openQRM.*##g" /etc/apparmor.d/usr.sbin.named
+        sed -i -e "s#.*openqrm.*##g" /etc/apparmor.d/usr.sbin.named
+        if [ -x "/etc/init.d/apparmor" ]; then
+            if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+                invoke-rc.d apparmor reload || exit $?
+            else
+                /etc/init.d/apparmor reload || exit $?
+            fi
+        fi
+    fi
+
 	# unlinking the web dir
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/dns
 }
