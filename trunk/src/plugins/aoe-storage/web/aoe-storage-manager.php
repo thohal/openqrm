@@ -344,7 +344,6 @@ if(htmlobject_request('redirect') != 'yes') {
 function aoe_select_storage() {
 	global $OPENQRM_USER;
 	global $thisfile;
-	$table = new htmlobject_db_table('storage_id');
     $table = new htmlobject_table_builder('storage_id', '', '', '', 'select');
 
 	$arHead = array();
@@ -450,7 +449,7 @@ function aoe_storage_display($aoe_storage_id) {
 	$deployment = new deployment();
 	$deployment->get_instance_by_id($storage->type);
 
-	$table = new htmlobject_db_table('aoe_luns');
+    $table = new htmlobject_table_builder('aoe_luns', '', '', '', 'luns');
 	$arHead = array();
 
     $arHead['aoe_lun_icon'] = array();
