@@ -405,6 +405,28 @@ var $_db_table;
 		return $count;
 	}
 
+
+	//--------------------------------------------------
+	/**
+	* get number of error events
+	* @access public
+	* @return int
+	*/
+	//--------------------------------------------------
+	function get_error_count() {
+		$count=0;
+		$db=openqrm_get_db_connection();
+		$rs = $db->Execute("select count(event_id) as num from $this->_db_table where event_priority < 4 and event_status <> 1");
+		if (!$rs) {
+			$this->log("get_error_count", $_SERVER['REQUEST_TIME'], 2, "event.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+		} else {
+			$count = $rs->fields["num"];
+		}
+		return $count;
+	}
+
+
+
 	//--------------------------------------------------
 	/**
 	* get an array of all event names
@@ -424,6 +446,35 @@ var $_db_table;
 		$event_name_array = openqrm_db_get_result_double ($query);
 		return $event_name_array;
 	}
+
+	//--------------------------------------------------
+	/**
+	* get an array of error events
+	* @access public
+	* @param int $offset
+	* @param int $limit
+	* @param string $sort
+	* @param enum $order [ASC/DESC]
+	* @return array
+	*/
+	//--------------------------------------------------
+	function display_error_overview($offset, $limit, $sort, $order) {
+		$db=openqrm_get_db_connection();
+		$recordSet = &$db->SelectLimit("select * from $this->_db_table where event_priority < 4 and event_status <> 1 order by $sort $order", $limit, $offset);
+		$event_array = array();
+		if (!$recordSet) {
+			$this->log("display_error_overview", $_SERVER['REQUEST_TIME'], 2, "event.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+		} else {
+			while (!$recordSet->EOF) {
+				array_push($event_array, $recordSet->fields);
+				$recordSet->MoveNext();
+			}
+			$recordSet->Close();
+		}		
+		return $event_array;
+	}
+
+
 
 	//--------------------------------------------------
 	/**
@@ -448,9 +499,12 @@ var $_db_table;
 				$recordSet->MoveNext();
 			}
 			$recordSet->Close();
-		}		
+		}
 		return $event_array;
 	}
+
+
+
 
 }
 ?>

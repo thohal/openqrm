@@ -253,11 +253,12 @@ function errors_only_display() {
     global $thisfile;
 
     $event_tmp = new event();
-    $table = new htmlobject_db_table('event_id', 'DESC');
+    $table = new htmlobject_table_builder('event_id', 'DESC', '', '', 'error');
 
 	$arHead = array();
 	$arHead['event_priority'] = array();
 	$arHead['event_priority']['title'] ='Status';
+	$arHead['event_priority']['sortable'] = false;
 
 	$arHead['event_id'] = array();
 	$arHead['event_id']['title'] ='ID';
@@ -273,9 +274,9 @@ function errors_only_display() {
 	$arHead['event_description']['sortable'] = false;
 
 	$arBody = array();
-	$event_array = $event_tmp->display_overview($table->offset, 1000, $table->sort, $table->order);
+	$event_array = $event_tmp->display_error_overview($table->offset, $table->limit, $table->sort, $table->order);
 
-        $event_count=0;
+    $event_count=0;
 	foreach ($event_array as $index => $event_db) {
 		$event = new event();
 		$event->get_instance_by_id($event_db["event_id"]);
@@ -289,14 +290,6 @@ function errors_only_display() {
 			case 5:	$prio_icon = "active.png"; 	break;
 			case 6:	$prio_icon = "idle.png"; 	break;
 			case 7:	$prio_icon = "idle.png"; 	break;
-		}
-		// is error ?
-		if ($event->priority > 4) {
-			continue;
-		}
-		// acknowledged ?
-		if ($event->status == 1) {
-			continue;
 		}
         // check for errors on token
         if (strstr($event->description, "ERROR running token")) {
@@ -351,7 +344,7 @@ function errors_only_display() {
 			'event_source' => '',
 			'event_description' => "<input type=\"hidden\" name=\"currenttab\" value=\"tab1\">",
 		);
-                $table->identifier_disabled=array(1);
+        $table->identifier_disabled=array(1);
     }
 
 	$table->id = 'Tabelle';
@@ -366,8 +359,7 @@ function errors_only_display() {
 		$table->bottom = array('remove', 'acknowledge');
 		$table->identifier = 'event_id';
 	}
-	$table->max = $event_count;
-        $table->limit = $event_tmp->get_count();
+	$table->max = $event_tmp->get_error_count();
 
         // set template
 	$t = new Template_PHPLIB();
