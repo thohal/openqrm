@@ -91,8 +91,9 @@ function my_cloud_manager() {
     $cl_user->get_instance_by_name($auth_user);
     $request_count=0;
 	$cl_request = new cloudrequest();
-	$request_array = $cl_request->display_overview_per_user($cl_user->id, $table->sort, $table->order);
-	foreach ($request_array as $index => $cr) {
+    $tmax = $cl_request->get_count_per_user($cl_user->id);
+	$request_array = $cl_request->display_overview_per_user($cl_user->id, $table->offset, $table->limit, $table->sort, $table->order);
+    foreach ($request_array as $index => $cr) {
         $request_count++;
     	// status
 		$cr_status = $cr["cr_status"];
@@ -143,6 +144,10 @@ function my_cloud_manager() {
 		);
 	}
 
+
+// echo "<pre>";
+// print_r($table);
+
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -154,7 +159,7 @@ function my_cloud_manager() {
 	$table->body = $arBody;
 	$table->bottom = array('reload', 'deprovision', 'extend');
 	$table->identifier = 'cr_id';
-    $table->max = count($cl_request);
+    $table->max = $tmax;
 	return $disp.$table->get_string();
 }
 

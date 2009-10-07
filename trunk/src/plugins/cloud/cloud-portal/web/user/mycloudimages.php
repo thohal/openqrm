@@ -207,7 +207,8 @@ function mycloud_images() {
         return $strMsg;
     }
 
-	$table = new htmlobject_db_table('co_id', 'DESC');
+	$table = new htmlobject_table_builder('co_id', 'DESC', '', '', 'priv');
+ 
 	$arHead = array();
 
     $arHead['image_icon'] = array();
@@ -256,10 +257,11 @@ function mycloud_images() {
 	$table->form_action = $thisfile;
 	$table->head = $arHead;
 	$table->body = $arBody;
-    $table->sort = "";
+    $table->autosort = true;
+    #$table->sort = "";
     $table->bottom = array('remove', 'comment');
     $table->identifier = 'co_id';
-	$table->max = count($private_image);
+	$table->max = $private_image_count;
 
 
 	//------------------------------------------------------------ set template

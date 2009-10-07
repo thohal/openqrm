@@ -190,6 +190,23 @@ function get_count() {
 }
 
 
+// returns the number of cloudrequests for an cloudrequest per user
+function get_count_per_user($cu_id) {
+	global $CLOUD_REQUEST_TABLE;
+	$count=0;
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute("select count(cr_id) as num from $CLOUD_REQUEST_TABLE where cr_cu_id=$cu_id");
+	if (!$rs) {
+		print $db->ErrorMsg();
+	} else {
+		$count = $rs->fields["num"];
+	}
+	return $count;
+}
+
+
+
+
 
 // returns a list of all cloudrequest ids + user ids
 function get_list() {
@@ -392,11 +409,11 @@ function extend_stop_time($cloudrequest_id, $stop_time) {
 
 
 // displays the cloudrequest-overview per user
-function display_overview_per_user($cu_id, $sort, $order) {
+function display_overview_per_user($cu_id, $offset, $limit, $sort, $order) {
 	global $CLOUD_REQUEST_TABLE;
 	global $event;
 	$db=openqrm_get_db_connection();
-	$recordSet = &$db->SelectLimit("select * from $CLOUD_REQUEST_TABLE where cr_cu_id=$cu_id order by $sort $order", -1, 0);
+	$recordSet = &$db->SelectLimit("select * from $CLOUD_REQUEST_TABLE where cr_cu_id=$cu_id order by $sort $order", $limit, $offset);
 	$cloudrequest_array = array();
 	if (!$recordSet) {
 		$event->log("display_overview_per_user", $_SERVER['REQUEST_TIME'], 2, "cloudrequest.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
