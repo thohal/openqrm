@@ -119,7 +119,7 @@ function manage_aoe() {
                 . /var/openqrm/openqrm-resource.conf
 				AOE_INTERFACE=`ifconfig | grep -i $resource_mac | awk {' print $1 '} | tail -1`
 			fi
-			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME $AUTHENTICATED_MAC" >> $VBLADECONF
+			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME $AUTHENTICATED_MAC # size=$AOE_IMAGE_SIZE" >> $VBLADECONF
 			sed -i '/^$/d' $VBLADECONF
 			# start vbladed
 			SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`

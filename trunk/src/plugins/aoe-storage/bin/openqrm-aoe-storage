@@ -169,10 +169,16 @@ case "$AOE_COMMAND" in
 			echo "ERROR: Could not find source image $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME on the storage-server"
 			exit 1
 		fi
-		echo "Creating snapshot from image $AOE_IMAGE_NAME -> $AOE_IMAGE_SNAPSHOT_NAME"
+        AOE_ORIGINAL_IMAGE_SIZE=`cat $VBLADECONF | grep -v '^#' | grep $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME | cut -d '#' -f2 | cut -d'=' -f2 | awk {' print $1 '}`
+		if [ "$AOE_ORIGINAL_IMAGE_SIZE" == "" ]; then
+			echo "ERROR: Could not find out original image size ! Skipping snapshot."
+			exit 1
+		fi
+		echo "Creating snapshot from image $AOE_IMAGE_NAME -> $AOE_IMAGE_SNAPSHOT_NAME size $AOE_ORIGINAL_IMAGE_SIZE"
 		mkdir -p $AOE_STORAGE_SERVER_IMAGE_DIRECTORY
 		cp -a $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_NAME $AOE_STORAGE_SERVER_IMAGE_DIRECTORY/$AOE_IMAGE_SNAPSHOT_NAME
 		export AOE_IMAGE_NAME=$AOE_IMAGE_SNAPSHOT_NAME
+        export AOE_IMAGE_SIZE=$AOE_ORIGINAL_IMAGE_SIZE
 		aoe_storage_lock aquire
 		manage_aoe add snap
 		aoe_storage_lock release
@@ -199,7 +205,7 @@ case "$AOE_COMMAND" in
 	post_luns)
 		echo "Posting current aoe-luns to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.aoe.stat
-		cat $VBLADECONF | grep -v '#' | grep $AOE_STORAGE_SERVER_IMAGE_DIRECTORY > $STORAGE_STATUS_TMP
+		cat $VBLADECONF | grep -v '^#' | sed -e 's/#//g' | grep $AOE_STORAGE_SERVER_IMAGE_DIRECTORY > $STORAGE_STATUS_TMP
         sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
 		if ! wget -q -O /dev/null --http-user=$AOE_OPENQRM_USERNAME --http-password=$AOE_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/aoe-storage/aoe-storage-action.php?aoe_storage_command=get_storage; then
 			echo "ERROR: Could not post the aoe-export status to the openQRM-server at $resource_openqrmserver!"
