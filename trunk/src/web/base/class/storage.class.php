@@ -22,6 +22,7 @@
 
 	$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 	require_once "$RootDir/include/openqrm-database-functions.php";
+	require_once "$RootDir/class/deployment.class.php";
 	require_once "$RootDir/class/event.class.php";
 
 /**
@@ -309,7 +310,28 @@ var $_event;
 		return $count;
 	}
 
+
 	//--------------------------------------------------
+	/**
+	* get number of storages by type
+	* @access public
+	* @return int
+	*/
+	//--------------------------------------------------
+	function get_count_per_type($deployment_type) {
+		$count=0;
+		$db=openqrm_get_db_connection();
+		$rs = $db->Execute("select count(storage_id) as num from $this->_db_table where storage_type = $deployment_type");
+		if (!$rs) {
+			$this->_event->log("get_count_per_type", $_SERVER['REQUEST_TIME'], 2, "storage.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+		} else {
+			$count = $rs->fields["num"];
+		}
+		return $count;
+	}
+
+
+    //--------------------------------------------------
 	/**
 	* get an array of all storage names
 	* <code>
@@ -348,6 +370,35 @@ var $_event;
 
 	//--------------------------------------------------
 	/**
+	* get an array of storages by type
+	* @access public
+	* @param int $offset
+	* @param int $limit
+	* @param string $sort
+	* @param enum $order [ASC/DESC]
+	* @return array
+	*/
+	//--------------------------------------------------
+	function display_overview_per_type($deployment_type, $offset, $limit, $sort, $order) {
+		$db=openqrm_get_db_connection();
+		$recordSet = &$db->SelectLimit("select * from $this->_db_table where storage_type = $deployment_type order by $sort $order", $limit, $offset);
+		$storage_array = array();
+		if (!$recordSet) {
+			$this->_event->log("display_overview_per_type", $_SERVER['REQUEST_TIME'], 2, "storage.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+		} else {
+			while (!$recordSet->EOF) {
+				array_push($storage_array, $recordSet->fields);
+				$recordSet->MoveNext();
+			}
+			$recordSet->Close();
+		}		
+		return $storage_array;
+	}
+
+
+
+	//--------------------------------------------------
+	/**
 	* get an array of storages
 	* @access public
 	* @param int $offset
@@ -369,9 +420,10 @@ var $_event;
 				$recordSet->MoveNext();
 			}
 			$recordSet->Close();
-		}		
+		}
 		return $storage_array;
 	}
+
 
 }
 ?>
