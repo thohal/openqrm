@@ -19,9 +19,9 @@
 -->
 <h1>NFS Volumes on storage {storage_name}</h1>
 {storage_table}
-<br>
-<br>
+<br><br><br>
 {lun_table}
+<br><br>
 <form action="{formaction}" method="GET">
 {add_export_header}
 <div style="float:left;">
