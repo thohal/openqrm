@@ -193,7 +193,6 @@ if(htmlobject_request('redirect') != 'yes') {
                     }
                 }
                 break;
-
             case 'select':
                 if (isset($_REQUEST['identifier'])) {
                     foreach($_REQUEST['identifier'] as $id) {
@@ -299,8 +298,8 @@ if(htmlobject_request('redirect') != 'yes') {
 
             case 'remove':
                 if (isset($_REQUEST['identifier'])) {
+                    show_progressbar();
                     foreach($_REQUEST['identifier'] as $zfs_lun_name) {
-                        show_progressbar();
                         $storage = new storage();
                         $storage->get_instance_by_id($zfs_storage_id);
                         $storage_resource = new resource();
@@ -316,12 +315,12 @@ if(htmlobject_request('redirect') != 'yes') {
                         $storage_resource->send_command($storage_resource->ip, $resource_command);
                         // and wait for the resulting statfile
                         if (!wait_for_statfile($statfile)) {
-                            $redir_msg = "Error during removing volume $zfs_lun_name to ZFS-Pool $zpool_name ! Please check the Event-Log";
+                            $redir_msg .= "Error during removing volume $zfs_lun_name to ZFS-Pool $zpool_name ! Please check the Event-Log<br>";
                         } else {
-                            $redir_msg = "Removed volume $zfs_lun_name to ZFS-Pool $zpool_name";
+                            $redir_msg .= "Removed volume $zfs_lun_name to ZFS-Pool $zpool_name<br>";
                         }
-                        redirect_mgmtzvol($redir_msg, $zfs_storage_id, $zpool_name);
                     }
+                    redirect_mgmtzvol($redir_msg, $zfs_storage_id, $zpool_name);
                 } else {
                     $redir_msg = "No ZFS volume selected. Skipping removal !";
                     redirect_mgmtzvol($redir_msg, $zfs_storage_id, $zpool_name);
@@ -414,13 +413,15 @@ if(htmlobject_request('redirect') != 'yes') {
 function zfs_select_storage() {
 	global $OPENQRM_USER;
 	global $thisfile;
-	$table = new htmlobject_db_table('storage_id');
+	$table = new htmlobject_table_builder('storage_id', '', '', '', 'select');
 	$arHead = array();
 	$arHead['storage_state'] = array();
 	$arHead['storage_state']['title'] ='';
+	$arHead['storage_state']['sortable'] = false;
 
 	$arHead['storage_icon'] = array();
 	$arHead['storage_icon']['title'] ='';
+	$arHead['storage_icon']['sortable'] = false;
 
 	$arHead['storage_id'] = array();
 	$arHead['storage_id']['title'] ='ID';
@@ -430,9 +431,11 @@ function zfs_select_storage() {
 
 	$arHead['storage_resource_id'] = array();
 	$arHead['storage_resource_id']['title'] ='Res.ID';
+	$arHead['storage_resource_id']['sortable'] = false;
 
 	$arHead['storage_resource_ip'] = array();
 	$arHead['storage_resource_ip']['title'] ='Ip';
+	$arHead['storage_resource_ip']['sortable'] = false;
 
 	$arHead['storage_type'] = array();
 	$arHead['storage_type']['title'] ='Type';
@@ -442,8 +445,10 @@ function zfs_select_storage() {
 
 	$storage_count=0;
 	$arBody = array();
+    $t_deployment = new deployment();
+    $t_deployment->get_instance_by_type("zfs-deployment");
 	$storage_tmp = new storage();
-	$storage_array = $storage_tmp->display_overview(0, 10, 'storage_id', 'ASC');
+	$storage_array = $storage_tmp->display_overview_per_type($t_deployment->id, $table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($storage_array as $index => $storage_db) {
 		$storage = new storage();
 		$storage->get_instance_by_id($storage_db["storage_id"]);
@@ -451,30 +456,28 @@ function zfs_select_storage() {
 		$storage_resource->get_instance_by_id($storage->resource_id);
 		$deployment = new deployment();
 		$deployment->get_instance_by_id($storage->type);
-		// is zfs ?
-		if ("$deployment->storagetype" == "zfs-storage") {
-			$storage_count++;
-			$resource_icon_default="/openqrm/base/img/resource.png";
-			$storage_icon="/openqrm/base/plugins/zfs-storage/img/storage.png";
-			$state_icon="/openqrm/base/img/$storage_resource->state.png";
-			if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
-				$state_icon="/openqrm/base/img/unknown.png";
-			}
-			if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
-				$resource_icon_default=$storage_icon;
-			}
-			$arBody[] = array(
-				'storage_state' => "<img src=$state_icon>",
-				'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-				'storage_id' => $storage->id,
-				'storage_name' => $storage->name,
-				'storage_resource_id' => $storage->resource_id,
-				'storage_resource_ip' => $storage_resource->ip,
-				'storage_type' => "$deployment->storagedescription",
-				'storage_comment' => $storage_resource->comment,
-			);
-		}
-	}
+        $storage_count++;
+        $resource_icon_default="/openqrm/base/img/resource.png";
+        $storage_icon="/openqrm/base/plugins/zfs-storage/img/storage.png";
+        $state_icon="/openqrm/base/img/$storage_resource->state.png";
+        if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
+            $state_icon="/openqrm/base/img/unknown.png";
+        }
+        if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
+            $resource_icon_default=$storage_icon;
+        }
+        $arBody[] = array(
+            'storage_state' => "<img src=$state_icon>",
+            'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+            'storage_id' => $storage->id,
+            'storage_name' => $storage->name,
+            'storage_resource_id' => $storage->resource_id,
+            'storage_resource_ip' => $storage_resource->ip,
+            'storage_type' => "$deployment->storagedescription",
+            'storage_comment' => $storage_resource->comment,
+        );
+    }
+
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -488,7 +491,7 @@ function zfs_select_storage() {
 		$table->bottom = array('select');
 		$table->identifier = 'storage_id';
 	}
-	$table->max = $storage_count;
+	$table->max = $storage_tmp->get_count_per_type($t_deployment->id);
 
     // set template
 	$t = new Template_PHPLIB();
@@ -585,10 +588,11 @@ function zfs_storage_zpool_display($zfs_storage_id) {
 
 
     // zpool table
-	$table1 = new htmlobject_db_table('zpool_name');
+    $table1 = new htmlobject_table_builder('zpool_name', '', '', '', 'zpool');
 	$arHead1 = array();
 	$arHead1['zpool_icon'] = array();
 	$arHead1['zpool_icon']['title'] ='';
+	$arHead1['zpool_icon']['sortable'] = false;
 
     $arHead1['zpool_name'] = array();
 	$arHead1['zpool_name']['title'] ='zpool';
@@ -609,7 +613,7 @@ function zfs_storage_zpool_display($zfs_storage_id) {
 	$arHead1['zpool_health']['title'] ='Health';
 
 	$arBody1 = array();
-	$zpool_count=1;
+	$zpool_count=0;
     $storage_export_list="storage/$storage_resource->id.zfs.zpool.stat";
 	if (file_exists($storage_export_list)) {
 		$storage_vg_content=file($storage_export_list);
@@ -645,7 +649,7 @@ function zfs_storage_zpool_display($zfs_storage_id) {
             $zpool_health = trim(substr($zpool_line_fivth_at_removed, 0, $sixth_at_pos-1));
 
             $arBody1[] = array(
-                'zpool_icon' => "<img width=24 height=24 src=$storage_icon><input type='hidden' name='zfs_storage_id' value=$zfs_storage_id>",
+                'zpool_icon' => "<img width=24 height=24 src=$storage_icon>",
                 'zpool_name' => $zpool_name,
                 'zpool_size' => $zpool_size,
                 'zpool_used' => $zpool_used,
@@ -657,7 +661,7 @@ function zfs_storage_zpool_display($zfs_storage_id) {
 		}
 	}
 
-
+    $table1->add_headrow("<input type='hidden' name='zfs_storage_id' value=$zfs_storage_id>");
 	$table1->id = 'Tabelle';
 	$table1->css = 'htmlobject_table';
 	$table1->border = 1;
@@ -665,7 +669,7 @@ function zfs_storage_zpool_display($zfs_storage_id) {
 	$table1->cellpadding = 3;
 	$table1->form_action = $thisfile;
 	$table1->identifier_type = "radio";
-	$table1->sort = '';
+	$table1->autosort = true;
 	$table1->head = $arHead1;
 	$table1->body = $arBody1;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -704,12 +708,12 @@ function zfs_storage_zpool_manager($zfs_storage_id, $zpool) {
 	$deployment = new deployment();
 	$deployment->get_instance_by_id($storage->type);
 
-
     // zpool table
-	$table = new htmlobject_db_table('zpool_luns');
+    $table = new htmlobject_table_builder('zpool_luns', '', '', '', 'luns');
 	$arHead = array();
 	$arHead['zpool_lun_icon'] = array();
 	$arHead['zpool_lun_icon']['title'] ='';
+	$arHead['zpool_lun_icon']['sortable'] = false;
 
     $arHead['zpool_lun_name'] = array();
 	$arHead['zpool_lun_name']['title'] ='Lun';
@@ -792,8 +796,8 @@ function zfs_storage_zpool_manager($zfs_storage_id, $zpool) {
 	$table->cellspacing = 0;
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
-	$table->identifier_type = "radio";
-	$table->sort = '';
+	$table->identifier_type = "checkbox";
+	$table->autosort = true;
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
