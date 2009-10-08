@@ -22,4 +22,4 @@
 #	Target
 ..|NetApp-storage
 ...|About|plugins/netapp-storage/netapp-storage-about.php
-...|Luns|plugins/netapp-storage/netapp-storage-manager.php
+...|iSCSI Luns|plugins/netapp-storage/netapp-storage-manager.php
