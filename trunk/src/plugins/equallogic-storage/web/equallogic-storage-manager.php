@@ -468,6 +468,7 @@ function equallogic_storage_display($equallogic_storage_id) {
 
 	$arHead1['lun_icon'] = array();
 	$arHead1['lun_icon']['title'] ='';
+	$arHead1['lun_icon']['sortable'] = false;
 
 	$arHead1['lun_name'] = array();
 	$arHead1['lun_name']['title'] ='Name';
