@@ -269,7 +269,7 @@ if(htmlobject_request('action') != '') {
                     $arr = array('@@ID@@'=>"$id", '@@FORENAME@@'=>"$cu_forename", '@@LASTNAME@@'=>"$cu_lastname", '@@START@@'=>"$start", '@@STOP@@'=>"$now");
                     $rmail->var_array = $arr;
                     $rmail->send();
-                    $cr_request->setstatus($id, 'deprovsion');
+                    $cr_request->setstatus($id, 'deprovision');
                     $strMsg .= "Deprovisioned Cloudrequest $id<br>";
                 }
                 redirect($strMsg, tab0);

@@ -276,7 +276,7 @@ class cloudsoap {
         }
         // set request to deprovision
 		$cr_request = new cloudrequest();
-		$cr_request->setstatus($cr_id, "deprovsion");
+		$cr_request->setstatus($cr_id, "deprovision");
 		$event->log("cloudsoap->CloudDeProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Set Cloud request $cr_id to state deprovision", "", "", 0, 0, 0);
 		return 0;
 	}
@@ -841,7 +841,7 @@ class cloudsoap {
                 $cloudrequest_details['status'] = "deny";
                 break;
             case '5':
-                $cloudrequest_details['status'] = "deprovsion";
+                $cloudrequest_details['status'] = "deprovision";
                 break;
             case '6':
                 $cloudrequest_details['status'] = "done";

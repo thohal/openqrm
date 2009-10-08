@@ -1402,7 +1402,7 @@ function openqrm_cloud_monitor() {
 				// in case the user has no ccunits any more we set the status to deprovision
 				if ($cu_ccunits <= 0) {
 					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "User $cu->name does not have any CC-Untis left for request ID $cr_id, deprovisioning.", "", "", 0, 0, 0);
-					$cr->setstatus($cr_id, "deprovsion");
+					$cr->setstatus($cr_id, "deprovision");
 					continue;
 				}
 	
@@ -1452,7 +1452,7 @@ function openqrm_cloud_monitor() {
 			if ($cr_stop < $now) {
 				// set to deprovisioning
 				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Cloud request ID $cr_id stop time reached, setting to deprovisioning", "", "", 0, 0, 0);
-				$cr->setstatus($cr_id, "deprovsion");
+				$cr->setstatus($cr_id, "deprovision");
 			}
 		}
 

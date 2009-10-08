@@ -231,7 +231,7 @@ if (htmlobject_request('action') != '') {
 					$armail->var_array = $aarr;
 					$armail->send();
                     // set cr status
-                    $cr_request->setstatus($id, 'deprovsion');
+                    $cr_request->setstatus($id, 'deprovision');
 	
 					$strMsg .="Set Cloud request $id to deprovision <br>";
 				}

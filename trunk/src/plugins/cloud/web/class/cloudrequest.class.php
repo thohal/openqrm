@@ -326,7 +326,7 @@ function setstatus($cloudrequest_id, $cloud_status) {
 		case 'deny':
 			$cr_status=4;
 			break;
-		case 'deprovsion':
+		case 'deprovision':
 			$cr_status=5;
 			break;
 		case 'done':
