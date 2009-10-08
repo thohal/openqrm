@@ -19,10 +19,9 @@
 -->
 <h1>Equallogic-Storage {storage_name}</h1>
 {storage_table}
-
+<br><br>
 {lun_table}
-<br>
-<br>
+<br><br>
 <form action="{formaction}" method="GET">
 <h1>Add Equallogic Lun :</h1>
 <div style="float:left;">
