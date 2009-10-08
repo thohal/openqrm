@@ -316,8 +316,8 @@ if(htmlobject_request('redirect') != 'yes') {
 
             case 'remove':
                 if (isset($_REQUEST['identifier'])) {
+                    show_progressbar();
                     foreach($_REQUEST['identifier'] as $local_lun_name) {
-                        show_progressbar();
                         $storage = new storage();
                         $storage->get_instance_by_id($local_storage_id);
                         $storage_resource = new resource();
@@ -335,12 +335,12 @@ if(htmlobject_request('redirect') != 'yes') {
                         $storage_resource->send_command($storage_resource->ip, $resource_command);
                         // and wait for the resulting statfile
                         if (!wait_for_statfile($statfile)) {
-                            $redir_msg = "Error during removing volume $local_lun_name from Volume group $local_volume_group ! Please check the Event-Log";
+                            $redir_msg .= "Error during removing volume $local_lun_name from Volume group $local_volume_group ! Please check the Event-Log<br>";
                         } else {
-                            $redir_msg = "Removed volume $local_lun_name from Volume group $local_volume_group";
+                            $redir_msg .= "Removed volume $local_lun_name from Volume group $local_volume_group<br>";
                         }
-                        redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
                     }
+                    redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
                 } else {
                     $redir_msg = "No Local Storage location selected. Skipping removal !";
                     redirect_localgmt($redir_msg, $local_storage_id, $local_volume_group);
@@ -456,14 +456,16 @@ function local_select_storage() {
 	global $OPENQRM_USER;
 	global $thisfile;
 
-	$table = new htmlobject_db_table('storage_id');
+	$table = new htmlobject_table_builder('storage_id', '', '', '', 'select');
 
 	$arHead = array();
 	$arHead['storage_state'] = array();
 	$arHead['storage_state']['title'] ='';
+	$arHead['storage_state']['sortable'] = false;
 
 	$arHead['storage_icon'] = array();
 	$arHead['storage_icon']['title'] ='';
+	$arHead['storage_icon']['sortable'] = false;
 
 	$arHead['storage_id'] = array();
 	$arHead['storage_id']['title'] ='ID';
@@ -473,9 +475,11 @@ function local_select_storage() {
 
 	$arHead['storage_resource_id'] = array();
 	$arHead['storage_resource_id']['title'] ='Res.ID';
+	$arHead['storage_resource_id']['sortable'] = false;
 
 	$arHead['storage_resource_ip'] = array();
 	$arHead['storage_resource_ip']['title'] ='Ip';
+	$arHead['storage_resource_ip']['sortable'] = false;
 
 	$arHead['storage_type'] = array();
 	$arHead['storage_type']['title'] ='Type';
@@ -485,8 +489,10 @@ function local_select_storage() {
 
 	$storage_count=0;
 	$arBody = array();
+    $t_deployment = new deployment();
+    $t_deployment->get_instance_by_type("local-storage");
 	$storage_tmp = new storage();
-	$storage_array = $storage_tmp->display_overview(0, 10, 'storage_id', 'ASC');
+	$storage_array = $storage_tmp->display_overview_per_type($t_deployment->id, $table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($storage_array as $index => $storage_db) {
 		$storage = new storage();
 		$storage->get_instance_by_id($storage_db["storage_id"]);
@@ -494,30 +500,27 @@ function local_select_storage() {
 		$storage_resource->get_instance_by_id($storage->resource_id);
 		$deployment = new deployment();
 		$deployment->get_instance_by_id($storage->type);
-		// is local-storage ?
-		if ("$deployment->storagetype" == "local-storage") {
-			$storage_count++;
-			$resource_icon_default="/openqrm/base/img/resource.png";
-			$storage_icon="/openqrm/base/plugins/local-storage/img/storage.png";
-			$state_icon="/openqrm/base/img/$storage_resource->state.png";
-			if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
-				$state_icon="/openqrm/base/img/unknown.png";
-			}
-			if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
-				$resource_icon_default=$storage_icon;
-			}
-			$arBody[] = array(
-				'storage_state' => "<img src=$state_icon>",
-				'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-				'storage_id' => $storage->id,
-				'storage_name' => $storage->name,
-				'storage_resource_id' => $storage->resource_id,
-				'storage_resource_ip' => $storage_resource->ip,
-				'storage_type' => "$deployment->storagedescription",
-				'storage_comment' => $storage_resource->comment,
-			);
-		}
-	}
+        $storage_count++;
+        $resource_icon_default="/openqrm/base/img/resource.png";
+        $storage_icon="/openqrm/base/plugins/local-storage/img/storage.png";
+        $state_icon="/openqrm/base/img/$storage_resource->state.png";
+        if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
+            $state_icon="/openqrm/base/img/unknown.png";
+        }
+        if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_icon)) {
+            $resource_icon_default=$storage_icon;
+        }
+        $arBody[] = array(
+            'storage_state' => "<img src=$state_icon>",
+            'storage_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+            'storage_id' => $storage->id,
+            'storage_name' => $storage->name,
+            'storage_resource_id' => $storage->resource_id,
+            'storage_resource_ip' => $storage_resource->ip,
+            'storage_type' => "$deployment->storagedescription",
+            'storage_comment' => $storage_resource->comment,
+        );
+    }
 
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
@@ -533,7 +536,7 @@ function local_select_storage() {
 		$table->bottom = array('select');
 		$table->identifier = 'storage_id';
 	}
-	$table->max = $storage_count;
+	$table->max = $storage_tmp->get_count_per_type($t_deployment->id);
 
    // set template
 	$t = new Template_PHPLIB();
@@ -624,18 +627,15 @@ function local_storage_display($local_storage_id) {
 	$table->sort = '';
 	$table->head = $arHead;
 	$table->body = $arBody;
-	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('refresh');
-		$table->identifier = 'storage_id';
-	}
 	$table->max = $storage_count;
 
 
     // vg table
-	$table1 = new htmlobject_db_table('vg_name');
+	$table1 = new htmlobject_table_builder('vg_name', '', '', '', 'vgs');
 	$arHead1 = array();
 	$arHead1['vg_icon'] = array();
 	$arHead1['vg_icon']['title'] ='';
+	$arHead1['vg_icon']['sortable'] = false;
 
     $arHead1['vg_name'] = array();
 	$arHead1['vg_name']['title'] ='Name';
@@ -659,7 +659,7 @@ function local_storage_display($local_storage_id) {
 	$arHead1['vg_vfree']['title'] ='VFree';
 
 	$arBody1 = array();
-	$vg_count=1;
+	$vg_count=0;
     $storage_vg_list="storage/$storage_resource->id.vg.stat";
 	if (file_exists($storage_vg_list)) {
 		$storage_vg_content=file($storage_vg_list);
@@ -717,7 +717,7 @@ function local_storage_display($local_storage_id) {
 	$table1->cellpadding = 3;
 	$table1->form_action = $thisfile;
 	$table1->identifier_type = "radio";
-	$table1->sort = '';
+	$table1->autosort = true;
 	$table1->head = $arHead1;
 	$table1->body = $arBody1;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -758,10 +758,12 @@ function local_storage_lv_display($local_storage_id, $local_volume_group) {
 	$deployment->get_instance_by_id($storage->type);
 
     // local table
-	$table = new htmlobject_db_table('local_luns');
+    $table = new htmlobject_table_builder('local_luns', '', '', '', 'luns');
+
 	$arHead = array();
 	$arHead['local_lun_icon'] = array();
 	$arHead['local_lun_icon']['title'] ='';
+	$arHead['local_lun_icon']['sortable'] = false;
 
     $arHead['local_lun_name'] = array();
 	$arHead['local_lun_name']['title'] ='Lun';
@@ -783,7 +785,6 @@ function local_storage_lv_display($local_storage_id, $local_volume_group) {
 		$storage_vg_content=file($storage_export_list);
 		foreach ($storage_vg_content as $index => $local) {
             $local_line = trim($local);
-
             $first_at_pos = strpos($local_line, "@");
             $first_at_pos++;
             $local_line_first_at_removed = substr($local_line, $first_at_pos, strlen($local_line)-$first_at_pos);
@@ -837,8 +838,8 @@ function local_storage_lv_display($local_storage_id, $local_volume_group) {
 	$table->cellspacing = 0;
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
-	$table->identifier_type = "radio";
-	$table->sort = '';
+	$table->identifier_type = "checkbox";
+	$table->autosort = true;
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -887,14 +888,6 @@ if(htmlobject_request('action') != '') {
             	$output[] = array('label' => 'Select', 'value' => local_select_storage());
             }
             break;
-		case 'refresh':
-            if (isset($_REQUEST['identifier'])) {
-                foreach($_REQUEST['identifier'] as $id) {
-                    $output[] = array('label' => 'Local Storage Admin', 'value' => local_storage_display($id));
-                }
-			}
-			break;
-
 		case 'select-vg':
             if (isset($_REQUEST['identifier'])) {
                 foreach($_REQUEST['identifier'] as $local_volume_group) {
@@ -927,6 +920,8 @@ if(htmlobject_request('action') != '') {
 
 } else if (strlen($local_volume_group)) {
 	$output[] = array('label' => 'Logical Volume Admin', 'value' => local_storage_lv_display($local_storage_id, $local_volume_group));
+} else if (strlen($local_storage_id)) {
+    $output[] = array('label' => 'Local Storage Admin', 'value' => local_storage_display($local_storage_id));
 } else  {
 	$output[] = array('label' => 'Select', 'value' => local_select_storage());
 }

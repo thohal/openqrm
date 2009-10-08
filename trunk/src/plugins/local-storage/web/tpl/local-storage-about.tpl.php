@@ -56,7 +56,7 @@ Create a 'local-storage' image ('Add Image' in the Image-overview)
 <br>
 Set the root-device and root-device-type to the storage location created in the previsous step
 </li><li>
-Go to 'local-storage' -> 'Create'
+Go to 'local-storage' -> 'Grab'
 </li><li>
 In the first step select an idle resource to grab
 </li><li>

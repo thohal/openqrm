@@ -207,20 +207,22 @@ function local_select_resource() {
 	global $OPENQRM_USER;
 	global $thisfile;
 
-	$table = new htmlobject_db_table('resource_id');
+    $table = new htmlobject_table_builder('resource_id', '', '', '', 'grab1');
 
 	$arHead = array();
 	$arHead['resource_state'] = array();
 	$arHead['resource_state']['title'] ='';
+	$arHead['resource_state']['sortable'] = false;
 
 	$arHead['resource_icon'] = array();
 	$arHead['resource_icon']['title'] ='';
+	$arHead['resource_icon']['sortable'] = false;
 
 	$arHead['resource_id'] = array();
 	$arHead['resource_id']['title'] ='ID';
 
-	$arHead['resource_name'] = array();
-	$arHead['resource_name']['title'] ='Name';
+	$arHead['resource_hostname'] = array();
+	$arHead['resource_hostname']['title'] ='Name';
 
 	$arHead['resource_ip'] = array();
 	$arHead['resource_ip']['title'] ='Ip';
@@ -231,35 +233,31 @@ function local_select_resource() {
 	$resource_count=0;
 	$arBody = array();
 	$resource_tmp = new resource();
-	$resource_array = $resource_tmp->display_overview(1, 1000, 'resource_id', 'ASC');
+	$resource_array = $resource_tmp->display_idle_overview($table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($resource_array as $index => $resource_db) {
 		$resource = new resource();
 		$resource->get_instance_by_id($resource_db["resource_id"]);
 		$resource_resource = new resource();
 		$resource_resource->get_instance_by_id($resource->resource_id);
-        // check if idle
-        if ((!strcmp($resource->state, "active")) && ($resource->imageid == 1)) {
-
-            $resource_count++;
-			$resource_icon_default="/openqrm/base/img/resource.png";
-			$resource_icon="/openqrm/base/plugins/local-resource/img/resource.png";
-			$state_icon="/openqrm/base/img/$resource->state.png";
-			if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
-				$state_icon="/openqrm/base/img/unknown.png";
-			}
-			if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$resource_icon)) {
-				$resource_icon_default=$resource_icon;
-			}
-			$arBody[] = array(
-				'resource_state' => "<img src=$state_icon>",
-				'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-				'resource_id' => $resource->id,
-				'resource_name' => $resource->hostname,
-				'resource_ip' => $resource->ip,
-				'resource_mac' => "$resource->mac",
-			);
+        $resource_icon_default="/openqrm/base/img/resource.png";
+        $resource_icon="/openqrm/base/plugins/local-resource/img/resource.png";
+        $state_icon="/openqrm/base/img/$resource->state.png";
+        if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
+            $state_icon="/openqrm/base/img/unknown.png";
         }
-	}
+        if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$resource_icon)) {
+            $resource_icon_default=$resource_icon;
+        }
+        $arBody[] = array(
+            'resource_state' => "<img src=$state_icon>",
+            'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+            'resource_id' => $resource->id,
+            'resource_hostname' => $resource->hostname,
+            'resource_ip' => $resource->ip,
+            'resource_mac' => "$resource->mac",
+        );
+        $resource_count++;
+    }
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -273,7 +271,7 @@ function local_select_resource() {
 		$table->bottom = array('grab');
 		$table->identifier = 'resource_id';
 	}
-	$table->max = $resource_count;
+    $table->max = $resource_tmp->get_count("idle");
 
     // set template
 	$t = new Template_PHPLIB();
@@ -294,12 +292,12 @@ function local_select_image($resource_id) {
 	global $OPENQRM_USER;
 	global $thisfile;
 
-	$table = new htmlobject_db_table('image_id');
-
+    $table = new htmlobject_table_builder('image_id', '', '', '', 'grab1');
 	$arHead = array();
-
+    
 	$arHead['image_icon'] = array();
 	$arHead['image_icon']['title'] ='';
+	$arHead['image_icon']['sortable'] = false;
 
 	$arHead['image_id'] = array();
 	$arHead['image_id']['title'] ='ID';
@@ -314,25 +312,23 @@ function local_select_image($resource_id) {
 	$arHead['image_rootdevice']['title'] ='Root-device';
 
 	$image_count=0;
+    $image_icon_default="/openqrm/base/img/image.png";
 	$arBody = array();
 	$image_tmp = new image();
-	$image_array = $image_tmp->display_overview(1, 1000, 'image_id', 'ASC');
+	$image_array = $image_tmp->display_overview_per_type("local-storage", $table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($image_array as $index => $image_db) {
 		$image = new image();
 		$image->get_instance_by_id($image_db["image_id"]);
-        // check if it is a local-storage image
-        if (!strcmp($image->type, "local-storage")) {
-            $image_count++;
-			$image_icon="/openqrm/base/plugins/local-image/img/storage.png";
-			$arBody[] = array(
-				'image_icon' => "<img width=24 height=24 src=$image_icon><input type='hidden' name='resource_id' value=$resource_id>",
-				'image_id' => $image->id,
-				'image_name' => $image->name,
-				'image_type' => $image->type,
-				'image_rootdevice' => "$image->rootdevice",
-			);
-        }
-	}
+        $image_icon="/openqrm/base/plugins/local-image/img/storage.png";
+        $arBody[] = array(
+            'image_icon' => "<img width=24 height=24 src=$image_icon_default><input type='hidden' name='resource_id' value=$resource_id>",
+            'image_id' => $image->id,
+            'image_name' => $image->name,
+            'image_type' => $image->type,
+            'image_rootdevice' => "$image->rootdevice",
+        );
+        $image_count++;
+    }
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -346,7 +342,7 @@ function local_select_image($resource_id) {
 		$table->bottom = array('transfer');
 		$table->identifier = 'image_id';
 	}
-	$table->max = $image_count;
+    $table->max = $image_tmp->get_count_per_type("local-storage");
 
     // set template
 	$t = new Template_PHPLIB();
@@ -408,6 +404,8 @@ if(htmlobject_request('action') != '') {
 	}
 
 
+} else if (strlen($resource_id)) {
+    $output[] = array('label' => 'Grab disk', 'value' => local_select_image($resource_id));
 } else  {
 	$output[] = array('label' => 'Select', 'value' => local_select_resource());
 }

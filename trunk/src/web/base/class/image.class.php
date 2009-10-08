@@ -415,6 +415,27 @@ var $_event;
 
 	//--------------------------------------------------
 	/**
+	* get number of images per type
+	* @access public
+	* @param string $deployment_type
+	* @return int
+	*/
+	//--------------------------------------------------
+	function get_count_per_type($deployment_type_str) {
+		$count=0;
+		$db=openqrm_get_db_connection();
+		$rs = $db->Execute("select count(image_id) as num from $this->_db_table where image_type=\"$deployment_type_str\"");
+		if (!$rs) {
+			$this->_event->log("get_count_per_type", $_SERVER['REQUEST_TIME'], 2, "image.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+		} else {
+			$count = $rs->fields["num"];
+		}
+		return $count;
+	}
+
+
+	//--------------------------------------------------
+	/**
 	* get number of images
 	* @access public
 	* @return int
@@ -479,6 +500,40 @@ var $_event;
 		}
 		return $image_array;
 	}
+
+
+
+
+	//--------------------------------------------------
+	/**
+	* get an array of images per type
+	* @access public
+	* @param string $deployment_type
+	* @param int $offset
+	* @param int $limit
+	* @param string $sort
+	* @param enum $order [ASC/DESC]
+	* @return array
+	*/
+	//--------------------------------------------------
+	function display_overview_per_type($deployment_type_str, $offset, $limit, $sort, $order) {
+		$db=openqrm_get_db_connection();
+		$recordSet = &$db->SelectLimit("select * from $this->_db_table where image_id > 1 and image_type=\"$deployment_type_str\" order by $sort $order", $limit, $offset);
+		$image_array = array();
+		if (!$recordSet) {
+			$this->_event->log("display_overview_per_type", $_SERVER['REQUEST_TIME'], 2, "image.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+		} else {
+			while (!$recordSet->EOF) {
+				array_push($image_array, $recordSet->fields);
+				$recordSet->MoveNext();
+			}
+			$recordSet->Close();
+		}
+		return $image_array;
+	}
+
+
+
 
 	//--------------------------------------------------
 	/**

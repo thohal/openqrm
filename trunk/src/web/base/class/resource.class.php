@@ -579,6 +579,9 @@ function get_count($which) {
 		case 'offline':
 			$sql .= " and resource_state!='active'";
 			break;
+		case 'idle':
+			$sql .= " and resource_state!='active' and resource_imageid=1";
+			break;
 	}
 	$rs = $db->Execute($sql);
 	if (!$rs) {
@@ -659,6 +662,29 @@ function check_all_states() {
 }
 
 
+
+
+// displays only idle resources
+function display_idle_overview($offset, $limit, $sort, $order) {
+	global $RESOURCE_INFO_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$recordSet = &$db->SelectLimit("select * from $RESOURCE_INFO_TABLE where resource_state='active' and resource_imageid=1 order by $sort $order", $limit, $offset);
+	$resource_array = array();
+	if (!$recordSet) {
+		$event->log("display_overview", $_SERVER['REQUEST_TIME'], 2, "resource.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	} else {
+		while (!$recordSet->EOF) {
+			array_push($resource_array, $recordSet->fields);
+			$recordSet->MoveNext();
+		}
+		$recordSet->Close();
+	}		
+	return $resource_array;
+}
+
+
+
 // displays the resource-overview
 function display_overview($offset, $limit, $sort, $order) {
 	global $RESOURCE_INFO_TABLE;
@@ -674,11 +700,9 @@ function display_overview($offset, $limit, $sort, $order) {
 			$recordSet->MoveNext();
 		}
 		$recordSet->Close();
-	}		
+	}
 	return $resource_array;
 }
-
-
 
 
 
