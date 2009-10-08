@@ -19,6 +19,7 @@
 -->
 <h1>Logical Volumes of Volume group {lvm_volume_group} on storage {storage_name}</h1>
 {lun_table}
+<br><br>
 <form action="{formaction}" method="GET">
 <h1>Add new logical volume to Volume group {lvm_volume_group}</h1>
 <div style="float:left;">
