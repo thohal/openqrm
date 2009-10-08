@@ -22,4 +22,6 @@
 #	Target
 ..|Lvm-storage
 ...|About|plugins/lvm-storage/lvm-storage-about.php
-...|Volume Groups|plugins/lvm-storage/lvm-storage-manager.php
+...|AOE Volumes|plugins/lvm-storage/lvm-storage-manager.php?type=aoe
+...|iSCSI Volumes|plugins/lvm-storage/lvm-storage-manager.php?type=iscsi
+...|NFS Volumes|plugins/lvm-storage/lvm-storage-manager.php?type=nfs
