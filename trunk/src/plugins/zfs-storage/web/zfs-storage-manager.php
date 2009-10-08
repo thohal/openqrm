@@ -778,7 +778,7 @@ function zfs_storage_zpool_manager($zfs_storage_id, $zpool) {
             $zpool_lun_snap .= "</form>";
 
             $arBody[] = array(
-                'zpool_lun_icon' => "<img width=24 height=24 src=$storage_icon><input type='hidden' name='zfs_storage_id' value=$zfs_storage_id><input type='hidden' name='zpool_name' value=$zpool>",
+                'zpool_lun_icon' => "<img width=24 height=24 src=$storage_icon>",
                 'zpool_lun_name' => $zpool_lun_name,
                 'zpool_lun_used' => $zpool_lun_used,
                 'zpool_lun_available' => $zpool_lun_available,
@@ -789,7 +789,7 @@ function zfs_storage_zpool_manager($zfs_storage_id, $zpool) {
 		}
 	}
 
-
+    $table->add_headrow("<input type='hidden' name='zfs_storage_id' value=$zfs_storage_id><input type='hidden' name='zpool_name' value=$zpool>");
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -880,6 +880,8 @@ if(htmlobject_request('action') != '') {
 			break;
 
 	}
+} else if (strlen($zpool_name)) {
+    $output[] = array('label' => $zpool_name, 'value' => zfs_storage_zpool_manager($zfs_storage_id, $zpool_name));
 } else if (strlen($zfs_storage_id)) {
 	$output[] = array('label' => 'ZFS zpool', 'value' => zfs_storage_zpool_display($zfs_storage_id));
 } else  {
