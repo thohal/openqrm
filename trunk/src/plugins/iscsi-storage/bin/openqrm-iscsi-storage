@@ -159,10 +159,22 @@ case "$ISCSI_COMMAND" in
 			echo "ERROR: Could not find source image $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME on the storage-server"
 			exit 1
 		fi
-		echo -n "Creating snapshot from image $ISCSI_IMAGE_NAME -> $ISCSI_IMAGE_SNAPSHOT_NAME"
+		if [ ! -f $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME.conf ]; then
+			echo "ERROR: Could not find source image $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME config file"
+            exit 1
+        else
+            . $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME.conf
+            ISCSI_ORIGINAL_IMAGE_SIZE=$LUN_SIZE
+            if [ "$ISCSI_ORIGINAL_IMAGE_SIZE" == "" ]; then
+                echo "ERROR: Could not find out original image size ! Skipping snapshot."
+                exit 1
+            fi
+		fi
+		echo -n "Creating snapshot from image $ISCSI_IMAGE_NAME -> $ISCSI_IMAGE_SNAPSHOT_NAME size $ISCSI_ORIGINAL_IMAGE_SIZE"
 		mkdir -p $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY
 		cp -a $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_SNAPSHOT_NAME
 		export ISCSI_IMAGE_NAME=$ISCSI_IMAGE_SNAPSHOT_NAME
+        export ISCSI_IMAGE_SIZE=$ISCSI_ORIGINAL_IMAGE_SIZE
 		iscsi_storage_lock aquire
 		manage_iscsi add snap $ISCSI_IMAGE_PASSWORD
 		iscsi_storage_lock release
@@ -190,7 +202,31 @@ case "$ISCSI_COMMAND" in
 		echo "Posting current iscsi-luns to the openQRM-server"
 		STORAGE_STATUS_TMP=$resource_id.iscsi.stat
         # take care to only post "our" iscsi luns and not the ones from e.g lvm-iscsi-storage
-		cat $IETDCONF | grep -v '#' | grep Lun | grep $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY | cut -d',' -f1 | awk {' print $2" "$3 '} | sed -e "s/Path=//g" > $STORAGE_STATUS_TMP
+		#cat $IETDCONF | grep -v '#' | grep Lun | grep $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY | cut -d',' -f1 | awk {' print $2" "$3 '} | sed -e "s/Path=//g" > $STORAGE_STATUS_TMP
+		> $STORAGE_STATUS_TMP
+		OLD_IFS=$IFS
+IFS='
+'
+		for LUN_STR in `cat $IETDCONF | grep -v "#" | grep Lun | grep $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY`; do
+			LUN=`echo $LUN_STR | awk {'print $2 '}`
+			IMAGE_NAME=`echo $LUN_STR | awk {'print $3 '}`
+			IMAGE_NAME=`basename $IMAGE_NAME | cut -d',' -f1`
+            # get the size from the config file
+            if [ ! -f $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$IMAGE_NAME.conf ]; then
+                echo "WARNING: Could not find source image $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$IMAGE_NAME config file"
+                IMAGE_SIZE=0
+            else
+                . $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$IMAGE_NAME.conf
+                IMAGE_SIZE=$LUN_SIZE
+                if [ "$IMAGE_SIZE" == "" ]; then
+                    echo "WARNING: Could not find source image $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$IMAGE_NAME config file"
+                    IMAGE_SIZE=0
+                fi
+                unset LUN_SIZE
+            fi
+			echo "$LUN $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$IMAGE_NAME $IMAGE_SIZE""@" >> $STORAGE_STATUS_TMP
+		done
+		IFS=$OLD_IFS
         sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
 		if ! wget -q -O /dev/null --http-user=$ISCSI_OPENQRM_USERNAME --http-password=$ISCSI_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/iscsi-storage/iscsi-storage-action.php?iscsi_storage_command=get_storage; then
 			echo "ERROR: Could not post the iscsi-export status to the openQRM-server at $resource_openqrmserver!"

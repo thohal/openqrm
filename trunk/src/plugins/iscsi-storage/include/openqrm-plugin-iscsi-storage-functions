@@ -108,7 +108,8 @@ function manage_iscsi() {
 			echo "Target $ISCSI_IMAGE_NAME" >> $IETDCONF
 			echo "	IncomingUser $ISCSI_IMAGE_NAME $IMAGE_PASS" >> $IETDCONF
 			echo "	Lun $IMAGE_LUN Path=$ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME,Type=fileio" >> $IETDCONF
-
+            # create config for keeping the size
+            echo "LUN_SIZE=$ISCSI_IMAGE_SIZE" > $ISCSI_STORAGE_SERVER_IMAGE_DIRECTORY/$ISCSI_IMAGE_NAME.conf
 			LAST_TID=`grep tid: /proc/net/iet/volume | cut -d':' -f2 | awk {' print $1 '} | sort | tail -n1`
 			NEW_TID=$(( $LAST_TID + 1 ))
 			# dynamically add new target
