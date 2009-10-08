@@ -22,4 +22,4 @@
 #	Target
 ..|Iscsi-Storage
 ...|About|plugins/iscsi-storage/iscsi-storage-about.php
-...|Luns|plugins/iscsi-storage/iscsi-storage-manager.php
+...|iSCSI Luns|plugins/iscsi-storage/iscsi-storage-manager.php

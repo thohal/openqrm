@@ -696,7 +696,7 @@ function local_storage_display($local_storage_id) {
             $vg_vfree = trim(substr($vg_line_sixth_at_removed, 0, $seventh_at_pos-1));
 
             $arBody1[] = array(
-                'vg_icon' => "<img width=24 height=24 src=$storage_icon><input type='hidden' name='local_storage_id' value=$local_storage_id>",
+                'vg_icon' => "<img width=24 height=24 src=$storage_icon>",
                 'vg_name' => $vg_name,
                 'vg_pv' => $vg_pv,
                 'vg_lv' => $vg_lv,
@@ -709,7 +709,7 @@ function local_storage_display($local_storage_id) {
 		}
 	}
 
-
+    $table1->add_headrow("<input type='hidden' name='local_storage_id' value=$local_storage_id>");
 	$table1->id = 'Tabelle';
 	$table1->css = 'htmlobject_table';
 	$table1->border = 1;
@@ -821,7 +821,7 @@ function local_storage_lv_display($local_storage_id, $local_volume_group) {
             $local_lun_snap .= "</form>";
 
             $arBody[] = array(
-                'local_lun_icon' => "<img width=24 height=24 src=$storage_icon><input type='hidden' name='local_storage_id' value=$local_storage_id><input type='hidden' name='local_volume_group' value=$local_volume_group>",
+                'local_lun_icon' => "<img width=24 height=24 src=$storage_icon>",
                 'local_lun_name' => $local_lun_name,
                 'local_lun_attr' => $local_lun_attr,
                 'local_lun_lsize' => $local_lun_lsize,
@@ -831,7 +831,7 @@ function local_storage_lv_display($local_storage_id, $local_volume_group) {
 		}
 	}
 
-
+    $table->add_headrow("<input type='hidden' name='local_storage_id' value=$local_storage_id><input type='hidden' name='local_volume_group' value=$local_volume_group>");
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;

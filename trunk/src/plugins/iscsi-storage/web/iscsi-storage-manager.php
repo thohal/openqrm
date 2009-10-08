@@ -517,7 +517,7 @@ function iscsi_storage_display($iscsi_storage_id) {
                 $iscsi_lun_snap .= "</form>";
 
                 $arBody[] = array(
-                    'iscsi_lun_icon' => "<img width=24 height=24 src=$storage_icon><input type='hidden' name='iscsi_storage_id' value=$iscsi_storage_id>",
+                    'iscsi_lun_icon' => "<img width=24 height=24 src=$storage_icon>",
                     'iscsi_lun_name' => $iscsi_lun_name,
                     'iscsi_lun_devname' => $iscsi_lun_devname,
                     'iscsi_lun_size' => $iscsi_lun_size." MB",
@@ -527,6 +527,9 @@ function iscsi_storage_display($iscsi_storage_id) {
 			}
 		}
 	}
+
+    // transfer some parameter in case we do not have a line in the table
+    $table->add_headrow("<input type='hidden' name='iscsi_storage_id' value=$iscsi_storage_id>");
 
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';

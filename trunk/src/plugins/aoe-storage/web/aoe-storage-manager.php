@@ -523,7 +523,7 @@ function aoe_storage_display($aoe_storage_id) {
             $aoe_lun_snap .= "</form>";
 
             $arBody[] = array(
-                'aoe_lun_icon' => "<img width=24 height=24 src=$storage_icon><input type='hidden' name='aoe_storage_id' value=$aoe_storage_id>",
+                'aoe_lun_icon' => "<img width=24 height=24 src=$storage_icon>",
                 'aoe_lun_name' => $aoe_lun_name,
                 'aoe_lun_no' => $aoe_lun_no,
                 'aoe_lun_size' => $aoe_lun_size." MB",
@@ -534,7 +534,9 @@ function aoe_storage_display($aoe_storage_id) {
             $aoe_count++;
 		}
 	}
-
+    // transfer some parameter in case we do not have a line in the table
+    $table->add_headrow("<input type='hidden' name='aoe_storage_id' value=$aoe_storage_id>");
+    
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
