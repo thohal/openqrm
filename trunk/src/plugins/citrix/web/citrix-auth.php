@@ -166,9 +166,6 @@ function citrix_auth() {
 	global $citrix_server_id;
     global $thisfile;
 
-	$disp = "<b>Authenticate Citrix Server $citrix_server_id</b>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 	$citrix_server_tmp = new appliance();
 	$citrix_server_tmp->get_instance_by_id($citrix_server_id);
 	$citrix_server_resource = new resource();
