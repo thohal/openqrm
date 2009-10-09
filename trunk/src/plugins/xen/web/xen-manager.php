@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Xen manager</title>
+	<title>Xen Manager</title>
     <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
     <link rel="stylesheet" type="text/css" href="xen.css" />
     <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
@@ -138,7 +138,7 @@ function show_progressbar() {
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 
-		case 'refresh':
+		case 'reload':
             if (strlen($xen_id)) {
                 show_progressbar();
                 $xen_appliance = new appliance();
@@ -354,62 +354,64 @@ if(htmlobject_request('action_table1') != '') {
 function xen_select() {
     global $OPENQRM_USER;
     global $thisfile;
-    $table = new htmlobject_db_table('xen_id');
+    $table = new htmlobject_table_builder('appliance_id', '', '', '', 'select');
 
     $arHead = array();
-    $arHead['xen_state'] = array();
-    $arHead['xen_state']['title'] ='';
+    $arHead['appliance_state'] = array();
+    $arHead['appliance_state']['title'] ='';
+	$arHead['appliance_state']['sortable'] = false;
 
-    $arHead['xen_icon'] = array();
-    $arHead['xen_icon']['title'] ='';
+    $arHead['appliance_icon'] = array();
+    $arHead['appliance_icon']['title'] ='';
+	$arHead['appliance_icon']['sortable'] = false;
 
-    $arHead['xen_id'] = array();
-    $arHead['xen_id']['title'] ='ID';
+    $arHead['appliance_id'] = array();
+    $arHead['appliance_id']['title'] ='ID';
 
-    $arHead['xen_name'] = array();
-    $arHead['xen_name']['title'] ='Name';
+    $arHead['appliance_name'] = array();
+    $arHead['appliance_name']['title'] ='Name';
 
-    $arHead['xen_resource_id'] = array();
-    $arHead['xen_resource_id']['title'] ='Res.ID';
+    $arHead['appliance_resource_id'] = array();
+    $arHead['appliance_resource_id']['title'] ='Res.ID';
+	$arHead['appliance_resource_id']['sortable'] = false;
 
-    $arHead['xen_resource_ip'] = array();
-    $arHead['xen_resource_ip']['title'] ='Ip';
+    $arHead['appliance_resource_ip'] = array();
+    $arHead['appliance_resource_ip']['title'] ='Ip';
+	$arHead['appliance_resource_ip']['sortable'] = false;
 
-    $arHead['xen_comment'] = array();
-    $arHead['xen_comment']['title'] ='Comment';
+    $arHead['appliance_comment'] = array();
+    $arHead['appliance_comment']['title'] ='Comment';
 
     $xen_count=0;
     $arBody = array();
+    $virtualization = new virtualization();
+    $virtualization->get_instance_by_type("xen");
     $xen_tmp = new appliance();
-    $xen_array = $xen_tmp->display_overview(0, 10, 'appliance_id', 'ASC');
-
+    $xen_array = $xen_tmp->display_overview_per_virtualization($virtualization->id, $table->offset, $table->limit, $table->sort, $table->order);
     foreach ($xen_array as $index => $xen_db) {
-        $virtualization = new virtualization();
-        $virtualization->get_instance_by_id($xen_db["appliance_virtualization"]);
-        if ((strstr($virtualization->type, "xen")) && (!strstr($virtualization->type, "xen-vm"))) {
-            $xen_resource = new resource();
-            $xen_resource->get_instance_by_id($xen_db["appliance_resources"]);
-            $xen_count++;
-            $resource_icon_default="/openqrm/base/img/resource.png";
-            $xen_icon="/openqrm/base/plugins/xen/img/plugin.png";
-            $state_icon="/openqrm/base/img/$xen_resource->state.png";
-            if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
-                $state_icon="/openqrm/base/img/unknown.png";
-            }
-            if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$xen_icon)) {
-                $resource_icon_default=$xen_icon;
-            }
-            $arBody[] = array(
-                'xen_state' => "<img width=16 height=16 src=$state_icon>",
-                'xen_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-                'xen_id' => $xen_db["appliance_id"],
-                'xen_name' => $xen_resource->hostname,
-                'xen_resource_id' => $xen_resource->id,
-                'xen_resource_ip' => $xen_resource->ip,
-                'xen_comment' => $xen_resource->comment,
-            );
+        $xen_resource = new resource();
+        $xen_resource->get_instance_by_id($xen_db["appliance_resources"]);
+        $xen_count++;
+        $resource_icon_default="/openqrm/base/img/resource.png";
+        $xen_icon="/openqrm/base/plugins/xen/img/plugin.png";
+        $state_icon="/openqrm/base/img/$xen_resource->state.png";
+        if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
+            $state_icon="/openqrm/base/img/unknown.png";
         }
+        if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$xen_icon)) {
+            $resource_icon_default=$xen_icon;
+        }
+        $arBody[] = array(
+            'appliance_state' => "<img width=16 height=16 src=$state_icon>",
+            'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+            'appliance_id' => $xen_db["appliance_id"],
+            'appliance_name' => $xen_resource->hostname,
+            'appliance_resource_id' => $xen_resource->id,
+            'appliance_resource_ip' => $xen_resource->ip,
+            'appliance_comment' => $xen_resource->comment,
+        );
     }
+
     $table->id = 'Tabelle';
     $table->css = 'htmlobject_table';
     $table->border = 1;
@@ -421,9 +423,9 @@ function xen_select() {
     $table->body = $arBody;
     if ($OPENQRM_USER->role == "administrator") {
         $table->bottom = array('select');
-        $table->identifier = 'xen_id';
+        $table->identifier = 'appliance_id';
     }
-    $table->max = $xen_count;
+    $table->max = $xen_tmp->get_count_per_virtualization($virtualization->id);
 
    // set template
 	$t = new Template_PHPLIB();
@@ -447,7 +449,6 @@ function xen_display($appliance_id) {
     global $OPENQRM_USER;
     global $thisfile;
 
-    // refresh
     $xen_appliance = new appliance();
     $xen_appliance->get_instance_by_id($appliance_id);
     $xen = new resource();
@@ -481,6 +482,7 @@ function xen_display($appliance_id) {
 
     // vm infos
     $loop = 0;
+    $xen_vm_count=0;
     $arBody1 = array();
     $xen_vm_list_file="xen-stat/$xen->id.vm_list";
     if (file_exists($xen_vm_list_file)) {
@@ -568,7 +570,7 @@ function xen_display($appliance_id) {
 
             // add to table1
             $arBody1[] = array(
-                'xen_vm_state' => "<img src=$xen_vm_state_icon><input type='hidden' name='xen_id' value=$xen_appliance->id><input type='hidden' name='xen_vm_mac_ar[$xen_name]' value=$xen_vm_mac>",
+                'xen_vm_state' => "<img src=$xen_vm_state_icon><input type='hidden' name='xen_vm_mac_ar[$xen_name]' value=$xen_vm_mac>",
                 'xen_vm_id' => $xen_vm_id,
                 'xen_vm_name' => $xen_name,
                 'xen_vm_vnc' => $xen_vm_vnc,
@@ -579,6 +581,7 @@ function xen_display($appliance_id) {
                 'xen_vm_actions' => $xen_vm_actions,
                 'xen_vm_migrate_actions' => $xen_vm_migrate_actions,
             );
+            $xen_vm_count++;
 
 
         }
@@ -587,8 +590,6 @@ function xen_display($appliance_id) {
 
     // main output section
     // ############################ Xen Host table #############################
-    $disp = "<h1>Xen-Admin</h1>";
-    $disp = $disp."<br>";
 
     $table = new htmlobject_table_identifiers_checked('xen_id');
 
@@ -626,19 +627,17 @@ function xen_display($appliance_id) {
     $table->sort = '';
     $table->head = $arHead;
     $table->body = $arBody;
-    if ($OPENQRM_USER->role == "administrator") {
-        $table->bottom = array('refresh');
-        $table->identifier = 'xen_id';
-    }
     $table->max = 1;
 
 
     // ############################ Xen vms table ###################
-    $disp = $disp."<h1>VMs on Xen Host $xen->id/$xen->hostname</h1>";
-    $table1 = new htmlobject_db_table('xen_vm_name');
+
+    $table1 = new htmlobject_table_builder('xen_vm_name', '', '', '', 'vms');
+
     $arHead1 = array();
     $arHead1['xen_vm_state'] = array();
     $arHead1['xen_vm_state']['title'] ='';
+	$arHead1['xen_vm_state']['sortable'] = false;
 
     $arHead1['xen_vm_res'] = array();
     $arHead1['xen_vm_res']['title'] ='Res.';
@@ -663,29 +662,30 @@ function xen_display($appliance_id) {
 
     $arHead1['xen_vm_actions'] = array();
     $arHead1['xen_vm_actions']['title'] ='VM-Actions';
+	$arHead1['xen_vm_actions']['sortable'] = false;
 
     $arHead1['$xen_vm_migrate_actions'] = array();
     $arHead1['$xen_vm_migrate_actions']['title'] ='Migration';
+	$arHead1['$xen_vm_migrate_actions']['sortable'] = false;
 
-
-
+    $table1->add_headrow("<input type='hidden' name='xen_id' value=$xen_appliance->id>");
     $table1->id = 'Tabelle';
     $table1->css = 'htmlobject_table';
     $table1->border = 1;
     $table1->cellspacing = 0;
     $table1->cellpadding = 3;
     $table1->form_action = $thisfile;
-    $table1->sort = '';
+    $table1->autosort = true;
     $table1->identifier_type = "checkbox";
     $table1->bottom_buttons_name = "action_table1";
     $table1->identifier_name = "identifier_table1";
     $table1->head = $arHead1;
     $table1->body = $arBody1;
     if ($OPENQRM_USER->role == "administrator") {
-        $table1->bottom = array('start', 'stop', 'reboot', 'remove', 'migrate');
+        $table1->bottom = array('start', 'stop', 'reboot', 'remove', 'migrate', 'reload');
         $table1->identifier = 'xen_vm_name';
     }
-    $table1->max = count($registerd_vms);
+    $table1->max = $xen_vm_count;
 
    // set template
 	$t = new Template_PHPLIB();
@@ -715,7 +715,7 @@ if(htmlobject_request('action') != '') {
                     $output[] = array('label' => 'Xen Admin', 'value' => xen_display($id));
                 }
                 break;
-            case 'refresh':
+            case 'reload':
                 foreach($_REQUEST['identifier'] as $id) {
                     $output[] = array('label' => 'Xen Admin', 'value' => xen_display($id));
                 }

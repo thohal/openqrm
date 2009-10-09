@@ -28,6 +28,7 @@
 
 <div style="float:left;">
 {xen_server_table}
+<br><br>
 </div>
 
 <div style="float:left;">
