@@ -136,38 +136,34 @@ function show_progressbar() {
 if(htmlobject_request('action') != '') {
 	switch (htmlobject_request('action')) {
 
-		case 'refresh':
-			if (isset($_REQUEST['identifier'])) {
-				foreach($_REQUEST['identifier'] as $citrix_server_id) {
-                    show_progressbar();
-                    $citrix_appliance = new appliance();
-                    $citrix_appliance->get_instance_by_id($citrix_server_id);
-                    $citrix = new resource();
-                    $citrix->get_instance_by_id($citrix_appliance->resources);
-                    $citrix_server_ip = $citrix->ip;
-                     // already authenticated ?
-                    $citrix_auth_file=$_SERVER["DOCUMENT_ROOT"]."/openqrm/base/plugins/citrix/citrix-stat/citrix-host.pwd.".$citrix_server_ip;
-                    if (!file_exists($citrix_auth_file)) {
-                        $strMsg .= "Citrix XenServer not yet authenticated. Please authenticate !";
-                        redirect($strMsg, "tab0");
-                    }
-                    // remove current stat file
-                    $statfile="citrix-stat/citrix-vm.lst.".$citrix_server_ip;
-                    if (file_exists($statfile)) {
-                        unlink($statfile);
-                    }
-                    // send command
-                    $citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix post_vm_list -i $citrix_server_ip";
-                    $openqrm_server->send_command($citrix_command);
-                    // wait for statfile to appear again
-                    if (!wait_for_statfile($statfile)) {
-                        $strMsg .= "Error while refreshing Citrix vm list ! Please check the Event-Log<br>";
-                    } else {
-                        $strMsg .= "Refreshed Citrix vm list<br>";
-                    }
-                    redirect($strMsg, "tab0");
-                }
+		case 'reload':
+            show_progressbar();
+            $citrix_appliance = new appliance();
+            $citrix_appliance->get_instance_by_id($citrix_server_id);
+            $citrix = new resource();
+            $citrix->get_instance_by_id($citrix_appliance->resources);
+            $citrix_server_ip = $citrix->ip;
+             // already authenticated ?
+            $citrix_auth_file=$_SERVER["DOCUMENT_ROOT"]."/openqrm/base/plugins/citrix/citrix-stat/citrix-host.pwd.".$citrix_server_ip;
+            if (!file_exists($citrix_auth_file)) {
+                $strMsg .= "Citrix XenServer not yet authenticated. Please authenticate !";
+                redirect($strMsg, "tab0");
             }
+            // remove current stat file
+            $statfile="citrix-stat/citrix-vm.lst.".$citrix_server_ip;
+            if (file_exists($statfile)) {
+                unlink($statfile);
+            }
+            // send command
+            $citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix post_vm_list -i $citrix_server_ip";
+            $openqrm_server->send_command($citrix_command);
+            // wait for statfile to appear again
+            if (!wait_for_statfile($statfile)) {
+                $strMsg .= "Error while refreshing Citrix vm list ! Please check the Event-Log<br>";
+            } else {
+                $strMsg .= "Refreshed Citrix vm list<br>";
+            }
+            redirect($strMsg, "tab0");
 			break;
 
 		case 'select':

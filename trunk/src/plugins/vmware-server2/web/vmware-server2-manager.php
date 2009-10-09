@@ -146,7 +146,7 @@ if(htmlobject_request('action') != '') {
             }
 			break;
 
-		case 'refresh':
+		case 'reload':
 			if (strlen($vmware_server_id)) {
                 show_progressbar();
 				$vmware_appliance = new appliance();
@@ -379,62 +379,64 @@ function vmware_server_select() {
 
 	global $OPENQRM_USER;
 	global $thisfile;
-	$table = new htmlobject_db_table('vmware_server_id');
+    $table = new htmlobject_table_builder('appliance_id', '', '', '', 'select');
 
 	$arHead = array();
-	$arHead['vmware_server_state'] = array();
-	$arHead['vmware_server_state']['title'] ='';
+	$arHead['appliance_state'] = array();
+	$arHead['appliance_state']['title'] ='';
+	$arHead['appliance_state']['sortable'] = false;
 
-	$arHead['vmware_server_icon'] = array();
-	$arHead['vmware_server_icon']['title'] ='';
+	$arHead['appliance_icon'] = array();
+	$arHead['appliance_icon']['title'] ='';
+	$arHead['appliance_icon']['sortable'] = false;
 
-	$arHead['vmware_server_id'] = array();
-	$arHead['vmware_server_id']['title'] ='ID';
+	$arHead['appliance_id'] = array();
+	$arHead['appliance_id']['title'] ='ID';
 
-	$arHead['vmware_server_name'] = array();
-	$arHead['vmware_server_name']['title'] ='Name';
+	$arHead['appliance_name'] = array();
+	$arHead['appliance_name']['title'] ='Name';
 
-	$arHead['vmware_server_resource_id'] = array();
-	$arHead['vmware_server_resource_id']['title'] ='Res.ID';
+	$arHead['appliance_resource_id'] = array();
+	$arHead['appliance_resource_id']['title'] ='Res.ID';
+	$arHead['appliance_resource_id']['sortable'] = false;
 
-	$arHead['vmware_server_resource_ip'] = array();
-	$arHead['vmware_server_resource_ip']['title'] ='Ip';
+	$arHead['appliance_resource_ip'] = array();
+	$arHead['appliance_resource_ip']['title'] ='Ip';
+	$arHead['appliance_resource_ip']['sortable'] = false;
 
-	$arHead['vmware_server_comment'] = array();
-	$arHead['vmware_server_comment']['title'] ='Comment';
+	$arHead['appliance_comment'] = array();
+	$arHead['appliance_comment']['title'] ='Comment';
 
 	$vmware_server_count=0;
 	$arBody = array();
+    $virtualization = new virtualization();
+    $virtualization->get_instance_by_type("vmware-server2");
 	$vmware_server_tmp = new appliance();
-	$vmware_server_array = $vmware_server_tmp->display_overview(0, 100, 'appliance_id', 'ASC');
-
+	$vmware_server_array = $vmware_server_tmp->display_overview_per_virtualization($virtualization->id, $table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($vmware_server_array as $index => $vmware_server_db) {
-		$virtualization = new virtualization();
-		$virtualization->get_instance_by_id($vmware_server_db["appliance_virtualization"]);
-		if ((strstr($virtualization->type, "vmware-server2")) && (!strstr($virtualization->type, "vmware-server2-vm"))) {
-			$vmware_server_resource = new resource();
-			$vmware_server_resource->get_instance_by_id($vmware_server_db["appliance_resources"]);
-			$vmware_server_count++;
-			$resource_icon_default="/openqrm/base/img/resource.png";
-			$vmware_server_icon="/openqrm/base/plugins/vmware-server2/img/plugin.png";
-			$state_icon="/openqrm/base/img/$vmware_server_resource->state.png";
-			if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
-				$state_icon="/openqrm/base/img/unknown.png";
-			}
-			if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$vmware_server_icon)) {
-				$resource_icon_default=$vmware_server_icon;
-			}
-			$arBody[] = array(
-				'vmware_server_state' => "<img src=$state_icon>",
-				'vmware_server_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-				'vmware_server_id' => $vmware_server_db["appliance_id"],
-				'vmware_server_name' => $vmware_server_db["appliance_name"],
-				'vmware_server_resource_id' => $vmware_server_resource->id,
-				'vmware_server_resource_ip' => $vmware_server_resource->ip,
-				'vmware_server_comment' => $vmware_server_db["appliance_comment"],
-			);
-		}
-	}
+        $vmware_server_resource = new resource();
+        $vmware_server_resource->get_instance_by_id($vmware_server_db["appliance_resources"]);
+        $vmware_server_count++;
+        $resource_icon_default="/openqrm/base/img/resource.png";
+        $vmware_server_icon="/openqrm/base/plugins/vmware-server2/img/plugin.png";
+        $state_icon="/openqrm/base/img/$vmware_server_resource->state.png";
+        if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
+            $state_icon="/openqrm/base/img/unknown.png";
+        }
+        if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$vmware_server_icon)) {
+            $resource_icon_default=$vmware_server_icon;
+        }
+        $arBody[] = array(
+            'appliance_state' => "<img src=$state_icon>",
+            'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+            'appliance_id' => $vmware_server_db["appliance_id"],
+            'appliance_name' => $vmware_server_db["appliance_name"],
+            'appliance_resource_id' => $vmware_server_resource->id,
+            'appliance_resource_ip' => $vmware_server_resource->ip,
+            'appliance_comment' => $vmware_server_db["appliance_comment"],
+        );
+    }
+    
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -446,9 +448,9 @@ function vmware_server_select() {
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('select');
-		$table->identifier = 'vmware_server_id';
+		$table->identifier = 'appliance_id';
 	}
-	$table->max = $vmware_server_count;
+	$table->max = $vmware_server_tmp->get_count_per_virtualization($virtualization->id);
     // set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
@@ -471,10 +473,6 @@ function vmware_server_display($appliance_id) {
 	global $thisfile;
 	global $mvware_server2_web_ui_port;
 	$table = new htmlobject_table_identifiers_checked('vmware_server_id');
-
-	$disp = "<h1>VMware-Server2-Admin</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 
 	$arHead = array();
 	$arHead['vmware_server_state'] = array();
@@ -544,17 +542,16 @@ function vmware_server_display($appliance_id) {
 	$table->sort = '';
 	$table->head = $arHead;
 	$table->body = $arBody;
-	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('refresh');
-		$table->identifier = 'vmware_server_id';
-	}
 	$table->max = $vmware_server_count;
 
+
     // table 1
-    $table1 = new htmlobject_db_table('vmware_vm_name');
+    $table1 = new htmlobject_table_builder('vmware_vm_name', '', '', '', 'vms');
+
 	$arHead1 = array();
 	$arHead1['vmware_vm_state'] = array();
 	$arHead1['vmware_vm_state']['title'] ='State';
+	$arHead1['vmware_vm_state']['sortable'] = false;
 
 	$arHead1['vmware_vm_res_id'] = array();
 	$arHead1['vmware_vm_res_id']['title'] ='Res.ID';
@@ -576,10 +573,10 @@ function vmware_server_display($appliance_id) {
 
     $arHead1['vmware_vm_actions'] = array();
 	$arHead1['vmware_vm_actions']['title'] ='Actions';
-    $arBody1 = array();
+	$arHead1['vmware_vm_actions']['sortable'] = false;
 
-
     $arBody1 = array();
+    $vmware_vm_count=0;
     $vmware_vm_list_file="vmware-server2-stat/".$vmware_server_resource_id.".vm_list";
     if (file_exists($vmware_vm_list_file)) {
         $vmware_vm_list_content=file($vmware_vm_list_file);
@@ -639,7 +636,7 @@ function vmware_server_display($appliance_id) {
 
             // add to table1
             $arBody1[] = array(
-                'vmware_vm_state' => "<img src=$vmware_vm_state_icon><input type='hidden' name='vmware_server_id' value=$appliance_id><input type='hidden' name='vmware_vm_mac_ar[$vmware_vm_name]' value=$vmware_vm_mac>",
+                'vmware_vm_state' => "<img src=$vmware_vm_state_icon><input type='hidden' name='vmware_vm_mac_ar[$vmware_vm_name]' value=$vmware_vm_mac>",
                 'vmware_vm_res_id' => $vmware_vm_res_id,
                 'vmware_vm_id' => $vmware_vm_id,
                 'vmware_vm_name' => $vmware_vm_name,
@@ -648,25 +645,27 @@ function vmware_server_display($appliance_id) {
                 'vmware_vm_memory' => $vmware_vm_memory." MB",
                 'vmware_vm_actions' => $vmware_vm_actions,
             );
+            $vmware_vm_count++;
 
 
         }
     }
 
+    $table1->add_headrow("<input type='hidden' name='vmware_server_id' value=$appliance_id>");
 	$table1->id = 'Tabelle';
 	$table1->css = 'htmlobject_table';
 	$table1->border = 1;
 	$table1->cellspacing = 0;
 	$table1->cellpadding = 3;
 	$table1->form_action = $thisfile;
-	$table1->sort = '';
+	$table1->autosort = true;
 	$table1->identifier_type = "checkbox";
     $table1->bottom_buttons_name = "action_table1";
     $table1->identifier_name = "identifier_table1";
 	$table1->head = $arHead1;
 	$table1->body = $arBody1;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table1->bottom = array('start', 'stop', 'reboot', 'delete');
+		$table1->bottom = array('start', 'stop', 'reboot', 'delete', 'reload');
 		$table1->identifier = 'vmware_vm_name';
 	}
 	$table1->max = $vmware_vm_count;
@@ -701,7 +700,7 @@ if(htmlobject_request('action') != '') {
                     $output[] = array('label' => 'VMware-Server2 Admin', 'value' => vmware_server_display($id));
                 }
                 break;
-            case 'refresh':
+            case 'reload':
                 foreach($_REQUEST['identifier'] as $id) {
                     $output[] = array('label' => 'VMware-Server2 Admin', 'value' => vmware_server_display($id));
                 }

@@ -576,7 +576,7 @@ function vmware_server_display($appliance_id) {
 	$table1->head = $arHead1;
 	$table1->body = $arBody1;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table1->bottom = array('start', 'stop', 'restart', 'delete');
+		$table1->bottom = array('start', 'stop', 'restart', 'delete', 'reload');
 		$table1->identifier = 'vmware_vm_name';
 	}
 	$table1->max = $vmware_vm_count;
@@ -609,7 +609,7 @@ if(htmlobject_request('action') != '') {
                     $output[] = array('label' => 'VMware-Server Admin', 'value' => vmware_server_display($id));
                 }
                 break;
-            case 'refresh':
+            case 'reload':
                 foreach($_REQUEST['identifier'] as $id) {
                     $output[] = array('label' => 'VMware-Server Admin', 'value' => vmware_server_display($id));
                 }
