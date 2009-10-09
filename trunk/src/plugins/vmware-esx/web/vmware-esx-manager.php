@@ -166,7 +166,7 @@ if(htmlobject_request('action') != '') {
             } else {
                 $strMsg .="Refreshing vm list<br>";
             }
-            redirect($strMsg, "tab0", $id);
+            redirect($strMsg, "tab0", $vmware_esx_id);
 			break;
 
 
@@ -265,7 +265,7 @@ if(htmlobject_request('action_table1') != '') {
             }
 			break;
 
-		case 'reboot':
+		case 'restart':
 			if (strlen($vmware_esx_id)) {
                 if (isset($_REQUEST['identifier_table1'])) {
                     show_progressbar();
@@ -285,9 +285,9 @@ if(htmlobject_request('action_table1') != '') {
                         $openqrm_server->send_command($esx_command);
                         // and wait for the resulting statfile
                         if (!wait_for_statfile($statfile)) {
-                            $strMsg .= "Error during rebooting vm $vmw_vm ! Please check the Event-Log<br>";
+                            $strMsg .= "Error during restarting vm $vmw_vm ! Please check the Event-Log<br>";
                         } else {
-                            $strMsg .="Rebooted vm $vmw_vm<br>";
+                            $strMsg .="restarted vm $vmw_vm<br>";
                         }
                     }
                     redirect($strMsg, "tab0", $vmware_esx_id);
@@ -594,7 +594,7 @@ function vmware_esx_display($appliance_id) {
                 $vmware_vm_state_icon = "/openqrm/base/img/active.png";
                 // online actions
                 $vmware_vm_actions= $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&action_table1=stop&vmware_esx_id=$appliance_id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"></a>&nbsp;";
-                $vmware_vm_actions = $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&action_table1=reboot&vmware_esx_id=$appliance_id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"></a>&nbsp;";
+                $vmware_vm_actions = $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&action_table1=restart&vmware_esx_id=$appliance_id\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"></a>&nbsp;";
             }
 
             // add to table1
@@ -627,7 +627,7 @@ function vmware_esx_display($appliance_id) {
 	$table1->head = $arHead1;
 	$table1->body = $arBody1;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table1->bottom = array('start', 'stop', 'reboot', 'delete');
+		$table1->bottom = array('start', 'stop', 'restart', 'delete');
 		$table1->identifier = 'vmware_vm_name';
 	}
 	$table1->max = $vmware_vm_count;

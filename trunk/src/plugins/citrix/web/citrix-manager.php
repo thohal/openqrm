@@ -279,7 +279,7 @@ if(htmlobject_request('action_table1') != '') {
             }
 			break;
 
-		case 'reboot':
+		case 'restart':
 			if (isset($_REQUEST['identifier_table1'])) {
                 show_progressbar();
 				foreach($_REQUEST['identifier_table1'] as $citrix_name) {
@@ -304,9 +304,9 @@ if(htmlobject_request('action_table1') != '') {
                     $openqrm_server->send_command($citrix_command);
                     // wait for statfile to appear again
                     if (!wait_for_statfile($statfile)) {
-                        $strMsg .= "Error while rebooting Citrix vm $citrix_name ! Please check the Event-Log<br>";
+                        $strMsg .= "Error while restarting Citrix vm $citrix_name ! Please check the Event-Log<br>";
                     } else {
-                        $strMsg .= "Rebooted Citrix vm $citrix_name<br>";
+                        $strMsg .= "restarted Citrix vm $citrix_name<br>";
                     }
                 }
                 redirect($strMsg, "tab0");
