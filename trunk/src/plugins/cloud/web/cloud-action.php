@@ -295,8 +295,8 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$create_cloud_appliance = "create table cloud_appliance(ca_id INT(5), ca_appliance_id INT(5), ca_cr_id INT(5), ca_cmd INT(5), ca_state INT(5))";
 			$create_cloud_nat = "create table cloud_nat(cn_id INT(5), cn_internal_net VARCHAR(50), cn_external_net VARCHAR(50))";
 			$create_cloud_transaction = "create table cloud_transaction(ct_id INT(5), ct_time VARCHAR(50), ct_cr_id INT(5), ct_cu_id INT(5), ct_ccu_charge INT(5), ct_ccu_balance INT(5), ct_reason VARCHAR(20), ct_comment VARCHAR(255))";
-			$create_cloud_image_resize_live_cycle = "create table cloud_irlc(cd_id INT(5), cd_appliance_id INT(5), cd_state INT(5))";
-			$create_cloud_image_private_live_cycle = "create table cloud_iplc(cp_id INT(5), cp_appliance_id INT(5), cp_cu_id INT(5), cp_state INT(5), cp_start_private VARCHAR(20))";
+			$create_cloud_image_resize_life_cycle = "create table cloud_irlc(cd_id INT(5), cd_appliance_id INT(5), cd_state INT(5))";
+			$create_cloud_image_private_life_cycle = "create table cloud_iplc(cp_id INT(5), cp_appliance_id INT(5), cp_cu_id INT(5), cp_state INT(5), cp_start_private VARCHAR(20))";
 			$create_cloud_image_private = "create table cloud_private_image(co_id INT(5), co_image_id INT(5), co_cu_id INT(5), co_comment VARCHAR(255), co_state INT(5))";
             $db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($create_cloud_requests);
@@ -309,8 +309,8 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($create_cloud_appliance);
 			$recordSet = &$db->Execute($create_cloud_nat);
 			$recordSet = &$db->Execute($create_cloud_transaction);
-			$recordSet = &$db->Execute($create_cloud_image_resize_live_cycle);
-			$recordSet = &$db->Execute($create_cloud_image_private_live_cycle);
+			$recordSet = &$db->Execute($create_cloud_image_resize_life_cycle);
+			$recordSet = &$db->Execute($create_cloud_image_private_life_cycle);
 			$recordSet = &$db->Execute($create_cloud_image_private);
 
 			// create the default configuration
@@ -370,8 +370,8 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$drop_cloud_appliance = "drop table cloud_appliance";
 			$drop_cloud_nat = "drop table cloud_nat";
 			$drop_cloud_transaction = "drop table cloud_transaction";
-			$drop_cloud_image_resize_live_cycle = "drop table cloud_irlc";
-			$drop_cloud_image_private_live_cycle = "drop table cloud_iplc";
+			$drop_cloud_image_resize_life_cycle = "drop table cloud_irlc";
+			$drop_cloud_image_private_life_cycle = "drop table cloud_iplc";
 			$drop_cloud_image_private = "drop table cloud_private_image";
 			$db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($drop_cloud_requests);
@@ -384,8 +384,8 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($drop_cloud_appliance);
 			$recordSet = &$db->Execute($drop_cloud_nat);
 			$recordSet = &$db->Execute($drop_cloud_transaction);
-			$recordSet = &$db->Execute($drop_cloud_image_resize_live_cycle);
-			$recordSet = &$db->Execute($drop_cloud_image_private_live_cycle);
+			$recordSet = &$db->Execute($drop_cloud_image_resize_life_cycle);
+			$recordSet = &$db->Execute($drop_cloud_image_private_life_cycle);
 			$recordSet = &$db->Execute($drop_cloud_image_private);
 		    $db->Close();
 			break;

@@ -1420,7 +1420,7 @@ class cloudsoap {
             'ci_disk_rsize' => "$ca_new_disk_size",
         );
         $cloud_image->update($cloud_image->id, $cloudi_request);
-        // create a new cloud-image resize-live-cycle / using cloudappliance id
+        // create a new cloud-image resize-life-cycle / using cloudappliance id
         $cloudirlc = new cloudirlc();
         $cirlc_fields['cd_id'] = openqrm_db_get_free_id('cd_id', $cloudirlc->_db_table);
         $cirlc_fields['cd_appliance_id'] = $cr_appliance->id;
@@ -1518,7 +1518,7 @@ class cloudsoap {
             'ci_clone_name' => $private_image_name,
         );
         $cloud_image->update($cloud_image->id, $cloudi_request);
-        // create a new cloud-image private-live-cycle / using the cloudappliance id
+        // create a new cloud-image private-life-cycle / using the cloudappliance id
         $cloudiplc = new cloudiplc();
         $ciplc_fields['cp_id'] = openqrm_db_get_free_id('cp_id', $cloudiplc->_db_table);
         $ciplc_fields['cp_appliance_id'] = $id;

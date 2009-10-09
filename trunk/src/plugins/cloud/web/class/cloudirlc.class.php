@@ -18,7 +18,7 @@
 */
 
 
-// This class represents a cloudirlc-resize-live-cycle object in openQRM
+// This class represents a cloudirlc-resize-life-cycle object in openQRM
 
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
