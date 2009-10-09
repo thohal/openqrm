@@ -510,7 +510,7 @@ function vmware_esx_display($appliance_id) {
 
 
     // table 1
-    $table1 = new htmlobject_db_table('vmware_vm_name');
+    $table1 = new htmlobject_table_builder('vmware_vm_name', '', '', '', 'vms');
 	$arHead1 = array();
 	$arHead1['vmware_vm_state'] = array();
 	$arHead1['vmware_vm_state']['title'] ='State';

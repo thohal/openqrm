@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>VMware Server 1 Create VM</title>
+	<title>VMware Server Create VM</title>
     <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
     <link rel="stylesheet" type="text/css" href="vmware-server.css" />
     <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />

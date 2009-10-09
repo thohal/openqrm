@@ -28,6 +28,7 @@
 
 <div style="float:left;">
 {vmware_server_table}
+<br><br>
 </div>
 
 <div style="float:left;">
