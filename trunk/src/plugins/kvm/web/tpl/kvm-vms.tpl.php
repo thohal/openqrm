@@ -24,10 +24,11 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1>KVM-Server-Admin</h1>
+<h1>KVM-Server Admin</h1>
 
 <div style="float:left;">
 {kvm_server_table}
+<br>
 </div>
 
 <div style="float:left;">

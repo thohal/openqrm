@@ -24,7 +24,7 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1>KVM-server Create VM</h1>
+<h1>KVM-Server Admin</h1>
 
 <div style="float:left;">
 Please select a KVM-Host from the list below

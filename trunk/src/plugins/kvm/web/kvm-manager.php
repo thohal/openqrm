@@ -148,7 +148,7 @@ if(htmlobject_request('action') != '') {
             }
             break;
 
-		case 'refresh':
+		case 'reload':
             show_progressbar();
             $kvm_appliance = new appliance();
             $kvm_appliance->get_instance_by_id($kvm_server_id);
@@ -198,6 +198,9 @@ if(htmlobject_request('action') != '') {
                     }
 				}
 				redirect($strMsg, "tab0");
+            } else {
+                $strMsg ="No virtual machine selected<br>";
+				redirect($strMsg, "tab0");
             }
             break;
 
@@ -227,10 +230,13 @@ if(htmlobject_request('action') != '') {
                     }
 				}
 				redirect($strMsg, "tab0");
+            } else {
+                $strMsg ="No virtual machine selected<br>";
+				redirect($strMsg, "tab0");
             }
             break;
 
-		case 'reboot':
+		case 'restart':
 			if (isset($_REQUEST['identifier'])) {
 				foreach($_REQUEST['identifier'] as $kvm_server_name) {
                     show_progressbar();
@@ -254,6 +260,9 @@ if(htmlobject_request('action') != '') {
     					$strMsg .="Restarting $kvm_server_name <br>";
                     }
 				}
+				redirect($strMsg, "tab0");
+            } else {
+                $strMsg ="No virtual machine selected<br>";
 				redirect($strMsg, "tab0");
             }
 			break;
@@ -289,6 +298,9 @@ if(htmlobject_request('action') != '') {
                     }
 				}
 				redirect($strMsg, "tab0");
+            } else {
+                $strMsg ="No virtual machine selected<br>";
+				redirect($strMsg, "tab0");
             }
 			break;
 
@@ -304,62 +316,63 @@ function kvm_server_select() {
 
 	global $OPENQRM_USER;
 	global $thisfile;
-	$table = new htmlobject_db_table('kvm_server_id');
+    $table = new htmlobject_table_builder('appliance_id', '', '', '', 'select');
 
 	$arHead = array();
-	$arHead['kvm_server_state'] = array();
-	$arHead['kvm_server_state']['title'] ='';
+	$arHead['appliance_state'] = array();
+	$arHead['appliance_state']['title'] ='';
+	$arHead['appliance_state']['sortable'] = false;
 
-	$arHead['kvm_server_icon'] = array();
-	$arHead['kvm_server_icon']['title'] ='';
+	$arHead['appliance_icon'] = array();
+	$arHead['appliance_icon']['title'] ='';
+	$arHead['appliance_icon']['sortable'] = false;
 
-	$arHead['kvm_server_id'] = array();
-	$arHead['kvm_server_id']['title'] ='ID';
+	$arHead['appliance_id'] = array();
+	$arHead['appliance_id']['title'] ='ID';
 
-	$arHead['kvm_server_name'] = array();
-	$arHead['kvm_server_name']['title'] ='Name';
+	$arHead['appliance_name'] = array();
+	$arHead['appliance_name']['title'] ='Name';
 
-	$arHead['kvm_server_resource_id'] = array();
-	$arHead['kvm_server_resource_id']['title'] ='Res.ID';
+	$arHead['appliance_resource_id'] = array();
+	$arHead['appliance_resource_id']['title'] ='Res.ID';
+	$arHead['appliance_resource_id']['sortable'] = false;
 
-	$arHead['kvm_server_resource_ip'] = array();
-	$arHead['kvm_server_resource_ip']['title'] ='Ip';
+	$arHead['appliance_resource_ip'] = array();
+	$arHead['appliance_resource_ip']['title'] ='Ip';
+	$arHead['appliance_resource_ip']['sortable'] = false;
 
-	$arHead['kvm_server_comment'] = array();
-	$arHead['kvm_server_comment']['title'] ='Comment';
+	$arHead['appliance_comment'] = array();
+	$arHead['appliance_comment']['title'] ='Comment';
 
 	$kvm_server_count=0;
 	$arBody = array();
+    $virtualization = new virtualization();
+    $virtualization->get_instance_by_type("kvm");
 	$kvm_server_tmp = new appliance();
-	$kvm_server_array = $kvm_server_tmp->display_overview(0, 100, 'appliance_id', 'ASC');
-
+	$kvm_server_array = $kvm_server_tmp->display_overview_per_virtualization($virtualization->id, $table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($kvm_server_array as $index => $kvm_server_db) {
-		$virtualization = new virtualization();
-		$virtualization->get_instance_by_id($kvm_server_db["appliance_virtualization"]);
-		if ((strstr($virtualization->type, "kvm")) && (!strstr($virtualization->type, "kvm-vm"))) {
-			$kvm_server_resource = new resource();
-			$kvm_server_resource->get_instance_by_id($kvm_server_db["appliance_resources"]);
-			$kvm_server_count++;
-			$resource_icon_default="/openqrm/base/img/resource.png";
-			$kvm_server_icon="/openqrm/base/plugins/kvm/img/plugin.png";
-			$state_icon="/openqrm/base/img/$kvm_server_resource->state.png";
-			if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
-				$state_icon="/openqrm/base/img/unknown.png";
-			}
-			if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$kvm_server_icon)) {
-				$resource_icon_default=$kvm_server_icon;
-			}
-			$arBody[] = array(
-				'kvm_server_state' => "<img src=$state_icon>",
-				'kvm_server_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-				'kvm_server_id' => $kvm_server_db["appliance_id"],
-				'kvm_server_name' => $kvm_server_db["appliance_name"],
-				'kvm_server_resource_id' => $kvm_server_resource->id,
-				'kvm_server_resource_ip' => $kvm_server_resource->ip,
-				'kvm_server_comment' => $kvm_server_db["appliance_comment"],
-			);
-		}
-	}
+        $kvm_server_resource = new resource();
+        $kvm_server_resource->get_instance_by_id($kvm_server_db["appliance_resources"]);
+        $resource_icon_default="/openqrm/base/img/resource.png";
+        $kvm_server_icon="/openqrm/base/plugins/kvm/img/plugin.png";
+        $state_icon="/openqrm/base/img/$kvm_server_resource->state.png";
+        if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
+            $state_icon="/openqrm/base/img/unknown.png";
+        }
+        if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$kvm_server_icon)) {
+            $resource_icon_default=$kvm_server_icon;
+        }
+        $arBody[] = array(
+            'appliance_state' => "<img src=$state_icon>",
+            'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+            'appliance_id' => $kvm_server_db["appliance_id"],
+            'appliance_name' => $kvm_server_db["appliance_name"],
+            'appliance_resource_id' => $kvm_server_resource->id,
+            'appliance_resource_ip' => $kvm_server_resource->ip,
+            'appliance_comment' => $kvm_server_db["appliance_comment"],
+        );
+        $kvm_server_count++;
+    }
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -371,9 +384,9 @@ function kvm_server_select() {
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('select');
-		$table->identifier = 'kvm_server_id';
+		$table->identifier = 'appliance_id';
 	}
-	$table->max = $kvm_server_count;
+    $table->max = $kvm_server_tmp->get_count_per_virtualization($virtualization->id);
     // set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
@@ -442,7 +455,7 @@ function kvm_server_display($appliance_id) {
 	// we need to run commands on the resource ip
 	$arBody[] = array(
 		'kvm_server_state' => "<img src=$state_icon>",
-		'kvm_server_icon' => "<img width=24 height=24 src=$resource_icon_default><input type='hidden' name='kvm_server_id' value=$appliance_id>",
+		'kvm_server_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 		'kvm_server_id' => $kvm_server_tmp->id,
 		'kvm_server_name' => $kvm_server_tmp->name,
 		'kvm_server_resource_id' => $kvm_server_resource->id,
@@ -450,6 +463,7 @@ function kvm_server_display($appliance_id) {
 		'kvm_server_comment' => $kvm_server_tmp->comment,
 		'kvm_server_create' => $kvm_server_create_button,
 	);
+
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -459,17 +473,14 @@ function kvm_server_display($appliance_id) {
 	$table->sort = '';
 	$table->head = $arHead;
 	$table->body = $arBody;
-	if ($OPENQRM_USER->role == "administrator") {
-		$table->bottom = array('refresh');
-		$table->identifier = 'kvm_server_id';
-	}
 	$table->max = $kvm_server_count;
 
     // table 1
-    $table1 = new htmlobject_db_table('kvm_vm_name');
+    $table1 = new htmlobject_table_builder('kvm_vm_res', '', '', '', 'vms');
 	$arHead1 = array();
 	$arHead1['kvm_vm_state'] = array();
 	$arHead1['kvm_vm_state']['title'] ='State';
+	$arHead1['kvm_vm_state']['sortable'] = false;
 
 	$arHead1['kvm_vm_res'] = array();
 	$arHead1['kvm_vm_res']['title'] ='Res.';
@@ -485,6 +496,7 @@ function kvm_server_display($appliance_id) {
 
 	$arHead1['kvm_vm_actions'] = array();
 	$arHead1['kvm_vm_actions']['title'] ='Actions';
+	$arHead1['kvm_vm_actions']['sortable'] = false;
     $arBody1 = array();
 
     $kvm_server_vm_list_file="kvm-stat/$kvm_server_resource->id.vm_list";
@@ -512,7 +524,7 @@ function kvm_server_display($appliance_id) {
                 if (!strcmp($kvm_vm_state, "1")) {
                     $state_icon="/openqrm/base/img/active.png";
                     $vm_actions = $vm_actions."<a href=\"$thisfile?identifier[]=$kvm_short_name&action=stop&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Stop</a>&nbsp;&nbsp;&nbsp;&nbsp;";
-                    $vm_actions = $vm_actions."<a href=\"$thisfile?identifier[]=$kvm_short_name&action=reboot&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"> Reboot</a>&nbsp;&nbsp;&nbsp;&nbsp;";
+                    $vm_actions = $vm_actions."<a href=\"$thisfile?identifier[]=$kvm_short_name&action=restart&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"> Reboot</a>&nbsp;&nbsp;&nbsp;&nbsp;";
                 } else {
                     $state_icon="/openqrm/base/img/off.png";
     				$vm_actions = $vm_actions."<a href=\"$thisfile?identifier[]=$kvm_short_name&action=start&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>&nbsp;&nbsp;&nbsp;&nbsp;";
@@ -524,7 +536,7 @@ function kvm_server_display($appliance_id) {
                 $kvm_vm_count++;
 
                 $arBody1[] = array(
-                    'kvm_vm_state' => "<img src=$state_icon><input type='hidden' name='kvm_server_id' value=$appliance_id><input type='hidden' name='kvm_vm_mac_ar[$kvm_short_name]' value=$kvm_vm_mac>",
+                    'kvm_vm_state' => "<img src=$state_icon><input type='hidden' name='kvm_vm_mac_ar[$kvm_short_name]' value=$kvm_vm_mac>",
                     'kvm_vm_id' => $kvm_vm_id,
                     'kvm_vm_name' => $kvm_short_name,
                     'kvm_vm_ip' => $kvm_vm_ip,
@@ -535,18 +547,19 @@ function kvm_server_display($appliance_id) {
 			}
 		}
 	}
+    $table1->add_headrow("<input type='hidden' name='kvm_server_id' value=$appliance_id>");
 	$table1->id = 'Tabelle';
 	$table1->css = 'htmlobject_table';
 	$table1->border = 1;
 	$table1->cellspacing = 0;
 	$table1->cellpadding = 3;
 	$table1->form_action = $thisfile;
-	$table1->sort = '';
+	$table1->autosort = true;
 	$table1->identifier_type = "checkbox";
 	$table1->head = $arHead1;
 	$table1->body = $arBody1;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table1->bottom = array('start', 'stop', 'restart', 'delete');
+		$table1->bottom = array('start', 'stop', 'restart', 'delete', 'reload');
 		$table1->identifier = 'kvm_vm_name';
 	}
 	$table1->max = $kvm_vm_count;
@@ -579,7 +592,7 @@ if(htmlobject_request('action') != '') {
                     $output[] = array('label' => 'Kvm-Server Admin', 'value' => kvm_server_display($id));
                 }
                 break;
-            case 'refresh':
+            case 'reload':
                 foreach($_REQUEST['identifier'] as $id) {
                     $output[] = array('label' => 'Kvm-Server Admin', 'value' => kvm_server_display($id));
                 }
