@@ -514,7 +514,24 @@ function get_capabilities($appliance_id) {
 	}
 }
 
-// returns the number of appliances for an appliance type
+
+
+// returns the number of appliances per virtualization type
+function get_count_per_virtualization($virtualization_id) {
+	global $APPLIANCE_INFO_TABLE;
+	$count=0;
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute("select count(appliance_id) as num from $APPLIANCE_INFO_TABLE where appliance_virtualization=$virtualization_id");
+	if (!$rs) {
+		print $db->ErrorMsg();
+	} else {
+		$count = $rs->fields["num"];
+	}
+	return $count;
+}
+
+
+// returns the number of all appliances
 function get_count() {
 	global $APPLIANCE_INFO_TABLE;
 	$count=0;
@@ -527,7 +544,6 @@ function get_count() {
 	}
 	return $count;
 }
-
 
 
 // returns a list of all appliance names
@@ -644,6 +660,27 @@ function find_resource($appliance_virtualization) {
 
 
 
+// displays the appliance-overview per type
+function display_overview_per_virtualization($virtualization_id, $offset, $limit, $sort, $order) {
+	global $APPLIANCE_INFO_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$recordSet = &$db->SelectLimit("select * from $APPLIANCE_INFO_TABLE where appliance_virtualization=$virtualization_id order by $sort $order", $limit, $offset);
+	$appliance_array = array();
+	if (!$recordSet) {
+		$event->log("display_overview_per_virtualization", $_SERVER['REQUEST_TIME'], 2, "appliance.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	} else {
+		while (!$recordSet->EOF) {
+			array_push($appliance_array, $recordSet->fields);
+			$recordSet->MoveNext();
+		}
+		$recordSet->Close();
+	}		
+	return $appliance_array;
+}
+
+
+
 // displays the appliance-overview
 function display_overview($offset, $limit, $sort, $order) {
 	global $APPLIANCE_INFO_TABLE;
@@ -659,13 +696,9 @@ function display_overview($offset, $limit, $sort, $order) {
 			$recordSet->MoveNext();
 		}
 		$recordSet->Close();
-	}		
+	}
 	return $appliance_array;
 }
-
-
-
-
 
 
 
