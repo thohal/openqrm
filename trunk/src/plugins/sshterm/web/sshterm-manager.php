@@ -82,17 +82,16 @@ function sshterm_display() {
 	global $thisfile;
 
 	$resource_tmp = new resource();
-	$table = new htmlobject_db_table('resource_id');
-
-	$disp = '<h1>Resource List</h1>';
-	$disp .= '<br>';
+    $table = new htmlobject_table_builder('resource_id', '', '', '', 'select');
 
 	$arHead = array();
 	$arHead['resource_state'] = array();
 	$arHead['resource_state']['title'] ='';
+	$arHead['resource_state']['sortable'] = false;
 
 	$arHead['resource_icon'] = array();
 	$arHead['resource_icon']['title'] ='';
+	$arHead['resource_icon']['sortable'] = false;
 
 	$arHead['resource_id'] = array();
 	$arHead['resource_id']['title'] ='ID';
@@ -105,6 +104,7 @@ function sshterm_display() {
 
 	$arHead['resource_login'] = array();
 	$arHead['resource_login']['title'] ='SSH-Login';
+	$arHead['resource_login']['sortable'] = false;
 
 	$arBody = array();
 	$resource_array = $resource_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
@@ -169,9 +169,16 @@ function sshterm_display() {
 		$table->identifier = 'resource_id';
 	}
 	$table->max = $resource_tmp->get_count('all');
-	#$table->limit = 10;
-	
-	return $disp.$table->get_string();
+
+    // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'sshterm-manager.tpl.php');
+	$t->setVar(array(
+        'ssh_login_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
 }
 
 

@@ -35,18 +35,15 @@ require_once "$RootDir/include/htmlobject.inc.php";
 
 function sshterm_about() {
 	global $OPENQRM_SERVER_BASE_DIR;
-	$disp = "<h1><img border=0 src=\"/openqrm/base/plugins/sshterm/img/plugin.png\"> Sshterm plugin</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."The sshterm-plugin integrates 'ajaxterm' into openQRM and provides a secure login to the openQRM-server and the managed resources through the Web-interface.";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<b>How to use :</b>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."No manual configuration is needed for the sshterm-plugin.";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
+    // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'sshterm-about.tpl.php');
+	$t->setVar(array(
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
+
 }
 
 
