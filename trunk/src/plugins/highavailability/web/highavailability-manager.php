@@ -84,10 +84,7 @@ function ha_appliance_display() {
 	global $thisfile;
 
 	$appliance_tmp = new appliance();
-	$table = new htmlobject_db_table('appliance_id');
-
-	$disp = '<h1>High-Availability Manager</h1>';
-	$disp .= '<br>';
+    $table = new htmlobject_table_builder('appliance_id', '', '', '', 'select');
 
 	$arHead = array();
 	$arHead['appliance_state'] = array();
@@ -112,15 +109,17 @@ function ha_appliance_display() {
 
 	$arHead['appliance_resources'] = array();
 	$arHead['appliance_resources']['title'] ='Resource <small>[id/ip]</small>';
+	$arHead['appliance_resources']['sortable'] = false;
 
 	$arHead['appliance_type'] = array();
 	$arHead['appliance_type']['title'] ='Type';
+	$arHead['appliance_type']['sortable'] = false;
 
 	$arHead['appliance_ha'] = array();
 	$arHead['appliance_ha']['title'] ='High-Available';
+	$arHead['appliance_ha']['sortable'] = false;
 
 	$arBody = array();
-	$table->offset=1;
 	$appliance_array = $appliance_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 
 	foreach ($appliance_array as $index => $appliance_db) {
@@ -190,8 +189,17 @@ function ha_appliance_display() {
 		$table->identifier = 'appliance_id';
 	}
 	$table->max = $appliance_tmp->get_count();
-	#$table->limit = 10;
-	
+    // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'highavailability-select.tpl.php');
+	$t->setVar(array(
+        'ha_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
+
+
 	return $disp.$table->get_string();
 }
 
