@@ -210,7 +210,7 @@ function image_shelf_select() {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $thisfile;
 
-	$table = new htmlobject_db_table('imageshelf_id');
+    $table = new htmlobject_table_builder('imageshelf_id', '', '', '', 'select');
 	$arHead = array();
 
 	$arHead['imageshelf_id'] = array();
@@ -227,7 +227,7 @@ function image_shelf_select() {
 
 	$image_shelf_count=1;
 	$imageshelf_tmp = new imageshelf();
-	$imageshelf_array = $imageshelf_tmp->display_overview(0, $table->limit, $table->sort, $table->order);
+	$imageshelf_array = $imageshelf_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 
 	$arBody = array();
 	foreach ($imageshelf_array as $index => $imageshelf_db) {
@@ -253,7 +253,7 @@ function image_shelf_select() {
 		$table->bottom = array('select', 'remove');
 		$table->identifier = 'imageshelf_id';
 	}
-	$table->max = $image_shelf_count;
+    $table->max = $imageshelf_tmp->get_count();
 
    // set template
 	$t = new Template_PHPLIB();
@@ -274,13 +274,15 @@ function image_shelf_display($image_shelf_id) {
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $thisfile;
+	global $step;
 
 	$imageshelf = new imageshelf();
 	$imageshelf->get_instance_by_id($image_shelf_id);
 	$image_shelf_name = $imageshelf->name;
 	$image_shelf_conf = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/web/image-lists/$image_shelf_name/image-shelf.conf";
 
-	$table = new htmlobject_db_table('image_id');
+    $table = new htmlobject_table_builder('image_id', '', '', '', 'get');
+
 	$arHead = array();
 
 	$arHead['image_id'] = array();
@@ -304,7 +306,7 @@ function image_shelf_display($image_shelf_id) {
 	$arHead['image_maintainer'] = array();
 	$arHead['image_maintainer']['title'] ='Maintainer';
 
-	$image_count=1;
+	$image_count=0;
 	$arBody = array();
     // be sure it is there, otherwise wait for it
     if (!wait_for_statfile($image_shelf_conf)) {
@@ -328,7 +330,7 @@ function image_shelf_display($image_shelf_id) {
 				'image_distribution' => "$image_distribution-$image_version",
 				'image_application' => "$image_application",
 				// using the filename to transport the image_shelf_id
-				'image_filename' => "$image_filename <input type=\"hidden\" name=\"image_shelf_id\" value=\"$image_shelf_id\">",
+				'image_filename' => "$image_filename",
 				'image_size' => "$image_size",
 				'image_root_password' => "$image_root_password",
 				'image_maintainer' => "$image_maintainer",
@@ -341,6 +343,7 @@ function image_shelf_display($image_shelf_id) {
 
 	}
 
+    $table->add_headrow("<input type=\"hidden\" name=\"image_shelf_id\" value=\"$image_shelf_id\"><input type=\"hidden\" name=\"step\" value=\"$step\">");
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -348,7 +351,7 @@ function image_shelf_display($image_shelf_id) {
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
 	$table->identifier_type = "radio";
-	$table->sort = '';
+	$table->autosort = true;
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -375,12 +378,12 @@ function image_storage_select($image_id, $image_shelf_id) {
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $thisfile;
+	global $step;
 
 	$image_tmp = new image();
-	$table = new htmlobject_db_table('image_id');
 
-	$disp = "<h1>Select (NFS-) Image to 'put' the template on</h1>";
-	$disp .= '<br>';
+    // nfs table
+    $table = new htmlobject_table_builder('image_id', '', '', '', 'put_nfs');
 
 	$arHead = array();
 	$arHead['image_icon'] = array();
@@ -407,7 +410,7 @@ function image_storage_select($image_id, $image_shelf_id) {
 	}
 
 	$arBody = array();
-	$image_array = $image_tmp->display_overview(1, $table->limit, $table->sort, $table->order);
+	$image_array = $image_tmp->display_overview_per_type("nfs-deployment", $table->offset, $table->limit, $table->sort, $table->order);
 	$image_icon = "/openqrm/base/img/image.png";
 
 	foreach ($image_array as $index => $image_db) {
@@ -415,22 +418,18 @@ function image_storage_select($image_id, $image_shelf_id) {
 		$image->get_instance_by_id($image_db["image_id"]);
 		$image_deployment = new deployment();
 		$image_deployment->get_instance_by_type($image_db["image_type"]);
-
-		// for now we only support nfs-images
-		if ((!strcmp($image_deployment->type, "nfs-deployment")) || (!strcmp($image_deployment->type, "lvm-nfs-deployment"))) {
-
-			$arBody[] = array(
-				'image_icon' => "<img width=20 height=20 src=$image_icon>",
-				'image_id' => $image_db["image_id"],
-				'image_name' => $image_db["image_name"],
-				'image_version' => $image_db["image_version"],
-				// use the image_type to transport image_id + image_shelf_id
-				'image_type' => "$image_deployment->description  <input type=\"hidden\" name=\"image_shelf_id\" value=\"$image_shelf_id\"><input type=\"hidden\" name=\"image_id\" value=\"$image_id\">",
-				'image_comment' => $image_db["image_comment"],
-			);
-		}
-	}
-
+        $arBody[] = array(
+            'image_icon' => "<img width=20 height=20 src=$image_icon>",
+            'image_id' => $image_db["image_id"],
+            'image_name' => $image_db["image_name"],
+            'image_version' => $image_db["image_version"],
+            // use the image_type to transport image_id + image_shelf_id
+            'image_type' => "$image_deployment->description",
+            'image_comment' => $image_db["image_comment"],
+        );
+    }
+    
+    $table->add_headrow("<input type=\"hidden\" name=\"image_shelf_id\" value=\"$image_shelf_id\"><input type=\"hidden\" name=\"image_id\" value=\"$image_id\"><input type=\"hidden\" name=\"step\" value=\"$step\">");
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -438,19 +437,86 @@ function image_storage_select($image_id, $image_shelf_id) {
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
 	$table->identifier_type = "radio";
+	$table->autosort = true;
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('put');
 		$table->identifier = 'image_id';
 	}
-	$table->max = count($image_array);
+    $table->max = $image_tmp->get_count_per_type("nfs-deployment");
+
+
+    // lvm-nfs table
+    $table1 = new htmlobject_table_builder('image_id', '', '', '', 'put_lvmnfs');
+
+	$arHead1 = array();
+	$arHead1['image_icon'] = array();
+	$arHead1['image_icon']['title'] ='';
+	$arHead1['image_icon']['sortable'] = false;
+
+	$arHead1['image_id'] = array();
+	$arHead1['image_id']['title'] ='ID';
+
+	$arHead1['image_name'] = array();
+	$arHead1['image_name']['title'] ='Name';
+
+	$arHead1['image_version'] = array();
+	$arHead1['image_version']['title'] ='Version';
+
+	$arHead1['image_type'] = array();
+	$arHead1['image_type']['title'] ='Deployment Type';
+
+	$arHead1['image_edit'] = array();
+	$arHead1['image_edit']['title'] ='';
+	$arHead1['image_edit']['sortable'] = false;
+	if(strtolower(OPENQRM_USER_ROLE_NAME) != 'administrator') {
+		$arHead1['image_edit']['hidden'] = true;
+	}
+
+	$arBody1 = array();
+	$image_array = $image_tmp->display_overview_per_type("lvm-nfs-deployment", $table->offset, $table->limit, $table->sort, $table->order);
+	$image_icon = "/openqrm/base/img/image.png";
+	foreach ($image_array as $index => $image_db) {
+		$image = new image();
+		$image->get_instance_by_id($image_db["image_id"]);
+		$image_deployment = new deployment();
+		$image_deployment->get_instance_by_type($image_db["image_type"]);
+        $arBody1[] = array(
+            'image_icon' => "<img width=20 height=20 src=$image_icon>",
+            'image_id' => $image_db["image_id"],
+            'image_name' => $image_db["image_name"],
+            'image_version' => $image_db["image_version"],
+            // use the image_type to transport image_id + image_shelf_id
+            'image_type' => "$image_deployment->description",
+            'image_comment' => $image_db["image_comment"],
+        );
+    }
+
+    $table1->add_headrow("<input type=\"hidden\" name=\"image_shelf_id\" value=\"$image_shelf_id\"><input type=\"hidden\" name=\"image_id\" value=\"$image_id\"><input type=\"hidden\" name=\"step\" value=\"$step\">");
+	$table1->id = 'Tabelle';
+	$table1->css = 'htmlobject_table';
+	$table1->border = 1;
+	$table1->cellspacing = 0;
+	$table1->cellpadding = 3;
+	$table1->form_action = $thisfile;
+	$table1->identifier_type = "radio";
+	$table1->autosort = true;
+	$table1->head = $arHead1;
+	$table1->body = $arBody1;
+	if ($OPENQRM_USER->role == "administrator") {
+		$table1->bottom = array('put');
+		$table1->identifier = 'image_id';
+	}
+    $table1->max = $image_tmp->get_count_per_type("lvm-nfs-deployment");
+
     // set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'image-shelf-put.tpl.php');
 	$t->setVar(array(
-		'image_shelf_put_table' => $table->get_string(),
+		'image_shelf_nfs_table' => $table->get_string(),
+		'image_shelf_lvm_nfs_table' => $table1->get_string(),
         'image_template' => $image_id,
 	));
 	$disp =  $t->parse('out', 'tplfile');
@@ -468,7 +534,7 @@ function image_shelf_final($final_image_id, $image_id, $image_shelf_id) {
 	global $thisfile;
 	// here we execute the request !
 	// get the image filename on the shelf from its id
-	$image_count=1;
+	$image_count=0;
 	$imageshelf = new imageshelf();
 	$imageshelf->get_instance_by_id($image_shelf_id);
 	$image_shelf_name = $imageshelf->name;

@@ -17,6 +17,18 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>Select openQRM Image</h1>
-<h4>Select an (NFS-) Image to 'put' the template {image_template} on</h4>
-{image_shelf_put_table}
+<h1>Select openQRM Image (NFS or LVM-NFS)</h1>
+
+Please select one of following server images to put the template on
+
+<h4>Available NFS-Images to 'put' the template {image_template} on</h4>
+{image_shelf_nfs_table}
+
+<br>
+<br>
+<hr>
+<br>
+
+<h4>Available LVM-NFS-Images to 'put' the template {image_template} on</h4>
+{image_shelf_lvm_nfs_table}
+

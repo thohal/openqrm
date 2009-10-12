@@ -282,6 +282,24 @@ var $_event;
 	}
 
 
+	//--------------------------------------------------
+	/**
+	* get number of imageshelfs
+	* @access public
+	* @return int
+	*/
+	//--------------------------------------------------
+	function get_count() {
+		$count=0;
+		$db=openqrm_get_db_connection();
+		$rs = $db->Execute("select count(imageshelf_id) as num from $this->_db_table");
+		if (!$rs) {
+			$this->_event->log("get_count", $_SERVER['REQUEST_TIME'], 2, "imageshelf.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+		} else {
+			$count = $rs->fields["num"];
+		}
+		return $count;
+	}
 
 	//--------------------------------------------------
 	/**
