@@ -21,10 +21,10 @@
 #	IMG
 #	Target
 ..|LinuxCOE
+...|About|plugins/linuxcoe/linuxcoe-manager.php?page=about
 ...|Create|plugins/linuxcoe/linuxcoe-manager.php?page=create
 ...|Apply|plugins/linuxcoe/linuxcoe-manager.php?page=apply
 ...|Main
-....|About|plugins/linuxcoe/linuxcoe-manager.php?page=about
 ....|LinuxCOE|plugins/linuxcoe/linuxcoe-manager.php?page=main
 ....|Create|plugins/linuxcoe/linuxcoe-manager.php?page=create
 ....|Profiles|plugins/linuxcoe/linuxcoe-manager.php?page=profile

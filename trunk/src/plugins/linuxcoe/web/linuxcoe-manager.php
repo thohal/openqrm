@@ -64,11 +64,6 @@ function linuxcoe_display($page) {
 	global $thisfile;
 	$install_lock_file = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/lock/install-lock";
 
-	$table = new htmlobject_db_table('imageshelf_id');
-
-	$disp = "<h1>LinuxCOE</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 	// check if the user reads the setup/install page 
 	if (file_exists($install_lock_file)) {
 		$page = "setup";
@@ -102,7 +97,7 @@ function linuxcoe_display($page) {
 	//------------------------------------------------------------ set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
-	$t->setFile('tplfile', './' . 'linuxcoe-tpl.php');
+	$t->setFile('tplfile', './tpl/' . 'linuxcoe-tpl.php');
 	$t->setVar(array(
 		'thisfile' => $thisfile,
 		'currentab' => htmlobject_input('currenttab', array("value" => 'tab1', "label" => ''), 'hidden'),

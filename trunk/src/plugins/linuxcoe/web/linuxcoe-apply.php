@@ -141,14 +141,6 @@ $openqrm_server->send_command($lcoe_profile_check);
 
 
 
-
-
-
-
-
-
-
-
 function linuxcoe_profile_manager() {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_SERVER_IP_ADDRESS;
@@ -156,15 +148,7 @@ function linuxcoe_profile_manager() {
 	global $thisfile;
 	global $RootDir;
 
-	$table = new htmlobject_db_table('lcoe_profile_name');
-
-	$disp = "<h1><img border=0 src=\"/openqrm/base/plugins/linuxcoe/img/plugin.png\"> LinuxCOE Profile Manager</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."Please select an LinuxCOE profile from the list below";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-
+    $table = new htmlobject_table_builder('lcoe_profile_id', '', '', '', 'profiles');
 	$arHead = array();
 
 	$arHead['lcoe_profile_id'] = array();
@@ -209,14 +193,27 @@ function linuxcoe_profile_manager() {
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
 	$table->identifier_type = "radio";
+	$table->autosort = true;
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('select', 'update', 'remove');
 		$table->identifier = 'lcoe_profile_name';
 	}
-	$table->max = $lcoe_profile_count;
-	return $disp.$table->get_string();
+	$table->max = $lcoe_profile_count-1;
+	// set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'linuxcoe-apply1.tpl.php');
+	$t->setVar(array(
+		'linuxcoe_profile_table' => $table->get_string(),
+	));
+
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
+
+
+
 
 }
 
@@ -228,20 +225,16 @@ function linuxcoe_select_resource($lcoe_profile_name) {
 	global $thisfile;
 	global $RootDir;
 
-	$table = new htmlobject_db_table('resource_id');
-
-	$disp = "<h1><img border=0 src=\"/openqrm/base/plugins/linuxcoe/img/plugin.png\"> LinuxCOE Profile Manager</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."Please select a Resource to apply the LinuxCOE profile $lcoe_profile_name to :";
-	$disp = $disp."<br>";
+    $table = new htmlobject_table_builder('resource_id', '', '', '', 'resources');
 
 	$arHead = array();
 	$arHead['resource_state'] = array();
 	$arHead['resource_state']['title'] ='';
+	$arHead['resource_state']['sortable'] = false;
 
 	$arHead['resource_icon'] = array();
 	$arHead['resource_icon']['title'] ='';
+	$arHead['resource_icon']['sortable'] = false;
 
 	$arHead['resource_id'] = array();
 	$arHead['resource_id']['title'] ='ID';
@@ -299,6 +292,7 @@ function linuxcoe_select_resource($lcoe_profile_name) {
 	$table->max = $resource_tmp->get_count('all');
 	
 	return $disp.$table->get_string();
+
 }
 
 
