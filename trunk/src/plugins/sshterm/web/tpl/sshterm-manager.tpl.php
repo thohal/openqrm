@@ -23,6 +23,7 @@
 }
 </style>
 
-<h1>SSH Login Manager</h1>
+<h1><img border=0 src="/openqrm/base/plugins/sshterm/img/plugin.png"> SSH Login Manager</h1>
+
 {ssh_login_table}
 
