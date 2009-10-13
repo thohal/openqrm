@@ -13,7 +13,7 @@ xmlHttp = null;
 xmlHttp = new Request();
 
 if (xmlHttp) {
-    xmlHttp.open("GET", "http://localhost/openqrm/base/server/event/event-xmlhttprequest.php?tmp="+Math.random(), true);
+    xmlHttp.open("GET", "server/event/event-xmlhttprequest.php?tmp="+Math.random(), true);
     xmlHttp.onreadystatechange = function () {
         if (xmlHttp.readyState == 4) {
 		values = xmlHttp.responseText.split(',');
@@ -36,7 +36,7 @@ apHttp = null;
 apHttp = new Request();
 
 if (apHttp) {
-    apHttp.open("GET", "http://localhost/openqrm/base/server/appliance/appliance-xmlhttprequest.php?tmp="+Math.random(), true);
+    apHttp.open("GET", "server/appliance/appliance-xmlhttprequest.php?tmp="+Math.random(), true);
     apHttp.onreadystatechange = function () {
         if (apHttp.readyState == 4) {
 		values = apHttp.responseText.split(',');
@@ -54,7 +54,7 @@ reHttp = null;
 reHttp = new Request();
 
 if (reHttp) {
-    reHttp.open("GET", "http://localhost/openqrm/base/server/resource/resource-xmlhttprequest.php?tmp="+Math.random(), true);
+    reHttp.open("GET", "server/resource/resource-xmlhttprequest.php?tmp="+Math.random(), true);
     reHttp.onreadystatechange = function () {
         if (reHttp.readyState == 4) {
 		values = reHttp.responseText.split(',');
