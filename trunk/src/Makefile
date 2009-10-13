@@ -117,6 +117,9 @@ buildrequirements:
 	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_check_build_requirements
 	if [ -d ./thirdparty ]; then mkdir -p ../buildtmp; cp -aR ./thirdparty/* ../buildtmp/; fi
 
+update:
+	@if [ -d .svn ]; then svn update;fi
 
-.PHONY: all configure compile install start uninstall clean realclean reinstall rpm deb debsource check initrd buildrequirements
+
+.PHONY: all configure compile install start uninstall clean realclean reinstall rpm deb debsource check initrd buildrequirements update
 
