@@ -154,6 +154,8 @@ function lcoe_apply_profile() {
 						UBUNTU_VERSION="hardy"
 					elif grep "mirror/suite" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/preseed | grep gutsy 1>/dev/null; then
 						UBUNTU_VERSION="gutsy"
+					elif grep "mirror/suite" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/preseed | grep jaunty 1>/dev/null; then
+						UBUNTU_VERSION="jaunty"
 					else
 						linuxcoe_log "ERROR: Could not find out the Ubuntu version to install or Ubuntu version too old and not supported."
 						linuxcoe_lock release
@@ -161,11 +163,11 @@ function lcoe_apply_profile() {
 					fi
 					
 					# find the architecture
-					if grep -i 64 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/openqrm.info 1>/dev/null; then
+					if grep -i x86_64 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/boot.msg 1>/dev/null; then
 						UBUNTU_ARCH="x86_64"
 						DEBIAN_NETINSTALL_KERNEL="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/ubuntu/$UBUNTU_VERSION/$UBUNTU_ARCH/ubuntu-installer/amd64/linux"
 						DEBIAN_NETINSTALL_INITRD="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/ubuntu/$UBUNTU_VERSION/$UBUNTU_ARCH/ubuntu-installer/amd64/initrd.gz"
-					elif grep -i 32 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/openqrm.info 1>/dev/null; then
+					elif grep -i i386 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/boot.msg 1>/dev/null; then
 						UBUNTU_ARCH="i386"
 						DEBIAN_NETINSTALL_KERNEL="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/ubuntu/$UBUNTU_VERSION/$UBUNTU_ARCH/ubuntu-installer/$UBUNTU_ARCH/linux"
 						DEBIAN_NETINSTALL_INITRD="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/ubuntu/$UBUNTU_VERSION/$UBUNTU_ARCH/ubuntu-installer/$UBUNTU_ARCH/initrd.gz"
@@ -196,11 +198,11 @@ function lcoe_apply_profile() {
 					fi
 					
 					# find the architecture
-					if grep -i 64 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/openqrm.info 1>/dev/null; then
+					if grep -i x86_64 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/boot.msg 1>/dev/null; then
 						DEBIAN_ARCH="x86_64"
 						DEBIAN_NETINSTALL_KERNEL="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/debian/$DEBIAN_VERSION/$DEBIAN_ARCH/debian-installer/amd64/linux"
 						DEBIAN_NETINSTALL_INITRD="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/debian/$DEBIAN_VERSION/$DEBIAN_ARCH/debian-installer/amd64/initrd.gz"
-					elif grep -i 32 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/openqrm.info 1>/dev/null; then
+					elif grep -i i386 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/web/profiles/$PROFILE_NAME/boot.msg 1>/dev/null; then
 						DEBIAN_ARCH="i386"
 						DEBIAN_NETINSTALL_KERNEL="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/debian/$DEBIAN_VERSION/$DEBIAN_ARCH/debian-installer/$DEBIAN_ARCH/linux"
 						DEBIAN_NETINSTALL_INITRD="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linuxcoe/etc/debian/$DEBIAN_VERSION/$DEBIAN_ARCH/debian-installer/$DEBIAN_ARCH/initrd.gz"

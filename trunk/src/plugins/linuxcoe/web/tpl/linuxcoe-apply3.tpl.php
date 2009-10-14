@@ -24,7 +24,10 @@
 </style>
 
 <h1><img border=0 src="/openqrm/base/plugins/linuxcoe/img/plugin.png"> LinuxCOE Profile Manager</h1>
-Please select a Resource to apply the LinuxCOE profile {lcoe_profile_name} to
-<br>
-{linuxcoe_idle_table}
 
+The LinuxCOE profile {lcoe_profile_name} will now be applied to the resource {lcoe_resource_id}.
+<br>
+It will fully automatic install the operation system as configured in the LinuxCOE profile.
+<br>
+After it is fully up and running please integrate it into openQRM via the local-server plugin.
+<br>
