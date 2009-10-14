@@ -25,6 +25,7 @@ $BootServiceDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/boot-service/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/class/storage.class.php";
+require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/plugin.class.php";
 require_once "$RootDir/class/event.class.php";
 
@@ -384,6 +385,14 @@ function get_parameter($resource_id) {
 	}
 	echo "openqrm_plugins=\"$plugin_list\"\n";
 	echo "openqrm_boot_services=\"$boot_service_list\"\n";
+    // here the appliance resouce got active
+    // now we remove the iscsi password from the deployment parameters
+    $image = new image();
+    $image->get_instance_by_id($image_id);
+    if (strstr($image->deployment_parameter, "IMAGE_ISCSI_AUTH")) {
+        $image->set_deployment_parameters("IMAGE_ISCSI_AUTH", "");
+        $event->log("get_parameter", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Resource $resource_id gets active. Removing authentication token from image $image_id", "", "", 0, 0, $resource_id);
+    }
 
 }
 
