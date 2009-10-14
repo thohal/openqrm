@@ -1,5 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Puppet manager</title>
+    <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
+    <link rel="stylesheet" type="text/css" href="kvm.css" />
+    <link type="text/css" href="/openqrm/base/js/jquery/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="/openqrm/base/js/jquery/js/jquery-ui-1.7.1.custom.min.js"></script>
+<style type="text/css">
+.ui-progressbar-value {
+    background-image: url(/openqrm/base/img/progress.gif);
+}
+#progressbar {
+    position: absolute;
+    left: 150px;
+    top: 250px;
+    width: 400px;
+    height: 20px;
+}
+</style>
+</head>
+<body>
+<div id="progressbar">
+</div>
 
-<link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
 
 <?php
 /*
@@ -42,30 +66,63 @@ global $OPENQRM_SERVER_BASE_DIR;
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
+$refresh_delay=1;
+$refresh_loop_max=20;
+
+
+function redirect($strMsg, $puppet_id) {
+	global $thisfile;
+    $url = $thisfile.'?strMsg='.urlencode($strMsg).'&currenttab=tab0&redir=yes&puppet_id='.$puppet_id;
+	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
+	exit;
+}
+
+
+function show_progressbar() {
+?>
+    <script type="text/javascript">
+        $("#progressbar").progressbar({
+			value: 100
+		});
+        var options = {};
+        $("#progressbar").effect("shake",options,2000,null);
+	</script>
+<?php
+        flush();
+}
+
+
 
 // action !
-if(htmlobject_request('action') != '') {
-	switch (htmlobject_request('action')) {
-		case 'update':
-			$puppet_id = $_REQUEST["puppet_id"];
-			// get the appliance name
-			$appliance = new appliance();
-			$appliance->get_instance_by_id($puppet_id);
-			$appliance_name = $appliance->name;
-
-			$puppet_groups_to_activate_array = array();
-			$identifier_array = $_REQUEST['identifier'];
-			$puppet = new puppet();
-			if (!is_array($identifier_array)) {
-				$puppet->remove_appliance($appliance_name);
-			} else {
-				foreach($identifier_array as $puppet_group) {
-					$puppet_groups_to_activate_array[] .= $puppet_group;
-				}
-				$puppet->set_groups($appliance_name, $puppet_groups_to_activate_array);
-			}
-			break;
-	}
+if(htmlobject_request('redir') != 'yes') {
+    if(htmlobject_request('action') != '') {
+        switch (htmlobject_request('action')) {
+            case 'update':
+                show_progressbar();
+                $puppet_id = htmlobject_request('puppet_id');
+                // get the appliance name
+                $appliance = new appliance();
+                $appliance->get_instance_by_id($puppet_id);
+                $appliance_name = $appliance->name;
+                $puppet_groups_to_activate_array = array();
+                $identifier_array = htmlobject_request('identifier');
+                $puppet = new puppet();
+                // clean up all current puppet groups from the appliance
+                $puppet->remove_appliance($appliance_name);
+                // set new groups if any
+                if (is_array($identifier_array)) {
+                    foreach($identifier_array as $puppet_group) {
+                        $puppet_groups_to_activate_array[] .= $puppet_group;
+                    }
+                    $puppet->set_groups($appliance_name, $puppet_groups_to_activate_array);
+                    $strMsg .="Updated Puppet groups for appliance $appliance_name<br>";
+                } else {
+                    $strMsg .="Removed Puppet groups from appliance $appliance_name<br>";
+                }
+                redirect($strMsg, $puppet_id);
+                break;
+        }
+    }
 }
 
 
@@ -74,42 +131,39 @@ function puppet_select() {
 
 	global $OPENQRM_USER;
 	global $thisfile;
-	$table = new htmlobject_db_table('puppet_id');
 
-
-	$disp = "<h1>Select Appliance for Puppet configuration</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."Please select an Appliance to configure via Puppet from the list";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
+    $table = new htmlobject_table_builder('appliance_id', '', '', '', 'select');
 
 	$arHead = array();
-	$arHead['puppet_state'] = array();
-	$arHead['puppet_state']['title'] ='';
+	$arHead['appliance_state'] = array();
+	$arHead['appliance_state']['title'] ='';
+	$arHead['appliance_state']['sortable'] = false;
 
-	$arHead['puppet_icon'] = array();
-	$arHead['puppet_icon']['title'] ='';
+	$arHead['appliance_icon'] = array();
+	$arHead['appliance_icon']['title'] ='';
+	$arHead['appliance_icon']['sortable'] = false;
 
-	$arHead['puppet_id'] = array();
-	$arHead['puppet_id']['title'] ='ID';
+	$arHead['appliance_id'] = array();
+	$arHead['appliance_id']['title'] ='ID';
 
-	$arHead['puppet_name'] = array();
-	$arHead['puppet_name']['title'] ='Name';
+	$arHead['appliance_name'] = array();
+	$arHead['appliance_name']['title'] ='Name';
 
-	$arHead['puppet_resource_id'] = array();
-	$arHead['puppet_resource_id']['title'] ='Res.ID';
+	$arHead['appliance_resource_id'] = array();
+	$arHead['appliance_resource_id']['title'] ='Res.ID';
+	$arHead['appliance_resource_id']['sortable'] = false;
 
-	$arHead['puppet_resource_ip'] = array();
-	$arHead['puppet_resource_ip']['title'] ='Ip';
+	$arHead['appliance_resource_ip'] = array();
+	$arHead['appliance_resource_ip']['title'] ='Ip';
+	$arHead['appliance_resource_ip']['sortable'] = false;
 
-	$arHead['puppet_comment'] = array();
-	$arHead['puppet_comment']['title'] ='Comment';
+	$arHead['appliance_comment'] = array();
+	$arHead['appliance_comment']['title'] ='Comment';
 
 	$puppet_count=0;
 	$arBody = array();
 	$puppet_tmp = new appliance();
-	$puppet_array = $puppet_tmp->display_overview(0, 100, 'appliance_id', 'ASC');
+	$puppet_array = $puppet_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 
 	foreach ($puppet_array as $index => $puppet_db) {
 		$puppet_app = new appliance();
@@ -130,13 +184,13 @@ function puppet_select() {
 		}
 
 		$arBody[] = array(
-			'puppet_state' => "<img src=$state_icon>",
-			'puppet_icon' => "<img width=24 height=24 src=$resource_icon_default>",
-			'puppet_id' => $puppet_db["appliance_id"],
-			'puppet_name' => $puppet_db["appliance_name"],
-			'puppet_resource_id' => $puppet_resource->id,
-			'puppet_resource_ip' => $puppet_resource->ip,
-			'puppet_comment' => $puppet_db["appliance_comment"],
+			'appliance_state' => "<img src=$state_icon>",
+			'appliance_icon' => "<img width=24 height=24 src=$resource_icon_default>",
+			'appliance_id' => $puppet_db["appliance_id"],
+			'appliance_name' => $puppet_db["appliance_name"],
+			'appliance_resource_id' => $puppet_resource->id,
+			'appliance_resource_ip' => $puppet_resource->ip,
+			'appliance_comment' => $puppet_db["appliance_comment"],
 		);
 	}
 
@@ -151,10 +205,18 @@ function puppet_select() {
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('select');
-		$table->identifier = 'puppet_id';
+		$table->identifier = 'appliance_id';
 	}
-	$table->max = $puppet_count;
-	return $disp.$table->get_string();
+    $table->max = $puppet_tmp->get_count();
+    // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'puppet-select.tpl.php');
+	$t->setVar(array(
+        'puppet_appliance_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
 }
 
 
@@ -169,26 +231,14 @@ function puppet_display($puppet_id) {
 	$puppet_group_array = array();
 	$puppet = new puppet();
 	$puppet_group_array = $puppet->get_available_groups();
-
-
-
 	// get the appliance name
 	$appliance = new appliance();
 	$appliance->get_instance_by_id($puppet_id);
 	$appliance_name = $appliance->name;
 	$appliance_domain = $puppet->get_domain();
-
 	// get the enabled groups
 	$appliance_puppet_groups = array();
 	$appliance_puppet_groups = $puppet->get_groups($appliance_name);
-
-			
-	$disp = "<h1>Select the Puppet-groups</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."Select the Puppet-groups for the appliance $appliance_name.$appliance_domain";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 
 	$arHead = array();
 
@@ -205,11 +255,13 @@ function puppet_display($puppet_id) {
 		$puid=$index+1;
 		$puppet_info = $puppet->get_group_info($puppet_g);
 		$arBody[] = array(
-			'puppet_id' => "$puid <input type=\"hidden\" name=\"puppet_id\" value=\"$puppet_id\">",
+			'puppet_id' => $puid,
 			'puppet_name' => $puppet_g,
 			'puppet_info' => $puppet_info,
 		);
 	}
+
+    $table->add_headrow("<input type=\"hidden\" name=\"puppet_id\" value=\"$puppet_id\">");
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -218,6 +270,7 @@ function puppet_display($puppet_id) {
 	$table->form_action = $thisfile;
 	$table->identifier_type = "checkbox";
 	$table->identifier_checked = $appliance_puppet_groups;
+    $table->autosort = true;
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
@@ -225,9 +278,16 @@ function puppet_display($puppet_id) {
 		$table->identifier = 'puppet_name';
 	}
 	$table->max = $puppet_count;
-	return $disp.$table->get_string();
-
-
+    // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'puppet-apply.tpl.php');
+	$t->setVar(array(
+        'puppet_groups_table' => $table->get_string(),
+        'appliance_name' => $appliance_name.".".$appliance_domain,
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
 }
 
 

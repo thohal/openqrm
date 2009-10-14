@@ -79,12 +79,8 @@ function puppet_config_manager() {
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $thisfile;
-	$table = new htmlobject_db_table('cc_id');
-
-	$disp = "<h1>Puppet Configuration</a></h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
+    
+	$table = new htmlobject_table_identifiers_checked('cc_id');
 	$arHead = array();
 
 	$arHead['cc_id'] = array();
@@ -99,8 +95,9 @@ function puppet_config_manager() {
 	$arBody = array();
 
 	// db select
+    $puppet_config_count=0;
 	$cc_config = new puppetconfig();
-	$cc_array = $cc_config->display_overview(0, 100, 'cc_id', 'ASC');
+	$cc_array = $cc_config->display_overview(0, 100, $table->sort, $table->order);
 	$ident_array = array();
 	foreach ($cc_array as $index => $cc) {
 		$key = $cc["cc_key"];
@@ -117,6 +114,7 @@ function puppet_config_manager() {
 			'cc_key' => $cc["cc_key"],
 			'cc_value' => $input_value,
 		);
+        $puppet_config_count++;
 	}
 
 	$table->id = 'Tabelle';
@@ -133,8 +131,16 @@ function puppet_config_manager() {
 		$table->bottom = array('update');
 		$table->identifier = 'cc_id';
 	}
-	$table->max = 100;
-	return $disp.$table->get_string();
+	$table->max = $puppet_config_count;
+    // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'puppet-config.tpl.php');
+	$t->setVar(array(
+        'puppet_config_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
 }
 
 
