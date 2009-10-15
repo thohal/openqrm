@@ -182,8 +182,7 @@ function aws_select_account() {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $thisfile;
 
-	$table = new htmlobject_db_table('aws_id');
-
+    $table = new htmlobject_table_builder('aws_id', '', '', '', 'select');
     $arHead = array();
 
 	$arHead['aws_id'] = array();
@@ -198,7 +197,7 @@ function aws_select_account() {
 	$arHead['aws_ec2_region'] = array();
 	$arHead['aws_ec2_region']['title'] ='Region';
 
-	$aws_count=1;
+	$aws_count=0;
 	$aws_tmp = new aws();
 	$aws_array = $aws_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
 
@@ -228,7 +227,7 @@ function aws_select_account() {
 	}
 	$table->max = $aws_tmp->get_count();
     // is there at least one account setup already ?
-    if ($aws_count == 1) {
+    if ($aws_count == 0) {
         $aws_account_hint = "<h4>No AWS account configured yet.<br>Click <a href='aws-setup.php'><strong>here</strong></a> to setup an AWS account in openQRM</h4>";
     }
    // set template
@@ -254,7 +253,9 @@ function image_storage_select($aws_id) {
 	global $thisfile;
 
 	$image_tmp = new image();
-	$table = new htmlobject_db_table('image_id');
+	$image_icon = "/openqrm/base/img/image.png";
+    // nfs table
+    $table = new htmlobject_table_builder('image_id', '', '', '', 'nfs');
 
 	$arHead = array();
 	$arHead['image_icon'] = array();
@@ -273,45 +274,35 @@ function image_storage_select($aws_id) {
 	$arHead['image_type'] = array();
 	$arHead['image_type']['title'] ='Deployment Type';
 
-	$arHead['image_edit'] = array();
-	$arHead['image_edit']['title'] ='';
-	$arHead['image_edit']['sortable'] = false;
-	if(strtolower(OPENQRM_USER_ROLE_NAME) != 'administrator') {
-		$arHead['image_edit']['hidden'] = true;
-	}
+	$arHead['image_comment'] = array();
+	$arHead['image_comment']['title'] ='Comment';
 
+    $image_nfs_count=0;
 	$arBody = array();
-	$image_array = $image_tmp->display_overview($table->offset, $table->limit, $table->sort, $table->order);
-	$image_icon = "/openqrm/base/img/image.png";
-    $image_count = 1;
+	$image_array = $image_tmp->display_overview_per_type("nfs-deployment", $table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($image_array as $index => $image_db) {
 		$image = new image();
 		$image->get_instance_by_id($image_db["image_id"]);
 		$image_deployment = new deployment();
 		$image_deployment->get_instance_by_type($image_db["image_type"]);
-
-		// for now we only support nfs-images
-		if ((!strcmp($image_deployment->type, "nfs-deployment")) || (!strcmp($image_deployment->type, "lvm-nfs-deployment"))) {
-
-			$arBody[] = array(
-				'image_icon' => "<img width=20 height=20 src=$image_icon>",
-				'image_id' => $image_db["image_id"],
-				'image_name' => $image_db["image_name"],
-				'image_version' => $image_db["image_version"],
-				// use the image_type to transport image_id + aws_id
-				'image_type' => "$image_deployment->description  <input type=\"hidden\" name=\"aws_id\" value=\"$aws_id\">",
-				'image_comment' => $image_db["image_comment"],
-			);
-            $image_count++;
-		}
+        $arBody[] = array(
+            'image_icon' => "<img width=20 height=20 src=$image_icon>",
+            'image_id' => $image_db["image_id"],
+            'image_name' => $image_db["image_name"],
+            'image_version' => $image_db["image_version"],
+            'image_type' => "$image_deployment->description",
+            'image_comment' => $image_db["image_comment"],
+        );
+        $image_nfs_count++;
 	}
 
     // are there any active aws instances ? if not give a hint
-    if ($image_count == 1) {
-        $create_image_hint = "<h4>There are no (NFS- or LVM-NFS based) openQRM Server-Images available";
-        $create_image_hint .= "<br>Please create a <a href=\"/openqrm/base/server/image/image-new.php?currenttab=tab1\"><strong>NFS- or LVM-NFS Server-Image</strong></a></h4>";
+    if ($image_nfs_count == 0) {
+        $create_nfs_image_hint = "<h4>There are no NFS-Server-Images available.";
+        $create_nfs_image_hint .= " Please create a <a href=\"/openqrm/base/server/image/image-new.php?currenttab=tab1\"><strong>NFS-Server-Image</strong></a></h4>";
     }
 
+    $table->add_headrow("<input type=\"hidden\" name=\"aws_id\" value=\"$aws_id\"><input type=\"hidden\" name=\"step\" value=\"2\">");
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -319,20 +310,90 @@ function image_storage_select($aws_id) {
 	$table->cellpadding = 3;
 	$table->form_action = $thisfile;
 	$table->identifier_type = "radio";
+    $table->autosort = true;
 	$table->head = $arHead;
 	$table->body = $arBody;
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('next');
 		$table->identifier = 'image_id';
 	}
-    $table->max = $image_tmp->get_count();
+    $table->max = $image_tmp->get_count_per_type("nfs-deployment");
+
+
+    // lvm-nfs table
+    $table1 = new htmlobject_table_builder('image_id', '', '', '', 'lvmnfs');
+
+	$arHead1 = array();
+	$arHead1['image_icon'] = array();
+	$arHead1['image_icon']['title'] ='';
+	$arHead1['image_icon']['sortable'] = false;
+
+	$arHead1['image_id'] = array();
+	$arHead1['image_id']['title'] ='ID';
+
+	$arHead1['image_name'] = array();
+	$arHead1['image_name']['title'] ='Name';
+
+	$arHead1['image_version'] = array();
+	$arHead1['image_version']['title'] ='Version';
+
+	$arHead1['image_type'] = array();
+	$arHead1['image_type']['title'] ='Deployment Type';
+
+	$arHead1['image_comment'] = array();
+	$arHead1['image_comment']['title'] ='Comment';
+
+    $image_lvmnfs_count=0;
+	$arBody1 = array();
+	$image_array = $image_tmp->display_overview_per_type("lvm-nfs-deployment", $table->offset, $table->limit, $table->sort, $table->order);
+	foreach ($image_array as $index => $image_db) {
+		$image = new image();
+		$image->get_instance_by_id($image_db["image_id"]);
+		$image_deployment = new deployment();
+		$image_deployment->get_instance_by_type($image_db["image_type"]);
+        $arBody1[] = array(
+            'image_icon' => "<img width=20 height=20 src=$image_icon>",
+            'image_id' => $image_db["image_id"],
+            'image_name' => $image_db["image_name"],
+            'image_version' => $image_db["image_version"],
+            'image_type' => "$image_deployment->description",
+            'image_comment' => $image_db["image_comment"],
+        );
+        $image_lvmnfs_count++;
+	}
+
+    // are there any active aws instances ? if not give a hint
+    if ($image_lvmnfs_count == 0) {
+        $create_lvn_nfs_image_hint = "<h4>There are no LVM-NFS-Server-Images available.";
+        $create_lvn_nfs_image_hint .= " Please create a <a href=\"/openqrm/base/server/image/image-new.php?currenttab=tab1\"><strong>LVM-NFS Server-Image</strong></a></h4>";
+    }
+
+    $table1->add_headrow("<input type=\"hidden\" name=\"aws_id\" value=\"$aws_id\"><input type=\"hidden\" name=\"step\" value=\"2\">");
+	$table1->id = 'Tabelle';
+	$table1->css = 'htmlobject_table';
+	$table1->border = 1;
+	$table1->cellspacing = 0;
+	$table1->cellpadding = 3;
+	$table1->form_action = $thisfile;
+	$table1->identifier_type = "radio";
+    $table1->autosort = true;
+	$table1->head = $arHead1;
+	$table1->body = $arBody1;
+	if ($OPENQRM_USER->role == "administrator") {
+		$table1->bottom = array('next');
+		$table1->identifier = 'image_id';
+	}
+    $table1->max = $image_tmp->get_count_per_type("lvm-nfs-deployment");
+    
     // set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'aws-export.tpl.php');
 	$t->setVar(array(
-		'image_put_table' => $table->get_string(),
-        'create_image_hint' => $create_image_hint,
+		'image_nfs_table' => $table->get_string(),
+        'create_nfs_image_hint' => $create_nfs_image_hint,
+		'image_lvm_nfs_table' => $table1->get_string(),
+        'create_lvn_nfs_image_hint' => $create_lvn_nfs_image_hint,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;

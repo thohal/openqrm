@@ -17,8 +17,12 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>Select openQRM Image</h1>
-<h4>Select an (NFS-) Image for exporting to AWS EC2 as a new AMI</h4>
-{image_put_table}
+<h1>Select openQRM Server Image (NFS or LVM-NFS)</h1>
+<h4>Available NFS Server-Images</h4>
+{image_nfs_table}
+{create_nfs_image_hint}
+<br>
+<h4>Available LVM-NFS Server-Images</h4>
 
-{create_image_hint}
+{image_lvm_nfs_table}
+{create_lvn_nfs_image_hint}

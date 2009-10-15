@@ -18,7 +18,7 @@
 */
 -->
 <h1>Configure the AMI</h1>
-<h4>Provide a name and the size for the new AMI</h4>
+<h4>Provide the name (min. 8 chars), size and architecture for the new AMI</h4>
 
 <form action="{thisfile}">
 <div>
