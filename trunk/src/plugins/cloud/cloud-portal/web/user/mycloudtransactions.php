@@ -64,9 +64,7 @@ function my_cloud_transactions() {
 	global $OPENQRM_USER;
 	global $thisfile;
 	global $auth_user;
-	$table = new htmlobject_table_identifiers_checked('ct_id');
-
-	$disp = "<h1>My Cloud Transactions</h1>";
+    $table = new htmlobject_table_builder('ct_id', 'DESC', '', '', 'transactions');
 	$arHead = array();
 
 	$arHead['ct_id'] = array();
@@ -94,20 +92,11 @@ function my_cloud_transactions() {
 
 	// db select
     $transaction_count=0;
+    $cu_tmp = new clouduser();
+    $cu_tmp->get_instance_by_name($auth_user);
 	$cl_transaction = new cloudtransaction();
-	$transaction_array = $cl_transaction->display_overview($table->offset, 1000, 'ct_id', 'DESC');
+	$transaction_array = $cl_transaction->display_overview_per_clouduser($cu_tmp->id, $table->offset, $table->limit, $table->sort, $table->order);
 	foreach ($transaction_array as $index => $ct) {
-		// user name
-		$cu_tmp = new clouduser();
-		$cu_tmp_id = $ct["ct_cu_id"];
-		$cu_tmp->get_instance_by_id($cu_tmp_id);
-
-		// only display our own transactions
-		if (strcmp($cu_tmp->name, $auth_user)) {
-			continue;
-		}
-
-        $transaction_count++;
 		// format time
 		$timestamp=$ct["ct_time"];
 		$ct_time = date("d-m-Y H-i", $timestamp);
@@ -122,6 +111,7 @@ function my_cloud_transactions() {
 			'ct_reason' => $ct["ct_reason"],
 			'ct_comment' => $ct["ct_comment"],
 		);
+        $transaction_count++;
 	}
 
 	$table->id = 'Tabelle';
@@ -133,10 +123,17 @@ function my_cloud_transactions() {
 	$table->head = $arHead;
 	$table->body = $arBody;
 	$table->identifier = 'ct_id';
-    $table->max = $transaction_count;
-    $disp .= $table->get_string();
-    $disp .= "<br><a href=\"javascript:window.print()\"><small>Print this page</small></a>";
+    $table->max = $cl_transaction->get_count_per_clouduser($cu_tmp->id);
+    // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './' . 'mycloudtransactions-tpl.php');
+	$t->setVar(array(
+        'mycloud_transaction_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
+
 }
 
 

@@ -197,6 +197,21 @@ function push($cr_id, $cu_id, $ccu_charge, $ccu_balance, $reason, $comment) {
 
 
 
+// returns the number of cloudtransactions for an cloudtransaction type per user
+function get_count_per_clouduser($cu_id) {
+	global $CLOUD_TRANSACTION_TABLE;
+	$count=0;
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute("select count(ct_id) as num from $CLOUD_TRANSACTION_TABLE where ct_cu_id=$cu_id");
+	if (!$rs) {
+		print $db->ErrorMsg();
+	} else {
+		$count = $rs->fields["num"];
+	}
+	return $count;
+}
+
+
 // returns the number of cloudtransactions for an cloudtransaction type
 function get_count() {
 	global $CLOUD_TRANSACTION_TABLE;
@@ -210,7 +225,6 @@ function get_count() {
 	}
 	return $count;
 }
-
 
 
 // returns a list of all cloudtransaction names
@@ -284,6 +298,28 @@ function get_transactions_per_cr($cr_id, $limit) {
 }
 
 
+// displays the cloudtransaction-overview per user
+function display_overview_per_clouduser($cu_id, $offset, $limit, $sort, $order) {
+	global $CLOUD_TRANSACTION_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$recordSet = &$db->SelectLimit("select * from $CLOUD_TRANSACTION_TABLE where ct_cu_id=$cu_id order by $sort $order", $limit, $offset);
+	$cloudtransaction_array = array();
+	if (!$recordSet) {
+		$event->log("display_overview_per_clouduser", $_SERVER['REQUEST_TIME'], 2, "cloudtransaction.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	} else {
+		while (!$recordSet->EOF) {
+			array_push($cloudtransaction_array, $recordSet->fields);
+			$recordSet->MoveNext();
+		}
+		$recordSet->Close();
+	}
+	return $cloudtransaction_array;
+}
+
+
+
+
 // displays the cloudtransaction-overview
 function display_overview($offset, $limit, $sort, $order) {
 	global $CLOUD_TRANSACTION_TABLE;
@@ -302,8 +338,6 @@ function display_overview($offset, $limit, $sort, $order) {
 	}
 	return $cloudtransaction_array;
 }
-
-
 
 
 

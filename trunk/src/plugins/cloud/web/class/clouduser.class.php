@@ -325,6 +325,29 @@ function checkEmail($email) {
 
 
 // displays the clouduser-overview
+function display_user($clouduser_name) {
+	global $CLOUD_USER_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$recordSet = &$db->SelectLimit("select * from $CLOUD_USER_TABLE where cu_name=\"$clouduser_name\"", 1, 0);
+	$clouduser_array = array();
+	if (!$recordSet) {
+		$event->log("display_user", $_SERVER['REQUEST_TIME'], 2, "clouduser.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	} else {
+		while (!$recordSet->EOF) {
+			array_push($clouduser_array, $recordSet->fields);
+			$recordSet->MoveNext();
+		}
+		$recordSet->Close();
+	}
+	return $clouduser_array;
+}
+
+
+
+
+
+// displays the clouduser-overview
 function display_overview($offset, $limit, $sort, $order) {
 	global $CLOUD_USER_TABLE;
 	global $event;

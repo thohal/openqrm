@@ -220,12 +220,8 @@ function mycloud_account() {
 
 	// db select
 	$cl_user = new clouduser();
-	$user_array = $cl_user->display_overview($table->offset, 1000, 'cu_id', 'ASC');
+	$user_array = $cl_user->display_user($auth_user);
 	foreach ($user_array as $index => $cu) {
-		// only display our user record
-		if (strcmp($auth_user, $cu["cu_name"])) {
-			continue;
-		}
 		$cu_status = $cu["cu_status"];
 		if ($cu_status == 1) {
 			$status_icon = "<img src=\"/cloud-portal/img/active.png\">";
