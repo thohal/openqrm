@@ -273,6 +273,9 @@ function openqrm_cloud_monitor() {
             $private_disk = $ci->disk_rsize;
             $private_image_name = $ci->clone_name;
             $private_success = false;
+            // create an admin user to post when cloning has finished
+            $openqrm_admin_user = new user("openqrm");
+            $openqrm_admin_user->set_user();
 
 // storage dependency for private !
 // currently supported storage types are
@@ -286,7 +289,7 @@ function openqrm_cloud_monitor() {
                 $vol_dir=dirname($full_vol_name);
                 $vol=str_replace("/", "", $vol_dir);
                 $image_location_name=basename($full_vol_name);
-                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage clone -n $image_location_name -s $private_image_name -v $vol -m $private_disk -t lvm-nfs-deployment";
+                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage clone -n $image_location_name -s $private_image_name -v $vol -m $private_disk -t lvm-nfs-deployment -u $openqrm_admin_user->name -p $openqrm_admin_user->password";
                 $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
                 $resource->send_command($resource_ip, $image_resize_cmd);
                 // set the storage specific image root_device parameter
@@ -301,7 +304,7 @@ function openqrm_cloud_monitor() {
                 $root_device=substr($image_rootdevice, $ident_separate);
                 $image_location=dirname($root_device);
                 $image_location_name=basename($image_location);
-                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage clone -n $image_location_name -s $private_image_name -v $volume_group -m $private_disk -t lvm-iscsi-deployment";
+                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage clone -n $image_location_name -s $private_image_name -v $volume_group -m $private_disk -t lvm-iscsi-deployment -u $openqrm_admin_user->name -p $openqrm_admin_user->password";
                 $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
                 $resource->send_command($resource_ip, $image_resize_cmd);
                 // set the storage specific image root_device parameter
@@ -317,7 +320,7 @@ function openqrm_cloud_monitor() {
                 $ident_separate2=strpos($image_rootdevice_rest, ":");
                 $image_location_name=substr($image_rootdevice_rest, 0, $ident_separate2);
                 $root_device=substr($image_rootdevice_rest, $ident_separate2+1);
-                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage clone -n $image_location_name -s $private_image_name -v $volume_group -m $private_disk -t lvm-aoe-deployment";
+                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage clone -n $image_location_name -s $private_image_name -v $volume_group -m $private_disk -t lvm-aoe-deployment -u $openqrm_admin_user->name -p $openqrm_admin_user->password";
                 $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
                 $resource->send_command($resource_ip, $image_resize_cmd);
                 // set the storage specific image root_device parameter
@@ -2015,7 +2018,7 @@ function openqrm_cloud_monitor() {
 
 	// ##################### start cloudimage-private-life-cycle ################
 
-    $estimated_clone_time = 600;
+    $max_clone_time = 1200;
 
 	$ciplc = new cloudiplc();
 	$ciplc_list = $ciplc->get_all_ids();
@@ -2075,11 +2078,38 @@ function openqrm_cloud_monitor() {
 
            case 4:
 				// end_private
+                // check timeout
                 $start_private = $cp->start_private;
                 $current_time = $_SERVER['REQUEST_TIME'];
                 $private_runtime = $current_time - $start_private;
-                if ($private_runtime > $estimated_clone_time) {
-                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(END_PRIVATE) Finish of private life-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
+                // check notifcation from storage
+                // get the cloudappliance
+                $cloud_app_private = new cloudappliance();
+                $cloud_app_private->get_instance_by_appliance_id($cp_appliance_id);
+                // get the real appliance
+                $appliance = new appliance();
+                $appliance->get_instance_by_id($cloud_app_private->appliance_id);
+                // get the cloudimage
+                $cloud_im = new cloudimage();
+                $cloud_im->get_instance_by_image_id($appliance->imageid);
+                // get image_id
+                $pimage = new image();
+                $pimage->get_instance_by_name($cloud_im->clone_name);
+                // get deployment type
+                $pdeployment = new deployment();
+                $pdeployment->get_instance_by_type($pimage->type);
+                // notification filename
+                $clone_notification_file = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/'.$pdeployment->storagetype.'/storage/'.$cloud_im->clone_name.'.clone';
+
+                // start checking
+                if ($private_runtime > $max_clone_time) {
+                    // ran too long
+                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(END_PRIVATE) Time-out private life-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
+                    $cp->set_state($cp_id, "unpause");
+                } else if (file_exists($clone_notification_file)) {
+                    // got notification from storage server
+                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(END_PRIVATE) Got notified to finsish private life-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
+                    unlink($clone_notification_file);
                     $cp->set_state($cp_id, "unpause");
                 } else {
                     $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(END_PRIVATE) Awaiting to finish private life-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
@@ -2098,7 +2128,6 @@ function openqrm_cloud_monitor() {
                 // get the cloudimage
                 $cloud_im = new cloudimage();
                 $cloud_im->get_instance_by_image_id($appliance->imageid);
-
                 // here we create the private cloud image in openQRM after the clone procedure
                 $private_cloud_image = new cloudprivateimage();
                 // get image_id

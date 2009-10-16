@@ -585,8 +585,17 @@ case "$LVM_COMMAND" in
 			lvm_storage_lock release
 		fi
 
+        # here we notify openQRM that cloning has finished
 		# in case we have a username + password post the updated list to the openQRM-server
+        # and notify openQRM that cloning has finished
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
+            CLONE_FINISHED="$LVM_IMAGE_SNAPSHOT_NAME.clone"
+            touch $CLONE_FINISHED
+            if ! wget -q -O /dev/null --http-user=$LVM_OPENQRM_USERNAME --http-password=$LVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $CLONE_FINISHED` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/lvm-storage/lvm-storage-action.php?lvm_storage_command=clone_finished; then
+                echo "ERROR: Could not post clone-finished status to the openQRM-server at $resource_openqrmserver!"
+                echo "ERROR: Could not post clone-finished status to the openQRM-server at $resource_openqrmserver!" | logger
+            fi
+            # post lv
 			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP -t $LVM_IMAGE_TYPE
 		fi
 

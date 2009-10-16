@@ -75,6 +75,19 @@ switch ($lvm_storage_command) {
         fclose($fout);
         break;
 
+    case 'clone_finished':
+        if (!file_exists($StorageDir)) {
+            mkdir($StorageDir);
+        }
+        $filename = $StorageDir."/".$_POST['filename'];
+        $filedata = base64_decode($_POST['filedata']);
+        echo "<h1>$filename</h1>";
+        $fout = fopen($filename,"wb");
+        fwrite($fout, $filedata);
+        fclose($fout);
+        break;
+
+
     default:
         $event->log("$lvm_storage_command", $_SERVER['REQUEST_TIME'], 3, "lvm-storage-action", "No such lvm-storage command ($lvm_storage_command)", "", "", 0, 0, 0);
         break;
