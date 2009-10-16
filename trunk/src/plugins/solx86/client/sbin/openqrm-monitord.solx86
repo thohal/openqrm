@@ -66,7 +66,7 @@ function find_uptime() {
 
 # cpu_number
 function find_cpu_number() {
-	current_cpu_number=`prtconf | grep cpu | grep -v cpus | wc -l`
+	current_cpu_number=`psrinfo -p | wc -l`
 	if [ -z "$current_cpu_number" ]; then
 		current_cpu_number=1
 	fi
@@ -74,6 +74,7 @@ function find_cpu_number() {
 
 # cpu_speed
 function find_cpu_speed() {
+    current_cpu_speed=`psrinfo -pv | grep "clock.*MHz" | sed -e 's#^.*clock \([0-9]*\).*$#\1#g'`
 	if [ -z "$current_cpu_speed" ]; then
 		current_cpu_speed=1
 	fi
@@ -87,7 +88,7 @@ function find_cpu_model() {
 
 # mem_total
 function find_mem_total() {
-	current_mem_total=`top -n | grep Memory | grep phys | awk {' print $2 '} | sed -e "s/[A-Z]//g"`
+	current_mem_total=`prtconf | grep Memory | sed -e 's#^.* \([0-9]\+\) Megabytes.*$#\1#g'`
 	if [ -z "current_mem_total" ]; then
 		current_mem_total=0
 	fi
@@ -95,7 +96,7 @@ function find_mem_total() {
 
 # mem_used
 function find_mem_used() {
-	current_mem_free=`top -n | grep Memory | grep phys | awk {' print $5 '} | sed -e "s/[A-Z]//g"`
+    current_mem_free=$(( `vmstat | grep -v memory | grep -v free | awk '{print $5}'` / 1024 ))
     current_mem_used=$(( $current_mem_total - $current_mem_free ))
 	if [ -z "$current_mem_used" ]; then
 		current_mem_used=0
@@ -103,21 +104,23 @@ function find_mem_used() {
 }
 
 
-# swap_total
-function find_swap_total() {
-    current_swap_total=`top -n | grep Memory | grep phys | grep swap | awk {' print $8 '} | sed -e "s/[A-Z]//g"`
-	if [ -z "$current_swap_total" ]; then
-		current_swap_total=0
-	fi
-}
-
-
 # swap_used
 function find_swap_used() {
-    current_swap_free=`top -n | grep Memory | grep phys | grep swap | awk {' print $11 '} | sed -e "s/[A-Z]//g"`
-    current_swap_used=$(( $current_swap_total - $current_swap_free))
-	if [ -z "$current_swap_used" ]; then
-		current_swap_used=0
+    current_swap_free=$(( `swap -s |sed -e 's#^.* \([0-9]\+\)k available.*$#\1#g'` / 1024 ))
+    current_swap_used=$(( `swap -s |sed -e 's#^.* \([0-9]\+\)k used.*$#\1#g'` / 1024 ))
+    if [ -z "$current_swap_used" ]; then
+        current_swap_used=0
+    fi
+}
+
+# swap_total
+function find_swap_total() {
+    if [ -z "$current_swap_used" -o -z "$current_swap_free" ] ; then
+        find_swap_used
+    fi
+	current_swap_total=$(( $current_swap_used + $current_swap_free ))
+	if [ -z "$current_swap_total" ]; then
+		current_swap_total=0
 	fi
 }
 
@@ -133,7 +136,7 @@ function find_hostname() {
 
 # cpu_load
 function find_cpu_load() {
-	current_cpu_load=`top -n | head -n1 | grep load | awk {' print $6 '} | sed -e "s/,//g"`
+    current_cpu_load=`prstat 1 1 | tail -n1 | sed -e 's#^.*load averages: \([0-9.]\+\).*$#\1#g'`
 	if [ -z "$current_cpu_load" ]; then
 		current_cpu_load=0
 	fi
@@ -158,10 +161,10 @@ while (true); do
 	find_uptime
 	# mem_used
 	find_mem_used
-	# swap_total
-	find_swap_total
 	# swap_used
 	find_swap_used
+	# swap_total
+	find_swap_total
 	# hostname
 	find_hostname
 	# cpu_load
