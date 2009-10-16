@@ -67,7 +67,7 @@ $citrix_server_password = htmlobject_request('citrix_server_password');
 $auth_action = htmlobject_request('auth_action');
 
 // place for the citrix stat files
-$CitrixDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/citrix/citrix-stat';
+$CitrixDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/citrix/citrix-stat';
 
 
 $openqrm_server = new openqrm_server();

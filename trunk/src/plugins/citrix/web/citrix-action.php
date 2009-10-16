@@ -24,7 +24,7 @@
 */
 
 
-$RootDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/';
+$RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/include/openqrm-server-config.php";
@@ -37,7 +37,7 @@ global $OPENQRM_SERVER_BASE_DIR;
 global $RESOURCE_INFO_TABLE;
 
 // place for the citrix stat files
-$CitrixDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/citrix/citrix-stat';
+$CitrixDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/citrix/citrix-stat';
 
 $event = new event();
 $openqrm_server = new openqrm_server();

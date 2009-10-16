@@ -70,7 +70,7 @@ global $citrix_vm_mac;
 global $citrix_vm_mac_ar;
 
 // place for the citrix stat files
-$CitrixDir = $_SERVER["DOCUMENT_ROOT"].'openqrm/base/plugins/citrix/citrix-stat';
+$CitrixDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/citrix/citrix-stat';
 
 
 $openqrm_server = new openqrm_server();
