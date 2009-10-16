@@ -6,7 +6,7 @@ openQRM is a single-management console for the complete IT-infra structure and
 provides a well defined API which can be used to integrate third-party tools as
 additional plugins.
 
-Its goal is it to archive the following specifications :
+Its goal is it to achieve the following specifications :
 
 - KIS (keep it simple)
 - run everywhere (support for every linux distribution, especially Debian+Ubuntu)
