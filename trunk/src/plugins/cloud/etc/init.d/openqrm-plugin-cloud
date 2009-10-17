@@ -26,6 +26,11 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/etc/openqrm-plugin-cloud.conf
 openqrm_server_get_config
 export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+# define wget to use with https
+if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
+
 
 function openqrm_plugin_cloud_start() {
 	echo "Starting the openQRM cloud-plugin"
@@ -53,7 +58,7 @@ function openqrm_plugin_cloud_uninstall() {
 	openqrm_plugin_cloud_stop
 
 	# removing the cloud tables
-	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/cloud/cloud-action.php?cloud_command=uninstall"; then
+	if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://$resource_openqrmserver/openqrm/base/plugins/cloud/cloud-action.php?cloud_command=uninstall"; then
 		cloud_manager_log uninstall "ERROR: Could not drop the cloud-plugin tables in the database!"
 	fi
 	# remove boot-service + soap-service
@@ -100,7 +105,7 @@ function openqrm_plugin_cloud_init() {
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/cloud
 	# creating the tables
-	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/cloud/cloud-action.php?cloud_command=init"; then
+	if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://$resource_openqrmserver/openqrm/base/plugins/cloud/cloud-action.php?cloud_command=init"; then
 		cloud_manager_log init "ERROR: Could not create the cloud-plugin tables in the database!"
 		exit 1
 	fi

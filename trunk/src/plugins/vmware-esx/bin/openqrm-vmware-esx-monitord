@@ -25,7 +25,10 @@ PASSWORD=$5
 MONITORD_LOCKFILE="/var/run/openqrm-vmware-esx-monitord"
 OPENQRM_RESOURCE_PARAMETER_FILE="/var/openqrm/openqrm-resource.conf"
 export LANG=C
-
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 
 # stop and exit
 if [ "$MONITOR_CMD" == "stop" ]; then
@@ -79,14 +82,26 @@ if [ ! -f "$OPENQRM_RESOURCE_PARAMETER_FILE" ]; then
 	# remove whitespaces
 	resource_mac=`echo $resource_mac`
 	echo "Using $resource_ip/$resource_mac"
-	wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
-	sleep 3
-	if [ ! -f "$OPENQRM_RESOURCE_PARAMETER_FILE" ]; then
-		echo "ERROR: Could not integrate the VMware ESX server into the openQRM-server at $OPENQRM_SERVER_IP!"
-		rm -f $MONITORD_LOCKFILE
-		exit 1
-	fi
+    # try https first
+	wget -q $WGET_NO_CERT_CHECK -O $OPENQRM_RESOURCE_PARAMETER_FILE "https://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
+	sleep 2
+    # check if https was successfull
+    if ! grep resource_openqrmserver $OPENQRM_RESOURCE_PARAMETER_FILE 1>/dev/null 2>&1; then
+        # try http
+        wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
+        sleep 2
+        # check if http was successfull
+        if ! grep resource_openqrmserver $OPENQRM_RESOURCE_PARAMETER_FILE 1>/dev/null 2>&1; then
+            echo "ERROR: Could not integrate the VMware ESX server into the openQRM-server at $OPENQRM_SERVER_IP!"
+            rm -f $MONITORD_LOCKFILE
+            exit 1
+        fi
+    fi
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
+    # define wget to use with https
+    if [ "$openqrm_web_protocol" == "https" ]; then
+        WGET_NO_CERT_CHECK="--no-check-certificate"
+    fi
 
 	# gather some more details to create the appliance on the openQRM-server
 	local_server_root_device=`mount | grep ' / ' | awk {' print $1 '}`
@@ -94,12 +109,12 @@ if [ ! -f "$OPENQRM_RESOURCE_PARAMETER_FILE" ]; then
 	local_server_kernel_version=`uname -r`
 
 	# now we integrate it via the local-sever plugin
-	if ! wget -O /dev/null -q "http://$OPENQRM_SERVER_IP/openqrm/action/vmware-esx-integrate.php?USER=$USER&PASSWORD=$PASSWORD&local_server_command=integrate&local_server_id=$resource_id&local_server_root_device=$local_server_root_device&local_server_root_device_type=$local_server_root_device_type&local_server_kernel_version=$local_server_kernel_version"; then
+	if ! wget -O /dev/null $WGET_NO_CERT_CHECK -q "$openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/action/vmware-esx-integrate.php?USER=$USER&PASSWORD=$PASSWORD&local_server_command=integrate&local_server_id=$resource_id&local_server_root_device=$local_server_root_device&local_server_root_device_type=$local_server_root_device_type&local_server_kernel_version=$local_server_kernel_version"; then
 		echo "ERROR: Could not create the appliance resource$resouce_id on the openQRM-server!"
 		sleep 2
 		echo "NOTCIE: Removing the system from openQRM because of errors !"
 		# try to remove components from the local-server appliance
-		if ! wget -O /dev/null -q  "http://$OPENQRM_SERVER/openqrm/action/vmware-esx-integrate.php?USER=$USER&PASSWORD=$PASSWORD&local_server_command=remove&local_server_id=$resource_id"; then
+		if ! wget -O /dev/null $WGET_NO_CERT_CHECK -q  "$openqrm_web_protocol://$OPENQRM_SERVER/openqrm/action/vmware-esx-integrate.php?USER=$USER&PASSWORD=$PASSWORD&local_server_command=remove&local_server_id=$resource_id"; then
 			echo "WARNING: Could not remove the appliance resource$resouce_id from the openQRM-server!"
 		fi
 		rm -f $MONITORD_LOCKFILE
@@ -130,6 +145,6 @@ fi
 # loop
 HNAME=`hostname`
 while(true); do
-	wget -q -O /dev/null "http://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=update_info&resource_id=$resource_id&resource_hostname=$HNAME&resource_state=active&resource_event=statistics"
+	wget -q -O /dev/null $WGET_NO_CERT_CHECK "$openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=update_info&resource_id=$resource_id&resource_hostname=$HNAME&resource_state=active&resource_event=statistics"
 	sleep 20
 done

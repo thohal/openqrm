@@ -32,11 +32,16 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	SYSTEM_IP=$OPENQRM_SERVER_IP_ADDRESS
 	resource_id=0
-	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+    export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+    export openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
 fi
 OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode"
 OPENQRM_LINUX_VSERVER_IDLE_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/templates/openqrm-initrd-default.tgz"
 export LANG=C
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 
 # let only root run this script
 WHOAMI=`whoami`
@@ -248,7 +253,7 @@ EOF
 
 		# send new resource to openQRM to get resource-config
 		mkdir -p `dirname $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE`
-		wget -q -O $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$OPENQRM_RESOURCE_ID&resource_mac=$LINUX_VSERVER_VM_MAC&resource_ip=$LINUX_VSERVER_VM_IP"
+		wget -q $WGET_NO_CERT_CHECK -O $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE "$openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$OPENQRM_RESOURCE_ID&resource_mac=$LINUX_VSERVER_VM_MAC&resource_ip=$LINUX_VSERVER_VM_IP"
 
 		# add to a main vif config file, start all at init
 		echo "$LINUX_VSERVER_VM_INTERFACE $LINUX_VSERVER_VM_NAME" >> $OPENQRM_VIF_CONFIG
@@ -270,13 +275,13 @@ EOF
 		# source current parameters of the vm
 		. $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE
 		# update parameters for the resource
-		wget -q -O $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
+		wget -q $WGET_NO_CERT_CHECK -O $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE "$openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
 		. $OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME/$OPENQRM_RESOURCE_PARAMETER_FILE
 		# check if assigned to an appliance or idle 
 		if [ "$image_type" != "ram" ]; then
 			eval $image_deployment_parameter
 			# get the root-mount functions according the deployment type
-			wget -q -O $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type "http://$OPENQRM_SERVER_IP/openqrm/boot-service/root-mount.$image_type"
+			wget -q $WGET_NO_CERT_CHECK -O $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type "$openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/boot-service/root-mount.$image_type"
 			# adapt root-mount functions of the deployment method
 			sed -i -e "s#/mnt2#XXXXX#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type
 			sed -i -e "s#/mnt#$OPENQRM_VM_DIR/$LINUX_VSERVER_VM_NAME#g" $OPENQRM_VM_CONFIG_DIR/$LINUX_VSERVER_VM_NAME/root-mount.$image_type
@@ -359,7 +364,7 @@ EOF
 		cat $VM_LIST_TMP | sed -e "s/^/#/g" > $VM_LIST_TMP.up
 		mv -f $VM_LIST_TMP.up $VM_LIST_TMP
 		ls /etc/vservers/ | grep -v newvserver-vars | grep -v openqrm-vif.conf >> $VM_LIST_TMP
-		if ! wget -q -O /dev/null --http-user=$LINUX_VSERVER_OPENQRM_USERNAME --http-password=$LINUX_VSERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/linux-vserver/linux-vserver-action.php?linux_vserver_command=get_linux_vserver; then
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LINUX_VSERVER_OPENQRM_USERNAME --http-password=$LINUX_VSERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/linux-vserver/linux-vserver-action.php?linux_vserver_command=get_linux_vserver; then
 			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!"
 			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
 		fi

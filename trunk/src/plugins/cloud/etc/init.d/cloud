@@ -24,6 +24,10 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_RESOURCE_PARAMETER_FILE
 OPENQRM_SERVER_IP=$resource_openqrmserver
 NETWORK_CONF="/tmp/cloud-net.conf"
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 
 
 # do not start on the intitrd
@@ -42,8 +46,7 @@ function cloud_start() {
 
 	# get the ip-config from the cloud-network-config provider
 	rm -f $NETWORK_CONF
-	if ! wget -q -O $NETWORK_CONF "http://$resource_openqrmserver/openqrm/action/cloud-conf/cloud-net.conf.$appliance_id"; then
-		echo "ERROR: Could not get Cloud network-config from openQRM-server $resource_openqrmserver"
+	if ! wget -q $WGET_NO_CERT_CHECK -O $NETWORK_CONF "$openqrm_web_protocol://$resource_openqrmserver/openqrm/action/cloud-conf/cloud-net.conf.$appliance_id"; then
 		return 1
 	fi
 	OPENQRM_INTERFACE=`ifconfig | grep -i $resource_mac | grep :oq | cut -d':' -f1`

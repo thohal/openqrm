@@ -77,6 +77,13 @@ IMAGE_LUN=1
 IMAGE_ROOT_DEVICE="/dev/iscsi_$IMAGE_LUN"
 ZFS_BASE_IQN="iqn.1986-00.com.oq:01:e00000000000"
 
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    export WGET="wget --no-check-certificate -q"
+else
+    export WGET="wget -q"
+fi
+
 #######################################################################
 # required functions ##################################################
 #######################################################################
@@ -87,16 +94,16 @@ function mount_rootfs() {
     if [ "$kernel_name" == "default" ]; then
         # we get the default binaries
         # get iscsid via wget from the openQRM-servers boot-service dir
-        wget -q -O /sbin/iscsid http://$resource_openqrmserver/openqrm/boot-service/iscsid
-        wget -q -O /sbin/iscsiadm http://$resource_openqrmserver/openqrm/boot-service/iscsiadm
+        $WGET -O /sbin/iscsid $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsid
+        $WGET -O /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsiadm
     else
         # we try to get the binaries fitting to the kernel name
         # -> if a special version is not available we go with the default
-        if ! wget -q -O /sbin/iscsid http://$resource_openqrmserver/openqrm/boot-service/iscsid.$kernel_name; then
-            wget -q -O /sbin/iscsid http://$resource_openqrmserver/openqrm/boot-service/iscsid
+        if ! $WGET -O /sbin/iscsid $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsid.$kernel_name; then
+            $WGET -O /sbin/iscsid $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsid
         fi
-        if ! wget -q -O /sbin/iscsiadm http://$resource_openqrmserver/openqrm/boot-service/iscsiadm.$kernel_name; then
-            wget -q -O /sbin/iscsiadm http://$resource_openqrmserver/openqrm/boot-service/iscsiadm
+        if ! $WGET -O /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsiadm.$kernel_name; then
+            $WGET -O /sbin/iscsiadm $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/iscsiadm
         fi
 
     fi

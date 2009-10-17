@@ -33,6 +33,10 @@ ZFS_MGMT_LOCK_DELAY=5
 ZFS_MGMT_LOCK_RETRY=10
 ZFS_BASE_IQN="iqn.1986-00.com.oq:01:e00000000000"
 
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 
 # are we root ?
 if ! id | grep root 1>/dev/null; then
@@ -361,7 +365,7 @@ case "$ZFS_COMMAND" in
         STORAGE_STATUS_TMP1=$resource_id.zfs.zpool.tmp
         zpool list | grep -v NAME > $STORAGE_STATUS_TMP1
         cat $STORAGE_STATUS_TMP1 | sed -e "s/ \{1,\}/@/g" > $STORAGE_STATUS_TMP
-		if ! wget -q -O /dev/null --http-user=$ZFS_OPENQRM_USERNAME --http-password=$ZFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/zfs-storage/zfs-storage-action.php?zfs_storage_command=get_zpools; then
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$ZFS_OPENQRM_USERNAME --http-password=$ZFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/zfs-storage/zfs-storage-action.php?zfs_storage_command=get_zpools; then
 			zfs_log "ERROR: Could not post the zfs-zpool status to the openQRM-server at $resource_openqrmserver!"
 		fi
 		rm -f $STORAGE_STATUS_TMP $STORAGE_STATUS_TMP1 $STORAGE_STATUS_TMP.post
@@ -387,7 +391,7 @@ case "$ZFS_COMMAND" in
         done
         IFS=$OLD_IFS
         cat $STORAGE_STATUS_TMP1 | sed -e "s/ \{1,\}/@/g" > $STORAGE_STATUS_TMP
-		if ! wget -q -O /dev/null --http-user=$ZFS_OPENQRM_USERNAME --http-password=$ZFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/zfs-storage/zfs-storage-action.php?zfs_storage_command=get_luns; then
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$ZFS_OPENQRM_USERNAME --http-password=$ZFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/zfs-storage/zfs-storage-action.php?zfs_storage_command=get_luns; then
 			zfs_log "ERROR: Could not post the zfs-lun status to the openQRM-server at $resource_openqrmserver!"
 		fi
 		rm -f $STORAGE_STATUS_TMP
@@ -410,7 +414,7 @@ case "$ZFS_COMMAND" in
             done
             IFS=$OLD_IFS
         done
-		if ! wget -q -O /dev/null --http-user=$ZFS_OPENQRM_USERNAME --http-password=$ZFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/zfs-storage/zfs-storage-action.php?zfs_storage_command=get_ident; then
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$ZFS_OPENQRM_USERNAME --http-password=$ZFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/zfs-storage/zfs-storage-action.php?zfs_storage_command=get_ident; then
 			zfs_log "ERROR: Could not post the zfs-identifier to the openQRM-server at $resource_openqrmserver!"
 		fi
 		rm -f $STORAGE_STATUS_TMP

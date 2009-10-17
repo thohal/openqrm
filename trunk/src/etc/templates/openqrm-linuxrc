@@ -92,11 +92,6 @@ function import_kernel() {
 	tftp $OPENQRM_SERVER_IP_ADDRESS -g -r boot/System.map-$kernel_name -l System.map-$kernel_name
 	mv System.map-$kernel_name System.map-$kernel_version
 	cd /
-	# create additional devices, mostly needed by dropbear
-	mknod /dev/urandom c 1 9
-	cd /dev/
-	ln -s urandom random
-	cd /
 	mknod /dev/ptmx c 5 2
 	chmod 666 /dev/ptmx
 	# and mount /dev/pts
@@ -165,7 +160,7 @@ function create_fstab_commons() {
 
 function set_root_password() {
 	local id=$1
-	if wget -q -O /iauth.$id http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/image-auth/iauth.$id 2>/iauth.log; then
+	if $WGET -q -O /iauth.$id $openqrm_web_protocol://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/image-auth/iauth.$id 2>/iauth.log; then
 		cryptedpassword=`cat /iauth.$id`
 		rm -f /iauth.$id iauth.log
 		sed -i "s#^root:[^:]*#root:$cryptedpassword#" /mnt/etc/shadow
@@ -215,6 +210,8 @@ mkdir -p /dev/fd
 ln -sf /proc/self/fd /dev/fd
 mknod /dev/tty c 5 0
 ln -sf /dev/ram1 /dev/ram
+mknod /dev/random c 1 8
+mknod /dev/urandom c 1 9
 echo 0x0100 > /proc/sys/kernel/real-root-dev
 echo 6 > /proc/sys/kernel/printk
 syslogd &&  klogd
@@ -279,7 +276,25 @@ fi
 # sending resource-id will add the resource if not existing (-1 = new resource)
 # loop get-parameters in case the network card is still not ready initialyzed
 NETWORKCARD_LOOP=0
-while ! wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$id&resource_mac=$OPENQRM_RESOURCE_MAC_ADDRESS&resource_ip=$OPENQRM_RESOURCE_IP_ADDRESS"; do
+
+while (true); do
+	# try https first
+	if wget --no-check-certificate --random-file=/dev/random -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "https://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$id&resource_mac=$OPENQRM_RESOURCE_MAC_ADDRESS&resource_ip=$OPENQRM_RESOURCE_IP_ADDRESS"; then
+		if ! grep "<html>" $OPENQRM_RESOURCE_PARAMETER_FILE >/out; then
+        	echo "-> got parameters via https"
+			break
+		fi
+        rm -f /out
+	fi
+	# try http
+	if wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$id&resource_mac=$OPENQRM_RESOURCE_MAC_ADDRESS&resource_ip=$OPENQRM_RESOURCE_IP_ADDRESS"; then
+		if ! grep "<html>" $OPENQRM_RESOURCE_PARAMETER_FILE >/out; then
+			echo "-> got parameter via http"
+			break
+		fi
+        rm -f /out
+	fi
+    # no chance ?
 	if [ "$NETWORKCARD_LOOP" == "10" ]; then
 		echo "ERROR: Could not reach the openQRM-Server at $OPENQRM_SERVER_IP_ADDRESS!"
 		# give a shell for the admin
@@ -288,7 +303,15 @@ while ! wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP_A
 	NETWORKCARD_LOOP=$(( NETWORKCARD_LOOP + 1 ))
 	sleep 5
 done
+# source parameters
 . $OPENQRM_RESOURCE_PARAMETER_FILE
+
+# define wget
+if [ "$openqrm_web_protocol" == "https" ]; then
+    export WGET="wget --no-check-certificate --random-file=/dev/random"
+else
+    export WGET="wget"
+fi
 
 # get kernel + modules by tftp
 echo "Importing kernel files"
@@ -304,10 +327,10 @@ else
 fi
 echo "Getting openqrm-client package $OPENQRM_CLIENT_ARCH"
 cd /
-if ! wget -q -O openqrm-client.tgz "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.$OPENQRM_CLIENT_ARCH.tgz"; then
+if ! $WGET -q -O openqrm-client.tgz "$openqrm_web_protocol://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.$OPENQRM_CLIENT_ARCH.tgz"; then
     rm -f openqrm-client.tgz
     echo "WARNING: Failed to get the openqrm-client package arch $OPENQRM_CLIENT_ARCH ! Using default one ..."
-    wget -q -O openqrm-client.tgz "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.tgz"
+    $WGET -q -O openqrm-client.tgz "$openqrm_web_protocol://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.tgz"
 fi
 tar -xzf openqrm-client.tgz
 rm -f openqrm-client.tgz
@@ -322,7 +345,7 @@ $resource_basedir/openqrm/etc/init.d/openqrm-client start
 if [ "$image_type" == "ram" ] || [ "$image_type" == "" ]; then
 	# send idle/available
 	echo "Sending idle/available to openQRM-server at $OPENQRM_SERVER_IP_ADDRESS"
-	wget -q -O /dev/null "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-monitor.php?resource_command=update_status&resource_id=$resource_id&resource_state=active&resource_event=available"
+	$WGET -q -O /dev/null "$openqrm_web_protocol://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-monitor.php?resource_command=update_status&resource_id=$resource_id&resource_state=active&resource_event=available"
 	hostname idle$resource_id
 	# rcs0 will be started here from init
 	
@@ -339,7 +362,7 @@ else
 
 	eval $image_deployment_parameter
 	cd /
-	wget -q "http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/root-mount.$image_type"
+	$WGET -q "$openqrm_web_protocol://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/root-mount.$image_type"
 	chmod +x root-mount.$image_type
 	# source the deployment plugin command, it will provide 
 	# the functions to mount/remount the rootfs at /mnt according 

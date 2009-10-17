@@ -32,12 +32,17 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	resource_id=0
 	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+    openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
 fi
 export LANG=C
 OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode"
 OPENQRM_VMWARE_SERVER_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/etc/templates/openqrm-vmware-server2-vm"
 OPENQRM_VMWARE_SERVER_CMD_CHECK_DELAY="sleep 5"
 VMWARE_VIM_CMD="vmware-vim-cmd ${VMWARE_VIM_CMD_ARGS}"
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 
 # let only root run this script
 WHOAMI=`whoami`
@@ -418,7 +423,7 @@ EOF
         done
 #		$VMWARE_VIM_CMD vmsvc/getallvms | grep -v Vmid > $VM_LIST_TMP
 #        sed -i -e "s/ \{1,\}/@/g" $VM_LIST_TMP
-		if ! wget -q -O /dev/null --http-user=$VMWARE_SERVER_OPENQRM_USERNAME --http-password=$VMWARE_SERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/vmware-server2/vmware-server2-action.php?vmware_server_command=get_vmware_server; then
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$VMWARE_SERVER_OPENQRM_USERNAME --http-password=$VMWARE_SERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/vmware-server2/vmware-server2-action.php?vmware_server_command=get_vmware_server; then
 			vmware_server2_log "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!"
 			vmware_server2_log "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
 		fi

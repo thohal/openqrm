@@ -30,9 +30,13 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_SERVER_IP=localhost
 	resource_id=0
 	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+    openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
 fi
 export LANG=C
-
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 # let only root run this script
 WHOAMI=`whoami`
 if [ "$WHOAMI" != "root" ]; then
@@ -228,7 +232,7 @@ IFS='
 		done
 		IFS=$OLD_IFS
         sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
-		if ! wget -q -O /dev/null --http-user=$ISCSI_OPENQRM_USERNAME --http-password=$ISCSI_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/iscsi-storage/iscsi-storage-action.php?iscsi_storage_command=get_storage; then
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$ISCSI_OPENQRM_USERNAME --http-password=$ISCSI_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/iscsi-storage/iscsi-storage-action.php?iscsi_storage_command=get_storage; then
 			echo "ERROR: Could not post the iscsi-export status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the iscsi-export status to the openQRM-server at $resource_openqrmserver!" | logger
 		fi
@@ -250,7 +254,8 @@ IFS='
 			echo "$IMAGE_NAME,/dev/$IMAGE_NAME/$LUN" >> $STORAGE_STATUS_TMP
 		done
 		IFS=$OLD_IFS
-		if ! wget -q -O /dev/null --http-user=$ISCSI_OPENQRM_USERNAME --http-password=$ISCSI_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/iscsi-storage/iscsi-storage-action.php?iscsi_storage_command=get_ident; then			echo "ERROR: Could not post the iscsi-export status to the openQRM-server at $resource_openqrmserver!"
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$ISCSI_OPENQRM_USERNAME --http-password=$ISCSI_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/iscsi-storage/iscsi-storage-action.php?iscsi_storage_command=get_ident; then
+			echo "ERROR: Could not post the iscsi-export status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the iscsi-export status to the openQRM-server at $resource_openqrmserver!" | logger
 		fi
 		rm -f $STORAGE_STATUS_TMP

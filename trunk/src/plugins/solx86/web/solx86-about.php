@@ -37,12 +37,13 @@ global $OPENQRM_SERVER_BASE_DIR;
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
-
+global $OPENQRM_WEB_PROTOCOL;
 
 function solx86_about() {
 
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_SERVER_IP_ADDRESS;
+    global $OPENQRM_WEB_PROTOCOL;
 	$disp = "<h1><img border=0 src=\"/openqrm/base/plugins/solx86/img/plugin.png\"> plugin</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."The solx86-plugin provides an integration for already existing, local-installed openSolaris/Solaris X86 systems in openQRM.";
@@ -60,7 +61,7 @@ function solx86_about() {
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<i>";
-	$disp = $disp."wget http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-solx86";
+	$disp = $disp."wget $OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-solx86";
     $disp = $disp."<br>";
 	$disp = $disp."chmod +x openqrm-solx86";
     $disp = $disp."<br>";

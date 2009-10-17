@@ -24,8 +24,14 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/include/openqrm-plugin-equallogic-storage-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/etc/openqrm-plugin-equallogic-storage.conf
-
-
+# get the ip config
+openqrm_server_get_config
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+export LANG=C
+# define wget to use with https
+if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 
 function openqrm_plugin_equallogic_storage_start() {
 	openqrm_plugin_equallogic_storage_stop 1>/dev/null 2>&1
@@ -54,7 +60,7 @@ function openqrm_plugin_equallogic_storage_uninstall() {
 	openqrm_plugin_equallogic_storage_stop
 	openqrm_server_remove_deployment_type $USERNAME $PASSWORD equallogic
 	# removing the eq-server table
-	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/equallogic-storage/equallogic-storage-action.php?equallogic_storage_command=uninstall"; then
+	if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://$resource_openqrmserver/openqrm/base/plugins/equallogic-storage/equallogic-storage-action.php?equallogic_storage_command=uninstall"; then
 		equallogic_storage_storage_log uninstall "ERROR: Could not drop the Equallogig-Storage plugin tables in the database!"
 	fi
 
@@ -129,7 +135,7 @@ function openqrm_plugin_equallogic_storage_init() {
     rmdir $RESIZE_TMP_DIR
 
 	# creating the tables
-	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/equallogic-storage/equallogic-storage-action.php?equallogic_storage_command=init"; then
+	if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://$resource_openqrmserver/openqrm/base/plugins/equallogic-storage/equallogic-storage-action.php?equallogic_storage_command=init"; then
 		equallogic_storage_storage_log uninstall "ERROR: Could not initialyze the EqualLogic-Storage-plugin tables in the database!"
         exit 1
 	fi

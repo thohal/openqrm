@@ -44,6 +44,12 @@ export `eval cat /proc/cmdline`
 export OPENQRM_SERVER_BASE_DIR=$resource_basedir
 . $resource_basedir/openqrm/include/openqrm-functions
 
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET="wget -q --no-check-certificate"
+else
+    WGET="wget -q"
+fi
 
 # gets/starts/stops enabled boot-services for the resources
 function openqrm_boot_service() {
@@ -56,7 +62,7 @@ function openqrm_boot_service() {
 		echo "Getting boot-service package $BOOT_SERVICE"
 		mkdir -p  $resource_basedir/openqrm/plugins/$BOOT_SERVICE
 		cd $resource_basedir/openqrm/plugins/$BOOT_SERVICE
-		if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/boot-service-$BOOT_SERVICE.tgz; then
+		if ! $WGET $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/boot-service-$BOOT_SERVICE.tgz; then
 			echo "ERROR: Could not get boot-service package for boot-service $BOOT_SERVICE !"
 			return 1
 		fi
@@ -99,7 +105,7 @@ function openqrm_client_start() {
 			mkdir -p $resource_basedir/openqrm/etc/dropbear/
 			$resource_basedir/openqrm/bin/dropbearkey -t rsa -f $resource_basedir/openqrm/etc/dropbear/dropbear_rsa_host_key
 			# get the public key of the openQRM server
-			if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/openqrm-server-public-rsa-key; then
+			if ! $WGET $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/openqrm-server-public-rsa-key; then
 				echo "ERROR: Could not get the public key of the openQRM-server at $resource_openqrmserver ! Please check the certificates !"
 				return 1
 			fi

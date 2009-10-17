@@ -29,6 +29,12 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 	openqrm_server_get_config
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+    export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+    export openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
+fi
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 # do not start on the intitrd
@@ -41,8 +47,8 @@ function linux_vserver_start() {
 	linux_vserver_stop 1>/dev/null 2>&1
 	# download the initrd
 	mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/templates
-	if ! wget -q -O $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/templates/openqrm-initrd-default.tgz http://$OPENQRM_SERVER_IP/openqrm/boot-service/openqrm-initrd-default.tgz; then
-		echo "ERROR: Could not download http://$OPENQRM_SERVER_IP/openqrm/boot-service/openqrm-initrd-default.tgz"
+	if ! wget -q $WGET_NO_CERT_CHECK -O $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/linux-vserver/etc/templates/openqrm-initrd-default.tgz $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/boot-service/openqrm-initrd-default.tgz; then
+		echo "ERROR: Could not download $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/boot-service/openqrm-initrd-default.tgz"
 		return 1
 	fi
 	# start all vifs

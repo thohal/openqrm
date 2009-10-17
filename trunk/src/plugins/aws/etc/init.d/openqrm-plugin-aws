@@ -28,7 +28,10 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 openqrm_server_get_config
 export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 export LANG=C
-
+# define wget to use with https
+if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 
 function openqrm_plugin_aws_start() {
 	echo "Starting the openQRM aws-plugin"
@@ -56,7 +59,7 @@ function openqrm_plugin_aws_uninstall() {
 	openqrm_plugin_aws_stop
 
 	# removing the table
-	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/aws/aws-action.php?aws_command=uninstall"; then
+	if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://$resource_openqrmserver/openqrm/base/plugins/aws/aws-action.php?aws_command=uninstall"; then
 		aws_log init "ERROR: Could not drop the aws-plugin tables in the database!"
 		return 1
 	fi
@@ -84,7 +87,7 @@ function openqrm_plugin_aws_init() {
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/aws/web/boot-service-aws.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-aws.tgz
 
 	# creating the table
-	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/aws/aws-action.php?aws_command=init"; then
+	if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://$resource_openqrmserver/openqrm/base/plugins/aws/aws-action.php?aws_command=init"; then
 		aws_log init "ERROR: Could not create the aws-plugin tables in the database!"
 		return 1
 	fi

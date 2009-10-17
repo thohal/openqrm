@@ -36,6 +36,7 @@ $event = new event();
 global $event;
 global $OPENQRM_SERVER_BASE_DIR;
 global $OPENQRM_EXECUTION_LAYER;
+global $OPENQRM_WEB_PROTOCOL;
 
 
 class resource {
@@ -306,6 +307,7 @@ function get_parameter($resource_id) {
 	global $BootServiceDir;
 	global $event;
 	global $OPENQRM_EXECUTION_LAYER;
+    global $OPENQRM_WEB_PROTOCOL;
 	$db=openqrm_get_db_connection();
 	// resource parameter
 	$recordSet = &$db->Execute("select * from $RESOURCE_INFO_TABLE where resource_id=$resource_id");
@@ -371,6 +373,8 @@ function get_parameter($resource_id) {
 
 	// command executation layer
 	echo "openqrm_execution_layer=\"$OPENQRM_EXECUTION_LAYER\"\n";
+    // openQRM server web protocol
+    echo "openqrm_web_protocol=\"$OPENQRM_WEB_PROTOCOL\"\n";
 
 	// plugin and bootservice list
 	$plugin = new plugin();

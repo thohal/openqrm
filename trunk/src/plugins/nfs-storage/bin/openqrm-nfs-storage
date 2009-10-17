@@ -33,9 +33,13 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	resource_id=0
 	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+    openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
 fi
 export LANG=C
-
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 # let only root run this script
 WHOAMI=`whoami`
 if [ "$WHOAMI" != "root" ]; then
@@ -203,7 +207,7 @@ case "$NFS_COMMAND" in
 		STORAGE_STATUS_TMP=$resource_id.nfs.stat
         # take care to only post "our" exports, e.g. not the ones from an lvm-nfs-storage
         cat /var/lib/nfs/etab | grep ^$NFS_STORAGE_SERVER_IMAGE_DIRECTORY | awk {' print $1"@"$2 '} | sed -e "s/<.*>//g" | sed -e "s/(.*)//g" > $STORAGE_STATUS_TMP
-		if ! wget -q -O /dev/null --http-user=$NFS_OPENQRM_USERNAME --http-password=$NFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/nfs-storage/nfs-storage-action.php?nfs_storage_command=get_storage; then
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$NFS_OPENQRM_USERNAME --http-password=$NFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/nfs-storage/nfs-storage-action.php?nfs_storage_command=get_storage; then
 			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!" | logger
 		fi
@@ -217,7 +221,7 @@ case "$NFS_COMMAND" in
 		for IMAGE_NAME in `cat /var/lib/nfs/etab | grep ^$NFS_STORAGE_SERVER_IMAGE_DIRECTORY | awk {' print $1 '} | sed -e "s/<.*>//g" | sed -e "s/(.*)//g"`; do
 			echo "$IMAGE_NAME,$IMAGE_NAME" >> $STORAGE_STATUS_TMP
 		done
-		if ! wget -q -O /dev/null --http-user=$NFS_OPENQRM_USERNAME --http-password=$NFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/nfs-storage/nfs-storage-action.php?nfs_storage_command=get_ident; then
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$NFS_OPENQRM_USERNAME --http-password=$NFS_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/nfs-storage/nfs-storage-action.php?nfs_storage_command=get_ident; then
 			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the nfs-export status to the openQRM-server at $resource_openqrmserver!" | logger
 		fi

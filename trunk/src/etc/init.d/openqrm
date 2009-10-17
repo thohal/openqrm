@@ -120,14 +120,17 @@ function openqrm_server_init() {
 		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
 		# the default apache config normally does not allow to override the authconfig (needed for basic auth)
 		# so we allow it for the openqrm directory
-		cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/apache2/conf.d/openqrm-httpd.conf
+        APACHE_CUSTOM_CONFIG_DIR="/etc/apache2/conf.d"
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> $APACHE_CUSTOM_CONFIG_DIR/openqrm-httpd.conf
 	elif [ -f /etc/redhat-release ]; then
+        APACHE_CUSTOM_CONFIG_DIR="/etc/httpd/conf.d"
 		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
-		cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/httpd/conf.d/openqrm-httpd.conf
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> $APACHE_CUSTOM_CONFIG_DIR/openqrm-httpd.conf
 	elif [ -f /etc/SuSE-release ]; then
+        APACHE_CUSTOM_CONFIG_DIR="/etc/apache2/conf.d"
 		HTPASSWD="htpasswd2"
 		ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/web/ $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm
-		cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> /etc/apache2/conf.d/openqrm-httpd.conf
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-httpd.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" >> $APACHE_CUSTOM_CONFIG_DIR/openqrm-httpd.conf
 		# we need a special treatment for suse to allow followsymlinks in the default-setup
 		DEFAULT_CONF=/etc/apache2/default-server.conf
 		NEW_CONF=/etc/apache2/default-server.conf.new
@@ -149,7 +152,36 @@ function openqrm_server_init() {
 			fi
 		fi
 	fi
-	$OPENQRM_WEBSERVER_INIT reload
+
+    # ssl ?
+    if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
+        echo "Setting up SSL secured openQRM Website"
+        # apache ssl setup
+        if ! a2enmod ssl; then
+            echo "ERROR: Could not enable SSL in the Apache webserver ! Exiting."
+            return 1
+        fi
+        # creating the cert + key
+        PRIVATE_KEY=$OPENQRM_SERVER_BASE_DIR/openqrm/etc/ssl/private/openqrm-private.key
+        CERTIFICATE_FILE=$OPENQRM_SERVER_BASE_DIR/openqrm/etc/ssl/cert/openqrm.crt
+        VALID_DAYS=3650
+        mkdir -p `dirname $PRIVATE_KEY`
+        mkdir -p `dirname $CERTIFICATE_FILE`
+        echo "-> Creating new private/public-keys without passphrase for server"
+        rm -f $PRIVATE_KEY
+        openssl genrsa -out $PRIVATE_KEY 1024
+        echo "-> Creating selfsigned certificate"
+        rm -f $CERTIFICATE_FILE
+        openssl req -new -days $VALID_DAYS -key $PRIVATE_KEY -x509 -out $CERTIFICATE_FILE
+        # openQRM apache ssl config
+		cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-https.conf | \
+            sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" | \
+            sed -e "s#@@OPENQRM_WEBSERVER_DOCUMENT_ROOT@@#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" \
+            > $APACHE_CUSTOM_CONFIG_DIR/openqrm-https.conf
+
+    fi
+
+    $OPENQRM_WEBSERVER_INIT reload
 
 	# create the .htaccess file
 	cat $OPENQRM_SERVER_BASE_DIR/openqrm/etc/httpd/openqrm-htaccess.conf | sed -e "s#OPENQRM_WEBSERVER_DOCUMENT_ROOT#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" > $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/.htaccess
@@ -312,9 +344,9 @@ function openqrm_server_start() {
     if [ -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured ]; then
         echo
         if [ "$OPENQRM_SERVER_IP_ADDRESS" != "" ]; then
-            echo "Please configure your openQRM Server at : http://$OPENQRM_SERVER_IP_ADDRESS/openqrm/"
+            echo "Please configure your openQRM Server at : $OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP_ADDRESS/openqrm/"
         else
-            echo "Please configure your openQRM Server at : http://[server-ip-address]/openqrm/"
+            echo "Please configure your openQRM Server at : $OPENQRM_WEB_PROTOCOL://[server-ip-address]/openqrm/"
         fi
         echo
         echo "-> User : openqrm"

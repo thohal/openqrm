@@ -17,13 +17,14 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
+require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/include/htmlobject.inc.php";
-
+global $OPENQRM_WEB_PROTOCOL;
 
 
 function documentation_installation() {
-
+    global $OPENQRM_WEB_PROTOCOL;
 	$disp = "<h1>Installation</h1>";
 	$disp = $disp."<br>";
 	$disp = $disp."openQRM can be easily installed from its source or using the provided binary packages.";
@@ -93,7 +94,7 @@ function documentation_installation() {
 	$disp = $disp."After the installation you can access the openQRM-server at :";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<b>http://[ip-address]/openqrm</b>";
+	$disp = $disp."<b>$OPENQRM_WEB_PROTOCOL://[ip-address]/openqrm</b>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."where [ip-address] is the ip-address of the system you installed openQRM on.";

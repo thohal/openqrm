@@ -31,8 +31,13 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_SERVER_IP=localhost
 	resource_id=0
 	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+    openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
 fi
 export LANG=C
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 
 # using the resource_id as the shelf-id
 AOE_SHELF=$resource_id
@@ -207,7 +212,7 @@ case "$AOE_COMMAND" in
 		STORAGE_STATUS_TMP=$resource_id.aoe.stat
 		cat $VBLADECONF | grep -v '^#' | sed -e 's/#//g' | grep $AOE_STORAGE_SERVER_IMAGE_DIRECTORY > $STORAGE_STATUS_TMP
         sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
-		if ! wget -q -O /dev/null --http-user=$AOE_OPENQRM_USERNAME --http-password=$AOE_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/aoe-storage/aoe-storage-action.php?aoe_storage_command=get_storage; then
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$AOE_OPENQRM_USERNAME --http-password=$AOE_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/aoe-storage/aoe-storage-action.php?aoe_storage_command=get_storage; then
 			echo "ERROR: Could not post the aoe-export status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the aoe-export status to the openQRM-server at $resource_openqrmserver!" | logger
 		fi
@@ -233,7 +238,7 @@ IFS='
 			echo "$V_IMAGE,$V_IMAGE_SHORT:/dev/etherd/e$V_SHELF.$V_SLOT" >> $STORAGE_STATUS_TMP
 		done
 		IFS=$OLD_IFS
-		if ! wget -q -O /dev/null --http-user=$AOE_OPENQRM_USERNAME --http-password=$AOE_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/aoe-storage/aoe-storage-action.php?aoe_storage_command=get_ident; then
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$AOE_OPENQRM_USERNAME --http-password=$AOE_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/aoe-storage/aoe-storage-action.php?aoe_storage_command=get_ident; then
 			echo "ERROR: Could not post the aoe-export status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the aoe-export status to the openQRM-server at $resource_openqrmserver!" | logger
 		fi

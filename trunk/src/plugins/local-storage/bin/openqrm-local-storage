@@ -33,10 +33,15 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 	resource_id=0
 	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+    openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
 fi
 export LANG=C
 LINEBR='
 '
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 
 # let only root run this script
 WHOAMI=`whoami`
@@ -248,7 +253,7 @@ case "$LOCAL_COMMAND" in
 		STORAGE_STATUS_TMP=$resource_id.vg.stat
 		vgs | grep -v VFree | sed -e "s/ \{1,\}//" > $STORAGE_STATUS_TMP
         sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
-		if ! wget -q -O /dev/null --http-user=$LOCAL_OPENQRM_USERNAME --http-password=$LOCAL_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/local-storage/local-storage-action.php?local_storage_command=get_storage; then
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LOCAL_OPENQRM_USERNAME --http-password=$LOCAL_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/local-storage/local-storage-action.php?local_storage_command=get_storage; then
 			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the volume group status to the openQRM-server at $resource_openqrmserver!" | logger
 		fi
@@ -268,7 +273,7 @@ case "$LOCAL_COMMAND" in
             fi
 		done
         sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
-		if ! wget -q -O /dev/null --http-user=$LOCAL_OPENQRM_USERNAME --http-password=$LOCAL_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/local-storage/local-storage-action.php?local_storage_command=get_storage; then
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LOCAL_OPENQRM_USERNAME --http-password=$LOCAL_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/local-storage/local-storage-action.php?local_storage_command=get_storage; then
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!" | logger
 		fi
@@ -294,7 +299,7 @@ case "$LOCAL_COMMAND" in
             rm -f /tmp/$STORAGE_STATUS_TMP
 		done
 
-		if ! wget -q -O /dev/null --http-user=$LOCAL_OPENQRM_USERNAME --http-password=$LOCAL_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` http://$OPENQRM_SERVER_IP/openqrm/base/plugins/local-storage/local-storage-action.php?local_storage_command=get_ident; then
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$LOCAL_OPENQRM_USERNAME --http-password=$LOCAL_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $STORAGE_STATUS_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/local-storage/local-storage-action.php?local_storage_command=get_ident; then
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!"
 			echo "ERROR: Could not post the logic volume status to the openQRM-server at $resource_openqrmserver!" | logger
 		fi

@@ -35,7 +35,7 @@ fi
 
 
 function usage() {
-        echo "Usage : $0 integrate -u <user> -p <password> -q <ip-address-of-openQRM-server> [-i <network-interface>]"
+        echo "Usage : $0 integrate -u <user> -p <password> -q <ip-address-of-openQRM-server> [-i <network-interface>]  [-s <http/https>]"
         echo "        $0 remove -u <user> -p <password> -q <ip-address-of-openQRM-server>"
 }
 
@@ -105,6 +105,7 @@ function openqrm_integrate_solx86() {
 	local PASSWORD=$2
 	local OPENQRM_SERVER=$3
 	local INTERFACE=$4
+    local PROTOCOL=$5
 
     echo "... checking dependecies"
     if ! check_dependencies; then
@@ -141,18 +142,23 @@ function openqrm_integrate_solx86() {
 	local resource_id=-1
 	local resource_ip=`ifconfig $INTERFACE | grep inet | grep -v inet6 | awk {' print $2 '}`
 	local resource_mac=`ifconfig $INTERFACE | grep ether | awk {' print $2 '}`
+    # define wget to use with https
+    if [ "$PROTOCOL" == "https" ]; then
+        WGET_NO_CERT_CHECK="--no-check-certificate"
+    fi
+
 	# remove whitespaces
 	resource_mac=`fix_mac $resource_mac`
 	echo "Using $INTERFACE $resource_ip/$resource_mac"
 	
-	wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
+	wget -q $WGET_NO_CERT_CHECK -O $OPENQRM_RESOURCE_PARAMETER_FILE "$PROTOCOL://$OPENQRM_SERVER/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
 	
 	echo "Getting openqrm-client package"
     mkdir -p $resource_basedir/openqrm/
 
 	cd $resource_basedir/openqrm/
-	wget -q "http://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.solx86.tgz"
+	wget -q $WGET_NO_CERT_CHECK "$PROTOCOL://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.solx86.tgz"
     gunzip openqrm-client.solx86.tgz
 	tar -xf openqrm-client.solx86.tar
 	rm -f openqrm-client.solx86.tar
@@ -168,7 +174,7 @@ function openqrm_integrate_solx86() {
 	
 	# now we send the local-integration signal to create
 	# the solx86 storage, image and appliance
-	if ! wget -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "http://$OPENQRM_SERVER/openqrm/base/plugins/solx86/solx86-action.php?solx86_command=integrate&solx86_id=$resource_id&solx86_root_device=$solx86_root_device&solx86_root_device_type=$solx86_root_device_type&solx86_kernel_version=$solx86_kernel_version"; then
+	if ! wget -O /dev/null -q $WGET_NO_CERT_CHECK --http-user=$USER --http-password=$PASSWORD "$PROTOCOL://$OPENQRM_SERVER/openqrm/base/plugins/solx86/solx86-action.php?solx86_command=integrate&solx86_id=$resource_id&solx86_root_device=$solx86_root_device&solx86_root_device_type=$solx86_root_device_type&solx86_kernel_version=$solx86_kernel_version"; then
 		echo "ERROR: Could not create the appliance resource$resource_id on the openQRM-server!"
 		sleep 2
 		echo "NOTCIE: Removing the system from openQRM because of errors !"
@@ -202,15 +208,20 @@ function openqrm_remove_solx86() {
     fi
 	echo "Removing system from openQRM-server at $OPENQRM_SERVER"
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
-    # stop the openqrm-client
+    # define wget to use with https
+    if [ "$openqrm_web_protocol" == "https" ]; then
+        WGET_NO_CERT_CHECK="--no-check-certificate"
+    fi
 
+
+    # stop the openqrm-client
 	# try to remove components from the solx86 appliance
-	if ! wget -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "http://$OPENQRM_SERVER/openqrm/base/plugins/solx86/solx86-action.php?solx86_command=remove&solx86_id=$resource_id"; then
+	if ! wget -O /dev/null -q $WGET_NO_CERT_CHECK --http-user=$USER --http-password=$PASSWORD "$openqrm_web_protocol://$OPENQRM_SERVER/openqrm/base/plugins/solx86/solx86-action.php?solx86_command=remove&solx86_id=$resource_id"; then
 		echo "WARNING: Could not remove the appliance resource$resource_id from the openQRM-server!"
 	fi
 
 	# remove system from openQRM
-	if ! wget -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "http://$OPENQRM_SERVER/openqrm/base/server/resource/resource-action.php?resource_command=remove&resource_id=$resource_id&resource_mac=$resource_mac"; then
+	if ! wget -O /dev/null -q $WGET_NO_CERT_CHECK --http-user=$USER --http-password=$PASSWORD "$openqrm_web_protocol://$OPENQRM_SERVER/openqrm/base/server/resource/resource-action.php?resource_command=remove&resource_id=$resource_id&resource_mac=$resource_mac"; then
 		echo "ERROR: Could not remove system from the openQRM-server!"
 		return 1
 	fi
@@ -245,6 +256,9 @@ case "$1" in
 				-i)
 					INTERFACE=$2
 					;;			
+				-s)
+					OPENQRM_WEB_PROTOCOL=$2
+					;;
 			esac
 			shift
 		done
@@ -263,7 +277,11 @@ case "$1" in
 			usage
 			exit 1
 		fi
-		openqrm_integrate_solx86 $USER $PASSWORD $OPENQRM_SERVER $INTERFACE
+		if [ "$OPENQRM_WEB_PROTOCOL" == "" ]; then
+            OPENQRM_WEB_PROTOCOL=http
+		fi
+
+		openqrm_integrate_solx86 $USER $PASSWORD $OPENQRM_SERVER $INTERFACE $OPENQRM_WEB_PROTOCOL
 		;;
 
 	remove)
@@ -301,6 +319,7 @@ case "$1" in
 			usage
 			exit 1
 		fi
+
 		openqrm_remove_solx86 $USER $PASSWORD $OPENQRM_SERVER
 		;;
 

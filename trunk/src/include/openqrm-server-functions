@@ -67,6 +67,12 @@ function openqrm_server_get_config() {
 # run immediatly
 openqrm_server_get_config
 
+# define wget to use with https
+if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
+    export WGET="wget --no-check-certificate"
+else
+    export WGET="wget"
+fi
 
 
 # --------------------------------------------------------------------
@@ -206,7 +212,7 @@ function openqrm_server_manage_kernel() {
 	case "$1" in
 		add)
 			echo "openQRM-server: Adding kernel $OPENQRM_SERVER_KERNEL_NAME version $OPENQRM_SERVER_KERNEL_VERSION" | logger
-			if ! wget -O /dev/null --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/kernel/kernel-action.php?kernel_command=new_kernel&kernel_name=$OPENQRM_SERVER_KERNEL_NAME&kernel_version=$OPENQRM_SERVER_KERNEL_VERSION"; then
+			if ! $WGET -O /dev/null --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "$OPENQRM_WEB_PROTOCOL://localhost/openqrm/base/server/kernel/kernel-action.php?kernel_command=new_kernel&kernel_name=$OPENQRM_SERVER_KERNEL_NAME&kernel_version=$OPENQRM_SERVER_KERNEL_VERSION"; then
 				echo "ERROR: Could not add kernel $OPENQRM_SERVER_KERNEL_NAME to the openQRM-server!" | logger
 				return 1
 			fi
@@ -214,7 +220,7 @@ function openqrm_server_manage_kernel() {
 			;;
 		remove)
 			echo "openQRM-server: Removing kernel $OPENQRM_SERVER_KERNEL_NAME" | logger
-			if ! wget -O /dev/null --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/kernel/kernel-action.php?kernel_command=remove_by_name&kernel_name=$OPENQRM_SERVER_KERNEL_NAME"; then
+			if ! $WGET -O /dev/null --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "$OPENQRM_WEB_PROTOCOL://localhost/openqrm/base/server/kernel/kernel-action.php?kernel_command=remove_by_name&kernel_name=$OPENQRM_SERVER_KERNEL_NAME"; then
 				echo "ERROR: Could not remove kernel $OPENQRM_SERVER_KERNEL_NAME to the openQRM-server!" | logger
 				return 1
 			fi
@@ -280,7 +286,7 @@ function openqrm_server_add_deployment_type() {
 	OPENQRM_SERVER_DEPLOYMENT_STORAGE_DESCRIPTION=$7
 	OPENQRM_SERVER_DEPLOYMENT_MAPPING=$8
 	echo "openQRM-server: Adding deployment type $OPENQRM_SERVER_DEPLOYMENT_NAME  to the openQRM-server" | logger
-	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/image/image-action.php?image_command=add_deployment_type&deployment_name=$OPENQRM_SERVER_DEPLOYMENT_NAME&deployment_type=$OPENQRM_SERVER_DEPLOYMENT_TYPE&deployment_description=$OPENQRM_SERVER_DEPLOYMENT_DESCRIPTION&deployment_storagetype=$OPENQRM_SERVER_DEPLOYMENT_STORAGE_TYPE&deployment_storagedescription=$OPENQRM_SERVER_DEPLOYMENT_STORAGE_DESCRIPTION&deployment_mapping=$OPENQRM_SERVER_DEPLOYMENT_MAPPING"; then
+	if ! $WGET -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "$OPENQRM_WEB_PROTOCOL://localhost/openqrm/base/server/image/image-action.php?image_command=add_deployment_type&deployment_name=$OPENQRM_SERVER_DEPLOYMENT_NAME&deployment_type=$OPENQRM_SERVER_DEPLOYMENT_TYPE&deployment_description=$OPENQRM_SERVER_DEPLOYMENT_DESCRIPTION&deployment_storagetype=$OPENQRM_SERVER_DEPLOYMENT_STORAGE_TYPE&deployment_storagedescription=$OPENQRM_SERVER_DEPLOYMENT_STORAGE_DESCRIPTION&deployment_mapping=$OPENQRM_SERVER_DEPLOYMENT_MAPPING"; then
 		echo "ERROR: Could not add deployment type $OPENQRM_SERVER_DEPLOYMENT_NAME to the openQRM-server!" | logger
 		return 1
 	fi
@@ -297,7 +303,7 @@ function openqrm_server_remove_deployment_type() {
 	OPENQRM_USER_PASSWORD=$2
 	OPENQRM_SERVER_DEPLOYMENT_NAME=$3
 	echo "openQRM-server: Removing deployment type $OPENQRM_SERVER_DEPLOYMENT_NAME  from the openQRM-server" | logger
-	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/image/image-action.php?image_command=remove_deployment_type&deployment_name=$OPENQRM_SERVER_DEPLOYMENT_NAME"; then
+	if ! $WGET -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "$OPENQRM_WEB_PROTOCOL://localhost/openqrm/base/server/image/image-action.php?image_command=remove_deployment_type&deployment_name=$OPENQRM_SERVER_DEPLOYMENT_NAME"; then
 		echo "ERROR: Could not remove deployment type $OPENQRM_SERVER_DEPLOYMENT_NAME from the openQRM-server!" | logger
 		return 1
 	fi
@@ -322,7 +328,7 @@ function openqrm_server_add_virtualization_type() {
 	OPENQRM_SERVER_VIRTUALIZATION_TYPE=$3
 	OPENQRM_SERVER_VIRTUALIZATION_NAME=$4
 	echo "openQRM-server: Adding virtualization type $OPENQRM_SERVER_VIRTUALIZATION_TYPE  to the openQRM-server" | logger
-	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/resource/resource-action.php?resource_command=add_virtualization_type&virtualization_type=$OPENQRM_SERVER_VIRTUALIZATION_TYPE&virtualization_name=$OPENQRM_SERVER_VIRTUALIZATION_NAME"; then
+	if ! $WGET -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "$OPENQRM_WEB_PROTOCOL://localhost/openqrm/base/server/resource/resource-action.php?resource_command=add_virtualization_type&virtualization_type=$OPENQRM_SERVER_VIRTUALIZATION_TYPE&virtualization_name=$OPENQRM_SERVER_VIRTUALIZATION_NAME"; then
 		echo "ERROR: Could not add virtualization type $OPENQRM_SERVER_VIRTUALIZATION_TYPE to the openQRM-server!" | logger
 		return 1
 	fi
@@ -339,7 +345,7 @@ function openqrm_server_remove_virtualization_type() {
 	OPENQRM_USER_PASSWORD=$2
 	OPENQRM_SERVER_VIRTUALIZATION_TYPE=$3
 	echo "openQRM-server: Removing virtualization type $OPENQRM_SERVER_VIRTUALIZATION_TYPE  from the openQRM-server" | logger
-	if ! wget -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "http://localhost/openqrm/base/server/resource/resource-action.php?resource_command=remove_virtualization_type&virtualization_type=$OPENQRM_SERVER_VIRTUALIZATION_TYPE"; then
+	if ! $WGET -O /dev/null -q --http-user=$OPENQRM_USER --http-password=$OPENQRM_USER_PASSWORD "$OPENQRM_WEB_PROTOCOL://localhost/openqrm/base/server/resource/resource-action.php?resource_command=remove_virtualization_type&virtualization_type=$OPENQRM_SERVER_VIRTUALIZATION_TYPE"; then
 		echo "ERROR: Could not remove virtualization type $OPENQRM_SERVER_VIRTUALIZATION_TYPE from the openQRM-server!" | logger
 		return 1
 	fi
@@ -454,7 +460,7 @@ function openqrm_assign_kernel() {
 # param 1	: resource_mac
 function openqrm_get_resource_parameter() {
 	local mac=$1
-	wget -q -O /tmp/$mac "http://localhost/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_mac=$mac"
+	$WGET -q -O /tmp/$mac "$OPENQRM_WEB_PROTOCOL://localhost/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_mac=$mac"
 	. /tmp/$mac
 	for param in `cat /tmp/$mac`; do
 		KEY=`echo $param | cut -d'=' -f1`

@@ -41,6 +41,13 @@ fi
 # blocksize for the transfer for performance tuning
 DD_BLOCKSIZE=1024
 
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    export WGET="wget --no-check-certificate -q"
+else
+    export WGET="wget -q"
+fi
+
 #######################################################################
 # required functions ##################################################
 #######################################################################
@@ -82,7 +89,7 @@ function mount_rootfs() {
 
         # send token to the openQRM server to stop the grab-appliance
         echo "local-storage: Sending 'grab-complete' to the openQRM server"
-        if ! wget -q "http://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=grab-complete&token=$LOCAL_STORAGE_GRAB"; then
+        if ! $WGET "$openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=grab-complete&token=$LOCAL_STORAGE_GRAB"; then
             echo "local-storage: Sending 'grab-complete' to the openQRM server"
             /bin/bash
         fi
@@ -111,7 +118,7 @@ function mount_rootfs() {
 
         # send token to the openQRM server to set appliance to localboot
         echo "local-storage: Sending 'deployment-complete' to the openQRM server"
-        if ! wget -q "http://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=deployment-complete&token=$LOCAL_STORAGE_DEPLOYMENT"; then
+        if ! $WGET "$openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=deployment-complete&token=$LOCAL_STORAGE_DEPLOYMENT"; then
             echo "local-storage: Error sending 'deployment-complete' to the openQRM server"
             /bin/bash
         fi

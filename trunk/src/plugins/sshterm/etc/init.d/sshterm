@@ -26,6 +26,10 @@ export OPENQRM_SOURCE_DIR="$OPENQRM_SERVER_BASE_DIR/openqrm/"
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/include/openqrm-plugin-sshterm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/etc/openqrm-plugin-sshterm.conf
 . $OPENQRM_RESOURCE_PARAMETER_FILE
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 
 # do not run on idle resources
 if [ "$resource_image" == "idle" ]; then
@@ -61,7 +65,7 @@ function sshterm_start() {
     if ! grep ^openqrm /etc/passwd 1>/dev/null; then
         useradd -d /home/openqrm -s /bin/bash -m openqrm
     fi
-	if wget -q -O /iauth.$image_id http://$resource_openqrmserver/openqrm/action/image-auth/iauth.$image_id 2>/iauth.log; then
+	if wget -q $WGET_NO_CERT_CHECK -O /iauth.$image_id $openqrm_web_protocol://$resource_openqrmserver/openqrm/action/image-auth/iauth.$image_id 2>/iauth.log; then
 		cryptedpassword=`cat /iauth.$image_id`
 		rm -f /iauth.$image_id iauth.log
 		sed -i "s#^openqrm:[^:]*#openqrm:$cryptedpassword#" /etc/shadow

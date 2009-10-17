@@ -73,6 +73,14 @@ fi
 
 IMAGE_NAME=`echo $image_rootdevice | cut -d':' -f1`
 IMAGE_ROOT_DEVICE=`echo $image_rootdevice | cut -d':' -f2`
+
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    export WGET="wget --no-check-certificate -q"
+else
+    export WGET="wget -q"
+fi
+
 #######################################################################
 # required functions ##################################################
 #######################################################################
@@ -80,15 +88,15 @@ IMAGE_ROOT_DEVICE=`echo $image_rootdevice | cut -d':' -f2`
 function mount_rootfs() {
 
 	# get aoe-interfaces via wget from the openQRM-servers boot-service dir
-	wget -q -O /sbin/aoe-interfaces http://$resource_openqrmserver/openqrm/boot-service/aoe-interfaces
+	$WGET -O /sbin/aoe-interfaces $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/aoe-interfaces
 	# get the aoe-discover via wget from the openQRM-servers boot-service dir
-	wget -q -O /sbin/aoe-discover http://$resource_openqrmserver/openqrm/boot-service/aoe-discover
+	$WGET -O /sbin/aoe-discover $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/aoe-discover
 	# get the aoe-stat via wget from the openQRM-servers boot-service dir
-	wget -q -O /sbin/aoe-stat http://$resource_openqrmserver/openqrm/boot-service/aoe-stat
+	$WGET -O /sbin/aoe-stat $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/aoe-stat
 	# get the aoe-mkdevs via wget from the openQRM-servers boot-service dir
-	wget -q -O /sbin/aoe-mkdevs http://$resource_openqrmserver/openqrm/boot-service/aoe-mkdevs
+	$WGET -O /sbin/aoe-mkdevs $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/aoe-mkdevs
 	# get the aoe-mkshelf via wget from the openQRM-servers boot-service dir
-	wget -q -O /sbin/aoe-mkshelf http://$resource_openqrmserver/openqrm/boot-service/aoe-mkshelf
+	$WGET -O /sbin/aoe-mkshelf $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/aoe-mkshelf
 	chmod +x /sbin/aoe*
 
     # insert udev rule

@@ -23,21 +23,18 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/include/openqrm-plugin-local-storage-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/etc/openqrm-plugin-local-storage.conf
-if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
-	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
-	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
-	openqrm_server_get_config
-	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
-	OPENQRM_INTERFACE=$OPENQRM_SERVER_INTERFACE
-	resource_id=0
-	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
-elif [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
-	. $OPENQRM_RESOURCE_PARAMETER_FILE
-	OPENQRM_SERVER_IP=$resource_openqrmserver
-	OPENQRM_INTERFACE=`ifconfig | grep -i $resource_mac | grep :oq | cut -d':' -f1`
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+openqrm_server_get_config
+OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+OPENQRM_INTERFACE=$OPENQRM_SERVER_INTERFACE
+resource_id=0
+resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+export LANG=C
+# define wget to use with https
+if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
-
-
 
 function openqrm_plugin_local_storage_start() {
 	echo "Starting the openQRM local-storage-plugin"
@@ -65,7 +62,7 @@ function openqrm_plugin_local_storage_uninstall() {
 	openqrm_plugin_local_storage_stop
 	openqrm_server_remove_deployment_type $USERNAME $PASSWORD local-storage
 	# removing the tables
-	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/local-storage/local-storage-action.php?local_storage_command=uninstall"; then
+	if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://localhost/openqrm/base/plugins/local-storage/local-storage-action.php?local_storage_command=uninstall"; then
 		local_storage_log init "ERROR: Could not remove the local-storage plugin tables in the database!"
 	fi
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-storage
@@ -91,7 +88,7 @@ function openqrm_plugin_local_storage_init() {
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/local-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-storage
 	# creating the tables
-	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/local-storage/local-storage-action.php?local_storage_command=init"; then
+	if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://localhost/openqrm/base/plugins/local-storage/local-storage-action.php?local_storage_command=init"; then
 		local_storage_log init "ERROR: Could not create the local-storage plugin tables in the database!"
         rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/local-storage
 		exit 1

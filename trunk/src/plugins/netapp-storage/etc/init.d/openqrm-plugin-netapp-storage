@@ -24,6 +24,14 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/include/openqrm-plugin-netapp-storage-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/netapp-storage/etc/openqrm-plugin-netapp-storage.conf
+# get the ip config
+openqrm_server_get_config
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+export LANG=C
+# define wget to use with https
+if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
+    w="--no-check-certificate"
+fi
 
 function openqrm_plugin_netapp_storage_start() {
 	echo "Starting the openQRM netapp-storage-plugin"
@@ -51,7 +59,7 @@ function openqrm_plugin_netapp_storage_uninstall() {
 	openqrm_plugin_netapp_storage_stop
 	openqrm_server_remove_deployment_type $USERNAME $PASSWORD netapp-deployment
 	# removing the na-server table
-	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/netapp-storage/netapp-storage-action.php?netapp_storage_command=uninstall"; then
+	if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://localhost/openqrm/base/plugins/netapp-storage/netapp-storage-action.php?netapp_storage_command=uninstall"; then
 		netapp_storage_log uninstall "ERROR: Could not drop the netapp-plugin tables in the database!"
 	fi
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/netapp-storage
@@ -98,7 +106,7 @@ function openqrm_plugin_netapp_storage_init() {
 		cp -f `which iscsiadm` $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/
 	fi
 	# creating the tables
-	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/netapp-storage/netapp-storage-action.php?netapp_storage_command=init"; then
+	if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://localhost/openqrm/base/plugins/netapp-storage/netapp-storage-action.php?netapp_storage_command=init"; then
 		netapp_storage_log uninstall "ERROR: Could not initialyze the NetApp-Storage plugin tables in the database!"
         exit 1
 	fi

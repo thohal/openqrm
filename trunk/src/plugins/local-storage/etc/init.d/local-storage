@@ -28,6 +28,10 @@ export OPENQRM_SOURCE_DIR="$resource_basedir/openqrm/"
 
 # blocksize for the transfer for performance tuning
 DD_BLOCKSIZE=1024
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 
 function local_storage_start() {
 	local_storage_stop 1>/dev/null 2>&1
@@ -41,7 +45,7 @@ function local_storage_start() {
         	echo "local-storage: Detected 'after-grab' phase"
             # send token to the openQRM server to remove the grab-appliance + resource capability
             echo "local-storage: Sending 'after-grab' to the openQRM server"
-            if ! wget -q "http://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=after-grab&token=$LOCAL_STORAGE_GRAB"; then
+            if ! wget $WGET_NO_CERT_CHECK -q "$openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=after-grab&token=$LOCAL_STORAGE_GRAB"; then
                 echo "local-storage: Error sending 'after-grab' to the openQRM server"
                 /bin/bash
             fi
@@ -91,7 +95,7 @@ function local_storage_start() {
             umount /mnt
 
             echo "local-storage: Sending 'finished-restore' to the openQRM server"
-            if ! wget -q "http://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=finished-restore&token=$LOCAL_STORAGE_DEPLOYMENT"; then
+            if ! wget $WGET_NO_CERT_CHECK -q "$openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/local-storage-state.php?action=finished-restore&token=$LOCAL_STORAGE_DEPLOYMENT"; then
                 echo "local-storage: Error sending 'finished-restore' to the openQRM server"
                 /bin/bash
             fi

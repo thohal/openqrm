@@ -46,7 +46,7 @@ if [ -x "/sbin/rpc.statd" ]; then
 fi
 
 
-OPENQRM_INITRD_COMPONENTS="$OPENQRM_INITRD_COMPONENTS /bin/bash /usr/bin/rsync /sbin/modprobe /sbin/depmod /sbin/insmod /sbin/lsmod /sbin/mke2fs /sbin/sfdisk /sbin/udevd"
+OPENQRM_INITRD_COMPONENTS="$OPENQRM_INITRD_COMPONENTS /bin/bash /usr/bin/rsync /usr/bin/wget /sbin/modprobe /sbin/depmod /sbin/insmod /sbin/lsmod /sbin/mke2fs /sbin/sfdisk /sbin/udevd"
 OPENQRM_INITRD_DIRECTORIES="bin etc etc/rc.d/init.d etc/sysconfig etc/X11 lib lib/modules lib/i686 loopfs mnt old_root proc sys sysroot usr usr/lib usr/bin usr/sbin var var/lock var/lock/subsys var/log var/run /var/lib /var/lib/nfs /var/lib/nfs/statd"
 
 # colorize/emphasize terminal output
@@ -374,6 +374,8 @@ function openqrm_create_default_initrd_template() {
 			cp -a $LIB""* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
 		fi
 	done
+    # remove wget link
+	rm -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/wget
 	# add some more utils + their libs
 	for UTIL in $OPENQRM_INITRD_COMPONENTS; do
 		cp -a $UTIL $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin
@@ -385,6 +387,8 @@ function openqrm_create_default_initrd_template() {
 			fi
 		done
 	done
+	# fix wget
+	rm -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/usr/bin/wget
 
 	# create default udhcpc script
 	mkdir -p $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/usr/share/udhcpc

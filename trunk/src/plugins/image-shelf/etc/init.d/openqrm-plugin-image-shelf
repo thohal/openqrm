@@ -24,6 +24,14 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/include/openqrm-plugin-image-shelf-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/etc/openqrm-plugin-image-shelf.conf
+# get the ip config
+openqrm_server_get_config
+export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+export LANG=C
+# define wget to use with https
+if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 
 function openqrm_plugin_image_shelf_start() {
 	echo "Starting the openQRM image-shelf-plugin"
@@ -51,7 +59,7 @@ function openqrm_plugin_image_shelf_uninstall() {
 	openqrm_plugin_image_shelf_stop
 
 	# removing the table
-	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/image-shelf/image-shelf-action.php?image_shelf_command=uninstall"; then
+	if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://$resource_openqrmserver/openqrm/base/plugins/image-shelf/image-shelf-action.php?image_shelf_command=uninstall"; then
 		image_shelf_log init "ERROR: Could not drop the image-shelf-plugin tables in the database!"
 		exit 1
 	fi
@@ -80,7 +88,7 @@ function openqrm_plugin_image_shelf_init() {
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/image-shelf/web/boot-service-image-shelf.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-image-shelf.tgz
 
 	# creating the table
-	if ! wget -q -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "http://localhost/openqrm/base/plugins/image-shelf/image-shelf-action.php?image_shelf_command=init"; then
+	if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$USERNAME --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://$resource_openqrmserver/openqrm/base/plugins/image-shelf/image-shelf-action.php?image_shelf_command=init"; then
 		image_shelf_log init "ERROR: Could not create the image-shelf-plugin tables in the database!"
 		exit 1
 	fi

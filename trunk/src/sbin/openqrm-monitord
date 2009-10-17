@@ -32,15 +32,24 @@ if [ -f "$OPENQRM_BASE_DIR/include/openqrm-server-functions" ]; then
 	export resource_id=0
 	export resource_senddelay=30
 	export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+    export SERVER_PROTOCOL=$OPENQRM_WEB_PROTOCOL
 else
 	# we are running on a managed resource
 	export OPENQRM_SERVER_BASE_DIR=$OPENQRM_BASE_DIR
 	. $OPENQRM_BASE_DIR/include/openqrm-functions
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
+    export SERVER_PROTOCOL=$openqrm_web_protocol
+fi
+# define wget to use with https
+if [ "$SERVER_PROTOCOL" == "https" ]; then
+    WGET="wget --no-check-certificate -q -O /dev/null"
+else
+    export WGET="wget -q -O /dev/null"
 fi
 
-# local used functions
 
+
+# local used functions
 function send_info() {
 	if [ -f /etc/initrd-devices.conf ] && [ "$image_type" != "ram" ]; then
 		current_state=`urlencodestring $OPENQRM_STARTING_STATE`
@@ -49,8 +58,8 @@ function send_info() {
 	fi
 	current_event=`urlencodestring $OPENQRM_EVENT`
 	MESSAGEDATA="resource_id=$resource_id&resource_uptime=$current_uptime&resource_cpunumber=$current_cpu_number&resource_cpuspeed=$current_cpu_speed&resource_cpumodel=$current_cpu_model&resource_memtotal=$current_mem_total&resource_memused=$current_mem_used&resource_swaptotal=$current_swap_total&resource_swapused=$current_swap_used&resource_hostname=$current_hostname&resource_load=$current_cpu_load&resource_state=$current_state&resource_event=$current_event";
-	OPENQRM_RESOURCE_INFO_URL="http://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=update_info&$MESSAGEDATA"
-	wget -q -O /dev/null "$OPENQRM_RESOURCE_INFO_URL"
+	OPENQRM_RESOURCE_INFO_URL="$SERVER_PROTOCOL://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=update_info&$MESSAGEDATA"
+	$WGET "$OPENQRM_RESOURCE_INFO_URL"
 }
 
 

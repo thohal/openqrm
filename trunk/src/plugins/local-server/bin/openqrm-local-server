@@ -27,8 +27,8 @@ export LC_ALL=C
 
 
 function usage() {
-        echo "Usage : $0 integrate -u <user> -p <password> -q <ip-address-of-openQRM-server> [ -n <hostname> ] [-i <network-interface>]"
-        echo "        $0 remove -u <user> -p <password> -q <ip-address-of-openQRM-server> [ -n <hostname> ]"
+        echo "Usage : $0 integrate -u <user> -p <password> -q <ip-address-of-openQRM-server> [ -n <hostname> ] [-i <network-interface>] [-s <http/https>]"
+        echo "        $0 remove -u <user> -p <password> -q <ip-address-of-openQRM-server> [ -n <hostname> ] [-s <http/https>]"
 }
 
 
@@ -55,11 +55,15 @@ function openqrm_integrate_local_server() {
 	local resource_id=-1
 	local resource_ip=`ifconfig $INTERFACE | grep "inet " | cut -d':' -f2 | cut -d' ' -f1`
 	local resource_mac=`ifconfig $INTERFACE | grep HWaddr| sed -e "s/.*HWaddr //g" | head -n1`
+    # define wget to use with https
+    if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
+        WGET_NO_CERT_CHECK="--no-check-certificate"
+    fi
 	# remove whitespaces
 	resource_mac=`echo $resource_mac`
 	echo "Using $INTERFACE $resource_ip/$resource_mac"
 	
-	wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
+	wget -q $WGET_NO_CERT_CHECK -O $OPENQRM_RESOURCE_PARAMETER_FILE "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
 	
 	echo "Getting openqrm-client package"
@@ -73,10 +77,10 @@ function openqrm_integrate_local_server() {
     fi
     echo "Getting openqrm-client package $OPENQRM_CLIENT_ARCH"
     cd /
-    if ! wget -q -O openqrm-client.tgz "http://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.$OPENQRM_CLIENT_ARCH.tgz"; then
+    if ! wget -q $WGET_NO_CERT_CHECK -O openqrm-client.tgz "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.$OPENQRM_CLIENT_ARCH.tgz"; then
         rm -f openqrm-client.tgz
         echo "WARNING: Failed to get the openqrm-client package arch $OPENQRM_CLIENT_ARCH ! Using default one ..."
-        wget -q -O openqrm-client.tgz "http://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.tgz"
+        wget -q $WGET_NO_CERT_CHECK -O openqrm-client.tgz "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.tgz"
     fi
 	tar -xzf openqrm-client.tgz
 	rm -f openqrm-client.tgz
@@ -93,7 +97,7 @@ function openqrm_integrate_local_server() {
 	
 	# now we send the local-integration signal to create
 	# the local-server storage, image and appliance
-	if ! wget -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "http://$OPENQRM_SERVER/openqrm/base/plugins/local-server/local-server-action.php?local_server_command=integrate&local_server_id=$resource_id&local_server_root_device=$local_server_root_device&local_server_root_device_type=$local_server_root_device_type&local_server_kernel_version=$local_server_kernel_version&local_server_name=$APPLIANCE_NAME"; then
+	if ! wget $WGET_NO_CERT_CHECK -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER/openqrm/base/plugins/local-server/local-server-action.php?local_server_command=integrate&local_server_id=$resource_id&local_server_root_device=$local_server_root_device&local_server_root_device_type=$local_server_root_device_type&local_server_kernel_version=$local_server_kernel_version&local_server_name=$APPLIANCE_NAME"; then
 		echo "ERROR: Could not create the appliance resource$resouce_id on the openQRM-server!"
 		sleep 2
 		echo "NOTCIE: Removing the system from openQRM because of errors !"
@@ -104,7 +108,7 @@ function openqrm_integrate_local_server() {
 	
     # re-get parameters
     rm -f $OPENQRM_RESOURCE_PARAMETER_FILE
-	wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
+	wget -q $WGET_NO_CERT_CHECK -O $OPENQRM_RESOURCE_PARAMETER_FILE "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
     # start the openQRM client late to get the new hostname from openQRM
 	$resource_basedir/openqrm/etc/init.d/openqrm-client start
 	
@@ -123,12 +127,16 @@ function openqrm_remove_local_server() {
 		echo -n "-> : "
 		read APPLIANCE_NAME
 	fi
+    # define wget to use with https
+    if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
+        WGET_NO_CERT_CHECK="--no-check-certificate"
+    fi
 	# try to remove components from the local-server appliance
-	if ! wget -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "http://$OPENQRM_SERVER/openqrm/base/plugins/local-server/local-server-action.php?local_server_command=remove&local_server_id=$resource_id&local_server_name=$APPLIANCE_NAME"; then
+	if ! wget $WGET_NO_CERT_CHECK -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER/openqrm/base/plugins/local-server/local-server-action.php?local_server_command=remove&local_server_id=$resource_id&local_server_name=$APPLIANCE_NAME"; then
 		echo "WARNING: Could not remove the appliance resource$resouce_id from the openQRM-server!"
 	fi
 	# remove system from openQRM
-	if ! wget -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "http://$OPENQRM_SERVER/openqrm/base/server/resource/resource-action.php?resource_command=remove&resource_id=$resource_id&resource_mac=$resource_mac"; then
+	if ! wget $WGET_NO_CERT_CHECK -O /dev/null -q --http-user=$USER --http-password=$PASSWORD "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER/openqrm/base/server/resource/resource-action.php?resource_command=remove&resource_id=$resource_id&resource_mac=$resource_mac"; then
 		echo "ERROR: Could not remove system from the openQRM-server!"
 		return 1
 	fi
@@ -167,6 +175,9 @@ case "$1" in
 				-n)
 					APPLIANCE_NAME=$2
 					;;
+				-s)
+					OPENQRM_WEB_PROTOCOL=$2
+					;;
 			esac
 			shift
 		done
@@ -185,11 +196,15 @@ case "$1" in
 			usage
 			exit 1
 		fi
+		if [ "$OPENQRM_WEB_PROTOCOL" == "" ]; then
+            OPENQRM_WEB_PROTOCOL=http
+		fi
         export USER
         export PASSWORD
         export OPENQRM_SERVER
         export INTERFACE
         export APPLIANCE_NAME
+        export OPENQRM_WEB_PROTOCOL
 		openqrm_integrate_local_server
 		;;
 
@@ -213,6 +228,9 @@ case "$1" in
 				-n)
 					APPLIANCE_NAME=$2
 					;;
+				-s)
+					OPENQRM_WEB_PROTOCOL=$2
+					;;
 			esac
 			shift
 		done
@@ -231,10 +249,14 @@ case "$1" in
 			usage
 			exit 1
 		fi
+		if [ "$OPENQRM_WEB_PROTOCOL" == "" ]; then
+            OPENQRM_WEB_PROTOCOL=http
+		fi
         export USER
         export PASSWORD
         export OPENQRM_SERVER
         export APPLIANCE_NAME
+        export OPENQRM_WEB_PROTOCOL
 		openqrm_remove_local_server $USER $PASSWORD $OPENQRM_SERVER
 		;;
 

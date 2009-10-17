@@ -33,9 +33,10 @@ fi
 # currently static list of plugin with boot-services for solaris/opensolaris systems
 OPENQRM_PLUGINS_FOR_SOLARIS="zfs-storage"
 
-
-
-
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
 
 case "$1" in
 'start')
@@ -46,7 +47,7 @@ case "$1" in
         rm -f $resource_basedir/openqrm/etc/dropbear/dropbear_rsa_host_key
         $resource_basedir/openqrm/bin/dropbearkey -t rsa -f $resource_basedir/openqrm/etc/dropbear/dropbear_rsa_host_key
         # get the public key from the openQRM server
-        if ! wget -q http://$resource_openqrmserver/openqrm/boot-service/openqrm-server-public-rsa-key; then
+        if ! wget -q $WGET_NO_CERT_CHECK $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/openqrm-server-public-rsa-key; then
             echo "ERROR: Could not get the public key of the openQRM-server at $resource_openqrmserver ! Please check the certificates !"
             exit 1
         fi
@@ -67,7 +68,7 @@ case "$1" in
                 echo "NOTICE: Getting boot-service for plugin $SOL_PLUGIN"
                 mkdir -p $resource_basedir/openqrm/plugins/$SOL_PLUGIN
                 cd $resource_basedir/openqrm/plugins/$SOL_PLUGIN
-                wget -q http://$resource_openqrmserver/openqrm/boot-service/openqrm-$SOL_PLUGIN.solx86.tgz
+                wget -q $WGET_NO_CERT_CHECK $openqrm_web_protocol://$resource_openqrmserver/openqrm/boot-service/openqrm-$SOL_PLUGIN.solx86.tgz
                 gunzip openqrm-$SOL_PLUGIN.solx86.tgz
                 tar -xf openqrm-$SOL_PLUGIN.solx86.tar
                 rm -f openqrm-$SOL_PLUGIN.solx86.tar
