@@ -30,7 +30,7 @@ export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 export LANG=C
 # define wget to use with https
 if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
-    w="--no-check-certificate"
+    WGET_NO_CERT_CHECK="--no-check-certificate"
 fi
 
 function openqrm_plugin_netapp_storage_start() {
