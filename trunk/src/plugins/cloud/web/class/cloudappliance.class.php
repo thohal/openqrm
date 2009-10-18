@@ -164,7 +164,7 @@ function set_state($cloudappliance_id, $state_str) {
 	$db=openqrm_get_db_connection();
 	$cloudappliance_set = &$db->Execute("update $CLOUD_APPLIANCE_TABLE set ca_state=$cloudappliance_state where ca_id=$cloudappliance_id");
 	if (!$cloudappliance_set) {
-		$event->log("get_name", $_SERVER['REQUEST_TIME'], 2, "cloudappliance.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+		$event->log("set_state", $_SERVER['REQUEST_TIME'], 2, "cloudappliance.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	}
 }
 
@@ -191,7 +191,7 @@ function set_cmd($cloudappliance_id, $cmd_str) {
 	$db=openqrm_get_db_connection();
 	$cloudappliance_set = &$db->Execute("update $CLOUD_APPLIANCE_TABLE set ca_cmd=$cloudappliance_cmd where ca_id=$cloudappliance_id");
 	if (!$cloudappliance_set) {
-		$event->log("get_name", $_SERVER['REQUEST_TIME'], 2, "cloudappliance.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+		$event->log("set_cmd", $_SERVER['REQUEST_TIME'], 2, "cloudappliance.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	}
 }
 

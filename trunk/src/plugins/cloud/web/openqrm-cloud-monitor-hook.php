@@ -1949,7 +1949,7 @@ function openqrm_cloud_monitor() {
 				// pause
     			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudirlc", "(PAUSE) Resize life-cycle of Appliance $cd_appliance_id", "", "", 0, 0, 0);
                 $cloud_app_resize = new cloudappliance();
-                $cloud_app_resize->get_instance_by_appliance_id($cd_appliance_id);
+                $cloud_app_resize->get_instance_by_id($cd_appliance_id);
                 $cloud_app_resize->set_cmd($cloud_app_resize->id, "stop");
                 $cloud_app_resize->set_state($cloud_app_resize->id, "paused");
                 $cd->set_state($cd_id, "start_resize");
@@ -1960,7 +1960,7 @@ function openqrm_cloud_monitor() {
     			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudirlc", "(START_RESIZE) Resize life-cycle of Appliance $cd_appliance_id", "", "", 0, 0, 0);
                 // set the cloudimage to state resize
                 $cloud_app_resize = new cloudappliance();
-                $cloud_app_resize->get_instance_by_appliance_id($cd_appliance_id);
+                $cloud_app_resize->get_instance_by_id($cd_appliance_id);
                 $appliance = new appliance();
                 $appliance->get_instance_by_id($cloud_app_resize->appliance_id);
                 $cloud_im = new cloudimage();
@@ -1974,7 +1974,7 @@ function openqrm_cloud_monitor() {
     			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudirlc", "(RESIZING) Resize life-cycle of Appliance $cd_appliance_id", "", "", 0, 0, 0);
                 // remove any existing image-authentication to avoid kicking the auth into the resize phase
                 $cloud_app_resize = new cloudappliance();
-                $cloud_app_resize->get_instance_by_appliance_id($cd_appliance_id);
+                $cloud_app_resize->get_instance_by_id($cd_appliance_id);
                 $appliance = new appliance();
                 $appliance->get_instance_by_id($cloud_app_resize->appliance_id);
                 $image_auth = new image_authentication();
@@ -1995,7 +1995,7 @@ function openqrm_cloud_monitor() {
     			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudirlc", "(UNPAUSE) Resize life-cycle of Appliance $cd_appliance_id", "", "", 0, 0, 0);
                 // unpause appliance
                 $cloud_app_resize = new cloudappliance();
-                $cloud_app_resize->get_instance_by_appliance_id($cd_appliance_id);
+                $cloud_app_resize->get_instance_by_id($cd_appliance_id);
                 $cloud_app_resize->set_cmd($cloud_app_resize->id, "start");
                 $cloud_app_resize->set_state($cloud_app_resize->id, "active");
                 // set new disk size in cloudimage
@@ -2042,7 +2042,7 @@ function openqrm_cloud_monitor() {
 				// pause
     			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(PAUSE) Private life-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
                 $cloud_app_private = new cloudappliance();
-                $cloud_app_private->get_instance_by_appliance_id($cp_appliance_id);
+                $cloud_app_private->get_instance_by_id($cp_appliance_id);
                 $cloud_app_private->set_cmd($cloud_app_private->id, "stop");
                 $cloud_app_private->set_state($cloud_app_private->id, "paused");
                 $cp->set_state($cp_id, "start_private");
@@ -2053,7 +2053,7 @@ function openqrm_cloud_monitor() {
     			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(START_PRIVATE) Private life-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
                 // set the cloudimage to state resize
                 $cloud_app_private = new cloudappliance();
-                $cloud_app_private->get_instance_by_appliance_id($cp_appliance_id);
+                $cloud_app_private->get_instance_by_id($cp_appliance_id);
                 $appliance = new appliance();
                 $appliance->get_instance_by_id($cloud_app_private->appliance_id);
                 $cloud_im = new cloudimage();
@@ -2067,7 +2067,7 @@ function openqrm_cloud_monitor() {
     			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(CLONING) Private life-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
                 // remove any existing image-authentication to avoid kicking the auth into the private phase
                 $cloud_app_private = new cloudappliance();
-                $cloud_app_private->get_instance_by_appliance_id($cp_appliance_id);
+                $cloud_app_private->get_instance_by_id($cp_appliance_id);
                 $appliance = new appliance();
                 $appliance->get_instance_by_id($cloud_app_private->appliance_id);
                 $image_auth = new image_authentication();
@@ -2085,7 +2085,7 @@ function openqrm_cloud_monitor() {
                 // check notifcation from storage
                 // get the cloudappliance
                 $cloud_app_private = new cloudappliance();
-                $cloud_app_private->get_instance_by_appliance_id($cp_appliance_id);
+                $cloud_app_private->get_instance_by_id($cp_appliance_id);
                 // get the real appliance
                 $appliance = new appliance();
                 $appliance->get_instance_by_id($cloud_app_private->appliance_id);
@@ -2121,7 +2121,7 @@ function openqrm_cloud_monitor() {
     			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(UNPAUSE) Private life-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
                 // get the cloudappliance
                 $cloud_app_private = new cloudappliance();
-                $cloud_app_private->get_instance_by_appliance_id($cp_appliance_id);
+                $cloud_app_private->get_instance_by_id($cp_appliance_id);
                 // get the real appliance
                 $appliance = new appliance();
                 $appliance->get_instance_by_id($cloud_app_private->appliance_id);
