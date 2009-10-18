@@ -67,6 +67,7 @@ $refresh_delay=5;
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
+global $OPENQRM_WEB_PROTOCOL;
 
 // get admin email
 $cc_conf = new cloudconfig();
@@ -285,6 +286,7 @@ function cloud_manager() {
 
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
+    global $OPENQRM_WEB_PROTOCOL;
 	global $thisfile;
 	$table = new htmlobject_db_table('cr_id', 'DESC');
 
@@ -292,14 +294,10 @@ function cloud_manager() {
 	// get external name
 	$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
 	if (!strlen($external_portal_name)) {
-		$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
+		$external_portal_name = "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 	}
+    $new_cloud_request = "<b><a href=\"$thisfile?action=create&currenttab=1\">Create new Cloud Request</a></b>";
 
-	$disp = "<h1>Cloud Requests from portal at <a href=\"$external_portal_name\" target=\"_BLANK\">$external_portal_name</a></h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<b><a href=\"$thisfile?action=create&currenttab=1\">Create new Cloud Request</a></b>";
-	$disp = $disp."<br>";
 	$arHead = array();
 
 	$arHead['cr_id'] = array();
@@ -400,7 +398,19 @@ function cloud_manager() {
 		$table->identifier = 'cr_id';
 	}
     $table->max = $cl_request->get_count();
-	return $disp.$table->get_string();
+	// set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'cloud-manager-tpl.php');
+	$t->setVar(array(
+        'new_cloud_request' => $new_cloud_request,
+        'cloud_request_table' => $table->get_string(),
+        'external_portal_name' => $external_portal_name,
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
+
+
 }
 
 
@@ -408,11 +418,20 @@ function cloud_manager() {
 
 function cloud_create_request() {
 
+    global $OPENQRM_SERVER_IP_ADDRESS;
 	global $OPENQRM_USER;
+    global $OPENQRM_WEB_PROTOCOL;
 	global $thisfile;
 	global $RootDir;
 
-	$cl_user = new clouduser();
+	$cc_conf = new cloudconfig();
+	// get external name
+	$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
+	if (!strlen($external_portal_name)) {
+		$external_portal_name = "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
+	}
+
+    $cl_user = new clouduser();
 	$cl_user_list = array();
 	$cl_user_list = $cl_user->get_list();
 	$cl_user_count = count($cl_user_list);
@@ -448,7 +467,6 @@ function cloud_create_request() {
 	$virtualization_list_select = array();
 	$virtualization_list = $virtualization->get_list();
 	// check if to show physical system type
-	$cc_conf = new cloudconfig();
 	$cc_request_physical_systems = $cc_conf->get_value(4);	// request_physical_systems
 	if (!strcmp($cc_request_physical_systems, "false")) {
 		array_shift($virtualization_list);
@@ -584,6 +602,7 @@ function cloud_create_request() {
 		'cloud_ha' => $show_ha,
 		'cloud_clone_on_deploy' => $clone_on_deploy,
 		'cloud_show_puppet' => $show_puppet,
+        'external_portal_name' => $external_portal_name,
 		'submit_save' => htmlobject_input('action', array("value" => 'Create', "label" => 'Create'), 'submit'),
 	));
 	$disp =  $t->parse('out', 'tplfile');
@@ -594,7 +613,6 @@ function cloud_create_request() {
 
 // post the details of a request to a new tab
 function cloud_request_details($cloud_request_id) {
-
 
 	global $OPENQRM_USER;
 	global $thisfile;

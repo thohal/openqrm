@@ -43,7 +43,7 @@ global $OPENQRM_SERVER_BASE_DIR;
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
-
+global $OPENQRM_WEB_PROTOCOL;
 
 function redirect($strMsg, $currenttab = 'tab0', $url = '') {
 	global $thisfile;
@@ -167,6 +167,7 @@ function cloud_user_mailer() {
 
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
+    global $OPENQRM_WEB_PROTOCOL;
 	global $thisfile;
     global $mailbody;
     global $mailsubject;
@@ -176,7 +177,7 @@ function cloud_user_mailer() {
 	// get external name
 	$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
 	if (!strlen($external_portal_name)) {
-		$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
+		$external_portal_name = "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 	}
 
     $cloud_user_select = "<select name=\"selected_user\">";

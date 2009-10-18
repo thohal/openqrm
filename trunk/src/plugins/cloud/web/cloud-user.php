@@ -78,6 +78,7 @@ $refresh_delay=5;
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
+global $OPENQRM_WEB_PROTOCOL;
 
 // check if we got some actions to do
 if(htmlobject_request('action') != '') {
@@ -135,7 +136,7 @@ if(htmlobject_request('action') != '') {
 			$cloud_user_limit->get_instance_by_cu_id($cloud_user_id);
 			$cl_id = $cloud_user_limit->id;
 			$cloud_user_limit->update($cl_id, $user_limits_fields);
-			echo "Updated limits for Cloud user $cloud_user_id<br>";
+			// echo "Updated limits for Cloud user $cloud_user_id<br>";
 			break;
 
 	}
@@ -148,13 +149,14 @@ function cloud_user_manager() {
 
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
+    global $OPENQRM_WEB_PROTOCOL;
 	global $thisfile;
 	$table = new htmlobject_db_table('cu_id', 'DESC');
 	$cc_conf = new cloudconfig();
 	// get external name
 	$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
 	if (!strlen($external_portal_name)) {
-		$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
+		$external_portal_name = "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 	}
 	$arHead = array();
 
@@ -245,12 +247,13 @@ function cloud_create_user() {
 
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
+    global $OPENQRM_WEB_PROTOCOL;
 	global $thisfile;
 	$cc_conf = new cloudconfig();
 	// get external name
 	$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
 	if (!strlen($external_portal_name)) {
-		$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
+		$external_portal_name = "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 	}
 	$cu_name = htmlobject_input('cu_name', array("value" => '', "label" => 'User name'), 'text', 20);
     // root password input plus generate password button

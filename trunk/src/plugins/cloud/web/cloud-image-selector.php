@@ -47,6 +47,7 @@ $refresh_delay=5;
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
+global $OPENQRM_WEB_PROTOCOL;
 // get the cu_id array
 $private_id_arr = htmlobject_request('cu_id');
 
@@ -125,6 +126,7 @@ function cloud_image_selector() {
 
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
+    global $OPENQRM_WEB_PROTOCOL;
 	global $thisfile;
 
     // private-image enabled ?
@@ -135,6 +137,11 @@ function cloud_image_selector() {
         return $strMsg;
         exit(0);
     }
+	// get external name
+	$external_portal_name = $cp_conf->get_value(3);  // 3 is the external name
+	if (!strlen($external_portal_name)) {
+		$external_portal_name = "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
+	}
 
 	$table = new htmlobject_table_identifiers_checked('image_id');
 	$arHead = array();
@@ -213,13 +220,16 @@ function cloud_image_selector() {
 		$table->bottom = array('set');
 		$table->identifier = 'image_id';
 	}
-    $table->max = $image_list->get_count();
+    // do not show the openQRM server and idle image
+    $image_max = $image_list->get_count();
+	$table->max = $image_max-2;
 
 	//------------------------------------------------------------ set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'cloud-image-selector-tpl.php');
 	$t->setVar(array(
+        'external_portal_name' => $external_portal_name,
 		'cloud_private_image_table' => $table->get_string(),
 	));
 	$disp =  $t->parse('out', 'tplfile');
@@ -227,11 +237,6 @@ function cloud_image_selector() {
 
 
 }
-
-
-
-
-
 
 
 

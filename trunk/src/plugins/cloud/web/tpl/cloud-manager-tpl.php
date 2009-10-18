@@ -23,18 +23,9 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Cloud NAT (natural address translation)</h1>
-<br>
-<br>
-This feature hels for openQRM Setups within a secured network which
-just allows one mac-address to be sent out. In this case please confiure
-post- and pre-routing to translate your internal Cloud network to the external
-ip-addresses via iptables. Then just put your internal and external network
-address in here, update the NAT table and enable the CloudNat features
-in the main CloudConfig.
-<br>
-Then all displays and mails containing the Cloud systems ip addresses
-will be mapped according the CloudNat setup below.
-<br>
-<br>
-{cloud_nat_table}
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Cloud Requests on portal <small><a href={external_portal_name} target="_BLANK">{external_portal_name}</a></small></h1>
+{new_cloud_request}
+
+{cloud_request_table}
+
+

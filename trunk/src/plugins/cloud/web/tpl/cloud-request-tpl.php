@@ -19,14 +19,14 @@
 -->
 <style>
 .htmlobject_tab_box {
-	width:600px;
+	width:700px;
 }
 </style>
 <form action="{formaction}">
 
 {currentab}
 
-<h1>Create new Cloud Request</h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Create Cloud Request on portal <small><a href={external_portal_name} target="_BLANK">{external_portal_name}</a></small></h1>
 
 {subtitle}
 

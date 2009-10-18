@@ -43,7 +43,7 @@ $refresh_delay=5;
 $openqrm_server = new openqrm_server();
 $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
-
+global $OPENQRM_WEB_PROTOCOL;
 
 // check if we got some actions to do
 if(htmlobject_request('action') != '') {
@@ -67,6 +67,7 @@ function cloud_config_manager() {
 
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
+    global $OPENQRM_WEB_PROTOCOL;
 	global $thisfile;
 	$table = new htmlobject_table_builder();
 
@@ -74,7 +75,7 @@ function cloud_config_manager() {
 	// get external name
 	$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
 	if (!strlen($external_portal_name)) {
-		$external_portal_name = "http://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
+		$external_portal_name = "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 	}
 	$arHead = array();
 
