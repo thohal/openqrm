@@ -18,7 +18,7 @@
 */
 -->
 <form action="{formaction}" method="GET">
-<h1>Select Equallogic-storage</h1>
+<h1><img border=0 src="/openqrm/base/plugins/equallogic-storage/img/plugin.png"> Select Equallogic-storage</h1>
 <h4>Please select an Equallogic Storage Server from the list below</h4>
 {storage_server_table}
 </form>

@@ -24,7 +24,7 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1>Xen create VM</h1>
+<h1><img border=0 src="/openqrm/base/plugins/xen/img/plugin.png"> Xen create VM</h1>
 
 Add new VM to Xen Host id {xen_server_id}
 <br>

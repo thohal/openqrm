@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>Select AWS Instance</h1>
+<h1><img border=0 src="/openqrm/base/plugins/aws/img/plugin.png"> Select AWS Instance</h1>
 <h4>Select an AWS Instance to import into openQRM</h4>
 {aws_get_table}
 

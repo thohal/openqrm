@@ -18,7 +18,7 @@
 */
 -->
 <form action="{formaction}" method="GET">
-<h1>Select iSCSI-storage</h1>
+<h1><img border=0 src="/openqrm/base/plugins/iscsi-storage/img/plugin.png"> Select iSCSI-storage</h1>
 <h4>Please select an iSCSI Storage Server from the list below</h4>
 {storage_server_table}
 </form>

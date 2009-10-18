@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>Configure the AMI</h1>
+<h1><img border=0 src="/openqrm/base/plugins/aws/img/plugin.png"> Configure the AMI</h1>
 <h4>Provide the name (min. 8 chars), size and architecture for the new AMI</h4>
 
 <form action="{thisfile}">

@@ -73,7 +73,7 @@ function nagios_display() {
 	global $thisfile;
 
 
-	$disp = '<h1>Automatic Nagios configuration</h1>';
+	$disp = '<h1><img border=0 src=\"/openqrm/base/plugins/nagios2/img/plugin.png\">Automatic Nagios configuration</h1>';
 	$disp .= '<br>';
 
 	$disp .= "<form action=\"$thisfile\" method=\"POST\">";

@@ -18,7 +18,7 @@
 */
 -->
 
-<h1>AWS Account setup</h1>
+<h1><img border=0 src="/openqrm/base/plugins/aws/img/plugin.png"> Account setup</h1>
 
 {aws_table}
 

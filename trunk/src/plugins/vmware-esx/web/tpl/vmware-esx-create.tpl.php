@@ -24,7 +24,7 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1>VMware ESX Create VM</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/plugin.png"> VMware ESX Create VM</h1>
 
 Add new VM to VMware ESX Host id {vmware_esx_id}
 <br>

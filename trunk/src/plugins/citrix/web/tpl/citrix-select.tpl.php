@@ -24,7 +24,7 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1>Select Citrix-Host</h1>
+<h1><img border=0 src="/openqrm/base/plugins/citrix/img/plugin.png"> Select Citrix-Host</h1>
 
 <div style="float:left;">
 Please select a Citrix-Host from the list below

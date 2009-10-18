@@ -18,7 +18,7 @@
 */
 -->
 <form action="{formaction}" method="GET">
-<h1>Select LVM-storage</h1>
+<h1><img border=0 src="/openqrm/base/plugins/lvm-storage/img/plugin.png"> Select LVM-storage</h1>
 <h4>Please select a LVM-storage server from the list below</h4>
 {storage_server_table}
 </form>

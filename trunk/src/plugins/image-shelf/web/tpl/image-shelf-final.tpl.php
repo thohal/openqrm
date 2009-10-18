@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>Executing Image-Shelf Request</h1>
+<h1><img border=0 src="/openqrm/base/plugins/image-shelf/img/plugin.png"> Executing Image-Shelf Request</h1>
 <br>
 openQRM is now tranferring the Content of the Image-template <strong>{image_filename}</strong>
 <br>

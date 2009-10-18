@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>iSCSI Luns of ZFS zpool {zpool_name} on storage {storage_name}</h1>
+<h1><img border=0 src="/openqrm/base/plugins/zfs-storage/img/plugin.png"> iSCSI Luns of ZFS zpool {zpool_name} on storage {storage_name}</h1>
 {lun_table}
 <form action="{formaction}" method="GET">
 <h4>Add new Lun on ZFS zpool {zpool_name}</h4>

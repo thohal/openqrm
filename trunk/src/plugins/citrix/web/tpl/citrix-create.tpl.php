@@ -24,7 +24,7 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1>Citrix XenServer create VM</h1>
+<h1><img border=0 src="/openqrm/base/plugins/citrix/img/plugin.png"> Citrix XenServer create VM</h1>
 
 Add new VM to Citrix XenServer Host id {citrix_server_id}
 <br>

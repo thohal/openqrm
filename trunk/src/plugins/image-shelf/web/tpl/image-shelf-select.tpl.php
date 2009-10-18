@@ -17,6 +17,6 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>Select Image-Shelf</h1>
+<h1><img border=0 src="/openqrm/base/plugins/image-shelf/img/plugin.png"> Select Image-Shelf</h1>
 <h4>Please select an Image-Shelf from the list below</h4>
 {image_shelf_table}

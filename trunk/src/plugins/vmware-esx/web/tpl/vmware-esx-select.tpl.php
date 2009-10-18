@@ -24,7 +24,7 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1>VMware ESX Manager</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/plugin.png"> VMware ESX Manager</h1>
 
 <div style="float:left;">
 Please select a VMWare ESX Host from the list below

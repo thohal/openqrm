@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>iSCSI Volumes on storage {storage_name}</h1>
+<h1><img border=0 src="/openqrm/base/plugins/iscsi-storage/img/plugin.png"> iSCSI Volumes on storage {storage_name}</h1>
 {lun_table}
 <form action="{formaction}" method="GET">
 <h1>Add new iSCSI Volume group</h1>

@@ -24,7 +24,7 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1>VMware Server 1 Manager</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-server/img/plugin.png"> VMware Server 1 Manager</h1>
 
 <div style="float:left;">
 Please select a VMWare Server 1 Host from the list below

@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>Select an AWS Account</h1>
+<h1><img border=0 src="/openqrm/base/plugins/aws/img/plugin.png"> Select an AWS Account</h1>
 <h4>Please select an Amazon AWS account from the list below</h4>
 {aws_table}
 

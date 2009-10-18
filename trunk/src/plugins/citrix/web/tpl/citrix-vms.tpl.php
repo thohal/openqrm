@@ -24,7 +24,7 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1>Citrix-XenServer Manager</h1>
+<h1><img border=0 src="/openqrm/base/plugins/citrix/img/plugin.png"> Citrix-XenServer Manager</h1>
 
 <div style="float:left;">
 {citrix_server_table}

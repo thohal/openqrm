@@ -22,6 +22,7 @@
 	width:600px;
 }
 </style>
+<h1><img border=0 src="/openqrm/base/plugins/image-shelf/img/plugin.png"> New Image-Shelf</h1>
 <form action="{thisfile}">
 
 {new_image_step_2}

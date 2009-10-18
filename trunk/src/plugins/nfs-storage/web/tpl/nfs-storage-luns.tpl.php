@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>NFS Volumes on storage {storage_name}</h1>
+<h1><img border=0 src="/openqrm/base/plugins/nfs-storage/img/plugin.png"> NFS Volumes on storage {storage_name}</h1>
 {storage_table}
 <br><br><br>
 {lun_table}

@@ -18,7 +18,7 @@
 */
 -->
 
-<h1><img border=0 src="/openqrm/base/plugins/xen/img/plugin.png">Xen plugin</h1>
+<h1><img border=0 src="/openqrm/base/plugins/xen/img/plugin.png"> Xen plugin</h1>
 <strong>This plugin is tested with Xen 3.2 and higher and requires full virtualization (HVM via VT)</strong><br>
 <br>
 <br>

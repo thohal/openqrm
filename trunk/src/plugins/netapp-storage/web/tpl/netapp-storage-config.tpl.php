@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>NetApp-Storage Configuration {storage_name}</h1>
+<h1><img border=0 src="/openqrm/base/plugins/netapp-storage/img/plugin.png"> NetApp-Storage Configuration {storage_name}</h1>
 
 {backlink}
 <br>

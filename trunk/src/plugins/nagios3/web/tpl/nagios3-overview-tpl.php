@@ -19,8 +19,7 @@
 -->
 
 
-<h1>Automatic Nagios configuration</h1>
-<br>
+<h1><img border=0 src="/openqrm/base/plugins/nagios3/img/plugin.png"> Automatic configuration</h1>
 <form action="{thisfile}" method="POST">
 <br>
 Click on the button below to automatic map the

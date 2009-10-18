@@ -24,7 +24,7 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1>VMware Server 2 Create VM</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-server2/img/plugin.png"> VMware Server 2 Create VM</h1>
 
 Add new VM to VMware Server 2 Host id {vmware_server_id}
 <br>

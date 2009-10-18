@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>Executing AWS EC2 Export</h1>
+<h1><img border=0 src="/openqrm/base/plugins/aws/img/plugin.png"> Executing AWS EC2 Export</h1>
 <br>
 openQRM is now export Server Image <strong>{image_id} / {image_name}</strong>
 <br>

@@ -18,7 +18,7 @@
 */
 -->
 <form action="{formaction}" method="GET">
-<h1>Please select an empty local-storage image
+<h1><img border=0 src="/openqrm/base/plugins/local-storage/img/plugin.png"> Please select an empty local-storage image
 <br>
 to transfer the disk-content of resource {resource_id} to</h1>
 {image_table}

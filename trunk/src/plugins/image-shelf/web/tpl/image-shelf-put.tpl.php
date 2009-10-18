@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>Select openQRM Image (NFS or LVM-NFS)</h1>
+<h1><img border=0 src="/openqrm/base/plugins/image-shelf/img/plugin.png"> Select openQRM Image (NFS or LVM-NFS)</h1>
 
 Please select one of following server images to put the template on
 

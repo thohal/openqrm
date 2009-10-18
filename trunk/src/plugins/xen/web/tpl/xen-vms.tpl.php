@@ -24,7 +24,7 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1>Xen Admin</h1>
+<h1><img border=0 src="/openqrm/base/plugins/xen/img/plugin.png"> Xen Admin</h1>
 
 <div style="float:left;">
 {xen_server_table}

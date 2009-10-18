@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1>Select openQRM Server Image (NFS or LVM-NFS)</h1>
+<h1><img border=0 src="/openqrm/base/plugins/aws/img/plugin.png"> Select openQRM Server Image (NFS or LVM-NFS)</h1>
 <h4>Available NFS Server-Images</h4>
 {image_nfs_table}
 {create_nfs_image_hint}

@@ -261,7 +261,7 @@ function imageshelf_form() {
 	
 	}
 
-	return "<h1>New Image-Shelf</h1>" . $disp;
+	return $disp;
 }
 
 $output = array();
