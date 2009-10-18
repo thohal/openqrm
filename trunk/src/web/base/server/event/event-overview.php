@@ -334,19 +334,8 @@ function errors_only_display() {
         $event_count++;
 
 	}
-    // check if empty body
-    $body_arr_count = count($arBody);
-    if ($body_arr_count == 0) {
-		$arBody[] = array(
-			'event_priority' => '',
-			'event_id' => '',
-			'event_time' => '',
-			'event_source' => '',
-			'event_description' => "<input type=\"hidden\" name=\"currenttab\" value=\"tab1\">",
-		);
-        $table->identifier_disabled=array(1);
-    }
 
+    $table->add_headrow("<input type=\"hidden\" name=\"currenttab\" value=\"tab1\">");
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -355,7 +344,8 @@ function errors_only_display() {
 	$table->form_action = $thisfile;
 	$table->head = $arHead;
 	$table->body = $arBody;
-	if (($OPENQRM_USER->role == "administrator") && ($event_count > 0)) {
+    $table->autosort = true;
+	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('remove', 'acknowledge');
 		$table->identifier = 'event_id';
 	}
