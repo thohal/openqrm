@@ -255,8 +255,8 @@ function openqrm_cloud_monitor() {
 
             // not supported yet
             } else {
-                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to resize image type $image_type.", "", "", 0, 0, 0);
-                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types for resize are lvm-nfs-deployment, lvm-iscsi-deployment, lvm-aoe-deployment.", "", "", 0, 0, 0);
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Do not know how to resize image type $image_type.", "", "", 0, 0, 0);
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Currently supporte storage types for resize are lvm-nfs-deployment, lvm-iscsi-deployment, lvm-aoe-deployment.", "", "", 0, 0, 0);
             }
             // re-set the cloudimage state to active
             $ci->set_state($ci->id, "active");
@@ -351,8 +351,8 @@ function openqrm_cloud_monitor() {
 
             // not supported yet
             } else {
-                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Do not know how to create a private image type $image_type.", "", "", 0, 0, 0);
-                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Currently supporte storage types for resize are lvm-nfs-deployment, lvm-iscsi-deployment, lvm-aoe-deployment.", "", "", 0, 0, 0);
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Do not know how to create a private image type $image_type.", "", "", 0, 0, 0);
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Currently supporte storage types for resize are lvm-nfs-deployment, lvm-iscsi-deployment, lvm-aoe-deployment.", "", "", 0, 0, 0);
             }
 
             // here we logical create the image in openQRM, we have all data available
@@ -362,7 +362,7 @@ function openqrm_cloud_monitor() {
                 $clone_image_fields["image_id"]=openqrm_db_get_free_id('image_id', $clone_image->_db_table);
                 $clone_image_fields["image_name"] = $ci->clone_name;
                 $clone_image_fields["image_version"] = "Private Cloud";
-                $clone_image_fields["image_type"] = "lvm-nfs-deployment";
+                $clone_image_fields["image_type"] = $image->type;
                 $clone_image_fields["image_rootfstype"] = $image->rootfstype;
                 $clone_image_fields["image_storageid"] = $image->storageid;
                 $clone_image_fields["image_deployment_parameter"] = $image->deployment_parameter;
@@ -2097,7 +2097,9 @@ function openqrm_cloud_monitor() {
                 $pimage->get_instance_by_name($cloud_im->clone_name);
                 // get deployment type
                 $pdeployment = new deployment();
-                $pdeployment->get_instance_by_type($pimage->type);
+                if (strlen($pimage->type)) {
+                    $pdeployment->get_instance_by_type($pimage->type);
+                }
                 // notification filename
                 $clone_notification_file = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/'.$pdeployment->storagetype.'/storage/'.$cloud_im->clone_name.'.clone';
 
