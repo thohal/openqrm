@@ -984,13 +984,13 @@ var $_var_prefix;
 	function get_select() {
 	$strR = '';
 		if($this->identifier_type == 'checkbox' && $this->identifier != '') {
-			$strR .= '<div class="selecttable" id="SelectTable" style="display:none;">';
+			$strR .= '<div class="selecttable" id="'.$this->_var_prefix.'SelectTable" style="display:none;">';
 			$strR .= $this->lang_select_title;
 			$strR .= ' <a href="javascript:selectident(\'all\');">'.$this->lang_select_all.'</a>'."\n";
 			$strR .= ' <a href="javascript:selectident(\'none\');">'.$this->lang_select_none.'</a>'."\n";
 			$strR .= ' <a href="javascript:selectident(\'invert\');">'.$this->lang_select_invert.'</a>'."\n";
 			$strR .= '<script>'."\n";
-			$strR .= 'document.getElementById("SelectTable").style.display = "inline"'."\n";
+			$strR .= 'document.getElementById("'.$this->_var_prefix.'SelectTable").style.display = "inline"'."\n";
 			$strR .= 'function selectident(arg) {'."\n";
 			$strR .= '  if(arg == "all") {'."\n";
 			$strR .= '    for(i = 0; i < document.getElementsByName("'.$this->identifier_name.'[]").length; i++)  {'."\n";
