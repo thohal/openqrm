@@ -305,8 +305,6 @@ function kvm_vm_config() {
 	$store = openqrm_parse_conf($kvm_vm_conf_file);
 	extract($store);
 
-	$disp = "<h1>Kvm Configure VM</h1>";
-
     // CPU
 	$vm_cpus_disp .= "<form action=\"$thisfile\" method=post>";
 	$vm_cpus_disp .= "<input type=hidden name=kvm_component value='cpus'>";
@@ -475,26 +473,28 @@ function kvm_vm_config_ram() {
 	$kvm_server_appliance->get_instance_by_id($kvm_server_id);
 	$kvm_server = new resource();
 	$kvm_server->get_instance_by_id($kvm_server_appliance->resources);
-
 	$kvm_vm_conf_file="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/web/kvm-stat/$kvm_server->id.$kvm_server_name.vm_config";
 	$store = openqrm_parse_conf($kvm_vm_conf_file);
 	extract($store);
+    $backlink = "<a href='kvm-vm-config.php?kvm_server_id=".$kvm_server_id."&kvm_server_name=".$kvm_server_name."'>back</a>";
 
-	$disp = "<h1>Kvm Configure VM</h1>";
-	$disp .= "<form action=\"$thisfile\" method=post>";
-	$disp .= "<input type=hidden name=action value='update_ram'>";
-	$disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
-	$disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-	$disp .= "<br>";
-	$disp .= htmlobject_input('kvm_update_ram', array("value" => $store[OPENQRM_KVM_VM_RAM], "label" => 'Ram (MB)'), 'text', 10);
-	$disp .= "<input type=submit value='Update'>";
-	$disp .= "<br>";
-	$disp .= "</form>";
+	$vm_config_ram_disp = "<form action=\"$thisfile\" method=post>";
+	$vm_config_ram_disp .= "<input type=hidden name=action value='update_ram'>";
+	$vm_config_ram_disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
+	$vm_config_ram_disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+	$vm_config_ram_disp .= htmlobject_input('kvm_update_ram', array("value" => $store[OPENQRM_KVM_VM_RAM], "label" => 'Ram (MB)'), 'text', 10);
+	$vm_config_ram_disp .= "<input type=submit value='Update'>";
+	$vm_config_ram_disp .= "</form>";
 
-	$disp .= "<br>";
-	$disp .= "<hr>";
-	$disp .= "<br>";
-
+   // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'kvm-config-ram.tpl.php');
+	$t->setVar(array(
+        'vm_config_ram_disp' => $vm_config_ram_disp,
+        'backlink' => $backlink,
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
 
@@ -517,6 +517,7 @@ function kvm_vm_config_cpus() {
 	$kvm_vm_conf_file="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/web/kvm-stat/$kvm_server->id.$kvm_server_name.vm_config";
 	$store = openqrm_parse_conf($kvm_vm_conf_file);
 	extract($store);
+    $backlink = "<a href='kvm-vm-config.php?kvm_server_id=".$kvm_server_id."&kvm_server_name=".$kvm_server_name."'>back</a>";
 
     // cpus array for the select
     $cpu_identifier_array = array();
@@ -525,21 +526,23 @@ function kvm_vm_config_cpus() {
 	$cpu_identifier_array[] = array("value" => "3", "label" => "3 CPUs");
 	$cpu_identifier_array[] = array("value" => "4", "label" => "4 CPUs");
 
-	$disp = "<h1>Kvm Configure VM</h1>";
-	$disp .= "<form action=\"$thisfile\" method=post>";
-	$disp .= "<input type=hidden name=action value='update_cpus'>";
-	$disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
-	$disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-	$disp .= "<br>";
-    $disp .= htmlobject_select('kvm_update_cpus', $cpu_identifier_array, 'CPUs');
-	$disp .= "<input type=submit value='Update'>";
-	$disp .= "<br>";
-	$disp .= "</form>";
+	$vm_config_cpus_disp = "<form action=\"$thisfile\" method=post>";
+	$vm_config_cpus_disp .= "<input type=hidden name=action value='update_cpus'>";
+	$vm_config_cpus_disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
+	$vm_config_cpus_disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+    $vm_config_cpus_disp .= htmlobject_select('kvm_update_cpus', $cpu_identifier_array, 'CPUs');
+	$vm_config_cpus_disp .= "<input type=submit value='Update'>";
+	$vm_config_cpus_disp .= "</form>";
 
-	$disp .= "<br>";
-	$disp .= "<hr>";
-	$disp .= "<br>";
-
+  // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'kvm-config-cpus.tpl.php');
+	$t->setVar(array(
+        'vm_config_cpus_disp' => $vm_config_cpus_disp,
+        'backlink' => $backlink,
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
 
@@ -560,11 +563,9 @@ function kvm_vm_config_net() {
 	$kvm_vm_conf_file="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/web/kvm-stat/$kvm_server->id.$kvm_server_name.vm_config";
 	$store = openqrm_parse_conf($kvm_vm_conf_file);
 	extract($store);
+    $backlink = "<a href='kvm-vm-config.php?kvm_server_id=".$kvm_server_id."&kvm_server_name=".$kvm_server_name."'>back</a>";
 
-	$disp = "<h1>Kvm Configure VM</h1>";
 	// the first nic must not be changed, this is the identifier for openQRM
-	$disp .= "<form action=\"$thisfile\" method=post>";
-	$disp .= "<br>";
 	// disable the first nic, this is from what we manage the vm
 	$html = new htmlobject_input();
 	$html->name = "net1";
@@ -573,21 +574,15 @@ function kvm_vm_config_net() {
 	$html->title = "Network-1";
 	$html->disabled = true;
 	$html->maxlength="10";
-	$disp .= htmlobject_box_from_object($html, ' input');
-	$disp .= "</form>";
-	$disp .= "<br>";
-	$disp .= "<hr>";
-	$disp .= "<br>";
+	$vm_config_nic1_disp = htmlobject_box_from_object($html, ' input');
 
 	$nic_number=2;
 	// remove nic 2
 	if (strlen($store[OPENQRM_KVM_VM_MAC_2])) {
-		$disp .= "<form action=\"$thisfile\" method=post>";
-		$disp .= "<input type=hidden name=action value='remove_vm_net'>";
-		$disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
-		$disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp .= "<input type=hidden name=kvm_nic_nr value=2>";
-
+		$vm_config_nic2_disp = "<input type=hidden name=action value='remove_vm_net'>";
+		$vm_config_nic2_disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
+		$vm_config_nic2_disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$vm_config_nic2_disp .= "<input type=hidden name=kvm_nic_nr value=2>";
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_net";
 		$html->id = 'p'.uniqid();
@@ -595,22 +590,17 @@ function kvm_vm_config_net() {
 		$html->title = "Network-2";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp .= htmlobject_box_from_object($html, ' input');
-		$disp .= "<input type=submit value='Remove'>";
-		$disp .= "</form>";
+		$vm_config_nic2_disp .= htmlobject_box_from_object($html, ' input');
+        $vm_config_nic2_disp .= "<input type=submit value='Remove'>";
 		$nic_number++;
 
-		$disp .= "<br>";
-		$disp .= "<hr>";
-		$disp .= "<br>";
 	}
 	// remove nic 3
 	if (strlen($store[OPENQRM_KVM_VM_MAC_3])) {
-		$disp .= "<form action=\"$thisfile\" method=post>";
-		$disp .= "<input type=hidden name=action value='remove_vm_net'>";
-		$disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
-		$disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp .= "<input type=hidden name=kvm_nic_nr value=3>";
+		$vm_config_nic3_disp = "<input type=hidden name=action value='remove_vm_net'>";
+		$vm_config_nic3_disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
+		$vm_config_nic3_disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$vm_config_nic3_disp .= "<input type=hidden name=kvm_nic_nr value=3>";
 
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_net";
@@ -619,23 +609,17 @@ function kvm_vm_config_net() {
 		$html->title = "Network-3";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp .= htmlobject_box_from_object($html, ' input');
-		$disp .= "<input type=submit value='Remove'>";
-		$disp .= "</form>";
+		$vm_config_nic3_disp .= htmlobject_box_from_object($html, ' input');
+        $vm_config_nic3_disp .= "<input type=submit value='Remove'>";
 		$nic_number++;
-
-		$disp .= "<br>";
-		$disp .= "<hr>";
-		$disp .= "<br>";
 	}
 
 	// remove nic 4
 	if (strlen($store[OPENQRM_KVM_VM_MAC_4])) {
-		$disp .= "<form action=\"$thisfile\" method=post>";
-		$disp .= "<input type=hidden name=action value='remove_vm_net'>";
-		$disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
-		$disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp .= "<input type=hidden name=kvm_nic_nr value=4>";
+		$vm_config_nic4_disp = "<input type=hidden name=action value='remove_vm_net'>";
+		$vm_config_nic4_disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
+		$vm_config_nic4_disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$vm_config_nic4_disp .= "<input type=hidden name=kvm_nic_nr value=4>";
 
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_net";
@@ -644,14 +628,9 @@ function kvm_vm_config_net() {
 		$html->title = "Network-4";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp .= htmlobject_box_from_object($html, ' input');
-		$disp .= "<input type=submit value='Remove'>";
-		$disp .= "</form>";
+		$vm_config_nic4_disp .= htmlobject_box_from_object($html, ' input');
+        $vm_config_nic4_disp .= "<input type=submit value='Remove'>";
 		$nic_number++;
-
-		$disp .= "<br>";
-		$disp .= "<hr>";
-		$disp .= "<br>";
 	}
 
 	// add nic
@@ -659,28 +638,39 @@ function kvm_vm_config_net() {
 		$resource_mac_gen = new resource();
 		$resource_mac_gen->generate_mac();
 		$suggested_mac = $resource_mac_gen->mac;
-		$disp .= "<br>";
-		$disp .= "<form action=\"$thisfile\" method=post>";
-        $disp .= "<div style=\"float:left;\">";
-		$disp .= "<input type=hidden name=action value='add_vm_net'>";
-		$disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
-		$disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp .= "<input type=hidden name=kvm_nic_nr value=$nic_number>";
-		$disp .= htmlobject_input('kvm_new_nic', array("value" => $suggested_mac, "label" => 'Add Network'), 'text', 10);
-        $disp .= "</div>";
 
-        $disp .= "<div style=\"float:right;\">";
-        $disp .= "<strong>Select the Networkcard model for the VM</strong>";
-        $disp .= "<div style=\"border: solid 1px #ccc; padding: 10px 10px 0 10px;\">";
-        $disp .= "<input type=\"radio\" name=\"kvm_nic_model\" value=\"virtio\" checked=\"checked\" /> virtio - Best performance, Linux only <br>";
-        $disp .= "<input type=\"radio\" name=\"kvm_nic_model\" value=\"e1000\" /> e1000 - Server Operating systems <br>";
-        $disp .= "<input type=\"radio\" name=\"kvm_nic_model\" value=\"rtl8139\" /> rtl8139 - Best supported <br><br>";
-        $disp .= "</div></div>";
-		$disp .= "<div style=\"clear:both;line-height:0px;\">&#160;</div>";
-        $disp .= "<input type=submit value='Submit'>";
-		$disp .= "</form>";
-	}
+		$vm_config_add_nic_disp = "<input type=hidden name=action value='add_vm_net'>";
+		$vm_config_add_nic_disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
+		$vm_config_add_nic_disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$vm_config_add_nic_disp .= "<input type=hidden name=kvm_nic_nr value=$nic_number>";
+		$vm_config_add_nic_disp .= htmlobject_input('kvm_new_nic', array("value" => $suggested_mac, "label" => 'Add Network'), 'text', 10);
 
+        $vm_config_nic_type_disp = "<input type=\"radio\" name=\"kvm_nic_model\" value=\"virtio\" checked=\"checked\" /> virtio - Best performance, Linux only <br>";
+        $vm_config_nic_type_disp .= "<input type=\"radio\" name=\"kvm_nic_model\" value=\"e1000\" /> e1000 - Server Operating systems <br>";
+        $vm_config_nic_type_disp .= "<input type=\"radio\" name=\"kvm_nic_model\" value=\"rtl8139\" /> rtl8139 - Best supported <br><br>";
+
+        $submit = "<input type=submit value='Submit'>";
+    } else {
+        $submit = "";
+    }
+
+  // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'kvm-config-nics.tpl.php');
+	$t->setVar(array(
+        'vm_config_nic1_disp' => $vm_config_nic1_disp,
+        'vm_config_nic2_disp' => $vm_config_nic2_disp,
+        'vm_config_nic3_disp' => $vm_config_nic3_disp,
+        'vm_config_nic4_disp' => $vm_config_nic4_disp,
+        'vm_config_add_nic_disp' => $vm_config_add_nic_disp,
+        'vm_config_nic_type_disp' => $vm_config_nic_type_disp,
+        'submit' => $submit,
+        'thisfile' => $thisfile,
+        'backlink' => $backlink,
+            
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
 
@@ -701,16 +691,14 @@ function kvm_vm_config_disk() {
 	$kvm_vm_conf_file="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/web/kvm-stat/$kvm_server->id.$kvm_server_name.vm_config";
 	$store = openqrm_parse_conf($kvm_vm_conf_file);
 	extract($store);
-
-	$disp = "<h1>Kvm Configure VM</h1>";
+    $backlink = "<a href='kvm-vm-config.php?kvm_server_id=".$kvm_server_id."&kvm_server_name=".$kvm_server_name."'>back</a>";
 
     $disk_count=1;
 	if (strlen($store[OPENQRM_KVM_VM_DISK_SIZE_1])) {
-		$disp .= "<form action=\"$thisfile\" method=post>";
-		$disp .= "<input type=hidden name=action value='remove_vm_disk'>";
-		$disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
-		$disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp .= "<input type=hidden name=kvm_disk_nr value=1>";
+		$vm_config_disk1_disp = "<input type=hidden name=action value='remove_vm_disk'>";
+		$vm_config_disk1_disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
+		$vm_config_disk1_disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$vm_config_disk1_disp .= "<input type=hidden name=kvm_disk_nr value=1>";
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_disk";
 		$html->id = 'p'.uniqid();
@@ -718,22 +706,16 @@ function kvm_vm_config_disk() {
 		$html->title = "Harddisk-1 (MB)";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp .= htmlobject_box_from_object($html, ' input');
-		$disp .= "<input type=submit value='Remove'>";
+		$vm_config_disk1_disp .= htmlobject_box_from_object($html, ' input');
+		$vm_config_disk1_disp .= "<input type=submit value='Remove'>";
 		$disk_count++;
-		$disp .= "</form>";
-
-		$disp .= "<br>";
-		$disp .= "<hr>";
-		$disp .= "<br>";
 	}
 
 	if (strlen($store[OPENQRM_KVM_VM_DISK_SIZE_2])) {
-		$disp .= "<form action=\"$thisfile\" method=post>";
-		$disp .= "<input type=hidden name=action value='remove_vm_disk'>";
-		$disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
-		$disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp .= "<input type=hidden name=kvm_disk_nr value=2>";
+		$vm_config_disk2_disp = "<input type=hidden name=action value='remove_vm_disk'>";
+		$vm_config_disk2_disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
+		$vm_config_disk2_disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$vm_config_disk2_disp .= "<input type=hidden name=kvm_disk_nr value=2>";
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_disk";
 		$html->id = 'p'.uniqid();
@@ -741,21 +723,15 @@ function kvm_vm_config_disk() {
 		$html->title = "Harddisk-2 (MB)";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp .= htmlobject_box_from_object($html, ' input');
-		$disp .= "<input type=submit value='Remove'>";
+		$vm_config_disk2_disp .= htmlobject_box_from_object($html, ' input');
+		$vm_config_disk2_disp .= "<input type=submit value='Remove'>";
 		$disk_count++;
-		$disp .= "</form>";
-
-		$disp .= "<br>";
-		$disp .= "<hr>";
-		$disp .= "<br>";
 	}
 	if (strlen($store[OPENQRM_KVM_VM_DISK_SIZE_3])) {
-		$disp .= "<form action=\"$thisfile\" method=post>";
-		$disp .= "<input type=hidden name=action value='remove_vm_disk'>";
-		$disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
-		$disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp .= "<input type=hidden name=kvm_disk_nr value=3>";
+		$vm_config_disk3_disp = "<input type=hidden name=action value='remove_vm_disk'>";
+		$vm_config_disk3_disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
+		$vm_config_disk3_disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$vm_config_disk3_disp .= "<input type=hidden name=kvm_disk_nr value=3>";
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_disk";
 		$html->id = 'p'.uniqid();
@@ -763,21 +739,15 @@ function kvm_vm_config_disk() {
 		$html->title = "Harddisk-3 (MB)";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp .= htmlobject_box_from_object($html, ' input');
-		$disp .= "<input type=submit value='Remove'>";
+		$vm_config_disk3_disp .= htmlobject_box_from_object($html, ' input');
+		$vm_config_disk3_disp .= "<input type=submit value='Remove'>";
 		$disk_count++;
-		$disp .= "</form>";
-
-		$disp .= "<br>";
-		$disp .= "<hr>";
-		$disp .= "<br>";
 	}
 	if (strlen($store[OPENQRM_KVM_VM_DISK_SIZE_4])) {
-		$disp .= "<form action=\"$thisfile\" method=post>";
-		$disp .= "<input type=hidden name=action value='remove_vm_disk'>";
-		$disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
-		$disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp .= "<input type=hidden name=kvm_disk_nr value=4>";
+		$vm_config_disk4_disp = "<input type=hidden name=action value='remove_vm_disk'>";
+		$vm_config_disk4_disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
+		$vm_config_disk4_disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$vm_config_disk4_disp .= "<input type=hidden name=kvm_disk_nr value=4>";
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_disk";
 		$html->id = 'p'.uniqid();
@@ -785,32 +755,40 @@ function kvm_vm_config_disk() {
 		$html->title = "Harddisk-4 (MB)";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp .= htmlobject_box_from_object($html, ' input');
-		$disp .= "<input type=submit value='Remove'>";
+		$vm_config_disk4_disp .= htmlobject_box_from_object($html, ' input');
+		$vm_config_disk4_disp .= "<input type=submit value='Remove'>";
 		$disk_count++;
-		$disp .= "</form>";
 
-		$disp .= "<br>";
-		$disp .= "<hr>";
-		$disp .= "<br>";
 	}
-
-
 
 	if ($disk_count < 5) {
-		$disp .= "<br>";
-		$disp .= "<form action=\"$thisfile\" method=post>";
-		$disp .= "<input type=hidden name=action value='add_vm_disk'>";
-		$disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
-		$disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-		$disp .= "<input type=hidden name=kvm_disk_nr value=$disk_count>";
-		$disp .= htmlobject_input('kvm_new_disk', array("value" => '2000', "label" => 'Add harddisk'), 'text', 10);
-		$disp .= "<br>";
-		$disp .= "<input type=submit value='Submit'>";
-		$disp .= "<br>";
-		$disp .= "</form>";
-	}
+		$vm_config_add_disk_disp = "<input type=hidden name=action value='add_vm_disk'>";
+		$vm_config_add_disk_disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
+		$vm_config_add_disk_disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$vm_config_add_disk_disp .= "<input type=hidden name=kvm_disk_nr value=$disk_count>";
+		$vm_config_add_disk_disp .= htmlobject_input('kvm_new_disk', array("value" => '2000', "label" => 'Add harddisk'), 'text', 10);
 
+        $submit = "<input type=submit value='Submit'>";
+    } else {
+        $submit = "";
+    }
+
+ // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'kvm-config-disks.tpl.php');
+	$t->setVar(array(
+        'vm_config_disk1_disp' => $vm_config_disk1_disp,
+        'vm_config_disk2_disp' => $vm_config_disk2_disp,
+        'vm_config_disk3_disp' => $vm_config_disk3_disp,
+        'vm_config_disk4_disp' => $vm_config_disk4_disp,
+        'vm_config_add_disk_disp' => $vm_config_add_disk_disp,
+        'submit' => $submit,
+        'thisfile' => $thisfile,
+        'backlink' => $backlink,
+
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
 
