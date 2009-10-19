@@ -76,6 +76,7 @@ $kvm_server_mac = htmlobject_request('kvm_server_mac');
 $kvm_server_ram = htmlobject_request('kvm_server_ram');
 $kvm_server_disk = htmlobject_request('kvm_server_disk');
 $kvm_nic_model = htmlobject_request('kvm_nic_model');
+$kvm_server_cpus = htmlobject_request('kvm_server_cpus');
 
 
 function redirect_mgmt($strMsg, $file, $kvm_server_id) {
@@ -175,6 +176,15 @@ if(htmlobject_request('action') != '') {
                     redirect_mgmt($strMsg, $thisfile, $kvm_server_id);
                 }
             }
+            // check for cpu count is int
+            if (!strlen($kvm_server_cpus)) {
+                $strMsg .= "Empty vm cpu number. Not creating new vm on KVM Host $kvm_server_id";
+                redirect_mgmt($strMsg, $thisfile, $kvm_server_id);
+            }
+            if (!validate_input($kvm_server_cpus, 'number')) {
+                $strMsg .= "Invalid vm cpu number. Not creating new vm on KVM Host $kvm_server_id";
+                redirect_mgmt($strMsg, $thisfile, $kvm_server_id);
+            }
 
             // send command to kvm_server-host to create the new vm
             $kvm_appliance = new appliance();
@@ -182,9 +192,9 @@ if(htmlobject_request('action') != '') {
             $kvm_server = new resource();
             $kvm_server->get_instance_by_id($kvm_appliance->resources);
             if (strlen($kvm_server_disk)) {
-                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm create -n $kvm_server_name -m $kvm_server_mac -r $kvm_server_ram -d $kvm_server_disk -t $kvm_nic_model -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm create -n $kvm_server_name -m $kvm_server_mac -r $kvm_server_ram -c $kvm_server_cpus -d $kvm_server_disk -t $kvm_nic_model -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
             } else {
-                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm create -n $kvm_server_name -m $kvm_server_mac -r $kvm_server_ram -t $kvm_nic_model -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm create -n $kvm_server_name -m $kvm_server_mac -r $kvm_server_ram -c $kvm_server_cpus -t $kvm_nic_model -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
             }
             // remove current stat file
             $kvm_server_resource_id = $kvm_server->id;
@@ -237,7 +247,12 @@ function kvm_server_create($kvm_server_id) {
 	$resource_mac_gen = new resource();
 	$resource_mac_gen->generate_mac();
 	$suggested_mac = $resource_mac_gen->mac;
-	
+    // cpus array for the select
+    $cpu_identifier_array = array();
+	$cpu_identifier_array[] = array("value" => "1", "label" => "1 CPU");
+	$cpu_identifier_array[] = array("value" => "2", "label" => "2 CPUs");
+	$cpu_identifier_array[] = array("value" => "3", "label" => "3 CPUs");
+	$cpu_identifier_array[] = array("value" => "4", "label" => "4 CPUs");
     // set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
@@ -246,6 +261,7 @@ function kvm_server_create($kvm_server_id) {
 		'formaction' => $thisfile,
 		'kvm_server_id' => $kvm_server_id,
 		'kvm_server_name' => htmlobject_input('kvm_server_name', array("value" => '', "label" => 'VM name'), 'text', 20),
+        'kvm_server_cpus' => htmlobject_select('kvm_server_cpus', $cpu_identifier_array, 'CPUs'),
 		'kvm_server_mac' => htmlobject_input('kvm_server_mac', array("value" => $suggested_mac, "label" => 'Mac address'), 'text', 20),
 		'kvm_server_ram' => htmlobject_input('kvm_server_ram', array("value" => '512', "label" => 'Memory (MB)'), 'text', 10),
 		'kvm_server_disk' => htmlobject_input('kvm_server_disk', array("value" => '2000', "label" => 'Disk (MB)'), 'text', 10),

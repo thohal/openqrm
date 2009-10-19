@@ -31,6 +31,9 @@
 <h4>Add new VM to KVM Host id {kvm_server_id}</h4>
 <div style="float:left;">
 {kvm_server_name}
+
+<h4>VM Configuration</h4>
+{kvm_server_cpus}
 {kvm_server_mac}
 {kvm_server_ram}
 {kvm_server_disk}

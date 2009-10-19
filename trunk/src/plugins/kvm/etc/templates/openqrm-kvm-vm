@@ -37,6 +37,7 @@ fi
 VM_CONF_DIR=`dirname $0`
 VM_CONF_DIR=`cd $VM_CONF_DIR && pwd && cd - 1>/dev/null`
 VM_NAME=`basename $VM_CONF_DIR`
+. $VM_CONF_DIR/cpus
 . $VM_CONF_DIR/ram
 . $VM_CONF_DIR/disk1
 . $VM_CONF_DIR/disk2
@@ -54,7 +55,7 @@ KVM_VM_DISK="$KVM_VM_DISK_1 $KVM_VM_DISK_2 $KVM_VM_DISK_3 $KVM_VM_DISK_4"
 KVM_VM_NET="$KVM_VM_NET_1 $KVM_VM_NET_2 $KVM_VM_NET_3 $KVM_VM_NET_4"
 
 echo "KVM vm $VM_NAME starting up ..." | logger
-$RUNSCREEN -dmS $KVM_VM_MAC_1 $KVM $KVM_VM_DISK -m $KVM_VM_RAM $KVM_VM_BOOT $KVM_VM_NET -vnc $KVM_VM_VNC
+$RUNSCREEN -dmS $KVM_VM_MAC_1 $KVM $KVM_VM_DISK -m $KVM_VM_RAM -smp $KVM_VM_CPUS $KVM_VM_BOOT $KVM_VM_NET -vnc $KVM_VM_VNC
 
 
 

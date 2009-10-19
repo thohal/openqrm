@@ -52,7 +52,7 @@ fi
 function kvm_usage() {
 	echo "Usage : $0 start/stop/reboot/delete/list <-n vm-name>"
 	echo "Usage : $0 setboot <-m mac-address> <-b local/net>"
-	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ]"
+	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ] [-c cpus ]"
 	echo "        $0 post_vm_list <-u username> <-p password>"
 	echo "        $0 post_vm_config <-n vm-name> <-u username> <-p password>"
 	echo "        $0 update_vm_ram <-r memory> <-n vm-name>"
@@ -123,6 +123,10 @@ while [ $# -ne 0 ]; do
 			KVM_VM_NIC_TYPE=$2
 			shift
 			;;
+		-c)
+			KVM_VM_CPUS=$2
+			shift
+			;;
 		*)
 			echo "ERROR: Free commandline arguments are not allowed"
 			kvm_usage
@@ -175,7 +179,11 @@ case "$KVM_COMMAND" in
 		# creating the kvm start script
 		mkdir -p $OPENQRM_VM_DIR/$KVM_VM_NAME/
 		cp -f $OPENQRM_KVM_VM_TEMPLATE $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
-
+        # cpus
+		if [ "$KVM_VM_CPUS" == "" ]; then
+			KVM_VM_CPUS=1
+		fi
+		echo "KVM_VM_CPUS=\"$KVM_VM_CPUS\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/cpus
 		# ram
 		echo "KVM_VM_RAM=\"$KVM_VM_RAM\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/ram
 
@@ -322,13 +330,16 @@ case "$KVM_COMMAND" in
         > $VM_LIST_TMP
 		for kvmvm in `ls $OPENQRM_VM_DIR/`; do
             # get mac address
+            . $OPENQRM_VM_DIR/$kvmvm/cpus
+            . $OPENQRM_VM_DIR/$kvmvm/ram
             . $OPENQRM_VM_DIR/$kvmvm/net1
             # check if active
             if ps ax | grep "$KVM_VM_MAC_1" | grep -v grep | grep -i screen 1>/dev/null; then
-                echo "$kvmvm"" $KVM_VM_MAC_1"" 1" >> $VM_LIST_TMP
+                VM_ACTIVE=1
             else
-                echo "$kvmvm"" $KVM_VM_MAC_1"" 0" >> $VM_LIST_TMP
+                VM_ACTIVE=0
             fi
+            echo "$VM_ACTIVE""@""$kvmvm""@""$KVM_VM_MAC_1""@""$KVM_VM_CPUS""@""$KVM_VM_RAM""@" >> $VM_LIST_TMP
         done
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$KVM_OPENQRM_USERNAME --http-password=$KVM_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/kvm/kvm-action.php?kvm_server_command=get_kvm_server; then
 			echo "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!"
@@ -343,6 +354,7 @@ case "$KVM_COMMAND" in
 		fi
 		echo "Posting vm config for $KVM_VM_NAME to the openQRM-server"
 		VM_CONFIG_TMP=$resource_id.$KVM_VM_NAME.vm_config
+		. $OPENQRM_VM_DIR/$KVM_VM_NAME/cpus
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/ram
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net2
@@ -354,7 +366,8 @@ case "$KVM_COMMAND" in
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/disk4
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/vnc
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/vnc
-		echo "OPENQRM_KVM_VM_RAM=\"$KVM_VM_RAM\"" > $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_CPUS=\"$KVM_VM_CPUS\"" > $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_RAM=\"$KVM_VM_RAM\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_NET_1=\"$KVM_VM_NET_1\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_MAC_1=\"$KVM_VM_MAC_1\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_NET_2=\"$KVM_VM_NET_2\"" >> $VM_CONFIG_TMP
@@ -381,6 +394,24 @@ case "$KVM_COMMAND" in
 		rm -f $VM_CONFIG_TMP.post
 		;;
 
+	update_vm_cpus)
+		if [ "$KVM_VM_NAME" == "" ]; then
+			kvm_usage
+		fi
+		if [ "$KVM_VM_CPUS" == "" ]; then
+			kvm_usage
+		fi
+		kvm_lock aquire
+		echo "Updating KVM vm $KVM_VM_NAME with $KVM_VM_CPUS CPUs"
+		sed -i -e s"#KVM_VM_CPUS=.*#KVM_VM_CPUS=\"$KVM_VM_CPUS\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/cpus
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $KVM_VM_NAME -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
+		fi
+		kvm_lock release
+		;;
+
+
 	update_vm_ram)
 		if [ "$KVM_VM_NAME" == "" ]; then
 			kvm_usage
@@ -397,7 +428,6 @@ case "$KVM_COMMAND" in
 		fi
 		kvm_lock release
 		;;
-
 
 	add_vm_nic)
 		if [ "$KVM_VM_NAME" == "" ]; then

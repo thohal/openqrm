@@ -488,6 +488,12 @@ function kvm_server_display($appliance_id) {
 	$arHead1['kvm_vm_name'] = array();
 	$arHead1['kvm_vm_name']['title'] ='Name';
 
+	$arHead1['kvm_vm_cpus'] = array();
+	$arHead1['kvm_vm_cpus']['title'] ='CPU';
+
+	$arHead1['kvm_vm_memory'] = array();
+	$arHead1['kvm_vm_memory']['title'] ='RAM';
+
 	$arHead1['kvm_vm_ip'] = array();
 	$arHead1['kvm_vm_ip']['title'] ='IP';
 
@@ -504,15 +510,36 @@ function kvm_server_display($appliance_id) {
     $kvm_vm_count=0;
 	if (file_exists($kvm_server_vm_list_file)) {
 		$kvm_server_vm_list_content=file($kvm_server_vm_list_file);
-		foreach ($kvm_server_vm_list_content as $index => $kvm_server_name) {
+		foreach ($kvm_server_vm_list_content as $index => $kvm_vm) {
 			// find the vms
-			if (!strstr($kvm_server_name, "#")) {
-				// vms
-				$kvm_short_name=basename($kvm_server_name);
-                // check if active
-                $kvm_vm_state = trim(substr($kvm_short_name, strlen($kvm_short_name)-2, 2));
-                $kvm_vm_mac = trim(substr($kvm_short_name, strlen($kvm_short_name)-21, 18));
-                $kvm_short_name = trim(substr($kvm_short_name, 0, strlen($kvm_short_name)-21));
+			if (!strstr($kvm_vm, "#")) {
+
+                $first_at_pos = strpos($kvm_vm, "@");
+                $first_at_pos++;
+                $kvm_name_first_at_removed = substr($kvm_vm, $first_at_pos, strlen($kvm_vm)-$first_at_pos);
+                $second_at_pos = strpos($kvm_name_first_at_removed, "@");
+                $second_at_pos++;
+                $kvm_name_second_at_removed = substr($kvm_name_first_at_removed, $second_at_pos, strlen($kvm_name_first_at_removed)-$second_at_pos);
+                $third_at_pos = strpos($kvm_name_second_at_removed, "@");
+                $third_at_pos++;
+                $kvm_name_third_at_removed = substr($kvm_name_second_at_removed, $third_at_pos, strlen($kvm_name_second_at_removed)-$third_at_pos);
+                $fourth_at_pos = strpos($kvm_name_third_at_removed, "@");
+                $fourth_at_pos++;
+                $kvm_name_fourth_at_removed = substr($kvm_name_third_at_removed, $fourth_at_pos, strlen($kvm_name_third_at_removed)-$fourth_at_pos);
+                $fivth_at_pos = strpos($kvm_name_fourth_at_removed, "@");
+                $fivth_at_pos++;
+                $kvm_name_fivth_at_removed = substr($kvm_name_fourth_at_removed, $fivth_at_pos, strlen($kvm_name_fourth_at_removed)-$fivth_at_pos);
+                $sixth_at_pos = strpos($kvm_name_fivth_at_removed, "@");
+                $sixth_at_pos++;
+                $kvm_name_sixth_at_removed = substr($kvm_name_fivth_at_removed, $sixth_at_pos, strlen($kvm_name_fivth_at_removed)-$sixth_at_pos);
+                $seventh_at_pos = strpos($kvm_name_sixth_at_removed, "@");
+                $seventh_at_pos++;
+
+                $kvm_vm_state = trim(substr($kvm_vm, 0, $first_at_pos-1));
+                $kvm_short_name = trim(substr($kvm_name_first_at_removed, 0, $second_at_pos-1));
+                $kvm_vm_mac = trim(substr($kvm_name_second_at_removed, 0, $third_at_pos-1));
+                $kvm_vm_cpus = trim(substr($kvm_name_third_at_removed, 0, $fourth_at_pos-1));
+                $kvm_vm_memory = trim(substr($kvm_name_fourth_at_removed, 0, $fivth_at_pos-1));
                 // get ip
                 $kvm_resource = new resource();
                 $kvm_resource->get_instance_by_mac($kvm_vm_mac);
@@ -523,13 +550,13 @@ function kvm_server_display($appliance_id) {
                 $vm_actions = "";
                 if (!strcmp($kvm_vm_state, "1")) {
                     $state_icon="/openqrm/base/img/active.png";
-                    $vm_actions = $vm_actions."<a href=\"$thisfile?identifier[]=$kvm_short_name&action=stop&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Stop</a>&nbsp;&nbsp;&nbsp;&nbsp;";
-                    $vm_actions = $vm_actions."<a href=\"$thisfile?identifier[]=$kvm_short_name&action=restart&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"> Restart</a>&nbsp;&nbsp;&nbsp;&nbsp;";
+                    $vm_actions = "<nobr><a href=\"$thisfile?identifier[]=$kvm_short_name&action=stop&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\"> Stop</a>&nbsp;&nbsp;&nbsp;&nbsp;";
+                    $vm_actions .= "<a href=\"$thisfile?identifier[]=$kvm_short_name&action=restart&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=16 width=16 src=\"/openqrm/base/img/active.png\" border=\"0\"> Restart</a></nobr>";
                 } else {
                     $state_icon="/openqrm/base/img/off.png";
-    				$vm_actions = $vm_actions."<a href=\"$thisfile?identifier[]=$kvm_short_name&action=start&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>&nbsp;&nbsp;&nbsp;&nbsp;";
-    				$vm_actions = $vm_actions."<a href=\"kvm-vm-config.php?kvm_server_name=$kvm_short_name&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/plugin.png\" border=\"0\"> Config</a>&nbsp;&nbsp;&nbsp;&nbsp;";
-    				$vm_actions = $vm_actions."<a href=\"$thisfile?identifier[]=$kvm_short_name&action=delete&kvm_server_id=$kvm_server_tmp->id&kvm_vm_mac_ar[$kvm_short_name]=$kvm_vm_mac\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Delete</a>&nbsp;&nbsp;";
+    				$vm_actions = "<nobr><a href=\"$thisfile?identifier[]=$kvm_short_name&action=start&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"> Start</a>&nbsp;&nbsp;&nbsp;&nbsp;";
+    				$vm_actions .= "<a href=\"kvm-vm-config.php?kvm_server_name=$kvm_short_name&kvm_server_id=$kvm_server_tmp->id\" style=\"text-decoration:none;\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/plugin.png\" border=\"0\"> Config</a>&nbsp;&nbsp;&nbsp;&nbsp;";
+    				$vm_actions .= "<a href=\"$thisfile?identifier[]=$kvm_short_name&action=delete&kvm_server_id=$kvm_server_tmp->id&kvm_vm_mac_ar[$kvm_short_name]=$kvm_vm_mac\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/disable.png\" border=\"0\"> Delete</a></nobr>";
                 }
 
 				$kvm_vm_registered[] = $kvm_short_name;
@@ -539,6 +566,8 @@ function kvm_server_display($appliance_id) {
                     'kvm_vm_state' => "<img src=$state_icon><input type='hidden' name='kvm_vm_mac_ar[$kvm_short_name]' value=$kvm_vm_mac>",
                     'kvm_vm_id' => $kvm_vm_id,
                     'kvm_vm_name' => $kvm_short_name,
+                    'kvm_vm_cpus' => $kvm_vm_cpus,
+                    'kvm_vm_memory' => $kvm_vm_memory." MB",
                     'kvm_vm_ip' => $kvm_vm_ip,
                     'kvm_vm_mac' => $kvm_vm_mac,
                     'kvm_vm_actions' => $vm_actions,
