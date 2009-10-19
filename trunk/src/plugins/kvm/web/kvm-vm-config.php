@@ -444,6 +444,8 @@ function kvm_vm_config() {
 	$vm_disk_disp .= "</form>";
     // vnc
 	$vm_vnc_disp = "Vnc-port <b>$store[OPENQRM_KVM_VM_VNC]</b> on <b>$kvm_server->ip</b>";
+    // backlink
+    $backlink = "<a href='kvm-manager.php?kvm_server_id=".$kvm_server_id."'>back</a>";
 
    // set template
 	$t = new Template_PHPLIB();
@@ -455,6 +457,7 @@ function kvm_vm_config() {
         'vm_net_disp' => $vm_net_disp,
         'vm_disk_disp' => $vm_disk_disp,
         'vm_vnc_disp' => $vm_vnc_disp,
+        'backlink' => $backlink,
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;

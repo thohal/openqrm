@@ -28,13 +28,10 @@
 
 <div style="float:left;">
 {kvm_server_table}
-<br>
 </div>
 
 <div style="float:left;">
-KVM vms on resource {kvm_server_id}/{kvm_server_name}
-<br>
-<br>
+<h4>KVM vms on resource {kvm_server_id}/{kvm_server_name}</h4>
 {kvm_vm_table}
 </div>
 

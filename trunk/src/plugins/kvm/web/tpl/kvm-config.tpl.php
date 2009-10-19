@@ -24,13 +24,20 @@
 </style>
 
 <h1><img border=0 src="/openqrm/base/plugins/kvm/img/plugin.png"> KVM VM Configuration</h1>
-
+{backlink}
+<br><br>
+<h4>VM CPUs</h4>
 {vm_cpus_disp}
-<br><hr><br>
+<hr>
+<h4>VM Memory</h4>
 {vm_ram_disp}
-<br><hr><br>
+<hr>
+<h4>VM Network Cards</h4>
 {vm_net_disp}
-<br><hr><br>
+<hr>
+<h4>VM Disks</h4>
 {vm_disk_disp}
-<br><hr><br>
+<hr>
+<h4>VM VNC Display</h4>
 {vm_vnc_disp}
+
