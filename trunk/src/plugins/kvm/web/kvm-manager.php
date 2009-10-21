@@ -567,7 +567,7 @@ function kvm_server_display($appliance_id) {
                     'kvm_vm_id' => $kvm_vm_id,
                     'kvm_vm_name' => $kvm_short_name,
                     'kvm_vm_cpus' => $kvm_vm_cpus,
-                    'kvm_vm_memory' => $kvm_vm_memory." MB",
+                    'kvm_vm_memory' => $kvm_vm_memory." MeBi",
                     'kvm_vm_ip' => $kvm_vm_ip,
                     'kvm_vm_mac' => $kvm_vm_mac,
                     'kvm_vm_actions' => $vm_actions,

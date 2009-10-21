@@ -397,15 +397,26 @@ function my_cloud_create_request() {
 		$res_id = $res['resource_id'];
 		$tres = new resource();
 		$tres->get_instance_by_id($res_id);
-		if (!in_array($tres->cpunumber, $available_cpunumber_uniq)) {
-			$available_cpunumber[] = array("value" => $tres->cpunumber, "label" => $tres->cpunumber);
+		if ((strlen($tres->cpunumber)) && (!in_array($tres->cpunumber, $available_cpunumber_uniq))) {
+			$available_cpunumber[] = array("value" => $tres->cpunumber, "label" => $tres->cpunumber." CPUs");
 			$available_cpunumber_uniq[] .= $tres->cpunumber;
 		}
-		if (!in_array($tres->memtotal, $available_memtotal_uniq)) {
-			$available_memtotal[] = array("value" => $tres->memtotal, "label" => $tres->memtotal);
+		if ((strlen($tres->memtotal)) && (!in_array($tres->memtotal, $available_memtotal_uniq))) {
+			$available_memtotal[] = array("value" => $tres->memtotal, "label" => $tres->memtotal." MB");
 			$available_memtotal_uniq[] .= $tres->memtotal;
 		}
 	}
+    // have static values here until we have the component selector
+    $available_memtotal[] = array("value" => 256, "label" => "256 MB");
+    $available_memtotal[] = array("value" => 512, "label" => "512 MB");
+    $available_memtotal[] = array("value" => 1024, "label" => "1 GB");
+    $available_memtotal[] = array("value" => 2048, "label" => "2 GB");
+
+    // have up to 4 cpus until we have the component selector
+    $available_cpunumber[] = array("value" => 1, "label" => "1 CPU");
+    $available_cpunumber[] = array("value" => 2, "label" => "2 CPUs");
+    $available_cpunumber[] = array("value" => 3, "label" => "3 CPUs");
+    $available_cpunumber[] = array("value" => 4, "label" => "4 CPUs");
 
 	if ($cl_user_count < 1) {
 		$subtitle = "<b>Please create a <a href='/openqrm/base/plugins/cloud/cloud-user.php?action=create'>Cloud User</a> first!";

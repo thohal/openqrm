@@ -726,9 +726,10 @@ function openqrm_cloud_monitor() {
 							$mac_res = new resource();
 							$mac_res->generate_mac();
 							$new_vm_mac = $mac_res->mac;
-							// cpu req, for now just one cpu since not every virtualization technology can handle that
-							// $new_vm_cpu = $cr->cpu_req;
-							$new_vm_cpu = 1;
+                            // additional_nics
+                            $new_additional_nics = $cr->network_req;
+                            // cpu
+							$new_vm_cpu = $cr->cpu_req;
 							// memory
 							$new_vm_memory = 256;
 							if ($cr->ram_req != 0) {
@@ -743,7 +744,7 @@ function openqrm_cloud_monitor() {
 							$cloudvm = new cloudvm();
 							// this method returns the resource-id when the resource gets idle
 							// it blocks until the resource is up or it reaches the timeout 
-							$cloudvm->create($appliance_virtualization, $appliance_name, $new_vm_mac, $new_vm_cpu, $new_vm_memory, $new_vm_disk, $vm_create_timout);
+							$cloudvm->create($appliance_virtualization, $appliance_name, $new_vm_mac, $new_additional_nics, $new_vm_cpu, $new_vm_memory, $new_vm_disk, $vm_create_timout);
 							$new_vm_resource_id = $cloudvm->resource_id;
 							if ($new_vm_resource_id == 0) {
 								$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Could not create a new resource for request ID $cr_id", "", "", 0, 0, 0);

@@ -63,6 +63,17 @@ function kvm_usage() {
 	exit 1
 }
 
+
+# function to looseley translate megabyte to mebibytes
+function megatomebibyte() {
+    local MEGA=$1
+    MEBI=$MEGA*1.09
+    MEBI=`echo $MEBI | bc`
+    MEBI=`echo $MEBI | cut -d'.' -f1`
+    MEBI=$(( MEBI + 1 ))
+    echo $MEBI
+}
+
 function get_disk_name() {
     local component=$1
     case "$component" in
@@ -95,6 +106,22 @@ while [ $# -ne 0 ]; do
 			KVM_VM_MAC=$2
 			shift
 			;;
+		-m2)
+			KVM_VM_MAC2=$2
+			shift
+			;;
+		-m3)
+			KVM_VM_MAC3=$2
+			shift
+			;;
+		-m4)
+			KVM_VM_MAC4=$2
+			shift
+			;;
+		-m5)
+			KVM_VM_MAC5=$2
+			shift
+			;;
 		-r)
 			KVM_VM_RAM=$2
 			shift
@@ -121,6 +148,22 @@ while [ $# -ne 0 ]; do
 			;;
 		-t)
 			KVM_VM_NIC_TYPE=$2
+			shift
+			;;
+		-t2)
+			KVM_VM_NIC_TYPE2=$2
+			shift
+			;;
+		-t3)
+			KVM_VM_NIC_TYPE3=$2
+			shift
+			;;
+		-t4)
+			KVM_VM_NIC_TYPE4=$2
+			shift
+			;;
+		-t5)
+			KVM_VM_NIC_TYPE5=$2
 			shift
 			;;
 		-c)
@@ -160,9 +203,21 @@ else
 	fi
 fi
 
-# default nic = rtl8139
+# default nic = rtl8139, best pxe boot support for first nic
 if [ "$KVM_VM_NIC_TYPE" == "" ]; then
 	KVM_VM_NIC_TYPE=rtl8139
+fi
+if [ "$KVM_VM_NIC_TYPE2" == "" ]; then
+	KVM_VM_NIC_TYPE2=$OPENQRM_PLUGIN_KVM_ADDITIONAL_NIC_TYPE
+fi
+if [ "$KVM_VM_NIC_TYPE3" == "" ]; then
+	KVM_VM_NIC_TYPE3=$OPENQRM_PLUGIN_KVM_ADDITIONAL_NIC_TYPE
+fi
+if [ "$KVM_VM_NIC_TYPE4" == "" ]; then
+	KVM_VM_NIC_TYPE4=$OPENQRM_PLUGIN_KVM_ADDITIONAL_NIC_TYPE
+fi
+if [ "$KVM_VM_NIC_TYPE5" == "" ]; then
+	KVM_VM_NIC_TYPE5=$OPENQRM_PLUGIN_KVM_ADDITIONAL_NIC_TYPE
 fi
 
 case "$KVM_COMMAND" in 
@@ -179,6 +234,8 @@ case "$KVM_COMMAND" in
 		# creating the kvm start script
 		mkdir -p $OPENQRM_VM_DIR/$KVM_VM_NAME/
 		cp -f $OPENQRM_KVM_VM_TEMPLATE $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+        # kvm uses mebibytes instead of megabytes
+        KVM_VM_RAM=`megatomebibyte $KVM_VM_RAM`
         # cpus
 		if [ "$KVM_VM_CPUS" == "" ]; then
 			KVM_VM_CPUS=1
@@ -190,12 +247,35 @@ case "$KVM_COMMAND" in
 		# network
 		echo "KVM_VM_NET_1=\"-net nic,vlan=1,macaddr=$KVM_VM_MAC,model=$KVM_VM_NIC_TYPE -net tap,vlan=1,script=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup,downscript=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
 		echo "KVM_VM_MAC_1=\"$KVM_VM_MAC\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
-		echo "KVM_VM_NET_2=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net2
-		echo "KVM_VM_MAC_2=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net2
-		echo "KVM_VM_NET_3=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net3
-		echo "KVM_VM_MAC_3=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net3
-		echo "KVM_VM_NET_4=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net4
-		echo "KVM_VM_MAC_4=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net4
+
+        if [ "$KVM_VM_MAC2" != "" ]; then
+            echo "KVM_VM_NET_2=\"-net nic,vlan=2,macaddr=$KVM_VM_MAC2,model=$KVM_VM_NIC_TYPE2 -net tap,vlan=2,script=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-ext,downscript=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-ext\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net2
+            echo "KVM_VM_MAC_2=\"$KVM_VM_MAC2\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net2
+        else
+            echo "KVM_VM_NET_2=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net2
+            echo "KVM_VM_MAC_2=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net2
+        fi
+        if [ "$KVM_VM_MAC3" != "" ]; then
+            echo "KVM_VM_NET_3=\"-net nic,vlan=3,macaddr=$KVM_VM_MAC3,model=$KVM_VM_NIC_TYPE3 -net tap,vlan=3,script=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-ext,downscript=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-ext\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net3
+            echo "KVM_VM_MAC_3=\"$KVM_VM_MAC3\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net3
+        else
+            echo "KVM_VM_NET_3=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net3
+            echo "KVM_VM_MAC_3=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net3
+        fi
+        if [ "$KVM_VM_MAC4" != "" ]; then
+            echo "KVM_VM_NET_4=\"-net nic,vlan=4,macaddr=$KVM_VM_MAC4,model=$KVM_VM_NIC_TYPE4 -net tap,vlan=4,script=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-ext,downscript=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-ext\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net4
+            echo "KVM_VM_MAC_4=\"$KVM_VM_MAC4\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net4
+        else
+            echo "KVM_VM_NET_4=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net4
+            echo "KVM_VM_MAC_4=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net4
+        fi
+        if [ "$KVM_VM_MAC5" != "" ]; then
+            echo "KVM_VM_NET_5=\"-net nic,vlan=5,macaddr=$KVM_VM_MAC5,model=$KVM_VM_NIC_TYPE5 -net tap,vlan=5,script=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-ext,downscript=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-ext\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net5
+            echo "KVM_VM_MAC_5=\"$KVM_VM_MAC5\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net5
+        else
+            echo "KVM_VM_NET_5=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/net5
+            echo "KVM_VM_MAC_5=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/net5
+        fi
 
 		# disk
 		if [ "$KVM_VM_DISK" != "" ]; then
@@ -376,6 +456,8 @@ case "$KVM_COMMAND" in
 		echo "OPENQRM_KVM_VM_MAC_3=\"$KVM_VM_MAC_3\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_NET_4=\"$KVM_VM_NET_4\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_MAC_4=\"$KVM_VM_MAC_4\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_NET_5=\"$KVM_VM_NET_5\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_MAC_5=\"$KVM_VM_MAC_5\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_DISK_1=\"$KVM_VM_DISK_1\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_DISK_SIZE_1=\"$KVM_VM_DISK_SIZE_1\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_DISK_2=\"$KVM_VM_DISK_2\"" >> $VM_CONFIG_TMP

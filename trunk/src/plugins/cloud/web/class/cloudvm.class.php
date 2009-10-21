@@ -58,7 +58,7 @@ function init($timeout) {
 
 
 // creates a vm from a specificed virtualization type + parameters
-function create($virtualization_type, $name, $mac, $cpu, $memory, $disk, $timeout) {
+function create($virtualization_type, $name, $mac, $additional_nics, $cpu, $memory, $disk, $timeout) {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $OPENQRM_EXEC_PORT;
@@ -118,6 +118,18 @@ function create($virtualization_type, $name, $mac, $cpu, $memory, $disk, $timeou
 	if ($less_load_resource_id >= 0) {
 		$event->log("create", $_SERVER['REQUEST_TIME'], 5, "cloudvm.class.php", "Found Virtualization host resource $less_load_resource_id as the target for the new vm ", "", "", 0, 0, 0);
 	}
+    // additional network cards
+    if ($additional_nics > 0) {
+        $anic = 1;
+        $additional_nic_str="";
+        $mac_gen_res = new resource();
+        while ($anic <= $additional_nics) {
+            $nic_nr = $anic +1;
+            $mac_gen_res->generate_mac();
+            $additional_nic_str .= " -m".$nic_nr." ".$mac_gen_res->mac;
+            $anic++;
+        }
+    }
 
 	// start the vm on the appliance resource
 	$host_resource = new resource();
@@ -134,7 +146,7 @@ function create($virtualization_type, $name, $mac, $cpu, $memory, $disk, $timeou
 
 	switch ($virtualization_plugin_name) {
 		case 'kvm':
-			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -d ".$disk."";
+			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -c ".$cpu." -d ".$disk." ".$additional_nic_str;
 			break;
 		case 'citrix':
 			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -s ".$host_resource->ip." -l ".$name." -m ".$memory."";
