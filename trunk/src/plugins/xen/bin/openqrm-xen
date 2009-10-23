@@ -78,7 +78,7 @@ fi
 
 function xen_usage() {
 	echo "Usage : $0 start/stop/reboot/remove/list <-n vm-name>"
-	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size -s swap-size]"
+	echo "Usage : $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size] [-s swap-size] [ -c cpu-number]"
 	echo "Usage : $0 migrate <-n vm-name> <-i ip-address> <-t live/regular>"
 	echo "Usage : $0 setboot <-m mac-address> <-b local/net>"
 	echo "        $0 post_vm_list <-u username> <-p password>"
@@ -129,6 +129,8 @@ function xen_generate_vm_config() {
     vm_bridge3=`cat $VM_BASE_DIR/bridge3 2>/dev/null`
     vm_mac4=`cat $VM_BASE_DIR/mac4 2>/dev/null`
     vm_bridge4=`cat $VM_BASE_DIR/bridge4 2>/dev/null`
+    vm_mac5=`cat $VM_BASE_DIR/mac5 2>/dev/null`
+    vm_bridge5=`cat $VM_BASE_DIR/bridge5 2>/dev/null`
     vm_boot=`cat $VM_BASE_DIR/boot 2>/dev/null`
     vm_root=`cat $VM_BASE_DIR/root 2>/dev/null`
     vm_swap=`cat $VM_BASE_DIR/swap 2>/dev/null`
@@ -162,8 +164,9 @@ sdl=$vm_sdl
 EOF
 
 
-    # add nics
+    # boot nic
     VM_NIC_CONF="$VM_DISK_CONF \"mac=$vm_mac1, type=ioemu, bridge=$vm_bridge1\","
+    # additional nics
     if [ "$vm_mac2" != "" ]; then
         VM_NIC_CONF="$VM_NIC_CONF \"mac=$vm_mac2, type=ioemu, bridge=$vm_bridge2\","
     fi
@@ -172,6 +175,9 @@ EOF
     fi
     if [ "$vm_mac4" != "" ]; then
         VM_NIC_CONF="$VM_NIC_CONF \"mac=$vm_mac4, type=ioemu, bridge=$vm_bridge4\","
+    fi
+    if [ "$vm_mac5" != "" ]; then
+        VM_NIC_CONF="$VM_NIC_CONF \"mac=$vm_mac5, type=ioemu, bridge=$vm_bridge5\","
     fi
     cat >> $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR/$VM_NAME.cfg << EOF
 vif = [ $VM_NIC_CONF ]
@@ -225,6 +231,22 @@ while [ $# -ne 0 ]; do
 			;;
 		-m)
 			XEN_VM_MAC=$2
+			shift
+			;;
+		-m2)
+			XEN_VM_MAC2=$2
+			shift
+			;;
+		-m3)
+			XEN_VM_MAC3=$2
+			shift
+			;;
+		-m4)
+			XEN_VM_MAC4=$2
+			shift
+			;;
+		-m5)
+			XEN_VM_MA5=$2
 			shift
 			;;
 		-i)
@@ -335,18 +357,16 @@ case "$XEN_COMMAND" in
         echo "$QEMU_DM" > $XEN_VM_BASE_DIR/device_model
         echo "$XEN_VM_MAC" > $XEN_VM_BASE_DIR/mac1
         echo "$OPENQRM_PLUGIN_XEN_INTERNAL_BRIDGE" > $XEN_VM_BASE_DIR/bridge1
-        echo "" > $XEN_VM_BASE_DIR/mac2
-        echo "$OPENQRM_PLUGIN_XEN_EXTERNAL_BRIDGE" > $XEN_VM_BASE_DIR/bridge2
-        echo "" > $XEN_VM_BASE_DIR/mac3
-        echo "$OPENQRM_PLUGIN_XEN_EXTERNAL_BRIDGE" > $XEN_VM_BASE_DIR/bridge3
-        echo "" > $XEN_VM_BASE_DIR/mac4
-        echo "$OPENQRM_PLUGIN_XEN_EXTERNAL_BRIDGE" > $XEN_VM_BASE_DIR/bridge4
         echo "n" > $XEN_VM_BASE_DIR/boot
         echo "1" > $XEN_VM_BASE_DIR/vnc
         echo "1" > $XEN_VM_BASE_DIR/vncviewer
         echo "0" > $XEN_VM_BASE_DIR/sdl
+
         # one cpu by default
-        echo "1" > $XEN_VM_BASE_DIR/vcpu
+        if [ "$XEN_VM_CPU" == "" ]; then
+            XEN_VM_CPU=1
+        fi
+        echo "$XEN_VM_CPU" > $XEN_VM_BASE_DIR/vcpu
 
         # find the next free vncdisplay
         for VNCD in `find $OPENQRM_VM_DIR/* -name vncdisplay 2>/dev/null`; do
@@ -376,6 +396,33 @@ case "$XEN_COMMAND" in
             echo "file:$OPENQRM_VM_DIR/$XEN_VM_NAME/swap.img,hdb,w" > $XEN_VM_BASE_DIR/swap
             echo "$XEN_VM_SWAP" > $XEN_VM_BASE_DIR/swapsize
 		fi
+
+		# nic1
+		if [ "$XEN_VM_MAC2" != "" ]; then
+			echo "-> Creating additional nic $XEN_VM_MAC2"
+            echo "$XEN_VM_MAC2" > $XEN_VM_BASE_DIR/mac2
+            echo "$OPENQRM_PLUGIN_XEN_EXTERNAL_BRIDGE" > $XEN_VM_BASE_DIR/bridge2
+		fi
+		# nic2
+		if [ "$XEN_VM_MAC3" != "" ]; then
+			echo "-> Creating additional nic $XEN_VM_MAC3"
+            echo "$XEN_VM_MAC3" > $XEN_VM_BASE_DIR/mac3
+            echo "$OPENQRM_PLUGIN_XEN_EXTERNAL_BRIDGE" > $XEN_VM_BASE_DIR/bridge3
+		fi
+		# nic3
+		if [ "$XEN_VM_MAC4" != "" ]; then
+			echo "-> Creating additional nic $XEN_VM_MAC4"
+            echo "$XEN_VM_MAC4" > $XEN_VM_BASE_DIR/mac4
+            echo "$OPENQRM_PLUGIN_XEN_EXTERNAL_BRIDGE" > $XEN_VM_BASE_DIR/bridge4
+		fi
+		# nic4
+		if [ "$XEN_VM_MAC5" != "" ]; then
+			echo "-> Creating additional nic $XEN_VM_MAC5"
+            echo "$XEN_VM_MAC5" > $XEN_VM_BASE_DIR/mac5
+            echo "$OPENQRM_PLUGIN_XEN_EXTERNAL_BRIDGE" > $XEN_VM_BASE_DIR/bridge5
+		fi
+
+
 
 		# creating the cfg
         xen_generate_vm_config $XEN_VM_NAME
@@ -552,6 +599,8 @@ case "$XEN_COMMAND" in
         vm_bridge3=`cat $VM_BASE_DIR/bridge3 2>/dev/null`
         vm_mac4=`cat $VM_BASE_DIR/mac4 2>/dev/null`
         vm_bridge4=`cat $VM_BASE_DIR/bridge4 2>/dev/null`
+        vm_mac5=`cat $VM_BASE_DIR/mac5 2>/dev/null`
+        vm_bridge5=`cat $VM_BASE_DIR/bridge5 2>/dev/null`
         vm_swap=`cat $VM_BASE_DIR/swap 2>/dev/null`
         vm_swapsize=`cat $VM_BASE_DIR/swapsize 2>/dev/null`
         vm_disk1=`cat $VM_BASE_DIR/disk1 2>/dev/null`
@@ -573,6 +622,8 @@ case "$XEN_COMMAND" in
 		echo "OPENQRM_XEN_VM_MAC_3=\"$vm_mac3\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_XEN_VM_NET_4=\"$vm_bridge4\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_XEN_VM_MAC_4=\"$vm_mac4\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_VM_NET_5=\"$vm_bridge5\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_VM_MAC_5=\"$vm_mac5\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_XEN_VM_SWAP=\"$vm_swap\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_XEN_VM_SWAPSIZE=\"$vm_swapsize\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_XEN_VM_DISK_1=\"$vm_disk1\"" >> $VM_CONFIG_TMP

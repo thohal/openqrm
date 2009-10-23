@@ -148,6 +148,9 @@ function create($virtualization_type, $name, $mac, $additional_nics, $cpu, $memo
 		case 'kvm':
 			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -c ".$cpu." -d ".$disk." ".$additional_nic_str;
 			break;
+		case 'xen':
+			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -c ".$cpu." -d ".$disk." ".$additional_nic_str;
+			break;
 		case 'citrix':
 			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -s ".$host_resource->ip." -l ".$name." -m ".$memory."";
 			break;
