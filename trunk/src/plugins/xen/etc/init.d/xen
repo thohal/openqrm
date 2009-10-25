@@ -51,8 +51,11 @@ if [ -f /etc/initrd-devices.conf ]; then
 fi
 
 function xen_start() {
-	DIR_CURRENT=`pwd`
 	echo "Starting the openQRM xen-plugin"
+	DIR_CURRENT=`pwd`
+   	export FORCE_INSTALL=true
+   	openqrm_install_os_dependency bc
+   	openqrm_install_os_dependency screen
 }
 
 

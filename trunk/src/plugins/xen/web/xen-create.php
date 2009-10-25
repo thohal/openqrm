@@ -76,6 +76,7 @@ $xen_ip = htmlobject_request('xen_ip');
 $xen_ram = htmlobject_request('xen_ram');
 $xen_disk = htmlobject_request('xen_disk');
 $xen_swap = htmlobject_request('xen_swap');
+$xen_cpus = htmlobject_request('xen_cpus');
 $xen_migrate_to_id = htmlobject_request('xen_migrate_to_id');
 $xen_migrate_type = htmlobject_request('xen_migrate_type');
 $xen_fields = array();
@@ -190,6 +191,10 @@ if(htmlobject_request('xen_command') != '') {
                     redirect_mgmt($strMsg, $thisfile, $xen_id);
                 }
             }
+            // cpus
+            if (!strlen($xen_cpus)) {
+                $xen_cpus=1;
+            }
 
             $xen_appliance = new appliance();
             $xen_appliance->get_instance_by_id($xen_id);
@@ -227,7 +232,7 @@ if(htmlobject_request('xen_command') != '') {
             // wait for the new-resource hooks to run
             sleep(5);
             // send command
-            $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen create -n $xen_name -m $xen_mac -r $xen_ram $xen_vm_disk_param $xen_vm_swap_param -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+            $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen create -n $xen_name -m $xen_mac -r $xen_ram -c $xen_cpus $xen_vm_disk_param $xen_vm_swap_param -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
             $xen->send_command($xen->ip, $resource_command);
             // and wait for the resulting statfile
             if (!wait_for_statfile($statfile)) {
@@ -260,7 +265,14 @@ function xen_create() {
 	$resource_mac_gen = new resource();
 	$resource_mac_gen->generate_mac();
 	$suggested_mac = $resource_mac_gen->mac;
-    $back_link = "<a href=\"xen-manager.php?action=refresh&xen_id=$xen_id\">Back</a>";
+    $back_link = "<a href=\"xen-manager.php?action=reload&xen_id=$xen_id\">Back</a>";
+    // cpus array for the select
+    $cpu_identifier_array = array();
+	$cpu_identifier_array[] = array("value" => "1", "label" => "1 CPU");
+	$cpu_identifier_array[] = array("value" => "2", "label" => "2 CPUs");
+	$cpu_identifier_array[] = array("value" => "3", "label" => "3 CPUs");
+	$cpu_identifier_array[] = array("value" => "4", "label" => "4 CPUs");
+
     // set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
@@ -271,6 +283,7 @@ function xen_create() {
 		'xen_server_id' => $xen_id,
 		'xen_server_name' => htmlobject_input('xen_name', array("value" => '', "label" => 'VM name'), 'text', 20),
 		'xen_server_mac' => htmlobject_input('xen_mac', array("value" => $suggested_mac, "label" => 'Mac address'), 'text', 20),
+        'xen_server_cpus' => htmlobject_select('xen_cpus', $cpu_identifier_array, 'CPUs'),
 		'xen_server_ip' => htmlobject_input('xen_ip', array("value" => 'dhcp', "label" => 'Ip address'), 'text', 20),
 		'xen_server_ram' => htmlobject_input('xen_ram', array("value" => '256', "label" => 'Memory (MB)'), 'text', 10),
 		'xen_server_disk' => htmlobject_input('xen_disk', array("value" => '', "label" => 'Disk (MB)'), 'text', 10),

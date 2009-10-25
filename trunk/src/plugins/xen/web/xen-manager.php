@@ -577,7 +577,7 @@ function xen_display($appliance_id) {
                 'xen_vm_ip' => $xen_vm_ip,
                 'xen_vm_mac' => $xen_vm_mac,
                 'xen_vm_bridge' => $xen_vm_bridge,
-                'xen_vm_memory' => $xen_vm_memory." MB",
+                'xen_vm_memory' => $xen_vm_memory." MeBi",
                 'xen_vm_actions' => $xen_vm_actions,
                 'xen_vm_migrate_actions' => $xen_vm_migrate_actions,
             );

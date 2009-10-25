@@ -26,11 +26,12 @@
 
 <h1><img border=0 src="/openqrm/base/plugins/xen/img/plugin.png"> Xen create VM</h1>
 
-Add new VM to Xen Host id {xen_server_id}
-<br>
-<br>
+<h4>Add new VM to Xen Host id {xen_server_id}</h4>
 <div style="float:left;">
 {xen_server_name}
+<br>
+<h4>VM Configuration</h4>
+{xen_server_cpus}
 {xen_server_mac}
 {xen_server_ram}
 {xen_server_disk}
@@ -38,9 +39,12 @@ Add new VM to Xen Host id {xen_server_id}
 </div>
 {hidden_xen_server_id}
 <div style="text-align:center;">
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
     {submit}
-    <br>
-    <br>
     <br>
     <br>
     <strong>{backlink}</strong>

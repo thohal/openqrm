@@ -93,6 +93,17 @@ function xen_usage() {
 }
 
 
+# function to looseley translate megabyte to mebibytes
+function megatomebibyte() {
+    local MEGA=$1
+    MEBI=$MEGA*1.07
+    MEBI=`echo $MEBI | bc`
+    MEBI=`echo $MEBI | cut -d'.' -f1`
+    MEBI=$(( MEBI + 1 ))
+    echo $MEBI
+}
+
+
 function get_disk_name() {
     local component=$1
     case "$component" in
@@ -332,6 +343,8 @@ case "$XEN_COMMAND" in
 		if [ "$XEN_VM_RAM" == "" ]; then
 			xen_usage
 		fi
+        # kvm uses mebibytes instead of megabytes
+        XEN_VM_RAM=`megatomebibyte $XEN_VM_RAM`
 		xen_lock aquire
 		echo "Creating Xen vm $XEN_VM_NAME -> /etc/xen/$XEN_VM_NAME.cfg"
 		# find the hvmloader
@@ -421,8 +434,6 @@ case "$XEN_COMMAND" in
             echo "$XEN_VM_MAC5" > $XEN_VM_BASE_DIR/mac5
             echo "$OPENQRM_PLUGIN_XEN_EXTERNAL_BRIDGE" > $XEN_VM_BASE_DIR/bridge5
 		fi
-
-
 
 		# creating the cfg
         xen_generate_vm_config $XEN_VM_NAME

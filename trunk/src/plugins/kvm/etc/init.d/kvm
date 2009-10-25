@@ -40,7 +40,9 @@ fi
 
 function kvm_start() {
 	echo "Starting the openQRM kvm-plugin"
-
+   	export FORCE_INSTALL=true
+   	openqrm_install_os_dependency bc
+   	openqrm_install_os_dependency screen
 
 	# preparing the nic-bios in case the openQRM server itself is the kvm-host
 	if [ ! -d /usr/share/kvm/ ]; then

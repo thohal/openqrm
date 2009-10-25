@@ -64,7 +64,7 @@ $xen_vm_component = htmlobject_request('xen_vm_component');
 
 $refresh_delay=1;
 $refresh_loop_max=20;
-$back_link = "<a href=\"xen-manager.php?action=refresh&xen_id=$xen_id\">Back</a>";
+$back_link = "<a href=\"xen-manager.php?action=reload&xen_id=$xen_id\">Back</a>";
 
 
 function redirect_conf($strMsg, $file, $xen_id, $xen_name) {
