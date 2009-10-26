@@ -47,6 +47,11 @@
 </form>
 <br><hr><br>
 
+<form action="{thisfile}" method="post">
+{vm_config_nic5_disp}
+</form>
+<br><hr><br>
+
 </form>
 
 

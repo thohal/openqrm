@@ -387,6 +387,17 @@ function kvm_vm_config() {
 		$vm_net_disp .= htmlobject_box_from_object($html, ' input');
 	}
 
+	if (strlen($store[OPENQRM_KVM_VM_MAC_5])) {
+		$html = new htmlobject_input();
+		$html->name = "net5";
+		$html->id = 'p'.uniqid();
+		$html->value = "$store[OPENQRM_KVM_VM_MAC_5]";
+		$html->title = "Network-5";
+		$html->disabled = true;
+		$html->maxlength="10";
+		$vm_net_disp .= htmlobject_box_from_object($html, ' input');
+	}
+    
 	$vm_net_disp .= "<input type=submit value='Edit'>";
 	$vm_net_disp .= "</form>";
 
@@ -533,7 +544,7 @@ function kvm_vm_config_cpus() {
 	$vm_config_cpus_disp .= "<input type=hidden name=action value='update_cpus'>";
 	$vm_config_cpus_disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
 	$vm_config_cpus_disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
-    $vm_config_cpus_disp .= htmlobject_select('kvm_update_cpus', $cpu_identifier_array, 'CPUs');
+    $vm_config_cpus_disp .= htmlobject_select('kvm_update_cpus', $cpu_identifier_array, 'CPUs', array($store[OPENQRM_KVM_VM_CPUS]));
 	$vm_config_cpus_disp .= "<input type=submit value='Update'>";
 	$vm_config_cpus_disp .= "</form>";
 
@@ -636,8 +647,28 @@ function kvm_vm_config_net() {
 		$nic_number++;
 	}
 
-	// add nic
-	if ($nic_number < 5) {
+	// remove nic 5
+	if (strlen($store[OPENQRM_KVM_VM_MAC_5])) {
+		$vm_config_nic5_disp = "<input type=hidden name=action value='remove_vm_net'>";
+		$vm_config_nic5_disp .= "<input type=hidden name=kvm_server_id value=$kvm_server_id>";
+		$vm_config_nic5_disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
+		$vm_config_nic5_disp .= "<input type=hidden name=kvm_nic_nr value=5>";
+
+		$html = new htmlobject_input();
+		$html->name = "remove_vm_net";
+		$html->id = 'p'.uniqid();
+		$html->value = "$store[OPENQRM_KVM_VM_MAC_5]";
+		$html->title = "Network-5";
+		$html->disabled = true;
+		$html->maxlength="10";
+		$vm_config_nic5_disp .= htmlobject_box_from_object($html, ' input');
+        $vm_config_nic5_disp .= "<input type=submit value='Remove'>";
+		$nic_number++;
+	}
+
+
+    // add nic
+	if ($nic_number < 6) {
 		$resource_mac_gen = new resource();
 		$resource_mac_gen->generate_mac();
 		$suggested_mac = $resource_mac_gen->mac;
@@ -666,6 +697,7 @@ function kvm_vm_config_net() {
         'vm_config_nic2_disp' => $vm_config_nic2_disp,
         'vm_config_nic3_disp' => $vm_config_nic3_disp,
         'vm_config_nic4_disp' => $vm_config_nic4_disp,
+        'vm_config_nic5_disp' => $vm_config_nic5_disp,
         'vm_config_add_nic_disp' => $vm_config_add_nic_disp,
         'vm_config_nic_type_disp' => $vm_config_nic_type_disp,
         'submit' => $submit,
