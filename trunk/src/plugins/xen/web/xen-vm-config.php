@@ -420,17 +420,6 @@ function xen_vm_config() {
 		$vm_disk_disp .= htmlobject_box_from_object($html, ' input');
 	}
 
-	if (strlen($store[OPENQRM_XEN_VM_DISK_SIZE_4])) {
-		$html = new htmlobject_input();
-		$html->name = "disk4";
-		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_XEN_VM_DISK_SIZE_4]";
-		$html->title = "Harddisk-4 (MB)";
-		$html->disabled = true;
-		$html->maxlength="10";
-		$vm_disk_disp .= htmlobject_box_from_object($html, ' input');
-	}
-
 	$vm_disk_disp .= "<input type=submit value='Edit'>";
 	$vm_disk_disp .= "</form>";
 
@@ -769,26 +758,8 @@ function xen_vm_config_disk() {
 		$vm_config_disk3_disp .= "<input type=submit value='Remove'>";
 		$disk_count++;
 	}
-	if (strlen($store[OPENQRM_XEN_VM_DISK_SIZE_4])) {
-		$vm_config_disk4_disp = "<input type=hidden name=xen_config_action value='remove_vm_disk'>";
-		$vm_config_disk4_disp .= "<input type=hidden name=xen_id value=$xen_id>";
-		$vm_config_disk4_disp .= "<input type=hidden name=xen_name value=$xen_name>";
-		$vm_config_disk4_disp .= "<input type=hidden name=xen_disk_nr value=4>";
-		$html = new htmlobject_input();
-		$html->name = "remove_vm_disk";
-		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_XEN_VM_DISK_SIZE_4]";
-		$html->title = "Harddisk-4 (MB)";
-		$html->disabled = true;
-		$html->maxlength="10";
-		$vm_config_disk4_disp .= htmlobject_box_from_object($html, ' input');
-		$vm_config_disk4_disp .= "<input type=submit value='Remove'>";
-		$disk_count++;
-	}
 
-
-
-	if ($disk_count < 5) {
+	if ($disk_count < 4) {
 		$vm_config_add_disk_disp = "<input type=hidden name=xen_config_action value='add_vm_disk'>";
 		$vm_config_add_disk_disp .= "<input type=hidden name=xen_id value=$xen_id>";
 		$vm_config_add_disk_disp .= "<input type=hidden name=xen_name value=$xen_name>";

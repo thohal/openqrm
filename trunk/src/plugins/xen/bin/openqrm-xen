@@ -152,8 +152,6 @@ function xen_generate_vm_config() {
     vm_disksize2=`cat $VM_BASE_DIR/disksize2 2>/dev/null`
     vm_disk3=`cat $VM_BASE_DIR/disk3 2>/dev/null`
     vm_disksize3=`cat $VM_BASE_DIR/disksize3 2>/dev/null`
-    vm_disk4=`cat $VM_BASE_DIR/disk4 2>/dev/null`
-    vm_disksize4=`cat $VM_BASE_DIR/disksize4 2>/dev/null`
     vm_vnc=`cat $VM_BASE_DIR/vnc 2>/dev/null`
     vm_vncviewer=`cat $VM_BASE_DIR/vncviewer 2>/dev/null`
     vm_vnc_display=`cat $VM_BASE_DIR/vncdisplay 2>/dev/null`
@@ -211,10 +209,6 @@ EOF
         VM_DISK_CONF="$VM_DISK_CONF \"$vm_disk3\","
         ADD_DISK=true
     fi
-    if [ "$vm_disk4" != "" ]; then
-        VM_DISK_CONF="$VM_DISK_CONF \"$vm_disk4\","
-        ADD_DISK=true
-    fi
     if [ "$vm_swap" != "" ]; then
         VM_DISK_CONF="$VM_DISK_CONF \"$vm_swap\","
         ADD_DISK=true
@@ -257,7 +251,7 @@ while [ $# -ne 0 ]; do
 			shift
 			;;
 		-m5)
-			XEN_VM_MA5=$2
+			XEN_VM_MAC5=$2
 			shift
 			;;
 		-i)
@@ -406,7 +400,7 @@ case "$XEN_COMMAND" in
 			echo "-> Creating swap"
 			dd if=/dev/zero of=$OPENQRM_VM_DIR/$XEN_VM_NAME/swap.img bs=1M seek=$XEN_VM_SWAP count=1
 			mkswap -f $OPENQRM_VM_DIR/$XEN_VM_NAME/swap.img
-            echo "file:$OPENQRM_VM_DIR/$XEN_VM_NAME/swap.img,hdb,w" > $XEN_VM_BASE_DIR/swap
+            echo "file:$OPENQRM_VM_DIR/$XEN_VM_NAME/swap.img,hdd,w" > $XEN_VM_BASE_DIR/swap
             echo "$XEN_VM_SWAP" > $XEN_VM_BASE_DIR/swapsize
 		fi
 
@@ -620,8 +614,6 @@ case "$XEN_COMMAND" in
         vm_disksize2=`cat $VM_BASE_DIR/disksize2 2>/dev/null`
         vm_disk3=`cat $VM_BASE_DIR/disk3 2>/dev/null`
         vm_disksize3=`cat $VM_BASE_DIR/disksize3 2>/dev/null`
-        vm_disk4=`cat $VM_BASE_DIR/disk4 2>/dev/null`
-        vm_disksize4=`cat $VM_BASE_DIR/disksize4 2>/dev/null`
         vm_vnc_display=`cat $VM_BASE_DIR/vncdisplay`
 		echo "OPENQRM_XEN_VM_RAM=\"$vm_memory\"" > $VM_CONFIG_TMP
 		echo "OPENQRM_XEN_VM_CPU=\"$vm_cpu\"" >> $VM_CONFIG_TMP
@@ -643,8 +635,6 @@ case "$XEN_COMMAND" in
 		echo "OPENQRM_XEN_VM_DISK_SIZE_2=\"$vm_disksize2\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_XEN_VM_DISK_3=\"$vm_disk3\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_XEN_VM_DISK_SIZE_3=\"$vm_disksize3\"" >> $VM_CONFIG_TMP
-		echo "OPENQRM_XEN_VM_DISK_4=\"$vm_disk4\"" >> $VM_CONFIG_TMP
-		echo "OPENQRM_XEN_VM_DISK_SIZE_4=\"$vm_disksize4\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_XEN_VM_VNC=\"$vm_vnc_display\"" >> $VM_CONFIG_TMP
 		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$XEN_OPENQRM_USERNAME --http-password=$XEN_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_CONFIG_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/xen/xen-action.php?xen_command=get_xen_config; then
 			echo "ERROR: Could not post vm config to the openQRM-server at $OPENQRM_SERVER_IP!"

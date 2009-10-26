@@ -42,10 +42,6 @@
 </form>
 <br><hr><br>
 
-<form action="{thisfile}" method="post">
-{vm_config_disk4_disp}
-</form>
-<br><hr><br>
 
 </form>
 

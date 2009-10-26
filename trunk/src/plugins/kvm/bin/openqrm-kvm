@@ -67,7 +67,7 @@ function kvm_usage() {
 # function to looseley translate megabyte to mebibytes
 function megatomebibyte() {
     local MEGA=$1
-    MEBI=$MEGA*1.09
+    MEBI=$MEGA*1.07
     MEBI=`echo $MEBI | bc`
     MEBI=`echo $MEBI | cut -d'.' -f1`
     MEBI=$(( MEBI + 1 ))
@@ -131,6 +131,10 @@ while [ $# -ne 0 ]; do
 			shift
 			;;
 		-s)
+			KVM_VM_SWAP=$2
+			shift
+			;;
+		-x)
 			KVM_VM_COMPONENT_NUMBER=$2
 			shift
 			;;
@@ -294,12 +298,36 @@ case "$KVM_COMMAND" in
 			echo "KVM_VM_DISK_1=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk1
 			echo "KVM_VM_DISK_SIZE_1=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/disk1
 		fi
+        # empty 2. and 3. disk
 		echo "KVM_VM_DISK_2=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk2
 		echo "KVM_VM_DISK_SIZE_2=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/disk2
 		echo "KVM_VM_DISK_3=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk3
 		echo "KVM_VM_DISK_SIZE_3=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/disk3
-		echo "KVM_VM_DISK_4=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk4
-		echo "KVM_VM_DISK_SIZE_4=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/disk4
+
+        # swap
+        # reserve disk4 for swap
+		if [ "$KVM_VM_SWAP" != "" ]; then
+			echo "-> Creating swap"
+			KVM_DISK_4="$OPENQRM_VM_DIR/$KVM_VM_NAME/disk04.img"
+			if ! dd if=/dev/zero of=$KVM_DISK_4 bs=1M seek=$KVM_VM_SWAP count=1; then
+				echo "ERROR: Could not create $KVM_DISK_4 (swap) for KVM vm $KVM_VM_NAME" | logger
+				kvm_lock release
+				exit 1
+			fi
+			# add the disk to the config file
+			echo "KVM_VM_DISK_4=\"-hdd $KVM_DISK_4\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk4
+			echo "KVM_VM_DISK_SIZE_4=\"$KVM_VM_SWAP\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/disk4
+            if ! mkswap -f $KVM_DISK_4; then
+				echo "ERROR: Could not create swap filesystem on $KVM_DISK_4 for KVM vm $KVM_VM_NAME" | logger
+				kvm_lock release
+				exit 1
+            fi
+		else
+			# add empty disk disk parameter
+			echo "KVM_VM_DISK_4=\"\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk4
+			echo "KVM_VM_DISK_SIZE_4=\"\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/disk4
+		fi
+
         # boot from network
         echo "KVM_VM_BOOT=\"-boot nc\"" >> $OPENQRM_VM_DIR/$KVM_VM_NAME/boot
 

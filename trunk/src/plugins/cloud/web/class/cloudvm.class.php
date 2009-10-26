@@ -130,6 +130,8 @@ function create($virtualization_type, $name, $mac, $additional_nics, $cpu, $memo
             $anic++;
         }
     }
+    // swap, for the cloud vms we simply calculate memory * 2
+    $swap = $memory*2;
 
 	// start the vm on the appliance resource
 	$host_resource = new resource();
@@ -146,10 +148,10 @@ function create($virtualization_type, $name, $mac, $additional_nics, $cpu, $memo
 
 	switch ($virtualization_plugin_name) {
 		case 'kvm':
-			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -c ".$cpu." -d ".$disk." ".$additional_nic_str;
+			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -c ".$cpu." -s ".$swap." ".$additional_nic_str;
 			break;
 		case 'xen':
-			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -c ".$cpu." -d ".$disk." ".$additional_nic_str;
+			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -c ".$cpu." -s ".$swap." ".$additional_nic_str;
 			break;
 		case 'citrix':
 			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -s ".$host_resource->ip." -l ".$name." -m ".$memory."";

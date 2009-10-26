@@ -37,6 +37,7 @@
 {kvm_server_mac}
 {kvm_server_ram}
 {kvm_server_disk}
+{kvm_server_swap}
 </div>
 
 

@@ -133,14 +133,12 @@ function create_fstab_commons() {
 	done
 	FOUND_SWAP=0
 	for SWPSPACE in $(cat /proc/partitions |grep '[0-9]' | awk '{print $4}'); do
-		if echo $SWPSPACE | grep '[0-9]' 1>/dev/null; then
-			if swapon /dev/${SWPSPACE} 1>/dev/null 2>&1; then
-				swapoff /dev/${SWPSPACE} 1>/dev/null 
-				echo "Adding /dev/${SWPSPACE} as swap space"
-				echo "/dev/${SWPSPACE} swap	swap	defaults	0 0" >> $IMAGE_FSTAB
-				FOUND_SWAP=1
-			fi
-		fi
+        if swapon /dev/${SWPSPACE} 1>/dev/null 2>&1; then
+            swapoff /dev/${SWPSPACE} 1>/dev/null
+            echo "Adding /dev/${SWPSPACE} as swap space"
+            echo "/dev/${SWPSPACE} swap	swap	defaults	0 0" >> $IMAGE_FSTAB
+            FOUND_SWAP=1
+        fi
 	done
 	if [ "$FOUND_SWAP" == "0" ]; then
 		# we need to create a small swap file

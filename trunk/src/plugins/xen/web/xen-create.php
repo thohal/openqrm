@@ -285,9 +285,9 @@ function xen_create() {
 		'xen_server_mac' => htmlobject_input('xen_mac', array("value" => $suggested_mac, "label" => 'Mac address'), 'text', 20),
         'xen_server_cpus' => htmlobject_select('xen_cpus', $cpu_identifier_array, 'CPUs'),
 		'xen_server_ip' => htmlobject_input('xen_ip', array("value" => 'dhcp', "label" => 'Ip address'), 'text', 20),
-		'xen_server_ram' => htmlobject_input('xen_ram', array("value" => '256', "label" => 'Memory (MB)'), 'text', 10),
-		'xen_server_disk' => htmlobject_input('xen_disk', array("value" => '', "label" => 'Disk (MB)'), 'text', 10),
-		'xen_server_swap' => htmlobject_input('xen_swap', array("value" => '', "label" => 'Swap (MB)'), 'text', 10),
+		'xen_server_ram' => htmlobject_input('xen_ram', array("value" => '512', "label" => 'Memory (MB)'), 'text', 10),
+		'xen_server_disk' => htmlobject_input('xen_disk', array("value" => '2000', "label" => 'Disk (MB)'), 'text', 10),
+		'xen_server_swap' => htmlobject_input('xen_swap', array("value" => '1024', "label" => 'Swap (MB)'), 'text', 10),
 		'hidden_xen_server_id' => "<input type=hidden name=xen_id value=$xen_id><input type=hidden name=xen_command value='new'>",
 		'submit' => htmlobject_input('action', array("value" => 'new', "label" => 'Create'), 'submit'),
 	));
