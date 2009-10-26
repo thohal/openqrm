@@ -53,6 +53,7 @@ var $cpuspeed = '';
 var $cpumodel = '';
 var $memtotal = '';
 var $swaptotal = '';
+var $nics = '';
 var $capabilities = '';
 var $cluster = '';
 var $ssi = '';
@@ -96,6 +97,7 @@ function get_instance($id, $name) {
 		$this->cpumodel = $appliance["appliance_cpumodel"];
 		$this->memtotal = $appliance["appliance_memtotal"];
 		$this->swaptotal = $appliance["appliance_swaptotal"];
+		$this->nics = $appliance["appliance_nics"];
 		$this->capabilities = $appliance["appliance_capabilities"];
 		$this->cluster = $appliance["appliance_cluster"];
 		$this->ssi = $appliance["appliance_ssi"];
@@ -179,6 +181,7 @@ function add($appliance_fields) {
         $appliance_fields["appliance_cpumodel"]=$this->cpumodel;
         $appliance_fields["appliance_memtotal"]=$this->memtotal;
         $appliance_fields["appliance_swaptotal"]=$this->swaptotal;
+        $appliance_fields["appliance_nics"]=$this->nics;
         $appliance_fields["appliance_capabilities"]=$this->capabilities;
         $appliance_fields["appliance_cluster"]=$this->cluster;
         $appliance_fields["appliance_ssi"]=$this->ssi;
@@ -241,6 +244,7 @@ function remove($appliance_id) {
 	$appliance_fields["appliance_cpumodel"]=$this->cpumodel;
 	$appliance_fields["appliance_memtotal"]=$this->memtotal;
 	$appliance_fields["appliance_swaptotal"]=$this->swaptotal;
+	$appliance_fields["appliance_nics"]=$this->nics;
 	$appliance_fields["appliance_capabilities"]=$this->capabilities;
 	$appliance_fields["appliance_cluster"]=$this->cluster;
 	$appliance_fields["appliance_ssi"]=$this->ssi;
@@ -287,6 +291,7 @@ function remove_by_name($appliance_name) {
 	$appliance_fields["appliance_cpumodel"]=$this->cpumodel;
 	$appliance_fields["appliance_memtotal"]=$this->memtotal;
 	$appliance_fields["appliance_swaptotal"]=$this->swaptotal;
+	$appliance_fields["appliance_nics"]=$this->nics;
 	$appliance_fields["appliance_capabilities"]=$this->capabilities;
 	$appliance_fields["appliance_cluster"]=$this->cluster;
 	$appliance_fields["appliance_ssi"]=$this->ssi;
@@ -376,6 +381,7 @@ function start() {
 	$appliance_fields["appliance_cpumodel"]=$this->cpumodel;
 	$appliance_fields["appliance_memtotal"]=$this->memtotal;
 	$appliance_fields["appliance_swaptotal"]=$this->swaptotal;
+	$appliance_fields["appliance_nics"]=$this->nics;
 	$appliance_fields["appliance_capabilities"]=$this->capabilities;
 	$appliance_fields["appliance_cluster"]=$this->cluster;
 	$appliance_fields["appliance_ssi"]=$this->ssi;
@@ -435,6 +441,7 @@ function stop() {
 	$appliance_fields["appliance_cpumodel"]=$this->cpumodel;
 	$appliance_fields["appliance_memtotal"]=$this->memtotal;
 	$appliance_fields["appliance_swaptotal"]=$this->swaptotal;
+	$appliance_fields["appliance_nics"]=$this->nics;
 	$appliance_fields["appliance_capabilities"]=$this->capabilities;
 	$appliance_fields["appliance_cluster"]=$this->cluster;
 	$appliance_fields["appliance_ssi"]=$this->ssi;
@@ -633,6 +640,13 @@ function find_resource($appliance_virtualization) {
 				if ((strlen($this->swaptotal)) && (strcmp($this->swaptotal, "0"))) {
 					if (strcmp($this->swaptotal, $resource->swaptotal)) {
 						$event->log("find_resource", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found new resource $resource->id type $virtualization->name for appliance $this->name but it has the wrong amount of Swap, skipping.", "", "", 0, 0, $resource_id);
+						continue;
+					}
+				}
+				// nics
+				if ((strlen($this->nics)) && (strcmp($this->nics, "0"))) {
+					if (strcmp($this->nics, $resource->nics)) {
+						$event->log("find_resource", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "Found new resource $resource->id type $virtualization->name for appliance $this->name but it has the wrong nic count, skipping.", "", "", 0, 0, $resource_id);
 						continue;
 					}
 				}

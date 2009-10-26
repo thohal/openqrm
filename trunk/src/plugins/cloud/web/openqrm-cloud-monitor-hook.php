@@ -649,7 +649,8 @@ function openqrm_cloud_monitor() {
 	
 				$appliance_name = "cloud-".$cr_id."-".$cr_resource_number."-x";
 				$appliance_id = openqrm_db_get_free_id('appliance_id', $APPLIANCE_INFO_TABLE);
-				
+				// we
+                $user_network_cards = $cr->network_req+1;
 				// prepare array to add appliance
 				$ar_request = array(
 					'appliance_id' => $appliance_id,
@@ -660,6 +661,7 @@ function openqrm_cloud_monitor() {
 					'appliance_virtualization' => $cr->resource_type_req,
 					'appliance_cpunumber' => $cr->cpu_req,
 					'appliance_memtotal' => $cr->ram_req,
+					'appliance_nics' => $user_network_cards,
 					'appliance_capabilities' => $appliance_name,
 					'appliance_comment' => "Requested by user $cu_name",
 					'appliance_ssi' => $cr->shared_req,

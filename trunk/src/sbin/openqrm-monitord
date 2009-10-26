@@ -57,7 +57,7 @@ function send_info() {
 		current_state=`urlencodestring $OPENQRM_ACTIVE_STATE`
 	fi
 	current_event=`urlencodestring $OPENQRM_EVENT`
-	MESSAGEDATA="resource_id=$resource_id&resource_uptime=$current_uptime&resource_cpunumber=$current_cpu_number&resource_cpuspeed=$current_cpu_speed&resource_cpumodel=$current_cpu_model&resource_memtotal=$current_mem_total&resource_memused=$current_mem_used&resource_swaptotal=$current_swap_total&resource_swapused=$current_swap_used&resource_hostname=$current_hostname&resource_load=$current_cpu_load&resource_state=$current_state&resource_event=$current_event";
+	MESSAGEDATA="resource_id=$resource_id&resource_uptime=$current_uptime&resource_cpunumber=$current_cpu_number&resource_cpuspeed=$current_cpu_speed&resource_cpumodel=$current_cpu_model&resource_memtotal=$current_mem_total&resource_memused=$current_mem_used&resource_swaptotal=$current_swap_total&resource_swapused=$current_swap_used&resource_hostname=$current_hostname&resource_load=$current_cpu_load&resource_nics=$current_nic_count&resource_state=$current_state&resource_event=$current_event";
 	OPENQRM_RESOURCE_INFO_URL="$SERVER_PROTOCOL://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=update_info&$MESSAGEDATA"
 	$WGET "$OPENQRM_RESOURCE_INFO_URL"
 }
@@ -112,8 +112,16 @@ function find_cpu_model() {
 		current_cpu_model=`cat /proc/cpuinfo | grep "model.*name" | head -n 1 | tr -s ' ' | cut -d' ' -f 3-`
 		current_cpu_model=`urlencodestring $current_cpu_model`
 	fi
-	if [ -z "current_cpu_model" ]; then 
+	if [ -z "$current_cpu_model" ]; then
 		current_cpu_model=0
+	fi
+}
+
+# how many nics we have
+function find_nics() {
+    current_nic_count=`ifconfig -a | grep ^eth | awk {' print $5 '} | uniq | wc -l`
+	if [ -z "$current_nic_count" ]; then
+		current_nic_count=0
 	fi
 }
 
@@ -197,6 +205,8 @@ find_cpu_speed
 find_cpu_model
 # mem_total
 find_mem_total
+# nics
+find_nics
 
 # main loop
 while (true); do

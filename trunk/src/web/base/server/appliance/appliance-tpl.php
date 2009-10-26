@@ -43,6 +43,7 @@
 		{appliance_cpumodel}
 		{appliance_memtotal}
 		{appliance_swaptotal}
+		{appliance_nics}
 		{appliance_capabilities}
 	</div>
 	<div style="float:left; margin:0 0 0 50px;">

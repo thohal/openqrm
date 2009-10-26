@@ -55,6 +55,7 @@ var $subnet = '';
 var $broadcast = '';
 var $network = '';
 var $mac = '';
+var $nics = '';
 var $uptime = '';
 var $cpunumber = '';
 var $cpuspeed = '';
@@ -108,6 +109,7 @@ function get_instance($id, $mac, $ip) {
 		$this->broadcast = $resource["resource_broadcast"];
 		$this->network = $resource["resource_network"];
 		$this->mac = $resource["resource_mac"];
+		$this->nics = $resource["resource_nics"];
 		$this->uptime = $resource["resource_uptime"];
 		$this->cpunumber = $resource["resource_cpunumber"];
 		$this->cpuspeed = $resource["resource_cpuspeed"];
@@ -471,6 +473,7 @@ function get_fields($which) {
 	$resource_fields["resource_broadcast"] = $resource->broadcast;
 	$resource_fields["resource_network"] = $resource->network;
 	$resource_fields["resource_mac"] = $resource->mac;
+	$resource_fields["resource_nics"] = $resource->nics;
 	$resource_fields["resource_uptime"] = $resource->uptime;
 	$resource_fields["resource_cpunumber"] = $resource->cpunumber;
 	$resource_fields["resource_cpuspeed"] = $resource->cpuspeed;

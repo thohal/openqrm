@@ -16,6 +16,7 @@ create table resource_info(				\
 	resource_broadcast varchar(20),			\
 	resource_network varchar(20),			\
 	resource_mac varchar(20),			\
+	resource_nics bigint,				\
 	resource_uptime bigint,				\
 	resource_cpunumber bigint,			\
 	resource_cpuspeed bigint,			\
@@ -79,6 +80,7 @@ create table appliance_info(				\
 	appliance_cpumodel varchar(40),			\
 	appliance_memtotal bigint,			\
 	appliance_swaptotal bigint,			\
+	appliance_nics bigint,			\
 	appliance_capabilities varchar(255),		\
 	appliance_cluster bigint,			\
 	appliance_ssi bigint,				\

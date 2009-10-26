@@ -52,6 +52,7 @@ if($appliance_id != '') {
 		'appliance_cpumodel' => (htmlobject_request('appliance_cpumodel') != '') ? htmlobject_request('appliance_cpumodel') : $appliance->cpumodel,
 		'appliance_memtotal' => (htmlobject_request('appliance_memtotal') != '') ? htmlobject_request('appliance_memtotal') : $appliance->memtotal,
 		'appliance_swaptotal' => (htmlobject_request('appliance_swaptotal') != '') ? htmlobject_request('appliance_swaptotal') : $appliance->swaptotal,
+		'appliance_nics' => (htmlobject_request('appliance_nics') != '') ? htmlobject_request('appliance_nics') : $appliance->nics,
 		'appliance_capabilities' => (htmlobject_request('appliance_capabilities') != '') ? htmlobject_request('appliance_capabilities') : $appliance->capabilities,
 		'appliance_comment' => (htmlobject_request('appliance_comment') != '') ? htmlobject_request('appliance_comment') : $appliance->comment,
 	);
@@ -153,6 +154,9 @@ function appliance_form() {
 	$available_swaptotal_uniq = array();
 	$available_swaptotal = array();
 	$available_swaptotal[] = array("value" => "0", "label" => "any");
+	$available_nics_uniq = array();
+	$available_nics = array();
+	$available_nics[] = array("value" => "0", "label" => "any");
 	foreach($resource_p_array as $res) {
 		$res_id = $res['resource_id'];
 		$tres = new resource();
@@ -176,6 +180,10 @@ function appliance_form() {
 		if (!in_array($tres->swaptotal, $available_swaptotal_uniq)) {
 			$available_swaptotal[] = array("value" => $tres->swaptotal, "label" => $tres->swaptotal);
 			$available_swaptotal_uniq[] .= $tres->swaptotal;
+		}
+		if (!in_array($tres->nics, $available_nics_uniq)) {
+			$available_nics[] = array("value" => $tres->nics, "label" => $tres->nics);
+			$available_nics_uniq[] .= $tres->nics;
 		}
 	}
 	$p_appliance = new appliance();
@@ -287,6 +295,7 @@ function appliance_form() {
 				'appliance_cpumodel' => htmlobject_select('appliance_cpumodel', $available_cpumodel, 'CPU-model', array($p_appliance->cpumodel)),
 				'appliance_memtotal' => htmlobject_select('appliance_memtotal', $available_memtotal, 'Memory', array($p_appliance->memtotal)),
 				'appliance_swaptotal' => htmlobject_select('appliance_swaptotal', $available_swaptotal, 'Swap', array($p_appliance->swaptotal)),
+				'appliance_nics' => htmlobject_select('appliance_nics', $available_nics, 'Network Cards', array($p_appliance->nics)),
 				'appliance_capabilities' => htmlobject_input('appliance_capabilities', array("value" => $ar_request['appliance_capabilities'], "label" => 'Capabilities'), 'text', 255),
 				'appliance_comment' => htmlobject_textarea('appliance_comment', array("value" => $ar_request['appliance_comment'], "label" => 'Comment')),
 				'appliance_cluster' => htmlobject_input('appliance_cluster', array("value" => 1, "label" => 'Cluster'), 'checkbox', ($ar_request['appliance_cluster'] == 0) ? false : true),
