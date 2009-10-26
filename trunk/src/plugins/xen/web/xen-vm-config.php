@@ -266,6 +266,7 @@ function xen_vm_config() {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
     global $back_link;
+    global $thisfile;
 	global $refresh_delay;
 
 
@@ -278,14 +279,6 @@ function xen_vm_config() {
     $xen_server->send_command($xen_server->ip, $resource_command);
     sleep($refresh_delay);
 
-	$disp = "<h1>xen Configure VM</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."<form action=\"$thisfile\" method=post>";
-	$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-	$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-	$disp = $disp."<input type=submit value='Refresh'> $back_link";
-	$disp = $disp."</form>";
-
 	$xen_vm_conf_file="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web/xen-stat/$xen_server->id.$xen_name.vm_config";
     if (!file_exists($xen_vm_conf_file)) {
     	$disp = $disp."<br>Could not get the Xen-configuration for the vm from the Xen-host. Please refresh<br>";
@@ -294,31 +287,11 @@ function xen_vm_config() {
 	$store = openqrm_parse_conf($xen_vm_conf_file);
 	extract($store);
 
-	$disp = $disp."<form action=\"$thisfile\" method=post>";
-	$disp = $disp."<input type=hidden name=xen_vm_component value='ram'>";
-	$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-	$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-	$disp = $disp."<br>";
-	$html = new htmlobject_input();
-	$html->name = "Ram";
-	$html->id = 'p'.uniqid();
-	$html->value = "$store[OPENQRM_XEN_VM_RAM]";
-	$html->title = "Ram (MB)";
-	$html->disabled = true;
-	$html->maxlength="10";
-	$disp = $disp.htmlobject_box_from_object($html, ' input');
-	$disp = $disp."<input type=submit value='Edit'>";
-	$disp = $disp."</form>";
-
-	$disp = $disp."<br>";
-	$disp = $disp."<hr>";
-	$disp = $disp."<br>";
-
-	$disp = $disp."<form action=\"$thisfile\" method=post>";
-	$disp = $disp."<input type=hidden name=xen_vm_component value='cpu'>";
-	$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-	$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-	$disp = $disp."<br>";
+    // CPU
+	$vm_cpus_disp = "<form action=\"$thisfile\" method=post>";
+	$vm_cpus_disp .= "<input type=hidden name=xen_vm_component value='cpu'>";
+	$vm_cpus_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+	$vm_cpus_disp .= "<input type=hidden name=xen_name value=$xen_name>";
 	$html = new htmlobject_input();
 	$html->name = "CPU";
 	$html->id = 'p'.uniqid();
@@ -326,19 +299,30 @@ function xen_vm_config() {
 	$html->title = "CPUs";
 	$html->disabled = true;
 	$html->maxlength="2";
-	$disp = $disp.htmlobject_box_from_object($html, ' input');
-	$disp = $disp."<input type=submit value='Edit'>";
-	$disp = $disp."</form>";
+	$vm_cpus_disp .= htmlobject_box_from_object($html, ' input');
+	$vm_cpus_disp .= "<input type=submit value='Edit'>";
+	$vm_cpus_disp .= "</form>";
 
-	$disp = $disp."<br>";
-	$disp = $disp."<hr>";
-	$disp = $disp."<br>";
+    // RAM
+	$vm_ram_disp = "<form action=\"$thisfile\" method=post>";
+	$vm_ram_disp .= "<input type=hidden name=xen_vm_component value='ram'>";
+	$vm_ram_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+	$vm_ram_disp .= "<input type=hidden name=xen_name value=$xen_name>";
+	$html = new htmlobject_input();
+	$html->name = "Ram";
+	$html->id = 'p'.uniqid();
+	$html->value = "$store[OPENQRM_XEN_VM_RAM]";
+	$html->title = "Ram (MB)";
+	$html->disabled = true;
+	$html->maxlength="10";
+	$vm_ram_disp .= htmlobject_box_from_object($html, ' input');
+	$vm_ram_disp .= "<input type=submit value='Edit'>";
+	$vm_ram_disp .= "</form>";
 
-	$disp = $disp."<form action=\"$thisfile\" method=post>";
-	$disp = $disp."<input type=hidden name=xen_vm_component value='net'>";
-	$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-	$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-	$disp = $disp."<br>";
+	$vm_net_disp = "<form action=\"$thisfile\" method=post>";
+	$vm_net_disp .= "<input type=hidden name=xen_vm_component value='net'>";
+	$vm_net_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+	$vm_net_disp .= "<input type=hidden name=xen_name value=$xen_name>";
 
 	// we always have a first nic
 	$html = new htmlobject_input();
@@ -348,7 +332,7 @@ function xen_vm_config() {
 	$html->title = "Network-1";
 	$html->disabled = true;
 	$html->maxlength="10";
-	$disp = $disp.htmlobject_box_from_object($html, ' input');
+	$vm_net_disp .= htmlobject_box_from_object($html, ' input');
 
 	if (strlen($store[OPENQRM_XEN_VM_MAC_2])) {
 		$html = new htmlobject_input();
@@ -358,7 +342,7 @@ function xen_vm_config() {
 		$html->title = "Network-2";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp = $disp.htmlobject_box_from_object($html, ' input');
+		$vm_net_disp .= htmlobject_box_from_object($html, ' input');
 	}
 
 	if (strlen($store[OPENQRM_XEN_VM_MAC_3])) {
@@ -369,7 +353,7 @@ function xen_vm_config() {
 		$html->title = "Network-3";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp = $disp.htmlobject_box_from_object($html, ' input');
+		$vm_net_disp .= htmlobject_box_from_object($html, ' input');
 	}
 
 	if (strlen($store[OPENQRM_XEN_VM_MAC_4])) {
@@ -380,25 +364,28 @@ function xen_vm_config() {
 		$html->title = "Network-4";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp = $disp.htmlobject_box_from_object($html, ' input');
+		$vm_net_disp .= htmlobject_box_from_object($html, ' input');
 	}
 
-	$disp = $disp."<input type=submit value='Edit'>";
-	$disp = $disp."</form>";
+	if (strlen($store[OPENQRM_XEN_VM_MAC_5])) {
+		$html = new htmlobject_input();
+		$html->name = "net5";
+		$html->id = 'p'.uniqid();
+		$html->value = "$store[OPENQRM_XEN_VM_MAC_5]";
+		$html->title = "Network-5";
+		$html->disabled = true;
+		$html->maxlength="10";
+		$vm_net_disp .= htmlobject_box_from_object($html, ' input');
+	}
 
+	$vm_net_disp .= "<input type=submit value='Edit'>";
+	$vm_net_disp .= "</form>";
 
-	$disp = $disp."<br>";
-	$disp = $disp."<hr>";
-	$disp = $disp."<br>";
-
-	$disp = $disp."<form action=\"$thisfile\" method=post>";
-	$disp = $disp."<input type=hidden name=xen_vm_component value='disk'>";
-	$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-	$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-	$disp = $disp."<br>";
-	$disp = $disp."Disks";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
+    // Disk
+	$vm_disk_disp = "<form action=\"$thisfile\" method=post>";
+	$vm_disk_disp .= "<input type=hidden name=xen_vm_component value='disk'>";
+	$vm_disk_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+	$vm_disk_disp .= "<input type=hidden name=xen_name value=$xen_name>";
 
 	if (strlen($store[OPENQRM_XEN_VM_DISK_SIZE_1])) {
 		$html = new htmlobject_input();
@@ -408,7 +395,7 @@ function xen_vm_config() {
 		$html->title = "Harddisk-1 (MB)";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp = $disp.htmlobject_box_from_object($html, ' input');
+		$vm_disk_disp .= htmlobject_box_from_object($html, ' input');
 	}
 
 	if (strlen($store[OPENQRM_XEN_VM_DISK_SIZE_2])) {
@@ -419,7 +406,7 @@ function xen_vm_config() {
 		$html->title = "Harddisk-2 (MB)";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp = $disp.htmlobject_box_from_object($html, ' input');
+		$vm_disk_disp .= htmlobject_box_from_object($html, ' input');
 	}
 
 	if (strlen($store[OPENQRM_XEN_VM_DISK_SIZE_3])) {
@@ -430,7 +417,7 @@ function xen_vm_config() {
 		$html->title = "Harddisk-3 (MB)";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp = $disp.htmlobject_box_from_object($html, ' input');
+		$vm_disk_disp .= htmlobject_box_from_object($html, ' input');
 	}
 
 	if (strlen($store[OPENQRM_XEN_VM_DISK_SIZE_4])) {
@@ -441,25 +428,26 @@ function xen_vm_config() {
 		$html->title = "Harddisk-4 (MB)";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp = $disp.htmlobject_box_from_object($html, ' input');
+		$vm_disk_disp .= htmlobject_box_from_object($html, ' input');
 	}
 
-	$disp = $disp."<input type=submit value='Edit'>";
+	$vm_disk_disp .= "<input type=submit value='Edit'>";
+	$vm_disk_disp .= "</form>";
 
-	$disp = $disp."</form>";
-
-	$disp = $disp."<br>";
-	$disp = $disp."<hr>";
-	$disp = $disp."<br>";
-
-	$disp = $disp."<br>";
-	$disp = $disp."<b>Display</b>";
-	$disp = $disp."<br>";
-	$disp = $disp."Vnc-port <b>$store[OPENQRM_XEN_VM_VNC]</b> on <b>$xen_server->ip</b>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-
+	$vm_vnc_disp = "Vnc-port <b>$store[OPENQRM_XEN_VM_VNC]</b> on <b>$xen_server->ip</b>";
+   // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'xen-config.tpl.php');
+	$t->setVar(array(
+        'vm_cpus_disp' => $vm_cpus_disp,
+        'vm_ram_disp' => $vm_ram_disp,
+        'vm_net_disp' => $vm_net_disp,
+        'vm_disk_disp' => $vm_disk_disp,
+        'vm_vnc_disp' => $vm_vnc_disp,
+        'backlink' => $back_link,
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
 
@@ -471,38 +459,40 @@ function xen_vm_config_ram() {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
 	global $refresh_delay;
+    global $back_link;
+    global $thisfile;
 
 	$xen_server_appliance = new appliance();
 	$xen_server_appliance->get_instance_by_id($xen_id);
 	$xen_server = new resource();
 	$xen_server->get_instance_by_id($xen_server_appliance->resources);
-
-	$disp = "<b>xen Configure VM</b>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 	$xen_vm_conf_file="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web/xen-stat/$xen_server->id.$xen_name.vm_config";
+    if (!file_exists($xen_vm_conf_file)) {
+    	echo "<br>Could not get the Xen-configuration for the vm from the Xen-host. Please refresh<br>";
+        return;
+    }
 	$store = openqrm_parse_conf($xen_vm_conf_file);
 	extract($store);
 
-	$disp = $disp."<form action=\"$thisfile\" method=post>";
-	$disp = $disp."<input type=hidden name=xen_config_action value='update_ram'>";
-	$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-	$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-	$disp = $disp."<br>";
-	$disp = $disp.htmlobject_input('xen_update_ram', array("value" => $store[OPENQRM_XEN_VM_RAM], "label" => 'Ram (MB)'), 'text', 10);
-	$disp = $disp."<input type=submit value='Update'>";
-	$disp = $disp."<br>";
-	$disp = $disp."</form>";
+	$vm_config_ram_disp = "<form action=\"$thisfile\" method=post>";
+	$vm_config_ram_disp .= "<input type=hidden name=xen_config_action value='update_ram'>";
+	$vm_config_ram_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+	$vm_config_ram_disp .= "<input type=hidden name=xen_name value=$xen_name>";
+	$vm_config_ram_disp .= htmlobject_input('xen_update_ram', array("value" => $store[OPENQRM_XEN_VM_RAM], "label" => 'Ram (MB)'), 'text', 10);
+	$vm_config_ram_disp .= "<input type=submit value='Update'>";
+	$vm_config_ram_disp .= "</form>";
 
-	$disp = $disp."<br>";
-	$disp = $disp."<hr>";
-	$disp = $disp."<br>";
-
+   // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'xen-config-ram.tpl.php');
+	$t->setVar(array(
+        'vm_config_ram_disp' => $vm_config_ram_disp,
+        'backlink' => $back_link,
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
-
-
-
 
 
 
@@ -513,37 +503,44 @@ function xen_vm_config_cpu() {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
 	global $refresh_delay;
+    global $back_link;
+    global $thisfile;
 
 	$xen_server_appliance = new appliance();
 	$xen_server_appliance->get_instance_by_id($xen_id);
 	$xen_server = new resource();
 	$xen_server->get_instance_by_id($xen_server_appliance->resources);
-
-	$disp = "<b>xen Configure VM</b>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 	$xen_vm_conf_file="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web/xen-stat/$xen_server->id.$xen_name.vm_config";
     if (!file_exists($xen_vm_conf_file)) {
-    	$disp = $disp."<br>Could not get the Xen-configuration for the vm from the Xen-host. Please refresh<br>";
+    	echo "<br>Could not get the Xen-configuration for the vm from the Xen-host. Please refresh<br>";
         return;
     }
 	$store = openqrm_parse_conf($xen_vm_conf_file);
 	extract($store);
 
-	$disp = $disp."<form action=\"$thisfile\" method=post>";
-	$disp = $disp."<input type=hidden name=xen_config_action value='update_cpu'>";
-	$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-	$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-	$disp = $disp."<br>";
-	$disp = $disp.htmlobject_input('xen_update_cpu', array("value" => $store[OPENQRM_XEN_VM_CPU], "label" => 'CPUs'), 'text', 2);
-	$disp = $disp."<input type=submit value='Update'>";
-	$disp = $disp."<br>";
-	$disp = $disp."</form>";
+    // cpus array for the select
+    $cpu_identifier_array = array();
+	$cpu_identifier_array[] = array("value" => "1", "label" => "1 CPU");
+	$cpu_identifier_array[] = array("value" => "2", "label" => "2 CPUs");
+	$cpu_identifier_array[] = array("value" => "3", "label" => "3 CPUs");
+	$cpu_identifier_array[] = array("value" => "4", "label" => "4 CPUs");
 
-	$disp = $disp."<br>";
-	$disp = $disp."<hr>";
-	$disp = $disp."<br>";
-
+	$vm_config_cpus_disp = "<form action=\"$thisfile\" method=post>";
+	$vm_config_cpus_disp .= "<input type=hidden name=xen_config_action value='update_cpu'>";
+	$vm_config_cpus_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+	$vm_config_cpus_disp .= "<input type=hidden name=xen_name value=$xen_name>";
+	$vm_config_cpus_disp .= htmlobject_select('xen_update_cpu', $cpu_identifier_array, 'CPUs', array($store[OPENQRM_XEN_VM_CPU]));
+	$vm_config_cpus_disp .= "<input type=submit value='Update'>";
+	$vm_config_cpus_disp .= "</form>";
+  // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'xen-config-cpus.tpl.php');
+	$t->setVar(array(
+        'vm_config_cpus_disp' => $vm_config_cpus_disp,
+        'backlink' => $back_link,
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
 
@@ -555,22 +552,22 @@ function xen_vm_config_net() {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
 	global $refresh_delay;
+    global $back_link;
+    global $thisfile;
 
 	$xen_server_appliance = new appliance();
 	$xen_server_appliance->get_instance_by_id($xen_id);
 	$xen_server = new resource();
 	$xen_server->get_instance_by_id($xen_server_appliance->resources);
-
-	$disp = "<b>xen Configure VM</b>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 	$xen_vm_conf_file="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web/xen-stat/$xen_server->id.$xen_name.vm_config";
+    if (!file_exists($xen_vm_conf_file)) {
+    	echo "<br>Could not get the Xen-configuration for the vm from the Xen-host. Please refresh<br>";
+        return;
+    }
 	$store = openqrm_parse_conf($xen_vm_conf_file);
 	extract($store);
 
 	// the first nic must not be changed, this is the identifier for openQRM
-	$disp = $disp."<form action=\"$thisfile\" method=post>";
-	$disp = $disp."<br>";
 	// disable the first nic, this is from what we manage the vm
 	$html = new htmlobject_input();
 	$html->name = "net1";
@@ -579,21 +576,15 @@ function xen_vm_config_net() {
 	$html->title = "Network-1";
 	$html->disabled = true;
 	$html->maxlength="10";
-	$disp = $disp.htmlobject_box_from_object($html, ' input');
-	$disp = $disp."</form>";
-	$disp = $disp."<br>";
-	$disp = $disp."<hr>";
-	$disp = $disp."<br>";
+	$vm_config_nic1_disp = htmlobject_box_from_object($html, ' input');
 
 	$nic_number=2;
 	// remove nic 2
 	if (strlen($store[OPENQRM_XEN_VM_MAC_2])) {
-		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=xen_config_action value='remove_vm_net'>";
-		$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-		$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-		$disp = $disp."<input type=hidden name=xen_nic_nr value=2>";
-
+		$vm_config_nic2_disp = "<input type=hidden name=xen_config_action value='remove_vm_net'>";
+		$vm_config_nic2_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+		$vm_config_nic2_disp .= "<input type=hidden name=xen_name value=$xen_name>";
+		$vm_config_nic2_disp .= "<input type=hidden name=xen_nic_nr value=2>";
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_net";
 		$html->id = 'p'.uniqid();
@@ -601,23 +592,16 @@ function xen_vm_config_net() {
 		$html->title = "Network-2";
 		$html->disabled = true;
 		$html->maxlength="10";
-
-		$disp = $disp.htmlobject_box_from_object($html, ' input');
-		$disp = $disp."<input type=submit value='Remove'>";
-		$disp = $disp."</form>";
+		$vm_config_nic2_disp .= htmlobject_box_from_object($html, ' input');
+		$vm_config_nic2_disp .= "<input type=submit value='Remove'>";
 		$nic_number++;
-
-		$disp = $disp."<br>";
-		$disp = $disp."<hr>";
-		$disp = $disp."<br>";
 	}
 	// remove nic 3
 	if (strlen($store[OPENQRM_XEN_VM_MAC_3])) {
-		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=xen_config_action value='remove_vm_net'>";
-		$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-		$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-		$disp = $disp."<input type=hidden name=xen_nic_nr value=3>";
+		$vm_config_nic3_disp = "<input type=hidden name=xen_config_action value='remove_vm_net'>";
+		$vm_config_nic3_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+		$vm_config_nic3_disp .= "<input type=hidden name=xen_name value=$xen_name>";
+		$vm_config_nic3_disp .= "<input type=hidden name=xen_nic_nr value=3>";
 
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_net";
@@ -627,23 +611,17 @@ function xen_vm_config_net() {
 		$html->disabled = true;
 		$html->maxlength="10";
 
-		$disp = $disp.htmlobject_box_from_object($html, ' input');
-		$disp = $disp."<input type=submit value='Remove'>";
-		$disp = $disp."</form>";
+		$vm_config_nic3_disp .= htmlobject_box_from_object($html, ' input');
+		$vm_config_nic3_disp .= "<input type=submit value='Remove'>";
 		$nic_number++;
-
-		$disp = $disp."<br>";
-		$disp = $disp."<hr>";
-		$disp = $disp."<br>";
 	}
 
 	// remove nic 4
 	if (strlen($store[OPENQRM_XEN_VM_MAC_4])) {
-		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=xen_config_action value='remove_vm_net'>";
-		$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-		$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-		$disp = $disp."<input type=hidden name=xen_nic_nr value=4>";
+		$vm_config_nic4_disp = "<input type=hidden name=xen_config_action value='remove_vm_net'>";
+		$vm_config_nic4_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+		$vm_config_nic4_disp .= "<input type=hidden name=xen_name value=$xen_name>";
+		$vm_config_nic4_disp .= "<input type=hidden name=xen_nic_nr value=4>";
 
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_net";
@@ -653,34 +631,69 @@ function xen_vm_config_net() {
 		$html->disabled = true;
 		$html->maxlength="10";
 
-		$disp = $disp.htmlobject_box_from_object($html, ' input');
-		$disp = $disp."<input type=submit value='Remove'>";
-		$disp = $disp."</form>";
+		$vm_config_nic4_disp .= htmlobject_box_from_object($html, ' input');
+		$vm_config_nic4_disp .= "<input type=submit value='Remove'>";
 		$nic_number++;
-
-		$disp = $disp."<br>";
-		$disp = $disp."<hr>";
-		$disp = $disp."<br>";
 	}
 
+	// remove nic 5
+	if (strlen($store[OPENQRM_XEN_VM_MAC_5])) {
+		$vm_config_nic5_disp = "<input type=hidden name=xen_config_action value='remove_vm_net'>";
+		$vm_config_nic5_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+		$vm_config_nic5_disp .= "<input type=hidden name=xen_name value=$xen_name>";
+		$vm_config_nic5_disp .= "<input type=hidden name=xen_nic_nr value=5>";
+
+		$html = new htmlobject_input();
+		$html->name = "remove_vm_net";
+		$html->id = 'p'.uniqid();
+		$html->value = "$store[OPENQRM_XEN_VM_MAC_5]";
+		$html->title = "Network-5";
+		$html->disabled = true;
+		$html->maxlength="10";
+
+		$vm_config_nic5_disp .= htmlobject_box_from_object($html, ' input');
+		$vm_config_nic5_disp .= "<input type=submit value='Remove'>";
+		$nic_number++;
+	}
+
+
 	// add nic
-	if ($nic_number < 5) {
+	if ($nic_number < 6) {
 		$resource_mac_gen = new resource();
 		$resource_mac_gen->generate_mac();
 		$suggested_mac = $resource_mac_gen->mac;
 
-		$disp = $disp."<br>";
-		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=xen_config_action value='add_vm_net'>";
-		$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-		$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-		$disp = $disp."<input type=hidden name=xen_nic_nr value=$nic_number>";
-		$disp = $disp.htmlobject_input('xen_new_nic', array("value" => $suggested_mac, "label" => 'Add Network'), 'text', 10);
-		$disp = $disp."<input type=submit value='Submit'>";
-		$disp = $disp."</form>";
-	}
+		$vm_config_add_nic_disp = "<input type=hidden name=xen_config_action value='add_vm_net'>";
+		$vm_config_add_nic_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+		$vm_config_add_nic_disp .= "<input type=hidden name=xen_name value=$xen_name>";
+		$vm_config_add_nic_disp .= "<input type=hidden name=xen_nic_nr value=$nic_number>";
+		$vm_config_add_nic_disp .= htmlobject_input('xen_new_nic', array("value" => $suggested_mac, "label" => 'Add Network'), 'text', 10);
+        
+        $submit = "<input type=submit value='Submit'>";
+    } else {
+        $submit = "";
+    }
 
+  // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'xen-config-nics.tpl.php');
+	$t->setVar(array(
+        'vm_config_nic1_disp' => $vm_config_nic1_disp,
+        'vm_config_nic2_disp' => $vm_config_nic2_disp,
+        'vm_config_nic3_disp' => $vm_config_nic3_disp,
+        'vm_config_nic4_disp' => $vm_config_nic4_disp,
+        'vm_config_nic5_disp' => $vm_config_nic5_disp,
+        'vm_config_add_nic_disp' => $vm_config_add_nic_disp,
+        'vm_config_nic_type_disp' => $vm_config_nic_type_disp,
+        'submit' => $submit,
+        'thisfile' => $thisfile,
+        'backlink' => $back_link,
+
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
+
 }
 
 
@@ -691,26 +704,27 @@ function xen_vm_config_disk() {
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_USER;
 	global $refresh_delay;
+    global $back_link;
+    global $thisfile;
 
 	$xen_server_appliance = new appliance();
 	$xen_server_appliance->get_instance_by_id($xen_id);
 	$xen_server = new resource();
 	$xen_server->get_instance_by_id($xen_server_appliance->resources);
-
-	$disp = "<b>xen Configure VM</b>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
 	$xen_vm_conf_file="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/web/xen-stat/$xen_server->id.$xen_name.vm_config";
+    if (!file_exists($xen_vm_conf_file)) {
+    	echo "<br>Could not get the Xen-configuration for the vm from the Xen-host. Please refresh<br>";
+        return;
+    }
 	$store = openqrm_parse_conf($xen_vm_conf_file);
 	extract($store);
 
 	$disk_count=1;
 	if (strlen($store[OPENQRM_XEN_VM_DISK_SIZE_1])) {
-		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=xen_config_action value='remove_vm_disk'>";
-		$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-		$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-		$disp = $disp."<input type=hidden name=xen_disk_nr value=1>";
+		$vm_config_disk1_disp = "<input type=hidden name=xen_config_action value='remove_vm_disk'>";
+		$vm_config_disk1_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+		$vm_config_disk1_disp .= "<input type=hidden name=xen_name value=$xen_name>";
+		$vm_config_disk1_disp .= "<input type=hidden name=xen_disk_nr value=1>";
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_disk";
 		$html->id = 'p'.uniqid();
@@ -718,22 +732,16 @@ function xen_vm_config_disk() {
 		$html->title = "Harddisk-1 (MB)";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp = $disp.htmlobject_box_from_object($html, ' input');
-		$disp = $disp."<input type=submit value='Remove'>";
+		$vm_config_disk1_disp .= htmlobject_box_from_object($html, ' input');
+		$vm_config_disk1_disp .= "<input type=submit value='Remove'>";
 		$disk_count++;
-		$disp = $disp."</form>";
-
-		$disp = $disp."<br>";
-		$disp = $disp."<hr>";
-		$disp = $disp."<br>";
 	}
 
 	if (strlen($store[OPENQRM_XEN_VM_DISK_SIZE_2])) {
-		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=xen_config_action value='remove_vm_disk'>";
-		$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-		$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-		$disp = $disp."<input type=hidden name=xen_disk_nr value=2>";
+		$vm_config_disk2_disp = "<input type=hidden name=xen_config_action value='remove_vm_disk'>";
+		$vm_config_disk2_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+		$vm_config_disk2_disp .= "<input type=hidden name=xen_name value=$xen_name>";
+		$vm_config_disk2_disp .= "<input type=hidden name=xen_disk_nr value=2>";
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_disk";
 		$html->id = 'p'.uniqid();
@@ -741,21 +749,15 @@ function xen_vm_config_disk() {
 		$html->title = "Harddisk-2 (MB)";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp = $disp.htmlobject_box_from_object($html, ' input');
-		$disp = $disp."<input type=submit value='Remove'>";
+		$vm_config_disk2_disp .= htmlobject_box_from_object($html, ' input');
+		$vm_config_disk2_disp .= "<input type=submit value='Remove'>";
 		$disk_count++;
-		$disp = $disp."</form>";
-
-		$disp = $disp."<br>";
-		$disp = $disp."<hr>";
-		$disp = $disp."<br>";
 	}
 	if (strlen($store[OPENQRM_XEN_VM_DISK_SIZE_3])) {
-		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=xen_config_action value='remove_vm_disk'>";
-		$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-		$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-		$disp = $disp."<input type=hidden name=xen_disk_nr value=3>";
+		$vm_config_disk3_disp = "<input type=hidden name=xen_config_action value='remove_vm_disk'>";
+		$vm_config_disk3_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+		$vm_config_disk3_disp .= "<input type=hidden name=xen_name value=$xen_name>";
+		$vm_config_disk3_disp .= "<input type=hidden name=xen_disk_nr value=3>";
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_disk";
 		$html->id = 'p'.uniqid();
@@ -763,21 +765,15 @@ function xen_vm_config_disk() {
 		$html->title = "Harddisk-3 (MB)";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp = $disp.htmlobject_box_from_object($html, ' input');
-		$disp = $disp."<input type=submit value='Remove'>";
+		$vm_config_disk3_disp .= htmlobject_box_from_object($html, ' input');
+		$vm_config_disk3_disp .= "<input type=submit value='Remove'>";
 		$disk_count++;
-		$disp = $disp."</form>";
-
-		$disp = $disp."<br>";
-		$disp = $disp."<hr>";
-		$disp = $disp."<br>";
 	}
 	if (strlen($store[OPENQRM_XEN_VM_DISK_SIZE_4])) {
-		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=xen_config_action value='remove_vm_disk'>";
-		$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-		$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-		$disp = $disp."<input type=hidden name=xen_disk_nr value=4>";
+		$vm_config_disk4_disp = "<input type=hidden name=xen_config_action value='remove_vm_disk'>";
+		$vm_config_disk4_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+		$vm_config_disk4_disp .= "<input type=hidden name=xen_name value=$xen_name>";
+		$vm_config_disk4_disp .= "<input type=hidden name=xen_disk_nr value=4>";
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_disk";
 		$html->id = 'p'.uniqid();
@@ -785,34 +781,43 @@ function xen_vm_config_disk() {
 		$html->title = "Harddisk-4 (MB)";
 		$html->disabled = true;
 		$html->maxlength="10";
-		$disp = $disp.htmlobject_box_from_object($html, ' input');
-		$disp = $disp."<input type=submit value='Remove'>";
+		$vm_config_disk4_disp .= htmlobject_box_from_object($html, ' input');
+		$vm_config_disk4_disp .= "<input type=submit value='Remove'>";
 		$disk_count++;
-		$disp = $disp."</form>";
-
-		$disp = $disp."<br>";
-		$disp = $disp."<hr>";
-		$disp = $disp."<br>";
 	}
 
 
 
 	if ($disk_count < 5) {
-		$disp = $disp."<br>";
-		$disp = $disp."<form action=\"$thisfile\" method=post>";
-		$disp = $disp."<input type=hidden name=xen_config_action value='add_vm_disk'>";
-		$disp = $disp."<input type=hidden name=xen_id value=$xen_id>";
-		$disp = $disp."<input type=hidden name=xen_name value=$xen_name>";
-		$disp = $disp."<input type=hidden name=xen_disk_nr value=$disk_count>";
-		$disp = $disp.htmlobject_input('xen_new_disk', array("value" => '2000', "label" => 'Add harddisk'), 'text', 10);
-		$disp = $disp."<br>";
-		$disp = $disp."<input type=submit value='Submit'>";
-		$disp = $disp."<br>";
-		$disp = $disp."</form>";
-	}
+		$vm_config_add_disk_disp = "<input type=hidden name=xen_config_action value='add_vm_disk'>";
+		$vm_config_add_disk_disp .= "<input type=hidden name=xen_id value=$xen_id>";
+		$vm_config_add_disk_disp .= "<input type=hidden name=xen_name value=$xen_name>";
+		$vm_config_add_disk_disp .= "<input type=hidden name=xen_disk_nr value=$disk_count>";
+		$vm_config_add_disk_disp .= htmlobject_input('xen_new_disk', array("value" => '2000', "label" => 'Add harddisk'), 'text', 10);
 
+        $submit = "<input type=submit value='Submit'>";
+    } else {
+        $submit = "";
+    }
 
+ // set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'xen-config-disks.tpl.php');
+	$t->setVar(array(
+        'vm_config_disk1_disp' => $vm_config_disk1_disp,
+        'vm_config_disk2_disp' => $vm_config_disk2_disp,
+        'vm_config_disk3_disp' => $vm_config_disk3_disp,
+        'vm_config_disk4_disp' => $vm_config_disk4_disp,
+        'vm_config_add_disk_disp' => $vm_config_add_disk_disp,
+        'submit' => $submit,
+        'thisfile' => $thisfile,
+        'backlink' => $back_link,
+
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
+
 }
 
 

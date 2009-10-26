@@ -708,6 +708,7 @@ case "$XEN_COMMAND" in
 		echo "Adding nic $XEN_VM_COMPONENT_NUMBER mac-address $XEN_VM_MAC to XEN vm $XEN_VM_NAME"
         VM_BASE_DIR=$OPENQRM_VM_DIR/$XEN_VM_NAME
         echo "$XEN_VM_MAC" > $VM_BASE_DIR/mac$XEN_VM_COMPONENT_NUMBER
+        echo "$OPENQRM_PLUGIN_XEN_EXTERNAL_BRIDGE" > $VM_BASE_DIR/bridge$XEN_VM_COMPONENT_NUMBER
 		# creating the cfg
         xen_generate_vm_config $XEN_VM_NAME
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
@@ -726,6 +727,7 @@ case "$XEN_COMMAND" in
 		echo "Removing nic $XEN_VM_COMPONENT_NUMBER from XEN vm $XEN_VM_NAME"
         VM_BASE_DIR=$OPENQRM_VM_DIR/$XEN_VM_NAME
         > $VM_BASE_DIR/mac$XEN_VM_COMPONENT_NUMBER
+        > $VM_BASE_DIR/bridge$XEN_VM_COMPONENT_NUMBER
 		# creating the cfg
         xen_generate_vm_config $XEN_VM_NAME
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
