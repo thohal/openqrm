@@ -28,13 +28,10 @@
 
 <div style="float:left;">
 {vmware_esx_table}
-<br><br>
 </div>
 
 <div style="float:left;">
-VMware ESX vms on resource {vmware_esx_id}/{vmware_esx_name}
-<br>
-<br>
+<h4>VMware ESX vms on resource {vmware_esx_id}/{vmware_esx_name}</h4>
 {vmware_vm_table}
 </div>
 

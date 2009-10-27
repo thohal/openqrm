@@ -64,11 +64,15 @@ $vmware_esx_name = htmlobject_request('vmware_esx_name');
 $vmware_esx_mac = htmlobject_request('vmware_esx_mac');
 $vmware_esx_ram = htmlobject_request('vmware_esx_ram');
 $vmware_esx_disk = htmlobject_request('vmware_esx_disk');
+$vmware_esx_swap = htmlobject_request('vmware_esx_swap');
+$vmware_esx_cpus = htmlobject_request('vmware_esx_cpus');
 global $vmware_esx_id;
 global $vmware_esx_name;
 global $vmware_esx_mac;
 global $vmware_esx_ram;
 global $vmware_esx_disk;
+global $vmware_esx_swap;
+global $vmware_esx_cpus;
 
 $action=htmlobject_request('action');
 $refresh_delay=1;
@@ -197,6 +201,28 @@ if(htmlobject_request('action') != '') {
                         $strMsg .= "Invalid vm disk size. Not creating the vm on VMware ESX Host $vmware_esx_id<br>";
                         redirect($strMsg, "tab0", $vmware_esx_id);
                     }
+                    $vmware_esx_disk_parameter = "-d ".$vmware_esx_disk;
+                } else {
+                    $vmware_esx_disk_parameter = "";
+                }
+                // check for swap size is int
+                if (strlen($vmware_esx_swap)) {
+                    if (!validate_input($vmware_esx_swap, 'number')) {
+                        $strMsg .= "Invalid vm swap size. Not creating the vm on VMware ESX Host $vmware_esx_id<br>";
+                        redirect($strMsg, "tab0", $vmware_esx_id);
+                    }
+                    $vmware_esx_swap_parameter = "-s ".$vmware_esx_swap;
+                } else {
+                    $vmware_esx_swap_parameter = "";
+                }
+                // check for cpu count is int
+                if (!strlen($vmware_esx_cpus)) {
+                    $strMsg .= "Empty vm cpu number. Not creating new vm on VMware ESX Host $vmware_esx_id";
+                    redirect_mgmt($strMsg, $thisfile, $vmware_esx_id);
+                }
+                if (!validate_input($vmware_esx_cpus, 'number')) {
+                    $strMsg .= "Invalid vm cpu number. Not creating new vm on VMware ESX Host $vmware_esx_id";
+                    redirect_mgmt($strMsg, $thisfile, $vmware_esx_id);
                 }
                 // send command to vmware_esx-host to create the new vm
                 show_progressbar();
@@ -204,11 +230,7 @@ if(htmlobject_request('action') != '') {
                 $vmware_appliance->get_instance_by_id($vmware_esx_id);
                 $vmware_esx = new resource();
                 $vmware_esx->get_instance_by_id($vmware_appliance->resources);
-                if (strlen($vmware_esx_disk)) {
-                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx create -n $vmware_esx_name -m $vmware_esx_mac -r $vmware_esx_ram -d $vmware_esx_disk -i $vmware_esx->ip";
-                } else {
-                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx create -n $vmware_esx_name -m $vmware_esx_mac -r $vmware_esx_ram -i $vmware_esx->ip";
-                }
+                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx create -n $vmware_esx_name -m $vmware_esx_mac -r $vmware_esx_ram -i $vmware_esx->ip -c $vmware_esx_cpus $vmware_esx_disk_parameter $vmware_esx_swap_parameter";
                 // remove current stat file
                 $vmware_esx_resource_id = $vmware_esx->id;
                 $statfile="vmware-esx-stat/".$vmware_esx_resource_id.".vm_list";
@@ -271,6 +293,12 @@ function vmware_esx_create() {
 	$suggested_mac = $resource_mac_gen->mac;
     $suggested_last_two_bytes = substr($suggested_mac, 12);
     $suggested_vmware_mac = $vmware_mac_address_space.":".$suggested_last_two_bytes;
+    // cpus array for the select
+    $cpu_identifier_array = array();
+	$cpu_identifier_array[] = array("value" => "1", "label" => "1 CPU");
+	$cpu_identifier_array[] = array("value" => "2", "label" => "2 CPUs");
+	$cpu_identifier_array[] = array("value" => "3", "label" => "3 CPUs");
+	$cpu_identifier_array[] = array("value" => "4", "label" => "4 CPUs");
 
    // set template
 	$t = new Template_PHPLIB();
@@ -280,9 +308,11 @@ function vmware_esx_create() {
 		'formaction' => $thisfile,
         'vmware_esx_id' => $vmware_esx_id,
         'vmware_vm_name' => htmlobject_input('vmware_esx_name', array("value" => '', "label" => 'VM name'), 'text', 20),
+        'vmware_vm_cpus' => htmlobject_select('vmware_esx_cpus', $cpu_identifier_array, 'CPUs'),
         'vmware_vm_mac' => htmlobject_input('vmware_esx_mac', array("value" => $suggested_vmware_mac, "label" => 'Mac address'), 'text', 20),
         'vmware_vm_ram' => htmlobject_input('vmware_esx_ram', array("value" => '512', "label" => 'Memory (MB)'), 'text', 10),
         'vmware_vm_disk' => htmlobject_input('vmware_esx_disk', array("value" => '2000', "label" => 'Disk (MB)'), 'text', 10),
+		'vmware_vm_swap' => htmlobject_input('vmware_esx_swap', array("value" => '1024', "label" => 'Swap (MB)'), 'text', 10),
         'hidden_vmware_esx_id' => "<input type=hidden name=vmware_esx_id value=$vmware_esx_id>",
 		'submit' => htmlobject_input('action', array("value" => 'new', "label" => 'Create'), 'submit'),
 	));

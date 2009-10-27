@@ -462,7 +462,7 @@ function vmware_esx_display($appliance_id) {
 	$arHead['vmware_esx_create']['title'] ='Create VM';
 
 	$arHead['vmware_esx_reinit'] = array();
-	$arHead['vmware_esx_reinit']['title'] ='Re-Init';
+	$arHead['vmware_esx_reinit']['title'] ='';
 
 	$vmware_esx_count=1;
 	$arBody = array();
@@ -482,7 +482,8 @@ function vmware_esx_display($appliance_id) {
 		$resource_icon_default=$vmware_esx_icon;
 	}
 	$vmware_esx_create_button="<a href=\"vmware-esx-create.php?vmware_esx_id=$vmware_esx_tmp->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/plugins/aa_plugins/img/enable.png\" border=\"0\"><b> VM</b></a>";
-	$vmware_esx_reinit_button="<a href=\"$thisfile?action=initialyze&identifier[]=$vmware_esx_tmp->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/img/user.gif\" border=\"0\"><b>Re-Init</b></a>";
+	// $vmware_esx_reinit_button="<a href=\"$thisfile?action=initialyze&identifier[]=$vmware_esx_tmp->id\" style=\"text-decoration: none\"><img height=16 width=16 src=\"/openqrm/base/img/user.gif\" border=\"0\"><b>Re-Init</b></a>";
+    $vmware_esx_reinit_button="";
 	// here we take the resource id as the identifier because
 	// we need to run commands on the resource ip
 	$arBody[] = array(

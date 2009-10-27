@@ -24,21 +24,35 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/plugin.png"> VMware ESX Create VM</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/plugin.png"> VMWware ESX Create VM</h1>
 
-Add new VM to VMware ESX Host id {vmware_esx_id}
-<br>
-<br>
+<div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
+
+<h4>Add new VM to VMWare ESX Host id {vmware_esx_id}</h4>
 <div style="float:left;">
 {vmware_vm_name}
+
+<h4>VM Configuration</h4>
+{vmware_vm_cpus}
 {vmware_vm_mac}
 {vmware_vm_ram}
 {vmware_vm_disk}
+{vmware_vm_swap}
 </div>
+
+
+<div style="float:right;">
+<br>
+</div>
+
 {hidden_vmware_esx_id}
+
+<div style="clear:both;line-height:0px;">&#160;</div>
+
 <div style="text-align:center;">{submit}</div>
-
-
+<br>
+</div>
 
 </form>
+
 

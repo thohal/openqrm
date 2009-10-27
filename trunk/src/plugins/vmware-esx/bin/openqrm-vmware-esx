@@ -308,10 +308,10 @@ EOF
 			$OPENQRM_ESX_CMD "vmkfstools -c $VMWARE_ESX_VM_SWAP""M -a lsilogic $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.swap.vmdk"  | logger
 			# add the disk to the config file
 			cat >> /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx << EOF
-scsi1:0.present = "true"
-scsi1:0.fileName = "$VMWARE_ESX_VM_NAME.swap.vmdk"
-scsi1:0.deviceType = "scsi-hardDisk"
-scsi1:0.redo = ""
+scsi0:1.present = "true"
+scsi0:1.fileName = "$VMWARE_ESX_VM_NAME.swap.vmdk"
+scsi0:1.deviceType = "scsi-hardDisk"
+scsi0:1.redo = ""
 EOF
 		fi
         # vnc ?
