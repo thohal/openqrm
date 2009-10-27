@@ -541,6 +541,59 @@ EOF
 		;;
 
 
+	post_vm_config)
+		VM_CONFIG="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/$VMWARE_ESX_VM_NAME.vm_config"
+		VM_CONFIG_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/$VMWARE_ESX_VM_NAME.vm_config.tmp"
+		VM_CMD_OUT="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/$VMWARE_ESX_VM_NAME.vm_config.out"
+
+        VMID=`vmware_esx_get_vmid $VMWARE_ESX_VM_NAME`
+        VMX_CONFIG=`vmware_esx_get_vmx $VMWARE_ESX_VM_NAME`
+		vmware_esx_log "Posting vm config for $VMWARE_ESX_VM_NAME (vm-id $VMID)"
+		mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/
+		chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/
+
+        $OPENQRM_ESX_CMD "cat $VMX_CONFIG" > $VM_CMD_OUT
+        # cpus
+        VMWARE_VM_CPUS=`grep numvcpu $VM_CMD_OUT | cut -d'=' -f2 | cut -d'"' -f2`
+        VMWARE_VM_MAC=`grep ethernet0.address $VM_CMD_OUT | cut -d'=' -f2 | cut -d'"' -f2`
+        VMWARE_VM_MAC2=`grep ethernet1.address $VM_CMD_OUT | cut -d'=' -f2 | cut -d'"' -f2`
+        VMWARE_VM_MAC3=`grep ethernet2.address $VM_CMD_OUT | cut -d'=' -f2 | cut -d'"' -f2`
+        VMWARE_VM_MAC4=`grep ethernet3.address $VM_CMD_OUT | cut -d'=' -f2 | cut -d'"' -f2`
+        VMWARE_VM_MEM=`grep memsize $VM_CMD_OUT | cut -d'=' -f2 | cut -d'"' -f2`
+        VMWARE_VM_VNC_PORT=`grep RemoteDisplay.vnc.port $VM_CMD_OUT | cut -d'=' -f2 | cut -d'"' -f2`
+
+
+
+		echo "OPENQRM_KVM_VM_CPUS=\"$KVM_VM_CPUS\"" > $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_RAM=\"$KVM_VM_RAM\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_NET_1=\"$KVM_VM_NET_1\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_MAC_1=\"$KVM_VM_MAC_1\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_NET_2=\"$KVM_VM_NET_2\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_MAC_2=\"$KVM_VM_MAC_2\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_NET_3=\"$KVM_VM_NET_3\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_MAC_3=\"$KVM_VM_MAC_3\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_NET_4=\"$KVM_VM_NET_4\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_MAC_4=\"$KVM_VM_MAC_4\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_NET_5=\"$KVM_VM_NET_5\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_MAC_5=\"$KVM_VM_MAC_5\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_DISK_1=\"$KVM_VM_DISK_1\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_DISK_SIZE_1=\"$KVM_VM_DISK_SIZE_1\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_DISK_2=\"$KVM_VM_DISK_2\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_DISK_SIZE_2=\"$KVM_VM_DISK_SIZE_2\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_DISK_3=\"$KVM_VM_DISK_3\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_DISK_SIZE_3=\"$KVM_VM_DISK_SIZE_3\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_DISK_4=\"$KVM_VM_DISK_4\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_DISK_SIZE_4=\"$KVM_VM_DISK_SIZE_4\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_VNC=\"$KVM_VM_VNC\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_BOOT=\"$KVM_VM_BOOT\"" >> $VM_CONFIG_TMP
+
+#        rm -f $VM_CMD_OUT
+        mv -f $VM_CONFIG_TMP $VM_CONFIG
+        chmod 777 $VM_CONFIG
+		;;
+
+
+
 	setboot)
        unset VMWARE_ESX_VM_NAME
 		if [ "$VMWARE_ESX_VM_MAC" == "" ]; then
