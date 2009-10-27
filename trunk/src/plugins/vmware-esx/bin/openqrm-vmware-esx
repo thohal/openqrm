@@ -45,7 +45,7 @@ fi
 
 function vmware_esx_usage() {
 	vmware_esx_log "Usage : $0 start/stop/reboot/add/delete/remove/list <-i esx-server-ip> <-n vm-name>"
-	vmware_esx_log "        $0 create <-i esx-server-ip> <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ]"
+	vmware_esx_log "        $0 create <-i esx-server-ip> <-n vm-name> <-m mac-address> <-r memory> [-d disk-size ] [-c cpus ] [-s swap-size ] [-va vnc-password ] [-vp vnc-port ]"
 	vmware_esx_log "        $0 setboot <-m mac-address> <-b local/net> <-i esx-server-ip>"
 	vmware_esx_log "        $0 post_vm_list"
 	vmware_esx_log "        $0 init <-i esx-server-ip> [ -u openqrm-user ] [ -p openqrm-password ]"
@@ -80,6 +80,22 @@ function vmware_esx_get_vmid() {
 	fi	
 }
 
+# function to looseley round up the memory so
+# that its resource really gets full of the mem
+function roundmemory() {
+    local MEGA=$1
+    ROUNDUP=$MEGA*1.03
+    ROUNDUP=`echo $ROUNDUP | bc`
+    ROUNDUP=`echo $ROUNDUP | cut -d'.' -f1`
+    # be sure it is divideable through 4
+    ROUNDUP=$ROUNDUP/4
+    ROUNDUP=`echo $ROUNDUP | bc`
+    ROUNDUP=`echo $ROUNDUP | cut -d'.' -f1`
+    ROUNDUP=$ROUNDUP*4
+    ROUNDUP=`echo $ROUNDUP | bc`
+    ROUNDUP=`echo $ROUNDUP | cut -d'.' -f1`
+    echo $ROUNDUP
+}
 
 
 VMWARE_ESX_COMMAND=$1
@@ -105,8 +121,24 @@ while [ $# -ne 0 ]; do
 			VMWARE_ESX_VM_NAME=$2
 			shift
 			;;
+		-c)
+			VMWARE_ESX_VM_CPU=$2
+			shift
+			;;
 		-m)
 			VMWARE_ESX_VM_MAC=$2
+			shift
+			;;
+		-m2)
+			VMWARE_ESX_VM_MAC2=$2
+			shift
+			;;
+		-m3)
+			VMWARE_ESX_VM_MAC3=$2
+			shift
+			;;
+		-m4)
+			VMWARE_ESX_VM_MAC4=$2
 			shift
 			;;
 		-r)
@@ -123,6 +155,18 @@ while [ $# -ne 0 ]; do
 			;;
 		-b)
 			VMWARE_ESX_VM_BOOT=$2
+			shift
+			;;
+		-s)
+			VMWARE_ESX_VM_SWAP=$2
+			shift
+			;;
+		-va)
+			VMWARE_ESX_VM_VNC_AUTH=$2
+			shift
+			;;
+		-vp)
+			VMWARE_ESX_VM_VNC_PORT=$2
 			shift
 			;;
 		-u)
@@ -198,19 +242,54 @@ case "$VMWARE_ESX_COMMAND" in
 		fi
 		vmware_esx_lock aquire
 		vmware_esx_log "Creating VMware vm $VMWARE_ESX_VM_NAME"
-		# creating the vmx
+        # some defaults
+        if [ "$VMWARE_ESX_VM_CPU" == "" ]; then
+            VMWARE_ESX_VM_CPU=1
+        fi
 
+		# creating the vmx
+        VMWARE_ESX_VM_RAM=`roundmemory $VMWARE_ESX_VM_RAM`
 		mkdir -p /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/
         echo '#!/usr/bin/vmware' > /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx
 		cat $OPENQRM_VMWARE_ESX_VM_TEMPLATE |	\
 			sed -e "s/@@VMWARE_ESX_VM_NAME@@/$VMWARE_ESX_VM_NAME/g" |	\
 			sed -e "s/@@OPENQRM_RESOURCE_RAM@@/$VMWARE_ESX_VM_RAM/g" |	\
-			sed -e "s/@@VMWARE_ESX_VM_MAC@@/$VMWARE_ESX_VM_MAC/g"	\
+			sed -e "s/@@OPENQRM_RESOURCE_CPU@@/$VMWARE_ESX_VM_CPU/g" |	\
+			sed -e "s/@@VMWARE_ESX_VM_MAC@@/$VMWARE_ESX_VM_MAC/g" | \
+			sed -e "s/@@OPENQRM_VMWARE_ESX_INTERNAL_BRIDGE@@/$OPENQRM_VMWARE_ESX_INTERNAL_BRIDGE/g"	\
 			>> /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx
+
+		# addtional nics -> nic2
+		if [ "$VMWARE_ESX_VM_MAC2" != "" ]; then
+			vmware_esx_log " Creating nic2"
+			cat >> /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx << EOF
+Ethernet1.present = "TRUE"
+ethernet1.address = "$VMWARE_ESX_VM_MAC2"
+ethernet1.networkName = "$OPENQRM_VMWARE_ESX_EXTERNAL_BRIDGE"
+EOF
+		fi
+		# addtional nics -> nic3
+		if [ "$VMWARE_ESX_VM_MAC3" != "" ]; then
+			vmware_esx_log " Creating nic3"
+			cat >> /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx << EOF
+Ethernet2.present = "TRUE"
+ethernet2.address = "$VMWARE_ESX_VM_MAC3"
+ethernet2.networkName = "$OPENQRM_VMWARE_ESX_EXTERNAL_BRIDGE"
+EOF
+		fi
+		# addtional nics -> nic4
+		if [ "$VMWARE_ESX_VM_MAC4" != "" ]; then
+			vmware_esx_log " Creating nic4"
+			cat >> /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx << EOF
+Ethernet3.present = "TRUE"
+ethernet3.address = "$VMWARE_ESX_VM_MAC4"
+ethernet3.networkName = "$OPENQRM_VMWARE_ESX_EXTERNAL_BRIDGE"
+EOF
+		fi
+
 		# creating the dir first for the eventual disk
 		$OPENQRM_ESX_CMD "mkdir -p $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/"
-
-		# disk + swap
+		# disk
 		if [ "$VMWARE_ESX_VM_DISK" != "" ]; then
 			vmware_esx_log " Creating disk"
 			$OPENQRM_ESX_CMD "vmkfstools -c $VMWARE_ESX_VM_DISK""M -a lsilogic $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmdk"  | logger
@@ -223,6 +302,37 @@ scsi0:0.redo = ""
 EOF
 		fi
 
+		# swap
+		if [ "$VMWARE_ESX_VM_SWAP" != "" ]; then
+			vmware_esx_log " Creating disk"
+			$OPENQRM_ESX_CMD "vmkfstools -c $VMWARE_ESX_VM_SWAP""M -a lsilogic $OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.swap.vmdk"  | logger
+			# add the disk to the config file
+			cat >> /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx << EOF
+scsi1:0.present = "true"
+scsi1:0.fileName = "$VMWARE_ESX_VM_NAME.swap.vmdk"
+scsi1:0.deviceType = "scsi-hardDisk"
+scsi1:0.redo = ""
+EOF
+		fi
+        # vnc ?
+        if [ "$VMWARE_ESX_VM_VNC_AUTH" != "" ] && [ "$VMWARE_ESX_VM_VNC_PORT" != "" ]; then
+			cat >> /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx << EOF
+RemoteDisplay.vnc.enabled = TRUE
+RemoteDisplay.vnc.port = "$VMWARE_ESX_VM_VNC_PORT"
+RemoteDisplay.vnc.password = "$VMWARE_ESX_VM_VNC_AUTH"
+EOF
+        else
+        ################ !!!!!!!!!!!! for testing !!!!!!!!!!!!!!!!!!######################
+			cat >> /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx << EOF
+RemoteDisplay.vnc.enabled = TRUE
+RemoteDisplay.vnc.port = "5999"
+RemoteDisplay.vnc.password = "openqrm"
+EOF
+        ################ !!!!!!!!!!!! for testing !!!!!!!!!!!!!!!!!!######################
+
+        fi
+
+        # copy over config
 		scp /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx $VMWARE_ESX_HOST_IP:$OPENQRM_VM_DIR/$VMWARE_ESX_VM_NAME/ | logger
 		rm -rf /tmp/vmware-esx-plugin
 

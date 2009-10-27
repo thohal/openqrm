@@ -72,7 +72,7 @@ global $IMAGE_INFO_TABLE;
 
 global $OPENQRM_SERVER_BASE_DIR;
 global $OPENQRM_EXEC_PORT;
-$vm_create_timout=90;
+$vm_create_timout=120;
 
 $event = new event();
 $openqrm_server = new openqrm_server();

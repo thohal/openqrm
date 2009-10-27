@@ -136,6 +136,11 @@ function create($virtualization_type, $name, $mac, $additional_nics, $cpu, $memo
 	// start the vm on the appliance resource
 	$host_resource = new resource();
 	$host_resource->get_instance_by_id($less_load_resource_id);
+    // we need to have an openQRM server object too since some of the
+    // virtualization commands are sent from openQRM directly
+    $openqrm = new openqrm_server();
+	// "guess" the new resource id from the db
+	$new_resource_id=openqrm_db_get_free_id('resource_id', $RESOURCE_INFO_TABLE);
 
 // !! Virtualization type dependency !!
 // Currently supported are :
@@ -149,21 +154,27 @@ function create($virtualization_type, $name, $mac, $additional_nics, $cpu, $memo
 	switch ($virtualization_plugin_name) {
 		case 'kvm':
 			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -c ".$cpu." -s ".$swap." ".$additional_nic_str;
+        	$host_resource->send_command($host_resource->ip, $vm_create_cmd);
 			break;
 		case 'xen':
 			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -c ".$cpu." -s ".$swap." ".$additional_nic_str;
+        	$host_resource->send_command($host_resource->ip, $vm_create_cmd);
 			break;
 		case 'citrix':
 			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -s ".$host_resource->ip." -l ".$name." -m ".$memory."";
+            $openqrm->send_command($vm_create_cmd);
 			break;
 		case 'vmware-esx':
-			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -i ".$host_resource->ip." -n ".$name." -m ".$mac." -r ".$memory." -d ".$disk."";
+			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -i ".$host_resource->ip." -n ".$name." -m ".$mac." -r ".$memory." -c ".$cpu." -s ".$swap." ".$additional_nic_str;
+            $openqrm->send_command($vm_create_cmd);
 			break;
 		case 'vmware-server':
 			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -d ".$disk."";
+        	$host_resource->send_command($host_resource->ip, $vm_create_cmd);
 			break;
 		case 'vmware-server2':
 			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -d ".$disk."";
+        	$host_resource->send_command($host_resource->ip, $vm_create_cmd);
 			break;
 		default:
 			return;
@@ -171,14 +182,9 @@ function create($virtualization_type, $name, $mac, $additional_nics, $cpu, $memo
 	}
 
 // !! end of Virtualization type dependency !!
-
-
-	// "guess" the new resource id from the db
-	$new_resource_id=openqrm_db_get_free_id('resource_id', $RESOURCE_INFO_TABLE);
 	
 	// create and start the new vm 
 	$event->log("create", $_SERVER['REQUEST_TIME'], 5, "cloudvm.class.php", "Running $vm_create_cmd", "", "", 0, 0, 0);
-	$host_resource->send_command($host_resource->ip, $vm_create_cmd);
 
 	// monitor the resources, the next new one will be our vm !
 	// -> we need to set the resource-type of it according to the virtualization type from the cr	

@@ -35,12 +35,8 @@ if [ "$MONITOR_CMD" == "stop" ]; then
 	if [ -f "$MONITORD_LOCKFILE" ]; then
 		kill `cat $MONITORD_LOCKFILE`
 		rm -f $MONITORD_LOCKFILE
-        exit
-	else
-		echo "Not started !"
-		rm -f $MONITORD_LOCKFILE
-		exit 1
 	fi
+    kill `ps -c | grep openqrm | grep -v grep | awk {' print $1 '}` 2>/dev/null
 fi
 # not start ?
 if [ "$MONITOR_CMD" != "start" ]; then
@@ -63,12 +59,12 @@ fi
 
 # create lockfile
 if [ -f "$MONITORD_LOCKFILE" ]; then
-	echo "$0 is running already"
-	exit 0
-else
-	echo "starting $0"
-	echo $$ > $MONITORD_LOCKFILE
+    kill `cat $MONITORD_LOCKFILE` 2>/dev/null
+    rm -f $MONITORD_LOCKFILE
+    kill `ps -c | grep openqrm | grep -v grep | awk {' print $1 '}` 2>/dev/null
 fi
+echo "starting $0"
+echo $$ > $MONITORD_LOCKFILE
 
 
 # main
@@ -82,26 +78,24 @@ if [ ! -f "$OPENQRM_RESOURCE_PARAMETER_FILE" ]; then
 	# remove whitespaces
 	resource_mac=`echo $resource_mac`
 	echo "Using $resource_ip/$resource_mac"
-    # try https first
-	wget -q $WGET_NO_CERT_CHECK -O $OPENQRM_RESOURCE_PARAMETER_FILE "https://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
-	sleep 2
-    # check if https was successfull
+    # https will fail since busybox on the esx does not support https connections
+    # try http
+    wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
+    sleep 2
+    # check if http was successfull
     if ! grep resource_openqrmserver $OPENQRM_RESOURCE_PARAMETER_FILE 1>/dev/null 2>&1; then
-        # try http
-        wget -q -O $OPENQRM_RESOURCE_PARAMETER_FILE "http://$OPENQRM_SERVER_IP/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_id=$resource_id&resource_mac=$resource_mac&resource_ip=$resource_ip"
-        sleep 2
-        # check if http was successfull
-        if ! grep resource_openqrmserver $OPENQRM_RESOURCE_PARAMETER_FILE 1>/dev/null 2>&1; then
-            echo "ERROR: Could not integrate the VMware ESX server into the openQRM-server at $OPENQRM_SERVER_IP!"
-            rm -f $MONITORD_LOCKFILE
-            exit 1
-        fi
+        echo "ERROR: Could not integrate the VMware ESX server into the openQRM-server at $OPENQRM_SERVER_IP!"
+        rm -f $MONITORD_LOCKFILE
+        exit 1
     fi
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
     # define wget to use with https
-    if [ "$openqrm_web_protocol" == "https" ]; then
-        WGET_NO_CERT_CHECK="--no-check-certificate"
-    fi
+    #if [ "$openqrm_web_protocol" == "https" ]; then
+    #    WGET_NO_CERT_CHECK="--no-check-certificate"
+    #fi
+    # https will fail since busybox on the esx does not support https connections
+    WGET_NO_CERT_CHECK=""
+    openqrm_web_protocol="http"
 
 	# gather some more details to create the appliance on the openQRM-server
 	local_server_root_device=`mount | grep ' / ' | awk {' print $1 '}`
@@ -122,6 +116,9 @@ if [ ! -f "$OPENQRM_RESOURCE_PARAMETER_FILE" ]; then
 	fi
 else
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
+    # https will fail since busybox on the esx does not support https connections
+    WGET_NO_CERT_CHECK=""
+    openqrm_web_protocol="http"
 fi
 
 # try to register all vms
