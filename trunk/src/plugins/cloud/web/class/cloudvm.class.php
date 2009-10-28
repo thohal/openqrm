@@ -245,6 +245,77 @@ function create($virtualization_type, $name, $mac, $additional_nics, $cpu, $memo
 
 
 
+// removes a vm from a specificed virtualization type + parameters
+function remove($resource_id, $virtualization_type, $name, $mac) {
+	global $OPENQRM_SERVER_BASE_DIR;
+	global $OPENQRM_SERVER_IP_ADDRESS;
+	global $OPENQRM_EXEC_PORT;
+	global $RESOURCE_INFO_TABLE;
+
+	global $event;
+	$vtype = new virtualization();
+	$vtype->get_instance_by_id($virtualization_type);
+	$virtualization_plugin_name = str_replace("-vm", "", $vtype->type);
+	// remove the vm from host
+	$auto_resource = new resource();
+    $auto_resource->get_instance_by_id($resource_id);
+    $host_resource = new resource();
+    $host_resource->get_instance_by_id($auto_resource->vhostid);
+	$event->log("remove", $_SERVER['REQUEST_TIME'], 5, "cloudvm.class.php", "Trying to remove resource $resource_id type $virtualization_plugin_name on host $host_resource->id ($mac)", "", "", 0, 0, 0);
+    // we need to have an openQRM server object too since some of the
+    // virtualization commands are sent from openQRM directly
+    $openqrm = new openqrm_server();
+
+// !! Virtualization type dependency !!
+// Currently supported are :
+// - KVM
+// - Citrix
+// - VMware ESX
+// - VMWare Server
+// - VMWare Server2
+// - Xen
+
+	switch ($virtualization_plugin_name) {
+		case 'kvm':
+			$vm_remove_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." delete -n ".$name;
+        	$host_resource->send_command($host_resource->ip, $vm_remove_cmd);
+			break;
+		case 'xen':
+			$vm_remove_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." delete -n ".$name;
+        	$host_resource->send_command($host_resource->ip, $vm_remove_cmd);
+			break;
+		case 'citrix':
+			$vm_remove_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." delete -s ".$host_resource->ip." -l ".$name;
+            $openqrm->send_command($vm_remove_cmd);
+			break;
+		case 'vmware-esx':
+			$vm_remove_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." delete -i ".$host_resource->ip." -n ".$name;
+            $openqrm->send_command($vm_remove_cmd);
+			break;
+		case 'vmware-server':
+			$vm_remove_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." delete -n ".$name;
+        	$host_resource->send_command($host_resource->ip, $vm_remove_cmd);
+			break;
+		case 'vmware-server2':
+			$vm_remove_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." delete -n ".$name;
+        	$host_resource->send_command($host_resource->ip, $vm_remove_cmd);
+			break;
+		default:
+			return;
+			break;
+	}
+
+// !! end of Virtualization type dependency !!
+	// create and start the new vm
+	$event->log("remove", $_SERVER['REQUEST_TIME'], 5, "cloudvm.class.php", "Running $vm_remove_cmd", "", "", 0, 0, 0);
+
+    // resource object remove
+    $auto_resource->remove($auto_resource->id, $auto_resource->mac);
+	$event->log("remove", $_SERVER['REQUEST_TIME'], 5, "cloudvm.class.php", "Removed resource $resource_id", "", "", 0, 0, 0);
+
+}
+
+
 
 
 

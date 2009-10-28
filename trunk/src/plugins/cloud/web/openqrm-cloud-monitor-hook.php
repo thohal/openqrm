@@ -553,7 +553,29 @@ function openqrm_cloud_monitor() {
                 // we do not remove non-shared images but just its cloudimage
                 $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Not removing the non-shared image $ci_image_id !", "", "", 0, 0, 0);
             }
-            
+
+            // ####################### remove auto createed vm #################
+            // check for auto-create vms, if yes remove the resource if it is virtual
+            $cc_autovm_remove_conf = new cloudconfig();
+            $cc_auto_remove_vms = $cc_autovm_remove_conf->get_value(7);  // 7 is auto_create_vms
+            if (!strcmp($cc_auto_remove_vms, "true")) {
+                // check virtualization type
+                $auto_resource = new resource();
+                $auto_resource->get_instance_by_id($ci_resource_id);
+                $auto_vm_virtualization=$auto_resource->vtype;
+                // we only remove virtual machines
+                if ($auto_vm_virtualization != 1) {
+                    // gather name
+                    $auto_remove_appliance = new appliance();
+                    $auto_remove_appliance->get_instance_by_id($ci_appliance_id);
+                    // cloudvm->remove .....
+                    $auto_cloudvm = new cloudvm();
+                    $auto_cloudvm->remove($ci_resource_id, $auto_vm_virtualization, $auto_remove_appliance->name, $auto_resource->mac);
+                }
+            }
+
+            // ####################### end remove auto createed vm #############
+
             // remove the appliance
             if ($ci_appliance_id > 0) {
                 $rapp = new appliance();
