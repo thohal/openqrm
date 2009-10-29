@@ -80,22 +80,6 @@ function vmware_esx_get_vmid() {
 	fi	
 }
 
-# function to looseley round up the memory so
-# that its resource really gets full of the mem
-function roundmemory() {
-    local MEGA=$1
-    ROUNDUP=$MEGA*1.03
-    ROUNDUP=`echo $ROUNDUP | bc`
-    ROUNDUP=`echo $ROUNDUP | cut -d'.' -f1`
-    # be sure it is divideable through 4
-    ROUNDUP=$ROUNDUP/4
-    ROUNDUP=`echo $ROUNDUP | bc`
-    ROUNDUP=`echo $ROUNDUP | cut -d'.' -f1`
-    ROUNDUP=$ROUNDUP*4
-    ROUNDUP=`echo $ROUNDUP | bc`
-    ROUNDUP=`echo $ROUNDUP | cut -d'.' -f1`
-    echo $ROUNDUP
-}
 
 
 VMWARE_ESX_COMMAND=$1
@@ -252,7 +236,6 @@ case "$VMWARE_ESX_COMMAND" in
         fi
 
 		# creating the vmx
-        VMWARE_ESX_VM_RAM=`roundmemory $VMWARE_ESX_VM_RAM`
 		mkdir -p /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/
         echo '#!/usr/bin/vmware' > /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx
 		cat $OPENQRM_VMWARE_ESX_VM_TEMPLATE |	\
@@ -493,6 +476,10 @@ EOF
 		done
 		if [ "$FOUND_VMID" == "true" ]; then
 			VMID=`vmware_esx_get_vmid $VMWARE_ESX_VM_NAME`
+            # make sure it is stopped
+			vmware_esx_log openqrm-vmware-esx "NOTICE: Powering off $VMWARE_ESX_VM_NAME/$VMID."
+            $OPENQRM_ESX_CMD $OPENQRM_VMWARE_ESX_VM_COMMAND vmsvc/power.off $VMID | logger
+            $OPENQRM_VMWARE_ESX_CMD_CHECK_DELAY
 			$OPENQRM_ESX_CMD $OPENQRM_VMWARE_ESX_VM_COMMAND vmsvc/destroy $VMID | logger
 			vmware_esx_log openqrm-vmware-esx "NOTICE: Removed $VMWARE_ESX_VM_NAME/$VMID from ESX-host."
 			openqrm_post_event 0 "parameter_check" 5 "openqrm-vmware-esx" "Removed $VMWARE_ESX_VM_NAME/$VMID from ESX-host."

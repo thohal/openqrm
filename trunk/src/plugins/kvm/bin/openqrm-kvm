@@ -65,15 +65,7 @@ function kvm_usage() {
 }
 
 
-# function to looseley translate megabyte to mebibytes
-function megatomebibyte() {
-    local MEGA=$1
-    MEBI=$MEGA*1.07
-    MEBI=`echo $MEBI | bc`
-    MEBI=`echo $MEBI | cut -d'.' -f1`
-    MEBI=$(( MEBI + 1 ))
-    echo $MEBI
-}
+
 
 function get_disk_name() {
     local component=$1
@@ -239,8 +231,6 @@ case "$KVM_COMMAND" in
 		# creating the kvm start script
 		mkdir -p $OPENQRM_VM_DIR/$KVM_VM_NAME/
 		cp -f $OPENQRM_KVM_VM_TEMPLATE $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
-        # kvm uses mebibytes instead of megabytes
-        KVM_VM_RAM=`megatomebibyte $KVM_VM_RAM`
         # cpus
 		if [ "$KVM_VM_CPUS" == "" ]; then
 			KVM_VM_CPUS=1
