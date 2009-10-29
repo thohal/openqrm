@@ -66,6 +66,9 @@ $vmware_esx_ram = htmlobject_request('vmware_esx_ram');
 $vmware_esx_disk = htmlobject_request('vmware_esx_disk');
 $vmware_esx_swap = htmlobject_request('vmware_esx_swap');
 $vmware_esx_cpus = htmlobject_request('vmware_esx_cpus');
+$vmware_vm_vnc_auth = htmlobject_request('vmware_vm_vnc_auth');
+$vmware_vm_vnc_port = htmlobject_request('vmware_vm_vnc_port');
+
 global $vmware_esx_id;
 global $vmware_esx_name;
 global $vmware_esx_mac;
@@ -73,6 +76,9 @@ global $vmware_esx_ram;
 global $vmware_esx_disk;
 global $vmware_esx_swap;
 global $vmware_esx_cpus;
+global $vmware_vm_vnc_auth;
+global $vmware_vm_vnc_port;
+
 
 $action=htmlobject_request('action');
 $refresh_delay=1;
@@ -218,19 +224,33 @@ if(htmlobject_request('action') != '') {
                 // check for cpu count is int
                 if (!strlen($vmware_esx_cpus)) {
                     $strMsg .= "Empty vm cpu number. Not creating new vm on VMware ESX Host $vmware_esx_id";
-                    redirect_mgmt($strMsg, $thisfile, $vmware_esx_id);
+                    redirect($strMsg, "tab0", $vmware_esx_id);
                 }
                 if (!validate_input($vmware_esx_cpus, 'number')) {
                     $strMsg .= "Invalid vm cpu number. Not creating new vm on VMware ESX Host $vmware_esx_id";
-                    redirect_mgmt($strMsg, $thisfile, $vmware_esx_id);
+                    redirect($strMsg, "tab0", $vmware_esx_id);
                 }
+                // vnc ?
+                if (strlen($vmware_vm_vnc_port)) {
+                    if (!validate_input($vmware_vm_vnc_port, 'number')) {
+                        $strMsg .= "Invalid vm VNC port number. Not creating new vm on VMware ESX Host $vmware_esx_id";
+                        redirect($strMsg, "tab0", $vmware_esx_id);
+                    }
+                    $vnc_pass_len = strlen($vmware_vm_vnc_auth);
+                    if ($vnc_pass_len < 8) {
+                        $strMsg .= "VNC password too short. Must be min 8 chars. Not creating new vm on VMware ESX Host $vmware_esx_id";
+                        redirect($strMsg, "tab0", $vmware_esx_id);
+                    }
+                    $create_vm_vnc_parameter = "-vp ".$vmware_vm_vnc_port." -va ".$vmware_vm_vnc_auth;
+                }
+
                 // send command to vmware_esx-host to create the new vm
                 show_progressbar();
                 $vmware_appliance = new appliance();
                 $vmware_appliance->get_instance_by_id($vmware_esx_id);
                 $vmware_esx = new resource();
                 $vmware_esx->get_instance_by_id($vmware_appliance->resources);
-                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx create -n $vmware_esx_name -m $vmware_esx_mac -r $vmware_esx_ram -i $vmware_esx->ip -c $vmware_esx_cpus $vmware_esx_disk_parameter $vmware_esx_swap_parameter";
+                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/bin/openqrm-vmware-esx create -n $vmware_esx_name -m $vmware_esx_mac -r $vmware_esx_ram -i $vmware_esx->ip -c $vmware_esx_cpus $vmware_esx_disk_parameter $vmware_esx_swap_parameter $create_vm_vnc_parameter";
                 // remove current stat file
                 $vmware_esx_resource_id = $vmware_esx->id;
                 $statfile="vmware-esx-stat/".$vmware_esx_resource_id.".vm_list";
@@ -263,7 +283,7 @@ if(htmlobject_request('action') != '') {
                 } else {
                     $strMsg .="Created vm $vmware_esx_name on VMware server 2 Host $vmware_esx_id<br>";
                 }
-                redirect_mgmt($strMsg, "tab0", $vmware_esx_id);
+                redirect($strMsg, "tab0", $vmware_esx_id);
             }
             break;
 
@@ -299,6 +319,15 @@ function vmware_esx_create() {
 	$cpu_identifier_array[] = array("value" => "2", "label" => "2 CPUs");
 	$cpu_identifier_array[] = array("value" => "3", "label" => "3 CPUs");
 	$cpu_identifier_array[] = array("value" => "4", "label" => "4 CPUs");
+    // vnc port array
+    $vnc_port_identifier_array[] = array("value" => "", "label" => "No VNC");
+    $vnc_start_port = 5901;
+    $vnc_end_port = 6000;
+    $vnc_port = $vnc_start_port;
+    while ($vnc_port < $vnc_end_port) {
+    	$vnc_port_identifier_array[] = array("value" => $vnc_port, "label" => $vnc_port);
+        $vnc_port++;
+    }
 
    // set template
 	$t = new Template_PHPLIB();
@@ -313,6 +342,8 @@ function vmware_esx_create() {
         'vmware_vm_ram' => htmlobject_input('vmware_esx_ram', array("value" => '512', "label" => 'Memory (MB)'), 'text', 10),
         'vmware_vm_disk' => htmlobject_input('vmware_esx_disk', array("value" => '2000', "label" => 'Disk (MB)'), 'text', 10),
 		'vmware_vm_swap' => htmlobject_input('vmware_esx_swap', array("value" => '1024', "label" => 'Swap (MB)'), 'text', 10),
+        'vmware_vm_vnc_auth' => htmlobject_input('vmware_vm_vnc_auth', array("value" => '[min. 8 chars]', "label" => 'VNC Password'), 'text', 10),
+        'vmware_vm_vnc_port' => htmlobject_select('vmware_vm_vnc_port', $vnc_port_identifier_array, 'VNC Port'),
         'hidden_vmware_esx_id' => "<input type=hidden name=vmware_esx_id value=$vmware_esx_id>",
 		'submit' => htmlobject_input('action', array("value" => 'new', "label" => 'Create'), 'submit'),
 	));

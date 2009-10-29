@@ -308,15 +308,6 @@ RemoteDisplay.vnc.enabled = TRUE
 RemoteDisplay.vnc.port = "$VMWARE_ESX_VM_VNC_PORT"
 RemoteDisplay.vnc.password = "$VMWARE_ESX_VM_VNC_AUTH"
 EOF
-        else
-        ################ !!!!!!!!!!!! for testing !!!!!!!!!!!!!!!!!!######################
-			cat >> /tmp/vmware-esx-plugin/$VMWARE_ESX_VM_NAME/$VMWARE_ESX_VM_NAME.vmx << EOF
-RemoteDisplay.vnc.enabled = TRUE
-RemoteDisplay.vnc.port = "5999"
-RemoteDisplay.vnc.password = "openqrm"
-EOF
-        ################ !!!!!!!!!!!! for testing !!!!!!!!!!!!!!!!!!######################
-
         fi
 
         # copy over config
@@ -744,6 +735,76 @@ EOF
         $0 post_vm_config -i $VMWARE_ESX_HOST_IP -n $VMWARE_ESX_VM_NAME
 		vmware_esx_lock release
 		;;
+
+	update_vm_vnc)
+		if [ "$VMWARE_ESX_VM_NAME" == "" ]; then
+			vmware_esx_usage
+		fi
+		if [ "$VMWARE_ESX_VM_VNC_AUTH" == "" ]; then
+			vmware_esx_usage
+		fi
+		if [ "$VMWARE_ESX_VM_VNC_PORT" == "" ]; then
+			vmware_esx_usage
+		fi
+		vmware_esx_lock aquire
+		echo "Setting VNC parameter for VMWare ESX vm $VMWARE_ESX_VM_NAME"
+		VM_VMX="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/$VMWARE_ESX_HOST_IP.$VMWARE_ESX_VM_NAME.vm_config.vmx"
+        if [ ! -f $VM_VMX ]; then
+            vmware_esx_log "No such config file $VM_VMX"
+        else
+            #VMID=`vmware_esx_get_vmid $VMWARE_ESX_VM_NAME`
+            # get remove config path
+            VMX_CONFIG=`vmware_esx_get_vmx $VMWARE_ESX_VM_NAME`
+            # adjust local config
+            sed -i -e "s/RemoteDisplay.vnc.*//g" $VM_VMX
+			cat >> $VM_VMX << EOF
+RemoteDisplay.vnc.enabled = TRUE
+RemoteDisplay.vnc.port = "$VMWARE_ESX_VM_VNC_PORT"
+RemoteDisplay.vnc.password = "$VMWARE_ESX_VM_VNC_AUTH"
+EOF
+            sed -i '/^$/d' $VM_VMX
+            # copy over to esx host
+    		if ! scp $VM_VMX $VMWARE_ESX_HOST_IP:$VMX_CONFIG; then
+                vmware_esx_log "Error copying config file $VM_VMX to $VMWARE_ESX_HOST_IP:$VMX_CONFIG"
+            else
+                vmware_esx_log "Successfully updated config file $VM_VMX to $VMWARE_ESX_HOST_IP:$VMX_CONFIG"
+            fi
+        fi
+
+
+        $0 post_vm_config -i $VMWARE_ESX_HOST_IP -n $VMWARE_ESX_VM_NAME
+		vmware_esx_lock release
+		;;
+
+	remove_vm_vnc)
+		if [ "$VMWARE_ESX_VM_NAME" == "" ]; then
+			vmware_esx_usage
+		fi
+		vmware_esx_lock aquire
+		echo "Removing VNC config for VMWare ESX vm $VMWARE_ESX_VM_NAME"
+		VM_VMX="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/$VMWARE_ESX_HOST_IP.$VMWARE_ESX_VM_NAME.vm_config.vmx"
+        if [ ! -f $VM_VMX ]; then
+            vmware_esx_log "No such config file $VM_VMX"
+        else
+            #VMID=`vmware_esx_get_vmid $VMWARE_ESX_VM_NAME`
+            # get remove config path
+            VMX_CONFIG=`vmware_esx_get_vmx $VMWARE_ESX_VM_NAME`
+            # adjust local config
+            sed -i -e "s/RemoteDisplay.vnc.*//g" $VM_VMX
+            sed -i '/^$/d' $VM_VMX
+            # copy over to esx host
+    		if ! scp $VM_VMX $VMWARE_ESX_HOST_IP:$VMX_CONFIG; then
+                vmware_esx_log "Error copying config file $VM_VMX to $VMWARE_ESX_HOST_IP:$VMX_CONFIG"
+            else
+                vmware_esx_log "Successfully updated config file $VM_VMX to $VMWARE_ESX_HOST_IP:$VMX_CONFIG"
+            fi
+        fi
+
+
+        $0 post_vm_config -i $VMWARE_ESX_HOST_IP -n $VMWARE_ESX_VM_NAME
+		vmware_esx_lock release
+		;;
+
 
 
 
