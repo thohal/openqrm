@@ -23,18 +23,42 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/plugin.png"> VMware ESX VM Configuration</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/plugin.png"> VMware ESX VM RAM Configuration</h1>
 {backlink}
-<br><br>
-<h4>VM CPUs</h4>
-{vm_cpus_disp}
-<hr>
-<h4>VM Memory</h4>
-{vm_ram_disp}
-<hr>
-<h4>VM Network Cards</h4>
-{vm_net_disp}
-<hr>
+<br>
 
-<h4>VM VNC Display</h4>
-{vm_vnc_disp}
+<form action="{thisfile}" method="post">
+{vm_config_nic1_disp}
+<br>
+<br><hr><br>
+
+<form action="{thisfile}" method="post">
+{vm_config_nic2_disp}
+</form>
+<br><hr><br>
+
+<form action="{thisfile}" method="post">
+{vm_config_nic3_disp}
+</form>
+<br><hr><br>
+
+<form action="{thisfile}" method="post">
+{vm_config_nic4_disp}
+</form>
+<br><hr><br>
+
+
+
+<form action="{thisfile}" method="post">
+<div style="float:left;">
+{vm_config_add_nic_disp}
+</div>
+
+<div style="float:right;">
+<br>
+</div>
+<div style="clear:both;line-height:0px;">&#160;</div>
+{submit}
+</form>
+
+

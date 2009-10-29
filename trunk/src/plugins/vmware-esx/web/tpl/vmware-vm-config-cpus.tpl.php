@@ -23,18 +23,8 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/plugin.png"> VMware ESX VM Configuration</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/plugin.png"> VMware ESX VM CPU Configuration</h1>
 {backlink}
-<br><br>
-<h4>VM CPUs</h4>
-{vm_cpus_disp}
-<hr>
-<h4>VM Memory</h4>
-{vm_ram_disp}
-<hr>
-<h4>VM Network Cards</h4>
-{vm_net_disp}
-<hr>
+<br>
+{vm_config_cpus_disp}
 
-<h4>VM VNC Display</h4>
-{vm_vnc_disp}
