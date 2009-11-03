@@ -1897,14 +1897,28 @@ function openqrm_cloud_monitor() {
 					'appliance_resources' => "-1",
 				);
 				// update appliance
-				$ca_appliance = new appliance();
 				$ca_appliance->update($ca_appliance_id, $ar_update);
 
 				// reset the cmd field
 				$ca->set_cmd($ca_id, "noop");
 				// set state to paused
 				$ca->set_state($ca_id, "paused");
-		
+
+                // ####################### remove auto createed vm #################
+                // check for auto-create vms, if yes remove the resource if it is virtual
+                $app_stop_autovm_remove_conf = new cloudconfig();
+                $app_stop_auto_remove_vms = $app_stop_autovm_remove_conf->get_value(7);  // 7 is auto_create_vms
+                if (!strcmp($app_stop_auto_remove_vms, "true")) {
+                    // we only remove virtual machines
+                    if ($ca_resource_stop->vtype != 1) {
+                        // cloudvm->remove .....
+                        $auto_cloudvm = new cloudvm();
+                        $auto_cloudvm->remove($ca_resource_id, $ca_resource_stop->vtype, $ca_appliance->name, $ca_resource_stop->mac);
+                    }
+                }
+
+                // ####################### end remove auto createed vm #############
+
 				// here we free up the ip addresses used by the appliance again
 				$iptable = new cloudiptables();
 				$ip_ids_arr = $iptable->get_all_ids();
