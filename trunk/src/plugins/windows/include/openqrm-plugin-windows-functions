@@ -21,7 +21,6 @@
 if [ -f /var/openqrm/openqrm-resource.conf ]; then
 	. /var/openqrm/openqrm-resource.conf
 fi
-VETH="$resource_basedir/openqrm/plugins/windows/bin/vethd"
 WINDOWS_VDEVICE_NAME="windowsdhcp"
 WINDOWS_XE_BINARY=/usr/sbin/xe
 
@@ -68,42 +67,6 @@ function windows_lock() {
 
 
 ################ windows functions
-
-
-# trick the dhcpd server
-function windows_get_next_ip() {
-	local PARTITION_MAC=$1
-	local RET=0
-	# create the virtual interface to trick the dhcpd
-	OPENQRM_INTERFACE=`ifconfig | grep eth | grep ":oq" | cut -d':' -f 1`
-	if ! $VETH -v $WINDOWS_VDEVICE_NAME -e $OPENQRM_INTERFACE -m $PARTITION_MAC; then
-		windows_log get_next_ip "ERROR Could not start virtual interface $WINDOWS_VDEVICE_NAME !"
-		return 1
-	fi
-	# now we request a new ip from the dhcpd on the bridge
-	if dhclient $WINDOWS_VDEVICE_NAME; then
-		PARTITION_IP=`ifconfig $WINDOWS_VDEVICE_NAME | grep "inet " | awk {' print $2 '} | cut -d':' -f 2`
-		PARTITION_BROADCAST=`ifconfig $WINDOWS_VDEVICE_NAME | grep "inet " | awk {' print $3 '} | cut -d':' -f 2`
-		PARTITION_SUBNET=`ifconfig $WINDOWS_VDEVICE_NAME | grep "inet " | awk {' print $4 '} | cut -d':' -f 2`
-		RET=0
-	else
-		windows_log get_next_ip "ERROR Failed to get a new ip-address on $WINDOWS_VDEVICE_NAME !"
-		RET=1
-	fi
-	# clean up
-	ifconfig $WINDOWS_VDEVICE_NAME down
-	DHCLIENT_PID=`ps ax | grep "dhclient $WINDOWS_VDEVICE_NAME" | grep -v grep | awk {' print $1 '}`
-	kill $DHCLIENT_PID
-	kill -9 $DHCLIENT_PID 1>/dev/null 2>&1
-	sleep 1
-	# stop the virtual interface
-	kill `ps ax | grep $WINDOWS_VDEVICE_NAME | grep vethd | grep -v grep | awk {' print $1 '}`
-	export PARTITION_IP PARTITION_BROADCAST PARTITION_SUBNET
-	return $RET
-}
-
-
-
 
 
 

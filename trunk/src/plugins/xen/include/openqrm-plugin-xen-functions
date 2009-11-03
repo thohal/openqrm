@@ -24,7 +24,6 @@ if [ "$OPENQRM_SERVER_BASE_DIR" == "" ]; then
 	exit 1
 fi
 
-VETH="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/vethd"
 XEN_VDEVICE_NAME="xendhcp"
 XEN_VIRTUAL_BRIDGE_NAME="xvbr0"
 XEN_LOCK_FILE=/var/run/xen/xen-plugin.lock
