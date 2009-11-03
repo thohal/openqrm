@@ -511,12 +511,12 @@ function equallogic_storage_display($equallogic_storage_id) {
             $fourth_at_pos = strpos($eq_name_third_at_removed, "@");
             $fourth_at_pos++;
             $eq_name_fourth_at_removed = substr($eq_name_third_at_removed, $fourth_at_pos, strlen($eq_name_third_at_removed)-$fourth_at_pos);
-            $fivth_at_pos = strpos($eq_name_fourth_at_removed, "@");
-            $fivth_at_pos++;
-            $eq_name_fivth_at_removed = substr($eq_name_fourth_at_removed, $fivth_at_pos, strlen($eq_name_fourth_at_removed)-$fivth_at_pos);
-            $sixth_at_pos = strpos($eq_name_fivth_at_removed, "@");
+            $fifth_at_pos = strpos($eq_name_fourth_at_removed, "@");
+            $fifth_at_pos++;
+            $eq_name_fifth_at_removed = substr($eq_name_fourth_at_removed, $fifth_at_pos, strlen($eq_name_fourth_at_removed)-$fifth_at_pos);
+            $sixth_at_pos = strpos($eq_name_fifth_at_removed, "@");
             $sixth_at_pos++;
-            $eq_name_sixth_at_removed = substr($eq_name_fivth_at_removed, $sixth_at_pos, strlen($eq_name_fivth_at_removed)-$sixth_at_pos);
+            $eq_name_sixth_at_removed = substr($eq_name_fifth_at_removed, $sixth_at_pos, strlen($eq_name_fifth_at_removed)-$sixth_at_pos);
             $seventh_at_pos = strpos($eq_name_sixth_at_removed, "@");
             $seventh_at_pos++;
 
@@ -524,8 +524,8 @@ function equallogic_storage_display($equallogic_storage_id) {
             $eq_size = trim(substr($eq_name_first_at_removed, 0, $second_at_pos-1));
             $eq_snapshots = trim(substr($eq_name_second_at_removed, 0, $third_at_pos-1));
             $eq_status = trim(substr($eq_name_third_at_removed, 0, $fourth_at_pos-1));
-            $eq_permissions = trim(substr($eq_name_fourth_at_removed, 0, $fivth_at_pos-1));
-            $eq_connections = trim(substr($eq_name_fivth_at_removed, 0, $sixth_at_pos-1));
+            $eq_permissions = trim(substr($eq_name_fourth_at_removed, 0, $fifth_at_pos-1));
+            $eq_connections = trim(substr($eq_name_fifth_at_removed, 0, $sixth_at_pos-1));
             $eq_tp = trim(substr($eq_name_sixth_at_removed, 0, $seventh_at_pos-1));
 
 
