@@ -146,16 +146,47 @@ function openqrm_cloud_monitor() {
 		$ci_image_id = $ci->image_id;
 		$ci_appliance_id = $ci->appliance_id;
 		$ci_resource_id = $ci->resource_id;
+        $ci_resource = new resource();
+        $ci_resource->get_instance_by_id($ci_resource_id);
+        $ci_appliance = new appliance();
+        $ci_appliance->get_instance_by_id($ci->appliance_id);
+
+        // not the openQRM server resource
+        if ($ci_resource_id == 0) {
+			continue;
+        }
 
 		// image still in use ?
 		if ($ci_state == 1) {
+            // its resource its active with the idle image ? sounds like pause
+            if ((!strcmp($ci_resource->state, "active")) && ($ci_resource->imageid == 1)) {
+                // ####################### remove auto createed vm #################
+                // check for auto-create vms, if yes remove the resource if it is virtual
+                $app_stop_autovm_remove_conf = new cloudconfig();
+                $app_stop_auto_remove_vms = $app_stop_autovm_remove_conf->get_value(7);  // 7 is auto_create_vms
+                if (!strcmp($app_stop_auto_remove_vms, "true")) {
+                    // we only remove virtual machines
+                    if ($ci_resource->vtype != 1) {
+                        // cloudvm->remove .....
+                		$event->log("openqrm_cloud_monitor", $_SERVER['REQUEST_TIME'], 5, "openqrm-cloud-monitor-hook.php", "!! Auto-removing resource $ci_resource_id", "", "", 0, 0, 0);
+                        $auto_cloudvm = new cloudvm();
+                        $auto_cloudvm->remove($ci_resource_id, $ci_resource->vtype, $ci_appliance->name, $ci_resource->mac);
+                        // update cloudimage with resource -1
+                        $ar_ci_update = array(
+                            'ci_resource_id' => "-1",
+                        );
+        				$ci->update($ci->id, $ar_ci_update);
+                    }
+                }
+
+                // ####################### end remove auto createed vm #############
+            }
 			// the image is still in use
 			continue;
 		}
-		// resource active (idle) again ?
+        
+		// image not in use any more and resource active (idle) again ?
         if ($ci_resource_id > 0) {
-            $ci_resource = new resource();
-            $ci_resource->get_instance_by_id($ci_resource_id);
             if (strcmp($ci_resource->state, "active")) {
                 // not yet active again
                 continue;
@@ -1715,16 +1746,20 @@ function openqrm_cloud_monitor() {
                 $cloud_image_start = new cloudimage();
                 $cloud_image_start->get_instance_by_image_id($tappliance->imageid);
 
-                // resource active (idle) again ?
-                $ca_resource = new resource();
-                $ca_resource->get_instance_by_id($cloud_image_start->resource_id);
-                $tcaid = $cloud_image_start->resource_id;
-                if (strcmp($ca_resource->state, "active")) {
-                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Appliance start (ca $ca_id / app $ca_appliance_id / cr $ca_cr_id) : resource $tcaid Not yet active again", "", "", 0, 0, 0);
-                    // not yet active again
-                    continue;
+                // resource active (idle) again or ci resource set to -1 (removed)
+                if ($cloud_image_start->resource_id == -1) {
+                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Appliance start (ca $ca_id / app $ca_appliance_id / cr $ca_cr_id) : previous resource got removed -> running start", "", "", 0, 0, 0);
                 } else {
-                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Appliance start (ca $ca_id / app $ca_appliance_id / cr $ca_cr_id) : resource $tcaid Active again -> running start", "", "", 0, 0, 0);
+                    $ca_resource = new resource();
+                    $ca_resource->get_instance_by_id($cloud_image_start->resource_id);
+                    $tcaid = $cloud_image_start->resource_id;
+                    if (strcmp($ca_resource->state, "active")) {
+                        $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Appliance start (ca $ca_id / app $ca_appliance_id / cr $ca_cr_id) : resource $tcaid Not yet active again", "", "", 0, 0, 0);
+                        // not yet active again
+                        continue;
+                    } else {
+                        $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Appliance start (ca $ca_id / app $ca_appliance_id / cr $ca_cr_id) : resource $tcaid Active again -> running start", "", "", 0, 0, 0);
+                    }
                 }
 
                 // prepare array to update appliance, be sure to set to auto-select resource
@@ -1755,9 +1790,10 @@ function openqrm_cloud_monitor() {
 						$mac_res = new resource();
 						$mac_res->generate_mac();
 						$new_vm_mac = $mac_res->mac;
-						// cpu req, for now just one cpu since not every virtualization technology can handle that
-						// $new_vm_cpu = $cr->cpu_req;
-						$new_vm_cpu = 1;
+                        // additional_nics
+                        $new_additional_nics = $cr->network_req;
+						// cpu req
+						$new_vm_cpu = $cr->cpu_req;
 						// memory
 						$new_vm_memory = 256;
 						if ($ca_cr->ram_req != 0) {
@@ -1773,10 +1809,10 @@ function openqrm_cloud_monitor() {
 						$cloudvm = new cloudvm();
 						// this method returns the resource-id when the resource gets idle
 						// it blocks until the resource is up or it reacges the timeout 
-						$cloudvm->create($appliance_virtualization, $ca_appliance->name, $new_vm_mac, $new_vm_cpu, $new_vm_memory, $new_vm_disk, $vm_create_timout);
+						$cloudvm->create($appliance_virtualization, $ca_appliance->name, $new_vm_mac, $new_additional_nics, $new_vm_cpu, $new_vm_memory, $new_vm_disk, $vm_create_timout);
 						$new_vm_resource_id = $cloudvm->resource_id;
 						if ($new_vm_resource_id == 0) {
-							$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Could not create a new resource for for appliance $ca_appliance->name start event!", "", "", 0, 0, 0);
+							$event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", "Could not create a new resource for for appliance $ca_appliance->name start event (timeout $vm_create_timout) !", "", "", 0, 0, 0);
 							continue;
 						} else {
 							// we have a new vm as resource :) update it in the appliance
@@ -1784,6 +1820,12 @@ function openqrm_cloud_monitor() {
 							$appliance_fields['appliance_resources'] = $new_vm_resource_id;
 							$ca_appliance->update($ca_appliance_id, $appliance_fields);
 							$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Created new resource $new_vm_resource_id for appliance $ca_appliance->name start event", "", "", 0, 0, 0);
+                            // update cloudimage with resource -1
+                            $ar_ci_update = array(
+                                'ci_resource_id' => $new_vm_resource_id,
+                            );
+                            $cloud_image_start->update($cloud_image_start->id, $ar_ci_update);
+
 						}
 				
 					} else {
@@ -1793,6 +1835,7 @@ function openqrm_cloud_monitor() {
 				}
 
 				// assign the resource
+                $ca_appliance->get_instance_by_id($ca_appliance_id);
 				$kernel = new kernel();
 				$kernel->get_instance_by_id($ca_appliance->kernelid);
 				$resource = new resource();
@@ -1903,21 +1946,6 @@ function openqrm_cloud_monitor() {
 				$ca->set_cmd($ca_id, "noop");
 				// set state to paused
 				$ca->set_state($ca_id, "paused");
-
-                // ####################### remove auto createed vm #################
-                // check for auto-create vms, if yes remove the resource if it is virtual
-                $app_stop_autovm_remove_conf = new cloudconfig();
-                $app_stop_auto_remove_vms = $app_stop_autovm_remove_conf->get_value(7);  // 7 is auto_create_vms
-                if (!strcmp($app_stop_auto_remove_vms, "true")) {
-                    // we only remove virtual machines
-                    if ($ca_resource_stop->vtype != 1) {
-                        // cloudvm->remove .....
-                        $auto_cloudvm = new cloudvm();
-                        $auto_cloudvm->remove($ca_resource_id, $ca_resource_stop->vtype, $ca_appliance->name, $ca_resource_stop->mac);
-                    }
-                }
-
-                // ####################### end remove auto createed vm #############
 
 				// here we free up the ip addresses used by the appliance again
 				$iptable = new cloudiptables();
