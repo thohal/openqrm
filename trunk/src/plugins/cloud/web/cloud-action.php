@@ -356,6 +356,8 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($create_default_cloud_config20);
 			$create_default_cloud_config21 = "insert into cloud_config(cc_id, cc_key, cc_value) values (21, 'show_private_image', 'false')";
 			$recordSet = &$db->Execute($create_default_cloud_config21);
+			$create_default_cloud_config22 = "insert into cloud_config(cc_id, cc_key, cc_value) values (22, 'cloud_selector', 'true')";
+			$recordSet = &$db->Execute($create_default_cloud_config22);
 		    $db->Close();
 			break;
 

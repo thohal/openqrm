@@ -102,6 +102,15 @@ function cloud_nat_manager() {
 	$table = new htmlobject_table_identifiers_checked('ip_id');
 	$arHead = array();
 
+    // cloud-nat enabled ?
+    $cl_conf = new cloudconfig();
+    $cloud_nat_enabled = $cl_conf->get_value(18);	// cloud_nat
+    if (strcmp($cloud_nat_enabled, "true")) {
+        $strMsg = "<strong>Cloud-NAT feature is not enabled in this Cloud !</strong>";
+        return $strMsg;
+        exit(0);
+    }
+
 	$arHead['cn_id'] = array();
 	$arHead['cn_id']['title'] ='ID';
 

@@ -23,11 +23,19 @@
 ..|About|plugins/cloud/cloud-about.php
 ..|Cloud User|plugins/cloud/cloud-user.php
 ..|Cloud Requests|plugins/cloud/cloud-manager.php
-..|Cloud Config|plugins/cloud/cloud-config.php
-..|Cloud Selector
-...|Images|plugins/cloud/cloud-image-selector.php
-..|Cloud IpGroups|plugins/cloud/cloud-ipgroup-manager.php
-..|Cloud NAT|plugins/cloud/cloud-nat-manager.php
+..|Configuration
+...|Cloud Config|plugins/cloud/cloud-config.php
+...|Selector|plugins/cloud/cloud-selector.php
+....|CPU|plugins/cloud/cloud-cpu-selector.php
+....|Disk|plugins/cloud/cloud-disk-selector.php
+....|Kernel|plugins/cloud/cloud-kernel-selector.php
+....|Memory|plugins/cloud/cloud-memory-selector.php
+....|Network|plugins/cloud/cloud-network-selector.php
+....|Quantity|plugins/cloud/cloud-quantity-selector.php
+....|Resource|plugins/cloud/cloud-resource-selector.php
+...|Private Images|plugins/cloud/cloud-image-selector.php
+...|IpGroups|plugins/cloud/cloud-ipgroup-manager.php
+...|Cloud NAT|plugins/cloud/cloud-nat-manager.php
 ..|Cloud Mail|plugins/cloud/cloud-mailer.php
 ..|Cloud WebService
 ...|Main|plugins/cloud/soap/index.php
