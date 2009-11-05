@@ -64,11 +64,21 @@ $vmware_server_name = htmlobject_request('vmware_server_name');
 $vmware_server_mac = htmlobject_request('vmware_server_mac');
 $vmware_server_ram = htmlobject_request('vmware_server_ram');
 $vmware_server_disk = htmlobject_request('vmware_server_disk');
+$vmware_server_swap = htmlobject_request('vmware_server_swap');
+$vmware_server_cpus = htmlobject_request('vmware_server_cpus');
+$vmware_vm_vnc_auth = htmlobject_request('vmware_vm_vnc_auth');
+$vmware_vm_vnc_port = htmlobject_request('vmware_vm_vnc_port');
+
 global $vmware_server_id;
 global $vmware_server_name;
 global $vmware_server_mac;
 global $vmware_server_ram;
 global $vmware_server_disk;
+global $vmware_server_swap;
+global $vmware_server_cpus;
+global $vmware_vm_vnc_auth;
+global $vmware_vm_vnc_port;
+
 
 $action=htmlobject_request('action');
 $refresh_delay=1;
@@ -85,7 +95,7 @@ global $OPENQRM_SERVER_BASE_DIR;
 
 
 function redirect_mgmt($strMsg, $currenttab = 'tab0', $vmware_server_id) {
-    $url = 'vmware-server2-manager.php?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&action=refresh&vmware_server_id='.$vmware_server_id;
+    $url = 'vmware-server2-manager.php?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&action=reload&vmware_server_id='.$vmware_server_id;
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
@@ -194,18 +204,50 @@ if(htmlobject_request('action') != '') {
                         $strMsg .= "Invalid vm disk size. Not creating the vm on VMware Server 2 Host $vmware_server_id<br>";
                         redirect($strMsg, "tab0", $vmware_server_id);
                     }
+                    $vmware_server_disk_parameter = "-d ".$vmware_server_disk;
+                } else {
+                    $vmware_server_disk_parameter = "";
                 }
+                // check for swap size is int
+                if (strlen($vmware_server_swap)) {
+                    if (!validate_input($vmware_server_swap, 'number')) {
+                        $strMsg .= "Invalid vm swap size. Not creating the vm on VMware Server 2 Host $vmware_server_id<br>";
+                        redirect($strMsg, "tab0", $vmware_server_id);
+                    }
+                    $vmware_server_swap_parameter = "-s ".$vmware_server_swap;
+                } else {
+                    $vmware_server_swap_parameter = "";
+                }
+                // check for cpu count is int
+                if (!strlen($vmware_server_cpus)) {
+                    $strMsg .= "Empty vm cpu number. Not creating new vm on VMware Server 2 Host $vmware_server_id";
+                    redirect($strMsg, "tab0", $vmware_esx_id);
+                }
+                if (!validate_input($vmware_server_cpus, 'number')) {
+                    $strMsg .= "Invalid vm cpu number. Not creating new vm on VMware Server 2 Host $vmware_server_id";
+                    redirect($strMsg, "tab0", $vmware_esx_id);
+                }
+                // vnc ?
+                if (strlen($vmware_vm_vnc_port)) {
+                    if (!validate_input($vmware_vm_vnc_port, 'number')) {
+                        $strMsg .= "Invalid vm VNC port number. Not creating new vm on VMware Server 2 Host $vmware_server_id";
+                        redirect($strMsg, "tab0", $vmware_esx_id);
+                    }
+                    $vnc_pass_len = strlen($vmware_vm_vnc_auth);
+                    if ($vnc_pass_len < 8) {
+                        $strMsg .= "VNC password too short. Must be min 8 chars. Not creating new vm on VMware Server 2 Host $vmware_server_id";
+                        redirect($strMsg, "tab0", $vmware_esx_id);
+                    }
+                    $create_vm_vnc_parameter = "-vp ".$vmware_vm_vnc_port." -va ".$vmware_vm_vnc_auth;
+                }
+
                 // send command to vmware_server-host to create the new vm
                 show_progressbar();
                 $vmware_appliance = new appliance();
                 $vmware_appliance->get_instance_by_id($vmware_server_id);
                 $vmware_server = new resource();
                 $vmware_server->get_instance_by_id($vmware_appliance->resources);
-                if (strlen($vmware_server_disk)) {
-                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/bin/openqrm-vmware-server2 create -n $vmware_server_name -m $vmware_server_mac -r $vmware_server_ram -d $vmware_server_disk -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                } else {
-                    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/bin/openqrm-vmware-server2 create -n $vmware_server_name -m $vmware_server_mac -r $vmware_server_ram -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
-                }
+                $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-server2/bin/openqrm-vmware-server2 create -n $vmware_server_name -m $vmware_server_mac -r $vmware_server_ram -c $vmware_server_cpus $vmware_server_disk_parameter $vmware_server_swap_parameter $create_vm_vnc_parameter -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
                 // remove current stat file
                 $vmware_server_resource_id = $vmware_server->id;
                 $statfile="vmware-server2-stat/".$vmware_server_resource_id.".vm_list";
@@ -268,6 +310,21 @@ function vmware_server_create() {
 	$suggested_mac = $resource_mac_gen->mac;
     $suggested_last_two_bytes = substr($suggested_mac, 12);
     $suggested_vmware_mac = $vmware_mac_address_space.":".$suggested_last_two_bytes;
+    // cpus array for the select
+    $cpu_identifier_array = array();
+	$cpu_identifier_array[] = array("value" => "1", "label" => "1 CPU");
+	$cpu_identifier_array[] = array("value" => "2", "label" => "2 CPUs");
+	$cpu_identifier_array[] = array("value" => "3", "label" => "3 CPUs");
+	$cpu_identifier_array[] = array("value" => "4", "label" => "4 CPUs");
+    // vnc port array
+    $vnc_port_identifier_array[] = array("value" => "", "label" => "No VNC");
+    $vnc_start_port = 5901;
+    $vnc_end_port = 6000;
+    $vnc_port = $vnc_start_port;
+    while ($vnc_port < $vnc_end_port) {
+    	$vnc_port_identifier_array[] = array("value" => $vnc_port, "label" => $vnc_port);
+        $vnc_port++;
+    }
 
    // set template
 	$t = new Template_PHPLIB();
@@ -277,9 +334,13 @@ function vmware_server_create() {
 		'formaction' => $thisfile,
         'vmware_server_id' => $vmware_server_resource->id,
         'vmware_vm_name' => htmlobject_input('vmware_server_name', array("value" => '', "label" => 'VM name'), 'text', 20),
+        'vmware_vm_cpus' => htmlobject_select('vmware_server_cpus', $cpu_identifier_array, 'CPUs'),
         'vmware_vm_mac' => htmlobject_input('vmware_server_mac', array("value" => $suggested_vmware_mac, "label" => 'Mac address'), 'text', 20),
         'vmware_vm_ram' => htmlobject_input('vmware_server_ram', array("value" => '512', "label" => 'Memory (MB)'), 'text', 10),
         'vmware_vm_disk' => htmlobject_input('vmware_server_disk', array("value" => '2000', "label" => 'Disk (MB)'), 'text', 10),
+		'vmware_vm_swap' => htmlobject_input('vmware_server_swap', array("value" => '1024', "label" => 'Swap (MB)'), 'text', 10),
+        'vmware_vm_vnc_auth' => htmlobject_input('vmware_vm_vnc_auth', array("value" => '[min. 8 chars]', "label" => 'VNC Password'), 'text', 10),
+        'vmware_vm_vnc_port' => htmlobject_select('vmware_vm_vnc_port', $vnc_port_identifier_array, 'VNC Port'),
         'hidden_vmware_server_id' => "<input type=hidden name=vmware_server_id value=$vmware_server_id>",
 		'submit' => htmlobject_input('action', array("value" => 'new', "label" => 'Create'), 'submit'),
 	));

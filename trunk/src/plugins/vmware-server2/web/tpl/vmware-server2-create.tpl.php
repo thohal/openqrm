@@ -26,19 +26,34 @@
 
 <h1><img border=0 src="/openqrm/base/plugins/vmware-server2/img/plugin.png"> VMware Server 2 Create VM</h1>
 
-Add new VM to VMware Server 2 Host id {vmware_server_id}
-<br>
-<br>
+<div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
+
+<h4>Add new VM to VMware Server 2 Host id {vmware_server_id}</h4>
 <div style="float:left;">
 {vmware_vm_name}
+
+<h4>VM Configuration</h4>
+
+{vmware_vm_cpus}
 {vmware_vm_mac}
 {vmware_vm_ram}
 {vmware_vm_disk}
+{vmware_vm_swap}
 </div>
+
+
+<div style="float:right;">
+{vmware_vm_vnc_port}
+{vmware_vm_vnc_auth}
+</div>
+
 {hidden_vmware_server_id}
+
+<div style="clear:both;line-height:0px;">&#160;</div>
+
 <div style="text-align:center;">{submit}</div>
-
-
+<br>
+</div>
 
 </form>
 
