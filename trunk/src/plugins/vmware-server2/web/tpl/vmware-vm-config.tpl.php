@@ -22,18 +22,19 @@
 	width:700px;
 }
 </style>
-<form action="{formaction}" method="GET">
 
-<h1><img border=0 src="/openqrm/base/plugins/vmware-server2/img/plugin.png"> VMware Server 2 Manager</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-server2/img/plugin.png"> VMware Server 2 VM Configuration</h1>
+{backlink}
+<br><br>
+<h4>VM CPUs</h4>
+{vm_cpus_disp}
+<hr>
+<h4>VM Memory</h4>
+{vm_ram_disp}
+<hr>
+<h4>VM Network Cards</h4>
+{vm_net_disp}
+<hr>
 
-<div style="float:left;">
-{vmware_server_table}
-</div>
-
-<div style="float:left;">
-<h4>VMware Server 2 vms on resource {vmware_server_id}/{vmware_server_name}</h4>
-{vmware_vm_table}
-</div>
-
-</form>
-
+<h4>VM VNC Display</h4>
+{vm_vnc_disp}

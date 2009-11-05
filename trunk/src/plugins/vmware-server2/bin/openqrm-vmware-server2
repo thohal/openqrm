@@ -561,10 +561,6 @@ EOF
 		;;
 
 	post_vm_config)
-		VM_CONFIG="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/$VMWARE_SERVER_HOST_IP.$VMWARE_SERVER_VM_NAME.vm_config"
-		VM_CONFIG_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/$VMWARE_SERVER_HOST_IP.$VMWARE_SERVER_VM_NAME.vm_config.tmp"
-		VM_CMD_OUT="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/$VMWARE_SERVER_HOST_IP.$VMWARE_SERVER_VM_NAME.vm_config.vmx"
-
         VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
         VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
 		vmware_server2_log "Posting vm config for $VMWARE_SERVER_VM_NAME (vm-id $VMID)"
@@ -589,7 +585,7 @@ EOF
 		echo "OPENQRM_VMWARE_VM_VNC=\"$VMWARE_VM_VNC_PORT\"" >> $VM_LIST_TMP
 		echo "OPENQRM_VMWARE_VM_VNC_PASS=\"$VMWARE_VM_VNC_PASS\"" >> $VM_LIST_TMP
         # post the file
-		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$VMWARE_SERVER_OPENQRM_USERNAME --http-password=$VMWARE_SERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/vmware-server2/vmware-server2-action.php?vmware_server_command=get_vmware_server; then
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$VMWARE_SERVER_OPENQRM_USERNAME --http-password=$VMWARE_SERVER_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/vmware-server2/vmware-server2-action.php?vmware_server_command=get_vm_config; then
 			vmware_server2_log "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!"
 			vmware_server2_log "ERROR: Could not post vm list to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
 		fi
@@ -601,11 +597,12 @@ EOF
         VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
         VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
 		vmware_server2_log "Updating RAM on vm $VMWARE_SERVER_VM_NAME (vm-id $VMID)"
-        UPDATE_RAM_CMD="sed -i -e \"s/^memsize.*/memsize = \"\"$VMWARE_SERVER_VM_RAM\"\"/g\" $VMX_CONFIG"
-        vmware_server2_log "Running : $UPDATE_RAM_CMD"
 		vmware_server2_lock aquire
-        "$UPDATE_RAM_CMD"
-        $0 post_vm_config -i $VMWARE_SERVER_HOST_IP -n $VMWARE_SERVER_VM_NAME
+        sed -i -e "s/^memsize.*/memsize = \"$VMWARE_SERVER_VM_RAM\"/g" $VMX_CONFIG
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $VMWARE_SERVER_VM_NAME -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
+		fi
 		vmware_server2_lock release
 		;;
 
@@ -613,11 +610,12 @@ EOF
         VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
         VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
 		vmware_server2_log "Updating CPUs on vm $VMWARE_SERVER_VM_NAME (vm-id $VMID)"
-        UPDATE_CPU_CMD="sed -i -e \"s/^numvcpus.*/numvcpus = \"\"$VMWARE_SERVER_VM_CPU\"\"/g\" $VMX_CONFIG"
-        vmware_server2_log "Running : $UPDATE_CPU_CMD"
 		vmware_server2_lock aquire
-        "$UPDATE_CPU_CMD"
-        $0 post_vm_config -i $VMWARE_SERVER_HOST_IP -n $VMWARE_SERVER_VM_NAME
+        sed -i -e "s/^numvcpus.*/numvcpus = \"$VMWARE_SERVER_VM_CPU\"/g" $VMX_CONFIG
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $VMWARE_SERVER_VM_NAME -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
+		fi
 		vmware_server2_lock release
 		;;
 
@@ -632,22 +630,19 @@ EOF
 			vmware_esx_usage
 		fi
 		vmware_server2_lock aquire
-		vmware_server2_log "Adding nic $VMWARE_SERVER_VM_COMPONENT_NUMBER mac $VMWARE_SERVER_VM_MAC to VMWare Server2 vm $VMWARE_SERVER_VM_NAME"
-		VM_VMX="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/$VMWARE_SERVER_HOST_IP.$VMWARE_SERVER_VM_NAME.vm_config.vmx"
-        if [ ! -f $VM_VMX ]; then
-            vmware_server2_log "No such config file $VM_VMX"
-        else
-            #VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
-            # get remove config path
-            VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
-            # adjust local config
-			cat >> $VM_VMX << EOF
+        VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+        VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
+		vmware_server2_log "Adding nic $VMWARE_SERVER_VM_COMPONENT_NUMBER mac $VMWARE_SERVER_VM_MAC to VMWare Server2 vm $VMWARE_SERVER_VM_NAME (vm-id $VMID)"
+        # adjust local config
+        cat >> $VMX_CONFIG << EOF
 Ethernet$VMWARE_SERVER_VM_COMPONENT_NUMBER.present = "TRUE"
 ethernet$VMWARE_SERVER_VM_COMPONENT_NUMBER.address = "$VMWARE_SERVER_VM_MAC"
 ethernet$VMWARE_SERVER_VM_COMPONENT_NUMBER.networkName = "$OPENQRM_VMWARE_SERVER_EXTERNAL_BRIDGE"
 EOF
-        fi
-        $0 post_vm_config -i $VMWARE_SERVER_HOST_IP -n $VMWARE_SERVER_VM_NAME
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $VMWARE_SERVER_VM_NAME -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
+		fi
 		vmware_server2_lock release
 		;;
 	remove_vm_nic)
@@ -658,22 +653,17 @@ EOF
 			vmware_esx_usage
 		fi
 		vmware_server2_lock aquire
-		echo "Removing nic $VMWARE_SERVER_VM_COMPONENT_NUMBER from VMWare Server2 vm $VMWARE_SERVER_VM_NAME"
-		VM_VMX="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/$VMWARE_SERVER_HOST_IP.$VMWARE_SERVER_VM_NAME.vm_config.vmx"
-        if [ ! -f $VM_VMX ]; then
-            vmware_server2_log "No such config file $VM_VMX"
-        else
-            #VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
-            # get remove config path
-            VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
-            # adjust local config
-            sed -i -e "s/Ethernet$VMWARE_SERVER_VM_COMPONENT_NUMBER.*//g" $VM_VMX
-            sed -i -e "s/ethernet$VMWARE_SERVER_VM_COMPONENT_NUMBER.*//g" $VM_VMX
-            sed -i '/^$/d' $VM_VMX
-        fi
-
-
-        $0 post_vm_config -i $VMWARE_SERVER_HOST_IP -n $VMWARE_SERVER_VM_NAME
+        VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+        VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
+		echo "Removing nic $VMWARE_SERVER_VM_COMPONENT_NUMBER from VMWare Server2 vm $VMWARE_SERVER_VM_NAME (vm-id $VMID)"
+        # adjust local config
+        sed -i -e "s/Ethernet$VMWARE_SERVER_VM_COMPONENT_NUMBER.*//g" $VMX_CONFIG
+        sed -i -e "s/ethernet$VMWARE_SERVER_VM_COMPONENT_NUMBER.*//g" $VMX_CONFIG
+        sed -i '/^$/d' $VMX_CONFIG
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $VMWARE_SERVER_VM_NAME -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
+		fi
 		vmware_server2_lock release
 		;;
 
@@ -688,26 +678,21 @@ EOF
 			vmware_esx_usage
 		fi
 		vmware_server2_lock aquire
-		echo "Setting VNC parameter for VMWare Server2 vm $VMWARE_SERVER_VM_NAME"
-		VM_VMX="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/$VMWARE_SERVER_HOST_IP.$VMWARE_SERVER_VM_NAME.vm_config.vmx"
-        if [ ! -f $VM_VMX ]; then
-            vmware_server2_log "No such config file $VM_VMX"
-        else
-            #VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
-            # get remove config path
-            VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
-            # adjust local config
-            sed -i -e "s/RemoteDisplay.vnc.*//g" $VM_VMX
-			cat >> $VM_VMX << EOF
+        VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+        VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
+		echo "Setting VNC parameter for VMWare Server2 vm $VMWARE_SERVER_VM_NAME (vm-id $VMID)"
+        # adjust local config
+        sed -i -e "s/RemoteDisplay.vnc.*//g" $VMX_CONFIG
+        cat >> $VMX_CONFIG << EOF
 RemoteDisplay.vnc.enabled = TRUE
 RemoteDisplay.vnc.port = "$VMWARE_SERVER_VM_VNC_PORT"
 RemoteDisplay.vnc.password = "$VMWARE_SERVER_VM_VNC_AUTH"
 EOF
-            sed -i '/^$/d' $VM_VMX
-        fi
-
-
-        $0 post_vm_config -i $VMWARE_SERVER_HOST_IP -n $VMWARE_SERVER_VM_NAME
+        sed -i '/^$/d' $VMX_CONFIG
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $VMWARE_SERVER_VM_NAME -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
+		fi
 		vmware_server2_lock release
 		;;
 
@@ -716,31 +701,18 @@ EOF
 			vmware_esx_usage
 		fi
 		vmware_server2_lock aquire
-		echo "Removing VNC config for VMWare Server2 vm $VMWARE_SERVER_VM_NAME"
-		VM_VMX="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/vmware-esx/web/vmware-esx-stat/$VMWARE_SERVER_HOST_IP.$VMWARE_SERVER_VM_NAME.vm_config.vmx"
-        if [ ! -f $VM_VMX ]; then
-            vmware_server2_log "No such config file $VM_VMX"
-        else
-            #VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
-            # get remove config path
-            VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
-            # adjust local config
-            sed -i -e "s/RemoteDisplay.vnc.*//g" $VM_VMX
-            sed -i '/^$/d' $VM_VMX
-        fi
-
-
-        $0 post_vm_config -i $VMWARE_SERVER_HOST_IP -n $VMWARE_SERVER_VM_NAME
+        VMID=`vmware_server2_get_vmid $VMWARE_SERVER_VM_NAME`
+        VMX_CONFIG=`vmware_server2_get_vmx $VMWARE_SERVER_VM_NAME`
+		echo "Removing VNC config for VMWare Server2 vm $VMWARE_SERVER_VM_NAME (vm-id $VMID)"
+        # adjust local config
+        sed -i -e "s/RemoteDisplay.vnc.*//g" $VMX_CONFIG
+        sed -i '/^$/d' $VMX_CONFIG
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$VMWARE_SERVER_OPENQRM_USERNAME" != "" ] && [ "$VMWARE_SERVER_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $VMWARE_SERVER_VM_NAME -u $VMWARE_SERVER_OPENQRM_USERNAME -p $VMWARE_SERVER_OPENQRM_PASSWORD
+		fi
 		vmware_server2_lock release
 		;;
-
-
-
-
-
-
-
-
 
 
 

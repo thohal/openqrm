@@ -22,18 +22,11 @@
 	width:700px;
 }
 </style>
-<form action="{formaction}" method="GET">
 
-<h1><img border=0 src="/openqrm/base/plugins/vmware-server2/img/plugin.png"> VMware Server 2 Manager</h1>
-
-<div style="float:left;">
-{vmware_server_table}
-</div>
-
-<div style="float:left;">
-<h4>VMware Server 2 vms on resource {vmware_server_id}/{vmware_server_name}</h4>
-{vmware_vm_table}
-</div>
-
-</form>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/plugin.png"> VMware ESX VM VNC Configuration</h1>
+{backlink}
+<br>
+{vm_config_vnc_disp}
+<br>
+{vm_remove_vnc_disp}
 
