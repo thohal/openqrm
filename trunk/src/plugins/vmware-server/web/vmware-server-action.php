@@ -65,6 +65,18 @@ switch ($vmware_server_command) {
         fclose($fout);
         break;
 
+    case 'get_vm_config':
+        if (!file_exists($VMwareDir)) {
+            mkdir($VMwareDir);
+        }
+        $filename = $VMwareDir."/".$_POST['filename'];
+        $filedata = base64_decode($_POST['filedata']);
+        echo "<h1>$filename</h1>";
+        $fout = fopen($filename,"wb");
+        fwrite($fout, $filedata);
+        fclose($fout);
+        break;
+
     default:
         $event->log("$vmware_server_command", $_SERVER['REQUEST_TIME'], 3, "vmware-server-action", "No such vmware-server command ($vmware_server_command)", "", "", 0, 0, 0);
         break;

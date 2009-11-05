@@ -38,6 +38,8 @@ $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
 global $RESOURCE_INFO_TABLE;
 
+$vmware_mac_address_space = "00:50:56:20";
+global $vmware_mac_address_space;
 
 
 
@@ -63,6 +65,7 @@ function create($virtualization_type, $name, $mac, $additional_nics, $cpu, $memo
 	global $OPENQRM_SERVER_IP_ADDRESS;
 	global $OPENQRM_EXEC_PORT;
 	global $RESOURCE_INFO_TABLE;
+    global $vmware_mac_address_space;
 
 	$this->init($timeout);
 	global $event;
@@ -126,7 +129,20 @@ function create($virtualization_type, $name, $mac, $additional_nics, $cpu, $memo
         while ($anic <= $additional_nics) {
             $nic_nr = $anic +1;
             $mac_gen_res->generate_mac();
-            $additional_nic_str .= " -m".$nic_nr." ".$mac_gen_res->mac;
+            // check if we need to generate the additional mac address in the vmware address space
+        	switch ($virtualization_plugin_name) {
+                case 'vmware-esx':
+                case 'vmware-server':
+                case 'vmware-server2':
+                    $suggested_mac = $mac_gen_res->mac;
+                    $suggested_last_two_bytes = substr($suggested_mac, 12);
+                    $mac_gen_res_vmw = $vmware_mac_address_space.":".$suggested_last_two_bytes;
+                    $additional_nic_str .= " -m".$nic_nr." ".$mac_gen_res_vmw;
+                    break;
+                default:
+                    $additional_nic_str .= " -m".$nic_nr." ".$mac_gen_res->mac;
+                    break;
+            }
             $anic++;
         }
     }
@@ -165,15 +181,33 @@ function create($virtualization_type, $name, $mac, $additional_nics, $cpu, $memo
             $openqrm->send_command($vm_create_cmd);
 			break;
 		case 'vmware-esx':
-			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -i ".$host_resource->ip." -n ".$name." -m ".$mac." -r ".$memory." -c ".$cpu." -s ".$swap." ".$additional_nic_str;
+            // also need to generate a new vmware mac for the first nic
+            $fn_mac_gen_res = new resource();
+            $fn_mac_gen_res->generate_mac();
+            $fn_suggested_mac = $fn_mac_gen_res->mac;
+            $fn_suggested_last_two_bytes = substr($fn_suggested_mac, 12);
+            $fn_mac = $vmware_mac_address_space.":".$fn_suggested_last_two_bytes;
+			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -i ".$host_resource->ip." -n ".$name." -m ".$fn_mac." -r ".$memory." -c ".$cpu." -s ".$swap." ".$additional_nic_str;
             $openqrm->send_command($vm_create_cmd);
 			break;
 		case 'vmware-server':
-			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -c ".$cpu." -s ".$swap." ".$additional_nic_str;
+            // also need to generate a new vmware mac for the first nic
+            $fn_mac_gen_res = new resource();
+            $fn_mac_gen_res->generate_mac();
+            $fn_suggested_mac = $fn_mac_gen_res->mac;
+            $fn_suggested_last_two_bytes = substr($fn_suggested_mac, 12);
+            $fn_mac = $vmware_mac_address_space.":".$fn_suggested_last_two_bytes;
+			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$fn_mac." -r ".$memory." -c ".$cpu." -s ".$swap." ".$additional_nic_str;
         	$host_resource->send_command($host_resource->ip, $vm_create_cmd);
 			break;
 		case 'vmware-server2':
-			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$mac." -r ".$memory." -c ".$cpu." -s ".$swap." ".$additional_nic_str;
+            // also need to generate a new vmware mac for the first nic
+            $fn_mac_gen_res = new resource();
+            $fn_mac_gen_res->generate_mac();
+            $fn_suggested_mac = $fn_mac_gen_res->mac;
+            $fn_suggested_last_two_bytes = substr($fn_suggested_mac, 12);
+            $fn_mac = $vmware_mac_address_space.":".$fn_suggested_last_two_bytes;
+			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -n ".$name." -m ".$fn_mac." -r ".$memory." -c ".$cpu." -s ".$swap." ".$additional_nic_str;
         	$host_resource->send_command($host_resource->ip, $vm_create_cmd);
 			break;
 		default:

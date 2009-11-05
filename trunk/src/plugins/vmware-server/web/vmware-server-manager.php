@@ -540,6 +540,7 @@ function vmware_server_display($appliance_id) {
             if (!strcmp($vmware_vm_state, "0")) {
                 $vmware_vm_state_icon = "/openqrm/base/img/off.png";
                 $vmware_vm_actions= $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&action_table1=start&vmware_server_id=$appliance_id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"></a>&nbsp;";
+                $vmware_vm_actions .= "<a href=\"vmware-vm-config.php?vmware_vm_name=$vmware_vm_name&vmware_server_id=$appliance_id&action=get_config\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/plugin.png\" border=\"0\"></a>&nbsp;";
                 $vmware_vm_actions = $vmware_vm_actions."<a href=\"$thisfile?identifier_table1[]=$vmware_vm_name&vmware_vm_mac_ar[$vmware_vm_name]=$vmware_vm_mac&action_table1=delete&vmware_server_id=$appliance_id\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"></a>&nbsp;";
             } else {
                 $vmware_vm_state_icon = "/openqrm/base/img/active.png";

@@ -22,38 +22,19 @@
 	width:700px;
 }
 </style>
-<form action="{formaction}" method="GET">
 
-<h1><img border=0 src="/openqrm/base/plugins/vmware-server/img/plugin.png"> VMware Server Create VM</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-server/img/plugin.png"> VMware Server VM Configuration</h1>
+{backlink}
+<br><br>
+<h4>VM CPUs</h4>
+{vm_cpus_disp}
+<hr>
+<h4>VM Memory</h4>
+{vm_ram_disp}
+<hr>
+<h4>VM Network Cards</h4>
+{vm_net_disp}
+<hr>
 
-<div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
-
-<h4>Add new VM to VMware Server Host id {vmware_server_id}</h4>
-<div style="float:left;">
-{vmware_vm_name}
-
-<h4>VM Configuration</h4>
-
-{vmware_vm_cpus}
-{vmware_vm_mac}
-{vmware_vm_ram}
-{vmware_vm_disk}
-{vmware_vm_swap}
-</div>
-
-
-<div style="float:right;">
-{vmware_vm_vnc_port}
-{vmware_vm_vnc_auth}
-</div>
-
-{hidden_vmware_server_id}
-
-<div style="clear:both;line-height:0px;">&#160;</div>
-
-<div style="text-align:center;">{submit}</div>
-<br>
-</div>
-
-</form>
-
+<h4>VM VNC Display</h4>
+{vm_vnc_disp}
