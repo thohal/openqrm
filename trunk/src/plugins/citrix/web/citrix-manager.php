@@ -606,6 +606,7 @@ function citrix_server_display($appliance_id) {
             if (strcmp($citrix_vm_state, "running")) {
                 $citrix_vm_state_icon = "/openqrm/base/img/off.png";
                 $citrix_vm_actions= $citrix_vm_actions."<a href=\"$thisfile?identifier_table1[]=$citrix_vm_name&action_table1=start&citrix_server_id=$appliance_id\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\"></a>&nbsp;";
+                $citrix_vm_actions .= "<a href=\"citrix-vm-config.php?citrix_vm_name=$citrix_vm_name&citrix_server_id=$appliance_id&action=get_config\" style=\"text-decoration:none;\"><img height=20 width=20 src=\"/openqrm/base/plugins/aa_plugins/img/plugin.png\" border=\"0\"></a>&nbsp;";
                 $citrix_vm_actions = $citrix_vm_actions."<a href=\"$thisfile?identifier_table1[]=$citrix_vm_name&citrix_vm_mac_ar[$citrix_vm_name]=$citrix_vm_mac&action_table1=delete&citrix_server_id=$appliance_id\"><img height=16 width=16 src=\"/openqrm/base/img/off.png\" border=\"0\"></a>&nbsp;";
             } else {
                 $citrix_vm_state_icon = "/openqrm/base/img/active.png";
@@ -621,7 +622,7 @@ function citrix_server_display($appliance_id) {
                 'citrix_vm_name' => $citrix_vm_name,
                 'citrix_vm_mac' => $citrix_vm_mac,
                 'citrix_vm_ip' => $citrix_vm_ip,
-                'citrix_vm_actions' => $citrix_vm_actions,
+                'citrix_vm_actions' => "<nobr>".$citrix_vm_actions."</nobr>",
             );
             $citrix_vm_count++;
         }
