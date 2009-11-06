@@ -31,9 +31,7 @@
 </div>
 
 <div style="float:left;">
-Citrix-XenServer vms on resource {citrix_server_id}/{citrix_server_name}
-<br>
-<br>
+<h4>Citrix-XenServer vms on resource {citrix_server_id}/{citrix_server_name}</h4>
 {citrix_vm_table}
 </div>
 

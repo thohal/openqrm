@@ -177,7 +177,7 @@ function create($virtualization_type, $name, $mac, $additional_nics, $cpu, $memo
         	$host_resource->send_command($host_resource->ip, $vm_create_cmd);
 			break;
 		case 'citrix':
-			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -s ".$host_resource->ip." -l ".$name." -m ".$memory."";
+			$vm_create_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." create -i ".$host_resource->ip." -n ".$name." -r ".$memory." -c ".$cpu." -m ".$mac." ".$additional_nic_str;
             $openqrm->send_command($vm_create_cmd);
 			break;
 		case 'vmware-esx':
@@ -319,7 +319,7 @@ function remove($resource_id, $virtualization_type, $name, $mac) {
         	$host_resource->send_command($host_resource->ip, $vm_remove_cmd);
 			break;
 		case 'citrix':
-			$vm_remove_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." delete -s ".$host_resource->ip." -l ".$name;
+			$vm_remove_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/".$virtualization_plugin_name."/bin/openqrm-".$virtualization_plugin_name." remove -i ".$host_resource->ip." -n ".$name;
             $openqrm->send_command($vm_remove_cmd);
 			break;
 		case 'vmware-esx':

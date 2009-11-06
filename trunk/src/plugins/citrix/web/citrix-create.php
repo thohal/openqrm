@@ -66,6 +66,7 @@ $citrix_command = htmlobject_request('citrix_command');
 $citrix_name = htmlobject_request('citrix_name');
 $citrix_ram = htmlobject_request('citrix_ram');
 $citrix_mac = htmlobject_request('citrix_mac');
+$citrix_cpus = htmlobject_request('citrix_cpus');
 $citrix_template = htmlobject_request('citrix_template');
 global $citrix_server_id;
 global $citrix_command;
@@ -74,6 +75,7 @@ global $citrix_server_id;
 global $citrix_ram;
 global $citrix_mac;
 global $citrix_template;
+global $citrix_cpus;
 
 // place for the citrix stat files
 $CitrixDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/plugins/citrix/citrix-stat';
@@ -86,7 +88,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 
 function redirect_mgmt($strMsg, $currenttab = 'tab0') {
     global $citrix_server_id;
-    $url = 'citrix-manager.php?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&action=refresh&identifier[]='.$citrix_server_id;
+    $url = 'citrix-manager.php?strMsg='.urlencode($strMsg).'&currenttab='.$currenttab.'&action=reload&citrix_server_id='.$citrix_server_id;
 	echo "<meta http-equiv=\"refresh\" content=\"0; URL=$url\">";
 	exit;
 }
@@ -192,6 +194,16 @@ if(htmlobject_request('citrix_command') != '') {
                 $strMsg .= "Citrix XenServer VM template not set. Not adding new VM!";
                 redirect($strMsg, "tab0");
             }
+            // check for cpu count is int
+            if (!strlen($citrix_cpus)) {
+                $strMsg .= "Empty vm cpu number. Not adding new VM!";
+                redirect($strMsg, "tab0");
+            }
+            if (!validate_input($citrix_cpus, 'number')) {
+                $strMsg .= "Invalid vm cpu number. Not adding new VM!";
+                redirect($strMsg, "tab0");
+            }
+
             show_progressbar();
             $citrix_appliance = new appliance();
             $citrix_appliance->get_instance_by_id($citrix_server_id);
@@ -214,7 +226,7 @@ if(htmlobject_request('citrix_command') != '') {
             $resource_id=openqrm_db_get_free_id('resource_id', $RESOURCE_INFO_TABLE);
             $resource_ip="0.0.0.0";
             // send command
-			$citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix create -i $citrix_server_ip -n $citrix_name -r $citrix_ram -m $citrix_mac -t $citrix_template";
+			$citrix_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/citrix/bin/openqrm-citrix create -i $citrix_server_ip -n $citrix_name -r $citrix_ram -m $citrix_mac -c $citrix_cpus -t $citrix_template";
             // set resource type
             $virtualization = new virtualization();
             $virtualization->get_instance_by_type("citrix-vm");
@@ -300,6 +312,12 @@ function citrix_create() {
 			$template_list_select[] = array("value" => $citrix_template_name, "label" => $citrix_display_template_name);
         }
     }
+    // cpus array for the select
+    $cpu_identifier_array = array();
+	$cpu_identifier_array[] = array("value" => "1", "label" => "1 CPU");
+	$cpu_identifier_array[] = array("value" => "2", "label" => "2 CPUs");
+	$cpu_identifier_array[] = array("value" => "3", "label" => "3 CPUs");
+	$cpu_identifier_array[] = array("value" => "4", "label" => "4 CPUs");
 
 
     // set template
@@ -312,9 +330,8 @@ function citrix_create() {
 		'citrix_server_id' => $citrix_server_id,
 		'citrix_server_name' => htmlobject_input('citrix_name', array("value" => '', "label" => 'VM name'), 'text', 20),
 		'citrix_server_mac' => htmlobject_input('citrix_mac', array("value" => $suggested_mac, "label" => 'Mac address'), 'text', 20),
-		'citrix_server_ram' => htmlobject_input('citrix_ram', array("value" => '256', "label" => 'Memory (MB)'), 'text', 10),
-//		'citrix_server_disk' => htmlobject_input('citrix_disk', array("value" => '', "label" => 'Disk (MB)'), 'text', 10),
-//		'citrix_server_swap' => htmlobject_input('citrix_swap', array("value" => '', "label" => 'Swap (MB)'), 'text', 10),
+		'citrix_server_ram' => htmlobject_input('citrix_ram', array("value" => '512', "label" => 'Memory (MB)'), 'text', 10),
+        'citrix_server_cpus' => htmlobject_select('citrix_cpus', $cpu_identifier_array, 'CPUs'),
 		'hidden_citrix_server_id' => "<input type=hidden name=citrix_server_id value=$citrix_server_id><input type=hidden name=citrix_command value='new'>",
 		'template_list_select' => htmlobject_select('citrix_template', $template_list_select, 'VM Template'),
 		'submit' => htmlobject_input('action', array("value" => 'new', "label" => 'Create'), 'submit'),

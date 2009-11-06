@@ -27,9 +27,7 @@
 <h1><img border=0 src="/openqrm/base/plugins/citrix/img/plugin.png"> Select Citrix-Host</h1>
 
 <div style="float:left;">
-Please select a Citrix-Host from the list below
-<br>
-<br>
+<h4>Please select a Citrix-Host from the list below</h4>
 {citrix_server_table}
 </div>
 

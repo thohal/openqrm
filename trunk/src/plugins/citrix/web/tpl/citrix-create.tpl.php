@@ -26,27 +26,34 @@
 
 <h1><img border=0 src="/openqrm/base/plugins/citrix/img/plugin.png"> Citrix XenServer create VM</h1>
 
-Add new VM to Citrix XenServer Host id {citrix_server_id}
-<br>
-<br>
+
+<div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
+
+<h4>Add new VM to Citrix XenServer Host id {citrix_server_id}</h4>
 <div style="float:left;">
 {citrix_server_name}
+
+<h4>VM Configuration</h4>
+
+{citrix_server_cpus}
 {citrix_server_mac}
 {citrix_server_ram}
+</div>
+
+
+<div style="float:right;">
 {template_list_select}
 Please select one of the HVM templates supporting PXE-boot
 
 </div>
+
 {hidden_citrix_server_id}
-<div style="text-align:center;">
-    {submit}
-    <br>
-    <br>
-    <br>
-    <br>
-    <strong>{backlink}</strong>
+
+<div style="clear:both;line-height:0px;">&#160;</div>
+
+<div style="text-align:center;">{submit}</div>
+<br>
 </div>
 
-
-
 </form>
+

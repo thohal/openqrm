@@ -37,7 +37,7 @@ fi
 
 function citrix_usage() {
 	echo "Usage : $0 start/stop/remove/reboot/list <-i citrix-server-ip> <-n vm-name>"
-	echo "        $0 create <-i citrix-server-ip> <-n vm-name> <-r memory> <-m mac-address> <-t vm-template>"
+	echo "        $0 create <-i citrix-server-ip> <-n vm-name> <-r memory> <-m mac-address> <-t vm-template> [-c cpus ] [-s swap-size ]"
 	echo "        $0 post_vm_list <-i citrix-server-ip>"
 	echo "        $0 post_template_list <-i citrix-server-ip>"
 #	echo "        $0 vm-mem-set <-i citrix-server-ip> <-n vm-name> <-m ram>"
@@ -54,8 +54,28 @@ while [ $# -ne 0 ]; do
 			CITRIX_VM_NAME=$2
 			shift
 			;;
+		-c)
+			CITRIX_VM_CPU=$2
+			shift
+			;;
 		-m)
 			CITRIX_VM_MAC=$2
+			shift
+			;;
+		-m1)
+			CITRIX_VM_MAC1=$2
+			shift
+			;;
+		-m2)
+			CITRIX_VM_MAC2=$2
+			shift
+			;;
+		-m3)
+			CITRIX_VM_MAC3=$2
+			shift
+			;;
+		-m4)
+			CITRIX_VM_MAC4=$2
 			shift
 			;;
 		-r)
@@ -64,6 +84,10 @@ while [ $# -ne 0 ]; do
 			;;
 		-d)
 			CITRIX_VM_DISK=$2
+			shift
+			;;
+		-s)
+			CITRIX_VM_SWAP=$2
 			shift
 			;;
 		-b)
@@ -126,9 +150,14 @@ case "$CITRIX_COMMAND" in
 		if [ "$CITRIX_VM_MAC" == "" ]; then
 			citrix_usage
 		fi
+        # defaults
 		if [ "$CITRIX_VM_TEMPLATE" == "" ]; then
-			citrix_usage
+			CITRIX_VM_TEMPLATE=$CITRIX_DEFAULT_VM_TEMPLATE
 		fi
+		if [ "$CITRIX_VM_CPU" == "" ]; then
+			CITRIX_VM_CPU=1
+		fi
+
         citrix_lock aquire
 		citrix_log openqrm-citrix "Creating Citrix vm $CITRIX_VM_NAME from template $CITRIX_VM_TEMPLATE"
         VM_TEMPLATE_NAME=`echo $CITRIX_VM_TEMPLATE | sed -e "s/@/ /g"`
@@ -183,6 +212,75 @@ case "$CITRIX_COMMAND" in
             citrix_lock release
             exit 1
         fi
+        # set cpus
+		if ! $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-param-set uuid=$CITRIX_VM_UUID VCPUs-at-startup=$CITRIX_VM_CPU; then
+            citrix_log openqrm-citrix "Failed to set VCPUs-at-startup for vm $CITRIX_VM_NAME !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to set VCPUs-at-startup for vm $CITRIX_VM_NAME !"
+            citrix_lock release
+            exit 1
+        fi
+		if ! $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vm-param-set uuid=$CITRIX_VM_UUID VCPUs-max=$CITRIX_VM_CPU; then
+            citrix_log openqrm-citrix "Failed to set VCPUs-max for vm $CITRIX_VM_NAME !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to set VCPUs-max for vm $CITRIX_VM_NAME !"
+            citrix_lock release
+            exit 1
+        fi
+
+        # additional nics
+       	# Find the network associated with the management interface. We'll assume that
+        # this is the network on which we want a network interface._{color}
+		EXTERNAL_NETWORK=`$CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE network-list bridge=$CITRIX_EXTERNAL_INTERFACE --minimal`
+        if [ "$NETWORK" == "" ]; then
+            citrix_log openqrm-citrix "Failed to get the external network bridge to create the additional vif device for vm $CITRIX_VM_NAME !"
+            openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to get the external network bridge to create the additional vif device for vm $CITRIX_VM_NAME !"
+            citrix_lock release
+            exit 1
+        fi
+		# addtional nics -> nic2
+		if [ "$CITRIX_VM_MAC1" != "" ]; then
+			citrix_log openqrm-citrix " Creating nic2"
+            # Add a VIF linking the VM to the external network
+            if ! $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vif-create vm-uuid=$CITRIX_VM_UUID network-uuid=$EXTERNAL_NETWORK device=1 mac=$CITRIX_VM_MAC1; then
+                citrix_log openqrm-citrix "Failed to create the nic2 device for vm $CITRIX_VM_NAME with mac address $CITRIX_VM_MAC1!"
+                openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to create the nic2 device for vm $CITRIX_VM_NAME with mac address $CITRIX_VM_MAC1!"
+                citrix_lock release
+                exit 1
+            fi
+		fi
+		# addtional nics -> nic3
+		if [ "$CITRIX_VM_MAC2" != "" ]; then
+			citrix_log openqrm-citrix " Creating nic3"
+            # Add a VIF linking the VM to the external network
+            if ! $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vif-create vm-uuid=$CITRIX_VM_UUID network-uuid=$EXTERNAL_NETWORK device=2 mac=$CITRIX_VM_MAC2; then
+                citrix_log openqrm-citrix "Failed to create the nic3 device for vm $CITRIX_VM_NAME with mac address $CITRIX_VM_MAC2!"
+                openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to create the nic3 device for vm $CITRIX_VM_NAME with mac address $CITRIX_VM_MAC2!"
+                citrix_lock release
+                exit 1
+            fi
+		fi
+		# addtional nics -> nic4
+		if [ "$CITRIX_VM_MAC3" != "" ]; then
+			citrix_log openqrm-citrix " Creating nic4"
+            # Add a VIF linking the VM to the external network
+            if ! $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vif-create vm-uuid=$CITRIX_VM_UUID network-uuid=$EXTERNAL_NETWORK device=3 mac=$CITRIX_VM_MAC3; then
+                citrix_log openqrm-citrix "Failed to create the nic4 device for vm $CITRIX_VM_NAME with mac address $CITRIX_VM_MAC3!"
+                openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to create the nic4 device for vm $CITRIX_VM_NAME with mac address $CITRIX_VM_MAC3!"
+                citrix_lock release
+                exit 1
+            fi
+		fi
+		# addtional nics -> nic5
+		if [ "$CITRIX_VM_MAC4" != "" ]; then
+			citrix_log openqrm-citrix " Creating nic5"
+            # Add a VIF linking the VM to the external network
+            if ! $CITRIX_XE_BINARY -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE vif-create vm-uuid=$CITRIX_VM_UUID network-uuid=$EXTERNAL_NETWORK device=4 mac=$CITRIX_VM_MAC4; then
+                citrix_log openqrm-citrix "Failed to create the nic5 device for vm $CITRIX_VM_NAME with mac address $CITRIX_VM_MAC4!"
+                openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to create the nic5 device for vm $CITRIX_VM_NAME with mac address $CITRIX_VM_MAC4!"
+                citrix_lock release
+                exit 1
+            fi
+		fi
+
 		if ! $CITRIX_XE_BINARY vm-start -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_UUID; then
             citrix_log openqrm-citrix "Failed to start vm $CITRIX_VM_NAME !"
             openqrm_post_event 0 "vm-install" 3 "openqrm-citrix" "Failed to start vm $CITRIX_VM_NAME !"
@@ -292,7 +390,7 @@ case "$CITRIX_COMMAND" in
             if [ "$CITRIX_VM_NAME" != "Control" ]; then
                 CITRIX_VM_STATE=`grep -A 2 $UUID $VM_TMPFILE1 | grep power-state | cut -d':' -f2 | awk {' print $1 '}`
                 # gather the mac address
-                CITRIX_VM_VIF_UUID=`grep -B 1 $UUID $VM_VIF_LIST | grep uuid | cut -d':' -f2 | awk {' print $1 '}`
+                CITRIX_VM_VIF_UUID=`grep -B 2 "device.*: 0" $VM_VIF_LIST | grep -B 1 $UUID | grep uuid | cut -d':' -f2 | awk {' print $1 '}`
                 VM_NIC_TMPFILE=`mktemp /tmp/oq-vm.XXXXXX` || exit 1
                 $CITRIX_XE_BINARY vif-param-list -s $CITRIX_SERVER_IP -pwf $CITRIX_SERVER_PASSWD_FILE uuid=$CITRIX_VM_VIF_UUID > $VM_NIC_TMPFILE
                 CITRIX_VM_MAC=`grep " MAC " $VM_NIC_TMPFILE | cut -d':' -f2- | awk {' print $1 '}`
