@@ -38,23 +38,6 @@
   height: 50px;
 }
 
-
-#quantity_content-slider {
-  position: relative;
-  left: 10px;
-  top: 40px;
-  width: 70px;
-  height: 6px;
-  background: #BBBBBB;
-}
-
-.quantity_content-slider-handle {
-  background: #478AFF;
-  border: solid 3px black;
-}
-
-
-
 #add_product {
   position: relative;
   left: 5px;
@@ -92,54 +75,24 @@
 </style>
 
 <script type="text/javascript">
-	$(document).ready(function() {
-
-      $("#quantity_content-slider").slider({
-        animate: true,
-        step: 1,
-        min: 1,
-        max: 10,
-        start: 1,
-        handle: ".quantity_content-slider-handle",
-        change: quantity_handleSliderChange,
-        slide: quantity_handleSliderSlide
-
-      });
-
- 	});
-
-
-function quantity_handleSliderChange(e, ui)
-{
-    $('.quantity_slider-input').val(ui.value);
-}
-
-
-function quantity_handleSliderSlide(e, ui)
-{
-    $('.quantity_slider-input').val(ui.value);
-}
-
 
 </script>
 </head>
 <body>
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> CPU Selector</h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Kernel Selector</h1>
 
-<h4>Add new CPU Product to the Cloud</h4>
-Use the slider to select product quantity and how much CCU to charge per hour
+<h4>Add new Kernel Product to the Cloud</h4>
+Select a kernel product and how much CCU to charge per hour
 
 <form action={thisfile} method=post>
-
-<div id="quantity_content-slider"><div class="quantity_content-slider-handle"></div></div>
-
 
 <div id="add_prod">
 
 <div id="add_product">
     <nobr>
-    <input type="text" name="product_quantity" class="quantity_slider-input" id="quantity_slider-input" maxlength="2" size="2" value="1"/> CPU(s)
+
+    {kernel_select} Kernel
 
     <strong> equals </strong>
     <select title="price" name="product_price">
@@ -240,7 +193,7 @@ Use the slider to select product quantity and how much CCU to charge per hour
     <input type="text" name="product_name" class="product_name" id="product_name" maxlength="20" size="20" value="[Product-Name]"/>
     <input type="text" name="product_description" class="product_description" id="product_description" maxlength="200" size="20" value="[Product-Description]"/>
 
-    <input type="hidden" name="product_type" value="cpu">
+    <input type="hidden" name="product_type" value="kernel">
     <input type="hidden" name="action" value="add">
     <input type="submit" value="Add" name="Add">
 

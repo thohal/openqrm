@@ -289,9 +289,11 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
             // id INT(5)
             // type VARCHAR(255)
             // sort_id INT(5)
-            // quantity INT(5)
+            // quantity VARCHAR(255)
             // price INT(5)
+            // name VARCHAR(20)
             // description VARCHAR(255)
+            // state INT(5)
 
             $create_cloud_requests = "create table cloud_requests(cr_id INT(5), cr_cu_id INT(5), cr_status INT(5), cr_request_time VARCHAR(20), cr_start VARCHAR(20), cr_stop VARCHAR(20), cr_kernel_id INT(5), cr_image_id INT(5), cr_ram_req VARCHAR(20), cr_cpu_req VARCHAR(20), cr_disk_req VARCHAR(20), cr_network_req VARCHAR(255), cr_resource_quantity INT(5), cr_resource_type_req VARCHAR(20), cr_deployment_type_req VARCHAR(50), cr_ha_req VARCHAR(5), cr_shared_req VARCHAR(5), cr_appliance_id VARCHAR(255), cr_puppet_groups VARCHAR(255), cr_lastbill VARCHAR(20))";
 			$create_cloud_users = "create table cloud_users(cu_id INT(5), cu_name VARCHAR(50), cu_password VARCHAR(50), cu_forename VARCHAR(50), cu_lastname VARCHAR(50), cu_email VARCHAR(50), cu_street VARCHAR(100), cu_city VARCHAR(100), cu_country VARCHAR(100), cu_phone VARCHAR(100), cu_status INT(5), cu_token VARCHAR(100), cu_ccunits BIGINT(10))";
@@ -306,7 +308,7 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$create_cloud_image_resize_life_cycle = "create table cloud_irlc(cd_id INT(5), cd_appliance_id INT(5), cd_state INT(5))";
 			$create_cloud_image_private_life_cycle = "create table cloud_iplc(cp_id INT(5), cp_appliance_id INT(5), cp_cu_id INT(5), cp_state INT(5), cp_start_private VARCHAR(20))";
 			$create_cloud_image_private = "create table cloud_private_image(co_id INT(5), co_image_id INT(5), co_cu_id INT(5), co_comment VARCHAR(255), co_state INT(5))";
-			$create_cloud_selector = "create table cloud_selector(id INT(5), type VARCHAR(255), sort_id INT(5), quantity INT(5), price INT(5), description VARCHAR(255))";
+			$create_cloud_selector = "create table cloud_selector(id INT(5), type VARCHAR(255), sort_id INT(5), quantity VARCHAR(255), price INT(5), name VARCHAR(20), description VARCHAR(255), state INT(5))";
             $db=openqrm_get_db_connection();
 			$recordSet = &$db->Execute($create_cloud_requests);
 			$recordSet = &$db->Execute($create_cloud_users);
@@ -360,13 +362,13 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($create_default_cloud_config17);
 			$create_default_cloud_config18 = "insert into cloud_config(cc_id, cc_key, cc_value) values (18, 'cloud_nat', 'false')";
 			$recordSet = &$db->Execute($create_default_cloud_config18);
-			$create_default_cloud_config19 = "insert into cloud_config(cc_id, cc_key, cc_value) values (19, 'show_collectd_graphs', 'true')";
+			$create_default_cloud_config19 = "insert into cloud_config(cc_id, cc_key, cc_value) values (19, 'show_collectd_graphs', 'false')";
 			$recordSet = &$db->Execute($create_default_cloud_config19);
 			$create_default_cloud_config20 = "insert into cloud_config(cc_id, cc_key, cc_value) values (20, 'show_disk_resize', 'false')";
 			$recordSet = &$db->Execute($create_default_cloud_config20);
 			$create_default_cloud_config21 = "insert into cloud_config(cc_id, cc_key, cc_value) values (21, 'show_private_image', 'false')";
 			$recordSet = &$db->Execute($create_default_cloud_config21);
-			$create_default_cloud_config22 = "insert into cloud_config(cc_id, cc_key, cc_value) values (22, 'cloud_selector', 'true')";
+			$create_default_cloud_config22 = "insert into cloud_config(cc_id, cc_key, cc_value) values (22, 'cloud_selector', 'false')";
 			$recordSet = &$db->Execute($create_default_cloud_config22);
 
             // TODO: fill default selector values

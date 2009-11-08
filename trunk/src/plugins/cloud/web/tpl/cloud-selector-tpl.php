@@ -125,7 +125,7 @@ a {
 </div>
 
 <div id="network" class="link">
-<a href="cloud-selector.php?product_type=net"><strong>Network</strong></a>
+<a href="cloud-selector.php?product_type=network"><strong>Network</strong></a>
 </div>
 
 <div id="puppet" class="link">

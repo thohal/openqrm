@@ -48,7 +48,9 @@ class cloudselector {
     var $sort_id = '';
     var $quantity = '';
     var $price = '';
+    var $name = '';
     var $description = '';
+    var $state = '';
 
 	//--------------------------------------------------
 	/**
@@ -96,7 +98,9 @@ function get_instance_by_id($id) {
 		$this->sort_id = $cloudselector["sort_id"];
 		$this->quantity = $cloudselector["quantity"];
 		$this->price = $cloudselector["price"];
+		$this->name = $cloudselector["name"];
 		$this->description = $cloudselector["description"];
+		$this->state = $cloudselector["state"];
 	}
 	return $this;
 }
@@ -112,7 +116,7 @@ function get_instance_by_quantity($type, $quantity) {
 		return;
     }
 	if ("$quantity" != "") {
-		$cloudselector_array = &$db->Execute("select * from $CLOUD_SELECTOR_TABLE where type=$type and quantity=$quantity");
+		$cloudselector_array = &$db->Execute("select * from $CLOUD_SELECTOR_TABLE where type=$type and quantity=\"$quantity\"");
 	} else {
 		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "cloudselector.class.php", "Could not create instance of cloudselector without data", "", "", 0, 0, 0);
 		return;
@@ -124,7 +128,9 @@ function get_instance_by_quantity($type, $quantity) {
 		$this->sort_id = $cloudselector["sort_id"];
 		$this->quantity = $cloudselector["quantity"];
 		$this->price = $cloudselector["price"];
+		$this->name = $cloudselector["name"];
 		$this->description = $cloudselector["description"];
+		$this->state = $cloudselector["state"];
 	}
 	return $this;
 }
@@ -182,7 +188,7 @@ function product_exists($cloudselector_type, $cloudselector_quantity) {
 	global $CLOUD_SELECTOR_TABLE;
 	global $event;
 	$db=openqrm_get_db_connection();
-	$rs = &$db->Execute("select id from $CLOUD_SELECTOR_TABLE where type=\"$cloudselector_type\" and quantity=$cloudselector_quantity");
+	$rs = &$db->Execute("select id from $CLOUD_SELECTOR_TABLE where type=\"$cloudselector_type\" and quantity=\"$cloudselector_quantity\"");
 	if (!$rs)
 		$event->log("product_exists", $_SERVER['REQUEST_TIME'], 2, "cloudselector.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
 	else

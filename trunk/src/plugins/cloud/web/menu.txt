@@ -30,7 +30,7 @@
 ....|Disk|plugins/cloud/cloud-selector.php?product_type=disk
 ....|Kernel|plugins/cloud/cloud-selector.php?product_type=kernel
 ....|Memory|plugins/cloud/cloud-selector.php?product_type=memory
-....|Network|plugins/cloud/cloud-selector.php?product_type=net
+....|Network|plugins/cloud/cloud-selector.php?product_type=network
 ....|Puppet|plugins/cloud/cloud-selector.php?product_type=puppet
 ....|Quantity|plugins/cloud/cloud-selector.php?product_type=quantity
 ....|Resource|plugins/cloud/cloud-selector.php?product_type=resource

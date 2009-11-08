@@ -306,7 +306,7 @@ function my_cloud_create_request() {
     // big switch ##############################################################
     //  : either show what is provided in the cloudselector
     //  : or show what is available
-    // check if private image feature is enabled
+    // check if cloud_selector feature is enabled
     $cloud_selector_enabled = $cc_conf->get_value(22);	// cloud_selector
     if (!strcmp($cloud_selector_enabled, "true")) {
         // show what is provided by the cloudselectors
@@ -315,9 +315,77 @@ function my_cloud_create_request() {
         // cpus
         $product_array = $cloudselector->display_overview_per_type("cpu");
         foreach ($product_array as $index => $cloudproduct) {
-            $available_cpunumber[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["description"]);
+            // is product enabled ?
+            if ($cloudproduct["state"] == 1) {
+                $available_cpunumber[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+            }
         }
 
+        // disk size
+        $product_array = $cloudselector->display_overview_per_type("disk");
+        foreach ($product_array as $index => $cloudproduct) {
+            // is product enabled ?
+            if ($cloudproduct["state"] == 1) {
+                $disk_size_select[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+            }
+        }
+
+        // resource quantity
+        $product_array = $cloudselector->display_overview_per_type("quantity");
+        foreach ($product_array as $index => $cloudproduct) {
+            // is product enabled ?
+            if ($cloudproduct["state"] == 1) {
+                $max_resources_per_cr_select[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+            }
+        }
+
+        // kernel
+        $product_array = $cloudselector->display_overview_per_type("kernel");
+        foreach ($product_array as $index => $cloudproduct) {
+            // is product enabled ?
+            if ($cloudproduct["state"] == 1) {
+                $kernel_list[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+            }
+        }
+
+        // memory sizes
+        $product_array = $cloudselector->display_overview_per_type("memory");
+        foreach ($product_array as $index => $cloudproduct) {
+            // is product enabled ?
+            if ($cloudproduct["state"] == 1) {
+                $available_memtotal[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+            }
+        }
+
+        // network cards
+        $product_array = $cloudselector->display_overview_per_type("network");
+        foreach ($product_array as $index => $cloudproduct) {
+            // is product enabled ?
+            if ($cloudproduct["state"] == 1) {
+                $max_network_interfaces_select[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+            }
+        }
+
+        // puppet classes
+        $product_array = $cloudselector->display_overview_per_type("puppet");
+        foreach ($product_array as $index => $cloudproduct) {
+            // is product enabled ?
+            if ($cloudproduct["state"] == 1) {
+                $puppet_product_name = $cloudproduct["name"];
+                $puppet_class_name = $cloudproduct["quantity"];
+                $show_puppet .= "<input type='checkbox' name='puppet_groups[]' value=$puppet_class_name>$puppet_product_name<br/>";
+            }
+        }
+        $show_puppet .= "<br/>";
+
+        // virtualization types
+        $product_array = $cloudselector->display_overview_per_type("resource");
+        foreach ($product_array as $index => $cloudproduct) {
+            // is product enabled ?
+            if ($cloudproduct["state"] == 1) {
+                $virtualization_list_select[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+            }
+        }
 
 
 
@@ -387,47 +455,21 @@ function my_cloud_create_request() {
                 $available_memtotal_uniq[] .= $tres->memtotal;
             }
         }
-        // have static values here until we have the component selector
-        $available_memtotal[] = array("value" => 256, "label" => "256 MB");
-        $available_memtotal[] = array("value" => 512, "label" => "512 MB");
-        $available_memtotal[] = array("value" => 1024, "label" => "1 GB");
-        $available_memtotal[] = array("value" => 2048, "label" => "2 GB");
+
+        // disk size select
+        $disk_size_select[] = array("value" => 1000, "label" => '1 GB');
+        $disk_size_select[] = array("value" => 2000, "label" => '2 GB');
+        $disk_size_select[] = array("value" => 3000, "label" => '3 GB');
+        $disk_size_select[] = array("value" => 4000, "label" => '4 GB');
+        $disk_size_select[] = array("value" => 5000, "label" => '5 GB');
+        $disk_size_select[] = array("value" => 10000, "label" => '10 GB');
+        $disk_size_select[] = array("value" => 20000, "label" => '20 GB');
+        $disk_size_select[] = array("value" => 50000, "label" => '50 GB');
+        $disk_size_select[] = array("value" => 100000, "label" => '100 GB');
 
         if ($cl_user_count < 1) {
             $subtitle = "<b>Please create a <a href='/openqrm/base/plugins/cloud/cloud-user.php?action=create'>Cloud User</a> first!";
         }
-        if ($image_count < 1) {
-            $subtitle = "<b>Please create <a href='/openqrm/base/server/image/image-new.php?currenttab=tab1'>Sever-Images</a> first!";
-        }
-
-        $now = date("d-m-Y H:i", $_SERVER['REQUEST_TIME']);
-        $start_request = $start_request."Start time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\" value=\"$now\">";
-        $start_request = $start_request."<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)\">";
-        $start_request = $start_request."<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
-        $start_request = $start_request."</a>";
-
-        $tomorrow = date("d-m-Y H:i", $_SERVER['REQUEST_TIME'] + 86400);
-        $stop_request = $stop_request."Stop time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\" value=\"$tomorrow\">";
-        $stop_request = $stop_request."<a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
-        $stop_request = $stop_request."<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
-        $stop_request = $stop_request."</a>";
-
-        // check if to show ha
-        $show_ha_checkbox = $cc_conf->get_value(10);	// show_ha_checkbox
-        if (!strcmp($show_ha_checkbox, "true")) {
-            // is ha enabled ?
-            if (file_exists("$RootDir/plugins/highavailability/.running")) {
-                $show_ha = htmlobject_input('cr_ha_req', array("value" => 1, "label" => 'Highavailable'), 'checkbox', false);
-            }
-        }
-        // check for default-clone-on-deploy
-        $cc_default_clone_on_deploy = $cc_conf->get_value(5);	// default_clone_on_deploy
-        if (!strcmp($cc_default_clone_on_deploy, "true")) {
-            $clone_on_deploy = "<input type=hidden name='cr_shared_req' value='on'>";
-        } else {
-            $clone_on_deploy = htmlobject_input('cr_shared_req', array("value" => 1, "label" => 'Clone-on-deploy'), 'checkbox', false);
-        }
-
 
         // check if to show puppet
         $show_puppet_groups = $cc_conf->get_value(11);	// show_puppet_groups
@@ -497,7 +539,37 @@ function my_cloud_create_request() {
         }
     }
     $image_count = count($image_list);
+    if ($image_count < 1) {
+        $subtitle = "<b>Please create <a href='/openqrm/base/server/image/image-new.php?currenttab=tab1'>Sever-Images</a> first!";
+    }
 
+    // check if to show ha
+    $show_ha_checkbox = $cc_conf->get_value(10);	// show_ha_checkbox
+    if (!strcmp($show_ha_checkbox, "true")) {
+        // is ha enabled ?
+        if (file_exists("$RootDir/plugins/highavailability/.running")) {
+            $show_ha = htmlobject_input('cr_ha_req', array("value" => 1, "label" => 'Highavailable'), 'checkbox', false);
+        }
+    }
+    // check for default-clone-on-deploy
+    $cc_default_clone_on_deploy = $cc_conf->get_value(5);	// default_clone_on_deploy
+    if (!strcmp($cc_default_clone_on_deploy, "true")) {
+        $clone_on_deploy = "<input type=hidden name='cr_shared_req' value='on'>";
+    } else {
+        $clone_on_deploy = htmlobject_input('cr_shared_req', array("value" => 1, "label" => 'Clone-on-deploy'), 'checkbox', false);
+    }
+
+    // start and stop calendar widgets
+    $now = date("d-m-Y H:i", $_SERVER['REQUEST_TIME']);
+    $start_request = $start_request."Start time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\" value=\"$now\">";
+    $start_request = $start_request."<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)\">";
+    $start_request = $start_request."<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+    $start_request = $start_request."</a>";
+    $tomorrow = date("d-m-Y H:i", $_SERVER['REQUEST_TIME'] + 86400);
+    $stop_request = $stop_request."Stop time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\" value=\"$tomorrow\">";
+    $stop_request = $stop_request."<a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
+    $stop_request = $stop_request."<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+    $stop_request = $stop_request."</a>";
 
     // global limits
     $max_resources_per_cr = $cc_conf->get_value(6);
@@ -550,7 +622,7 @@ function my_cloud_create_request() {
 		'cloud_image_id' => htmlobject_select('cr_image_id', $image_list, 'Image'),
 		'cloud_ram_req' => htmlobject_select('cr_ram_req', $available_memtotal, 'Memory'),
 		'cloud_cpu_req' => htmlobject_select('cr_cpu_req', $available_cpunumber, 'CPUs'),
-		'cloud_disk_req' => htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk(MB)'), 'text', 20),
+		'cloud_disk_req' => htmlobject_select('cr_disk_req', $disk_size_select, 'Disk(MB)'),
 		'cloud_network_req' => htmlobject_select('cr_network_req', $max_network_interfaces_select, 'Network-cards'),
 		'cloud_ha' => $show_ha,
 		'cloud_clone_on_deploy' => $clone_on_deploy,
