@@ -109,35 +109,35 @@ a {
 
 
 <div id="cpu" class="link">
-<a href="cloud-cpu-selector.php"><strong>CPU</strong></a>
+<a href="cloud-selector.php?product_type=cpu"><strong>CPU</strong></a>
 </div>
 
 <div id="disk" class="link">
-<a href="cloud-disk-selector.php"><strong>Disk</strong></a>
+<a href="cloud-selector.php?product_type=disk"><strong>Disk</strong></a>
 </div>
 
 <div id="kernel" class="link">
-<a href="cloud-kernel-selector.php"><strong>Kernel</strong></a>
+<a href="cloud-selector.php?product_type=kernel"><strong>Kernel</strong></a>
 </div>
 
 <div id="memory" class="link">
-<a href="cloud-memory-selector.php"><strong>Memory</strong></a>
+<a href="cloud-selector.php?product_type=memory"><strong>Memory</strong></a>
 </div>
 
 <div id="network" class="link">
-<a href="cloud-network-selector.php"><strong>Network</strong></a>
+<a href="cloud-selector.php?product_type=net"><strong>Network</strong></a>
 </div>
 
 <div id="puppet" class="link">
-<a href="cloud-puppet-selector.php"><strong>Puppet</strong></a>
+<a href="cloud-selector.php?product_type=puppet"><strong>Puppet</strong></a>
 </div>
 
 <div id="quantity" class="link">
-<a href="cloud-quantity-selector.php"><strong>Quantity</strong></a>
+<a href="cloud-selector.php?product_type=quantity"><strong>Quantity</strong></a>
 </div>
 
 <div id="resource" class="link">
-<a href="cloud-resource-selector.php"><strong>Resource</strong></a>
+<a href="cloud-selector.php?product_type=resource"><strong>Resource</strong></a>
 </div>
 
 

@@ -30,19 +30,62 @@
 <style type="text/css">
 
 
-#content-slider {
-  position: absolute;
-  left: 25px;
-  top: 155px;
-  width: 180px;
+#add_prod {
+  position: relative;
+  left: 0px;
+  top: 0px;
+  width: 480px;
+  height: 50px;
+}
+
+
+#quantity_content-slider {
+  position: relative;
+  left: 10px;
+  top: 40px;
+  width: 70px;
   height: 6px;
-  margin: 5px;
   background: #BBBBBB;
 }
 
-.content-slider-handle {
+.quantity_content-slider-handle {
   background: #478AFF;
-  border: solid 1px black;
+  border: solid 3px black;
+}
+
+
+
+#add_product {
+  position: relative;
+  left: 5px;
+  top: 0px;
+  width: 180px;
+  height: 6px;
+}
+
+#add_price {
+  position: relative;
+  left: 55px;
+  top: 0px;
+  width: 320px;
+  height: 6px;
+}
+
+#ccus {
+  position: relative;
+  left: 280px;
+  top: 0px;
+  width: 40px;
+  height: 6px;
+}
+
+
+#add_submit {
+  position: relative;
+  left: 370px;
+  top: 0px;
+  width: 40px;
+  height: 6px;
 }
 
 
@@ -51,31 +94,31 @@
 <script type="text/javascript">
 	$(document).ready(function() {
 
-      $("#content-slider").slider({
+      $("#quantity_content-slider").slider({
         animate: true,
-        handle: ".content-slider-handle",
-        change: handleSliderChange,
-        slide: handleSliderSlide
+        step: 1,
+        min: 1,
+        max: 10,
+        start: 1,
+        handle: ".quantity_content-slider-handle",
+        change: quantity_handleSliderChange,
+        slide: quantity_handleSliderSlide
 
       });
-	});
+
+ 	});
 
 
-function handleSliderChange(e, ui)
+function quantity_handleSliderChange(e, ui)
 {
-    document.writeln();
-    var maxScroll = $("#content-scroll").attr("scrollHeight") - $("#content-scroll").height();
-    $("#content-scroll").animate({scrollTop: ui.value * (maxScroll / 100) }, 1000);
-    var ttt = "hallo "+ui.value;
-    document.writeln(ttt);
+    $('.quantity_slider-input').val(ui.value);
 }
 
-function handleSliderSlide(e, ui)
-{
-  var maxScroll = $("#content-scroll").attr("scrollHeight") - $("#content-scroll").height();
-  $("#content-scroll").attr({scrollTop: ui.value * (maxScroll / 100) });
-}
 
+function quantity_handleSliderSlide(e, ui)
+{
+    $('.quantity_slider-input').val(ui.value);
+}
 
 
 </script>
@@ -84,51 +127,133 @@ function handleSliderSlide(e, ui)
 
 <h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> CPU Selector</h1>
 
+<h4>Add new CPU Product to the Cloud</h4>
+Use the slider to select product quantity and how much CCU to charge per hour
 
-<div id="content-slider"><div class="content-slider-handle"></div></div>
+<form action={thisfile} method=post>
+
+<div id="quantity_content-slider"><div class="quantity_content-slider-handle"></div></div>
 
 
-<div id="content-scroll">
-    <div id="content-holder">
-        <div class="content-item">
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-        </div>
-        <div class="content-item">
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-        </div>
-        <div class="content-item">
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-        </div>
-        <div class="content-item">
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-            blablablablablablabla<br>
-        </div>
-    </div>
+<div id="add_prod">
+
+<div id="add_product">
+    <nobr>
+    <input type="text" name="product_quantity" class="quantity_slider-input" id="quantity_slider-input" maxlength="2" size="2" value="1"/> CPU(s)
+
+    <strong> equals </strong>
+    <select title="price" name="product_price">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+        <option value="21">21</option>
+        <option value="22">22</option>
+        <option value="23">23</option>
+        <option value="24">24</option>
+        <option value="25">25</option>
+        <option value="26">26</option>
+        <option value="27">27</option>
+        <option value="28">28</option>
+        <option value="29">29</option>
+        <option value="30">30</option>
+        <option value="31">31</option>
+        <option value="32">32</option>
+        <option value="33">33</option>
+        <option value="34">34</option>
+        <option value="35">35</option>
+        <option value="36">36</option>
+        <option value="37">37</option>
+        <option value="38">38</option>
+        <option value="39">39</option>
+        <option value="40">40</option>
+        <option value="41">41</option>
+        <option value="42">42</option>
+        <option value="43">43</option>
+        <option value="44">44</option>
+        <option value="45">45</option>
+        <option value="46">46</option>
+        <option value="47">47</option>
+        <option value="48">48</option>
+        <option value="49">49</option>
+        <option value="50">50</option>
+        <option value="51">51</option>
+        <option value="52">52</option>
+        <option value="53">53</option>
+        <option value="54">54</option>
+        <option value="55">55</option>
+        <option value="56">56</option>
+        <option value="57">57</option>
+        <option value="58">58</option>
+        <option value="59">59</option>
+        <option value="60">60</option>
+        <option value="61">61</option>
+        <option value="62">62</option>
+        <option value="63">63</option>
+        <option value="64">64</option>
+        <option value="65">65</option>
+        <option value="66">66</option>
+        <option value="67">67</option>
+        <option value="68">68</option>
+        <option value="69">69</option>
+        <option value="70">70</option>
+        <option value="71">71</option>
+        <option value="72">72</option>
+        <option value="73">73</option>
+        <option value="74">74</option>
+        <option value="75">75</option>
+        <option value="76">76</option>
+        <option value="77">77</option>
+        <option value="78">78</option>
+        <option value="79">79</option>
+        <option value="80">80</option>
+        <option value="81">81</option>
+        <option value="82">82</option>
+        <option value="83">83</option>
+        <option value="84">84</option>
+        <option value="85">85</option>
+        <option value="86">86</option>
+        <option value="87">87</option>
+        <option value="88">88</option>
+        <option value="89">89</option>
+        <option value="90">90</option>
+        <option value="91">91</option>
+        <option value="92">92</option>
+        <option value="93">93</option>
+        <option value="94">94</option>
+        <option value="95">95</option>
+        <option value="96">96</option>
+        <option value="97">97</option>
+        <option value="98">98</option>
+        <option value="99">99</option>
+        <option value="100">100</option>
+    </select>
+
+    CCU(s)/h
+
+    <input type="text" name="product_description" class="product_description" id="product_description" maxlength="20" size="20" value="[Product-description]"/>
+
+    <input type="hidden" name="product_type" value="cpu">
+    <input type="hidden" name="action" value="add">
+    <input type="submit" value="Add" name="Add">
+
+    </nobr>
 </div>
 
+</div>
+
+
+</form>
+
+<hr>
+<h4> Product List</h4>
+{product_table}
 
 </body>
 </html>

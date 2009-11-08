@@ -26,13 +26,14 @@
 ..|Configuration
 ...|Cloud Config|plugins/cloud/cloud-config.php
 ...|Selector|plugins/cloud/cloud-selector.php
-....|CPU|plugins/cloud/cloud-cpu-selector.php
-....|Disk|plugins/cloud/cloud-disk-selector.php
-....|Kernel|plugins/cloud/cloud-kernel-selector.php
-....|Memory|plugins/cloud/cloud-memory-selector.php
-....|Network|plugins/cloud/cloud-network-selector.php
-....|Quantity|plugins/cloud/cloud-quantity-selector.php
-....|Resource|plugins/cloud/cloud-resource-selector.php
+....|CPU|plugins/cloud/cloud-selector.php?product_type=cpu
+....|Disk|plugins/cloud/cloud-selector.php?product_type=disk
+....|Kernel|plugins/cloud/cloud-selector.php?product_type=kernel
+....|Memory|plugins/cloud/cloud-selector.php?product_type=memory
+....|Network|plugins/cloud/cloud-selector.php?product_type=net
+....|Puppet|plugins/cloud/cloud-selector.php?product_type=puppet
+....|Quantity|plugins/cloud/cloud-selector.php?product_type=quantity
+....|Resource|plugins/cloud/cloud-selector.php?product_type=resource
 ...|Private Images|plugins/cloud/cloud-image-selector.php
 ...|IpGroups|plugins/cloud/cloud-ipgroup-manager.php
 ...|Cloud NAT|plugins/cloud/cloud-nat-manager.php
