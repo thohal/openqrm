@@ -13,6 +13,12 @@
 		calimg= new Image(16,16); 
 		calimg.src="img/cal.gif"; 
 		}
+
+        function statusMsg(msg) {
+            window.status=msg;
+            return true;
+        }
+        
 	//-->
 </script>
 <link type="text/css" rel="stylesheet" href="css/calendar.css">
@@ -296,7 +302,6 @@ function cloud_manager() {
 	if (!strlen($external_portal_name)) {
 		$external_portal_name = "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 	}
-    $new_cloud_request = "<b><a href=\"$thisfile?action=create&currenttab=1\">Create new Cloud Request</a></b>";
 
 	$arHead = array();
 
@@ -371,10 +376,15 @@ function cloud_manager() {
 		$cr_stop = date("d-m-Y H-i", $timestamp);
 		$cr_resource_quantity = $cr["cr_resource_quantity"];
 
+        // user login link
+        $user_auth_str = "://".$cu_tmp->name.":".$cu_tmp->password."@";
+        $external_portal_user_auth = str_replace("://", $user_auth_str, $external_portal_name);
+        $user_login_link = "<a href=\"".$external_portal_user_auth."/user/mycloud.php\" title=\"Login\" target=\"_BLANK\" onmouseover=\"return statusMsg('')\">".$cu_tmp->name."</a>";
+
 		// fill the array for the table
 		$arBody[] = array(
 			'cr_id' => $cr["cr_id"],
-			'cr_cu_id' => $cu_tmp->name,
+			'cr_cu_id' => $user_login_link,
 			'cr_status' => $cr_status_disp,
 			'cr_request_time' => $cr_request_time,
 			'cr_start' => $cr_start,
@@ -403,7 +413,6 @@ function cloud_manager() {
 	$t->debug = false;
 	$t->setFile('tplfile', './tpl/' . 'cloud-manager-tpl.php');
 	$t->setVar(array(
-        'new_cloud_request' => $new_cloud_request,
         'cloud_request_table' => $table->get_string(),
         'external_portal_name' => $external_portal_name,
 	));
@@ -411,202 +420,6 @@ function cloud_manager() {
 	return $disp;
 
 
-}
-
-
-
-
-function cloud_create_request() {
-
-    global $OPENQRM_SERVER_IP_ADDRESS;
-	global $OPENQRM_USER;
-    global $OPENQRM_WEB_PROTOCOL;
-	global $thisfile;
-	global $RootDir;
-
-	$cc_conf = new cloudconfig();
-	// get external name
-	$external_portal_name = $cc_conf->get_value(3);  // 3 is the external name
-	if (!strlen($external_portal_name)) {
-		$external_portal_name = "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
-	}
-
-    $cl_user = new clouduser();
-	$cl_user_list = array();
-	$cl_user_list = $cl_user->get_list();
-	$cl_user_count = count($cl_user_list);
-	
-	$kernel = new kernel();
-	$kernel_list = array();
-	$kernel_list = $kernel->get_list();
-	// remove the openqrm kernelfrom the list
-	// print_r($kernel_list);
-	array_shift($kernel_list);
-
-	$image = new image();
-	$image_list = array();
-	$image_list_tmp = array();
-	$image_list_tmp = $image->get_list();
-	// remove the openqrm + idle image from the list
-	//print_r($image_list);
-	array_shift($image_list_tmp);
-	array_shift($image_list_tmp);
-	// do not show the image-clones from other requests
-	foreach($image_list_tmp as $list) {
-		$iname = $list['label'];
-		$iid = $list['value'];
-		if (!strstr($iname, ".cloud_")) {
-			$image_list[] = array("value" => $iid, "label" => $iname);
-		}
-	}
-	$image_count = count($image_list);
-
-	// get the list of virtualization types
-	$virtualization = new virtualization();
-	$virtualization_list = array();
-	$virtualization_list_select = array();
-	$virtualization_list = $virtualization->get_list();
-	// check if to show physical system type
-	$cc_request_physical_systems = $cc_conf->get_value(4);	// request_physical_systems
-	if (!strcmp($cc_request_physical_systems, "false")) {
-		array_shift($virtualization_list);
-	}
-	// filter out the virtualization hosts
-	foreach ($virtualization_list as $id => $virt) {
-		if (!strstr($virt[label], "Host")) {
-			$virtualization_list_select[] = array("value" => $virt[value], "label" => $virt[label]);
-			
-		}
-	}
-
-	// prepare the array for the resource_quantity select
-	$max_resources_per_cr_select = array();
-	$cc_conf = new cloudconfig();
-	$cc_max_resources_per_cr = $cc_conf->get_value(6);	// max_resources_per_cr
-	for ($mres = 1; $mres <= $cc_max_resources_per_cr; $mres++) {
-		$max_resources_per_cr_select[] = array("value" => $mres, "label" => $mres);
-	}
-
-	// prepare the array for the network-interface select
-	$max_network_interfaces_select = array();
-	$max_network_interfaces = $cc_conf->get_value(9);	// max_network_interfaces
-	for ($mnet = 1; $mnet <= $max_network_interfaces; $mnet++) {
-		$max_network_interfaces_select[] = array("value" => $mnet, "label" => $mnet);
-	}
-
-	// get list of available resource parameters
-	$resource_p = new resource();
-	$resource_p_array = $resource_p->get_list();
-	// remove openQRM resource
-	array_shift($resource_p_array);
-	// gather all available values in arrays
-	$available_cpunumber_uniq = array();
-	$available_cpunumber = array();
-	$available_cpunumber[] = array("value" => "0", "label" => "any");
-	$available_memtotal_uniq = array();
-	$available_memtotal = array();
-	$available_memtotal[] = array("value" => "0", "label" => "any");
-	foreach($resource_p_array as $res) {
-		$res_id = $res['resource_id'];
-		$tres = new resource();
-		$tres->get_instance_by_id($res_id);
-		if (!in_array($tres->cpunumber, $available_cpunumber_uniq)) {
-			$available_cpunumber[] = array("value" => $tres->cpunumber, "label" => $tres->cpunumber);
-			$available_cpunumber_uniq[] .= $tres->cpunumber;
-		}
-		if (!in_array($tres->memtotal, $available_memtotal_uniq)) {
-			$available_memtotal[] = array("value" => $tres->memtotal, "label" => $tres->memtotal);
-			$available_memtotal_uniq[] .= $tres->memtotal;
-		}
-	}
-
-	if ($cl_user_count < 1) {
-		$subtitle = "<b>Please create a <a href='/openqrm/base/plugins/cloud/cloud-user.php?action=create'>Cloud User</a> first!";
-	}
-	if ($image_count < 1) {
-		$subtitle = "<b>Please create <a href='/openqrm/base/server/image/image-new.php?currenttab=tab1'>Sever-Images</a> first!";
-	}
-
-	$now = date("d-m-Y H:i", $_SERVER['REQUEST_TIME']);
-    $start_request = $start_request."Start time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\" value=\"$now\">";
-	$start_request = $start_request."<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)\">";
-	$start_request = $start_request."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
-	$start_request = $start_request."</a>";
-
-    $tomorrow = date("d-m-Y H:i", $_SERVER['REQUEST_TIME'] + 86400);
-	$stop_request = $stop_request."Stop time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\" value=\"$tomorrow\">";
-	$stop_request = $stop_request."<a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
-	$stop_request = $stop_request."<img src=\"img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
-	$stop_request = $stop_request."</a>";
-
-	// check if to show ha
-	$show_ha_checkbox = $cc_conf->get_value(10);	// show_ha_checkbox
-	if (!strcmp($show_ha_checkbox, "true")) {
-		// is ha enabled ?
-		if (file_exists("$RootDir/plugins/highavailability/.running")) {
-			$show_ha = htmlobject_input('cr_ha_req', array("value" => 1, "label" => 'Highavailable'), 'checkbox', false);
-		}
-	}
-	// check for default-clone-on-deploy
-	$cc_conf = new cloudconfig();
-	$cc_default_clone_on_deploy = $cc_conf->get_value(5);	// default_clone_on_deploy
-	if (!strcmp($cc_default_clone_on_deploy, "true")) {
-		$clone_on_deploy = "<input type=hidden name='cr_shared_req' value='on'>";
-	} else {
-		$clone_on_deploy = htmlobject_input('cr_shared_req', array("value" => 1, "label" => 'Clone-on-deploy'), 'checkbox', false);
-	}
-
-
-	// check if to show puppet
-	$show_puppet_groups = $cc_conf->get_value(11);	// show_puppet_groups
-	if (!strcmp($show_puppet_groups, "true")) {
-		// is puppet enabled ?
-		if (file_exists("$RootDir/plugins/puppet/.running")) {
-			require_once "$RootDir/plugins/puppet/class/puppet.class.php";
-			$puppet_group_dir = "$RootDir/plugins/puppet/puppet/manifests/groups";
-			global $puppet_group_dir;
-			$puppet_group_array = array();
-			$puppet = new puppet();
-			$puppet_group_array = $puppet->get_available_groups();
-			foreach ($puppet_group_array as $index => $puppet_g) {
-				$puid=$index+1;
-				$puppet_info = $puppet->get_group_info($puppet_g);
-				// TODO use  $puppet_info for onmouseover info
-				$show_puppet = $show_puppet."<input type='checkbox' name='puppet_groups[]' value=$puppet_g>$puppet_g<br/>";
-			}
-			$show_puppet = $show_puppet."<br/>";
-
-		}
-	}
-
-	//------------------------------------------------------------ set template
-	$t = new Template_PHPLIB();
-	$t->debug = false;
-	$t->setFile('tplfile', './tpl/' . 'cloud-request-tpl.php');
-	$t->setVar(array(
-		'formaction' => 'cloud-action.php',
-		'currentab' => htmlobject_input('currenttab', array("value" => 'tab0', "label" => ''), 'hidden'),
-		'cloud_command' => htmlobject_input('cloud_command', array("value" => 'create_request', "label" => ''), 'hidden'),
-		'subtitle' => $subtitle,
-		'cloud_user' => htmlobject_select('cr_cu_id', $cl_user_list, 'User'),
-		'cloud_request_start' => $start_request,
-		'cloud_request_stop' => $stop_request,
-		'cloud_resource_quantity' => htmlobject_select('cr_resource_quantity', $max_resources_per_cr_select, 'Quantity'),
-		'cloud_resource_type_req' => htmlobject_select('cr_resource_type_req', $virtualization_list_select, 'Resource type'),
-		'cloud_kernel_id' => htmlobject_select('cr_kernel_id', $kernel_list, 'Kernel'),
-		'cloud_image_id' => htmlobject_select('cr_image_id', $image_list, 'Image'),
-		'cloud_ram_req' => htmlobject_select('cr_ram_req', $available_memtotal, 'Memory'),
-		'cloud_cpu_req' => htmlobject_select('cr_cpu_req', $available_cpunumber, 'CPUs'),
-		'cloud_disk_req' => htmlobject_input('cr_disk_req', array("value" => '', "label" => 'Disk(MB)'), 'text', 20),
-		'cloud_network_req' => htmlobject_select('cr_network_req', $max_network_interfaces_select, 'Network-cards'),
-		'cloud_ha' => $show_ha,
-		'cloud_clone_on_deploy' => $clone_on_deploy,
-		'cloud_show_puppet' => $show_puppet,
-        'external_portal_name' => $external_portal_name,
-		'submit_save' => htmlobject_input('action', array("value" => 'Create', "label" => 'Create'), 'submit'),
-	));
-	$disp =  $t->parse('out', 'tplfile');
-	return $disp;
 }
 
 
@@ -775,10 +588,6 @@ $output = array();
 if(htmlobject_request('action') != '') {
 	// display by default
 	switch (htmlobject_request('action')) {
-		case 'create':
-			$output[] = array('label' => 'Cloud Manager', 'value' => cloud_manager());
-			$output[] = array('label' => 'Create Cloud Request', 'value' => cloud_create_request());
-			break;
 
 		case 'details':
 			foreach($_REQUEST['identifier'] as $id) {

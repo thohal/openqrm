@@ -399,6 +399,13 @@ if (htmlobject_request('action') != '') {
 				}
 			}
 
+            // checks if products exist in the cloudselector
+
+
+
+
+
+
 			// id
 			$request_fields['cr_id'] = openqrm_db_get_free_id('cr_id', $CLOUD_REQUEST_TABLE);
 			$cr_request = new cloudrequest();
