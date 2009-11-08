@@ -30,6 +30,13 @@ function getPassword(length, extraChars, firstNumber, firstLower, firstUpper, fi
 	}
 	return rc;
 }
+
+function statusMsg(msg) {
+    window.status=msg;
+    return true;
+}
+
+
 </script>
 
 <link rel="stylesheet" type="text/css" href="../../css/htmlobject.css" />
@@ -201,10 +208,18 @@ function cloud_user_manager() {
 		}
 		$cu_id = $cu["cu_id"];
 		$ccunits_input = "<input type=\"text\" name=\"cu_ccunits[$cu_id]\" value=\"$ccunits\" size=\"5\ maxsize=\"10\">";
-		
+
+        // user login link
+        $tclu = new clouduser();
+        $tclu->get_instance_by_id($cu_id);
+        $user_auth_str = "://".$tclu->name.":".$tclu->password."@";
+        $external_portal_user_auth = str_replace("://", $user_auth_str, $external_portal_name);
+        $user_login_link = "<a href=\"".$external_portal_user_auth."/user/mycloud.php\" title=\"Login\" target=\"_BLANK\" onmouseover=\"return statusMsg('')\">".$tclu->name."</a>";
+
+
 		$arBody[] = array(
 			'cu_id' => $cu["cu_id"],
-			'cu_name' => $cu["cu_name"],
+			'cu_name' => $user_login_link,
 			'cu_forename' => $cu["cu_forename"],
 			'cu_lastname' => $cu["cu_lastname"],
 			'cu_email' => $cu["cu_email"],
