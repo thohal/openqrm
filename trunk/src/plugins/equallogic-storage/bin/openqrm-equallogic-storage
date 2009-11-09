@@ -30,7 +30,7 @@ export LANG=C
 
 
 function equallogic_storage_usage() {
-	echo "Usage : $0 add/remove/snap/list <-n image-name> <-i image-password> <-u eq-username> <-p eq-password> <-e eq-server-ip>"
+	echo "Usage : $0 add/remove/snap/list/resize <-n image-name> <-i image-password> <-u eq-username> <-p eq-password> <-e eq-server-ip>"
 	echo "             [-m size in MB]"
 	echo "             [-s image-snapshot-name]"
 	echo "        $0 auth <-r image-rootdevice> <-i image-password> <-u eq-username> <-p eq-password> <-e eq-server-ip>"
@@ -130,7 +130,7 @@ done
 
 # main
 if [ "$EQUALLOGIC_COMMAND" == "" ]; then
-	equallogic_storage_usage
+    equallogic_storage_usage
 fi
 if [ "$EQUALLOGIC_PASSWORD" == "" ]; then
     equallogic_storage_usage
@@ -165,14 +165,14 @@ case "$EQUALLOGIC_COMMAND" in
 		export EQUALLOGIC_IMAGE_SIZE
 		echo -n "Creating EQUALLOGIC Lun for image $EQUALLOGIC_IMAGE_NAME"
 		equallogic_storage_lock aquire
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume create $EQUALLOGIC_IMAGE_NAME $EQUALLOGIC_IMAGE_SIZE"
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume create $EQUALLOGIC_IMAGE_NAME $EQUALLOGIC_IMAGE_SIZE"
 		equallogic_storage_lock release
 		$0 post_luns -u $EQUALLOGIC_USERNAME -p $EQUALLOGIC_PASSWORD -e $EQUALLOGIC_SERVER_IP
 		;;
 	remove)
 		echo -n "Removing EQUALLOGIC export for image $EQUALLOGIC_IMAGE_NAME"
 		equallogic_storage_lock aquire
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-volume-remove $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "$EQUALLOGIC_IMAGE_NAME"
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-volume-remove $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "$EQUALLOGIC_IMAGE_NAME"
 		equallogic_storage_lock release
 		$0 post_luns -u $EQUALLOGIC_USERNAME -p $EQUALLOGIC_PASSWORD -e $EQUALLOGIC_SERVER_IP
 		;;
@@ -200,58 +200,70 @@ case "$EQUALLOGIC_COMMAND" in
 		echo -n "Authenticating EQUALLOGIC Lun for image $EQUALLOGIC_IMAGE_NAME"
 		equallogic_storage_lock aquire
 
-        # we first have to check if there is an existing access control
-        # for the volume already, if yes we remove and re-create it
-        # if no we just create a new one
-        TMPLISTFILE=`mktemp /tmp/eq-list.XXXXXXXXXX`
+		# we first have to check if there is an existing access control
+		# for the volume already, if yes we remove and re-create it
+		# if no we just create a new one
+		TMPLISTFILE=`mktemp /tmp/eq-list.XXXXXXXXXX`
 		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-volume-access-ids $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD $EQUALLOGIC_IMAGE_NAME > $TMPLISTFILE
-        for access_id in `grep "$EQUALLOGIC_IMAGE_NAME " $TMPLISTFILE | awk {' print $1 '}`; do
-    		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-volume-access-remove $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD $EQUALLOGIC_IMAGE_NAME $access_id
-        done
-       /bin/rm -f TMPLISTFILE
-        $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-volume-auth $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD $EQUALLOGIC_IMAGE_NAME $EQUALLOGIC_IMAGE_NAME $EQUALLOGIC_IMAGE_PASSWORD
+		for access_id in `grep "$EQUALLOGIC_IMAGE_NAME " $TMPLISTFILE | awk {' print $1 '}`; do
+			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-volume-access-remove $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD $EQUALLOGIC_IMAGE_NAME $access_id
+		done
+		/bin/rm -f $TMPLISTFILE
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-volume-auth $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD $EQUALLOGIC_IMAGE_NAME $EQUALLOGIC_IMAGE_NAME $EQUALLOGIC_IMAGE_PASSWORD
 		equallogic_storage_lock release
 		;;
 
 	list)
 		equallogic_storage_lock aquire
-        TMPLISTFILE=`mktemp /tmp/eq-list.XXXXXXXXXX`
+		TMPLISTFILE=`mktemp /tmp/eq-list.XXXXXXXXXX`
 		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume show" > $TMPLISTFILE
-        equallogic_parse_cmd_output $TMPLISTFILE
-        /bin/rm -f TMPLISTFILE
+		equallogic_parse_cmd_output $TMPLISTFILE
+		/bin/rm -f $TMPLISTFILE
 		equallogic_storage_lock release
 		;;
 	post_luns)
 		# echo "Posting current equallogic-luns to the openQRM-server"
 		equallogic_storage_lock aquire
-        if [ ! -d $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage ]; then
-            mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage
-        fi
+		if [ ! -d $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage ]; then
+			mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage
+		fi
 		STORAGE_STATUS_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage/$EQUALLOGIC_SERVER_IP.equallogic.stat"
-        TMPLISTFILE=`mktemp /tmp/eq-list.XXXXXXXXXX`
+		TMPLISTFILE=`mktemp /tmp/eq-list.XXXXXXXXXX`
 		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume show" > $TMPLISTFILE
-        equallogic_parse_cmd_output $TMPLISTFILE > $STORAGE_STATUS_TMP
-        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
-        chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage
-        /bin/rm -f TMPLISTFILE
+		equallogic_parse_cmd_output $TMPLISTFILE > $STORAGE_STATUS_TMP
+		sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
+		/bin/rm -f $TMPLISTFILE
 		equallogic_storage_lock release
 		;;
 	post_identifier)
 		#echo "Posting current equallogic-identifier to the openQRM-server"
 		equallogic_storage_lock aquire
-        if [ ! -d $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage ]; then
-            mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage
-        fi
-        STORAGE_STATUS_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage/$EQUALLOGIC_SERVER_IP.equallogic.ident"
-		> $STORAGE_STATUS_TMP
-        TMPLISTFILE=`mktemp /tmp/eq-list.XXXXXXXXXX`
+		if [ ! -d $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage ]; then
+			mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage
+		fi
+		STORAGE_STATUS_TMP="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage/$EQUALLOGIC_SERVER_IP.equallogic.ident" > $STORAGE_STATUS_TMP
+		TMPLISTFILE=`mktemp /tmp/eq-list.XXXXXXXXXX`
 		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume show" > $TMPLISTFILE
-        equallogic_parse_cmd_output $TMPLISTFILE > $STORAGE_STATUS_TMP
-        sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
-        chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/web/storage
-        /bin/rm -f TMPLISTFILE
+		equallogic_parse_cmd_output $TMPLISTFILE > $STORAGE_STATUS_TMP
+		sed -i -e "s/ \{1,\}/@/g" $STORAGE_STATUS_TMP
+		/bin/rm -f $TMPLISTFILE
 		equallogic_storage_lock release
 		;;
+	resize)
+		if [ "$EQUALLOGIC_IMAGE_SIZE" == "" ]; then
+			echo "Error: no size given"
+        		/bin/rm -f $TMPLISTFILE
+			exit 1
+		fi
+		export EQUALLOGIC_IMAGE_SIZE
+		echo -n "Resizing EQUALLOGIC image $EQUALLOGIC_IMAGE_NAME to $EQUALLOGIC_IMAGE_SIZE"
+		equallogic_storage_lock aquire
+        	$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-cmd $EQUALLOGIC_SERVER_IP $EQUALLOGIC_USERNAME $EQUALLOGIC_PASSWORD "volume select $EQUALLOGIC_IMAGE_NAME size $EQUALLOGIC_IMAGE_SIZE"
+		equallogic_storage_lock release
+		$0 post_luns -u $EQUALLOGIC_USERNAME -p $EQUALLOGIC_PASSWORD -e $EQUALLOGIC_SERVER_IP
+        	/bin/rm -f $TMPLISTFILE
+		;;
+
 	*)
 		equallogic_storage_usage
 		;;

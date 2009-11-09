@@ -277,9 +277,40 @@ function openqrm_cloud_monitor() {
                     $eq_storage_ip = $resource_ip;
                     $eq_user = $eq_storage->storage_user;
                     $eq_password = $eq_storage->storage_password;
-                    $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage resize -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip -m $resize_value";
-                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
-                    $output = shell_exec($image_remove_clone_cmd);
+		     $eq_resize_from = $ci->disk_size;
+		     $eq_resize_to = $ci->disk_rsize;
+                    // Convert values to MB
+                    if(preg_match('/TB$/i',$eq_resize_from)) {
+                     $eq_resize_from = preg_replace('/TB$/i','',$eq_resize_from);
+                     $eq_resize_from = round($eq_resize_from * 1024 * 1024);
+                    }
+                    if(preg_match('/GB$/i',$eq_resize_from)) {
+                     $eq_resize_from = preg_replace('/GB$/i','',$eq_resize_from);
+                     $eq_resize_from = round($eq_resize_from * 1024);
+                    }
+                    if(preg_match('/MB$/i',$eq_resize_from)) {
+                     $eq_resize_from = preg_replace('/MB$/i','',$eq_resize_from);
+                     $eq_resize_from = round($eq_resize_from);
+                    }
+                    if(preg_match('/TB$/i',$eq_resize_to)) {
+                     $eq_resize_to = preg_replace('/TB$/i','',$eq_resize_to);
+                     $eq_resize_to = round($eq_resize_to * 1024 * 1024);
+                    }
+                    if(preg_match('/GB$/i',$eq_resize_to)) {
+                     $eq_resize_to = preg_replace('/GB$/i','',$eq_resize_to);
+                     $eq_resize_to = round($eq_resize_to * 1024);
+                    }
+                    if(preg_match('/MB$/i',$eq_resize_to)) {
+                     $eq_resize_to = preg_replace('/MB$/i','',$eq_resize_to);
+                     $eq_resize_to = round($eq_resize_to);
+		    }
+		    if($eq_resize_to <= $eq_resize_from) {
+                     $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Error, downsizing unsupported: $image_resize_cmd", "", "", 0, 0, 0); 
+                    } else {
+                     $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage resize -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip -m $eq_resize_to";
+                     $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
+                     $output = shell_exec($image_resize_cmd);
+	            }
                 }
 
 

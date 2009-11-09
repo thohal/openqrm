@@ -273,6 +273,91 @@ if(htmlobject_request('redirect') != 'yes') {
                 }
                 break;
 
+            case 'resize':
+                if (isset($_REQUEST['identifier'])) {
+                    foreach($_REQUEST['identifier'] as $lun_name) {
+                        // check if configuration already exists
+                        $eq_storage = new equallogic_storage();
+                        $eq_storage->get_instance_by_storage_id($equallogic_storage_id);
+                        if (!strlen($eq_storage->storage_id)) {
+                            $strMsg .= "EqualLogic Storage server $id not configured yet<br>";
+                        } else {
+                            show_progressbar();
+                            $storage = new storage();
+                            $storage->get_instance_by_id($eq_storage->storage_id);
+                            $resource = new resource();
+                            $resource->get_instance_by_id($storage->resource_id);
+                            $eq_storage_ip = $resource->ip;
+                            $eq_user = $eq_storage->storage_user;
+                            $eq_password = $eq_storage->storage_password;
+			    
+			    // Fetch the data for the resize
+			    $eq_resize_arr = htmlobject_request("equallogic_storage_resize");
+			    // See if we have an actual value to resize to
+			    if(isset($eq_resize_arr[$lun_name])) {
+
+			     // We are resizing so fetch the current LUN size
+			     $storage_export_list="storage/$resource->ip.equallogic.stat";
+			     if (file_exists($storage_export_list)) {
+			      $storage_vg_content=file($storage_export_list);
+			      foreach ($storage_vg_content as $index => $equallogic) {
+			       $equallogic_output = trim($equallogic);
+			       $eqstat = preg_split('/@/',trim($equallogic));
+            		       $tmp_eq_name = $eqstat[0];
+			       $tmp_eq_size = $eqstat[1];
+			       if($tmp_eq_name == $lun_name) {
+
+ 				// set the current lun size to $eq_resize_from
+   			        $eq_resize_from = $tmp_eq_size;
+ 			       }
+                              }
+                             }
+		
+			     // Set eq_resize_to to the value we're supposed to resize to
+                             $eq_resize_to = $eq_resize_arr[$lun_name];
+
+			     // Convert values to MB
+		 	     if(preg_match('/TB$/i',$eq_resize_from)) {
+				$eq_resize_from = preg_replace('/TB$/i','',$eq_resize_from);
+				$eq_resize_from = round($eq_resize_from * 1024 * 1024);
+			     }
+			     if(preg_match('/GB$/i',$eq_resize_from)) {
+				$eq_resize_from = preg_replace('/GB$/i','',$eq_resize_from);
+				$eq_resize_from = round($eq_resize_from * 1024);
+			     }
+			     if(preg_match('/MB$/i',$eq_resize_from)) {
+				$eq_resize_from = preg_replace('/MB$/i','',$eq_resize_from);
+				$eq_resize_from = round($eq_resize_from);
+			     }
+			     if(preg_match('/TB$/i',$eq_resize_to)) {
+				$eq_resize_to = preg_replace('/TB$/i','',$eq_resize_to);
+				$eq_resize_to = round($eq_resize_to * 1024 * 1024);
+			     }
+			     if(preg_match('/GB$/i',$eq_resize_to)) {
+				$eq_resize_to = preg_replace('/GB$/i','',$eq_resize_to);
+				$eq_resize_to = round($eq_resize_to * 1024);
+			     }
+			     if(preg_match('/MB$/i',$eq_resize_to)) {
+				$eq_resize_to = preg_replace('/MB$/i','',$eq_resize_to);
+				$eq_resize_to = round($eq_resize_to);
+			     }
+
+			     // Check if the new size is bigger than the old size (we don't support downsizing)
+			     if($eq_resize_to <= $eq_resize_from) {
+                               $strMsg .= "Not resizing Lun $lun_name ($eq_resize_from is larger than $eq_resize_to), downsizing unsupported<br>";
+			     } else { 
+                               $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage resize -n $lun_name -u $eq_user -p $eq_password -e $eq_storage_ip -m ".$eq_resize_to;
+                               $output = shell_exec($openqrm_server_command);
+                               $strMsg .= "Resizing Lun $lun_name from $eq_resize_from MB to $eq_resize_to MB on the EqualLogic Storage server $equallogic_storage_id <br>";
+                             }
+                            } 
+                        }
+                    }
+                    redirect($strMsg, 'tab0', $equallogic_storage_id);
+                }
+                break;
+
+
             case 'snap_lun':
                 show_progressbar();
                 $strMsg = "Snapshotting is not supported yet !";
@@ -473,7 +558,7 @@ function equallogic_storage_display($equallogic_storage_id) {
 	$arHead1['lun_name'] = array();
 	$arHead1['lun_name']['title'] ='Name';
 
-    $arHead1['lun_size'] = array();
+       $arHead1['lun_size'] = array();
 	$arHead1['lun_size']['title'] ='Size';
 
 	$arHead1['lun_snapshots'] = array();
@@ -491,6 +576,9 @@ function equallogic_storage_display($equallogic_storage_id) {
 	$arHead1['lun_tp'] = array();
 	$arHead1['lun_tp']['title'] ='TP';
 
+       $arHead1['lun_resize'] = array();
+	$arHead1['lun_resize']['title'] ='Resize';
+
     $arBody1 = array();
 	$lun_count=0;
 
@@ -499,38 +587,20 @@ function equallogic_storage_display($equallogic_storage_id) {
 		$storage_vg_content=file($storage_export_list);
 		foreach ($storage_vg_content as $index => $equallogic) {
             $equallogic_output = trim($equallogic);
-            $first_at_pos = strpos($equallogic_output, "@");
-            $first_at_pos++;
-            $eq_name_first_at_removed = substr($equallogic_output, $first_at_pos, strlen($equallogic_output)-$first_at_pos);
-            $second_at_pos = strpos($eq_name_first_at_removed, "@");
-            $second_at_pos++;
-            $eq_name_second_at_removed = substr($eq_name_first_at_removed, $second_at_pos, strlen($eq_name_first_at_removed)-$second_at_pos);
-            $third_at_pos = strpos($eq_name_second_at_removed, "@");
-            $third_at_pos++;
-            $eq_name_third_at_removed = substr($eq_name_second_at_removed, $third_at_pos, strlen($eq_name_second_at_removed)-$third_at_pos);
-            $fourth_at_pos = strpos($eq_name_third_at_removed, "@");
-            $fourth_at_pos++;
-            $eq_name_fourth_at_removed = substr($eq_name_third_at_removed, $fourth_at_pos, strlen($eq_name_third_at_removed)-$fourth_at_pos);
-            $fifth_at_pos = strpos($eq_name_fourth_at_removed, "@");
-            $fifth_at_pos++;
-            $eq_name_fifth_at_removed = substr($eq_name_fourth_at_removed, $fifth_at_pos, strlen($eq_name_fourth_at_removed)-$fifth_at_pos);
-            $sixth_at_pos = strpos($eq_name_fifth_at_removed, "@");
-            $sixth_at_pos++;
-            $eq_name_sixth_at_removed = substr($eq_name_fifth_at_removed, $sixth_at_pos, strlen($eq_name_fifth_at_removed)-$sixth_at_pos);
-            $seventh_at_pos = strpos($eq_name_sixth_at_removed, "@");
-            $seventh_at_pos++;
 
-            $eq_name = trim(substr($equallogic_output, 0, $first_at_pos-1));
-            $eq_size = trim(substr($eq_name_first_at_removed, 0, $second_at_pos-1));
-            $eq_snapshots = trim(substr($eq_name_second_at_removed, 0, $third_at_pos-1));
-            $eq_status = trim(substr($eq_name_third_at_removed, 0, $fourth_at_pos-1));
-            $eq_permissions = trim(substr($eq_name_fourth_at_removed, 0, $fifth_at_pos-1));
-            $eq_connections = trim(substr($eq_name_fifth_at_removed, 0, $sixth_at_pos-1));
-            $eq_tp = trim(substr($eq_name_sixth_at_removed, 0, $seventh_at_pos-1));
+            $eqstat = preg_split('/@/',trim($equallogic));
+ 
+            $eq_name = $eqstat[0];
+            $eq_size = $eqstat[1];
+            $eq_snapshots = $eqstat[2];
+            $eq_status = $eqstat[3];
+            $eq_permissions = $eqstat[4];
+            $eq_connections = $eqstat[5];
+            $eq_tp = $eqstat[6];
 
 
             $arBody1[] = array(
-        		'lun_icon' => "<img width=24 height=24 src=$resource_icon_default><input type='hidden' name='equallogic_storage_id' value=$equallogic_storage_id>",
+                'lun_icon' => "<img width=24 height=24 src=$resource_icon_default><input type='hidden' name='equallogic_storage_id' value=$equallogic_storage_id>",
                 'lun_name' => $eq_name,
                 'lun_size' => $eq_size,
                 'lun_snapshots' => $eq_snapshots,
@@ -538,6 +608,7 @@ function equallogic_storage_display($equallogic_storage_id) {
                 'lun_permissions' => $eq_permissions,
                 'lun_connections' => $eq_connections,
                 'lun_tp' => $eq_tp,
+                'lun_resize' => htmlobject_input("equallogic_storage_resize[$eq_name]", array("value" => "", "label" => 'Resize (MB)'), 'text', 10),
             );
             $lun_count++;
 		}
@@ -555,7 +626,7 @@ function equallogic_storage_display($equallogic_storage_id) {
 	$table1->head = $arHead1;
 	$table1->body = $arBody1;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table1->bottom = array('reload', 'remove');
+		$table1->bottom = array('resize','reload', 'remove');
 		$table1->identifier = 'lun_name';
 	}
 	$table1->max = $lun_count;
@@ -571,7 +642,7 @@ function equallogic_storage_display($equallogic_storage_id) {
 		'lun_table' => $table1->get_string(),
 		'equallogic_lun_name' => htmlobject_input('equallogic_storage_image_name', array("value" => '', "label" => 'Name'), 'text', 20),
 		'equallogic_lun_size' => htmlobject_input('equallogic_storage_image_size', array("value" => '1000', "label" => 'Lun Size (MB)'), 'text', 20),
-    	'hidden_equallogic_storage_id' => "<input type=hidden name=identifier[] value=$storage->id>",
+	    	'hidden_equallogic_storage_id' => "<input type=hidden name=identifier[] value=$storage->id>",
 		'submit' => htmlobject_input('action', array("value" => 'add', "label" => 'Add'), 'submit'),
 	));
 	$disp =  $t->parse('out', 'tplfile');
