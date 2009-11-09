@@ -206,7 +206,7 @@ function manage_iscsi() {
 			echo "Target $LVM_IMAGE_NAME" >> $IETDCONF
 			echo "	IncomingUser $LVM_IMAGE_NAME $IMAGE_PASS" >> $IETDCONF
 			echo "	Lun $IMAGE_LUN Path=/dev/mapper/$LVM_STORAGE_SERVER_VOLUME_GROUP-$LVM_IMAGE_NAME,Type=fileio" >> $IETDCONF
-			LAST_TID=`grep tid: /proc/net/iet/volume | cut -d':' -f2 | awk {' print $1 '} | sort | tail -n1`
+			LAST_TID=`grep tid: /proc/net/iet/volume | cut -d':' -f2 | awk {' print $1 '} | sort -g | tail -n1`
 			NEW_TID=$(( $LAST_TID + 1 ))
 			# dynamically add new target
 			if ! ietadm --op new --tid=$NEW_TID --params Name=$LVM_IMAGE_NAME; then
