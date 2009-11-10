@@ -393,12 +393,13 @@ function get_parameter($resource_id) {
 	echo "openqrm_boot_services=\"$boot_service_list\"\n";
     // here the appliance resouce got active
     // now we remove the iscsi password from the deployment parameters
-    $image = new image();
-    $image->get_instance_by_id($image_id);
-    if (strstr($image->deployment_parameter, "IMAGE_ISCSI_AUTH")) {
-        $image->set_deployment_parameters("IMAGE_ISCSI_AUTH", "");
-        $event->log("get_parameter", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Resource $resource_id gets active. Removing authentication token from image $image_id", "", "", 0, 0, $resource_id);
-    }
+    // TODO: this is not reboot save !
+//    $image = new image();
+//    $image->get_instance_by_id($image_id);
+//    if (strstr($image->deployment_parameter, "IMAGE_ISCSI_AUTH")) {
+//        $image->set_deployment_parameters("IMAGE_ISCSI_AUTH", "");
+//        $event->log("get_parameter", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Resource $resource_id gets active. Removing authentication token from image $image_id", "", "", 0, 0, $resource_id);
+//    }
 
 }
 
