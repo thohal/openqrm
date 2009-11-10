@@ -64,6 +64,7 @@ require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudirlc.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudiplc.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudprivateimage.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudselector.class.php";
 
 // inclde the mycloud parts
 require_once "./mycloudrequests.php";
@@ -324,14 +325,14 @@ if (htmlobject_request('action') != '') {
 			// check that the new stop time is later than the start time
 			if ($tstop < ($tstart + 3600)) {
 				$strMsg .="Request cannot be created with stop date before start.<br>Request duration must be at least 1 hour.<br>";
-				redirect($strMsg, "tab1");
+				redirect($strMsg, "tab2");
 				exit(0);
 			}
 
 			// check that the new stop time is later than the now + 1 hour
 			if ($tstop < ($nowstmp + 3600)) {
 				$strMsg .="Request duration must be at least 1 hour.<br>Not creating the request.<br>";
-				redirect($strMsg, "tab1");
+				redirect($strMsg, "tab2");
 				exit(0);
 			}
 
@@ -339,7 +340,7 @@ if (htmlobject_request('action') != '') {
 			check_is_number("Disk", $request_fields['cr_disk_req']);
 			if ($request_fields['cr_disk_req'] <= 500) {
 				$strMsg .="Disk parameter must be > 500 <br>";
-				redirect($strMsg, "tab1");
+				redirect($strMsg, "tab2");
 				exit(0);
 			}
 			// max disk size
@@ -347,14 +348,14 @@ if (htmlobject_request('action') != '') {
 			$max_disk_size = $cc_disk_conf->get_value(8);  // 8 is max_disk_size config
 			if ($request_fields['cr_disk_req'] > $max_disk_size) {
 				$strMsg .="Disk parameter must be <= $max_disk_size <br>";
-				redirect($strMsg, "tab1");
+				redirect($strMsg, "tab2");
 				exit(0);
 			}
 			// max network interfaces
 			$max_network_infterfaces = $cc_disk_conf->get_value(9);  // 9 is max_network_interfaces
 			if ($request_fields['cr_network_req'] > $max_network_infterfaces) {
 				$strMsg .="Network parameter must be <= $max_network_infterfaces <br>";
-				redirect($strMsg, "tab1");
+				redirect($strMsg, "tab2");
 				exit(0);
 			}
             // private image ? if yes do not clone it
@@ -372,7 +373,7 @@ if (htmlobject_request('action') != '') {
                             $request_fields['cr_shared_req']=0;
                         } else {
                             $strMsg .="Unauthorized request of private Cloud image! Skipping ...<br>";
-                            redirect($strMsg, "tab1");
+                            redirect($strMsg, "tab2");
                             exit(0);
                         }
                     }
@@ -399,12 +400,78 @@ if (htmlobject_request('action') != '') {
 				}
 			}
 
-            // checks if products exist in the cloudselector
+
+            // ####### start of cloudselector case #######
+            // if cloudselector is enabled check if products exist
+            $cloud_selector_enabled = $cc_disk_conf->get_value(22);	// cloudselector
+            if (!strcmp($cloud_selector_enabled, "true")) {
+                $cloudselector = new cloudselector();
+                // cpu
+                $cs_cpu = htmlobject_request('cr_cpu_req');
+                if (!$cloudselector->product_exists("cpu", $cs_cpu)) {
+                    $strMsg .="Cloud CPU Product ($cs_cpu) is not existing...<br>";
+                    redirect($strMsg, "tab2");
+                    exit(0);
+                }
+                // disk
+                $cs_disk = htmlobject_request('cr_disk_req');
+                if (!$cloudselector->product_exists("disk", $cs_disk)) {
+                    $strMsg .="Cloud Disk Product ($cs_disk) is not existing...<br>";
+                    redirect($strMsg, "tab2");
+                    exit(0);
+                }
+                // kernel
+                $cs_kernel = htmlobject_request('cr_kernel_id');
+                if (!$cloudselector->product_exists("kernel", $cs_kernel)) {
+                    $strMsg .="Cloud Kernel Product ($cs_kernel) is not existing...<br>";
+                    redirect($strMsg, "tab2");
+                    exit(0);
+                }
+                // memory
+                $cs_memory = htmlobject_request('cr_ram_req');
+                if (!$cloudselector->product_exists("memory", $cs_memory)) {
+                    $strMsg .="Cloud Memory Product ($cs_memory) is not existing...<br>";
+                    redirect($strMsg, "tab2");
+                    exit(0);
+                }
+                // network
+                $cs_network = htmlobject_request('cr_network_req');
+                if (!$cloudselector->product_exists("network", $cs_network)) {
+                    $strMsg .="Cloud Network Product ($cs_network) is not existing...<br>";
+                    redirect($strMsg, "tab2");
+                    exit(0);
+                }
+                // puppet
+                if(htmlobject_request('puppet_groups') != '') {
+                    $puppet_groups_array = htmlobject_request('puppet_groups');
+                    if (is_array($puppet_groups_array)) {
+                        foreach($puppet_groups_array as $puppet_group) {
+                            if (!$cloudselector->product_exists("puppet", $puppet_group)) {
+                                $strMsg .="Cloud Puppet Product ($puppet_group) is not existing...<br>";
+                                redirect($strMsg, "tab2");
+                                exit(0);
+                            }
+                        }
+                    }
+                }
+                // quantity
+                $cs_quantity = htmlobject_request('cr_resource_quantity');
+                if (!$cloudselector->product_exists("quantity", $cs_quantity)) {
+                    $strMsg .="Cloud Quantity Product ($cs_quantity) is not existing...<br>";
+                    redirect($strMsg, "tab2");
+                    exit(0);
+                }
+                // resource type
+                $cs_resource = htmlobject_request('cr_resource_type_req');
+                if (!$cloudselector->product_exists("resource", $cs_resource)) {
+                    $strMsg .="Cloud Virtualization Product ($cs_resource) is not existing...<br>";
+                    redirect($strMsg, "tab2");
+                    exit(0);
+                }
 
 
-
-
-
+                // ####### end of cloudselector case #######
+            }
 
 			// id
 			$request_fields['cr_id'] = openqrm_db_get_free_id('cr_id', $CLOUD_REQUEST_TABLE);
