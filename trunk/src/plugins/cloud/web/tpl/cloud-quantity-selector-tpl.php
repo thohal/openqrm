@@ -264,6 +264,7 @@ Use the slider to select product quantity and how much CCU to charge per hour
 
 <hr>
 <h4> Product List</h4>
+<a href="./cloud-selector.php">back</a>
 {product_table}
 
 </body>

@@ -29,7 +29,7 @@ a {
 #cloudoffer {
     position: absolute;
     left: 250px;
-    top: 140px;
+    top: 260px;
     width: 150px;
     height: 20px;
 }
@@ -38,31 +38,31 @@ a {
 #cpu {
     position: absolute;
     left: 100px;
-    top: 290px;
-    width: 100px;
+    top: 280px;
+    width: 120px;
     height: 70px;
 }
 
 #disk {
     position: absolute;
-    left: 200px;
-    top: 230px;
+    left: 185px;
+    top: 215px;
     width: 100px;
     height: 70px;
 }
 
 #kernel {
     position: absolute;
-    left: 300px;
-    top: 220px;
+    left: 320px;
+    top: 200px;
     width: 100px;
     height: 70px;
 }
 
 #memory {
     position: absolute;
-    left: 400px;
-    top: 230px;
+    left: 420px;
+    top: 225px;
     width: 100px;
     height: 70px;
 }
@@ -70,31 +70,31 @@ a {
 #network {
     position: absolute;
     left: 500px;
-    top: 290px;
+    top: 280px;
     width: 100px;
     height: 70px;
 }
 
 #puppet {
     position: absolute;
-    left: 400px;
-    top: 350px;
+    left: 420px;
+    top: 330px;
     width: 100px;
     height: 70px;
 }
 
 #quantity {
     position: absolute;
-    left: 300px;
-    top: 370px;
+    left: 320px;
+    top: 360px;
     width: 100px;
     height: 70px;
 }
 
 #resource {
     position: absolute;
-    left: 180px;
-    top: 350px;
+    left: 190px;
+    top: 330px;
     width: 100px;
     height: 70px;
 }
@@ -102,6 +102,9 @@ a {
 </style>
 
 <h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Cloud Selector for portal <small><a href="{external_portal_name}" target="_BLANK">{external_portal_name}</a></small></h1>
+
+&nbsp;&nbsp;&nbsp;&nbsp;<img src="img/cloudofferings.png" width="518" height="233" alt="cloudofferings"/>
+
 
 <div id="cloudoffer" class="link">
 <h4>Define Cloud Offerings</h4>
@@ -139,10 +142,6 @@ a {
 <div id="resource" class="link">
 <a href="cloud-selector.php?product_type=resource"><strong>Resource</strong></a>
 </div>
-
-
-<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
-
 
 
 
