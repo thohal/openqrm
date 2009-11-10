@@ -250,6 +250,17 @@ function update($cloudselector_id, $ci_fields) {
 
 
 
+// sets cloud product state
+function set_state($id, $state) {
+	global $CLOUD_SELECTOR_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$update_query = "update $CLOUD_SELECTOR_TABLE set state=$state where id=$id";
+	$rs = $db->Execute($update_query);
+
+}
+
+
 // returns the number of cloudselectors 
 function get_count() {
 	global $CLOUD_SELECTOR_TABLE;
@@ -298,6 +309,61 @@ function get_all_ids() {
 	return $cloudselector_list;
 
 }
+
+
+
+// sorts a specific cloud product up or down
+function sort($direction, $id, $type) {
+	global $CLOUD_SELECTOR_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$cloudselector_list = array();
+	$query = "select sort_id from $CLOUD_SELECTOR_TABLE where id=$id";
+	$rs = $db->Execute($query);
+	if (!$rs)
+		$event->log("sort", $_SERVER['REQUEST_TIME'], 2, "cloudselector.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	else
+	while (!$rs->EOF) {
+		$current_sort_id_arr = $rs->fields;
+		$rs->MoveNext();
+	}
+    if (!count($current_sort_id_arr)) {
+        return;
+    }
+    $current_sort_id=$current_sort_id_arr['sort_id'];
+    switch ($direction) {
+        case 'up':
+            $new_sort_id=$current_sort_id-1;
+            break;
+
+        case 'down':
+            $new_sort_id=$current_sort_id+1;
+            break;
+    }
+    if ($new_sort_id < 0) {
+        return;
+    }
+    // find the product with the new_sort_id
+	$query = "select id from $CLOUD_SELECTOR_TABLE where sort_id=$new_sort_id and type=\"$type\"";
+	$rs = $db->Execute($query);
+	if (!$rs)
+		$event->log("sort1", $_SERVER['REQUEST_TIME'], 2, "cloudselector.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	else
+	while (!$rs->EOF) {
+		$product_id_exchange = $rs->fields;
+		$rs->MoveNext();
+	}
+    if (!count($product_id_exchange)) {
+        return;
+    }
+    $exchange_id = $product_id_exchange['id'];
+	$update_query1 = "update $CLOUD_SELECTOR_TABLE set sort_id=$current_sort_id where id=$exchange_id and type=\"$type\"";
+	$update_query2 = "update $CLOUD_SELECTOR_TABLE set sort_id=$new_sort_id where id=$id and type=\"$type\"";
+	$rs = $db->Execute($update_query1);
+	$rs = $db->Execute($update_query2);
+
+}
+
 
 
 

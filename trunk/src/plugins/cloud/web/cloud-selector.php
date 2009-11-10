@@ -48,6 +48,7 @@ global $OPENQRM_SERVER_IP_ADDRESS;
 global $OPENQRM_WEB_PROTOCOL;
 
 // gather post
+$product_id = htmlobject_request('product_id');
 $product_type = htmlobject_request('product_type');
 $product_quantity = htmlobject_request('product_quantity');
 $product_price = htmlobject_request('product_price');
@@ -80,14 +81,13 @@ if (htmlobject_request('redirect') != 'yes') {
                 break;
 
             case 'add':
-echo "here $product_type  $product_quantity";
                 $cloudselector = new cloudselector();
                 if ($cloudselector->product_exists($product_type, $product_quantity)) {
                     $strMsg .= "Cloud $product_type Product with Quantity $product_quantity already exists. Not adding ...<br>";
                     redirect_private($strMsg, $product_type);
                 }
                 $new_product_id = openqrm_db_get_free_id('id', $cloudselector->_db_table);
-                $next_free_sort_id = $cloudselector->get_next_free_sort_id("cpu");
+                $next_free_sort_id = $cloudselector->get_next_free_sort_id($product_type);
                 $new_product['id'] = $new_product_id;
                 $new_product['type'] = $product_type;
                 $new_product['sort_id'] = $next_free_sort_id;
@@ -101,7 +101,42 @@ echo "here $product_type  $product_quantity";
                 redirect_private($strMsg, $product_type);
                 break;
 
+            case 'up':
+                if (strlen($product_id)) {
+                    $cloudselector = new cloudselector();
+                    $cloudselector->sort("up", $product_id, $product_type);
+                    $strMsg .= "Moving $product_type Cloud Product $product_id up<br>";
+                }
+                redirect_private($strMsg, $product_type);
+                break;
 
+            case 'down':
+                if (strlen($product_id)) {
+                    $cloudselector = new cloudselector();
+                    $cloudselector->sort("down", $product_id, $product_type);
+                    $strMsg .= "Moving $product_type Cloud Product $product_id down<br>";
+                }
+                redirect_private($strMsg, $product_type);
+                break;
+
+
+            case 'enable':
+                if (strlen($product_id)) {
+                    $cloudselector = new cloudselector();
+                    $cloudselector->set_state($product_id, 1);
+                    $strMsg .= "Enabled $product_type Cloud Product $product_id<br>";
+                }
+                redirect_private($strMsg, $product_type);
+                break;
+
+            case 'disable':
+                if (strlen($product_id)) {
+                    $cloudselector = new cloudselector();
+                    $cloudselector->set_state($product_id, 0);
+                    $strMsg .= "Disabled $product_type Cloud Product $product_id<br>";
+                }
+                redirect_private($strMsg, $product_type);
+                break;
         }
     }
 }
@@ -190,6 +225,9 @@ function cloud_cpu_selector() {
 	$arHead['description'] = array();
 	$arHead['description']['title'] ='Description';
 
+	$arHead['sort_id'] = array();
+	$arHead['sort_id']['title'] ='Sort';
+
 	$arHead['state'] = array();
 	$arHead['state']['title'] ='State';
 
@@ -198,13 +236,26 @@ function cloud_cpu_selector() {
     $cloudselector = new cloudselector();
     $product_array = $cloudselector->display_overview_per_type("cpu");
     foreach ($product_array as $index => $cloudproduct) {
+        $cloudproduct_id = $cloudproduct["id"];
+        $cloudproduct_sort_id = $cloudproduct["sort_id"];
+        // sorting
+        $product_sorting_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=cpu&product_id=".$cloudproduct_id."&action=up\"><img src=\"img/sort_up.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_up\"/></a>&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=cpu&product_id=".$cloudproduct_id."&action=down\"><img src=\"img/sort_down.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        // state
+        $product_state = $cloudproduct["state"];
+        if ($product_state == 1) {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=cpu&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
+        } else {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=cpu&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        }
+        // table body
 		$arBody[] = array(
 			'id' => $cloudproduct["id"],
 			'quantity' => $cloudproduct["quantity"],
 			'price' => $cloudproduct["price"],
 			'name' => $cloudproduct["name"],
 			'description' => $cloudproduct["description"],
-			'state' => $cloudproduct["state"],
+			'sort_id' => $product_sorting_action,
+			'state' => $product_state_action,
 		);
         $product_count++;
 	}
@@ -283,6 +334,9 @@ function cloud_disk_selector() {
 	$arHead['description'] = array();
 	$arHead['description']['title'] ='Description';
 
+	$arHead['sort_id'] = array();
+	$arHead['sort_id']['title'] ='Sort';
+
 	$arHead['state'] = array();
 	$arHead['state']['title'] ='State';
 
@@ -291,13 +345,26 @@ function cloud_disk_selector() {
     $cloudselector = new cloudselector();
     $product_array = $cloudselector->display_overview_per_type("disk");
     foreach ($product_array as $index => $cloudproduct) {
+        $cloudproduct_id = $cloudproduct["id"];
+        $cloudproduct_sort_id = $cloudproduct["sort_id"];
+        // sorting
+        $product_sorting_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=disk&product_id=".$cloudproduct_id."&action=up\"><img src=\"img/sort_up.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_up\"/></a>&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=disk&product_id=".$cloudproduct_id."&action=down\"><img src=\"img/sort_down.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        // state
+        $product_state = $cloudproduct["state"];
+        if ($product_state == 1) {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=disk&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
+        } else {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=disk&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        }
+        // table body
 		$arBody[] = array(
 			'id' => $cloudproduct["id"],
 			'quantity' => $cloudproduct["quantity"],
 			'price' => $cloudproduct["price"],
 			'name' => $cloudproduct["name"],
 			'description' => $cloudproduct["description"],
-			'state' => $cloudproduct["state"],
+			'sort_id' => $product_sorting_action,
+			'state' => $product_state_action,
 		);
         $product_count++;
 	}
@@ -375,6 +442,9 @@ function cloud_quantity_selector() {
 	$arHead['description'] = array();
 	$arHead['description']['title'] ='Description';
 
+	$arHead['sort_id'] = array();
+	$arHead['sort_id']['title'] ='Sort';
+
 	$arHead['state'] = array();
 	$arHead['state']['title'] ='State';
 
@@ -383,13 +453,26 @@ function cloud_quantity_selector() {
     $cloudselector = new cloudselector();
     $product_array = $cloudselector->display_overview_per_type("quantity");
     foreach ($product_array as $index => $cloudproduct) {
+        $cloudproduct_id = $cloudproduct["id"];
+        $cloudproduct_sort_id = $cloudproduct["sort_id"];
+        // sorting
+        $product_sorting_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=quantity&product_id=".$cloudproduct_id."&action=up\"><img src=\"img/sort_up.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_up\"/></a>&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=quantity&product_id=".$cloudproduct_id."&action=down\"><img src=\"img/sort_down.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        // state
+        $product_state = $cloudproduct["state"];
+        if ($product_state == 1) {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=quantity&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
+        } else {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=quantity&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        }
+        // table body
 		$arBody[] = array(
 			'id' => $cloudproduct["id"],
 			'quantity' => $cloudproduct["quantity"],
 			'price' => $cloudproduct["price"],
 			'name' => $cloudproduct["name"],
 			'description' => $cloudproduct["description"],
-			'state' => $cloudproduct["state"],
+			'sort_id' => $product_sorting_action,
+			'state' => $product_state_action,
 		);
         $product_count++;
 	}
@@ -476,6 +559,9 @@ function cloud_kernel_selector() {
 	$arHead['description'] = array();
 	$arHead['description']['title'] ='Description';
 
+	$arHead['sort_id'] = array();
+	$arHead['sort_id']['title'] ='Sort';
+
 	$arHead['state'] = array();
 	$arHead['state']['title'] ='State';
 
@@ -486,13 +572,26 @@ function cloud_kernel_selector() {
     foreach ($product_array as $index => $cloudproduct) {
         $pkernel = new kernel();
         $pkernel->get_instance_by_id($cloudproduct["quantity"]);
+        $cloudproduct_id = $cloudproduct["id"];
+        $cloudproduct_sort_id = $cloudproduct["sort_id"];
+        // sorting
+        $product_sorting_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=kernel&product_id=".$cloudproduct_id."&action=up\"><img src=\"img/sort_up.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_up\"/></a>&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=kernel&product_id=".$cloudproduct_id."&action=down\"><img src=\"img/sort_down.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        // state
+        $product_state = $cloudproduct["state"];
+        if ($product_state == 1) {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=kernel&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
+        } else {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=kernel&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        }
+        // table body
 		$arBody[] = array(
 			'id' => $cloudproduct["id"],
 			'quantity' => $pkernel->name,
 			'price' => $cloudproduct["price"],
 			'name' => $cloudproduct["name"],
 			'description' => $cloudproduct["description"],
-			'state' => $cloudproduct["state"],
+			'sort_id' => $product_sorting_action,
+			'state' => $product_state_action,
 		);
         $product_count++;
 	}
@@ -571,6 +670,9 @@ function cloud_memory_selector() {
 	$arHead['description'] = array();
 	$arHead['description']['title'] ='Description';
 
+	$arHead['sort_id'] = array();
+	$arHead['sort_id']['title'] ='Sort';
+
 	$arHead['state'] = array();
 	$arHead['state']['title'] ='State';
 
@@ -579,13 +681,26 @@ function cloud_memory_selector() {
     $cloudselector = new cloudselector();
     $product_array = $cloudselector->display_overview_per_type("memory");
     foreach ($product_array as $index => $cloudproduct) {
+        $cloudproduct_id = $cloudproduct["id"];
+        $cloudproduct_sort_id = $cloudproduct["sort_id"];
+        // sorting
+        $product_sorting_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=memory&product_id=".$cloudproduct_id."&action=up\"><img src=\"img/sort_up.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_up\"/></a>&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=memory&product_id=".$cloudproduct_id."&action=down\"><img src=\"img/sort_down.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        // state
+        $product_state = $cloudproduct["state"];
+        if ($product_state == 1) {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=memory&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
+        } else {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=memory&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        }
+        // table body
 		$arBody[] = array(
 			'id' => $cloudproduct["id"],
 			'quantity' => $cloudproduct["quantity"],
 			'price' => $cloudproduct["price"],
 			'name' => $cloudproduct["name"],
 			'description' => $cloudproduct["description"],
-			'state' => $cloudproduct["state"],
+			'sort_id' => $product_sorting_action,
+			'state' => $product_state_action,
 		);
         $product_count++;
 	}
@@ -671,6 +786,9 @@ function cloud_network_selector() {
 	$arHead['description'] = array();
 	$arHead['description']['title'] ='Description';
 
+	$arHead['sort_id'] = array();
+	$arHead['sort_id']['title'] ='Sort';
+
 	$arHead['state'] = array();
 	$arHead['state']['title'] ='State';
 
@@ -679,13 +797,26 @@ function cloud_network_selector() {
     $cloudselector = new cloudselector();
     $product_array = $cloudselector->display_overview_per_type("network");
     foreach ($product_array as $index => $cloudproduct) {
+        $cloudproduct_id = $cloudproduct["id"];
+        $cloudproduct_sort_id = $cloudproduct["sort_id"];
+        // sorting
+        $product_sorting_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=network&product_id=".$cloudproduct_id."&action=up\"><img src=\"img/sort_up.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_up\"/></a>&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=network&product_id=".$cloudproduct_id."&action=down\"><img src=\"img/sort_down.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        // state
+        $product_state = $cloudproduct["state"];
+        if ($product_state == 1) {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=network&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
+        } else {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=network&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        }
+        // table body
 		$arBody[] = array(
 			'id' => $cloudproduct["id"],
 			'quantity' => $cloudproduct["quantity"],
 			'price' => $cloudproduct["price"],
 			'name' => $cloudproduct["name"],
 			'description' => $cloudproduct["description"],
-			'state' => $cloudproduct["state"],
+			'sort_id' => $product_sorting_action,
+			'state' => $product_state_action,
 		);
         $product_count++;
 	}
@@ -788,6 +919,9 @@ function cloud_puppet_selector() {
 	$arHead['description'] = array();
 	$arHead['description']['title'] ='Description';
 
+	$arHead['sort_id'] = array();
+	$arHead['sort_id']['title'] ='Sort';
+
 	$arHead['state'] = array();
 	$arHead['state']['title'] ='State';
 
@@ -796,13 +930,26 @@ function cloud_puppet_selector() {
     $cloudselector = new cloudselector();
     $product_array = $cloudselector->display_overview_per_type("puppet");
     foreach ($product_array as $index => $cloudproduct) {
+        $cloudproduct_id = $cloudproduct["id"];
+        $cloudproduct_sort_id = $cloudproduct["sort_id"];
+        // sorting
+        $product_sorting_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=puppet&product_id=".$cloudproduct_id."&action=up\"><img src=\"img/sort_up.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_up\"/></a>&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=puppet&product_id=".$cloudproduct_id."&action=down\"><img src=\"img/sort_down.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        // state
+        $product_state = $cloudproduct["state"];
+        if ($product_state == 1) {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=puppet&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
+        } else {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=puppet&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        }
+        // table body
 		$arBody[] = array(
 			'id' => $cloudproduct["id"],
 			'quantity' => $cloudproduct["quantity"],
 			'price' => $cloudproduct["price"],
 			'name' => $cloudproduct["name"],
 			'description' => $cloudproduct["description"],
-			'state' => $cloudproduct["state"],
+			'sort_id' => $product_sorting_action,
+			'state' => $product_state_action,
 		);
         $product_count++;
 	}
@@ -899,6 +1046,9 @@ function cloud_virtualization_selector() {
 	$arHead['description'] = array();
 	$arHead['description']['title'] ='Description';
 
+	$arHead['sort_id'] = array();
+	$arHead['sort_id']['title'] ='Sort';
+
 	$arHead['state'] = array();
 	$arHead['state']['title'] ='State';
 
@@ -909,13 +1059,26 @@ function cloud_virtualization_selector() {
     foreach ($product_array as $index => $cloudproduct) {
         $pvirtualization = new virtualization();
         $pvirtualization->get_instance_by_id($cloudproduct["quantity"]);
+        $cloudproduct_id = $cloudproduct["id"];
+        $cloudproduct_sort_id = $cloudproduct["sort_id"];
+        // sorting
+        $product_sorting_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=resource&product_id=".$cloudproduct_id."&action=up\"><img src=\"img/sort_up.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_up\"/></a>&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=resource&product_id=".$cloudproduct_id."&action=down\"><img src=\"img/sort_down.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        // state
+        $product_state = $cloudproduct["state"];
+        if ($product_state == 1) {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=resource&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
+        } else {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=resource&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        }
+        // table body
 		$arBody[] = array(
 			'id' => $cloudproduct["id"],
 			'quantity' => $pvirtualization->name,
 			'price' => $cloudproduct["price"],
 			'name' => $cloudproduct["name"],
 			'description' => $cloudproduct["description"],
-			'state' => $cloudproduct["state"],
+			'sort_id' => $product_sorting_action,
+			'state' => $product_state_action,
 		);
         $product_count++;
 	}
