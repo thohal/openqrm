@@ -337,12 +337,6 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
                     var names = cloud_kernel_list;
                     for ( var i in names )
                     {
-                        // check for default kernel, name it Linux
-                        var myRegExp = /default/;
-                        var matchPos1 = names[i].search(myRegExp);
-                        if(matchPos1 > -1) {
-                            names[i] = "Linux";
-                        }
                         document.writeln("<div id=\"" + names[i] + "\" key=\"kernel\" value=\"" + names[i] + "\" class=\"portlet\">");
                             document.writeln("<div class=\"portlet-header\">" + names[i].substring(0,18) + "</div>");
                             document.writeln("<div class=\"portlet-content\">A " + names[i] + " Operating System</div>");
@@ -353,7 +347,7 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
             </div>
 
             <div id="cpus" class="column">
-                <small>------------------------- CPU's -------------------------</small>
+                <small>------------------------- CPU's ------------------------</small>
                 <hr>
                 <script type="text/javascript">
                     // the next line give a syntax error in the IDE but works
@@ -420,12 +414,13 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
                 <script type="text/javascript">
                     // the next line give a syntax error in the IDE but works
                     // ok since the var in brackets is filled via the php-template
-                    var cloud_network_req = {cloud_network_req};
-                    for ( var i=1; i <= cloud_network_req; i++)
+                    var cloud_network_req = [ {cloud_network_req} ];
+                    var cnetwork = cloud_network_req;
+                    for ( var i in cnetwork )
                     {
-                        document.writeln("<div id=\"" +i + "net\" key=\"network\" value=\"" + i + "\" class=\"portlet\">");
-                            document.writeln("<div class=\"portlet-header\">" + i + " Network</div>");
-                            document.writeln("<div class=\"portlet-content\">" + i + " Network card(s) for the Cloud appliance(s)</div>");
+                        document.writeln("<div id=\"" +i + "net\" key=\"network\" value=\"" + cnetwork[i] + "\" class=\"portlet\">");
+                            document.writeln("<div class=\"portlet-header\">" + cnetwork[i] + " Network</div>");
+                            document.writeln("<div class=\"portlet-content\">" + cnetwork[i] + " Network card(s) for the Cloud appliance(s)</div>");
                         document.writeln("</div>");
                     }
                 </script>
@@ -467,12 +462,13 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
                 <script type="text/javascript">
                     // the next line give a syntax error in the IDE but works
                     // ok since the var in brackets is filled via the php-template
-                    var cloud_resource_quantity = {cloud_resource_quantity};
-                    for ( var i=1; i <= cloud_resource_quantity; i++)
+                    var cloud_resource_quantity = [ {cloud_resource_quantity} ];
+                    var rquantity = cloud_resource_quantity;
+                    for ( var i in rquantity )
                     {
-                        document.writeln("<div id=\"" +i + "quantity\" key=\"quantity\" value=\"" + i + "\" class=\"portlet\">");
-                            document.writeln("<div class=\"portlet-header\">" + i + " X</div>");
-                            document.writeln("<div class=\"portlet-content\">" + i + " Cloud appliance(s)</div>");
+                        document.writeln("<div id=\"" +i + "quantity\" key=\"quantity\" value=\"" + rquantity[i] + "\" class=\"portlet\">");
+                            document.writeln("<div class=\"portlet-header\">" + rquantity[i] + " X</div>");
+                            document.writeln("<div class=\"portlet-content\">" + rquantity[i] + " Cloud appliance(s)</div>");
                         document.writeln("</div>");
                     }
                 </script>
@@ -480,7 +476,7 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
             </div>
 
             <div id="special" class="column">
-                <small>----------------------- Specials ------------------------</small>
+                <small>----------------------- Specials ----------------------</small>
                 <hr>
                 <script type="text/javascript">
                     // the next line give a syntax error in the IDE but works
