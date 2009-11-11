@@ -150,13 +150,6 @@ if (htmlobject_request('action') != '') {
                 exit(false);
             }
             $disk_size = $disk * 1000;
-            // max disk size
-            $cc_disk_conf = new cloudconfig();
-            $max_disk_size = $cc_disk_conf->get_value(8);  // 8 is max_disk_size config
-            if ($disk_size > $max_disk_size) {
-                // $strMsg .="Disk parameter must be <= $max_disk_size <br>";
-                exit(false);
-            }
 
             // check memory param
             if (!check_is_number("RAM", $memory)) {
@@ -167,13 +160,6 @@ if (htmlobject_request('action') != '') {
             // check ha param
             if ($highavailable != 1) {
                 $highavailable = 0;
-            }
-
-            // max network interfaces
-            $max_network_infterfaces = $cc_disk_conf->get_value(9);  // 9 is max_network_interfaces
-            if ($network > $max_network_infterfaces) {
-                // $strMsg .="Network parameter must be <= $max_network_infterfaces <br>";
-                exit(false);
             }
 
             // additional checks
@@ -235,7 +221,27 @@ if (htmlobject_request('action') != '') {
             }
             $puppet_groups = rtrim($puppet_groups, ",");
 
-            // check user limits
+            // check global limits #####################
+            // max disk size
+            $cc_disk_conf = new cloudconfig();
+            $max_disk_size = $cc_disk_conf->get_value(8);  // 8 is max_disk_size config
+            if ($disk_size > $max_disk_size) {
+                // $strMsg .="Disk parameter must be <= $max_disk_size <br>";
+                exit(false);
+            }
+            // max network interfaces
+            $max_network_infterfaces = $cc_disk_conf->get_value(9);  // 9 is max_network_interfaces
+            if ($network > $max_network_infterfaces) {
+                // $strMsg .="Network parameter must be <= $max_network_infterfaces <br>";
+                exit(false);
+            }
+            // max resource per cr
+            $max_resource_per_cr = $cc_disk_conf->get_value(6);  // 6 is max_resources_per_cr
+            if ($quantity > $max_resource_per_cr) {
+                // $strMsg .="Network parameter must be <= $max_network_infterfaces <br>";
+                exit(false);
+            }
+            // check user limits #######################
             $cloud_user_limit = new clouduserlimits();
             $cloud_user_limit->get_instance_by_cu_id($request_user->id);
             $resource_quantity = $request_fields['cr_resource_quantity'];
@@ -293,49 +299,49 @@ if (htmlobject_request('action') != '') {
                 $cloudselector = new cloudselector();
                 // cpu
                 if (!$cloudselector->product_exists("cpu", $cpus)) {
-                    echo "Cloud CPU Product ($cpus) is not existing...<br>";
-                    exit(0);
+                    // echo "Cloud CPU Product ($cpus) is not existing...<br>";
+                    exit(false);
                 }
                 // disk
                 if (!$cloudselector->product_exists("disk", $disk_size)) {
-                    echo "Cloud Disk Product ($disk_size) is not existing...<br>";
-                    exit(0);
+                    // echo "Cloud Disk Product ($disk_size) is not existing...<br>";
+                    exit(false);
                 }
                 // kernel
                 $tkernel = new kernel();
                 $tkernel->get_instance_by_name($kernel);
                 if (!$cloudselector->product_exists("kernel", $tkernel->id)) {
-                    echo "Cloud Kernel Product ($kernel) is not existing...<br>";
-                    exit(0);
+                    // echo "Cloud Kernel Product ($kernel) is not existing...<br>";
+                    exit(false);
                 }
                 // memory
                 if (!$cloudselector->product_exists("memory", $memory)) {
-                    echo "Cloud Memory Product ($memory) is not existing...<br>";
-                    exit(0);
+                    // echo "Cloud Memory Product ($memory) is not existing...<br>";
+                    exit(false);
                 }
                 // network
                 if (!$cloudselector->product_exists("network", $network)) {
-                    echo "Cloud Network Product ($network) is not existing...<br>";
-                    exit(0);
+                    // echo "Cloud Network Product ($network) is not existing...<br>";
+                    exit(false);
                 }
                 // puppet
                 if (is_array($puppet_groups_array)) {
                     foreach($puppet_groups_array as $puppet_group) {
                         if (!$cloudselector->product_exists("puppet", $puppet_group)) {
-                            echo "Cloud Puppet Product ($puppet_group) is not existing...<br>";
-                            exit(0);
+                            // echo "Cloud Puppet Product ($puppet_group) is not existing...<br>";
+                            exit(false);
                         }
                     }
                 }
                 // quantity
                 if (!$cloudselector->product_exists("quantity", $quantity)) {
-                    echo "Cloud Quantity Product ($quantity) is not existing...<br>";
-                    exit(0);
+                    // echo "Cloud Quantity Product ($quantity) is not existing...<br>";
+                    exit(false);
                 }
                 // resource type
                 if (!$cloudselector->product_exists("resource", $virtualization_id)) {
-                    echo "Cloud Virtualization Product ($virtualization_id) is not existing...<br>";
-                    exit(0);
+                    // echo "Cloud Virtualization Product ($virtualization_id) is not existing...<br>";
+                    exit(false);
                 }
 
 
@@ -444,21 +450,22 @@ function my_cloud_create_request() {
         // show what is provided by the cloudselectors
         $cloudselector = new cloudselector();
 
-// ######################################################################
-// check user limits
-// ######################################################################
-// check global limits
         // cpus
         $product_array = $cloudselector->display_overview_per_type("cpu");
         foreach ($product_array as $index => $cloudproduct) {
             // is product enabled ?
             if ($cloudproduct["state"] == 1) {
-                $available_cpunumber_uniq[] = $cloudproduct["quantity"];
+                $cpu_product = $cloudproduct["quantity"];
+                if ($cloud_user_cpu_limit != 0) {
+                    if ($cpu_product <= $cloud_user_cpu_limit) {
+                        $available_cpunumber_uniq[] = $cpu_product;
+                    }
+                } else {
+                        $available_cpunumber_uniq[] = $cpu_product;
+                }
             }
         }
 
-// ######################################################################
-// check global limits
         // disk size
         $disk_loop = 1;
         $product_array = $cloudselector->display_overview_per_type("disk");
@@ -467,8 +474,17 @@ function my_cloud_create_request() {
             if ($cloudproduct["state"] == 1) {
                 $disk_size = $cloudproduct["quantity"];
                 $gb = $disk_size/1000;
-                if ($cloud_user_disk_limit != 0) {
-                    if ($disk_size < $cloud_user_disk_limit) {
+                if ($disk_size <= $max_disk_size) {
+                    if ($cloud_user_disk_limit != 0) {
+                        if ($disk_size <= $cloud_user_disk_limit) {
+                            if ($disk_loop == 1) {
+                                $cloud_disk_req = "\"$gb\"";
+                            } else {
+                                $cloud_disk_req .= " ,\"$gb\"";
+                            }
+                            $disk_loop++;
+                        }
+                    } else {
                         if ($disk_loop == 1) {
                             $cloud_disk_req = "\"$gb\"";
                         } else {
@@ -476,23 +492,10 @@ function my_cloud_create_request() {
                         }
                         $disk_loop++;
                     }
-                } else {
-                    if ($disk_loop == 1) {
-                        $cloud_disk_req = "\"$gb\"";
-                    } else {
-                        $cloud_disk_req .= " ,\"$gb\"";
-                    }
-                    $disk_loop++;
                 }
-
             }
         }
 
-
-// ######################################################################
-// check user limits
-// ######################################################################
-// check global limits
         // resource quantity
         $res_loop=1;
         $product_array = $cloudselector->display_overview_per_type("quantity");
@@ -500,12 +503,25 @@ function my_cloud_create_request() {
             // is product enabled ?
             if ($cloudproduct["state"] == 1) {
                 $res_q = $cloudproduct["quantity"];
-                if ($res_loop == 1) {
-                    $resource_quantity .= $res_q;
-                } else {
-                    $resource_quantity .= ", $res_q";
+                if ($res_q <= $max_resources_per_cr) {
+                    if ($cloud_user_resource_limit != 0) {
+                        if ($res_q <= $cloud_user_resource_limit) {
+                            if ($res_loop == 1) {
+                                $resource_quantity .= $res_q;
+                            } else {
+                                $resource_quantity .= ", $res_q";
+                            }
+                            $res_loop++;
+                        }
+                    } else {
+                        if ($res_loop == 1) {
+                            $resource_quantity .= $res_q;
+                        } else {
+                            $resource_quantity .= ", $res_q";
+                        }
+                        $res_loop++;
+                    }
                 }
-                $res_loop++;
             }
         }
 
@@ -530,11 +546,7 @@ function my_cloud_create_request() {
             }
         }
 
-// ######################################################################
-// check user limits
-// ######################################################################
-// check global limits
-        // memory sizes
+        // memory sizes / user-limits checked later
         $product_array = $cloudselector->display_overview_per_type("memory");
         foreach ($product_array as $index => $cloudproduct) {
             // is product enabled ?
@@ -543,24 +555,32 @@ function my_cloud_create_request() {
             }
         }
 
-// ######################################################################
-// check user limits
-// ######################################################################
-// check global limits
         // network cards
         $nic_loop=1;
         $product_array = $cloudselector->display_overview_per_type("network");
         foreach ($product_array as $index => $cloudproduct) {
             // is product enabled ?
             if ($cloudproduct["state"] == 1) {
-                $max_network_interfaces_select[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
                 $nic_product = $cloudproduct["quantity"];
-                if ($nic_loop == 1) {
-                    $network_quantity .= $nic_product;
-                } else {
-                    $network_quantity .= ", $nic_product";
+                if ($nic_product <= $max_network_interfaces) {
+                    if ($cloud_user_network_limit != 0) {
+                        if ($nic_product <= $cloud_user_network_limit) {
+                            if ($nic_loop == 1) {
+                                $network_quantity .= $nic_product;
+                            } else {
+                                $network_quantity .= ", $nic_product";
+                            }
+                            $nic_loop++;
+                        }
+                    } else {
+                        if ($nic_loop == 1) {
+                            $network_quantity .= $nic_product;
+                        } else {
+                            $network_quantity .= ", $nic_product";
+                        }
+                        $nic_loop++;
+                    }
                 }
-                $nic_loop++;
             }
         }
 
@@ -604,7 +624,6 @@ function my_cloud_create_request() {
     // else -> big switch ##############################################################
     } else {
         // show what is available in openQRM
-
 
         // kernels
         $kernel_list_str = "";
@@ -663,10 +682,6 @@ function my_cloud_create_request() {
         $available_memtotal_uniq = array();
         $available_memtotal = array();
         $available_memtotal[] = array("value" => "0", "label" => "any");
-// ######################################################################
-// check user limits
-// ######################################################################
-// check global limits
         foreach($resource_p_array as $res) {
             $res_id = $res['resource_id'];
             $tres = new resource();
@@ -707,8 +722,6 @@ function my_cloud_create_request() {
             }
         }
 
-// ######################################################################
-// check global limits
         // prepare an array for the disk-sizes
         $disk_size_mb = 1000;
         $disk_size = 1000;
@@ -736,22 +749,27 @@ function my_cloud_create_request() {
         $max_disk_size_gb = $max_disk_size/1000;
         $cloud_disk_req = $cloud_disk_req." ,\"$max_disk_size_gb\"";
 
-
-// ######################################################################
-// check user limits
-// ######################################################################
-// check global limits
         // resource quantity
         for ($resn = 1; $resn <= $max_resources_per_cr; $resn++) {
-            if ($resn == 1) {
-                $resource_quantity .= $resn;
-            } else {
-                $resource_quantity .= ", $resn";
+            if ($resn <= $max_resources_per_cr) {
+                if ($cloud_user_resource_limit != 0) {
+                    if ($resn <= $cloud_user_resource_limit) {
+                        if ($resn == 1) {
+                            $resource_quantity .= $resn;
+                        } else {
+                            $resource_quantity .= ", $resn";
+                        }
+                    }
+                } else {
+                    if ($resn == 1) {
+                        $resource_quantity .= $resn;
+                    } else {
+                        $resource_quantity .= ", $resn";
+                    }
+                }
             }
         }
 
-// ######################################################################
-// check global limits
         // network card quantity
         for ($nicn = 1; $nicn <= $max_network_interfaces; $nicn++) {
             if ($cloud_user_network_limit != 0) {
@@ -861,9 +879,6 @@ function my_cloud_create_request() {
         $clone_on_deploy = htmlobject_input('cr_shared_req', array("value" => 1, "label" => 'Clone-on-deploy'), 'checkbox', false);
     }
 
- 
-// ######################################################################
-// check global limits
     // prepare an array for the memory-sizes
     $cloud_memory_loop=1;
     foreach ($available_memtotal_uniq as $cloud_memory) {
@@ -886,8 +901,6 @@ function my_cloud_create_request() {
         }
     }
 
-// ######################################################################
-// check global limits
     // prepare the array for the cpu numbers
     $cloud_cpu_loop=1;
     foreach ($available_cpunumber_uniq as $cloud_cpu) {
