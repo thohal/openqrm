@@ -40,9 +40,6 @@
                 <a href="http://www.openqrm.com/?q=node/139" target="_BLANK"><b>openQRM Cloud HowTo</b></a>
                 <br>
                 <br>
-                <a href="soap/soap-user.php" target="_BLANK"><b>SOAP-WebService for the Cloud User</b></a>
-                <br>
-                <br>
                 <a href="http://www.openqrm-ng.net/downloads/plugins/cloud/openqrm-soap-api/" target="_BLANK"><b>API for the Cloud SOAP-WebService</b></a>
                 <br>
                 <br>
