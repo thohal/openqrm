@@ -292,6 +292,13 @@ if (htmlobject_request('action') != '') {
 					exit(0);
 				}
 			}
+            // check user input
+			check_param("Quantity", $request_fields['cr_resource_quantity']);
+			check_param("Kernel Id", $request_fields['cr_kernel_id']);
+			check_param("Image Id", $request_fields['cr_image_id']);
+			check_param("Memory", $request_fields['cr_ram_req']);
+			check_param("CPU", $request_fields['cr_cpu_req']);
+			check_param("Network", $request_fields['cr_network_req']);
 
 			// check user limits
 			$cloud_user_limit = new clouduserlimits();
@@ -301,7 +308,6 @@ if (htmlobject_request('action') != '') {
 			$disk_req = $request_fields['cr_disk_req'];
 			$cpu_req = $request_fields['cr_cpu_req'];
 			$network_req = $request_fields['cr_network_req'];
-
 			if (!$cloud_user_limit->check_limits($resource_quantity, $ram_req, $disk_req, $cpu_req, $network_req)) {
 				$strMsg = "User exceeds its Cloud-Limits ! Not adding the request";
 				echo "$strMsg <br>";
@@ -358,6 +364,14 @@ if (htmlobject_request('action') != '') {
 				redirect($strMsg, "tab2");
 				exit(0);
 			}
+            // max resource per cr
+			$max_res_per_cr = $cc_disk_conf->get_value(6);  // 6 is max_resources_per_cr
+			if ($request_fields['cr_resource_quantity'] > $max_res_per_cr) {
+				$strMsg .="Resource quantity parameter must be <= $max_res_per_cr <br>";
+				redirect($strMsg, "tab2");
+				exit(0);
+			}
+
             // private image ? if yes do not clone it
             $show_private_image = $cc_disk_conf->get_value(21);	// show_private_image
             if (!strcmp($show_private_image, "true")) {
@@ -379,13 +393,6 @@ if (htmlobject_request('action') != '') {
                     }
                 }
             }
-
-			check_param("Quantity", $request_fields['cr_resource_quantity']);
-			check_param("Kernel Id", $request_fields['cr_kernel_id']);
-			check_param("Image Id", $request_fields['cr_image_id']);
-			check_param("Memory", $request_fields['cr_ram_req']);
-			check_param("CPU", $request_fields['cr_cpu_req']);
-			check_param("Network", $request_fields['cr_network_req']);
 
 			// set the eventual selected puppet groups
 			if(htmlobject_request('puppet_groups') != '') {

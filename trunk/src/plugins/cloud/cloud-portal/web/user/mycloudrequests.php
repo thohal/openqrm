@@ -302,6 +302,38 @@ function my_cloud_create_request() {
 
     $cc_conf = new cloudconfig();
 
+    // global limits
+    $max_resources_per_cr = $cc_conf->get_value(6);
+    $max_disk_size = $cc_conf->get_value(8);
+    $max_network_interfaces = $cc_conf->get_value(9);
+    $max_apps_per_user = $cc_conf->get_value(13);
+    $cloud_global_limits = "<ul type=\"disc\">";
+	$cloud_global_limits = $cloud_global_limits."<li>Max Resources per CR : $max_resources_per_cr</li>";
+	$cloud_global_limits = $cloud_global_limits."<li>Max Disk Size : $max_disk_size MB</li>";
+	$cloud_global_limits = $cloud_global_limits."<li>Max Network Interfaces : $max_network_interfaces</li>";
+	$cloud_global_limits = $cloud_global_limits."<li>Max Appliance per User : $max_apps_per_user</li>";
+	$cloud_global_limits = $cloud_global_limits."</ul>";
+	$cloud_global_limits = $cloud_global_limits."<br><br>";
+
+    // user limits
+    $cloud_user = new clouduser();
+    $cloud_user->get_instance_by_name("$auth_user");
+    $cloud_userlimit = new clouduserlimits();
+    $cloud_userlimit->get_instance_by_cu_id($cloud_user->id);
+    $cloud_user_resource_limit = $cloud_userlimit->resource_limit;
+    $cloud_user_memory_limit = $cloud_userlimit->memory_limit;
+    $cloud_user_disk_limit = $cloud_userlimit->disk_limit;
+    $cloud_user_cpu_limit = $cloud_userlimit->cpu_limit;
+    $cloud_user_network_limit = $cloud_userlimit->network_limit;
+    $cloud_user_limits = "<ul type=\"disc\">";
+	$cloud_user_limits = $cloud_user_limits."<li>Max Resources : $cloud_user_resource_limit</li>";
+	$cloud_user_limits = $cloud_user_limits."<li>Max Disk Size : $cloud_user_disk_limit MB</li>";
+	$cloud_user_limits = $cloud_user_limits."<li>Max Network Interfaces : $cloud_user_network_limit</li>";
+	$cloud_user_limits = $cloud_user_limits."<li>Max Memory : $cloud_user_memory_limit</li>";
+	$cloud_user_limits = $cloud_user_limits."<li>Max CPU's : $cloud_user_cpu_limit</li>";
+	$cloud_user_limits = $cloud_user_limits."</ul>";
+	$cloud_user_limits = $cloud_user_limits."<br><br>";
+
 
     // big switch ##############################################################
     //  : either show what is provided in the cloudselector
@@ -317,7 +349,14 @@ function my_cloud_create_request() {
         foreach ($product_array as $index => $cloudproduct) {
             // is product enabled ?
             if ($cloudproduct["state"] == 1) {
-                $available_cpunumber[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+                $cs_cpu = $cloudproduct["quantity"];
+                if ($cloud_user_cpu_limit != 0) {
+                     if ($cs_cpu <= $cloud_user_cpu_limit) {
+                        $available_cpunumber[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+                     }
+                } else {
+                    $available_cpunumber[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+                }
             }
         }
 
@@ -326,7 +365,16 @@ function my_cloud_create_request() {
         foreach ($product_array as $index => $cloudproduct) {
             // is product enabled ?
             if ($cloudproduct["state"] == 1) {
-                $disk_size_select[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+                $cs_disk = $cloudproduct["quantity"];
+                if ($cs_disk <= $max_disk_size) {
+                    if ($cloud_user_disk_limit != 0) {
+                         if ($cs_disk <= $cloud_user_disk_limit) {
+                            $disk_size_select[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+                         }
+                    } else {
+                        $disk_size_select[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+                    }
+                }
             }
         }
 
@@ -335,7 +383,16 @@ function my_cloud_create_request() {
         foreach ($product_array as $index => $cloudproduct) {
             // is product enabled ?
             if ($cloudproduct["state"] == 1) {
-                $max_resources_per_cr_select[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+                $cs_res = $cloudproduct["quantity"];
+                if ($cs_res <= $max_resources_per_cr) {
+                    if ($cloud_user_resource_limit != 0) {
+                         if ($cs_res <= $cloud_user_resource_limit) {
+                            $max_resources_per_cr_select[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+                         }
+                    } else {
+                        $max_resources_per_cr_select[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+                    }
+                }
             }
         }
 
@@ -353,7 +410,14 @@ function my_cloud_create_request() {
         foreach ($product_array as $index => $cloudproduct) {
             // is product enabled ?
             if ($cloudproduct["state"] == 1) {
-                $available_memtotal[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+                $cs_memory = $cloudproduct["quantity"];
+                if ($cloud_user_memory_limit != 0) {
+                     if ($cs_memory <= $cloud_user_memory_limit) {
+                        $available_memtotal[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+                     }
+                } else {
+                    $available_memtotal[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+                }
             }
         }
 
@@ -362,7 +426,16 @@ function my_cloud_create_request() {
         foreach ($product_array as $index => $cloudproduct) {
             // is product enabled ?
             if ($cloudproduct["state"] == 1) {
-                $max_network_interfaces_select[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+                $cs_metwork = $cloudproduct["quantity"];
+                if ($cs_metwork <= $max_network_interfaces) {
+                    if ($cloud_user_network_limit != 0) {
+                         if ($cs_metwork <= $cloud_user_network_limit) {
+                            $max_network_interfaces_select[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+                         }
+                    } else {
+                        $max_network_interfaces_select[] = array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]);
+                    }
+                }
             }
         }
 
@@ -458,14 +531,30 @@ function my_cloud_create_request() {
 
         // disk size select
         $disk_size_select[] = array("value" => 1000, "label" => '1 GB');
-        $disk_size_select[] = array("value" => 2000, "label" => '2 GB');
-        $disk_size_select[] = array("value" => 3000, "label" => '3 GB');
-        $disk_size_select[] = array("value" => 4000, "label" => '4 GB');
-        $disk_size_select[] = array("value" => 5000, "label" => '5 GB');
-        $disk_size_select[] = array("value" => 10000, "label" => '10 GB');
-        $disk_size_select[] = array("value" => 20000, "label" => '20 GB');
-        $disk_size_select[] = array("value" => 50000, "label" => '50 GB');
-        $disk_size_select[] = array("value" => 100000, "label" => '100 GB');
+        if (2000 <= $max_disk_size) {
+            $disk_size_select[] = array("value" => 2000, "label" => '2 GB');
+        }
+        if (3000 <= $max_disk_size) {
+            $disk_size_select[] = array("value" => 3000, "label" => '3 GB');
+        }
+        if (4000 <= $max_disk_size) {
+            $disk_size_select[] = array("value" => 4000, "label" => '4 GB');
+        }
+        if (5000 <= $max_disk_size) {
+            $disk_size_select[] = array("value" => 5000, "label" => '5 GB');
+        }
+        if (10000 <= $max_disk_size) {
+            $disk_size_select[] = array("value" => 10000, "label" => '10 GB');
+        }
+        if (20000 <= $max_disk_size) {
+            $disk_size_select[] = array("value" => 20000, "label" => '20 GB');
+        }
+        if (50000 <= $max_disk_size) {
+            $disk_size_select[] = array("value" => 50000, "label" => '50 GB');
+        }
+        if (100000 <= $max_disk_size) {
+            $disk_size_select[] = array("value" => 100000, "label" => '100 GB');
+        }
 
         if ($cl_user_count < 1) {
             $subtitle = "<b>Please create a <a href='/openqrm/base/plugins/cloud/cloud-user.php?action=create'>Cloud User</a> first!";
@@ -570,38 +659,6 @@ function my_cloud_create_request() {
     $stop_request = $stop_request."<a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
     $stop_request = $stop_request."<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
     $stop_request = $stop_request."</a>";
-
-    // global limits
-    $max_resources_per_cr = $cc_conf->get_value(6);
-    $max_disk_size = $cc_conf->get_value(8);
-    $max_network_interfaces = $cc_conf->get_value(9);
-    $max_apps_per_user = $cc_conf->get_value(13);
-    $cloud_global_limits = "<ul type=\"disc\">";
-	$cloud_global_limits = $cloud_global_limits."<li>Max Resources per CR : $max_resources_per_cr</li>";
-	$cloud_global_limits = $cloud_global_limits."<li>Max Disk Size : $max_disk_size MB</li>";
-	$cloud_global_limits = $cloud_global_limits."<li>Max Network Interfaces : $max_network_interfaces</li>";
-	$cloud_global_limits = $cloud_global_limits."<li>Max Appliance per User : $max_apps_per_user</li>";
-	$cloud_global_limits = $cloud_global_limits."</ul>";
-	$cloud_global_limits = $cloud_global_limits."<br><br>";
-
-    // user limits
-    $cloud_user = new clouduser();
-    $cloud_user->get_instance_by_name("$auth_user");
-    $cloud_userlimit = new clouduserlimits();
-    $cloud_userlimit->get_instance_by_cu_id($cloud_user->id);
-    $cloud_user_resource_limit = $cloud_userlimit->resource_limit;
-    $cloud_user_memory_limit = $cloud_userlimit->memory_limit;
-    $cloud_user_disk_limit = $cloud_userlimit->disk_limit;
-    $cloud_user_cpu_limit = $cloud_userlimit->cpu_limit;
-    $cloud_user_network_limit = $cloud_userlimit->network_limit;
-    $cloud_user_limits = "<ul type=\"disc\">";
-	$cloud_user_limits = $cloud_user_limits."<li>Max Resources : $cloud_user_resource_limit</li>";
-	$cloud_user_limits = $cloud_user_limits."<li>Max Disk Size : $cloud_user_disk_limit MB</li>";
-	$cloud_user_limits = $cloud_user_limits."<li>Max Network Interfaces : $cloud_user_network_limit</li>";
-	$cloud_user_limits = $cloud_user_limits."<li>Max Memory : $cloud_user_memory_limit</li>";
-	$cloud_user_limits = $cloud_user_limits."<li>Max CPU's : $cloud_user_cpu_limit</li>";
-	$cloud_user_limits = $cloud_user_limits."</ul>";
-	$cloud_user_limits = $cloud_user_limits."<br><br>";
 
 
 	//------------------------------------------------------------ set template
