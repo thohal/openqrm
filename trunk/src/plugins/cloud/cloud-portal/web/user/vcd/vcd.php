@@ -298,48 +298,48 @@ if (htmlobject_request('action') != '') {
             if (!strcmp($cloud_selector_enabled, "true")) {
                 $cloudselector = new cloudselector();
                 // cpu
-                if (!$cloudselector->product_exists("cpu", $cpus)) {
+                if (!$cloudselector->product_exists_enabled("cpu", $cpus)) {
                     // echo "Cloud CPU Product ($cpus) is not existing...<br>";
                     exit(false);
                 }
                 // disk
-                if (!$cloudselector->product_exists("disk", $disk_size)) {
+                if (!$cloudselector->product_exists_enabled("disk", $disk_size)) {
                     // echo "Cloud Disk Product ($disk_size) is not existing...<br>";
                     exit(false);
                 }
                 // kernel
                 $tkernel = new kernel();
                 $tkernel->get_instance_by_name($kernel);
-                if (!$cloudselector->product_exists("kernel", $tkernel->id)) {
+                if (!$cloudselector->product_exists_enabled("kernel", $tkernel->id)) {
                     // echo "Cloud Kernel Product ($kernel) is not existing...<br>";
                     exit(false);
                 }
                 // memory
-                if (!$cloudselector->product_exists("memory", $memory)) {
+                if (!$cloudselector->product_exists_enabled("memory", $memory)) {
                     // echo "Cloud Memory Product ($memory) is not existing...<br>";
                     exit(false);
                 }
                 // network
-                if (!$cloudselector->product_exists("network", $network)) {
+                if (!$cloudselector->product_exists_enabled("network", $network)) {
                     // echo "Cloud Network Product ($network) is not existing...<br>";
                     exit(false);
                 }
                 // puppet
                 if (is_array($puppet_groups_array)) {
                     foreach($puppet_groups_array as $puppet_group) {
-                        if (!$cloudselector->product_exists("puppet", $puppet_group)) {
+                        if (!$cloudselector->product_exists_enabled("puppet", $puppet_group)) {
                             // echo "Cloud Puppet Product ($puppet_group) is not existing...<br>";
                             exit(false);
                         }
                     }
                 }
                 // quantity
-                if (!$cloudselector->product_exists("quantity", $quantity)) {
+                if (!$cloudselector->product_exists_enabled("quantity", $quantity)) {
                     // echo "Cloud Quantity Product ($quantity) is not existing...<br>";
                     exit(false);
                 }
                 // resource type
-                if (!$cloudselector->product_exists("resource", $virtualization_id)) {
+                if (!$cloudselector->product_exists_enabled("resource", $virtualization_id)) {
                     // echo "Cloud Virtualization Product ($virtualization_id) is not existing...<br>";
                     exit(false);
                 }

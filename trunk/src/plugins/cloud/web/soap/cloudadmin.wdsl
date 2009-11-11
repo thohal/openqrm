@@ -208,6 +208,19 @@
   <part name='Result' type='xsd:string'/>
 </message>
 
+<message name='ProductGetListRequest'>
+  <part name='Result' type='xsd:string'/>
+</message>
+<message name='ProductGetListResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
+
+<message name='ProductGetDetailsRequest'>
+  <part name='Result' type='xsd:string'/>
+</message>
+<message name='ProductGetDetailsResponse'>
+  <part name='Result' type='xsd:string'/>
+</message>
 
 
 <portType name='CloudPortType'>
@@ -355,6 +368,16 @@
   <operation name='PuppetGetList'>
     <input message='tns:PuppetGetListRequest'/>
     <output message='tns:PuppetGetListResponse'/>
+  </operation>
+
+  <operation name='ProductGetList'>
+    <input message='tns:ProductGetListRequest'/>
+    <output message='tns:ProductGetListResponse'/>
+  </operation>
+
+  <operation name='ProductGetDetails'>
+    <input message='tns:ProductGetDetailsRequest'/>
+    <output message='tns:ProductGetDetailsResponse'/>
   </operation>
 
 </portType>
@@ -704,6 +727,30 @@
 
   <operation name='PuppetGetList'>
     <soap:operation soapAction='urn:localhost-cloud#PuppetGetList'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='ProductGetList'>
+    <soap:operation soapAction='urn:localhost-cloud#ProductGetList'/>
+    <input>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </input>
+    <output>
+      <soap:body use='encoded' namespace='urn:localhost-cloud'
+        encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>
+    </output>
+  </operation>
+
+  <operation name='ProductGetDetails'>
+    <soap:operation soapAction='urn:localhost-cloud#ProductGetDetails'/>
     <input>
       <soap:body use='encoded' namespace='urn:localhost-cloud'
         encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'/>

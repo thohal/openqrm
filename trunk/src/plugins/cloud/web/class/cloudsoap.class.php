@@ -49,6 +49,7 @@ require_once "$RootDir/plugins/cloud/class/cloudtransaction.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudprivateimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudirlc.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudiplc.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudselector.class.php";
 
 
 // only if puppet is available
@@ -154,6 +155,26 @@ class cloudsoap {
                 return;
             }
         }
+
+        // check global limits
+        // max disk size
+        $max_disk_size = $cc_conf->get_value(8);  // 8 is max_disk_size config
+        if ($disk_req > $max_disk_size) {
+            $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $cloud_username Disk must be <= $max_disk_size.", "", "", 0, 0, 0);
+            return;
+        }
+        // max network interfaces
+        $max_network_infterfaces = $cc_conf->get_value(9);  // 9 is max_network_interfaces
+        if ($network_req > $max_network_infterfaces) {
+            $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $cloud_username Network must be <= $max_network_infterfaces.", "", "", 0, 0, 0);
+            return;
+        }
+        // max resource per cr
+        $max_res_per_cr = $cc_conf->get_value(6);  // 6 is max_resources_per_cr
+        if ($resource_quantity > $max_res_per_cr) {
+            $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $cloud_username Resource quantity must be <= $max_res_per_cr.", "", "", 0, 0, 0);
+            return;
+        }
         // check user limits
         $cloud_user_limit = new clouduserlimits();
         $cloud_user_limit->get_instance_by_cu_id($cl_user->id);
@@ -161,6 +182,68 @@ class cloudsoap {
             $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $cloud_username exceeds its Cloud-Limits ! Not adding the request.", "", "", 0, 0, 0);
             return;
         }
+
+        // check cloudselector
+        // ####### start of cloudselector case #######
+        // if cloudselector is enabled check if products exist
+        $cloud_selector_enabled = $cc_conf->get_value(22);	// cloudselector
+        if (!strcmp($cloud_selector_enabled, "true")) {
+            $cloudselector = new cloudselector();
+            // cpu
+            if (!$cloudselector->product_exists_enabled("cpu", $cpu_req)) {
+                $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $cloud_username: Cloud CPU Product ($cpu_req) is not existing", "", "", 0, 0, 0);
+                return;
+            }
+            // disk
+            if (!$cloudselector->product_exists_enabled("disk", $disk_req)) {
+                $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $cloud_username: Cloud Disk Product ($disk_req) is not existing", "", "", 0, 0, 0);
+                return;
+            }
+            // kernel
+            $cs_kernel = new kernel();
+            $cs_kernel->get_instance_by_name($kernel_name);
+            if (!$cloudselector->product_exists_enabled("kernel", $cs_kernel->id)) {
+                $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $cloud_username: Cloud Kernel Product ($cs_kernel->id) is not existing", "", "", 0, 0, 0);
+                return;
+            }
+            // memory
+            if (!$cloudselector->product_exists_enabled("memory", $ram_req)) {
+                $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $cloud_username: Cloud Memory Product ($ram_req) is not existing", "", "", 0, 0, 0);
+                return;
+            }
+            // network
+            if (!$cloudselector->product_exists_enabled("network", $network_req)) {
+                $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $cloud_username: Cloud Network Product ($network_req) is not existing", "", "", 0, 0, 0);
+                return;
+            }
+            // puppet
+            if (strlen($puppet_groups)) {
+                $puppet_groups_array = explode(",", $puppet_groups);
+                if (is_array($puppet_groups_array)) {
+                    foreach($puppet_groups_array as $puppet_group) {
+                        if (!$cloudselector->product_exists_enabled("puppet", $puppet_group)) {
+                            $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $cloud_username: Cloud Puppet Product ($puppet_group) is not existing", "", "", 0, 0, 0);
+                            return;
+                        }
+                    }
+                }
+            }
+            // quantity
+            if (!$cloudselector->product_exists_enabled("quantity", $resource_quantity)) {
+                $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $cloud_username: Cloud Quantity Product ($resource_quantity) is not existing", "", "", 0, 0, 0);
+                return;
+            }
+            // resource type
+            $cs_resource = new virtualization();
+            $cs_resource->get_instance_by_name($virtualization_name);
+            if (!$cloudselector->product_exists_enabled("resource", $cs_resource->id)) {
+                $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloud User $cloud_username: Virtualization Product ($cs_resource->id) is not existing", "", "", 0, 0, 0);
+                return;
+            }
+
+            // ####### end of cloudselector case #######
+        }
+
         $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Provisioning appliance in the openQRM Cloud for user $cloud_username", "", "", 0, 0, 0);
         // fill the array
         $request_fields['cr_cu_id'] = $cl_user->id;
@@ -1568,14 +1651,33 @@ class cloudsoap {
             return;
         }
         $event->log("cloudsoap->KernelGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available kernels", "", "", 0, 0, 0);
-		$kernel = new kernel();
+
+        $kernel = new kernel();
 		$kernel_list = $kernel->get_list();
 		$kernel_name_list = array();
 		foreach($kernel_list as $kernels) {
-			$kernel_name_list[] = $kernels['label'];
+            // check cloudselector
+            // ####### start of cloudselector case #######
+            // if cloudselector is enabled check if products exist
+            $cloudselector = new cloudselector();
+            $cc_conf = new cloudconfig();
+            $cloud_selector_enabled = $cc_conf->get_value(22);	// cloudselector
+            if (!strcmp($cloud_selector_enabled, "true")) {
+                // kernel
+                $kernel_name = $kernels['label'];
+                $cs_kernel = new kernel();
+                $cs_kernel->get_instance_by_name($kernel_name);
+                if ($cloudselector->product_exists_enabled("kernel", $cs_kernel->id)) {
+        			$kernel_name_list[] = $kernels['label'];
+                }
+            } else {          
+    			$kernel_name_list[] = $kernels['label'];
+            }
 		}
-		// remove openqrm kernel
-		array_splice($kernel_name_list, 0, 1);
+        if (strcmp($cloud_selector_enabled, "true")) {
+            // remove openqrm kernel
+            array_splice($kernel_name_list, 0, 1);
+        }
 		return $kernel_name_list;
 	}
 
@@ -1721,9 +1823,21 @@ class cloudsoap {
 			array_shift($virtualization_name_list);
 		}
 		// filter out the virtualization hosts
+        $cloudselector = new cloudselector();
+        $cloud_selector_enabled = $cc_conf->get_value(22);	// cloudselector
 		foreach ($virtualization_name_list as $virt) {
 			if (!strstr($virt, "Host")) {
-				$virtualization_return_list[] = $virt;
+                // check cloudselector
+                if (!strcmp($cloud_selector_enabled, "true")) {
+                    // virtualization
+                    $cs_virt_type = new virtualization();
+                    $cs_virt_type->get_instance_by_name($virt);
+                    if ($cloudselector->product_exists_enabled("resource", $cs_virt_type->id)) {
+        				$virtualization_return_list[] = $virt;
+                    }
+                } else {
+    				$virtualization_return_list[] = $virt;
+                }
 			}
 		}
 		return $virtualization_return_list;
@@ -1775,14 +1889,145 @@ class cloudsoap {
 			$puppet = new puppet();
 			$puppet_list = $puppet->get_available_groups();
 			$puppet_name_list = array();
+            $cc_conf = new cloudconfig();
+            $cloudselector = new cloudselector();
+            $cloud_selector_enabled = $cc_conf->get_value(22);	// cloudselector
 			foreach($puppet_list as $puppet) {
-				$puppet_name_list[] = $puppet;
+                if (!strcmp($cloud_selector_enabled, "true")) {
+                    if ($cloudselector->product_exists_enabled("puppet", $puppet)) {
+        				$puppet_name_list[] = $puppet;
+                    }
+                } else {
+    				$puppet_name_list[] = $puppet;
+                }
 			}
 			return $puppet_name_list;
 		}
 	}
 
 
+
+
+// ######################### selector methods ##################################
+
+
+	//--------------------------------------------------
+	/**
+	* Get a list of Cloud Products ids by product-type
+	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password, product-type
+	* @return array List of Product ids
+	*/
+	//--------------------------------------------------
+	function ProductGetList($method_parameters) {
+		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$product_type = $parameter_array[3];
+        // check all user input
+        for ($i = 0; $i <= 3; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->ProductGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 4) {
+            $event->log("cloudsoap->ProductGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->ProductGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        // cloudselector enabled ?
+		$cc_conf = new cloudconfig();
+        $cloud_selector_enabled = $cc_conf->get_value(22);	// cloudselector
+        if (strcmp($cloud_selector_enabled, "true")) {
+            $event->log("cloudsoap->ProductGetList", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloudselector is not enabled on this Cloud.", "", "", 0, 0, 0);
+            return;
+        }
+        $event->log("cloudsoap->ProductGetList", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing list of available $product_type Cloud Products", "", "", 0, 0, 0);
+		$product_id_list = array();
+        $cloudselector = new cloudselector();
+        $product_array = $cloudselector->display_overview_per_type($product_type);
+        foreach ($product_array as $index => $cloudproduct) {
+            $product_id_list[] = $cloudproduct["id"];
+        }
+		return $product_id_list;
+	}
+
+
+
+
+	//--------------------------------------------------
+	/**
+	* Get a list of Cloud Products ids by product-type
+	* @access public
+	* @param string $method_parameters
+	*  -> mode,user-name,user-password, product-id
+	* @return array of Product Details
+	*/
+	//--------------------------------------------------
+	function ProductGetDetails($method_parameters) {
+		global $event;
+		$parameter_array = explode(',', $method_parameters);
+		$mode = $parameter_array[0];
+		$username = $parameter_array[1];
+		$password = $parameter_array[2];
+		$product_id = $parameter_array[3];
+        // check all user input
+        for ($i = 0; $i <= 3; $i++) {
+            if(!$this->check_param($parameter_array[$i])) {
+                $event->log("cloudsoap->ProductGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Not allowing user-intput with special-characters : $parameter_array[$i]", "", "", 0, 0, 0);
+                return;
+            }
+        }
+        // check parameter count
+        $parameter_count = count($parameter_array);
+        if ($parameter_count != 4) {
+            $event->log("cloudsoap->ProductGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Wrong parameter count $parameter_count ! Exiting.", "", "", 0, 0, 0);
+            return;
+        }
+        // check authentication
+        if (!$this->check_user($mode, $username, $password)) {
+            $event->log("cloudsoap->ProductGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "User authentication failed (mode $mode)", "", "", 0, 0, 0);
+            return;
+        }
+        // cloudselector enabled ?
+		$cc_conf = new cloudconfig();
+        $cloud_selector_enabled = $cc_conf->get_value(22);	// cloudselector
+        if (strcmp($cloud_selector_enabled, "true")) {
+            $event->log("cloudsoap->ProductGetDetails", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Cloudselector is not enabled on this Cloud.", "", "", 0, 0, 0);
+            return;
+        }
+        $event->log("cloudsoap->ProductGetDetails", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Providing details of Cloud Product $product_id", "", "", 0, 0, 0);
+        $cloudproduct_details = array();
+        $product_id = trim($product_id);
+        $cloudselector = new cloudselector();
+        $cloudselector->get_instance_by_id($product_id);
+        // if the product is disabled we return for the user mode
+        if ($cloudselector->state == 0) {
+            if (!strcmp($mode, "user")) {
+                return;
+            }
+        }
+        // fill the array to return
+        $cloudproduct_details['id'] = $product_id;
+        $cloudproduct_details['type'] = $cloudselector->type;
+        $cloudproduct_details['sort_id'] = $cloudselector->sort_id;
+        $cloudproduct_details['quantity'] = $cloudselector->quantity;
+        $cloudproduct_details['price'] = $cloudselector->price;
+        $cloudproduct_details['name'] = $cloudselector->name;
+        $cloudproduct_details['description'] = $cloudselector->description;
+        $cloudproduct_details['state'] = $cloudselector->state;
+		return $cloudproduct_details;
+	}
 
 
 // ############################ helper methods #################################

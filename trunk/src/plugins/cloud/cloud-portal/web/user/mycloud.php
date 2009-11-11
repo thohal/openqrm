@@ -415,35 +415,35 @@ if (htmlobject_request('action') != '') {
                 $cloudselector = new cloudselector();
                 // cpu
                 $cs_cpu = htmlobject_request('cr_cpu_req');
-                if (!$cloudselector->product_exists("cpu", $cs_cpu)) {
+                if (!$cloudselector->product_exists_enabled("cpu", $cs_cpu)) {
                     $strMsg .="Cloud CPU Product ($cs_cpu) is not existing...<br>";
                     redirect($strMsg, "tab2");
                     exit(0);
                 }
                 // disk
                 $cs_disk = htmlobject_request('cr_disk_req');
-                if (!$cloudselector->product_exists("disk", $cs_disk)) {
+                if (!$cloudselector->product_exists_enabled("disk", $cs_disk)) {
                     $strMsg .="Cloud Disk Product ($cs_disk) is not existing...<br>";
                     redirect($strMsg, "tab2");
                     exit(0);
                 }
                 // kernel
                 $cs_kernel = htmlobject_request('cr_kernel_id');
-                if (!$cloudselector->product_exists("kernel", $cs_kernel)) {
+                if (!$cloudselector->product_exists_enabled("kernel", $cs_kernel)) {
                     $strMsg .="Cloud Kernel Product ($cs_kernel) is not existing...<br>";
                     redirect($strMsg, "tab2");
                     exit(0);
                 }
                 // memory
                 $cs_memory = htmlobject_request('cr_ram_req');
-                if (!$cloudselector->product_exists("memory", $cs_memory)) {
+                if (!$cloudselector->product_exists_enabled("memory", $cs_memory)) {
                     $strMsg .="Cloud Memory Product ($cs_memory) is not existing...<br>";
                     redirect($strMsg, "tab2");
                     exit(0);
                 }
                 // network
                 $cs_network = htmlobject_request('cr_network_req');
-                if (!$cloudselector->product_exists("network", $cs_network)) {
+                if (!$cloudselector->product_exists_enabled("network", $cs_network)) {
                     $strMsg .="Cloud Network Product ($cs_network) is not existing...<br>";
                     redirect($strMsg, "tab2");
                     exit(0);
@@ -453,7 +453,7 @@ if (htmlobject_request('action') != '') {
                     $puppet_groups_array = htmlobject_request('puppet_groups');
                     if (is_array($puppet_groups_array)) {
                         foreach($puppet_groups_array as $puppet_group) {
-                            if (!$cloudselector->product_exists("puppet", $puppet_group)) {
+                            if (!$cloudselector->product_exists_enabled("puppet", $puppet_group)) {
                                 $strMsg .="Cloud Puppet Product ($puppet_group) is not existing...<br>";
                                 redirect($strMsg, "tab2");
                                 exit(0);
@@ -463,14 +463,14 @@ if (htmlobject_request('action') != '') {
                 }
                 // quantity
                 $cs_quantity = htmlobject_request('cr_resource_quantity');
-                if (!$cloudselector->product_exists("quantity", $cs_quantity)) {
+                if (!$cloudselector->product_exists_enabled("quantity", $cs_quantity)) {
                     $strMsg .="Cloud Quantity Product ($cs_quantity) is not existing...<br>";
                     redirect($strMsg, "tab2");
                     exit(0);
                 }
                 // resource type
                 $cs_resource = htmlobject_request('cr_resource_type_req');
-                if (!$cloudselector->product_exists("resource", $cs_resource)) {
+                if (!$cloudselector->product_exists_enabled("resource", $cs_resource)) {
                     $strMsg .="Cloud Virtualization Product ($cs_resource) is not existing...<br>";
                     redirect($strMsg, "tab2");
                     exit(0);

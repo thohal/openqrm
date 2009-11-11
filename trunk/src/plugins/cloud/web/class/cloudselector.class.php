@@ -86,7 +86,7 @@ function get_instance_by_id($id) {
 	global $event;
 	$db=openqrm_get_db_connection();
 	if ("$id" != "") {
-		$cloudselector_array = &$db->Execute("select * from $CLOUD_SELECTOR_TABLE where cloudselector_id=$id");
+		$cloudselector_array = &$db->Execute("select * from $CLOUD_SELECTOR_TABLE where id=$id");
 	} else {
 		$event->log("get_instance", $_SERVER['REQUEST_TIME'], 2, "cloudselector.class.php", "Could not create instance of cloudselector without data", "", "", 0, 0, 0);
 		return;
@@ -201,6 +201,21 @@ function product_exists($cloudselector_type, $cloudselector_quantity) {
 
 
 
+// checks if the product quantity exists enabled in the db
+function product_exists_enabled($cloudselector_type, $cloudselector_quantity) {
+	global $CLOUD_SELECTOR_TABLE;
+	global $event;
+	$db=openqrm_get_db_connection();
+	$rs = &$db->Execute("select id from $CLOUD_SELECTOR_TABLE where type=\"$cloudselector_type\" and quantity=\"$cloudselector_quantity\" and state=1");
+	if (!$rs)
+		$event->log("product_exists_enabled", $_SERVER['REQUEST_TIME'], 2, "cloudselector.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	else
+	if ($rs->EOF) {
+		return false;
+	} else {
+		return true;
+	}
+}
 
 
 

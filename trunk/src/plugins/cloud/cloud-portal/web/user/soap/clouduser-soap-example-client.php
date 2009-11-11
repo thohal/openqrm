@@ -273,42 +273,101 @@ try {
     echo 'Caught exception: ',  $e->getMessage(), "<br>";
 }
 
-// ######################### static user input #################################
+// ######################### Cloud products (cloudselector) ####################
 
 // select how many systems to deploy
-echo 'Quantity</td><td><select name="cr_resource_quantity" size="1">';
-echo "<option value=\"1\">1</option>";
-echo "<option value=\"2\">2</option>";
-echo "<option value=\"3\">3</option>";
-echo "<option value=\"4\">4</option>";
-echo '</select></td></tr><tr><td>';
+try {
+    $quantity_product_list_parameter = "user,$cloud_user,$cloud_password,quantity";
+    $quantity_product_list = $client->ProductGetList($quantity_product_list_parameter);
+    echo 'Quantity</td><td><select name="cr_resource_quantity" size="1">';
+    foreach($quantity_product_list as $product_id) {
+        $quantity_product_details_parameter = "user,$cloud_user,$cloud_password,$product_id";
+        $quantity_product_details = $client->ProductGetDetails($quantity_product_details_parameter);
+        $product_quantity_parameter = $quantity_product_details['quantity'];
+        if (strlen($product_quantity_parameter)) {
+            echo "<option value=\"$product_quantity_parameter\">$product_quantity_parameter</option>";
+        }
+    }
+    echo '</select></td></tr><tr><td>';
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
+}
 
 // select how much memory
-echo 'Memory</td><td><select name="cr_ram_req" size="1">';
-echo "<option value=\"512\">512 MB</option>";
-echo "<option value=\"1024\">1 GB</option>";
-echo "<option value=\"2048\">2 GB</option>";
-echo '</select></td></tr><tr><td>';
+try {
+    $memory_product_list_parameter = "user,$cloud_user,$cloud_password,memory";
+    $memory_product_list = $client->ProductGetList($memory_product_list_parameter);
+    echo 'Memory</td><td><select name="cr_ram_req" size="1">';
+    foreach($memory_product_list as $product_id) {
+        $memory_product_details_parameter = "user,$cloud_user,$cloud_password,$product_id";
+        $memory_product_details = $client->ProductGetDetails($memory_product_details_parameter);
+        $product_memory_parameter = $memory_product_details['quantity'];
+        if (strlen($product_memory_parameter)) {
+            echo "<option value=\"$product_memory_parameter\">$product_memory_parameter</option>";
+        }
+    }
+    echo '</select></td></tr><tr><td>';
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
+}
+
 
 // select how many cpus
-echo 'CPU</td><td><select name="cr_cpu_req" size="1">';
-echo "<option value=\"1\">1</option>";
-echo "<option value=\"2\">2</option>";
-echo '</select></td></tr><tr><td>';
+try {
+    $cpu_product_list_parameter = "user,$cloud_user,$cloud_password,cpu";
+    $cpu_product_list = $client->ProductGetList($cpu_product_list_parameter);
+    echo 'CPU</td><td><select name="cr_cpu_req" size="1">';
+    foreach($cpu_product_list as $product_id) {
+        $cpu_product_details_parameter = "user,$cloud_user,$cloud_password,$product_id";
+        $cpu_product_details = $client->ProductGetDetails($cpu_product_details_parameter);
+        $product_cpu_parameter = $cpu_product_details['quantity'];
+        if (strlen($product_cpu_parameter)) {
+            echo "<option value=\"$product_cpu_parameter\">$product_cpu_parameter</option>";
+        }
+    }
+    echo '</select></td></tr><tr><td>';
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
+}
 
 // select disk-size
-echo 'Disk</td><td><select name="cr_disk_req" size="1">';
-echo "<option value=\"5000\">5 GB</option>";
-echo "<option value=\"10000\">10 GB</option>";
-echo "<option value=\"20000\">20 GB</option>";
-echo "<option value=\"50000\">50 GB</option>";
-echo '</select></td></tr><tr><td>';
+try {
+    $disk_product_list_parameter = "user,$cloud_user,$cloud_password,disk";
+    $disk_product_list = $client->ProductGetList($disk_product_list_parameter);
+    echo 'Disk</td><td><select name="cr_disk_req" size="1">';
+    foreach($disk_product_list as $product_id) {
+        $disk_product_details_parameter = "user,$cloud_user,$cloud_password,$product_id";
+        $disk_product_details = $client->ProductGetDetails($disk_product_details_parameter);
+        $product_disk_parameter = $disk_product_details['quantity'];
+        if (strlen($product_disk_parameter)) {
+            echo "<option value=\"$product_disk_parameter\">$product_disk_parameter</option>";
+        }
+    }
+    echo '</select></td></tr><tr><td>';
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
+}
+
 
 // select how many network interfaces
-echo 'NIC</td><td><select name="cr_network_req" size="1">';
-echo "<option value=\"1\">1</option>";
-echo "<option value=\"2\">2</option>";
-echo '</select></td></tr><tr><td>';
+try {
+    $network_product_list_parameter = "user,$cloud_user,$cloud_password,network";
+    $network_product_list = $client->ProductGetList($network_product_list_parameter);
+    echo 'NIC</td><td><select name="cr_network_req" size="1">';
+    foreach($network_product_list as $product_id) {
+        $network_product_details_parameter = "user,$cloud_user,$cloud_password,$product_id";
+        $network_product_details = $client->ProductGetDetails($network_product_details_parameter);
+        $product_network_parameter = $network_product_details['quantity'];
+        if (strlen($product_network_parameter)) {
+            echo "<option value=\"$product_network_parameter\">$product_network_parameter</option>";
+        }
+    }
+    echo '</select></td></tr><tr><td>';
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "<br>";
+}
+
+
 
 // highavailable ?
 echo 'HA</td><td><select name="cr_ha_req" size="1">';
