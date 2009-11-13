@@ -49,8 +49,7 @@ body
 	height: 400px;
 	position: absolute;
 	top: 70px;
-	right: 17%;
-	margin-right: -120px;
+	left: 400px;
 }
 #carousel a
 {
