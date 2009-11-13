@@ -155,6 +155,7 @@ function my_cloud_appliances() {
 		$appliance->get_instance_by_id($appid);
 
         $sshterm_login = false;
+        $appliance_resources_str="";
         $res_ip_loop = 0;
 		$resource = new resource();
 		$appliance_resources=$appliance->resources;
