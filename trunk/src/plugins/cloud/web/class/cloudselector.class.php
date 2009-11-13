@@ -327,6 +327,27 @@ function get_all_ids() {
 
 
 
+// returns the CCU price of a cloud product
+function get_price($quantity, $type) {
+	global $CLOUD_SELECTOR_TABLE;
+	global $event;
+	$cloud_price = 0;
+	$query = "select price from $CLOUD_SELECTOR_TABLE where quantity=\"$quantity\" and type=\"$type\"";
+	$db=openqrm_get_db_connection();
+	$rs = $db->Execute($query);
+	if (!$rs)
+		$event->log("get_price", $_SERVER['REQUEST_TIME'], 2, "cloudselector.class.php", $db->ErrorMsg(), "", "", 0, 0, 0);
+	else
+	while (!$rs->EOF) {
+		$cloud_price = $rs->fields["price"];
+		$rs->MoveNext();
+	}
+	return $cloud_price;
+}
+
+
+
+
 // sorts a specific cloud product up or down
 function sort($direction, $id, $type) {
 	global $CLOUD_SELECTOR_TABLE;

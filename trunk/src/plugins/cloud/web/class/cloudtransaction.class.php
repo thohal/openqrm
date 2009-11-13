@@ -191,7 +191,6 @@ function push($cr_id, $cu_id, $ccu_charge, $ccu_balance, $reason, $comment) {
     $transaction_fields['ct_reason'] = $reason;
     $transaction_fields['ct_comment'] = $comment;
     $new_ct_id = $transaction_fields['ct_id'];
-    $event->log("push", $_SERVER['REQUEST_TIME'], 5, "cloudtransaction.class.php", "Pushing new transaction $new_ct_id to the database", "", "", 0, 0, 0);
     $this->add($transaction_fields);
 }
 

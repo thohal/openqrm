@@ -46,7 +46,9 @@ require_once "$RootDir/plugins/cloud/class/cloudimage.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudappliance.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudirlc.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudiplc.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudtransaction.class.php";
 require_once "$RootDir/plugins/cloud/class/cloudprivateimage.class.php";
+require_once "$RootDir/plugins/cloud/class/cloudselector.class.php";
 
 // custom billing hook, please fill in your custom-billing function 
 require_once "$RootDir/plugins/cloud/openqrm-cloud-billing-hook.php";
@@ -1495,39 +1497,93 @@ function openqrm_cloud_monitor() {
 					$cr->setstatus($cr_id, "deprovision");
 					continue;
 				}
-	
+
+                // check if to charge
+                $charge = false;
 				$cr_lastbill = $cr->lastbill;
 				if (!strlen($cr_lastbill)) {
 					// we set the last-bill time to now and bill
 					$cr->set_requests_lastbill($cr_id, $now);
-					$cr_costs = $cr->get_cost();
-
-                    // custom billing
-                    $cu_ccunits = openqrm_custom_cloud_billing($cr_id, $cu_id, $cr_costs, $cu_ccunits);
-
-                    $cu->set_users_ccunits($cu_id, $cu_ccunits);
-					$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Billing (first hour) user $cu->name for request ID $cr_id", "", "", 0, 0, 0);
-
-
+                    $charge = true;
 				} else {
 					// we check if we need to bill according the last-bill var
 					$active_cr_time = $now - $cr_lastbill;
 					if ($active_cr_time >= $one_hour) {
 						// set lastbill to now
 						$cr->set_requests_lastbill($cr_id, $now);
-						// bill for an hour
-						$cr_costs = $cr->get_cost();
-
-                        // custom billing
-                        $cu_ccunits = openqrm_custom_cloud_billing($cr_id, $cu_id, $cr_costs, $cu_ccunits);
-
-                        $cu->set_users_ccunits($cu_id, $cu_ccunits);
-						$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Billing (an hour) user $cu->name for request ID $cr_id", "", "", 0, 0, 0);
+                        $charge = true;
 					}
 				}
+                if ($charge) {
+                    // here we calculate what to charge
+                    // cloudselector enabled ?
+                    $show_cloud_selector = $cb_config->get_value(22);	// cloud_selector
+                    if (!strcmp($show_cloud_selector, "true")) {
+                        $ct = new cloudtransaction();
+                        $cloudselector = new cloudselector();
+                        // we need to loop through all appliances of this request
+                        // and only charge for active ones
+                        $cs_active_apps = 0;
+                        $new_cu_ccunits = $cu_ccunits;
+                        $cs_app_array = explode(",", $cr->appliance_id);
+                        if (is_array($cs_app_array)) {
+                            foreach($cs_app_array as $cs_app_id) {
+                                $cs_app = new appliance();
+                                $cs_app->get_instance_by_id($cs_app_id);
+                                if (!strcmp($cs_app->state, "active")) {
+                                    // cpu
+                                    $cpu_cost = $cloudselector->get_price($cr->cpu_req, "cpu");
+                                    $new_cu_ccunits = $new_cu_ccunits - $cpu_cost;
+                                    $ct->push($cr->id, $cr->cu_id, $cpu_cost, $new_cu_ccunits, "Cloud Billing", "$cpu_cost CCUs for $cr->cpu_req CPU(s) Appliance $cs_app_id (CR $cr->id)");
+                                    // disk
+                                    $disk_cost = $cloudselector->get_price($cr->disk_req, "disk");
+                                    $new_cu_ccunits = $new_cu_ccunits - $disk_cost;
+                                    $ct->push($cr->id, $cr->cu_id, $disk_cost, $new_cu_ccunits, "Cloud Billing", "$disk_cost CCUs for $cr->disk_req MB Disk Space Appliance $cs_app_id (CR $cr->id)");
+                                    // kernel
+                                    $kernel_cost = $cloudselector->get_price($cr->kernel_id, "kernel");
+                                    $new_cu_ccunits = $new_cu_ccunits - $kernel_cost;
+                                    $ct->push($cr->id, $cr->cu_id, $kernel_cost, $new_cu_ccunits, "Cloud Billing", "$kernel_cost CCUs for Kernel $cr->kernel_id Appliance $cs_app_id (CR $cr->id)");
+                                    // memory
+                                    $memory_cost = $cloudselector->get_price($cr->ram_req, "memory");
+                                    $new_cu_ccunits = $new_cu_ccunits - $memory_cost;
+                                    $ct->push($cr->id, $cr->cu_id, $memory_cost, $new_cu_ccunits, "Cloud Billing", "$memory_cost CCUs for $cr->ram_req MB Memory Appliance $cs_app_id (CR $cr->id)");
+                                    // network
+                                    $network_cost = $cloudselector->get_price($cr->network_req, "network");
+                                    $new_cu_ccunits = $new_cu_ccunits - $network_cost;
+                                    $ct->push($cr->id, $cr->cu_id, $network_cost, $new_cu_ccunits, "Cloud Billing", "$network_cost CCUs for $cr->network_req Network Card(s) Appliance $cs_app_id (CR $cr->id)");
+                                    // puppet
+                                    $puppet_cost=0;
+                                    $puppet_groups_array = explode(",", $cr->puppet_groups);
+                                    if (is_array($puppet_groups_array)) {
+                                        foreach($puppet_groups_array as $puppet_group) {
+                                            if (strlen($puppet_group)) {
+                                                $puppet_group_cost = $cloudselector->get_price($puppet_group, "puppet");
+                                                $new_cu_ccunits = $new_cu_ccunits - $puppet_group_cost;
+                                                $ct->push($cr->id, $cr->cu_id, $puppet_group_cost, $new_cu_ccunits, "Cloud Billing", "$puppet_group_cost CCUs for Application $puppet_group Appliance $cs_app_id (CR $cr->id)");
+                                            }
+                                        }
+                                    }
+                                    // resource type
+                                    $cs_virtualization = new virtualization();
+                                    $cs_virtualization->get_instance_by_id($cr->resource_type_req);
+                                    $resource_cost = $cloudselector->get_price($cr->resource_type_req, "resource");
+                                    $new_cu_ccunits = $new_cu_ccunits - $resource_cost;
+                                    $ct->push($cr->id, $cr->cu_id, $resource_cost, $new_cu_ccunits, "Cloud Billing", "$resource_cost CCUs for Type $cs_virtualization->name Appliance $cs_app_id (CR $cr->id)");
+                                    $cs_active_apps++;
+                                }
+                            }
+                        }
+
+                    } else {
+                        // or custom billing
+                        $new_cu_ccunits = openqrm_custom_cloud_billing($cr_id, $cu_id, $cu_ccunits);
+                    }
+
+                    $cu->set_users_ccunits($cu_id, $new_cu_ccunits);
+                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Billing (an hour) user $cu->name for request ID $cr_id : $new_cu_ccunits / $cu_ccunits", "", "", 0, 0, 0);
+                }
 			}
 		}
-
 
 		// #################### check for deprovisioning ################################		
 		// de-provision, check if it is time or if status deprovisioning
