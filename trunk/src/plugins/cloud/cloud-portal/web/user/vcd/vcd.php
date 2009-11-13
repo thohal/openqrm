@@ -525,6 +525,24 @@ function my_cloud_create_request() {
             }
         }
 
+        // ha
+        // check if to show ha
+        $show_ha_checkbox = $cc_conf->get_value(10);	// show_ha_checkbox
+        if (!strcmp($show_ha_checkbox, "true")) {
+            // is ha enabled ?
+            if (file_exists("$RootDir/plugins/highavailability/.running")) {
+                $product_array = $cloudselector->display_overview_per_type("ha");
+                foreach ($product_array as $index => $cloudproduct) {
+                    // is product enabled ?
+                    if ($cloudproduct["state"] == 1) {
+                        $show_ha = 1;
+                    } else {
+                        $show_ha = 0;
+                    }
+                }
+            }
+        }
+
         // kernel
         $kernel_loop=1;
         $product_array = $cloudselector->display_overview_per_type("kernel");
@@ -722,6 +740,17 @@ function my_cloud_create_request() {
             }
         }
 
+        // check if to show ha
+        $show_ha_checkbox = $cc_conf->get_value(10);	// show_ha_checkbox
+        if (!strcmp($show_ha_checkbox, "true")) {
+            // is ha enabled ?
+            if (file_exists("$RootDir/plugins/highavailability/.running")) {
+                $show_ha = 1;
+            } else {
+                $show_ha = 0;
+            }
+        }
+
         // prepare an array for the disk-sizes
         $disk_size_mb = 1000;
         $disk_size = 1000;
@@ -861,16 +890,6 @@ function my_cloud_create_request() {
     $now = date("m/d/Y", $_SERVER['REQUEST_TIME']);
     $tomorrow = date("m/d/Y", $_SERVER['REQUEST_TIME'] + 86400);
 
-    // check if to show ha
-    $show_ha_checkbox = $cc_conf->get_value(10);	// show_ha_checkbox
-    if (!strcmp($show_ha_checkbox, "true")) {
-        // is ha enabled ?
-        if (file_exists("$RootDir/plugins/highavailability/.running")) {
-            $show_ha = 1;
-        } else {
-            $show_ha = 0;
-        }
-    }
     // check for default-clone-on-deploy
     $cc_default_clone_on_deploy = $cc_conf->get_value(5);	// default_clone_on_deploy
     if (!strcmp($cc_default_clone_on_deploy, "true")) {

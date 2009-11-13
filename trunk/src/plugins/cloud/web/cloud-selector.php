@@ -245,7 +245,7 @@ function cloud_cpu_selector() {
         if ($product_state == 1) {
             $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=cpu&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
         } else {
-            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=cpu&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=cpu&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"enable\"/></a>";
         }
         // table body
 		$arBody[] = array(
@@ -354,7 +354,7 @@ function cloud_disk_selector() {
         if ($product_state == 1) {
             $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=disk&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
         } else {
-            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=disk&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=disk&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"enable\"/></a>";
         }
         // table body
 		$arBody[] = array(
@@ -401,8 +401,7 @@ function cloud_disk_selector() {
 
 
 
-
-function cloud_quantity_selector() {
+function cloud_ha_selector() {
 
 	global $OPENQRM_USER;
 	global $OPENQRM_SERVER_IP_ADDRESS;
@@ -422,16 +421,26 @@ function cloud_quantity_selector() {
 	if (!strlen($external_portal_name)) {
 		$external_portal_name = "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
 	}
+    // check if to show physical system type
+    $show_ha_checkbox = $cl_conf->get_value(10);	// show_ha_checkbox
+    if (!strcmp($show_ha_checkbox, "fale")) {
+        $strMsg = "<strong>High-Availability feature is not enabled in this Cloud !</strong>";
+        return $strMsg;
+        exit(0);
+    }
+    // create the select box
+    $ha_list_select[] = array("value" => 1, "label" => "High-Availability");
+    $ha_select_input = htmlobject_select('product_quantity', $ha_list_select, '');
 
     // build product table
-    $table = new htmlobject_table_builder('id', '', '', '', 'quantity');
+    $table = new htmlobject_table_builder('id', '', '', '', 'ha');
 	$arHead = array();
 
 	$arHead['id'] = array();
 	$arHead['id']['title'] ='ID';
 
 	$arHead['quantity'] = array();
-	$arHead['quantity']['title'] ='Resource Quantity';
+	$arHead['quantity']['title'] ='HA';
 
 	$arHead['price'] = array();
 	$arHead['price']['title'] ='Price/h';
@@ -451,18 +460,18 @@ function cloud_quantity_selector() {
 	$arBody = array();
     $product_count=0;
     $cloudselector = new cloudselector();
-    $product_array = $cloudselector->display_overview_per_type("quantity");
+    $product_array = $cloudselector->display_overview_per_type("ha");
     foreach ($product_array as $index => $cloudproduct) {
         $cloudproduct_id = $cloudproduct["id"];
         $cloudproduct_sort_id = $cloudproduct["sort_id"];
         // sorting
-        $product_sorting_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=quantity&product_id=".$cloudproduct_id."&action=up\"><img src=\"img/sort_up.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_up\"/></a>&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=quantity&product_id=".$cloudproduct_id."&action=down\"><img src=\"img/sort_down.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        $product_sorting_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=ha&product_id=".$cloudproduct_id."&action=up\"><img src=\"img/sort_up.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_up\"/></a>&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=ha&product_id=".$cloudproduct_id."&action=down\"><img src=\"img/sort_down.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
         // state
         $product_state = $cloudproduct["state"];
         if ($product_state == 1) {
-            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=quantity&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=ha&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
         } else {
-            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=quantity&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=ha&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"enable\"/></a>";
         }
         // table body
 		$arBody[] = array(
@@ -477,7 +486,7 @@ function cloud_quantity_selector() {
         $product_count++;
 	}
 
-    $table->add_headrow("<input type=\"hidden\" name=\"product_type\" value=\"quantity\">");
+    $table->add_headrow("<input type=\"hidden\" name=\"product_type\" value=\"ha\">");
 	$table->id = 'Tabelle';
 	$table->css = 'htmlobject_table';
 	$table->border = 1;
@@ -491,20 +500,23 @@ function cloud_quantity_selector() {
 	if ($OPENQRM_USER->role == "administrator") {
 		$table->bottom = array('Remove');
 	}
-    $table->max = $cloudselector->get_count_by_type("quantity");
+    $table->max = $cloudselector->get_count_by_type("ha");
 
     //------------------------------------------------------------ set template
 	$t = new Template_PHPLIB();
 	$t->debug = false;
-	$t->setFile('tplfile', './tpl/' . 'cloud-quantity-selector-tpl.php');
+	$t->setFile('tplfile', './tpl/' . 'cloud-ha-selector-tpl.php');
 	$t->setVar(array(
         'thisfile' => $thisfile,
         'external_portal_name' => $external_portal_name,
+        'ha_select' => $ha_select_input,
         'product_table' => $table->get_string(),
 	));
 	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
+
+
 
 
 
@@ -581,7 +593,7 @@ function cloud_kernel_selector() {
         if ($product_state == 1) {
             $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=kernel&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
         } else {
-            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=kernel&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=kernel&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"enable\"/></a>";
         }
         // table body
 		$arBody[] = array(
@@ -690,7 +702,7 @@ function cloud_memory_selector() {
         if ($product_state == 1) {
             $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=memory&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
         } else {
-            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=memory&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=memory&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"enable\"/></a>";
         }
         // table body
 		$arBody[] = array(
@@ -806,7 +818,7 @@ function cloud_network_selector() {
         if ($product_state == 1) {
             $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=network&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
         } else {
-            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=network&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=network&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"enable\"/></a>";
         }
         // table body
 		$arBody[] = array(
@@ -939,7 +951,7 @@ function cloud_puppet_selector() {
         if ($product_state == 1) {
             $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=puppet&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
         } else {
-            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=puppet&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=puppet&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"enable\"/></a>";
         }
         // table body
 		$arBody[] = array(
@@ -978,6 +990,114 @@ function cloud_puppet_selector() {
         'thisfile' => $thisfile,
         'external_portal_name' => $external_portal_name,
         'puppet_select' => $puppet_select_input,
+        'product_table' => $table->get_string(),
+	));
+	$disp =  $t->parse('out', 'tplfile');
+	return $disp;
+}
+
+
+
+
+
+function cloud_quantity_selector() {
+
+	global $OPENQRM_USER;
+	global $OPENQRM_SERVER_IP_ADDRESS;
+    global $OPENQRM_WEB_PROTOCOL;
+	global $thisfile;
+
+    // cloud_selector enabled ?
+    $cl_conf = new cloudconfig();
+    $show_cloud_selector = $cl_conf->get_value(22);	// cloud_selector
+    if (strcmp($show_cloud_selector, "true")) {
+        $strMsg = "<strong>Cloud-Selector feature is not enabled in this Cloud !</strong>";
+        return $strMsg;
+        exit(0);
+    }
+	// get external name
+	$external_portal_name = $cl_conf->get_value(3);  // 3 is the external name
+	if (!strlen($external_portal_name)) {
+		$external_portal_name = "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER_IP_ADDRESS/cloud-portal";
+	}
+
+    // build product table
+    $table = new htmlobject_table_builder('id', '', '', '', 'quantity');
+	$arHead = array();
+
+	$arHead['id'] = array();
+	$arHead['id']['title'] ='ID';
+
+	$arHead['quantity'] = array();
+	$arHead['quantity']['title'] ='Resource Quantity';
+
+	$arHead['price'] = array();
+	$arHead['price']['title'] ='Price/h';
+
+	$arHead['name'] = array();
+	$arHead['name']['title'] ='Product Name';
+
+	$arHead['description'] = array();
+	$arHead['description']['title'] ='Description';
+
+	$arHead['sort_id'] = array();
+	$arHead['sort_id']['title'] ='Sort';
+
+	$arHead['state'] = array();
+	$arHead['state']['title'] ='State';
+
+	$arBody = array();
+    $product_count=0;
+    $cloudselector = new cloudselector();
+    $product_array = $cloudselector->display_overview_per_type("quantity");
+    foreach ($product_array as $index => $cloudproduct) {
+        $cloudproduct_id = $cloudproduct["id"];
+        $cloudproduct_sort_id = $cloudproduct["sort_id"];
+        // sorting
+        $product_sorting_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=quantity&product_id=".$cloudproduct_id."&action=up\"><img src=\"img/sort_up.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_up\"/></a>&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=quantity&product_id=".$cloudproduct_id."&action=down\"><img src=\"img/sort_down.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+        // state
+        $product_state = $cloudproduct["state"];
+        if ($product_state == 1) {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=quantity&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
+        } else {
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=quantity&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"enable\"/></a>";
+        }
+        // table body
+		$arBody[] = array(
+			'id' => $cloudproduct["id"],
+			'quantity' => $cloudproduct["quantity"],
+			'price' => $cloudproduct["price"],
+			'name' => $cloudproduct["name"],
+			'description' => $cloudproduct["description"],
+			'sort_id' => $product_sorting_action,
+			'state' => $product_state_action,
+		);
+        $product_count++;
+	}
+
+    $table->add_headrow("<input type=\"hidden\" name=\"product_type\" value=\"quantity\">");
+	$table->id = 'Tabelle';
+	$table->css = 'htmlobject_table';
+	$table->border = 1;
+	$table->cellspacing = 0;
+	$table->cellpadding = 3;
+	$table->form_action = $thisfile;
+	$table->head = $arHead;
+	$table->body = $arBody;
+	$table->identifier = 'id';
+    $table->sort = false;
+	if ($OPENQRM_USER->role == "administrator") {
+		$table->bottom = array('Remove');
+	}
+    $table->max = $cloudselector->get_count_by_type("quantity");
+
+    //------------------------------------------------------------ set template
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'cloud-quantity-selector-tpl.php');
+	$t->setVar(array(
+        'thisfile' => $thisfile,
+        'external_portal_name' => $external_portal_name,
         'product_table' => $table->get_string(),
 	));
 	$disp =  $t->parse('out', 'tplfile');
@@ -1068,7 +1188,7 @@ function cloud_virtualization_selector() {
         if ($product_state == 1) {
             $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=resource&product_id=".$cloudproduct_id."&action=disable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/start.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"disable\"/></a>";
         } else {
-            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=resource&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"sort_down\"/></a>";
+            $product_state_action = "&nbsp;&nbsp;<a href=\"".$thisfile."?product_type=resource&product_id=".$cloudproduct_id."&action=enable\"><img src=\"/openqrm/base/plugins/aa_plugins/img/stop.png\" border=\"0\" width=\"16\" height=\"16\" alt=\"enable\"/></a>";
         }
         // table body
 		$arBody[] = array(
@@ -1132,6 +1252,10 @@ if (strlen($product_type)) {
 
          case 'quantity':
             $output[] = array('label' => 'Quantity Selector', 'value' => cloud_quantity_selector());
+            break;
+
+         case 'ha':
+            $output[] = array('label' => 'High-Availability Selector', 'value' => cloud_ha_selector());
             break;
 
          case 'kernel':

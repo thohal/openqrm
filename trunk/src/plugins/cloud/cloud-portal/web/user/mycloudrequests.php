@@ -396,6 +396,23 @@ function my_cloud_create_request() {
             }
         }
 
+        // ha
+        // check if to show ha
+        $show_ha_checkbox = $cc_conf->get_value(10);	// show_ha_checkbox
+        if (!strcmp($show_ha_checkbox, "true")) {
+            // is ha enabled ?
+            if (file_exists("$RootDir/plugins/highavailability/.running")) {
+                $product_array = $cloudselector->display_overview_per_type("ha");
+                foreach ($product_array as $index => $cloudproduct) {
+                    // is product enabled ?
+                    if ($cloudproduct["state"] == 1) {
+                        $show_ha = htmlobject_input('cr_ha_req', array("value" => $cloudproduct["quantity"], "label" => $cloudproduct["name"]), 'checkbox', false);
+                    }
+                }
+            }
+        }
+
+
         // kernel
         $product_array = $cloudselector->display_overview_per_type("kernel");
         foreach ($product_array as $index => $cloudproduct) {
@@ -582,6 +599,15 @@ function my_cloud_create_request() {
             }
         }
 
+        // check if to show ha
+        $show_ha_checkbox = $cc_conf->get_value(10);	// show_ha_checkbox
+        if (!strcmp($show_ha_checkbox, "true")) {
+            // is ha enabled ?
+            if (file_exists("$RootDir/plugins/highavailability/.running")) {
+                $show_ha = htmlobject_input('cr_ha_req', array("value" => 1, "label" => 'Highavailable'), 'checkbox', false);
+            }
+        }
+
 
     // end of big switch #######################################################
     }
@@ -632,14 +658,6 @@ function my_cloud_create_request() {
         $subtitle = "<b>Please create <a href='/openqrm/base/server/image/image-new.php?currenttab=tab1'>Sever-Images</a> first!";
     }
 
-    // check if to show ha
-    $show_ha_checkbox = $cc_conf->get_value(10);	// show_ha_checkbox
-    if (!strcmp($show_ha_checkbox, "true")) {
-        // is ha enabled ?
-        if (file_exists("$RootDir/plugins/highavailability/.running")) {
-            $show_ha = htmlobject_input('cr_ha_req', array("value" => 1, "label" => 'Highavailable'), 'checkbox', false);
-        }
-    }
     // check for default-clone-on-deploy
     $cc_default_clone_on_deploy = $cc_conf->get_value(5);	// default_clone_on_deploy
     if (!strcmp($cc_default_clone_on_deploy, "true")) {

@@ -51,10 +51,18 @@ a {
     height: 70px;
 }
 
+#ha {
+    position: absolute;
+    left: 280px;
+    top: 200px;
+    width: 100px;
+    height: 70px;
+}
+
 #kernel {
     position: absolute;
-    left: 320px;
-    top: 200px;
+    left: 360px;
+    top: 190px;
     width: 100px;
     height: 70px;
 }
@@ -117,6 +125,10 @@ a {
 
 <div id="disk" class="link">
 <a href="cloud-selector.php?product_type=disk"><strong>Disk</strong></a>
+</div>
+
+<div id="ha" class="link">
+<a href="cloud-selector.php?product_type=ha"><strong>HA</strong></a>
 </div>
 
 <div id="kernel" class="link">

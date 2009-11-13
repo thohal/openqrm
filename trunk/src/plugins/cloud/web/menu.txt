@@ -28,6 +28,7 @@
 ...|Selector|plugins/cloud/cloud-selector.php
 ....|CPU|plugins/cloud/cloud-selector.php?product_type=cpu
 ....|Disk|plugins/cloud/cloud-selector.php?product_type=disk
+....|HA|plugins/cloud/cloud-selector.php?product_type=ha
 ....|Kernel|plugins/cloud/cloud-selector.php?product_type=kernel
 ....|Memory|plugins/cloud/cloud-selector.php?product_type=memory
 ....|Network|plugins/cloud/cloud-selector.php?product_type=network

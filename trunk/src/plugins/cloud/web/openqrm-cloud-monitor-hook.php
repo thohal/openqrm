@@ -1539,6 +1539,12 @@ function openqrm_cloud_monitor() {
                                     $disk_cost = $cloudselector->get_price($cr->disk_req, "disk");
                                     $new_cu_ccunits = $new_cu_ccunits - $disk_cost;
                                     $ct->push($cr->id, $cr->cu_id, $disk_cost, $new_cu_ccunits, "Cloud Billing", "$disk_cost CCUs for $cr->disk_req MB Disk Space Appliance $cs_app_id (CR $cr->id)");
+                                    // ha
+                                    if (strlen($cr->ha_req)) {
+                                        $ha_cost = $cloudselector->get_price($cr->ha_req, "ha");
+                                        $new_cu_ccunits = $new_cu_ccunits - $ha_cost;
+                                        $ct->push($cr->id, $cr->cu_id, $ha_cost, $new_cu_ccunits, "Cloud Billing", "$ha_cost CCUs for High-Availability Appliance $cs_app_id (CR $cr->id)");
+                                    }
                                     // kernel
                                     $kernel_cost = $cloudselector->get_price($cr->kernel_id, "kernel");
                                     $new_cu_ccunits = $new_cu_ccunits - $kernel_cost;
