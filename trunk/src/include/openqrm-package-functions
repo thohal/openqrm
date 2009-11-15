@@ -164,6 +164,14 @@ function openqrm_check_requirements() {
 
 function openqrm_rpm_package() {
 
+    # make sure to have some additional deps installed
+   	export FORCE_INSTALL=true
+   	openqrm_install_os_dependency redhat-rpm-config
+    openqrm_install_os_dependency rpm-build
+   	openqrm_install_os_dependency gcc
+   	openqrm_install_os_dependency pciutils-devel
+   	openqrm_install_os_dependency zlib-devel
+
     # this is only rpm packaging, debian package are build with the standard debian package tools
     PLUGINS_IN_OPENQRM_PACKAGE="aoe-storage aws cloud dhcpd dns highavailability image-shelf iscsi-storage kvm local-server lvm-storage nagios3 nfs-storage puppet tftpd xen"
     PLUGINS_IN_PLUGINS_PACKAGE="citrix equallogic-storage linuxcoe local-storage netapp-storage solx86 vmware-esx vmware-server vmware-server2 zabbix zfs-storage"
@@ -390,6 +398,17 @@ function openqrm_pbuilder() {
         openqrm_create_deb_source
     fi
     cd ..
+    # make sure to have some additional deps installed
+   	export FORCE_INSTALL=true
+   	openqrm_install_os_dependency build-essential
+   	openqrm_install_os_dependency pbuilder
+   	openqrm_install_os_dependency fakeroot
+   	openqrm_install_os_dependency cdbs
+    # check if to init pbuilder
+    if [ ! -f /var/cache/pbuilder/base.tgz ]; then
+        pbuilder create
+    fi
+    # run pbuilder
     pbuilder build openqrm_$OPENQRM_SERVER_VERSION.dsc
     echo
     echo "Packaging finished. Please find the created packages in /var/cache/pbuilder/result"
