@@ -57,7 +57,6 @@ function xen_start() {
 	echo "Starting the openQRM xen-plugin"
 	DIR_CURRENT=`pwd`
    	export FORCE_INSTALL=true
-   	openqrm_install_os_dependency bc
    	openqrm_install_os_dependency screen
 }
 
