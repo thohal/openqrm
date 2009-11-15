@@ -348,6 +348,12 @@ function openqrm_rpm_package() {
 
 # function to create a debian/ubuntu source package
 function openqrm_create_deb_source() {
+    # make sure to have some additional deps installed
+   	export FORCE_INSTALL=true
+   	openqrm_install_os_dependency build-essential
+   	openqrm_install_os_dependency pbuilder
+   	openqrm_install_os_dependency fakeroot
+   	openqrm_install_os_dependency cdbs
     CDIR=`pwd`
     TMPBUILD_DIR=`mktemp -d /tmp/deb_source.XXXXXXXXXX` || exit 1
     OPENQRM_UBUNTU_VERSION=`cat debian/changelog | grep ^"openqrm.*(" | head -n 1 | awk {' print $2 '} | sed -e "s/(//g" | sed -e "s/)//g" | cut -d'-' -f1`
@@ -392,18 +398,18 @@ function openqrm_create_deb_source() {
 
 # function to create a debian/ubuntu binary package via pbuilder
 function openqrm_pbuilder() {
-    CDIR=`pwd`
-    PACKAGE_DESCRIPTION="openqrm_$OPENQRM_SERVER_VERSION.dsc"
-    if [ ! -f "../$PACKAGE_DESCRIPTION" ]; then
-        openqrm_create_deb_source
-    fi
-    cd ..
     # make sure to have some additional deps installed
    	export FORCE_INSTALL=true
    	openqrm_install_os_dependency build-essential
    	openqrm_install_os_dependency pbuilder
    	openqrm_install_os_dependency fakeroot
    	openqrm_install_os_dependency cdbs
+    CDIR=`pwd`
+    PACKAGE_DESCRIPTION="openqrm_$OPENQRM_SERVER_VERSION.dsc"
+    if [ ! -f "../$PACKAGE_DESCRIPTION" ]; then
+        openqrm_create_deb_source
+    fi
+    cd ..
     # check if to init pbuilder
     if [ ! -f /var/cache/pbuilder/base.tgz ]; then
         pbuilder create
