@@ -113,6 +113,9 @@ function import_kernel() {
 	udevd --daemon
 	# give time to settle, especially needed for some scsi devices
 	sleep 3
+    # make sure hwsetup is gone
+    killall hwsetup 2>/tmplog
+    rm -f /tmp/log
 }
 
 
