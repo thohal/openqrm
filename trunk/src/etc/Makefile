@@ -22,6 +22,7 @@ export OPENQRM_SERVER_CONF=$(shell pwd)/../etc/openqrm-server.conf
 configure:
 
 compile:
+	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_get_initrd_templates
 
 install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/etc
@@ -41,6 +42,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp db/oracle/README $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/oracle/
 	. $(OPENQRM_SERVER_CONF) && cp db/postgres/openqrm* $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/postgres/
 	. $(OPENQRM_SERVER_CONF) && cp db/postgres/README $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/postgres/
+	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_install_initrd_templates
 
 uninstall:
 	. $(OPENQRM_SERVER_CONF) && rm -rf $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/etc/*

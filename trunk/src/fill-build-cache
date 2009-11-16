@@ -28,15 +28,15 @@ export OPENQRM_SOURCE_DIR=$OPENQRM_SERVER_BASE_DIR
 . include/openqrm-functions
 . include/openqrm-build-functions
 
-for COMPONENT_CONFIG in `find etc/build.conf/ -type f -name *.conf | grep -v initrd` ; do
+for COMPONENT_CONFIG in `find etc/build.conf/ -type f -name *.conf | grep -v initrd-devices` ; do
 	COMPONENT=`basename $COMPONENT_CONFIG`
-	COMPONENT=`echo $COMPONENT | cut -d'.' -f1`
+	COMPONENT=`echo $COMPONENT | sed -e 's/\.conf//g'`
 	echo "Checking $COMPONENT"
-	openqrm_cache_or_download $COMPONENT $COMPONENT_CONFIG
+    openqrm_cache_or_download $COMPONENT $COMPONENT_CONFIG
 done
 for COMPONENT_CONFIG in $PLUGIN_CONFS; do
 	COMPONENT=`basename $COMPONENT_CONFIG`
-	COMPONENT=`echo $COMPONENT | cut -d'.' -f1`
+	COMPONENT=`echo $COMPONENT | sed -e 's/\.conf//g'`
 	echo "Checking $COMPONENT"
 	openqrm_cache_or_download $COMPONENT $COMPONENT_CONFIG
 done

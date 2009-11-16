@@ -30,7 +30,7 @@ require_once "$RootDir/class/plugin.class.php";
 require_once "$RootDir/class/event.class.php";
 
 global $RESOURCE_INFO_TABLE;
-$RESOURCE_TIME_OUT=120;
+$RESOURCE_TIME_OUT=240;
 global $RESOURCE_TIME_OUT;
 $event = new event();
 global $event;

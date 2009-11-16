@@ -25,6 +25,9 @@ compile:
 	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_get_adodb
 	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_get_jquery_bundle
 	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_get_js_interface
+	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_get_openqrm_clients
+
+
 
 install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web
@@ -115,6 +118,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp base/plugins/aa_plugins/img/*.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/aa_plugins/img/
 
 	echo "Creating the openqrm-client boot-service package"
+	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_install_openqrm_clients
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client/$$OPENQRM_RESOURCE_BASE_DIR/openqrm/bin
 	. $(OPENQRM_SERVER_CONF) && cp -a ../bin/openqrm-cmd $$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client/$$OPENQRM_RESOURCE_BASE_DIR/openqrm/bin/
@@ -136,6 +140,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && chmod +x $$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client/$$OPENQRM_RESOURCE_BASE_DIR/openqrm/etc/init.d/*
 	. $(OPENQRM_SERVER_CONF) && tar -C 	$$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client/ -czf $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-client.tgz `echo $$OPENQRM_RESOURCE_BASE_DIR | cut -d'/' -f2-`
 	rm -rf $$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client
+	. $(OPENQRM_SERVER_CONF) && ../make-assistant openqrm_install_openqrm_clients
 
 	
 uninstall:

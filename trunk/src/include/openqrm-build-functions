@@ -683,3 +683,64 @@ function openqrm_install_js_interface() {
 }
 
 
+
+
+# function to get the additional initrd-templates
+# -> this is for "make " phase
+function openqrm_get_initrd_templates() {
+	openqrm_cache_or_download openqrm-initrd-template.centos.i386
+	openqrm_cache_or_download openqrm-initrd-template.centos.x86_64
+	openqrm_cache_or_download openqrm-initrd-template.debian.i386
+	openqrm_cache_or_download openqrm-initrd-template.debian.x86_64
+	openqrm_cache_or_download openqrm-initrd-template.ubuntu.i386
+	openqrm_cache_or_download openqrm-initrd-template.ubuntu.x86_64
+}
+
+
+# function to get the additional openqrm-client packages
+# -> this is for "make " phase
+function openqrm_get_openqrm_clients() {
+	openqrm_cache_or_download openqrm-client.centos.i386
+	openqrm_cache_or_download openqrm-client.centos.x86_64
+	openqrm_cache_or_download openqrm-client.debian.i386
+	openqrm_cache_or_download openqrm-client.debian.x86_64
+	openqrm_cache_or_download openqrm-client.ubuntu.i386
+	openqrm_cache_or_download openqrm-client.ubuntu.x86_64
+}
+
+
+
+# function to install the additional initrd-templates
+# -> this is for "make install" phase
+function openqrm_install_initrd_templates() {
+    CLIENT_VERSION="4.6.0"
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-initrd-template.centos.i386/source/openqrm-initrd-template.$CLIENT_VERSION.centos.i386.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-template.centos.i386.tgz
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-initrd-template.centos.x86_64/source/openqrm-initrd-template.$CLIENT_VERSION.centos.x86_64.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-template.centos.x86_64.tgz
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-initrd-template.debian.i386/source/openqrm-initrd-template.$CLIENT_VERSION.debian.i386.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-template.debian.i386.tgz
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-initrd-template.debian.x86_64/source/openqrm-initrd-template.$CLIENT_VERSION.debian.x86_64.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-template.debian.x86_64.tgz
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-initrd-template.ubuntu.i386/source/openqrm-initrd-template.$CLIENT_VERSION.ubuntu.i386.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-template.ubuntu.i386.tgz
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-initrd-template.ubuntu.x86_64/source/openqrm-initrd-template.$CLIENT_VERSION.ubuntu.x86_64.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-template.ubuntu.x86_64.tgz
+}
+
+
+# function to install the additional openqrm-client packages
+# -> this is for "make install" phase
+function openqrm_install_openqrm_clients() {
+    CLIENT_VERSION="4.6.0"
+    mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client.centos.i386/source/openqrm-client.$CLIENT_VERSION.centos.i386.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-client.centos.i386.tgz
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client.centos.x86_64/source/openqrm-client.$CLIENT_VERSION.centos.x86_64.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-client.centos.x86_64.tgz
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client.debian.i386/source/openqrm-client.$CLIENT_VERSION.debian.i386.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-client.debian.i386.tgz
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client.debian.x86_64/source/openqrm-client.$CLIENT_VERSION.debian.x86_64.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-client.debian.x86_64.tgz
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client.ubuntu.i386/source/openqrm-client.$CLIENT_VERSION.ubuntu.i386.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-client.ubuntu.i386.tgz
+	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client.ubuntu.x86_64/source/openqrm-client.$CLIENT_VERSION.ubuntu.x86_64.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-client.ubuntu.x86_64.tgz
+}
+
+
+
+
+
+
+
+
+
