@@ -383,20 +383,24 @@ else
         OPENQRM_SHORT_DISTRI_NAME="centos"
     fi
     # get the openQRM client package fitting to distri + arch
+    rm -rf /mnt/$resource_basedir/openqrm
     cd /
     if [ "$OPENQRM_SHORT_DISTRI_NAME" != "" ]; then
         echo "Getting openqrm-client package $OPENQRM_SHORT_DISTRI_NAME/$OPENQRM_CLIENT_ARCH"
-        if ! $WGET -q -O openqrm-client.tgz "$openqrm_web_protocol://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.$OPENQRM_SHORT_DISTRI_NAME.$OPENQRM_CLIENT_ARCH.tgz"; then
-            rm -f openqrm-client.tgz
+        if ! $WGET -q -O /mnt/openqrm-client.tgz "$openqrm_web_protocol://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.$OPENQRM_SHORT_DISTRI_NAME.$OPENQRM_CLIENT_ARCH.tgz"; then
+            rm -f /mnt/openqrm-client.tgz
             echo "WARNING: Failed to get the openqrm-client package arch $OPENQRM_CLIENT_ARCH ! Using default one fitting $OPENQRM_CLIENT_ARCH"
+            # copy openQRM client which is on the initrd
+            mkdir /mnt/$resource_basedir/openqrm/
+            cp -a /$resource_basedir/openqrm/* /mnt/$resource_basedir/openqrm/
         else
-            $resource_basedir/openqrm/etc/init.d/openqrm-client stop
+            # use the openQRM client which fits to the distri and arch
+            cd /mnt/
             tar -xzf openqrm-client.tgz
             rm -f openqrm-client.tgz
+            cd /
         fi
     fi
-    # this will automatically restart the openQRM client
-    $resource_basedir/openqrm/etc/init.d/openqrm-client start
 
 	# fill /boot and /lib/modules on the fs-image
 	echo "Filling /boot and /lib/modules"
@@ -417,9 +421,11 @@ else
 
 	# transfer resource basedir
 	echo "Preparing resource openQRM client"
-	rm -rf /mnt/$resource_basedir/openqrm
-	mkdir /mnt/$resource_basedir/openqrm/
-	cp -a /$resource_basedir/openqrm/* /mnt/$resource_basedir/openqrm/
+
+
+
+
+
 	# copy resource parameter
 	mkdir -p /mnt/`dirname $OPENQRM_RESOURCE_PARAMETER_FILE`
 	cp -af $OPENQRM_RESOURCE_PARAMETER_FILE /mnt/$OPENQRM_RESOURCE_PARAMETER_FILE
