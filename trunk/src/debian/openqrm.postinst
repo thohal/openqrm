@@ -78,12 +78,26 @@ case "$1" in
         if echo $KERNEL_ARCH | grep i.*86 1>/dev/null; then
             # i386
             OPENQRM_CLIENT_ARCH=i386
+            OPENQRM_ADDITIONAL_ARCH=x86_64
         else
             OPENQRM_CLIENT_ARCH=$KERNEL_ARCH
+            OPENQRM_ADDITIONAL_ARCH=i386
+        fi
+        # find out the short distri name
+        if [ -f /etc/debian_version ]; then
+            # debian or ubuntu, try to find out without lsb-release which may not be installed
+            if grep -i ubuntu /etc/apt/sources.list 1>/dev/null; then
+                OPENQRM_SHORT_DISTRI_NAME="ubuntu"
+            else
+                OPENQRM_SHORT_DISTRI_NAME="debian"
+            fi
+        elif [ -f /etc/redhat-release ]; then
+            OPENQRM_SHORT_DISTRI_NAME="centos"
         fi
         THISDIR=`pwd`
         cd $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/
         ln -sf openqrm-client.tgz openqrm-client.$OPENQRM_CLIENT_ARCH.tgz
+        ln -sf openqrm-client.$OPENQRM_SHORT_DISTRI_NAME.$OPENQRM_ADDITIONAL_ARCH.tgz openqrm-client.$OPENQRM_ADDITIONAL_ARCH.tgz
         cd $THISDIR
 
         # init the remote execution layer
