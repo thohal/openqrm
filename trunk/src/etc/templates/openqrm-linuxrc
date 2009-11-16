@@ -324,7 +324,7 @@ if echo $KERNEL_ARCH | grep i.*86 1>/dev/null; then
 else
     OPENQRM_CLIENT_ARCH=$KERNEL_ARCH
 fi
-echo "Getting openqrm-client package $OPENQRM_CLIENT_ARCH"
+
 cd /
 if ! $WGET -q -O openqrm-client.tgz "$openqrm_web_protocol://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.$OPENQRM_CLIENT_ARCH.tgz"; then
     rm -f openqrm-client.tgz
@@ -333,15 +333,10 @@ if ! $WGET -q -O openqrm-client.tgz "$openqrm_web_protocol://$OPENQRM_SERVER_IP_
 fi
 tar -xzf openqrm-client.tgz
 rm -f openqrm-client.tgz
-# copy dropbear to its final destination inside the basedir
-mkdir -p $resource_basedir/openqrm/sbin $resource_basedir/openqrm/bin
-cp -af /sbin/dropbear $resource_basedir/openqrm/sbin/
-cp -af /bin/dbclient $resource_basedir/openqrm/bin/
-cp -af /bin/dropbearconvert $resource_basedir/openqrm/bin/
-cp -af /bin/dropbearkey $resource_basedir/openqrm/bin/
 $resource_basedir/openqrm/etc/init.d/openqrm-client start
 
 if [ "$image_type" == "ram" ] || [ "$image_type" == "" ]; then
+
 	# send idle/available
 	echo "Sending idle/available to openQRM-server at $OPENQRM_SERVER_IP_ADDRESS"
 	$WGET -q -O /dev/null "$openqrm_web_protocol://$OPENQRM_SERVER_IP_ADDRESS/openqrm/action/resource-monitor.php?resource_command=update_status&resource_id=$resource_id&resource_state=active&resource_event=available"
@@ -373,6 +368,35 @@ else
 	# DEPLOYMENT PLUGIN HOOK ######################################
 	###############################################################
 	mount_rootfs
+
+    # here we have the rootfs mounted rw so we get the openQRM client according
+    # distro and arch
+    # find out the short distri name
+    if [ -f /mnt/etc/debian_version ]; then
+        # debian or ubuntu, try to find out without lsb-release which may not be installed
+        if grep -i ubuntu /mnt/etc/apt/sources.list 1>/dev/null; then
+            OPENQRM_SHORT_DISTRI_NAME="ubuntu"
+        else
+            OPENQRM_SHORT_DISTRI_NAME="debian"
+        fi
+    elif [ -f /mnt/etc/redhat-release ]; then
+        OPENQRM_SHORT_DISTRI_NAME="centos"
+    fi
+    # get the openQRM client package fitting to distri + arch
+    cd /
+    if [ "$OPENQRM_SHORT_DISTRI_NAME" != "" ]; then
+        echo "Getting openqrm-client package $OPENQRM_SHORT_DISTRI_NAME/$OPENQRM_CLIENT_ARCH"
+        if ! $WGET -q -O openqrm-client.tgz "$openqrm_web_protocol://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.$OPENQRM_SHORT_DISTRI_NAME.$OPENQRM_CLIENT_ARCH.tgz"; then
+            rm -f openqrm-client.tgz
+            echo "WARNING: Failed to get the openqrm-client package arch $OPENQRM_CLIENT_ARCH ! Using default one fitting $OPENQRM_CLIENT_ARCH"
+        else
+            $resource_basedir/openqrm/etc/init.d/openqrm-client stop
+            tar -xzf openqrm-client.tgz
+            rm -f openqrm-client.tgz
+        fi
+    fi
+    # this will automatically restart the openQRM client
+    $resource_basedir/openqrm/etc/init.d/openqrm-client start
 
 	# fill /boot and /lib/modules on the fs-image
 	echo "Filling /boot and /lib/modules"

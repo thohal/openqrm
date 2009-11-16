@@ -25,7 +25,6 @@ compile:
 
 install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/sbin
-	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-execd $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-exec $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-cmd-queue $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/
 	. $(OPENQRM_SERVER_CONF) && cp -a openqrm-monitord $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/

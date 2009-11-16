@@ -75,13 +75,39 @@ function openqrm_integrate_local_server() {
     else
         OPENQRM_CLIENT_ARCH=$KERNEL_ARCH
     fi
-    echo "Getting openqrm-client package $OPENQRM_CLIENT_ARCH"
-    cd /
-    if ! wget -q $WGET_NO_CERT_CHECK -O openqrm-client.tgz "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.$OPENQRM_CLIENT_ARCH.tgz"; then
-        rm -f openqrm-client.tgz
-        echo "WARNING: Failed to get the openqrm-client package arch $OPENQRM_CLIENT_ARCH ! Using default one ..."
-        wget -q $WGET_NO_CERT_CHECK -O openqrm-client.tgz "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.tgz"
+    # find out the short distri name
+    if [ -f /etc/debian_version ]; then
+        # debian or ubuntu, try to find out without lsb-release which may not be installed
+        if grep -i ubuntu /etc/apt/sources.list 1>/dev/null; then
+            OPENQRM_SHORT_DISTRI_NAME="ubuntu"
+        else
+            OPENQRM_SHORT_DISTRI_NAME="debian"
+        fi
+    elif [ -f /etc/redhat-release ]; then
+        OPENQRM_SHORT_DISTRI_NAME="centos"
     fi
+
+    cd /
+    if [ "$OPENQRM_SHORT_DISTRI_NAME" != "" ]; then
+        echo "Getting openqrm-client package $OPENQRM_SHORT_DISTRI_NAME/$OPENQRM_CLIENT_ARCH"
+        if ! $WGET -q -O openqrm-client.tgz "$openqrm_web_protocol://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.$OPENQRM_SHORT_DISTRI_NAME.$OPENQRM_CLIENT_ARCH.tgz"; then
+            rm -f openqrm-client.tgz
+            echo "WARNING: Failed to get the openqrm-client package arch $OPENQRM_CLIENT_ARCH ! Using default one fitting $OPENQRM_CLIENT_ARCH"
+            if ! wget -q $WGET_NO_CERT_CHECK -O openqrm-client.tgz "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.$OPENQRM_CLIENT_ARCH.tgz"; then
+                rm -f openqrm-client.tgz
+                echo "WARNING: Failed to get the openqrm-client package arch $OPENQRM_CLIENT_ARCH ! Using default one ..."
+                wget -q $WGET_NO_CERT_CHECK -O openqrm-client.tgz "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.tgz"
+            fi
+        fi
+    else
+        echo "Getting openqrm-client package $OPENQRM_CLIENT_ARCH"
+        if ! wget -q $WGET_NO_CERT_CHECK -O openqrm-client.tgz "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.$OPENQRM_CLIENT_ARCH.tgz"; then
+            rm -f openqrm-client.tgz
+            echo "WARNING: Failed to get the openqrm-client package arch $OPENQRM_CLIENT_ARCH ! Using default one ..."
+            wget -q $WGET_NO_CERT_CHECK -O openqrm-client.tgz "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.tgz"
+        fi
+    fi
+
 	tar -xzf openqrm-client.tgz
 	rm -f openqrm-client.tgz
 	ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client /etc/init.d/openqrm-client
