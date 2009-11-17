@@ -107,7 +107,7 @@ start_server() {
     touch ${LOCKFILE}
 
     if [ -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured ]; then
-        log_success_msg "Please configure your openQRM Server at : http://[server-ip-address]/openqrm/"
+        log_success_msg "Please configure your openQRM Server at : $OPENQRM_WEB_PROTOCOL://[server-ip-address]/openqrm/"
         log_success_msg "-> User : openqrm"
         log_success_msg "-> Password : openqrm"
         sleep 2

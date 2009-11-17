@@ -156,10 +156,12 @@ function openqrm_server_init() {
     # ssl ?
     if [ "$OPENQRM_WEB_PROTOCOL" == "https" ]; then
         echo "Setting up SSL secured openQRM Website"
-        # apache ssl setup
-        if ! a2enmod ssl; then
-            echo "ERROR: Could not enable SSL in the Apache webserver ! Exiting."
-            return 1
+        # apache ssl setup, on centos it is enabled by default
+        if [ -f /etc/debian_version ]; then
+            if ! a2enmod ssl; then
+                echo "ERROR: Could not enable SSL in the Apache webserver ! Exiting."
+                return 1
+            fi
         fi
         # creating the cert + key
         PRIVATE_KEY=$OPENQRM_SERVER_BASE_DIR/openqrm/etc/ssl/private/openqrm-private.key
@@ -178,7 +180,10 @@ function openqrm_server_init() {
             sed -e "s#@@OPENQRM_SERVER_BASE_DIR@@#$OPENQRM_SERVER_BASE_DIR#g" | \
             sed -e "s#@@OPENQRM_WEBSERVER_DOCUMENT_ROOT@@#$OPENQRM_WEBSERVER_DOCUMENT_ROOT#g" \
             > $APACHE_CUSTOM_CONFIG_DIR/openqrm-https.conf
-
+        # check if to adjust the error log location
+        if [ -f /etc/redhat-release ]; then
+            sed -i -e "s/apache2/httpd/g" $APACHE_CUSTOM_CONFIG_DIR/openqrm-https.conf
+        fi
     fi
 
     $OPENQRM_WEBSERVER_INIT reload
