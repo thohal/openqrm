@@ -1,4 +1,4 @@
-openqrm (4.6-ubuntu1) karmic; urgency=low
+openqrm (4.6-debian1) lenny; urgency=low
 
   [ Matthias Rechenburg ]
   * Initial release

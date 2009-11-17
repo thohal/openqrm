@@ -348,6 +348,15 @@ function openqrm_rpm_package() {
 
 # function to create a debian/ubuntu source package
 function openqrm_create_deb_source() {
+    # find out the short distri name
+	if [ -f /etc/debian_version ]; then
+        # debian or ubuntu, try to find out without lsb-release which may not be installed
+        if grep -i ubuntu /etc/apt/sources.list 1>/dev/null; then
+            OPENQRM_SHORT_DISTRI_NAME="ubuntu"
+        else
+            OPENQRM_SHORT_DISTRI_NAME="debian"
+        fi
+    fi
     # make sure to have some additional deps installed
    	export FORCE_INSTALL=true
    	openqrm_install_os_dependency build-essential
@@ -356,10 +365,12 @@ function openqrm_create_deb_source() {
    	openqrm_install_os_dependency cdbs
     CDIR=`pwd`
     TMPBUILD_DIR=`mktemp -d /tmp/deb_source.XXXXXXXXXX` || exit 1
-    OPENQRM_UBUNTU_VERSION=`cat debian/changelog | grep ^"openqrm.*(" | head -n 1 | awk {' print $2 '} | sed -e "s/(//g" | sed -e "s/)//g" | cut -d'-' -f1`
+    OPENQRM_UBUNTU_VERSION="$OPENQRM_SERVER_VERSION"
     mkdir -p $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION
     cp -aR * $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION/
     cd $TMPBUILD_DIR/openqrm-$OPENQRM_UBUNTU_VERSION/
+    # copy changelog for package naming
+    cp -f debian/changelog.$OPENQRM_SHORT_DISTRI_NAME debian/changelog
     # remove nagios2 for now, ubuntu and latest debian already have nagios3
     rm -rf plugins/nagios2
     # windows is still in work
@@ -398,6 +409,16 @@ function openqrm_create_deb_source() {
 
 # function to create a debian/ubuntu binary package via pbuilder
 function openqrm_pbuilder() {
+    # find out the short distri name
+	if [ -f /etc/debian_version ]; then
+        # debian or ubuntu, try to find out without lsb-release which may not be installed
+        if grep -i ubuntu /etc/apt/sources.list 1>/dev/null; then
+            OPENQRM_SHORT_DISTRI_NAME="ubuntu"
+        else
+            OPENQRM_SHORT_DISTRI_NAME="debian"
+        fi
+    fi
+    OPENQRM_UBUNTU_VERSION=`cat debian/changelog.$OPENQRM_SHORT_DISTRI_NAME | head -n1 | cut -d'(' -f2 | cut -d')' -f1`
     # make sure to have some additional deps installed
    	export FORCE_INSTALL=true
    	openqrm_install_os_dependency build-essential
@@ -405,7 +426,7 @@ function openqrm_pbuilder() {
    	openqrm_install_os_dependency fakeroot
    	openqrm_install_os_dependency cdbs
     CDIR=`pwd`
-    PACKAGE_DESCRIPTION="openqrm_$OPENQRM_SERVER_VERSION.dsc"
+    PACKAGE_DESCRIPTION="openqrm_$OPENQRM_UBUNTU_VERSION.dsc"
     if [ ! -f "../$PACKAGE_DESCRIPTION" ]; then
         openqrm_create_deb_source
     fi
@@ -415,7 +436,7 @@ function openqrm_pbuilder() {
         pbuilder create
     fi
     # run pbuilder
-    pbuilder build openqrm_$OPENQRM_SERVER_VERSION.dsc
+    pbuilder build $PACKAGE_DESCRIPTION
     echo
     echo "Packaging finished. Please find the created packages in /var/cache/pbuilder/result"
     ls -lh /var/cache/pbuilder/result/openqrm*
