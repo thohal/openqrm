@@ -25,7 +25,7 @@ export PATH
 export IMAGE_FSTAB=/mnt/etc/fstab
 export IMAGE_FSTAB_STATIC=/mnt/etc/fstab-static
 export NETWORK_SERVICES_TO_ADJUST="/etc/init.d/portmap /etc/init.d/netfs /etc/rc.d/init.d/portmap /etc/rc.d/init.d/netfs /etc/init.d/network /etc/rc.d/init.d/network /etc/init.d/networking /etc/rc.d/init.d/networking"
-export NOT_START_SERVICE="dbus avahi-daemon"
+export NOT_START_SERVICE="dbus avahi-daemon kudzu"
 
 # functions
 

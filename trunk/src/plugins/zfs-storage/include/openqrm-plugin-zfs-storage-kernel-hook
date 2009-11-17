@@ -34,10 +34,20 @@ function zfs_storage_kernel_hook() {
         echo "zfs-storage-plugin: Found iscsid at $KERNEL_LOCATION/sbin/iscsid. Coping to $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsid.$KERNEL_NAME"
         echo "zfs-storage-plugin: Found iscsid at $KERNEL_LOCATION/sbin/iscsid. Coping to $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsid.$KERNEL_NAME" | logger
     fi
+    if [ -x "$KERNEL_LOCATION/usr/sbin/iscsid" ]; then
+        cp -a $KERNEL_LOCATION/usr/sbin/iscsid $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsid.$KERNEL_NAME
+        echo "zfs-storage-plugin: Found iscsid at $KERNEL_LOCATION/usr/sbin/iscsid. Coping to $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsid.$KERNEL_NAME"
+        echo "zfs-storage-plugin: Found iscsid at $KERNEL_LOCATION/usr/sbin/iscsid. Coping to $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsid.$KERNEL_NAME" | logger
+    fi
     if [ -x "$KERNEL_LOCATION/sbin/iscsiadm" ]; then
         cp -a $KERNEL_LOCATION/sbin/iscsiadm $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsiadm.$KERNEL_NAME
         echo "zfs-storage-plugin: Found iscsiadm at $KERNEL_LOCATION/sbin/iscsiadm. Coping to $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsiadm.$KERNEL_NAME"
         echo "zfs-storage-plugin: Found iscsiadm at $KERNEL_LOCATION/sbin/iscsiadm. Coping to $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsiadm.$KERNEL_NAME" | logger
+    fi
+    if [ -x "$KERNEL_LOCATION/usr/bin/iscsiadm" ]; then
+        cp -a $KERNEL_LOCATION/usr/bin/iscsiadm $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsiadm.$KERNEL_NAME
+        echo "zfs-storage-plugin: Found iscsiadm at $KERNEL_LOCATION/usr/bin/iscsiadm. Coping to $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsiadm.$KERNEL_NAME"
+        echo "zfs-storage-plugin: Found iscsiadm at $KERNEL_LOCATION/usr/bin/iscsiadm. Coping to $OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/iscsiadm.$KERNEL_NAME" | logger
     fi
 
 }
