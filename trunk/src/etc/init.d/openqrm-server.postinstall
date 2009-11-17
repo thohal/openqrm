@@ -21,11 +21,12 @@
 chmod +x /usr/share/openqrm/etc/init.d/openqrm
 ln -sf /usr/share/openqrm/etc/init.d/openqrm /etc/init.d/openqrm
 
-if [ -x "/etc/init.d/openqrm" ]; then
-	if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-		invoke-rc.d openqrm start || exit $?
-	else
-		/etc/init.d/openqrm start || exit $?
-	fi
-fi
+# do not start automatically on rpm based systems
+# creating the https cert with openssl won't work in rpm post-inst
+
+echo "Please start the openQRM Server with :"
+echo
+echo "    /etc/init.d/openqrm start"
+echo
+
 
