@@ -26,7 +26,7 @@ Description: Cloud Computing Platform
 
 Package: openqrm
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client, syslinux, dropbear, python, tftpd-hpa, dhcp3-server, screen, nagios-images, nagios-plugins, nmap, default-mta | mail-transport-agent, libxml-simple-perl, open-iscsi, aoetools, openssl, rsync, expect, puppetmaster, subversion, bind9, collectd
+Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, php5, php5-mysql, libphp-adodb, mysql-server, mysql-client, syslinux, python, tftpd-hpa, dhcp3-server, screen, nagios-images, nagios-plugins, nmap, default-mta | mail-transport-agent, libxml-simple-perl, open-iscsi, aoetools, openssl, rsync, expect, puppetmaster, subversion, bind9, collectd
 Description: Cloud Computing Platform
  openQRM is a fully automated, rapid deployment system including
  VM-Management, Monitoring, High-Availability and Storage-Management.
