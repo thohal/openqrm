@@ -23,6 +23,7 @@
 ..|About|plugins/cloud/cloud-about.php|How to use|cloud/plugin.png
 ..|Cloud User|plugins/cloud/cloud-user.php|The User on the Cloud|cloud/clouduser.png
 ..|Cloud Requests|plugins/cloud/cloud-manager.php|The Requests from the Users|cloud/cloudrequests.png
+..|Cloud Mail|plugins/cloud/cloud-mailer.php|Send a mail to the Cloud Users|cloud/cloudmail.png
 ..|Configuration
 ...|Cloud Config|plugins/cloud/cloud-config.php|The Cloud Configuration|cloud/cloudconfig.png
 ...|Products|plugins/cloud/cloud-selector.php
@@ -38,7 +39,6 @@
 ...|Private Images|plugins/cloud/cloud-image-selector.php|Private Cloud Images|cloud/cloudprivateimage.png
 ...|IpGroups|plugins/cloud/cloud-ipgroup-manager.php|Setup IP-Adressing for the Cloud|cloud/cloudipgroups.png
 ...|Cloud NAT|plugins/cloud/cloud-nat-manager.php|Configure NAT for the Cloud|cloud/cloudnat.png
-..|Cloud Mail|plugins/cloud/cloud-mailer.php|Send a mail to the Cloud Users|cloud/cloudmail.png
 ..|Cloud WebService
 ...|Main|plugins/cloud/soap/index.php|Documenation for the Cloud SOAP WebService|cloud/cloudsoap.png
 ...|Admin WebService|plugins/cloud/soap/soap-admin.php|Documenation for the Cloud Admin SOAP WebService|cloud/cloudsoap.png
