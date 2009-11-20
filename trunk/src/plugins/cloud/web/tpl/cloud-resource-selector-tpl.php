@@ -80,7 +80,7 @@
 </head>
 <body>
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Virtualization Type Selector</h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/cloudproduct_resource.png"> Virtualization Products</h1>
 
 <h4>Add new Virtualization Product to the Cloud</h4>
 Select a Virtualization product and how much CCU to charge per hour

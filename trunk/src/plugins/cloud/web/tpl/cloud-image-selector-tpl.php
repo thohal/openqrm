@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Cloud Image Selector for portal <small><a href="{external_portal_name}" target="_BLANK">{external_portal_name}</a></small></h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/cloudprivateimage.png"> Cloud Image Selector for portal <small><a href="{external_portal_name}" target="_BLANK">{external_portal_name}</a></small></h1>
 
 {cloud_private_image_table}
 

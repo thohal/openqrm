@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Load ip-adresses into Cloud IpGroup {ig_name}</h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/cloudipgroups.png"> Load ip-adresses into Cloud IpGroup {ig_name}</h1>
 <br>
 <form action={thisfile} method=post>
 <table><tr><td>

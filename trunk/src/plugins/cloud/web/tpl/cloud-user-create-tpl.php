@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Create Cloud User on portal <small><a href={external_portal_name} target="_BLANK">{external_portal_name}</a></small></h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/clouduser.png"> Create Cloud User on portal <small><a href={external_portal_name} target="_BLANK">{external_portal_name}</a></small></h1>
 <br>
 <form action={thisfile} method=post>
 

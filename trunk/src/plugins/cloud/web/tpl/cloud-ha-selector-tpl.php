@@ -80,7 +80,7 @@
 </head>
 <body>
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> High-Availability Selector</h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/cloudproduct_ha.png"> High-Availability Products</h1>
 
 <h4>Add new High-Availability Product to the Cloud</h4>
 Select High-Availability product and how much CCU to charge per hour

@@ -20,29 +20,29 @@
 #	Alt
 #	IMG
 #	Target
-..|About|plugins/cloud/cloud-about.php
-..|Cloud User|plugins/cloud/cloud-user.php
-..|Cloud Requests|plugins/cloud/cloud-manager.php
+..|About|plugins/cloud/cloud-about.php|How to use|cloud/plugin.png
+..|Cloud User|plugins/cloud/cloud-user.php|The User on the Cloud|cloud/clouduser.png
+..|Cloud Requests|plugins/cloud/cloud-manager.php|The Requests from the Users|cloud/cloudrequests.png
 ..|Configuration
-...|Cloud Config|plugins/cloud/cloud-config.php
-...|Selector|plugins/cloud/cloud-selector.php
-....|CPU|plugins/cloud/cloud-selector.php?product_type=cpu
-....|Disk|plugins/cloud/cloud-selector.php?product_type=disk
-....|HA|plugins/cloud/cloud-selector.php?product_type=ha
-....|Kernel|plugins/cloud/cloud-selector.php?product_type=kernel
-....|Memory|plugins/cloud/cloud-selector.php?product_type=memory
-....|Network|plugins/cloud/cloud-selector.php?product_type=network
-....|Puppet|plugins/cloud/cloud-selector.php?product_type=puppet
-....|Quantity|plugins/cloud/cloud-selector.php?product_type=quantity
-....|Resource|plugins/cloud/cloud-selector.php?product_type=resource
-...|Private Images|plugins/cloud/cloud-image-selector.php
-...|IpGroups|plugins/cloud/cloud-ipgroup-manager.php
-...|Cloud NAT|plugins/cloud/cloud-nat-manager.php
-..|Cloud Mail|plugins/cloud/cloud-mailer.php
+...|Cloud Config|plugins/cloud/cloud-config.php|The Cloud Configuration|cloud/cloudconfig.png
+...|Products|plugins/cloud/cloud-selector.php
+....|CPU|plugins/cloud/cloud-selector.php?product_type=cpu|CPU Products|cloud/cloudproduct_cpu.png
+....|Disk|plugins/cloud/cloud-selector.php?product_type=disk|Disk Products|cloud/cloudproduct_disk.png
+....|HA|plugins/cloud/cloud-selector.php?product_type=ha|HighAvailability Products|cloud/cloudproduct_ha.png
+....|Kernel|plugins/cloud/cloud-selector.php?product_type=kernel|Kernel Products|cloud/cloudproduct_kernel.png
+....|Memory|plugins/cloud/cloud-selector.php?product_type=memory|Memory Products|cloud/cloudproduct_memory.png
+....|Network|plugins/cloud/cloud-selector.php?product_type=network|Network Products|cloud/cloudproduct_network.png
+....|Puppet|plugins/cloud/cloud-selector.php?product_type=puppet|Puppet Products|cloud/cloudproduct_puppet.png
+....|Quantity|plugins/cloud/cloud-selector.php?product_type=quantity|Quantity Products|cloud/cloudproduct_quantity.png
+....|Virtual|plugins/cloud/cloud-selector.php?product_type=resource|Virtualization Products|cloud/cloudproduct_resource.png
+...|Private Images|plugins/cloud/cloud-image-selector.php|Private Cloud Images|cloud/cloudprivateimage.png
+...|IpGroups|plugins/cloud/cloud-ipgroup-manager.php|Setup IP-Adressing for the Cloud|cloud/cloudipgroups.png
+...|Cloud NAT|plugins/cloud/cloud-nat-manager.php|Configure NAT for the Cloud|cloud/cloudnat.png
+..|Cloud Mail|plugins/cloud/cloud-mailer.php|Send a mail to the Cloud Users|cloud/cloudmail.png
 ..|Cloud WebService
-...|Main|plugins/cloud/soap/index.php
-...|Admin WebService|plugins/cloud/soap/soap-admin.php
-...|Admin Demo|plugins/cloud/soap/cloudadmin-soap-example-client.php
-...|User WebService|plugins/cloud/soap/soap-user.php
-...|User Demo|/cloud-portal/user/soap/clouduser-soap-example-client.php
-...|API|http://www.openqrm-ng.net/downloads/plugins/cloud/openqrm-soap-api/|||_BLANK
+...|Main|plugins/cloud/soap/index.php|Documenation for the Cloud SOAP WebService|cloud/cloudsoap.png
+...|Admin WebService|plugins/cloud/soap/soap-admin.php|Documenation for the Cloud Admin SOAP WebService|cloud/cloudsoap.png
+...|Admin Demo|plugins/cloud/soap/cloudadmin-soap-example-client.php|Demo for the Cloud Admin SOAP WebService|cloud/cloudsoapdemo.png
+...|User WebService|plugins/cloud/soap/soap-user.php|Documenation for the Cloud User SOAP WebService|cloud/cloudsoap.png
+...|User Demo|/cloud-portal/user/soap/clouduser-soap-example-client.php|Demo for the Cloud User SOAP WebService|cloud/cloudsoapdemo.png
+...|API|http://www.openqrm-ng.net/downloads/plugins/cloud/openqrm-soap-api/|The API for the Cloud SOAP WebService|cloud/cloudsoap.png|_BLANK

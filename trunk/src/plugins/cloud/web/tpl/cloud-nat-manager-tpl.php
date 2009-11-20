@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Cloud NAT (natural address translation)</h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/cloudnat.png"> Cloud NAT (natural address translation)</h1>
 <br>
 <br>
 This feature hels for openQRM Setups within a secured network which

@@ -125,7 +125,7 @@ function quantity_handleSliderSlide(e, ui)
 </head>
 <body>
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Disk Selector</h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/cloudproduct_disk.png"> Disk Products</h1>
 
 <h4>Add new Disk Product to the Cloud</h4>
 Use the slider to select product quantity and how much CCU to charge per hour

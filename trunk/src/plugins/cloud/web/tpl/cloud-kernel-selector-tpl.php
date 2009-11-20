@@ -80,7 +80,7 @@
 </head>
 <body>
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Kernel Selector</h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/cloudproduct_kernel.png"> Kernel Products</h1>
 
 <h4>Add new Kernel Product to the Cloud</h4>
 Select a kernel product and how much CCU to charge per hour

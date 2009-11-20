@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Create new Cloud IpGroup</h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/cloudipgroups.png"> Create new Cloud IpGroup</h1>
 <br>
 <form action={thisfile} method=post>
 

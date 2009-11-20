@@ -28,9 +28,9 @@ a {
 
 #cloudoffer {
     position: absolute;
-    left: 250px;
-    top: 260px;
-    width: 150px;
+    left: 220px;
+    top: 265px;
+    width: 250px;
     height: 20px;
 }
 
@@ -46,7 +46,7 @@ a {
 #disk {
     position: absolute;
     left: 185px;
-    top: 215px;
+    top: 225px;
     width: 100px;
     height: 70px;
 }
@@ -54,7 +54,7 @@ a {
 #ha {
     position: absolute;
     left: 280px;
-    top: 200px;
+    top: 210px;
     width: 100px;
     height: 70px;
 }
@@ -62,7 +62,7 @@ a {
 #kernel {
     position: absolute;
     left: 360px;
-    top: 190px;
+    top: 200px;
     width: 100px;
     height: 70px;
 }
@@ -86,7 +86,7 @@ a {
 #puppet {
     position: absolute;
     left: 420px;
-    top: 330px;
+    top: 320px;
     width: 100px;
     height: 70px;
 }
@@ -94,7 +94,7 @@ a {
 #quantity {
     position: absolute;
     left: 320px;
-    top: 360px;
+    top: 340px;
     width: 100px;
     height: 70px;
 }
@@ -102,57 +102,66 @@ a {
 #resource {
     position: absolute;
     left: 190px;
-    top: 330px;
+    top: 310px;
     width: 100px;
     height: 70px;
 }
 
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Cloud Selector for portal <small><a href="{external_portal_name}" target="_BLANK">{external_portal_name}</a></small></h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Cloud Products for portal <small><a href="{external_portal_name}" target="_BLANK">{external_portal_name}</a></small></h1>
 
 &nbsp;&nbsp;&nbsp;&nbsp;<img src="img/cloudofferings.png" width="518" height="233" alt="cloudofferings"/>
 
 
 <div id="cloudoffer" class="link">
-<h4>Define Cloud Offerings</h4>
+<h2>Define Cloud Offerings</h2>
 </div>
 
 
 <div id="cpu" class="link">
-<a href="cloud-selector.php?product_type=cpu"><strong>CPU</strong></a>
+<a href="cloud-selector.php?product_type=cpu"><img src="img/cloudproduct_cpu.png" border="0" width="24" height="24" alt="cloudproduct_cpu"/>
+<br><strong>CPU</strong></a>
 </div>
 
 <div id="disk" class="link">
-<a href="cloud-selector.php?product_type=disk"><strong>Disk</strong></a>
+<a href="cloud-selector.php?product_type=disk">&nbsp;<img src="img/cloudproduct_disk.png" border="0" width="24" height="24" alt="cloudproduct_disk"/>
+<br><strong>Disk</strong></a>
 </div>
 
 <div id="ha" class="link">
-<a href="cloud-selector.php?product_type=ha"><strong>HA</strong></a>
+<a href="cloud-selector.php?product_type=ha"><img src="img/cloudproduct_ha.png" border="0" width="24" height="24" alt="cloudproduct_ha"/>
+<br><strong>&nbsp;HA</strong></a>
 </div>
 
 <div id="kernel" class="link">
-<a href="cloud-selector.php?product_type=kernel"><strong>Kernel</strong></a>
+<a href="cloud-selector.php?product_type=kernel">&nbsp;&nbsp;<img src="img/cloudproduct_kernel.png" border="0" width="24" height="24" alt="cloudproduct_kernel"/>
+<br><strong>Kernel</strong></a>
 </div>
 
 <div id="memory" class="link">
-<a href="cloud-selector.php?product_type=memory"><strong>Memory</strong></a>
+<a href="cloud-selector.php?product_type=memory">&nbsp;&nbsp;&nbsp;<img src="img/cloudproduct_memory.png" border="0" width="24" height="24" alt="cloudproduct_memory"/>
+<br><strong>Memory</strong></a>
 </div>
 
 <div id="network" class="link">
-<a href="cloud-selector.php?product_type=network"><strong>Network</strong></a>
+    <a href="cloud-selector.php?product_type=network">&nbsp;&nbsp;&nbsp;<img src="img/cloudproduct_network.png" border="0" width="24" height="24" alt="cloudproduct_network"/>
+    <br><strong>Network</strong></a>
 </div>
 
 <div id="puppet" class="link">
-<a href="cloud-selector.php?product_type=puppet"><strong>Puppet</strong></a>
+<a href="cloud-selector.php?product_type=puppet">&nbsp;&nbsp;&nbsp;<img src="img/cloudproduct_puppet.png" border="0" width="24" height="24" alt="cloudproduct_puppet"/>
+<br><strong>Puppet</strong></a>
 </div>
 
 <div id="quantity" class="link">
-<a href="cloud-selector.php?product_type=quantity"><strong>Quantity</strong></a>
+<a href="cloud-selector.php?product_type=quantity">&nbsp;&nbsp;&nbsp;<img src="img/cloudproduct_quantity.png" border="0" width="24" height="24" alt="cloudproduct_quantity"/>
+<br><strong>Quantity</strong></a>
 </div>
 
 <div id="resource" class="link">
-<a href="cloud-selector.php?product_type=resource"><strong>Resource</strong></a>
+<a href="cloud-selector.php?product_type=resource">&nbsp;&nbsp;&nbsp;<img src="img/cloudproduct_resource.png" border="0" width="24" height="24" alt="cloudproduct_resource"/>
+<br><strong>Resource</strong></a>
 </div>
 
 

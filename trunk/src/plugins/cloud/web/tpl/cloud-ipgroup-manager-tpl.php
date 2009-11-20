@@ -19,11 +19,11 @@
 -->
 <style>
 .htmlobject_tab_box {
-	width:750px;
+	width:800px;
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Cloud IpGroups for portal <small><a href={external_portal_name} target="_BLANK">{external_portal_name}</a></small></h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/cloudipgroups.png"> Cloud IpGroups for portal <small><a href={external_portal_name} target="_BLANK">{external_portal_name}</a></small></h1>
 <br>
 <b><a href="{thisfile}?action=create">Create new Cloud IpGroup</a></b>
 

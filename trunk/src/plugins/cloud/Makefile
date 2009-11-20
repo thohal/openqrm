@@ -76,11 +76,33 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/user/vcd/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/vcd/
 	. $(OPENQRM_SERVER_CONF) && cp cloud-portal/web/user/vcd/*.css $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/vcd/
 	. $(OPENQRM_SERVER_CONF) && cp web/soap/soap-user.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/cloud-portal/web/user/soap/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudrequests.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/clouduser.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudconfig.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudmail.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudsoap.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudsoapdemo.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudprivateimage.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudnat.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudipgroups.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/plugin.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudproduct_network.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudproduct_memory.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudproduct_quantity.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudproduct_disk.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudproduct_puppet.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudproduct_ha.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudproduct_kernel.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudproduct_cpu.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/cloudproduct_resource.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/
 
 
 uninstall:
 	. $(OPENQRM_SERVER_CONF) && rm -rf $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud/*
 	. $(OPENQRM_SERVER_CONF) && rmdir $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/cloud
+	. $(OPENQRM_SERVER_CONF) && rm -rf $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud/*
+	. $(OPENQRM_SERVER_CONF) && rmdir $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/cloud
 
 clean:
 

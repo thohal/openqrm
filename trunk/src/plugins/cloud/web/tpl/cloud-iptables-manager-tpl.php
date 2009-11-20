@@ -24,7 +24,7 @@
 </style>
 
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Cloud Ip-address for IpGroup {cloud_ipgroup}</h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/cloudipgroups.png"> Cloud Ip-address for IpGroup {cloud_ipgroup}</h1>
 {cloud_iptable}
 
 

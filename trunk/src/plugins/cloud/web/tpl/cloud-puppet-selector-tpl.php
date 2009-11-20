@@ -80,7 +80,7 @@
 </head>
 <body>
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Puppet Class Selector</h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/cloudproduct_puppet.png"> Puppet Products</h1>
 
 <h4>Add new Puppet Class Product to the Cloud</h4>
 Select a Puppet Class product and how much CCU to charge per hour

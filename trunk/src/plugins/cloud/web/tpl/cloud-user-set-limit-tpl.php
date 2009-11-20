@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/cloud/img/plugin.png"> Set Limits for Cloud User {cu_name}</h1>
+<h1><img border=0 src="/openqrm/base/plugins/cloud/img/clouduser.png"> Set Limits for Cloud User {cu_name}</h1>
 (0 => infinite)
 <br>
 <form action={thisfile} method=post>
