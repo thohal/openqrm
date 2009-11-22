@@ -59,6 +59,14 @@ install:
 	# base/img/menu
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu
 	. $(OPENQRM_SERVER_CONF) && cp base/img/menu/*.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/
+	. $(OPENQRM_SERVER_CONF) && cp base/plugins/aa_plugins/img/plugin.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/
+	. $(OPENQRM_SERVER_CONF) && cp base/img/image.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/
+	. $(OPENQRM_SERVER_CONF) && cp base/img/kernel.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/
+	. $(OPENQRM_SERVER_CONF) && cp base/img/resource.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/
+	. $(OPENQRM_SERVER_CONF) && cp base/img/storage.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/
+	. $(OPENQRM_SERVER_CONF) && cp base/img/active.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/
+	. $(OPENQRM_SERVER_CONF) && cp base/img/error.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/
+	. $(OPENQRM_SERVER_CONF) && cp base/img/add.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/
 	. $(OPENQRM_SERVER_CONF) && cp base/img/*.gif $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/
 	. $(OPENQRM_SERVER_CONF) && cp base/img/*.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/
 	# base/server

@@ -21,12 +21,12 @@
 #	IMG
 #	Target
 ..|LinuxCOE
-...|About|plugins/linuxcoe/linuxcoe-manager.php?page=about
-...|Create|plugins/linuxcoe/linuxcoe-manager.php?page=create
-...|Apply|plugins/linuxcoe/linuxcoe-manager.php?page=apply
+...|About|plugins/linuxcoe/linuxcoe-manager.php?page=about|How to use|linuxcoe/plugin.png
+...|Create|plugins/linuxcoe/linuxcoe-manager.php?page=create|Create new LinuxCOE Automatic-Installation Profile|linuxcoe/add.png
+...|Apply|plugins/linuxcoe/linuxcoe-manager.php?page=apply|Apply LinuxCOE Automatic-Installation Profile to a Resource|linuxcoe/apply.png
 ...|Main
-....|LinuxCOE|plugins/linuxcoe/linuxcoe-manager.php?page=main
-....|Create|plugins/linuxcoe/linuxcoe-manager.php?page=create
-....|Profiles|plugins/linuxcoe/linuxcoe-manager.php?page=profile
-....|Retrofit|plugins/linuxcoe/linuxcoe-manager.php?page=retrofit
-....|Setup|plugins/linuxcoe/linuxcoe-manager.php?page=setup
+....|LinuxCOE|plugins/linuxcoe/linuxcoe-manager.php?page=main|LinuxCOE UI|linuxcoe/plugin.png
+....|Create|plugins/linuxcoe/linuxcoe-manager.php?page=create|Create LinuxCOE Profile|linuxcoe/add.png
+....|Profiles|plugins/linuxcoe/linuxcoe-manager.php?page=profile|Manage LinuxCOE Profiles|linuxcoe/profiles.png
+....|Retrofit|plugins/linuxcoe/linuxcoe-manager.php?page=retrofit|Retrofit LinuxCOE Profile|linuxcoe/retrofit.png
+....|Setup|plugins/linuxcoe/linuxcoe-manager.php?page=setup|LinuxCOE Setup|linuxcoe/setup.png

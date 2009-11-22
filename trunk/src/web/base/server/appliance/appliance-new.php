@@ -315,7 +315,7 @@ function appliance_form() {
 				$table->identifier_type = 'radio';
 			}
 			$table->max = count($resource_array) +1;
-			$disp = "<h3>Resource List</h3>". $table->get_string();
+			$disp = "<h3>Please select a Resource from the List</h3>". $table->get_string();
 		}
 
 

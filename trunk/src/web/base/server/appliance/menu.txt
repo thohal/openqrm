@@ -16,4 +16,5 @@
 # Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 #
 .|Appliances
-..|Overview|server/appliance/appliance-index.php
+..|New|server/appliance/appliance-new.php?currenttab=tab1
+..|List|server/appliance/appliance-index.php

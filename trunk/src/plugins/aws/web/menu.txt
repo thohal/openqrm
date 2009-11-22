@@ -21,8 +21,8 @@
 #	IMG
 #	Target
 ..|AWS
-...|About|plugins/aws/aws-about.php
-...|AWS Accounts|plugins/aws/aws-setup.php
-...|Import from EC2|plugins/aws/aws-import.php
-...|Export to EC2|plugins/aws/aws-export.php
-...|AWS-Console|https://console.aws.amazon.com/ec2/|AWS-Console||_BLANK
+...|About|plugins/aws/aws-about.php|How to use|aws/plugin.png
+...|AWS Accounts|plugins/aws/aws-setup.php|Manage AWS Accounts|aws/awsuser.png
+...|Import from EC2|plugins/aws/aws-import.php|Import AMI as Server Image from EC2|aws/import.png
+...|Export to EC2|plugins/aws/aws-export.php|Export Server Image as AMI to EC2|aws/export.png
+...|AWS-Console|https://console.aws.amazon.com/ec2/|AWS-Console|aws/awsconsole.png|_BLANK

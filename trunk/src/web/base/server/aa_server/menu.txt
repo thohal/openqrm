@@ -22,4 +22,20 @@
 #	Alt
 #	IMG
 #	Target
-.|Data-Center|server/aa_server/dc-overview.php
+.|Data-Center|server/aa_server/dc-overview.php|Your Data-Center|datacenter.png
+.|Appliances
+..|Create|server/appliance/appliance-new.php?currenttab=tab1|Create a new Appliance|add.png
+..|List|server/appliance/appliance-index.php|List of Appliances|datacenter.png
+.|Components
+..|Create
+...|Image|server/image/image-new.php?currenttab=tab1|Create a new Server Image|image.png
+...|Kernel|server/kernel/kernel-overview.php?currenttab=tab1|Create a new OS Kernel|kernel.png
+...|Resource|server/resource/resource-overview.php?currenttab=tab1|Create a new Computing Resources in the Data-Center|resource.png
+...|Storage|server/storage/storage-new.php?currenttab=tab1|Create a new Storage Servers|storage.png
+..|Images|server/image/image-index.php|List of Server Images|image.png
+..|Kernels|server/kernel/kernel-overview.php|List of OS Kernels|kernel.png
+..|Resources|server/resource/resource-overview.php|Available Computing Resources in the Data-Center|resource.png
+..|Storage|server/storage/storage-index.php|List of Storage Servers|storage.png
+.|Events
+..|Event List|server/event/event-overview.php|Events in the openQRM Server|active.png
+..|Error Events|server/event/event-overview.php?currenttab=tab1|Error Events!|error.png

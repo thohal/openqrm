@@ -89,6 +89,18 @@ div {
 	line-height:18px;
 }
 
+#Support_box {
+	background:url(../img/support.png) no-repeat;
+	text-decoration:none;
+	padding: 0 0 0 20px;
+	color:black;
+	display:block;
+	margin: 5px 0 5px 20px;
+	float:right;
+	line-height:18px;
+}
+
+
 /*
 .div_box {
 	margin: 5px 0 0 5px;

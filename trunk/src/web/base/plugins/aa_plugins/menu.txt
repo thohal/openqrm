@@ -15,5 +15,4 @@
 #
 # Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 #
-.|Plugins
-..|Plugin manager|plugins/aa_plugins/plugin-manager.php
+.|Plugin Manager|plugins/aa_plugins/plugin-manager.php|Manage the available Plugins|plugin.png

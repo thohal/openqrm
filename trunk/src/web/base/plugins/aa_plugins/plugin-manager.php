@@ -389,7 +389,7 @@ if ($OPENQRM_USER->role == "administrator") {
 	$table_1->identifier = 'plugin_name';
 }
 
-$disp = "<h1>Plugin Manager</h1><br>";
+    $disp = "<h1><img src=\"img/plugin.png\" width=\"32\" height=\"32\" alt=\"plugin\"/>Plugin Manager</h1><br>";
 $disp .= '<div style="float:left;">'.$table_1->get_string().'</div>';
 $disp .= '<br style="clear:both;">';
 

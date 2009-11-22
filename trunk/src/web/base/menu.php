@@ -61,15 +61,10 @@ $mid->icondir = $RootDir.'img/menu/';
 $mid->iconwww = $WebDir.'img/menu/';
 
 $strMenuStructure = '';
-$server = new Folder();
-$server->getFolders($RootDir.'server/');
 
-foreach ($server->folders as $server_dir) {
-	$filename = $RootDir.'server/'.$server_dir.'/menu.txt';
-	if(file_exists($filename)) {
-		$strMenuStructure .= implode('', file($filename));
-	}
-}
+// define the base menu item
+$strMenuStructure .= implode('', file($RootDir.'server/aa_server/menu.txt'));
+
 if($strMenuStructure != '') {
 	$mid->setMenuStructureString($strMenuStructure);
 }
