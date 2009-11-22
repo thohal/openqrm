@@ -21,4 +21,4 @@
 #	IMG
 #	Target
 ..|DNS
-...|About|plugins/dns/dns-about.php
+...|About|plugins/dns/dns-about.php|How to use|dns/plugin.png

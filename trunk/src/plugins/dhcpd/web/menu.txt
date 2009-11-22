@@ -21,4 +21,4 @@
 #	IMG
 #	Target
 ..|Dhcpd
-...|About|plugins/dhcpd/dhcpd-about.php
+...|About|plugins/dhcpd/dhcpd-about.php|How to use|dhcpd/plugin.png

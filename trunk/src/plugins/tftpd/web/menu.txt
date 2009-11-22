@@ -21,4 +21,4 @@
 #	IMG
 #	Target
 ..|Tftpd
-...|About|plugins/tftpd/tftpd-about.php
+...|About|plugins/tftpd/tftpd-about.php|How to use|tftpd/plugin.png

@@ -20,6 +20,6 @@
 #	Alt
 #	IMG
 #	Target
-..|Highavailability
-...|About|plugins/highavailability/highavailability-about.php
-...|HA-Manager|plugins/highavailability/highavailability-manager.php
+..|Appliance HA
+...|About|plugins/highavailability/highavailability-about.php|How to use|highavailability/plugin.png
+...|HA-Manager|plugins/highavailability/highavailability-manager.php|Appliance HA Manager|highavailability/setup.png

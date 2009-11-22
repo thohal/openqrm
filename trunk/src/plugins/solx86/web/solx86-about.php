@@ -48,8 +48,6 @@ function solx86_about() {
 	$disp = $disp."<br>";
 	$disp = $disp."The solx86-plugin provides an integration for already existing, local-installed openSolaris/Solaris X86 systems in openQRM.";
 	$disp = $disp." After integrating an existing, local-installed server it can be used as a ZFS-Storage server.";
-	$disp = $disp." It also allows to dynamically deploy network-booted server images while";
-	$disp = $disp." still being able to restore/restart the existing server-system located on the local-harddisk.";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."<b>How to use :</b>";

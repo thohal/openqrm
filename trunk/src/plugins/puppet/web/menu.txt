@@ -21,6 +21,6 @@
 #	IMG
 #	Target
 ..|Puppet
-...|About|plugins/puppet/puppet-about.php
-...|Puppet Config|plugins/puppet/puppet-config.php
-...|Puppet manager|plugins/puppet/puppet-manager.php
+...|About|plugins/puppet/puppet-about.php|How to use|puppet/plugin.png
+...|Apply|plugins/puppet/puppet-manager.php|Apply Puppet Classes to Appliances|puppet/apply.png
+...|Configuration|plugins/puppet/puppet-config.php|Puppet Configuration|puppet/setup.png

@@ -21,4 +21,4 @@
 #	IMG
 #	Target
 ..|Local-server
-...|About|plugins/local-server/local-server-about.php
+...|About|plugins/local-server/local-server-about.php|How to use|local-server/plugin.png

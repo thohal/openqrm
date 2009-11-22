@@ -21,4 +21,4 @@
 #	IMG
 #	Target
 ..|Solaris-X86
-...|About|plugins/solx86/solx86-about.php
+...|About|plugins/solx86/solx86-about.php|How to use|solx86/plugin.png

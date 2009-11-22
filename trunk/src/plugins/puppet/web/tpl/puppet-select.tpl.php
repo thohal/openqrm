@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1><img border=0 src="/openqrm/base/plugins/puppet/img/plugin.png"> Puppet Manager</h1>
+<h1><img border=0 src="/openqrm/base/plugins/puppet/img/apply.png"> Apply Puppet Classes I</h1>
 
 <h4>Please select an appliance to automatically configure via Puppet</h4>
 <br>

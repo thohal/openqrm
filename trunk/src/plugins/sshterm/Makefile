@@ -43,6 +43,11 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp web/tpl/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/web/tpl/
 	. $(OPENQRM_SERVER_CONF) && if ! tar -C $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/ -xzf $$OPENQRM_BUILD_TMP_DIR/openqrm-build/sshterm-component/source/openqrm-plugin-sshterm-components-1.0.tgz 2>/dev/null; then tar -C  $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/ -xzf ../../$$OPENQRM_BUILD_TMP_DIR/openqrm-build/sshterm-component/source/openqrm-plugin-sshterm-components-1.0.tgz; fi
 	. $(OPENQRM_SERVER_CONF) && tar -C $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm -czf $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/web/boot-service-sshterm.tgz include/ etc/init.d/sshterm etc/templates/pound.cfg etc/openqrm-plugin-sshterm.conf pound ajaxterm
+	# menu icons
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/sshterm
+	. $(OPENQRM_SERVER_CONF) && cp web/img/plugin.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/sshterm/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/console.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/sshterm/
+	. $(OPENQRM_SERVER_CONF) && cp web/img/setup.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/sshterm/
 
 uninstall:
 	. $(OPENQRM_SERVER_CONF) && rm -rf $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sshterm/*

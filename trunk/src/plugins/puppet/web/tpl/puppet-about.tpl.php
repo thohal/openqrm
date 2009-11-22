@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1><img border=0 src="/openqrm/base/plugins/puppet/img/plugin.png"> Plugin</h1>
+<h1><img border=0 src="/openqrm/base/plugins/puppet/img/plugin.png"> Puppet Plugin</h1>
 
 The Puppet plugin provides automated configuration-management for appliances in openQRM.
  It seamlessly integrates <a href="http://reductivelabs.com/projects/puppet/" target="_BLANK">Puppet</a> within the openQRM GUI and assists to put specific appliances into pre-made or custom Puppet-classes.

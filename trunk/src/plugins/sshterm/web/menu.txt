@@ -21,6 +21,6 @@
 #	IMG
 #	Target
 ..|SSH-Terminal
-...|About|plugins/sshterm/sshterm-about.php
-...|openQRM|plugins/sshterm/sshterm-manager.php?action=login&identifier[]=0
-...|SSH-Manager|plugins/sshterm/sshterm-manager.php
+...|About|plugins/sshterm/sshterm-about.php|How to use|sshterm/plugin.png
+...|openQRM|plugins/sshterm/sshterm-manager.php?action=login&identifier[]=0|SSH Login to the openQRM Server|sshterm/console.png
+...|SSH-Manager|plugins/sshterm/sshterm-manager.php|SSH-Manager|sshterm/setup.png

@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1><img border=0 src="/openqrm/base/plugins/puppet/img/plugin.png"> Puppet Configuration</h1>
+<h1><img border=0 src="/openqrm/base/plugins/puppet/img/setup.png"> Puppet Configuration</h1>
 
 {puppet_config_table}
 <br>
