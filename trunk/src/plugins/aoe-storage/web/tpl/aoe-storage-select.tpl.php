@@ -18,7 +18,7 @@
 */
 -->
 <form action="{formaction}" method="GET">
-<h1><img border=0 src="/openqrm/base/plugins/aoe-storage/img/plugin.png"> Select AOE-storage</h1>
+<h1><img border=0 src="/openqrm/base/plugins/aoe-storage/img/volumes.png"> Select AOE-storage</h1>
 <h4>Please select an Aoe Storage Server from the list below</h4>
 {storage_server_table}
 </form>

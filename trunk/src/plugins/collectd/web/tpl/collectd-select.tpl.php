@@ -17,6 +17,6 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1><img border=0 src="/openqrm/base/plugins/collectd/img/plugin.png"> System Statistics</h1>
+<h1><img border=0 src="/openqrm/base/plugins/collectd/img/charts.png"> Collectd System Statistics</h1>
 {collectd_table}
 <br>

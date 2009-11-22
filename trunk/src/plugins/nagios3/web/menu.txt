@@ -21,41 +21,36 @@
 #	IMG
 #	Target
 ..|Nagios3
-...|About|plugins/nagios3/nagios3-about.php
-...|Config|plugins/nagios3/nagios3-overview.php
-...|Overview|plugins/nagios3/nagios3-redir.php?re=cgi-bin/tac.cgi'
-...|Services|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?host=all'
-...|Hosts|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=hostdetail'
+...|About|plugins/nagios3/nagios3-about.php|How to use|nagios3/plugin.png
+...|Config|plugins/nagios3/nagios3-overview.php|Automatic Nagios Configuration|nagios3/setup.png
+...|Overview|plugins/nagios3/nagios3-redir.php?re=cgi-bin/tac.cgi'|Tactical Data-Center Overview|nagios3/overview.png
+...|Services|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?host=all'|Service Availability|nagios3/services.png
+...|Hosts|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=hostdetail'|Resource Availability|nagios3/hosts.png
+...|Status-Map|plugins/nagios3/nagios3-redir.php?re='cgi-bin/statusmap.cgi?host=all'|Status Map|nagios3/map.png
 ...|Host-Group
-....|Host-Group|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=overview'
-....|Host-Group Summary|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=summary'
-....|Host-Group Grid|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=grid'
+....|Overview|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=overview'|Overview of the HostGroups|nagios3/hostgroup.png
+....|Summary|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=summary'|HostGroups Summary|nagios3/hostgroup.png
+....|Grid|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=grid'|HostGroups Grid|nagios3/hostgroup.png
 ...|Service-Group
-....|Service-Group|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?servicegroup=all&style=overviewall'
-....|Service-Group Summary|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?servicegroup=all&style=summary'
-....|Service-Group Grid|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?servicegroup=all&style=grid'
-...|Status-Map|plugins/nagios3/nagios3-redir.php?re='cgi-bin/statusmap.cgi?host=all'
+....|Overview|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?servicegroup=all&style=overviewall'|Overview of the Service|nagios3/services.png
+....|Summary|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?servicegroup=all&style=summary'|ServiceGroup Summary|nagios3/services.png
+....|Grid|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?servicegroup=all&style=grid'|ServiceGroup Grid|nagios3/services.png
 ...|Problems
-....|Problems Service|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?host=all&servicestatustypes=28up=al'
-....|Problems Host|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12'
-....|Problems Network|plugins/nagios3/nagios3-redir.php?re='cgi-bin/outages.cgi'
-...|Comments
-....|Comments|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=3'
-....|Downtime|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=6'
-....|Comments|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=3'
+....|Hosts|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?host=all&servicestatustypes=28up=al'|Service Status All Hosts|nagios3/problem.png
+....|HostGroups|plugins/nagios3/nagios3-redir.php?re='cgi-bin/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12'|Service Status All HostGroups|nagios3/problem.png
+....|Outages|plugins/nagios3/nagios3-redir.php?re='cgi-bin/outages.cgi'|Blocking Outages|nagios3/problem.png
 ...|Reporting
-....|Reporting Trends|plugins/nagios3/nagios3-redir.php?re='cgi-bin/trends.cgi'
-....|Reporting Availability|plugins/nagios3/nagios3-redir.php?re='cgi-bin/avail.cgi'
-....|Reporting Alerts
-....|Reporting Alerts Histogram|plugins/nagios3/nagios3-redir.php?re='cgi-bin/histogram.cgi'
-....|Reporting Alerts History|plugins/nagios3/nagios3-redir.php?re='cgi-bin/history.cgi?host=allram.'
-....|Reporting Alerts Summary|plugins/nagios3/nagios3-redir.php?re='cgi-bin/summary.cgi'
-....|Reporting Notifications|plugins/nagios3/nagios3-redir.php?re='cgi-bin/notifications.cgi?contact=all'
-....|Reporting Event-Log|plugins/nagios3/nagios3-redir.php?re='cgi-bin/showlog.cgi'
+....|Trends|plugins/nagios3/nagios3-redir.php?re='cgi-bin/trends.cgi'|Nagios Trend Reporting|nagios3/charts.png
+....|Availability|plugins/nagios3/nagios3-redir.php?re='cgi-bin/avail.cgi'|Reporting Availability|nagios3/charts.png
+....|Alerts Histogram|plugins/nagios3/nagios3-redir.php?re='cgi-bin/histogram.cgi'|Nagios Reporting Alerts Histogram|nagios3/charts.png
+....|Alerts History|plugins/nagios3/nagios3-redir.php?re='cgi-bin/history.cgi?host=allram.'|Nagios Reporting Alerts History|nagios3/charts.png
+....|Alerts Summary|plugins/nagios3/nagios3-redir.php?re='cgi-bin/summary.cgi'|Nagios Reporting Alert Summary|nagios3/charts.png
+....|Notifications|plugins/nagios3/nagios3-redir.php?re='cgi-bin/notifications.cgi?contact=all'|Nagios Reporting Notifications|nagios3/charts.png
+....|Event-Log|plugins/nagios3/nagios3-redir.php?re='cgi-bin/showlog.cgi'|Nagios Reporting Event Log|nagios3/charts.png
 ...|Configuration
-....|Configuration Process|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=0'
-....|Configuration Performance|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=4'
-....|Configuration Scheduling|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=7'
-....|Configuration Scheduling|plugins/nagios3/nagios3-redir.php?re='cgi-bin/config.cgi'
+....|Nagios Process|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=0'|Nagios Process Configuration|nagios3/setup.png
+....|Performance|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=4'|Nagios Performance Configuration|nagios3/setup.png
+....|Scheduling|plugins/nagios3/nagios3-redir.php?re='cgi-bin/extinfo.cgi?&type=7'|Nagios Scheduling Configuration|nagios3/setup.png
+....|Scheduling|plugins/nagios3/nagios3-redir.php?re='cgi-bin/config.cgi'|Nagios Scheduling Configuration|nagios3/setup.png
 ...|Nagvis
-....|Maps|plugins/nagios3/nagios3-redir.php?re=nagvis/index.php'
+....|Maps|plugins/nagios3/nagios3-redir.php?re=nagvis/index.php'|Nagvis Maps|nagios3/map.png

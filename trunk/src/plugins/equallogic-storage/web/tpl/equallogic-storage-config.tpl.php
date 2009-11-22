@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1><img border=0 src="/openqrm/base/plugins/equallogic-storage/img/plugin.png"> Equallogic-Storage Configuration {storage_name}</h1>
+<h1><img border=0 src="/openqrm/base/plugins/equallogic-storage/img/volumes.png"> Equallogic-Storage Configuration {storage_name}</h1>
 
 {backlink}
 <br>

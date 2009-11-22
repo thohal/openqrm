@@ -21,5 +21,5 @@
 #	IMG
 #	Target
 ..|Collectd
-...|About|plugins/collectd/collectd-about.php
-...|Collectd Graphs|plugins/collectd/collectd-manager.php
+...|About|plugins/collectd/collectd-about.php|How to use|collectd/plugin.png
+...|Collectd Graphs|plugins/collectd/collectd-manager.php|Collectd System Graphs|collectd/charts.png

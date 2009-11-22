@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1><img border=0 src="/openqrm/base/plugins/collectd/img/plugin.png"> Collectd-plugin</h1>
+<h1><img border=0 src="/openqrm/base/plugins/collectd/img/plugin.png"> Collectd plugin</h1>
 <br>
 The Collectd plugin provides automated monitoring and system graphs for appliances in openQRM.
  It seamlessly integrates <a href="http://collectd.org/" target="_BLANK">Collectd</a> within openQRM
