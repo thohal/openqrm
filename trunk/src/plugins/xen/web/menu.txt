@@ -21,5 +21,5 @@
 #	IMG
 #	Target
 ..|Xen
-...|About|plugins/xen/xen-about.php
-...|Xen Manager|plugins/xen/xen-manager.php
+...|About|plugins/xen/xen-about.php|How to use|xen/plugin.png
+...|VM Manager|plugins/xen/xen-manager.php|Xen VM Manager|xen/plugin.png

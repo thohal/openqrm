@@ -21,5 +21,5 @@
 #	IMG
 #	Target
 ..|VMware-ESX
-...|About|plugins/vmware-esx/vmware-esx-about.php
-...|ESX Manager|plugins/vmware-esx/vmware-esx-manager.php
+...|About|plugins/vmware-esx/vmware-esx-about.php|How to use|vmware-esx/plugin.png
+...|VM Manager|plugins/vmware-esx/vmware-esx-manager.php|VMWare ESX VM Manager|vmware-esx/plugin.png

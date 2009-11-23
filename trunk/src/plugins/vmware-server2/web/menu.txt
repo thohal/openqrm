@@ -21,5 +21,5 @@
 #	IMG
 #	Target
 ..|VMware-server2
-...|About|plugins/vmware-server2/vmware-server2-about.php
-...|VMware Manager|plugins/vmware-server2/vmware-server2-manager.php
+...|About|plugins/vmware-server2/vmware-server2-about.php|How to use|vmware-server2/plugin.png
+...|VM Manager|plugins/vmware-server2/vmware-server2-manager.php|VMWare Server 2 VM Manager|vmware-server2/plugin.png
