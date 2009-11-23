@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1><img border=0 src="/openqrm/base/plugins/lvm-storage/img/plugin.png"> Logical Volumes of Volume group {lvm_volume_group} on storage {storage_name}</h1>
+<h1><img border=0 src="/openqrm/base/plugins/lvm-storage/img/volumes.png"> Logical Volumes of Volume group {lvm_volume_group} on storage {storage_name}</h1>
 {lun_table}
 <br><br>
 <form action="{formaction}" method="GET">

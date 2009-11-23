@@ -18,7 +18,7 @@
 */
 -->
 <form action="{formaction}" method="GET">
-<h1><img border=0 src="/openqrm/base/plugins/local-storage/img/plugin.png"> Select Local-Storage</h1>
+<h1><img border=0 src="/openqrm/base/plugins/local-storage/img/volumes.png"> Select Local-Storage</h1>
 <h4>Please select an Local-Storage Server from the list below</h4>
 {storage_server_table}
 </form>

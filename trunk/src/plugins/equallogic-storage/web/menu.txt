@@ -22,4 +22,4 @@
 #	Target
 ..|EqualLogic-Storage
 ...|About|plugins/equallogic-storage/equallogic-storage-about.php|How to use|equallogic-storage/plugin.png
-...|Luns|plugins/equallogic-storage/equallogic-storage-manager.php|Equallogic Storage Manager|equallogic-storage/volumes.png
+...|Volume Admin|plugins/equallogic-storage/equallogic-storage-manager.php|Equallogic Storage Manager|equallogic-storage/volumes.png

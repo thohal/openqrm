@@ -20,7 +20,7 @@
 <h1>Logical Volumes of Volume group {local_volume_group} on storage {storage_name}</h1>
 {lun_table}
 <form action="{formaction}" method="GET">
-<h1><img border=0 src="/openqrm/base/plugins/local-storage/img/plugin.png"> Add new Local-Storage location to Volume group {local_volume_group}</h1>
+<h1><img border=0 src="/openqrm/base/plugins/local-storage/img/volumes.png"> Add new Local-Storage location to Volume group {local_volume_group}</h1>
 <div style="float:left;">
 {local_lun_name}
 {local_lun_size}

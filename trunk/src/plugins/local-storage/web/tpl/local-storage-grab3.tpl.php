@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1><img border=0 src="/openqrm/base/plugins/local-storage/img/plugin.png"> Local-storage 'grab' phase started</h1>
+<h1><img border=0 src="/openqrm/base/plugins/local-storage/img/grab.png"> Local-storage 'grab' phase started</h1>
 
 <h4>Transferring disk content of resource {resource_id} to image {image_id}</h4>
 <br>

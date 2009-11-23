@@ -18,7 +18,7 @@
 */
 -->
 <form action="{formaction}" method="GET">
-<h1><img border=0 src="/openqrm/base/plugins/lvm-storage/img/plugin.png"> Select LVM Volume group on storage {storage_name}</h1>
+<h1><img border=0 src="/openqrm/base/plugins/lvm-storage/img/volumes.png"> Select LVM Volume group on storage {storage_name}</h1>
 {storage_table}
 <h4>Please select a LVM Volume group from the list below</h4>
 {vg_table}

@@ -21,7 +21,7 @@
 #	IMG
 #	Target
 ..|Lvm-storage
-...|About|plugins/lvm-storage/lvm-storage-about.php
-...|AOE Volumes|plugins/lvm-storage/lvm-storage-manager.php?type=aoe
-...|iSCSI Volumes|plugins/lvm-storage/lvm-storage-manager.php?type=iscsi
-...|NFS Volumes|plugins/lvm-storage/lvm-storage-manager.php?type=nfs
+...|About|plugins/lvm-storage/lvm-storage-about.php|How to use|lvm-storage/plugin.png
+...|AOE Volumes|plugins/lvm-storage/lvm-storage-manager.php?type=aoe|AOE Storage Manager|lvm-storage/volumes.png
+...|iSCSI Volumes|plugins/lvm-storage/lvm-storage-manager.php?type=iscsi|iSCSI Storage Manager|lvm-storage/volumes.png
+...|NFS Volumes|plugins/lvm-storage/lvm-storage-manager.php?type=nfs|NFS Storage Manager|lvm-storage/volumes.png

@@ -18,7 +18,7 @@
 */
 -->
 <form action="{formaction}" method="GET">
-<h1><img border=0 src="/openqrm/base/plugins/zfs-storage/img/plugin.png"> Select ZFS Storage</h1>
+<h1><img border=0 src="/openqrm/base/plugins/zfs-storage/img/volumes.png"> Select ZFS Storage</h1>
 <h4>Please select a ZFS Storage Server from the list below</h4>
 {storage_table}
 </form>

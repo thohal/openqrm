@@ -21,5 +21,5 @@
 #	IMG
 #	Target
 ..|Nfs-Storage
-...|About|plugins/nfs-storage/nfs-storage-about.php
-...|NFS Exports|plugins/nfs-storage/nfs-storage-manager.php
+...|About|plugins/nfs-storage/nfs-storage-about.php|How to use|nfs-storage/plugin.png
+...|Volume Admin|plugins/nfs-storage/nfs-storage-manager.php|NFS Storage Manager|nfs-storage/volumes.png

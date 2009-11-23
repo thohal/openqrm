@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1><img border=0 src="/openqrm/base/plugins/iscsi-storage/img/plugin.png"> Iscsi-storage plugin</h1>
+<h1><img border=0 src="/openqrm/base/plugins/iscsi-storage/img/plugin.png"> iSCSI Storage plugin</h1>
 <br>
 The Iscsi-storage plugin integrates Iscsi-Target Storage into openQRM.
  It adds a new storage-type 'iscsi-storage' and a new deployment-type 'iscsi-root' to

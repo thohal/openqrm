@@ -21,5 +21,5 @@
 #	IMG
 #	Target
 ..|NetApp-storage
-...|About|plugins/netapp-storage/netapp-storage-about.php
-...|iSCSI Luns|plugins/netapp-storage/netapp-storage-manager.php
+...|About|plugins/netapp-storage/netapp-storage-about.php|How to use|netapp-storage/plugin.png
+...|Volume Admin|plugins/netapp-storage/netapp-storage-manager.php|NetApp Storage Manager|netapp-storage/volumes.png

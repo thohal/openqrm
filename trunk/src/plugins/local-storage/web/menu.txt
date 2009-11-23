@@ -21,6 +21,6 @@
 #	IMG
 #	Target
 ..|Local-Storage
-...|About|plugins/local-storage/local-storage-about.php
-...|Storage-Manager|plugins/local-storage/local-storage-manager.php
-...|Grab|plugins/local-storage/local-storage-grab.php
+...|About|plugins/local-storage/local-storage-about.php|How to use|local-storage/plugin.png
+...|Grab Image|plugins/local-storage/local-storage-grab.php|Grab Server Image from existing System|local-storage/grab.png
+...|Volume Admin|plugins/local-storage/local-storage-manager.php|Local Storage Manager|local-storage/volumes.png

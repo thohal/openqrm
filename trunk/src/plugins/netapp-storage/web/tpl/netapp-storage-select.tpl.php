@@ -18,7 +18,7 @@
 */
 -->
 <form action="{formaction}" method="GET">
-<h1><img border=0 src="/openqrm/base/plugins/netapp-storage/img/plugin.png"> Select NetApp-storage</h1>
+<h1><img border=0 src="/openqrm/base/plugins/netapp-storage/img/volumes.png"> Select NetApp-storage</h1>
 <h4>Please select an NetApp Storage Server from the list below</h4>
 {storage_server_table}
 </form>

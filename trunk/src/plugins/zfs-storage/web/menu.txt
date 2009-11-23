@@ -21,5 +21,5 @@
 #	IMG
 #	Target
 ..|ZFS-Storage
-...|About|plugins/zfs-storage/zfs-storage-about.php
-...|ZFS Luns|plugins/zfs-storage/zfs-storage-manager.php
+...|About|plugins/zfs-storage/zfs-storage-about.php|How to use|zfs-storage/plugin.png
+...|Volume Admin|plugins/zfs-storage/zfs-storage-manager.php|ZFS Storage Manager|zfs-storage/volumes.png
