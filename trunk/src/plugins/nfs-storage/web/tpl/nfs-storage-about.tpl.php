@@ -37,7 +37,7 @@ openQRM then automatically manages the exports on the Nfs-storage server.
 The Nfs-deployment type supports to boot servers/resources from the Nfs-stoage server.
  Server images created with the 'nfs-root' deployment type are stored on Storage-server
  from the storage-server type 'nfs-storage'. During startup of an appliance they are directly
- attached to the resource as its rootfs via the nfs-protokol.
+ attached to the resource as its rootfs via the nfs-protocol.
 <br>
 <br>
 <b>How to use :</b>

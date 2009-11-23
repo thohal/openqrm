@@ -26,7 +26,7 @@ Storage-Servers managed by openQRM. After that they can directly used for rapid-
 This is the easist method to get started.
 <br>
 <br>
-Please noticed that the Image-Shelfs are providing NFS-deployment Server-Image templates which
+Please notice that the Image-Shelfs are providing NFS-deployment Server-Image templates which
 then can be tranferred to e.g. Iscsi- or Aoe-deployment Images via the INSTALL_FROM deployment parameters.
 <br>
 <br>
