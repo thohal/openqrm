@@ -17,7 +17,7 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<h1><img border=0 src="/openqrm/base/plugins/citrix/img/plugin.png"> Citrix-XenServer plugin</h1>
+<h1><img border=0 src="/openqrm/base/plugins/citrix/img/plugin.png"> Citrix XenServer plugin</h1>
 <strong>This plugin is tested with Citrix XenServer 5.5.0</strong>
 <br>
 <br>
@@ -29,7 +29,7 @@ install Citrix-XenServer on a server system
 </li><li>
 also install the second cd containing the support for Linux vms
 </li><li>
-login to the Citrix-XenServer via ssh and scp the /usr/sbin/xe util to the openQRM servers /usr/sbin dir
+login to the Citrix XenServer via ssh and scp the /usr/sbin/xe util to the openQRM servers /usr/sbin dir
 </li><li>
 enable the openQRM Citrix plugin via the plugin manager
 </li><li>
@@ -43,7 +43,7 @@ create an appliance via "Base -> Appliances -> New", select the Citrix servers r
 </li><li>
 set the appliance "Resource type" to "Citrix Host" and save
 </li><li>
-go to "Plugins -> Virtualization -> Citrix -> Citrix-manager", select the Citrix Host appliance
+go to "Plugins -> Virtualization -> Citrix -> Citrix VM Manager", select the Citrix Host appliance
 </li><li>
 now click on "auth" and provide the authentication details to login to the Citrix Host
 </li><li>

@@ -22,4 +22,4 @@
 #	Target
 ..|KVM
 ...|About|plugins/kvm/kvm-about.php|How to use|kvm/plugin.png
-...|VM Manager|plugins/kvm/kvm-manager.php|KVM VM Manager|kvm/plugin.png
+...|VM Manager|plugins/kvm/kvm-manager.php|KVM VM Manager|kvm/manager.png

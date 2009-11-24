@@ -291,7 +291,7 @@ $output = array();
 // if admin
 if ($OPENQRM_USER->role == "administrator") {
     if (isset($kvm_server_id)) {
-        $output[] = array('label' => 'Kvm-server Create VM', 'value' => kvm_server_create($kvm_server_id));
+        $output[] = array('label' => 'KVM Create VM', 'value' => kvm_server_create($kvm_server_id));
     }
 }
 

@@ -22,4 +22,4 @@
 #	Target
 ..|Citrix
 ...|About|plugins/citrix/citrix-about.php|How to use|citrix/plugin.png
-...|VM Manager|plugins/citrix/citrix-manager.php|Citrix VM Manager|citrix/plugin.png
+...|VM Manager|plugins/citrix/citrix-manager.php|Citrix VM Manager|citrix/manager.png
