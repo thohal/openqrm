@@ -24,7 +24,7 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/plugin.png"> VMWware ESX Create VM</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/manager.png"> VMWware ESX Create VM</h1>
 
 <div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
 

@@ -22,4 +22,4 @@
 #	Target
 ..|VMware-server
 ...|About|plugins/vmware-server/vmware-server-about.php|How to use|vmware-server/plugin.png
-...|VM Manager|plugins/vmware-server/vmware-server-manager.php|VMWare Server VM Manager|vmware-server/plugin.png
+...|VM Manager|plugins/vmware-server/vmware-server-manager.php|VMWare Server VM Manager|vmware-server/manager.png

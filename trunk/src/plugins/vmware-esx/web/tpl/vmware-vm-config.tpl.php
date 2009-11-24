@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/plugin.png"> VMware ESX VM Configuration</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/manager.png"> VMware ESX VM Configuration</h1>
 {backlink}
 <br><br>
 <h4>VM CPUs</h4>

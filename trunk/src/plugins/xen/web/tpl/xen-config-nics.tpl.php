@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/xen/img/plugin.png"> Xen VM NET Configuration</h1>
+<h1><img border=0 src="/openqrm/base/plugins/xen/img/manager.png"> Xen VM NET Configuration</h1>
 {backlink}
 <br>
 

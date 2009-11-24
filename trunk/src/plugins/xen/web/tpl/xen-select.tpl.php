@@ -24,12 +24,10 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1><img border=0 src="/openqrm/base/plugins/xen/img/plugin.png"> Select Xen-Host</h1>
+<h1><img border=0 src="/openqrm/base/plugins/xen/img/manager.png"> Xen VM Manager</h1>
 
 <div style="float:left;">
-Please select a Xen-Host from the list below
-<br>
-<br>
+<h4>Please select a Xen-Host from the list below</h4>
 {xen_server_table}
 </div>
 

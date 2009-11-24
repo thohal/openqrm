@@ -658,28 +658,28 @@ if(htmlobject_request('action') != '') {
         switch (htmlobject_request('action')) {
             case 'select':
                 foreach($_REQUEST['identifier'] as $id) {
-                    $output[] = array('label' => 'VMware-ESX Admin', 'value' => vmware_esx_display($id));
+                    $output[] = array('label' => 'VMware ESX VM Manager', 'value' => vmware_esx_display($id));
                 }
                 break;
             case 'reload':
                 foreach($_REQUEST['identifier'] as $id) {
-                    $output[] = array('label' => 'VMware-ESX Admin', 'value' => vmware_esx_display($id));
+                    $output[] = array('label' => 'VMware ESX VM Manager', 'value' => vmware_esx_display($id));
                 }
                 break;
             case 'initialyze':
                 foreach($_REQUEST['identifier'] as $id) {
-                    $output[] = array('label' => 'VMware-ESX Admin', 'value' => vmware_esx_display($id));
+                    $output[] = array('label' => 'VMware ESX VM Manager', 'value' => vmware_esx_display($id));
                 }
                 break;
         }
     } else {
-    	$output[] = array('label' => 'VMware-ESX Admin', 'value' => vmware_esx_select());
+    	$output[] = array('label' => 'VMware ESX VM Manager', 'value' => vmware_esx_select());
     }
 
 } else if (strlen($vmware_esx_id)) {
-	$output[] = array('label' => 'VMware-ESX Admin', 'value' => vmware_esx_display($vmware_esx_id));
+	$output[] = array('label' => 'VMware ESX VM Manager', 'value' => vmware_esx_display($vmware_esx_id));
 } else  {
-	$output[] = array('label' => 'VMware-ESX Admin', 'value' => vmware_esx_select());
+	$output[] = array('label' => 'VMware ESX VM Manager', 'value' => vmware_esx_select());
 }
 
 echo htmlobject_tabmenu($output);

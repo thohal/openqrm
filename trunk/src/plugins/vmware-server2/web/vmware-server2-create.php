@@ -353,7 +353,7 @@ function vmware_server_create() {
 $output = array();
 // if admin
 if ($OPENQRM_USER->role == "administrator") {
-	$output[] = array('label' => 'VMware-server2 Create VM', 'value' => vmware_server_create());
+	$output[] = array('label' => 'VMware Server 2 Create VM', 'value' => vmware_server_create());
 }
 
 echo htmlobject_tabmenu($output);

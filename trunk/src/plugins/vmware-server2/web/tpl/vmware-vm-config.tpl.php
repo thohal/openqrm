@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/vmware-server2/img/plugin.png"> VMware Server 2 VM Configuration</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-server2/img/manager.png"> VMware Server 2 VM Configuration</h1>
 {backlink}
 <br><br>
 <h4>VM CPUs</h4>

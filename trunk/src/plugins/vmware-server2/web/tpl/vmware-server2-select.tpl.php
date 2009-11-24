@@ -24,12 +24,10 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1><img border=0 src="/openqrm/base/plugins/vmware-server2/img/plugin.png"> VMware Server 2 Manager</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-server2/img/manager.png"> VMware Server 2 VM Manager</h1>
 
 <div style="float:left;">
-Please select a VMWare Server 2 Host from the list below
-<br>
-<br>
+<h4>Please select a VMWare Server 2 Host from the list below</h4>
 {vmware_server_table}
 </div>
 

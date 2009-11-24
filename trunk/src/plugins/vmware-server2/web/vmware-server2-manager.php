@@ -698,22 +698,22 @@ if(htmlobject_request('action') != '') {
     	switch (htmlobject_request('action')) {
             case 'select':
                 foreach($_REQUEST['identifier'] as $id) {
-                    $output[] = array('label' => 'VMware-Server2 Admin', 'value' => vmware_server_display($id));
+                    $output[] = array('label' => 'VMware Server2 VM Manager', 'value' => vmware_server_display($id));
                 }
                 break;
             case 'reload':
                 foreach($_REQUEST['identifier'] as $id) {
-                    $output[] = array('label' => 'VMware-Server2 Admin', 'value' => vmware_server_display($id));
+                    $output[] = array('label' => 'VMware Server2 VM Manager', 'value' => vmware_server_display($id));
                 }
                 break;
         }
     } else {
-        $output[] = array('label' => 'VMware-Server2 Admin', 'value' => vmware_server_select());
+        $output[] = array('label' => 'VMware Server2 VM Manager', 'value' => vmware_server_select());
     }
 } else if (strlen($vmware_server_id)) {
-	$output[] = array('label' => 'VMware-Server2 Admin', 'value' => vmware_server_display($vmware_server_id));
+	$output[] = array('label' => 'VMware Server2 VM Manager', 'value' => vmware_server_display($vmware_server_id));
 } else  {
-	$output[] = array('label' => 'VMware-Server2 Admin', 'value' => vmware_server_select());
+	$output[] = array('label' => 'VMware Server2 VM Manager', 'value' => vmware_server_select());
 }
 
 echo htmlobject_tabmenu($output);

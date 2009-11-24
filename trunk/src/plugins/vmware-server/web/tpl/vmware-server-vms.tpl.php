@@ -24,7 +24,7 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1><img border=0 src="/openqrm/base/plugins/vmware-server/img/plugin.png"> VMware Server 1 Manager</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-server/img/manager.png"> VMware Server VM Manager</h1>
 
 <div style="float:left;">
 {vmware_server_table}
@@ -32,9 +32,7 @@
 </div>
 
 <div style="float:left;">
-VMware Server 1 vms on resource {vmware_server_id}/{vmware_server_name}
-<br>
-<br>
+<h4>VMware Server 1 vms on resource {vmware_server_id}/{vmware_server_name}</h4>
 {vmware_vm_table}
 </div>
 

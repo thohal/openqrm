@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/vmware-server/img/plugin.png"> VMware Server VM RAM Configuration</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-server/img/manager.png"> VMware Server VM RAM Configuration</h1>
 {backlink}
 <br>
 

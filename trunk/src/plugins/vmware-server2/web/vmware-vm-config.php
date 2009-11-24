@@ -737,15 +737,15 @@ $output = array();
 if ($OPENQRM_USER->role == "administrator") {
 
 	if ("$vmware_component" == "ram") {
-		$output[] = array('label' => 'VMWare Server2 Configure VM', 'value' => vmware_vm_config_ram());
+		$output[] = array('label' => 'VMWare Server 2 Configure VM', 'value' => vmware_vm_config_ram());
 	} else if ("$vmware_component" == "cpus") {
-		$output[] = array('label' => 'VMWare Server2 Configure VM', 'value' => vmware_vm_config_cpus());
+		$output[] = array('label' => 'VMWare Server 2 Configure VM', 'value' => vmware_vm_config_cpus());
 	} else if ("$vmware_component" == "net") {
-		$output[] = array('label' => 'VMWare Server2 Configure VM', 'value' => vmware_vm_config_net());
+		$output[] = array('label' => 'VMWare Server 2 Configure VM', 'value' => vmware_vm_config_net());
 	} else if ("$vmware_component" == "vnc") {
-		$output[] = array('label' => 'VMWare Server2 Configure VM', 'value' => vmware_vm_config_vnc());
+		$output[] = array('label' => 'VMWare Server 2 Configure VM', 'value' => vmware_vm_config_vnc());
 	} else {
-		$output[] = array('label' => 'VMWare Server2 Configure VM', 'value' => vmware_vm_config());
+		$output[] = array('label' => 'VMWare Server 2 Configure VM', 'value' => vmware_vm_config());
 	}
 }
 

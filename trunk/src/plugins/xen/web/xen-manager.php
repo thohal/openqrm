@@ -712,24 +712,24 @@ if(htmlobject_request('action') != '') {
         switch (htmlobject_request('action')) {
             case 'select':
                 foreach($_REQUEST['identifier'] as $id) {
-                    $output[] = array('label' => 'Xen Admin', 'value' => xen_display($id));
+                    $output[] = array('label' => 'Xen VM Manager', 'value' => xen_display($id));
                 }
                 break;
             case 'reload':
                 foreach($_REQUEST['identifier'] as $id) {
-                    $output[] = array('label' => 'Xen Admin', 'value' => xen_display($id));
+                    $output[] = array('label' => 'Xen VM Manager', 'value' => xen_display($id));
                 }
                 break;
         }
 
     } else {
-        $output[] = array('label' => 'Xen Admin', 'value' => xen_select());
+        $output[] = array('label' => 'Xen VM Manager', 'value' => xen_select());
     }
 
 } else if (strlen($xen_id)) {
-    $output[] = array('label' => 'Xen Admin', 'value' => xen_display($xen_id));
+    $output[] = array('label' => 'Xen VM Manager', 'value' => xen_display($xen_id));
 } else  {
-    $output[] = array('label' => 'Xen Admin', 'value' => xen_select());
+    $output[] = array('label' => 'Xen VM Manager', 'value' => xen_select());
 }
 
 echo htmlobject_tabmenu($output);

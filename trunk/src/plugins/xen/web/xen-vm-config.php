@@ -798,15 +798,15 @@ $output = array();
 if ($OPENQRM_USER->role == "administrator") {
 
 	if ("$xen_vm_component" == "ram") {
-		$output[] = array('label' => 'xen Configure VM', 'value' => xen_vm_config_ram());
+		$output[] = array('label' => 'Xen Configure VM', 'value' => xen_vm_config_ram());
 	} else if ("$xen_vm_component" == "cpu") {
-		$output[] = array('label' => 'xen Configure VM', 'value' => xen_vm_config_cpu());
+		$output[] = array('label' => 'Xen Configure VM', 'value' => xen_vm_config_cpu());
 	} else if ("$xen_vm_component" == "net") {
-		$output[] = array('label' => 'xen Configure VM', 'value' => xen_vm_config_net());
+		$output[] = array('label' => 'Xen Configure VM', 'value' => xen_vm_config_net());
 	} else if ("$xen_vm_component" == "disk") {
-		$output[] = array('label' => 'xen Configure VM', 'value' => xen_vm_config_disk());
+		$output[] = array('label' => 'Xen Configure VM', 'value' => xen_vm_config_disk());
 	} else {
-		$output[] = array('label' => 'xen Configure VM', 'value' => xen_vm_config());
+		$output[] = array('label' => 'Xen Configure VM', 'value' => xen_vm_config());
 	}
 }
 

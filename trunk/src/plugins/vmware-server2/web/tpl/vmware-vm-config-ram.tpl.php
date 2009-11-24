@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/plugin.png"> VMware ESX VM RAM Configuration</h1>
+<h1><img border=0 src="/openqrm/base/plugins/vmware-esx/img/manager.png"> VMware Server 2 VM RAM Configuration</h1>
 {backlink}
 <br>
 {vm_config_ram_disp}

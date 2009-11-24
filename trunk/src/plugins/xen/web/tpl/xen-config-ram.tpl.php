@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/xen/img/plugin.png"> Xen VM RAM Configuration</h1>
+<h1><img border=0 src="/openqrm/base/plugins/xen/img/manager.png"> Xen VM RAM Configuration</h1>
 {backlink}
 <br>
 {vm_config_ram_disp}
