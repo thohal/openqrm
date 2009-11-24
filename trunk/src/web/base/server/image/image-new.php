@@ -473,7 +473,7 @@ function image_form() {
 				$table->identifier = 'storage_id';
 				$table->identifier_type = 'radio';
 			}
-			$disp = '<h3>Storage List</h3>'.$table->get_string();
+			$disp = '<h3>Please select a Storage for the new Image from the List</h3>'.$table->get_string();
 		} else {
 			$disp = '<center>';
 			$disp .= '<b>No Storage available</b>';
