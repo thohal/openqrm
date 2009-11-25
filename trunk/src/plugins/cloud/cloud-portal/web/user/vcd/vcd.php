@@ -135,13 +135,13 @@ if (htmlobject_request('action') != '') {
             $nowstmp = $_SERVER['REQUEST_TIME'];
             // check that the new stop time is later than the start time
             if ($cr_stop < ($cr_start + 3600)) {
-                // $strMsg .="Request cannot be created with stop date before start.<br>Request duration must be at least 1 hour.<br>";
+                // $strMsg .="Request cannot be created with stop date before start.<br />Request duration must be at least 1 hour.<br />";
                 exit(false);
             }
 
             // check that the new stop time is later than the now + 1 hour
             if ($cr_stop < ($nowstmp + 3600)) {
-                // $strMsg .="Request duration must be at least 1 hour.<br>Not creating the request.<br>";
+                // $strMsg .="Request duration must be at least 1 hour.<br />Not creating the request.<br />";
                 exit(false);
             }
 
@@ -226,19 +226,19 @@ if (htmlobject_request('action') != '') {
             $cc_disk_conf = new cloudconfig();
             $max_disk_size = $cc_disk_conf->get_value(8);  // 8 is max_disk_size config
             if ($disk_size > $max_disk_size) {
-                // $strMsg .="Disk parameter must be <= $max_disk_size <br>";
+                // $strMsg .="Disk parameter must be <= $max_disk_size <br />";
                 exit(false);
             }
             // max network interfaces
             $max_network_infterfaces = $cc_disk_conf->get_value(9);  // 9 is max_network_interfaces
             if ($network > $max_network_infterfaces) {
-                // $strMsg .="Network parameter must be <= $max_network_infterfaces <br>";
+                // $strMsg .="Network parameter must be <= $max_network_infterfaces <br />";
                 exit(false);
             }
             // max resource per cr
             $max_resource_per_cr = $cc_disk_conf->get_value(6);  // 6 is max_resources_per_cr
             if ($quantity > $max_resource_per_cr) {
-                // $strMsg .="Network parameter must be <= $max_network_infterfaces <br>";
+                // $strMsg .="Network parameter must be <= $max_network_infterfaces <br />";
                 exit(false);
             }
             // check user limits #######################
@@ -299,48 +299,48 @@ if (htmlobject_request('action') != '') {
                 $cloudselector = new cloudselector();
                 // cpu
                 if (!$cloudselector->product_exists_enabled("cpu", $cpus)) {
-                    // echo "Cloud CPU Product ($cpus) is not existing...<br>";
+                    // echo "Cloud CPU Product ($cpus) is not existing...<br />";
                     exit(false);
                 }
                 // disk
                 if (!$cloudselector->product_exists_enabled("disk", $disk_size)) {
-                    // echo "Cloud Disk Product ($disk_size) is not existing...<br>";
+                    // echo "Cloud Disk Product ($disk_size) is not existing...<br />";
                     exit(false);
                 }
                 // kernel
                 $tkernel = new kernel();
                 $tkernel->get_instance_by_name($kernel);
                 if (!$cloudselector->product_exists_enabled("kernel", $tkernel->id)) {
-                    // echo "Cloud Kernel Product ($kernel) is not existing...<br>";
+                    // echo "Cloud Kernel Product ($kernel) is not existing...<br />";
                     exit(false);
                 }
                 // memory
                 if (!$cloudselector->product_exists_enabled("memory", $memory)) {
-                    // echo "Cloud Memory Product ($memory) is not existing...<br>";
+                    // echo "Cloud Memory Product ($memory) is not existing...<br />";
                     exit(false);
                 }
                 // network
                 if (!$cloudselector->product_exists_enabled("network", $network)) {
-                    // echo "Cloud Network Product ($network) is not existing...<br>";
+                    // echo "Cloud Network Product ($network) is not existing...<br />";
                     exit(false);
                 }
                 // puppet
                 if (is_array($puppet_groups_array)) {
                     foreach($puppet_groups_array as $puppet_group) {
                         if (!$cloudselector->product_exists_enabled("puppet", $puppet_group)) {
-                            // echo "Cloud Puppet Product ($puppet_group) is not existing...<br>";
+                            // echo "Cloud Puppet Product ($puppet_group) is not existing...<br />";
                             exit(false);
                         }
                     }
                 }
                 // quantity
                 if (!$cloudselector->product_exists_enabled("quantity", $quantity)) {
-                    // echo "Cloud Quantity Product ($quantity) is not existing...<br>";
+                    // echo "Cloud Quantity Product ($quantity) is not existing...<br />";
                     exit(false);
                 }
                 // resource type
                 if (!$cloudselector->product_exists_enabled("resource", $virtualization_id)) {
-                    // echo "Cloud Virtualization Product ($virtualization_id) is not existing...<br>";
+                    // echo "Cloud Virtualization Product ($virtualization_id) is not existing...<br />";
                     exit(false);
                 }
 
@@ -418,10 +418,10 @@ function my_cloud_create_request() {
 
    // global limits
     $cloud_global_limits = "";
-	$cloud_global_limits = $cloud_global_limits."<nobr>Max Resources per CR : $max_resources_per_cr</nobr><br>";
-	$cloud_global_limits = $cloud_global_limits."<nobr>Max Disk Size : $max_disk_size MB</nobr><br>";
-	$cloud_global_limits = $cloud_global_limits."<nobr>Max Network Interfaces : $max_network_interfaces</nobr><br>";
-	$cloud_global_limits = $cloud_global_limits."<nobr>Max Appliance per User : $max_apps_per_user</nobr><br>";
+	$cloud_global_limits = $cloud_global_limits."<dd>Max Resources per CR : $max_resources_per_cr</dd>";
+	$cloud_global_limits = $cloud_global_limits."<dd>Max Disk Size : $max_disk_size MB</dd>";
+	$cloud_global_limits = $cloud_global_limits."<dd>Max Network Interfaces : $max_network_interfaces</dd>";
+	$cloud_global_limits = $cloud_global_limits."<dd>Max Appliance per User : $max_apps_per_user</dd>";
 
     // user limits
     $cloud_user = new clouduser();
@@ -434,11 +434,11 @@ function my_cloud_create_request() {
     $cloud_user_cpu_limit = $cloud_userlimit->cpu_limit;
     $cloud_user_network_limit = $cloud_userlimit->network_limit;
     $cloud_user_limits = "";
-	$cloud_user_limits = $cloud_user_limits."<nobr>Max Resources : $cloud_user_resource_limit</nobr><br>";
-	$cloud_user_limits = $cloud_user_limits."<nobr>Max Disk Size : $cloud_user_disk_limit MB</nobr><br>";
-	$cloud_user_limits = $cloud_user_limits."<nobr>Max Network Interfaces : $cloud_user_network_limit</nobr><br>";
-	$cloud_user_limits = $cloud_user_limits."<nobr>Max Memory : $cloud_user_memory_limit</nobr><br>";
-	$cloud_user_limits = $cloud_user_limits."<nobr>Max CPU's : $cloud_user_cpu_limit</nobr><br>";
+	$cloud_user_limits = $cloud_user_limits."<dd>Max Resources : $cloud_user_resource_limit</dd>";
+	$cloud_user_limits = $cloud_user_limits."<dd>Max Disk Size : $cloud_user_disk_limit MB</dd>";
+	$cloud_user_limits = $cloud_user_limits."<dd>Max Network Interfaces : $cloud_user_network_limit</dd>";
+	$cloud_user_limits = $cloud_user_limits."<dd>Max Memory : $cloud_user_memory_limit</dd>";
+	$cloud_user_limits = $cloud_user_limits."<dd>Max CPU's : $cloud_user_cpu_limit</dd>";
 
 
     // big switch ##############################################################
@@ -963,9 +963,9 @@ function my_cloud_create_request() {
 		'cloud_cpu_req' => $cloud_cpu_req,
 		'cloud_disk_req' => $cloud_disk_req,
 		'cloud_network_req' => $network_quantity,
-		'cloud_ha' => $show_ha,
+		'cloud_ha' => $show_ha?$show_ha:0,
 		'cloud_clone_on_deploy' => $clone_on_deploy,
-		'cloud_show_puppet' => $show_puppet,
+		'cloud_show_puppet' => $show_puppet?$show_puppet:0,
 		'cloud_puppet_groups' => $puppet_group_list,
 		'cloud_global_limits' => $cloud_global_limits,
 		'cloud_user_limits' => $cloud_user_limits,

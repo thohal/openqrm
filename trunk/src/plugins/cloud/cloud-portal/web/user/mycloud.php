@@ -914,7 +914,7 @@ $cloudu = new clouduser();
 $cloudu->get_instance_by_name($auth_user);
 if ($cloudu->status == 1) {
 	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab0\">Cloud Manager</a>", 'value' => my_cloud_manager());
-	$output[] = array('label' => "<a href=\"#\" onClick=\"javascript:window.open('vcd/','','location=0,status=0,scrollbars=1,width=910,height=740');\">Visual Cloud Designer <small><i>beta</i></small></a>", 'value' => '');
+	$output[] = array('label' => "<a href=\"#\" onClick=\"javascript:window.open('vcd/','','location=0,status=0,scrollbars=1,width=910,height=740');\">Visual Cloud Designer</a>", 'value' => '');
 	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab2\">Cloud Request</a>", 'value' => my_cloud_create_request());
 	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab3\">Cloud Appliances</a>", 'value' => my_cloud_appliances());
 	$output[] = array('label' => "<a href=\"$thisfile?currenttab=tab4\">My Account</a>", 'value' => mycloud_account());

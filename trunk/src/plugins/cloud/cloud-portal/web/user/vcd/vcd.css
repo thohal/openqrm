@@ -47,6 +47,10 @@ body {
     height: 70px;
 }
 
+#titleheader h1{
+	font-size:20px;	
+}
+
 #docu {
     position: absolute;
     left: 250px;
@@ -208,3 +212,27 @@ body {
 }
 
 
+dl{
+	margin:0;	
+}
+
+dt{
+	font-weight:bold;	
+	text-align:center;
+}
+
+dd{
+	margin:0;	
+}
+
+dd.small{
+	font-size:9px;
+	text-align:center;
+	border-bottom:1px solid #474747;
+	margin-bottom:4px;
+	padding-bottom:4px;	
+}
+
+span.small{
+	font-size:9px;	
+}

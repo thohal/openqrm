@@ -1,3 +1,6 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <!--
 /*
   This file is part of openQRM.
@@ -17,21 +20,21 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
-<!doctype html>
-<html lang="en">
 <head>
 	<title>Visual Cloud Designer</title>
     <link type="text/css" href="../js/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
-    <script type="text/javascript" src="../js/js/jquery-1.3.2.min.js"></script>
-    <script type="text/javascript" src="../js/js/jquery-ui-1.7.1.custom.min.js"></script>
     <link type="text/css" href="../../css/jquery.css" rel="stylesheet" />
     <link type="text/css" href="./vcd.css" rel="stylesheet" />
-    <style type="text/css">
-	</style>
-
+    <script type="text/javascript" src="../js/js/jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="../js/js/jquery-ui-1.7.1.custom.min.js"></script>
+    
+   
     <script type="text/javascript">
 	$(document).ready(function() {
+                                            
+                                            
 
+                                            
         $("#server").draggable({
             helper: 'original',
             containment: 'parent'
@@ -54,14 +57,14 @@
 
         $(".column").sortable({
 			connectWith: '.column',
-            cancel: 'small, hr, b, #content-slider, .content-slider-handle',
+            cancel: '.content-holder, .content-scroll, small, hr, b, #content-slider, .content-slider-handle',
             helper: 'clone', appendTo: 'body'
 		});
 
 		$(".portlet").addClass("ui-widget ui-widget-content ui-helper-clearfix ui-corner-all")
 			.find(".portlet-header")
 				.addClass("ui-widget-header ui-corner-all")
-				.prepend('<span class="ui-icon ui-icon-plusthick"></span>')
+				.prepend('<span class="ui-icon ui-icon-plusthick"><\/span>')
 				.end()
 			.find(".portlet-content").toggle();
 
@@ -72,11 +75,11 @@
 
 
 		$(".column").disableSelection();
-
-        $("#column").Sortable({
+/*
+        $(".column").Sortable({
             accept : "portlet"
         });
-
+*/
 
 
 
@@ -258,11 +261,10 @@ function submitrequest(s)
 <form name="vcd" action="openqrm-vcd.php">
 
 <div id="titleheader" class="titleheader">
-    <a href="http://www.openqrm.com" target="_blank" style="text-decoration: none">
-    <h1>openQRM's
-    <br>
-    Visual Cloud Designer</h1>
-    </a>
+    <h1>
+		<a href="http://www.openqrm.com" target="_blank" style="text-decoration: none">
+       	openQRM's<br />Visual Cloud Designer</a></h1>
+    
 </div>
 
 <div id="docu" class="docu">
@@ -280,16 +282,18 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
 
 <div id="content-slider"><div class="content-slider-handle"></div></div>
 
-<div id="components" class="column">
+<div id="components" class="must-not-be-column">
 <b>Cloud Components</b>
-<hr>
+<hr />
 <div id="content-scroll">
     <div id="content-holder">
         <div class="content-item">
             <div id="systemtype" class="column">
-                <small>-------------- Virtualization Types --------------</small>
-                <hr>
+                <span class="small">-------------- Virtualization Types --------------</span>
+                <hr />
                 <script type="text/javascript">
+                	
+
                     // the next line give a syntax error in the IDE but works
                     // ok since the var in brackets is filled via the php-template
                     var cloud_resource_type_req = [ {cloud_resource_type_req} ];
@@ -297,17 +301,18 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
                     for ( var i in names )
                     {
                         document.writeln("<div id=\"" + names[i] + "\" key=\"systemtype\" value=\"" + names[i] + "\" class=\"portlet\">");
-                            document.writeln("<div class=\"portlet-header\">" + names[i].substring(0,18) + "</div>");
-                            document.writeln("<div class=\"portlet-content\">A " + names[i] + " (Virtual Machine)</div>");
-                        document.writeln("</div>");
+                            document.writeln("<div class=\"portlet-header\">" + names[i].substring(0,18) + "<\/div>");
+                            document.writeln("<div class=\"portlet-content\">A " + names[i] + " (Virtual Machine)<\/div>");
+                        document.writeln("<\/div>");
                     }
+                    
                 </script>
 
             </div>
 
             <div id="serverimage" class="column">
-                <small>---------------- Server Templates ----------------</small>
-                <hr>
+                <span class="small">---------------- Server Templates ----------------</span>
+                <hr />
                 <script type="text/javascript">
                     // the next line give a syntax error in the IDE but works
                     // ok since the var in brackets is filled via the php-template
@@ -318,9 +323,9 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
                         var fullname = names[i].substring(0,18);
                         var showname = fullname.replace(/_/g, "-");
                         document.writeln("<div id=\"" + names[i] + "\" key=\"serverimage\" value=\"" + names[i] + "\" class=\"portlet\">");
-                            document.writeln("<div class=\"portlet-header\">" + showname + "</div>");
-                            document.writeln("<div class=\"portlet-content\">A " + showname + " Server Template</div>");
-                        document.writeln("</div>");
+                            document.writeln("<div class=\"portlet-header\">" + showname + "<\/div>");
+                            document.writeln("<div class=\"portlet-content\">A " + showname + " Server Template<\/div>");
+                        document.writeln("<\/div>");
                     }
                 </script>
 
@@ -328,8 +333,8 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
 
 
             <div id="kernel" class="column">
-                <small>--------------- Operating Systems ---------------</small>
-                <hr>
+                <span class="small">--------------- Operating Systems ---------------</span>
+                <hr />
                 <script type="text/javascript">
                     // the next line give a syntax error in the IDE but works
                     // ok since the var in brackets is filled via the php-template
@@ -338,17 +343,17 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
                     for ( var i in names )
                     {
                         document.writeln("<div id=\"" + names[i] + "\" key=\"kernel\" value=\"" + names[i] + "\" class=\"portlet\">");
-                            document.writeln("<div class=\"portlet-header\">" + names[i].substring(0,18) + "</div>");
-                            document.writeln("<div class=\"portlet-content\">A " + names[i] + " Operating System</div>");
-                        document.writeln("</div>");
+                            document.writeln("<div class=\"portlet-header\">" + names[i].substring(0,18) + "<\/div>");
+                            document.writeln("<div class=\"portlet-content\">A " + names[i] + " Operating System<\/div>");
+                        document.writeln("<\/div>");
                     }
                 </script>
 
             </div>
 
             <div id="cpus" class="column">
-                <small>------------------------- CPU's ------------------------</small>
-                <hr>
+                <span class="small">------------------------- CPU's ------------------------</span>
+                <hr />
                 <script type="text/javascript">
                     // the next line give a syntax error in the IDE but works
                     // ok since the var in brackets is filled via the php-template
@@ -358,21 +363,21 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
                     {
                         document.writeln("<div id=\"" + names[i] + "cpus\" key=\"cpus\" value=\"" + names[i] + "\" class=\"portlet\">");
                             if (i == 0) {
-                                document.writeln("<div class=\"portlet-header\">" + names[i] + " CPU</div>");
-                                document.writeln("<div class=\"portlet-content\">" + names[i] + " CPU for your Cloud appliance</div>");
+                                document.writeln("<div class=\"portlet-header\">" + names[i] + " CPU<\/div>");
+                                document.writeln("<div class=\"portlet-content\">" + names[i] + " CPU for your Cloud appliance<\/div>");
                             } else {
-                                document.writeln("<div class=\"portlet-header\">" + names[i] + " CPUs</div>");
-                                document.writeln("<div class=\"portlet-content\">" + names[i] + " CPUs for your Cloud appliance</div>");
+                                document.writeln("<div class=\"portlet-header\">" + names[i] + " CPUs<\/div>");
+                                document.writeln("<div class=\"portlet-content\">" + names[i] + " CPUs for your Cloud appliance<\/div>");
                             }
-                        document.writeln("</div>");
+                        document.writeln("<\/div>");
                     }
                 </script>
 
             </div>
 
             <div id="memory" class="column">
-                <small>----------------------- Memory -----------------------</small>
-                <hr>
+                <span class="small">----------------------- Memory -----------------------</span>
+                <hr />
                 <script type="text/javascript">
                     // the next line give a syntax error in the IDE but works
                     // ok since the var in brackets is filled via the php-template
@@ -381,17 +386,17 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
                     for ( var i in names )
                     {
                         document.writeln("<div id=\"" + names[i] + "MB\" key=\"memory\" value=\"" + names[i] + "\" class=\"portlet\">");
-                            document.writeln("<div class=\"portlet-header\">" + names[i] + " MB</div>");
-                            document.writeln("<div class=\"portlet-content\">" + names[i] + " MB Memory</div>");
-                        document.writeln("</div>");
+                            document.writeln("<div class=\"portlet-header\">" + names[i] + " MB<\/div>");
+                            document.writeln("<div class=\"portlet-content\">" + names[i] + " MB Memory<\/div>");
+                        document.writeln("<\/div>");
                     }
                 </script>
 
             </div>
 
             <div id="disk" class="column">
-                <small>---------------------- Hard-Disk ----------------------</small>
-                <hr>
+                <span class="small">---------------------- Hard-Disk ----------------------</span>
+                <hr />
                 <script type="text/javascript">
                     // the next line give a syntax error in the IDE but works
                     // ok since the var in brackets is filled via the php-template
@@ -400,17 +405,17 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
                     for ( var i in names )
                     {
                         document.writeln("<div id=\"" + names[i] + "GB\" key=\"disk\" value=\"" + names[i] + "\" class=\"portlet\">");
-                            document.writeln("<div class=\"portlet-header\">" + names[i] + "GB</div>");
-                            document.writeln("<div class=\"portlet-content\">" + names[i] + " GB Disk size</div>");
-                        document.writeln("</div>");
+                            document.writeln("<div class=\"portlet-header\">" + names[i] + "GB<\/div>");
+                            document.writeln("<div class=\"portlet-content\">" + names[i] + " GB Disk size<\/div>");
+                        document.writeln("<\/div>");
                     }
                 </script>
 
             </div>
 
             <div id="network" class="column">
-                <small>------------------ Network Cards ------------------</small>
-                <hr>
+                <span class="small">------------------ Network Cards ------------------</span>
+                <hr />
                 <script type="text/javascript">
                     // the next line give a syntax error in the IDE but works
                     // ok since the var in brackets is filled via the php-template
@@ -419,9 +424,9 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
                     for ( var i in cnetwork )
                     {
                         document.writeln("<div id=\"" +i + "net\" key=\"network\" value=\"" + cnetwork[i] + "\" class=\"portlet\">");
-                            document.writeln("<div class=\"portlet-header\">" + cnetwork[i] + " Network</div>");
-                            document.writeln("<div class=\"portlet-content\">" + cnetwork[i] + " Network card(s) for the Cloud appliance(s)</div>");
-                        document.writeln("</div>");
+                            document.writeln("<div class=\"portlet-header\">" + cnetwork[i] + " Network<\/div>");
+                            document.writeln("<div class=\"portlet-content\">" + cnetwork[i] + " Network card(s) for the Cloud appliance(s)<\/div>");
+                        document.writeln("<\/div>");
                     }
                 </script>
 
@@ -431,12 +436,16 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
             <script type="text/javascript">
                 // the next line give a syntax error in the IDE but works
                 // ok since the var in brackets is filled via the php-template
-                var cloud_show_puppet = {cloud_show_puppet};
+               
+              var cloud_show_puppet = {cloud_show_puppet};
+             
+              
+                
                 if (cloud_show_puppet == 1)
                 {
                     document.writeln("<div id=\"application\" class=\"column\">");
-                        document.writeln("<small>-------------------- Applications ---------------------</small>");
-                        document.writeln("<hr>");
+                        document.writeln("<span class=\"small\">-------------------- Applications ---------------------<\/span>");
+                        document.writeln("<hr />");
 
                         // the next line give a syntax error in the IDE but works
                         // ok since the var in brackets is filled via the php-template
@@ -445,19 +454,19 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
                         for ( var i in pnames )
                         {
                             document.writeln("<div id=\"application" + pnames[i] + "\" key=\"application" + i + "\" value=\"" + pnames[i] + "\" class=\"portlet\">");
-                                document.writeln("<div class=\"portlet-header\">" + pnames[i].substring(0,18) + "</div>");
-                                document.writeln("<div class=\"portlet-content\">A " + pnames[i] + " system</div>");
-                            document.writeln("</div>");
+                                document.writeln("<div class=\"portlet-header\">" + pnames[i].substring(0,18) + "<\/div>");
+                                document.writeln("<div class=\"portlet-content\">A " + pnames[i] + " system<\/div>");
+                            document.writeln("<\/div>");
                         }
 
-                    document.writeln("</div>");
+                    document.writeln("<\/div>");
 
                 }
             </script>
 
 
             <div id="quantity" class="column">
-                <small>---------------------- Quantity ----------------------</small>
+                <span class="small">---------------------- Quantity ----------------------</span>
 
                 <script type="text/javascript">
                     // the next line give a syntax error in the IDE but works
@@ -467,27 +476,29 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
                     for ( var i in rquantity )
                     {
                         document.writeln("<div id=\"" +i + "quantity\" key=\"quantity\" value=\"" + rquantity[i] + "\" class=\"portlet\">");
-                            document.writeln("<div class=\"portlet-header\">" + rquantity[i] + " X</div>");
-                            document.writeln("<div class=\"portlet-content\">" + rquantity[i] + " Cloud appliance(s)</div>");
-                        document.writeln("</div>");
+                            document.writeln("<div class=\"portlet-header\">" + rquantity[i] + " X<\/div>");
+                            document.writeln("<div class=\"portlet-content\">" + rquantity[i] + " Cloud appliance(s)<\/div>");
+                        document.writeln("<\/div>");
                     }
                 </script>
 
             </div>
 
             <div id="special" class="column">
-                <small>----------------------- Specials ----------------------</small>
-                <hr>
+                <span class="small">----------------------- Specials ----------------------</span>
+                <hr />
                 <script type="text/javascript">
                     // the next line give a syntax error in the IDE but works
                     // ok since the var in brackets is filled via the php-template
-                    var cloud_ha = {cloud_ha};
+
+                 	var cloud_ha = {cloud_ha};
+                    
                     if (cloud_ha == 1)
                     {
                         document.writeln("<div id=\"ha\" key=\"ha\" value=\"1\" class=\"portlet\">");
-                            document.writeln("<div class=\"portlet-header\">High-Availability</div>");
-                            document.writeln("<div class=\"portlet-content\">High-Availability for the Cloud appliances</div>");
-                        document.writeln("</div>");
+                            document.writeln("<div class=\"portlet-header\">High-Availability<\/div>");
+                            document.writeln("<div class=\"portlet-content\">High-Availability for the Cloud appliances<\/div>");
+                        document.writeln("<\/div>");
                     }
                 </script>
 
@@ -508,15 +519,15 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
   <small>(construct your cloud appliance here)</small>
     <div id="server" class="server">
         <center><b><u>Cloud Appliance</u></b></center>
-        <br>
+        <br />
         <b>Start&nbsp;<input name="cr_start" id="cr_start" class="date-pick" size="7" value="{cloud_request_start}"/></b>
-        <br>
+        <br />
         <b>End&nbsp;&nbsp;&nbsp;<input name="cr_stop" id="cr_stop" class="date-pick" size="7" value="{cloud_request_stop}"/></b>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
         <center><small>Drop components below</small></center>
         <div id="builder" class="column">
         </div>
@@ -526,23 +537,23 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
 
 <div id="cloudactions" class="dc">
     <center><b>Cloud Actions</b></center>
-    <hr>
+    <hr />
 
     <div class="serializer">
-        <br>
+        <br />
         <center><a href="#" onClick="submitrequest('#builder'); return false;" style="text-decoration: none">
         <img src="../../img/submit.png" width="32" height="32" alt="submit" border="0"/>
-        <br>
+        <br />
         <b>Request Appliance</b>
         </a></center>
     </div>
-   <br>
+   <br />
 
     <div  class="reset">
-        <br>
+        <br />
         <center><a href="#" onClick="window.location.reload()" style="text-decoration: none">
         <img src="../../img/clear.png" width="32" height="32" alt="Reset" border="0"/>
-        <br>
+        <br />
         <b>Reset Designer</b>
         </a></center>
     </div>
@@ -552,26 +563,29 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
 
 <div id="myaccount" class="dc">
     <center><b>My Cloud Account</b></center>
-    <hr>
+    <hr />
     User : {cloud_user_name}
-    <br>
+    <br />
     Name : {cloud_user}
-    <br>
+    <br />
     CCU's : {cloud_user_ccus}
 </div>
 
 <div id="globallimits" class="dc">
-    <center><b>Global Limits</b></center>
-    <center><small>(set by the Cloud-Administrator)</small></center>
-    <hr>
+    <dl><dt>Global Limits</dt>
+    <dd class="small">(set by the Cloud-Administrator)</dd>
+   
     {cloud_global_limits}
+  </dl>
 </div>
 
 <div id="userlimits" class="dc">
-    <center><b>User Limits</b></center>
-    <center><small>(0 = no limit set)</small></center>
-    <hr>
+    <dl>
+    	<dt>User Limits</dt>
+    	<dd class="small">(0 = no limit set)</dd>
+    
     {cloud_user_limits}
+   </dl>
 </div>
 
 <div id="adplace" class="dc">
@@ -582,7 +596,7 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
 </div>
 
 
-<div id="testedwith" class="testedwith">
+<div id="testedwith" class="testedwith" style="display:none;">
     <center>
     <small>works best with Firefox</small>
     </center>
