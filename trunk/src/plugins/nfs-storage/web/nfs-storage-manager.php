@@ -637,7 +637,7 @@ function nfs_storage_display($nfs_storage_id) {
         $submit = "";
     } else {
         $add_export_header = "<h1>Add new NFS export</h1>";
-        $nfs_lun_name = htmlobject_input('nfs_lun_name', array("value" => '', "label" => 'Lun Name'), 'text', 20);
+        $nfs_lun_name = htmlobject_input('nfs_lun_name', array("value" => '', "label" => 'Export Name'), 'text', 20);
 		$submit = htmlobject_input('action', array("value" => 'add', "label" => 'Add'), 'submit');
     }
 
