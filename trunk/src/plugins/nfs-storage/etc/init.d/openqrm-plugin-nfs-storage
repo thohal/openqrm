@@ -37,6 +37,15 @@ function openqrm_plugin_nfs_storage_start() {
             /etc/init.d/nfs-kernel-server start || exit $?
         fi
     fi
+	if [ -x "/etc/init.d/portmap" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d portmap start || exit $?
+        else
+            /etc/init.d/portmap start || exit $?
+        fi
+    fi
+
+
     if [ -x "/etc/init.d/nfs" ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
             invoke-rc.d nfs start || exit $?
@@ -51,6 +60,11 @@ function openqrm_plugin_nfs_storage_start() {
             /etc/init.d/nfslock start || exit $?
         fi
     fi
+
+
+
+
+
 }
 
 
@@ -64,6 +78,16 @@ function openqrm_plugin_nfs_storage_stop() {
             /etc/init.d/nfs-kernel-server stop || exit $?
         fi
     fi
+
+
+	if [ -x "/etc/init.d/portmap" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d portmap stop || exit $?
+        else
+            /etc/init.d/portmap stop || exit $?
+        fi
+    fi
+
     if [ -x "/etc/init.d/nfs" ]; then
         if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
             invoke-rc.d nfs stop || exit $?
@@ -78,6 +102,11 @@ function openqrm_plugin_nfs_storage_stop() {
             /etc/init.d/nfslock stop || exit $?
         fi
     fi
+
+
+
+
+	
 }
 
 function openqrm_plugin_nfs_storage_uninstall() {
