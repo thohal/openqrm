@@ -226,7 +226,7 @@ function add($resource_fields) {
 	$resource_fields["resource_kernelid"]='1';
 	$resource_fields["resource_image"]='idle';
 	$resource_fields["resource_imageid"]='1';
-	$resource_fields["resource_senddelay"]=30;
+	$resource_fields["resource_senddelay"]=10;
 	$resource_fields["resource_lastgood"]=$_SERVER['REQUEST_TIME'];
 
 	$db=openqrm_get_db_connection();
