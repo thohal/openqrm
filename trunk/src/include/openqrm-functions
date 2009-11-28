@@ -468,21 +468,25 @@ function openqrm_validate_ip() {
 	IFS=.
 	set -- $IP_A
 	if [ "$#" -ne "4" ]; then
+        IFS=$OLDIFS
 		return 1
 	fi
 
 	for oct in $1 $2 $3 $4; do
 		echo $oct | egrep "^[0-9]+$" >/dev/null 2>&1
 		if [ "$?" -ne "0" ]; then
+            IFS=$OLDIFS
 			return 1
 		else
 			if [ "$oct" -lt "0" -o "$oct" -gt "255" ]; then
-				return 1
+                IFS=$OLDIFS
+                return 1
 			fi
 		fi
 	done
 	echo "$IP_A" | grep "\.$" >/dev/null 2>&1
 	if [ "$?" -eq "0" ]; then
+        IFS=$OLDIFS
 		return 1
 	fi
 	IFS=$OLDIFS
