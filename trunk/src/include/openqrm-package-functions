@@ -173,7 +173,7 @@ function openqrm_rpm_package() {
    	openqrm_install_os_dependency zlib-devel
 
     # this is only rpm packaging, debian package are build with the standard debian package tools
-    PLUGINS_IN_OPENQRM_PACKAGE="aoe-storage aws cloud collectd dhcpd dns highavailability image-shelf iscsi-storage kvm local-server lvm-storage nagios3 nfs-storage puppet tftpd xen"
+    PLUGINS_IN_OPENQRM_PACKAGE="aoe-storage aws cloud dhcpd dns highavailability image-shelf iscsi-storage kvm local-server lvm-storage nagios3 nfs-storage puppet tftpd xen"
     PLUGINS_IN_PLUGINS_PACKAGE="citrix equallogic-storage linuxcoe local-storage netapp-storage solx86 sshterm vmware-esx vmware-server vmware-server2 zabbix zfs-storage"
     OPENQRM_PACKAGE_ARCHITECTURE=` uname -i`
     if [ -f /etc/redhat-release ]; then
@@ -195,6 +195,10 @@ function openqrm_rpm_package() {
     for PLUGIN_DEP in $PLUGINS_IN_PLUGINS_PACKAGE; do
         OPENQRM_BUILD_POSTINSTALL="$OPENQRM_BUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/$PLUGIN_DEP;"
     done
+    # for now we remove the puppet + nagios + collectd plugins plus its deps because centos does not include them in their standard distri
+    OPENQRM_BUILD_POSTINSTALL="$OPENQRM_BUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/nagios3;"
+    OPENQRM_BUILD_POSTINSTALL="$OPENQRM_BUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/puppet;"
+    OPENQRM_BUILD_POSTINSTALL="$OPENQRM_BUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/collectd;"
 
 #    for PLUGIN_DEP in $PLUGINS_IN_OPENQRM_PACKAGE; do
 #        # we need to sum up the server + plugin dependencies
@@ -262,6 +266,10 @@ function openqrm_rpm_package() {
     OPENQRM_PBUILD_POSTINSTALL="$OPENQRM_PBUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/tftpboot;"
     OPENQRM_PBUILD_POSTINSTALL="$OPENQRM_PBUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/var;"
     OPENQRM_PBUILD_POSTINSTALL="$OPENQRM_PBUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/web;"
+    # for now we remove the puppet + nagios plugins plus its deps because centos does not include them in their standard distri
+    OPENQRM_PBUILD_POSTINSTALL="$OPENQRM_PBUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/nagios3;"
+    OPENQRM_PBUILD_POSTINSTALL="$OPENQRM_PBUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/puppet;"
+    OPENQRM_PBUILD_POSTINSTALL="$OPENQRM_PBUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/collectd;"
 
     # clean up
     rm -rf /usr/src/$OPENQRM_PACKAGE_SUB_DIR/BUILD/buildtmp /usr/src/$OPENQRM_PACKAGE_SUB_DIR/BUILD/$OPENQRM_PACKAGE_NAME-$OPENQRM_SERVER_VERSION

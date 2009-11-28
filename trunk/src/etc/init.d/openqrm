@@ -168,7 +168,7 @@ function openqrm_server_init() {
         ETCHOSTS=/etc/hosts
         MYHOSTNAME=`hostname`
 
-        if grep $MYHOSTNAME $ETCHOSTS | grep 127.0. 1>/dev/null; then
+        if grep $MYHOSTNAME $ETCHOSTS | grep 127.0. 1>/dev/null || ! grep $MYHOSTNAME $ETCHOSTS 1>/dev/null; then
             echo "Found system hostname $MYHOSTNAME connected to loopback interface"
             echo "! This causes troubles while enabling SSL for the apache webserver !"
             AVAIL_IPS=`ifconfig -a | grep -v inet6  | grep -B1 inet | grep -i -A1 link | grep -v lo | grep inet | grep -v 127.0.0.1 | cut -d':' -f2 | awk {' print $1 '}`
