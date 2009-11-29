@@ -108,6 +108,14 @@ if(htmlobject_request('action') != '') {
             exit(0);
             break;
 
+        case 'get_apps_cost':
+            $application = htmlobject_request('application');
+            $cloudselector = new cloudselector();
+            $cloudcost = $cloudselector->get_price($application, "puppet");
+            echo "$cloudcost";
+            exit(0);
+            break;
+
     }
 }
 

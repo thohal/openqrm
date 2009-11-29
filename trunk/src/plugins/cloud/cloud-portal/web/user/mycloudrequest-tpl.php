@@ -428,6 +428,50 @@ hr  {
             recalculate_costs();
         });
 
+        // apps
+        $("input[name='puppet_groups[]']").each(
+        	function() {
+                $(this).click(function() {
+                    if($(this).is(":checked")) {
+                        var application = $(this).val();
+                        $.ajax({
+                            url : "mycloudrequests.php?action=get_apps_cost&application=" + application,
+                            type: "POST",
+                            cache: false,
+                            async: false,
+                            dataType: "html",
+                            success : function (data) {
+                                var current_app_cost = 0;
+                                var new_app_cost = 0;
+                                current_app_cost = parseInt($("#cost_apps_val").text());
+                                new_app_cost = current_app_cost + parseInt(data);
+                                $("#cost_apps_val").text(new_app_cost);
+                            }
+                        });
+                    } else {
+                        var application = $(this).val();
+                        $.ajax({
+                            url : "mycloudrequests.php?action=get_apps_cost&application=" + application,
+                            type: "POST",
+                            cache: false,
+                            async: false,
+                            dataType: "html",
+                            success : function (data) {
+                                var current_app_cost = 0;
+                                var new_app_cost = 0;
+                                current_app_cost = parseInt($("#cost_apps_val").text());
+                                new_app_cost = current_app_cost - parseInt(data);
+                                $("#cost_apps_val").text(new_app_cost);
+                            }
+                        });
+                    }
+                    recalculate_costs();
+                });
+            });
+
+
+
+
 
         // resource_quantity
         $("select[name=cr_resource_quantity]").change(function () {
