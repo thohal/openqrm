@@ -51,6 +51,69 @@ global $CLOUD_REQUEST_TABLE;
 
 
 
+if(htmlobject_request('action') != '') {
+    switch (htmlobject_request('action')) {
+        case 'get_resource_type_req_cost':
+            $res_type = htmlobject_request('res_type');
+            $cloudselector = new cloudselector();
+            $cloudcost = $cloudselector->get_price($res_type, "resource");
+            echo "$cloudcost";
+            exit(0);
+            break;
+
+        case 'get_kernel_cost':
+            $kernel_id = htmlobject_request('kernel_id');
+            $cloudselector = new cloudselector();
+            $cloudcost = $cloudselector->get_price($kernel_id, "kernel");
+            echo "$cloudcost";
+            exit(0);
+            break;
+
+        case 'get_memory_cost':
+            $memory_req = htmlobject_request('memory_req');
+            $cloudselector = new cloudselector();
+            $cloudcost = $cloudselector->get_price($memory_req, "memory");
+            echo "$cloudcost";
+            exit(0);
+            break;
+
+        case 'get_cpu_cost':
+            $cpu_req = htmlobject_request('cpu_req');
+            $cloudselector = new cloudselector();
+            $cloudcost = $cloudselector->get_price($cpu_req, "cpu");
+            echo "$cloudcost";
+            exit(0);
+            break;
+
+        case 'get_disk_cost':
+            $disk_req = htmlobject_request('disk_req');
+            $cloudselector = new cloudselector();
+            $cloudcost = $cloudselector->get_price($disk_req, "disk");
+            echo "$cloudcost";
+            exit(0);
+            break;
+
+        case 'get_network_cost':
+            $network_req = htmlobject_request('network_req');
+            $cloudselector = new cloudselector();
+            $cloudcost = $cloudselector->get_price($network_req, "network");
+            echo "$cloudcost";
+            exit(0);
+            break;
+
+        case 'get_ha_cost':
+            $cloudselector = new cloudselector();
+            $cloudcost = $cloudselector->get_price(1, "ha");
+            echo "$cloudcost";
+            exit(0);
+            break;
+
+    }
+}
+
+
+
+
 function my_cloud_manager() {
 
 	global $OPENQRM_USER;
@@ -245,11 +308,11 @@ function my_cloud_extend_request($cr_id) {
             break;
     }
     // format time
-    $timestamp=$cr["cr_request_time"];
+    $timestamp=$cl_request->request_time;
     $cr_request_time = date("d-m-Y H-i", $timestamp);
-    $timestamp=$cr["cr_start"];
+    $timestamp=$cl_request->start;
     $cr_start = date("d-m-Y H-i", $timestamp);
-    $timestamp=$cr["cr_stop"];
+    $timestamp=$cl_request->stop;
     $cr_stop = date("d-m-Y H-i", $timestamp);
     $cr_resource_quantity = $cl_request->resource_quantity;
     // preprare a calendar to let the user extend the request
@@ -313,7 +376,6 @@ function my_cloud_create_request() {
 	$cloud_global_limits = $cloud_global_limits."<li>Max Network Interfaces : $max_network_interfaces</li>";
 	$cloud_global_limits = $cloud_global_limits."<li>Max Appliance per User : $max_apps_per_user</li>";
 	$cloud_global_limits = $cloud_global_limits."</ul>";
-	$cloud_global_limits = $cloud_global_limits."<br><br>";
 
     // user limits
     $cloud_user = new clouduser();
@@ -332,7 +394,6 @@ function my_cloud_create_request() {
 	$cloud_user_limits = $cloud_user_limits."<li>Max Memory : $cloud_user_memory_limit</li>";
 	$cloud_user_limits = $cloud_user_limits."<li>Max CPU's : $cloud_user_cpu_limit</li>";
 	$cloud_user_limits = $cloud_user_limits."</ul>";
-	$cloud_user_limits = $cloud_user_limits."<br><br>";
 
 
     // big switch ##############################################################
@@ -457,16 +518,23 @@ function my_cloud_create_request() {
         }
 
         // puppet classes
-        $product_array = $cloudselector->display_overview_per_type("puppet");
-        foreach ($product_array as $index => $cloudproduct) {
-            // is product enabled ?
-            if ($cloudproduct["state"] == 1) {
-                $puppet_product_name = $cloudproduct["name"];
-                $puppet_class_name = $cloudproduct["quantity"];
-                $show_puppet .= "<input type='checkbox' name='puppet_groups[]' value=$puppet_class_name>$puppet_product_name<br/>";
+        // check if to show puppet
+        $show_puppet_groups = $cc_conf->get_value(11);	// show_puppet_groups
+        if (!strcmp($show_puppet_groups, "true")) {
+            // is puppet enabled ?
+            if (file_exists("$RootDir/plugins/puppet/.running")) {
+                $product_array = $cloudselector->display_overview_per_type("puppet");
+                foreach ($product_array as $index => $cloudproduct) {
+                    // is product enabled ?
+                    if ($cloudproduct["state"] == 1) {
+                        $puppet_product_name = $cloudproduct["name"];
+                        $puppet_class_name = $cloudproduct["quantity"];
+                        $show_puppet .= "<input type='checkbox' name='puppet_groups[]' value=$puppet_class_name>$puppet_product_name<br/>";
+                    }
+                }
+                $show_puppet .= "<br/>";
             }
         }
-        $show_puppet .= "<br/>";
 
         // virtualization types
         $product_array = $cloudselector->display_overview_per_type("resource");
@@ -668,14 +736,14 @@ function my_cloud_create_request() {
 
     // start and stop calendar widgets
     $now = date("d-m-Y H:i", $_SERVER['REQUEST_TIME']);
-    $start_request = $start_request."Start time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\" value=\"$now\">";
+    $start_request = $start_request."<input id=\"cr_start\" name=\"cr_start\" type=\"text\" size=\"25\" value=\"$now\">";
     $start_request = $start_request."<a href=\"javascript:NewCal('cr_start','ddmmyyyy',true,24,'dropdown',true)\">";
-    $start_request = $start_request."<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+    $start_request = $start_request."<img src=\"../img/cal.gif\" id=\"img_start_cal\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
     $start_request = $start_request."</a>";
     $tomorrow = date("d-m-Y H:i", $_SERVER['REQUEST_TIME'] + 86400);
-    $stop_request = $stop_request."Stop time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\" value=\"$tomorrow\">";
+    $stop_request = $stop_request."<input id=\"cr_stop\" name=\"cr_stop\" type=\"text\" size=\"25\" value=\"$tomorrow\">";
     $stop_request = $stop_request."<a href=\"javascript:NewCal('cr_stop','ddmmyyyy',true,24,'dropdown',true)\">";
-    $stop_request = $stop_request."<img src=\"../img/cal.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
+    $stop_request = $stop_request."<img src=\"../img/cal.gif\" id=\"img_stop_cal\" width=\"16\" height=\"16\" border=\"0\" alt=\"Pick a date\">";
     $stop_request = $stop_request."</a>";
 
 

@@ -1,3 +1,6 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <!--
 /*
   This file is part of openQRM.
@@ -17,28 +20,221 @@
     Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 */
 -->
+<head>
+	<title>Create Cloud Request</title>
+    <link type="text/css" href="js/development-bundle/themes/smoothness/ui.all.css" rel="stylesheet" />
+    <link type="text/css" href="../css/jquery.css" rel="stylesheet" />
+    <script type="text/javascript" src="js/js/jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="js/js/jquery-ui-1.7.1.custom.min.js"></script>
+
+
+
 <style>
 .htmlobject_tab_box {
 	width:850px;
 }
+
+
+.inline {
+    display: inline;
+}
+
+#cr_start_input {
+    position: relative;
+    left: 70px;
+    top: 5px;
+    height: 10px;
+	width:160px;
+    float:left;
+}
+
+#cr_start {
+    position: relative;
+    left: 0px;
+    top: 0px;
+    height: 22px;
+	width:130px;
+    float:right;
+}
+
+#img_start_cal {
+    position: relative;
+    left: 160px;
+    top: 5px;
+    height: 16px;
+	width:16px;
+    float:left;
+}
+
+
+#cr_stop_input {
+    position: relative;
+    left: 65px;
+    top: 5px;
+    height: 10px;
+	width:160px;
+    float:left;
+}
+
+
+#cr_stop {
+    position: relative;
+    left: 5px;
+    top: 0px;
+    height: 22px;
+	width:130px;
+    float:right;
+}
+
+#img_stop_cal {
+    position: relative;
+    left: 165px;
+    top: 5px;
+    height: 16px;
+	width:16px;
+    float:left;
+}
+
+
+#cloud_request {
+    position: relative;
+    left: 0px;
+    top: 0px;
+    height: 340px;
+	width:280px;
+    float:left;
+    border: solid 1px #ccc;
+    padding: 10px 10px 0 10px;
+}
+
+
+hr  {
+    color: #ccc;
+    background-color: #ccc;
+    height: 1px;
+}
+
+
+#cloud_applications {
+    position: relative;
+    left: 5px;
+    top: 0px;
+    height: 350px;
+	width:140px;
+    float:left;
+}
+
+#puppet {
+    border: solid 1px #ccc;
+    padding: 5px 5px 0 5px;
+}
+
+
+
+#submit_request {
+    position: absolute;
+    left: 540px;
+    top: 530px;
+    height: 25px;
+	width:70px;
+    float:left;
+}
+
+
+
+
+#cloud_request_costs {
+    position: relative;
+    left: 10px;
+    top: 0px;
+    height: 350px;
+	width:143px;
+    float:left;
+}
+
+#costs {
+    border: solid 1px #ccc;
+    padding: 5px 5px 0 5px;
+    height: 245px;
+}
+
+
+
+#cloud_limits {
+    position: relative;
+    left: 0px;
+    top: 0px;
+    height: 300px;
+	width:250px;
+    float:right;
+}
+
+
+#cloud_user_limits {
+    border: solid 1px #ccc;
+    padding: 5px 5px 0 5px;
+}
+#cloud_global_limits {
+    border: solid 1px #ccc;
+    padding: 5px 5px 0 5px;
+}
+
+
+
+#cost_resource_type_req,
+#cost_kernel,
+#cost_image,
+#cost_memory,
+#cost_cpu,
+#cost_disk,
+#cost_network,
+#cost_apps,
+#cost_ha {
+    float:right;
+    padding: 0px 15px 0 0px;
+}
+
+
+
+#costs_summary {
+    position: relative;
+    left: 0px;
+    top: 0px;
+    height: 25px;
+	width:120px;
+    float:right;
+}
+
+
 </style>
+
+
+</head>
+<body>
+
+
 <form action="{formaction}">
-
 {currentab}
-
 <h1>Create new Cloud Request</h1>
 
 {subtitle}
 
-<div>
-	<div style="float:left;">
+    <div id="cloud_request">
 
 	{cloud_user}
-	{cloud_request_start}
-	<br>
+    <div id="cr_start_input">
+    {cloud_request_start}
+    </div>
+    <br>
+	Start time
+    <br>
+    <div id="cr_stop_input">
 	{cloud_request_stop}
-	<br>
-
+    </div>
+    <br>
+    Stop time
+    <br>
+    <hr>
 	{cloud_resource_quantity}
 	{cloud_resource_type_req}
 	{cloud_kernel_id}
@@ -54,8 +250,46 @@
 
 	</div>
 
-	<div style="float:right;">
-		<div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
+	<div id="cloud_applications">
+		<div id="puppet">
+        <b><u>Applications</u></b>
+        <br>
+		{cloud_show_puppet}
+		</div>
+    </div>
+
+
+    <div id="cloud_request_costs">
+		<div id="costs">
+            <b><u>Costs per Hour</u></b>
+            <br>
+            <br>
+            <u>Components / Price</u>
+            <br>
+            <ul type="none">
+                <li><div id="cost_resource_type_req">Res. type : <div id="cost_resource_type_req_val" class="inline">0</div></div></li>
+                <li><div id="cost_kernel">Kernel : <div id="cost_kernel_val" class="inline">0</div></div></li>
+                <li><div id="cost_memory">Memory : <div id="cost_memory_val" class="inline">0</div></div></li>
+                <li><div id="cost_cpu">CPUs : <div id="cost_cpu_val" class="inline">0</div></div></li>
+                <li><div id="cost_disk">Disk : <div id="cost_disk_val" class="inline">0</div></div></li>
+                <li><div id="cost_network">Network : <div id="cost_network_val" class="inline">0</div></div></li>
+                <li><div id="cost_ha">HA : <div id="cost_ha_val" class="inline">0</div></div></li>
+                <li><div id="cost_apps">Apps : <div id="cost_apps_val" class="inline">0</div></div></li>
+            </ul>
+        
+            <div id="costs_summary">
+                <hr>
+                Quantity : <div id="quantity_val" class="inline">0</div> * <div id="cost_per_appliance_val" class="inline">0</div>
+                <hr>
+                Sum : <div id="cost_overall_val" class="inline">0</div> CCU/h
+            </div>
+
+        </div>
+	</div>
+
+
+	<div id="cloud_limits">
+		<div id="cloud_user_limits">
 		<b><u>Global Cloud Limits</u></b>
         <br>
         <small>(set by the Cloud-Administrator)</small>
@@ -63,34 +297,165 @@
 		{cloud_global_limits}
 		</div>
         <br>
-		<div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
+		<div id="cloud_global_limits">
 		<b><u>Cloud User Limits</u></b>
         <br>
         <small>(0 = no limit set)</small>
         <br>
 		{cloud_user_limits}
 		</div>
-
     </div>
 
-	<div style="float:right;">
-		<div style="padding: 10px 10px 0 10px;">
-		&nbsp;&nbsp;&nbsp;
-		</div>
-	</div>
 
-	<div style="float:right;">
-		<div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
-        <b><u>Applications</u></b>
-        <br>
-		{cloud_show_puppet}
-		</div>
-	</div>
+
+    <div id="submit_request">{submit_save}</div>
 
 
 
-<div style="clear:both;line-height:0px;">&#160;</div>
-</div>
-<div style="text-align:center;">{submit_save}</div>
 
 </form>
+
+
+    <script type="text/javascript">
+
+        // resource_type_req
+        $("select[name=cr_resource_type_req]").change(function () {
+            var res_type = $("select[name=cr_resource_type_req]").val();
+            $.ajax({
+                url : "mycloudrequests.php?action=get_resource_type_req_cost&res_type=" + res_type,
+                type: "POST",
+                cache: false,
+                async: false,
+                dataType: "html",
+                success : function (data) {
+                    $("#cost_resource_type_req_val").text(data);;
+                }
+            });
+            recalculate_costs();
+        }).change();
+        // kernel
+        $("select[name=cr_kernel_id]").change(function () {
+            var kernel_id = $("select[name=cr_kernel_id]").val();
+            $.ajax({
+                url : "mycloudrequests.php?action=get_kernel_cost&kernel_id=" + kernel_id,
+                type: "POST",
+                cache: false,
+                async: false,
+                dataType: "html",
+                success : function (data) {
+                    $("#cost_kernel_val").text(data);;
+                }
+            });
+            recalculate_costs();
+        }).change();
+        // memory
+        $("select[name=cr_ram_req]").change(function () {
+            var memory_req = $("select[name=cr_ram_req]").val();
+            $.ajax({
+                url : "mycloudrequests.php?action=get_memory_cost&memory_req=" + memory_req,
+                type: "POST",
+                cache: false,
+                async: false,
+                dataType: "html",
+                success : function (data) {
+                    $("#cost_memory_val").text(data);;
+                }
+            });
+            recalculate_costs();
+        }).change();
+        // cpu
+        $("select[name=cr_cpu_req]").change(function () {
+            var cpu_req = $("select[name=cr_cpu_req]").val();
+            $.ajax({
+                url : "mycloudrequests.php?action=get_cpu_cost&cpu_req=" + cpu_req,
+                type: "POST",
+                cache: false,
+                async: false,
+                dataType: "html",
+                success : function (data) {
+                    $("#cost_cpu_val").text(data);;
+                }
+            });
+            recalculate_costs();
+        }).change();
+        // disk
+        $("select[name=cr_disk_req]").change(function () {
+            var disk_req = $("select[name=cr_disk_req]").val();
+            $.ajax({
+                url : "mycloudrequests.php?action=get_disk_cost&disk_req=" + disk_req,
+                type: "POST",
+                cache: false,
+                async: false,
+                dataType: "html",
+                success : function (data) {
+                    $("#cost_disk_val").text(data);;
+                }
+            });
+            recalculate_costs();
+        }).change();
+        // network
+        $("select[name=cr_network_req]").change(function () {
+            var network_req = $("select[name=cr_network_req]").val();
+            $.ajax({
+                url : "mycloudrequests.php?action=get_network_cost&network_req=" + network_req,
+                type: "POST",
+                cache: false,
+                async: false,
+                dataType: "html",
+                success : function (data) {
+                    $("#cost_network_val").text(data);;
+                }
+            });
+            recalculate_costs();
+        }).change();
+        // ha
+        $("input[name=cr_ha_req]").click(function () {
+
+            if ($("input[name=cr_ha_req]").is(":checked")) {
+                $.ajax({
+                    url : "mycloudrequests.php?action=get_ha_cost",
+                    type: "POST",
+                    cache: false,
+                    async: false,
+                    dataType: "html",
+                    success : function (data) {
+                        $("#cost_ha_val").text(data);
+                    }
+                });
+            } else {
+                $("#cost_ha_val").text("0");
+            }
+            recalculate_costs();
+        });
+
+
+        // resource_quantity
+        $("select[name=cr_resource_quantity]").change(function () {
+            $("#quantity_val").text($("select[name=cr_resource_quantity]").val());;
+            recalculate_costs();
+        }).change();
+
+
+        function recalculate_costs(){
+            var sum_per_appliance = 0;
+            var sum_overall = 0;
+            sum_per_appliance = sum_per_appliance + parseInt($("#cost_resource_type_req_val").text());
+            sum_per_appliance = sum_per_appliance + parseInt($("#cost_kernel_val").text());
+            sum_per_appliance = sum_per_appliance + parseInt($("#cost_memory_val").text());
+            sum_per_appliance = sum_per_appliance + parseInt($("#cost_cpu_val").text());
+            sum_per_appliance = sum_per_appliance + parseInt($("#cost_disk_val").text());
+            sum_per_appliance = sum_per_appliance + parseInt($("#cost_network_val").text());
+            sum_per_appliance = sum_per_appliance + parseInt($("#cost_ha_val").text());
+            sum_per_appliance = sum_per_appliance + parseInt($("#cost_apps_val").text());
+            sum_overall = sum_per_appliance * parseInt($("#quantity_val").text());
+            $("#cost_per_appliance_val").text(sum_per_appliance);;
+            $("#cost_overall_val").text(sum_overall);;
+        }
+
+
+
+    </script>
+
+</body>
+</html>
+
