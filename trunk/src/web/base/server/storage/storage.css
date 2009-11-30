@@ -1,3 +1,21 @@
+
+a:link {
+    text-decoration: none;
+    color: black;
+}
+a:visited {
+        text-decoration: none;
+        color: black;
+}
+a:active {
+        text-decoration: none;
+        color: black;
+}
+
+img {
+    border:none;
+}
+
 .htmlobject_td.storage_id {
 	text-align:center;
 	width:25px;
@@ -34,6 +52,11 @@
 	vertical-align:top;
 }
 .htmlobject_td.storage_edit {
+	text-align:center;
+	width:40px;
+	vertical-align:top;
+}
+.htmlobject_td.storage_mgmt {
 	text-align:center;
 	width:40px;
 	vertical-align:top;

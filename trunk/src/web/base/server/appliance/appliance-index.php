@@ -238,7 +238,7 @@ function appliance_display() {
 
 		$strEdit = '';
 		#if($image_db["image_id"] != 1) {
-			$strEdit = '<a href="appliance-edit.php?appliance_id='.$appliance_db["appliance_id"].'&currenttab=tab2">edit</a>';
+			$strEdit = '<a href="appliance-edit.php?appliance_id='.$appliance_db["appliance_id"].'&currenttab=tab2"><img src="../../img/edit.png" width="24" height="24" alt="edit"/> Edit</a>';
 		#}
 
 
