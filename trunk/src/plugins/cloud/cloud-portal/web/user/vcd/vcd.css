@@ -97,7 +97,7 @@ body {
     left: 720px;
     top: 100px;
     width: 150px;
-    height: 170px;
+    height: 240px;
     padding: 10px;
     border: solid 1px #808080;
 }
@@ -105,7 +105,7 @@ body {
 #myaccount {
     position: absolute;
     left: 720px;
-    top: 300px;
+    top: 370px;
     width: 150px;
     height: 60px;
     padding: 10px;
@@ -115,7 +115,7 @@ body {
 #globallimits {
     position: absolute;
     left: 720px;
-    top: 390px;
+    top: 460px;
     width: 150px;
     height: 100px;
     padding: 10px;
@@ -125,19 +125,10 @@ body {
 #userlimits {
     position: absolute;
     left: 720px;
-    top: 520px;
+    top: 590px;
     width: 150px;
     height: 110px;
     padding: 10px;
-    border: solid 1px #808080;
-}
-
-#adplace {
-    position: absolute;
-    left: 720px;
-    top: 660px;
-    width: 170px;
-    height: 60px;
     border: solid 1px #808080;
 }
 
@@ -202,14 +193,6 @@ body {
   float: top;
   }
 
-
-#testedwith {
-    position: absolute;
-    left: 10px;
-    top: 725px;
-    width: 880px;
-    height: 10px;
-}
 
 
 dl{

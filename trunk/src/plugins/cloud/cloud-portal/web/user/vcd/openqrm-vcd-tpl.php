@@ -254,6 +254,48 @@ function submitrequest(s)
 
 }
 
+
+
+function checkcosts(s)
+{
+
+    var str = [];
+    var key = 'myKey[]=';
+    var delimiter = '&'
+    $(s + "> *").not('.ui-sortable-helper').each(function() {
+        if (this.getAttribute('id') != null) {
+            str.push(this.getAttribute('key')+"="+this.getAttribute('value'));
+        }
+    });
+
+    var o = str.join(delimiter);
+
+    // if quantity is not set we assume 1
+    var myRegExp = /quantity/;
+    var matchPos1 = o.search(myRegExp);
+    if(matchPos1 == -1) {
+        str.push("quantity=1");
+    }
+
+    // filter out whitespaces
+    var tmpstr = str.join(delimiter);
+    var final_str = tmpstr.replace(" ", "%20");
+    //start the ajax
+    $.ajax({
+        //this is the php file that processes the data and send mail
+        url: "vcd.php?action=check_costs&" + str.join(delimiter),
+        type: "GET",
+        cache: false,
+        async: false,
+        dataType: "html",
+         success: function (data) {
+             alert(data);
+         }
+     });
+
+}
+
+
 	</script>
 </head>
 <body>
@@ -549,6 +591,15 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
     </div>
    <br />
 
+    <div  class="costs">
+        <br />
+        <center><a href="#" onClick="checkcosts('#builder'); return false;" style="text-decoration: none">
+        <img src="../../img/checkcosts.png" width="32" height="32" alt="Check Costs" border="0"/>
+        <br />
+        <b>Check Costs</b>
+        </a></center>
+    </div>
+
     <div  class="reset">
         <br />
         <center><a href="#" onClick="window.location.reload()" style="text-decoration: none">
@@ -588,19 +639,7 @@ and check to have enough CCU's (Cloud Computing Units) when requesting a System.
    </dl>
 </div>
 
-<div id="adplace" class="dc">
-    <center>
-        <img src="../../img/cloud.png" alt="cloud"/>
 
-    </center>
-</div>
-
-
-<div id="testedwith" class="testedwith" style="display:none;">
-    <center>
-    <small>works best with Firefox</small>
-    </center>
-</div>
 
 </form>
 </body>

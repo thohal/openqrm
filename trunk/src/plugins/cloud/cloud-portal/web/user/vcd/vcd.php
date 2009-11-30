@@ -389,6 +389,218 @@ if (htmlobject_request('action') != '') {
             exit(true);
             break;
 
+
+        case 'check_costs':
+
+            $kernel=$_GET["kernel"];
+            $systemtype=$_GET["systemtype"];
+            $serverimage=$_GET["serverimage"];
+            $cpus=$_GET["cpus"];
+            $memory=$_GET["memory"];
+            $disk=$_GET["disk"];
+            $network=$_GET["network"];
+            $quantity=$_GET["quantity"];
+            $application0 =$_GET["application0"];
+            $application1 =$_GET["application1"];
+            $application2 =$_GET["application2"];
+            $application3 =$_GET["application3"];
+            $application4 =$_GET["application4"];
+            $cr_start = $_GET['cr_start'];
+            $cr_stop = $_GET['cr_stop'];
+            $highavailable = $_GET['ha'];
+
+            // check if billing is enabled
+            $cb_config = new cloudconfig();
+            $cloud_billing_enabled = $cb_config->get_value(16);	// 16 is cloud_billing_enabled
+            if ($cloud_billing_enabled == 'false') {
+                exit(false);
+            }
+
+            // check disk param
+            if (strlen($disk)) {
+                if (!check_is_number("Disk", $disk)) {
+                    exit(false);
+                }
+            }
+            $disk_size = $disk * 1000;
+
+            // check memory param
+            if (strlen($memory)) {
+                if (!check_is_number("RAM", $memory)) {
+                    exit(false);
+                }
+            }
+            $memory_size = $memory;
+
+            // check ha param
+            if ($highavailable != 1) {
+                $highavailable = 0;
+            }
+
+            // additional checks
+            if (strlen($quantity)) {
+                if (!check_param("Quantity", $quantity, true)) {
+                        exit(false);
+                }
+            }
+            if (strlen($kernel)) {
+                if (!check_param("Kernel Id", $kernel, true)) {
+                        exit(false);
+                }
+            }
+            if (strlen($serverimage)) {
+                if (!check_param("Image Id", $serverimage, true)) {
+                        exit(false);
+                }
+            }
+            if (strlen($memory)) {
+                if (!check_param("Memory", $memory, true)) {
+                        exit(false);
+                }
+            }
+            if (strlen($cpus)) {
+                if (!check_param("CPU", $cpus, true)) {
+                        exit(false);
+                }
+            }
+            if (strlen($network)) {
+                if (!check_param("Network", $network, true)) {
+                        exit(false);
+                }
+            }
+            if (strlen($application0)) {
+                if (!check_param("Application0", $application0, false)) {
+                        exit(false);
+                }
+            }
+            if (strlen($application1)) {
+                if (!check_param("Application1", $application1, false)) {
+                        exit(false);
+                }
+            }
+            if (strlen($application2)) {
+                if (!check_param("Application2", $application2, false)) {
+                        exit(false);
+                }
+            }
+            if (strlen($application3)) {
+                if (!check_param("Application3", $application3, false)) {
+                        exit(false);
+                }
+            }
+            if (strlen($application4)) {
+                if (!check_param("Application4", $application4, false)) {
+                        exit(false);
+                }
+            }
+
+            // calcuating the price
+            $cloudselector = new cloudselector();
+            // kernel
+            $cost_kernel = 0;
+            if (strlen($kernel)) {
+                $kernel_vcd = new kernel();
+                $kernel_vcd->get_instance_by_name($kernel);
+                $cost_kernel = $cloudselector->get_price($kernel_vcd->id, "kernel");
+            }
+            // resource type
+            $cost_res_type = 0;
+            if (strlen($systemtype)) {
+                $virtualization = new virtualization();
+                $virtualization->get_instance_by_name($systemtype);
+                $virtualization_id = $virtualization->id;
+                $cost_res_type = $cloudselector->get_price($virtualization_id, "resource");
+            }
+            // cpu
+            $cost_cpu = 0;
+            if (strlen($cpus)) {
+                $cost_cpu = $cloudselector->get_price($cpus, "cpu");
+            }
+
+            // memory
+            $cost_memory = 0;
+            if (strlen($memory)) {
+                $cost_memory = $cloudselector->get_price($memory, "memory");
+            }
+
+            // disk
+            $cost_disk = 0;
+            if (strlen($disk)) {
+                $cost_disk = $cloudselector->get_price($disk_size, "disk");
+            }
+
+            // network
+            $cost_network = 0;
+            if (strlen($network)) {
+                $cost_network = $cloudselector->get_price($network, "network");
+            }
+
+            // puppet
+            $cost_app0 = 0;
+            if (strlen($application0)) {
+                $cost_app0 = $cloudselector->get_price($application0, "puppet");
+            }
+            $cost_app1 = 0;
+            if (strlen($application1)) {
+                $cost_app1 = $cloudselector->get_price($application1, "puppet");
+            }
+            $cost_app2 = 0;
+            if (strlen($application2)) {
+                $cost_app2 = $cloudselector->get_price($application2, "puppet");
+            }
+            $cost_app3 = 0;
+            if (strlen($application3)) {
+                $cost_app3 = $cloudselector->get_price($application3, "puppet");
+            }
+            $cost_app4 = 0;
+            if (strlen($application4)) {
+                $cost_app4 = $cloudselector->get_price($application4, "puppet");
+            }
+
+            // ha
+            $cost_ha = 0;
+            if (strlen($highavailable)) {
+                $cost_ha = $cloudselector->get_price($highavailable, "ha");
+            }
+
+            // get cloud currency
+            $cloud_currency = $cb_config->get_value(23);   // 23 is cloud_currency
+            $cloud_1000_ccus_value = $cb_config->get_value(24);   // 24 is cloud_1000_ccus
+
+            // summary
+            $summary_per_appliance = $cost_res_type + $cost_kernel + $cost_cpu + $cost_memory + $cost_disk + $cost_network + $cost_ha;
+            $summary_overall = $quantity * $summary_per_appliance;
+            $one_ccu_cost_in_real_currency = $cloud_1000_ccus_value / 1000;
+            $appliance_cost_in_real_currency_per_hour = $summary_overall * $one_ccu_cost_in_real_currency;
+            $appliance_cost_in_real_currency_per_hour_disp = number_format($appliance_cost_in_real_currency_per_hour, 2, ",", "");
+            $appliance_cost_in_real_currency_per_day = $appliance_cost_in_real_currency_per_hour * 24;
+            $appliance_cost_in_real_currency_per_day_disp = number_format($appliance_cost_in_real_currency_per_day, 2, ",", "");
+            $appliance_cost_in_real_currency_per_month = $appliance_cost_in_real_currency_per_day * 31;
+            $appliance_cost_in_real_currency_per_month_disp = number_format($appliance_cost_in_real_currency_per_month, 2, ",", "");
+            echo "Compontent / Price (in CCU)\n";
+            echo "---------------------------------------\n";
+            echo "Res. type : $cost_res_type\n";
+            echo "Kernel : $cost_kernel\n";
+            echo "CPU : $cost_cpu\n";
+            echo "Memory : $cost_memory\n";
+            echo "Network : $cost_network\n";
+            echo "Disk : $cost_disk\n";
+            echo "HA : $cost_ha\n";
+            echo "---------------------------------------\n";
+            echo "Costs per Appliance : $summary_per_appliance CCUs\n";
+            echo "\n";
+            echo "$quantity * $summary_per_appliance == $summary_overall CCUs\n";
+            echo "---------------------------------------\n";
+            echo "1000 CCUs == $cloud_1000_ccus_value $cloud_currency\n";
+            echo "\n";
+            echo "Hourly : $appliance_cost_in_real_currency_per_hour_disp $cloud_currency\n";
+            echo "Daily : $appliance_cost_in_real_currency_per_day_disp $cloud_currency\n";
+            echo "Monthly : $appliance_cost_in_real_currency_per_month_disp $cloud_currency\n";
+            echo "\n";
+
+            exit(0);
+            break;
+
     }
 }
 

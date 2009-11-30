@@ -41,7 +41,7 @@
 #add_product {
   position: relative;
   left: 5px;
-  top: 0px;
+  top: 10px;
   width: 180px;
   height: 6px;
 }
@@ -71,6 +71,13 @@
   height: 6px;
 }
 
+
+#htmlobject_box_product_quantity {
+    display: inline;
+}
+#htmlobject_box_product_quantity .floatbreaker {
+    display: inline;
+}
 
 </style>
 
