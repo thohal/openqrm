@@ -370,6 +370,10 @@ $event->log("$cloud_command", $_SERVER['REQUEST_TIME'], 5, "cloud-action", "Proc
 			$recordSet = &$db->Execute($create_default_cloud_config21);
 			$create_default_cloud_config22 = "insert into cloud_config(cc_id, cc_key, cc_value) values (22, 'cloud_selector', 'true')";
 			$recordSet = &$db->Execute($create_default_cloud_config22);
+			$create_default_cloud_config23 = "insert into cloud_config(cc_id, cc_key, cc_value) values (23, 'cloud_currency', 'US')";
+			$recordSet = &$db->Execute($create_default_cloud_config23);
+			$create_default_cloud_config24 = "insert into cloud_config(cc_id, cc_key, cc_value) values (24, 'cloud_1000_ccus', '1')";
+			$recordSet = &$db->Execute($create_default_cloud_config244);
 
             // fill in default cloud products for the cloudselector
             $create_default_cloudselector_config = "insert into `cloud_selector` VALUES (1,'cpu',0,'1',1,'1 CPU','1 CPU',1),(2,'cpu',1,'2',2,'2 CPUs','2 CPUs',1),(3,'cpu',2,'4',4,'4 CPUs','4 CPUs',1),(4,'disk',0,'2000',2,'2 GB','2 GB Disk Space',1),(5,'disk',1,'5000',5,'5 GB','5 GB Disk Space',1),(6,'disk',2,'10000',10,'10 GB','10 GB Disk Space',1),(7,'disk',3,'20000',20,'20 GB','20 GB Disk Space',1),(8,'disk',4,'50000',50,'50 GB','50 GB Disk Space',1),(9,'disk',5,'100000',100,'100 GB','100 GB Disk Space',1),(11,'memory',1,'512',2,'512 MB','512 MB Memory',1),(10,'memory',0,'256',1,'256 MB','256 MB Memory',1),(12,'memory',2,'1024',4,'1 GB','1 GB Memory',1),(13,'memory',3,'2048',8,'2 GB','2 GB Memory',1),(16,'network',2,'3',3,'3 NICs','3 Network Cards',1),(15,'network',1,'2',2,'2 NICs','2 Network Cards',1),(14,'network',0,'1',1,'1 NIC','1 Network Card',1),(17,'network',3,'4',4,'4 NICs','4 Network Cards',1),(18,'quantity',0,'1',1,'1','1 CloudAppliance',1),(19,'quantity',1,'2',2,'2','2 CloudAppliances',1),(20,'quantity',2,'3',3,'3','3 CloudAppliances',1),(21,'quantity',3,'4',4,'4','4 CloudAppliances',1),(22,'quantity',4,'5',5,'5','5 CloudAppliances',1);";

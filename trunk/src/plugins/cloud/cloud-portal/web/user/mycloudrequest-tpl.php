@@ -133,7 +133,7 @@ hr  {
 
 #submit_request {
     position: absolute;
-    left: 540px;
+    left: 750px;
     top: 530px;
     height: 25px;
 	width:70px;
@@ -148,14 +148,14 @@ hr  {
     left: 10px;
     top: 0px;
     height: 350px;
-	width:143px;
+	width:163px;
     float:left;
 }
 
 #costs {
     border: solid 1px #ccc;
     padding: 5px 5px 0 5px;
-    height: 245px;
+    height: 345px;
 }
 
 
@@ -165,7 +165,7 @@ hr  {
     left: 0px;
     top: 0px;
     height: 300px;
-	width:250px;
+	width:230px;
     float:right;
 }
 
@@ -191,7 +191,7 @@ hr  {
 #cost_apps,
 #cost_ha {
     float:right;
-    padding: 0px 15px 0 0px;
+    padding: 0px 15px 0 10px;
 }
 
 
@@ -201,7 +201,7 @@ hr  {
     left: 0px;
     top: 0px;
     height: 25px;
-	width:120px;
+	width:140px;
     float:right;
 }
 
@@ -261,7 +261,7 @@ hr  {
 
     <div id="cloud_request_costs">
 		<div id="costs">
-            <b><u>Costs per Hour</u></b>
+            <b><u>Costs</u></b>
             <br>
             <br>
             <u>Components / Price</u>
@@ -282,6 +282,17 @@ hr  {
                 Quantity : <div id="quantity_val" class="inline">0</div> * <div id="cost_per_appliance_val" class="inline">0</div>
                 <hr>
                 Sum : <div id="cost_overall_val" class="inline">0</div> CCU/h
+                <hr>
+                <br>
+                <br>
+                <nobr>1000 CCUs == <div id="cloud_1000_ccus" class="inline">0</div> <div id="cloud_currency" class="inline">0</div></nobr>
+                <hr>
+                Hourly : <div id="cost_hourly" class="inline">0</div> <div id="cloud_currency_h" class="inline">0</div></nobr>
+                <br>
+                Daily : <div id="cost_daily" class="inline">0</div> <div id="cloud_currency_d" class="inline">0</div></nobr>
+                <br>
+                Monthly : <div id="cost_monthly" class="inline">0</div> <div id="cloud_currency_m" class="inline">0</div></nobr>
+
             </div>
 
         </div>
@@ -310,13 +321,28 @@ hr  {
 
     <div id="submit_request">{submit_save}</div>
 
-
-
-
 </form>
 
 
     <script type="text/javascript">
+
+        // check if the cloudselector is enabled, if not hide it
+        $.ajax({
+                url : "mycloudrequests.php?action=get_cloudselector_state",
+                type: "POST",
+                cache: false,
+                async: false,
+                dataType: "html",
+                success : function (data) {
+                    var cloudselector_state = 0;
+                    cloudselector_state = parseInt(data);
+                    if (cloudselector_state == 0) {
+                        $("#cloud_request_costs").hide();
+                    }
+                }
+            })
+
+
 
         // resource_type_req
         $("select[name=cr_resource_type_req]").change(function () {
@@ -471,13 +497,39 @@ hr  {
 
 
 
-
-
         // resource_quantity
         $("select[name=cr_resource_quantity]").change(function () {
             $("#quantity_val").text($("select[name=cr_resource_quantity]").val());;
             recalculate_costs();
         }).change();
+
+
+        // get the cloud currency
+        $.ajax({
+            url : "mycloudrequests.php?action=get_cloud_currency",
+            type: "POST",
+            cache: false,
+            async: false,
+            dataType: "html",
+            success : function (data) {
+                $("#cloud_currency").text(data);
+                $("#cloud_currency_h").text(data);
+                $("#cloud_currency_d").text(data);
+                $("#cloud_currency_m").text(data);
+            }
+        });
+
+        // get the 1000 CCUs value
+        $.ajax({
+            url : "mycloudrequests.php?action=get_1000_ccu_value",
+            type: "POST",
+            cache: false,
+            async: false,
+            dataType: "html",
+            success : function (data) {
+                $("#cloud_1000_ccus").text(data);
+            }
+        });
 
 
         function recalculate_costs(){
@@ -494,9 +546,22 @@ hr  {
             sum_overall = sum_per_appliance * parseInt($("#quantity_val").text());
             $("#cost_per_appliance_val").text(sum_per_appliance);;
             $("#cost_overall_val").text(sum_overall);;
+            // cost in real currency
+            var one_ccu_cost_in_real_currency = 0;
+            var appliance_cost_in_real_currency_per_hour = 0;
+            var appliance_cost_in_real_currency_per_day = 0;
+            var appliance_cost_in_real_currency_per_month = 0;
+            one_ccu_cost_in_real_currency = parseInt($("#cloud_1000_ccus").text()) / 1000;
+            appliance_cost_in_real_currency_per_hour = sum_overall * one_ccu_cost_in_real_currency;
+            appliance_cost_in_real_currency_per_day = appliance_cost_in_real_currency_per_hour * 24;
+            appliance_cost_in_real_currency_per_month = appliance_cost_in_real_currency_per_day * 31;
+            $("#cost_hourly").text(appliance_cost_in_real_currency_per_hour.toFixed(2));;
+            $("#cost_daily").text(appliance_cost_in_real_currency_per_day.toFixed(2));;
+            $("#cost_monthly").text(appliance_cost_in_real_currency_per_month.toFixed(2));;
         }
 
-
+        // calculate again after all values are loaded
+        recalculate_costs();
 
     </script>
 

@@ -115,6 +115,30 @@ if(htmlobject_request('action') != '') {
             echo "$cloudcost";
             exit(0);
             break;
+        case 'get_cloud_currency':
+            $cloud_conf = new cloudconfig();
+            $cloud_currency = $cloud_conf->get_value(23);   // 23 is cloud_currency
+            echo "$cloud_currency";
+            exit(0);
+            break;
+        case 'get_1000_ccu_value':
+            $cloud_conf = new cloudconfig();
+            $cloud_1000_ccus_value = $cloud_conf->get_value(24);   // 24 is cloud_1000_ccus
+            echo "$cloud_1000_ccus_value";
+            exit(0);
+            break;
+
+        case 'get_cloudselector_state':
+            $cloud_conf = new cloudconfig();
+            $cloudselector_state = $cloud_conf->get_value(22);   // 22 is the cloudselector
+            if (!strcmp($cloudselector_state, "true")) {
+                echo "1";
+            } else {
+                echo "0";
+            }
+            exit(0);
+            break;
+
 
     }
 }

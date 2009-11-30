@@ -101,6 +101,7 @@ function cloud_config_manager() {
 			case '8':
 			case '12':
 			case '13':
+			case '24':
 				$input_value = htmlobject_input($cc["cc_key"], array('value' => $cc["cc_value"]), 'text');
 			break;
 			case '2':
@@ -152,6 +153,12 @@ function cloud_config_manager() {
 				$ar[] = array('value'=> '2', 'label'=> '2');
 				$ar[] = array('value'=> '3', 'label'=> '3');
 				$ar[] = array('value'=> '4', 'label'=> '4');
+				$input_value = htmlobject_select($cc["cc_key"], $ar , '', array($cc["cc_value"]));
+			break;
+			case '23':
+				$ar = array();
+				$ar[] = array('value'=> 'US', 'label'=> 'US');
+				$ar[] = array('value'=> 'Euro', 'label'=> 'Euro');
 				$input_value = htmlobject_select($cc["cc_key"], $ar , '', array($cc["cc_value"]));
 			break;
 			
