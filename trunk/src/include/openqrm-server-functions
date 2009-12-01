@@ -58,6 +58,11 @@ function openqrm_server_get_config() {
 	for VAR in `cat $OPENQRM_SERVER_CONF | grep -v ^# | grep OPENQRM | cut -d'=' -f1`; do
 		eval `export $VAR`
 	done
+
+	# make sure /sbin and /usr/sbin are in our PATH, because we might be running as the webserver user,
+	# in which case the ifconfig and route commands will fail, leaving the variables empty (bad!)
+        PATH=/sbin:/usr/sbin:$PATH
+
 	# get ip configuration
 	export OPENQRM_SERVER_IP_ADDRESS=`ifconfig $OPENQRM_SERVER_INTERFACE | grep inet | grep -v inet6 | cut -d':' -f2 | awk {' print $1 '} | head -n 1`
 	export OPENQRM_SERVER_BROADCAST_ADDRESS=`ifconfig $OPENQRM_SERVER_INTERFACE | grep inet | grep -v inet6 | cut -d':' -f3 | awk {' print $1 '} | head -n 1`
