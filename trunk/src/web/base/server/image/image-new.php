@@ -87,8 +87,8 @@ $error = 0;
 
 			// check passed values
 			if(htmlobject_request('image_name') != '') {
-				if (ereg("^[A-Za-z0-9_-]*$", htmlobject_request('image_name')) === false) {
-					$strMsg .= 'image name must be [A-Za-z0-9_-]<br/>';
+				if (ereg("^[A-Za-z0-9_.-]*$", htmlobject_request('image_name')) === false) {
+					$strMsg .= 'image name must be [A-Za-z0-9_.-]<br/>';
 					$error = 1;
 				} 
 			} else {
