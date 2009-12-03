@@ -92,7 +92,7 @@ function get_image_rootdevice_identifier($equallogic_storage_id) {
         $first_at_pos = strpos($equallogic_output, "@");
         $first_at_pos++;
         $eq_name = trim(substr($equallogic_output, 0, $first_at_pos-1));
-        $rootdevice_identifier_array[] = array("value" => "/dev/$eq_storage_ip/$lun_loop", "label" => "$eq_name");
+        $rootdevice_identifier_array[] = array("value" => "/dev/$eq_storage_ip/$eq_name", "label" => "$eq_name");
         $lun_loop++;
     }
 	return $rootdevice_identifier_array;

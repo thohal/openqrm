@@ -119,8 +119,7 @@ function validate_input($var, $type) {
         case 'string':
             // remove allowed chars
             // On Equallogic: Only alphanumeric characters, colon, dot and dash are allowed in volume name or collection name.
-            $var = str_replace(".", "", $var);
-            $var = str_replace("-", "", $var);
+            $var = preg_replace("/_/", "-", $var);
             for ($i = 0; $i<strlen($var); $i++) {
                 if (!ctype_alpha($var[$i])) {
                     if (!ctype_digit($var[$i])) {
@@ -363,6 +362,61 @@ if(htmlobject_request('redirect') != 'yes') {
                 $strMsg = "Snapshotting is not supported yet !";
                 redirect($strMsg, 'tab0', $equallogic_storage_id);
                 break;
+            case 'clone':
+                if (isset($_REQUEST['identifier'])) {
+                    foreach($_REQUEST['identifier'] as $lun_name) {
+                        // check if configuration already exists
+                        $eq_storage = new equallogic_storage();
+                        $eq_storage->get_instance_by_storage_id($equallogic_storage_id);
+                        if (!strlen($eq_storage->storage_id)) {
+                            $strMsg .= "EqualLogic Storage server $id not configured yet<br>";
+                        } else {
+                            show_progressbar();
+                            $storage = new storage();
+                            $storage->get_instance_by_id($eq_storage->storage_id);
+                            $resource = new resource();
+                            $resource->get_instance_by_id($storage->resource_id);
+                            $eq_storage_ip = $resource->ip;
+                            $eq_user = $eq_storage->storage_user;
+                            $eq_password = $eq_storage->storage_password;
+			    
+			    // Fetch the data for the clone
+			    $eq_clone_arr = htmlobject_request("equallogic_storage_clone");
+			    // See if we have an actual value to create a new lun with
+			    if(isset($eq_clone_arr[$lun_name])) {
+			     $eq_clone_name = $eq_clone_arr[$lun_name];
+
+			     // validate lun name
+	                     if (!strlen($lun_name)) {
+	                      $strMsg .= "Got emtpy LUN name. Not adding ...";
+                              redirect($strMsg, 'tab0', $equallogic_storage_id);
+                	      exit(0);
+	                    } else if (!validate_input($lun_name, 'string')) {
+        	              $strMsg .= "Got invalid LUN name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
+                              redirect($strMsg, 'tab0', $equallogic_storage_id);
+        	              exit(0);
+	                    }
+
+        	            if (!strlen($eq_clone_name)) {
+		              $strMsg .= "Got emtpy clone LUN name. Not adding ...";
+                              redirect($strMsg, 'tab0', $equallogic_storage_id);
+	                      exit(0);
+        	            } else if (!validate_input($eq_clone_name, 'string')) {
+                	      $strMsg .= "Got invalid clone LUN name. Not adding ...<br>(allowed characters are [a-z][A-z][0-9].-_)";
+                              redirect($strMsg, 'tab0', $equallogic_storage_id);
+        	              exit(0);
+                	    }
+			     
+                            $openqrm_server_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage clone -n $lun_name -u $eq_user -p $eq_password -e $eq_storage_ip -s $eq_clone_name -ou $OPENQRM_USER->name -op $OPENQRM_USER->password";
+                            $output = shell_exec($openqrm_server_command);
+                            $strMsg .= "Cloning Lun $lun_name to $eq_clone_name on the EqualLogic Storage server $equallogic_storage_id <br>";
+                            } 
+			 
+                        }
+                    }
+                    redirect($strMsg, 'tab0', $equallogic_storage_id);
+                }
+                break;
             default:
                 $event->log("$equallogic_storage_command", $_SERVER['REQUEST_TIME'], 3, "equallogic-storage-action", "No such equallogic-storage command ($equallogic_storage_command)", "", "", 0, 0, 0);
                 break;
@@ -576,9 +630,11 @@ function equallogic_storage_display($equallogic_storage_id) {
 	$arHead1['lun_tp'] = array();
 	$arHead1['lun_tp']['title'] ='TP';
 
-       $arHead1['lun_resize'] = array();
+        $arHead1['lun_resize'] = array();
 	$arHead1['lun_resize']['title'] ='Resize';
 
+        $arHead1['lun_clone'] = array();
+	$arHead1['lun_clone']['title'] ='Clone';
     $arBody1 = array();
 	$lun_count=0;
 
@@ -609,6 +665,7 @@ function equallogic_storage_display($equallogic_storage_id) {
                 'lun_connections' => $eq_connections,
                 'lun_tp' => $eq_tp,
                 'lun_resize' => htmlobject_input("equallogic_storage_resize[$eq_name]", array("value" => "", "label" => 'Resize (MB)'), 'text', 10),
+                'lun_clone' => htmlobject_input("equallogic_storage_clone[$eq_name]", array("value" => "", "label" => 'Clone LUN'), 'text', 10),
             );
             $lun_count++;
 		}
@@ -626,7 +683,7 @@ function equallogic_storage_display($equallogic_storage_id) {
 	$table1->head = $arHead1;
 	$table1->body = $arBody1;
 	if ($OPENQRM_USER->role == "administrator") {
-		$table1->bottom = array('resize','reload', 'remove');
+		$table1->bottom = array('clone','resize','reload', 'remove');
 		$table1->identifier = 'lun_name';
 	}
 	$table1->max = $lun_count;

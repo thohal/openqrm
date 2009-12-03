@@ -43,6 +43,9 @@ $OPENQRM_SERVER_IP_ADDRESS=$openqrm_server->get_ip_address();
 global $OPENQRM_SERVER_IP_ADDRESS;
 global $event;
 
+// place for the storage stat files
+$StorageDir = 'storage/';
+
 // user/role authentication
 if ($OPENQRM_USER->role != "administrator") {
 	$event->log("authorization", $_SERVER['REQUEST_TIME'], 1, "equallogic-storage-action", "Un-Authorized access to equallogic-storage-actions from $OPENQRM_USER->name", "", "", 0, 0, 0);
@@ -87,11 +90,21 @@ $event->log("$equallogic_storage_command", $_SERVER['REQUEST_TIME'], 5, "equallo
 			}
 			break;
 
-
+		case 'clone_finished':
+		        if (!file_exists($StorageDir)) {
+		            mkdir($StorageDir);
+		        }
+		        $filename = $StorageDir."/".basename($_POST['filename']);
+		        $filedata = base64_decode($_POST['filedata']);
+		        echo "<h1>$filename</h1>";
+		        $fout = fopen($filename,"wb");
+		        fwrite($fout, $filedata);
+		        fclose($fout);
+			$event->log("$equallogic_storage_command", $_SERVER['REQUEST_TIME'], 3, "equallogic-storage-action", "filename $filename, filedata $filedata", "", "", 0, 0, 0);
+		        break;
 		default:
-			$event->log("$equallogic_storage_command", $_SERVER['REQUEST_TIME'], 3, "equallogic-storage-action", "No such event command ($equallogic_storage_command)", "", "", 0, 0, 0);
+			$event->log("$equallogic_storage_command", $_SERVER['REQUEST_TIME'], 3, "equallogic-storage-action", "No such equallogic-storage command ($equallogic_storage_command)", "", "", 0, 0, 0);
 			break;
-
 
 	}
 

@@ -20,17 +20,20 @@
 # Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 #
 
-if {[llength $argv]<2} {
-        send_user "usage: $argv0 <equallogic-ip> <equallogic-user> <equallogic-password> <command>\n"
+if {[llength $argv]<3} {
+        send_user "usage: $argv0 <equallogic-ip> <equallogic-user> <equallogic-password> <command 1> [command 2] [command 3] [command 4]\n"
+        send_user "do not forget to quote your commands!\n"
         exit
 }
 
 set EQUALLOGIC_IP [lindex $argv 0]
 set EQUALLOGIC_USER [lindex $argv 1]
 set EQUALLOGIC_PASSWORD [lindex $argv 2]
-set EQUALLOGIC_CMD [lindex $argv 3]
+set EQUALLOGIC_CMD_1 [lindex $argv 3]
+set EQUALLOGIC_CMD_2 [lindex $argv 4]
+set EQUALLOGIC_CMD_3 [lindex $argv 5]
+set EQUALLOGIC_CMD_4 [lindex $argv 6]
 
-send_user "Running command $EQUALLOGIC_CMD on $EQUALLOGIC_IP as $EQUALLOGIC_USER\n"
 
 set force_conservative 0  ;# set to 1 to force conservative mode even if
                           ;# script wasn't run conservatively originally
@@ -45,39 +48,62 @@ if {$force_conservative} {
 set timeout 30
 spawn /bin/bash
 match_max 100000
-send -- "ssh $EQUALLOGIC_USER@$EQUALLOGIC_IP\r"
 
-expect {
-    "yes/no)?" {
-                send "yes\r"
-                set timeout -1
-    } timeout {
-                exit
-    } -re . {
-                exp_continue
-    } eof {
-                exit
-    }
- }
+# we set strict key checking to no to avoid yes/no prompts for key confirmation
+send -- "ssh -o 'StrictHostKeyChecking no' $EQUALLOGIC_USER@$EQUALLOGIC_IP\r"
 
-expect -exact "password: "
+expect -ex "password"
 send -- "$EQUALLOGIC_PASSWORD\r"
-expect -exact ">"
+expect -ex ">"
 
-send -- "$EQUALLOGIC_CMD\r"
+send -- "stty hardwrap off\r"
+expect -ex ">"
 
-expect -exact ">"
-send -- "logout\r"
-send -- "\r"
+send -- "cli-settings paging off\r"
+expect -ex ">"
+
+send -- "cli-settings confirmation off\r"
+expect -ex ">"
+
+send -- "cli-settings events off\r"
+expect -ex ">"
+
+send -- "cli-settings displayinMB on\r"
+expect -ex ">"
+
+send -- "$EQUALLOGIC_CMD_1\r"
+
+# check for multiple commands
+if {$EQUALLOGIC_CMD_2 != ""} {
+	send -- "$EQUALLOGIC_CMD_2\r"
+}
+# check for multiple commands
+if {$EQUALLOGIC_CMD_2 != ""} {
+	send -- "$EQUALLOGIC_CMD_3\r"
+}
+# check for multiple commands
+if {$EQUALLOGIC_CMD_2 != ""} {
+	send -- "$EQUALLOGIC_CMD_4\r"
+}
+
+expect -ex ">" {
+	send -- "logout\r"
+	send -- "\r"
+}
+
 expect {
-    "Do you really want to logout? (y/n) \[n\]" {
-        send -- "y\r"
-    } "Connection to $EQUALLOGIC_IP closed." {
-    } timeout {
-        exit
-    } eof {
-        exit
-    }
+	-ex "Do you really want to logout? (y/n) \[n\]" {
+		send -- "y\r"
+	}
+	-ex "Connection to $EQUALLOGIC_IP closed." {
+		exit
+	}
+	timeout {
+		exit
+	} 
+	eof {
+		exit
+	}
 }
 
 

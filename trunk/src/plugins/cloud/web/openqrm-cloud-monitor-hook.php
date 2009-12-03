@@ -307,7 +307,8 @@ function openqrm_cloud_monitor() {
                      $eq_resize_to = round($eq_resize_to);
 		    }
 		    if($eq_resize_to <= $eq_resize_from) {
-                     $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Error, downsizing unsupported: $image_resize_cmd", "", "", 0, 0, 0); 
+                     $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage resize -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip -m $eq_resize_to";
+                     $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Error, downsizing (".$ci->disk_size." to ".$ci->disk_rsize.") unsupported: $image_resize_cmd", "", "", 0, 0, 0); 
                     } else {
                      $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage resize -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip -m $eq_resize_to";
                      $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
@@ -401,14 +402,22 @@ function openqrm_cloud_monitor() {
                     $strMsg = "Equallogic Storage server $storage->id not configured yet<br>";
                     $event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor", $strMsg, "", "", 0, 0, 0);
                 } else {
+                    // we need to special take care that the volume name does not contain special characters
+                    $private_image_lun_name = preg_replace('/_/',"-", $private_image_name);
+                    // and that it does not exceed 16 chars for EQEMU (SCST based limit, real EQ does not care about lun length)
+                    if(preg_match("/emulator/i",$eq_storage->storage_comment)) {
+                        $event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor","Equallogic emulator detected, trimming LUNs to 16 characters", "", "", 0, 0, 0);
+                        $private_image_lun_name = preg_replace('/private/','pvt',$private_image_lun_name);
+                        $private_image_lun_name = substr($private_image_lun_name,0,16);
+                    }
                     $eq_storage_ip = $resource_ip;
                     $eq_user = $eq_storage->storage_user;
                     $eq_password = $eq_storage->storage_password;
-                    $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage clone -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip -s $private_image_name -m $private_disk";
-                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
-                    $output = shell_exec($image_remove_clone_cmd);
+                    $eq_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage clone -n $equallogic_volume_name -u $eq_user -p $eq_password -ou $openqrm_admin_user->name -op $openqrm_admin_user->password -e $eq_storage_ip -s $private_image_lun_name -m $private_disk -ci $private_image_name";
+                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $eq_clone_cmd", "", "", 0, 0, 0);
+                    $output = shell_exec($eq_clone_cmd);
                     // set the storage specific image root_device parameter
-        			$clone_image_fields["image_rootdevice"] = str_replace($equallogic_volume_name, $private_image_name, $image->rootdevice);
+                    $clone_image_fields["image_rootdevice"] = preg_replace('#'.$equallogic_volume_name.'$#', $private_image_lun_name, $image->rootdevice);
                     $private_success = true;
                 }
 
@@ -1241,11 +1250,21 @@ function openqrm_cloud_monitor() {
                             if (strlen($cr->disk_req)) {
                                 $disk_size=$cr->disk_req;
                             }
-                            $image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage add -n $image_clone_name -m $disk_size -u $eq_user -p $eq_password -e $eq_storage_ip";
+                            // we need to special take care that the LUN name does not contain special characters
+                            $image_clone_lun_name = $image_clone_name;
+                            $image_clone_lun_name = preg_replace('/_/',"-", $image_clone_lun_name);
+
+                            // and that it does not exceed 16 chars for EQEMU (SCST based limit, real EQ does not care about lun length)
+                            if(preg_match("/emulator/i",$eq_storage->storage_comment)) {
+                                $event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor","Equallogic emulator detected, trimming LUNs to 16 characters", "", "", 0, 0, 0);
+                                $image_clone_lun_name = substr($image_clone_lun_name,0,16);
+                            }
+                            $image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage add -n $image_clone_lun_name -m $disk_size -u $eq_user -p $eq_password -e $eq_storage_ip";
                             $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_clone_cmd", "", "", 0, 0, 0);
                             $output = shell_exec($image_clone_cmd);
                             // update the image rootdevice parameter
-                            $clone_image_root_device = str_replace($equallogic_volume_name, $image_clone_name, $image_rootdevice);
+
+                            $clone_image_root_device = preg_replace('#'.$equallogic_volume_name.'$#', $image_clone_lun_name, $image_rootdevice);
                             $ar_image_update = array(
                                 'image_rootdevice' => $clone_image_root_device,
                             );

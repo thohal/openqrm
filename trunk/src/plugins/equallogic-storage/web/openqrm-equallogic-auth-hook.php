@@ -72,7 +72,7 @@ global $event;
 		global $OPENQRM_SERVER_IP_ADDRESS;
 		global $OPENQRM_EXEC_PORT;
 		global $IMAGE_AUTHENTICATION_TABLE;
-        global $EQUALLOGIC_STORAGE_SERVER_TABLE;
+	        global $EQUALLOGIC_STORAGE_SERVER_TABLE;
 		global $openqrm_server;
 	
 		$appliance = new appliance();
