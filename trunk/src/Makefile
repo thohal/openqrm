@@ -93,11 +93,11 @@ rpm:
 	@. $(OPENQRM_SERVER_CONF) && ./make-assistant openqrm_rpm_package
 
 reinstall: 
-	sudo make uninstall -s
+	make uninstall -s
 	make clean -s
 	make all -s
-	sudo make install -s
-	sudo make start -s
+	make install -s
+	make start -s
 
 debsource:
 	@chmod +x make-assistant
