@@ -30,7 +30,7 @@ if [ -f "$OPENQRM_BASE_DIR/include/openqrm-server-functions" ]; then
 	. $OPENQRM_BASE_DIR/include/openqrm-functions
 	. $OPENQRM_BASE_DIR/include/openqrm-server-functions
 	export resource_id=0
-	export resource_senddelay=10
+	export resource_senddelay=30
 	export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
     export SERVER_PROTOCOL=$OPENQRM_WEB_PROTOCOL
 else
