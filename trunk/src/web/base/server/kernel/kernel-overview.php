@@ -155,10 +155,10 @@ function kernel_form() {
 	$disp = $disp."<b>username</b> and <b>password</b> are the credentials to openqrm itself.<br>";
 	$disp = $disp."<b>location</b> is the root directory for the kernel you want to install. The files that are used are \${location}/boot/vmlinuz-\${version}, \${location}/boot/initrd.img-\${version} and \${location}/lib/modules/\${version}/*<br>";
 	$disp = $disp."<b>initramfs/ext2</b> should specify the type of initrd image you want to generate. Most people want to use <b>initramfs</b> here.<br>";
-	$disp = $disp."<b>path-to-initrd-template-file</b> is an optional parameter to specify a non-default openqrm initrd template.<br>";
+	$disp = $disp."<b>path-to-initrd-template-file</b> should point to an openqrm initrd template. These can be found in the openqrm base dir under etc/templates.<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."Example:<br>";
-	$disp = $disp."/usr/share/openqrm/bin/openqrm kernel add -n openqrm-kernel-1 -v 2.6.29 -u openqrm -p openqrm -i initramfs -l /<br>";
+	$disp = $disp."/usr/share/openqrm/bin/openqrm kernel add -n openqrm-kernel-1 -v 2.6.29 -u openqrm -p openqrm -i initramfs -l / -t /usr/share/openqrm/etc/templates/openqrm-initrd-template.debian.x86_64.tgz<br>";
 	$disp = $disp."<br>";
  	return $disp;
 }
