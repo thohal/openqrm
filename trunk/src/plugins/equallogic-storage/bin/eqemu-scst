@@ -1,0 +1,264 @@
+#!/bin/bash
+#
+# Copyright (C) 2003, 2005-2007 Free Software Foundation, Inc.
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Library General Public License as published
+# by the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+# USA.
+#
+
+# Equallogic emulator for OpenQRM v1.0
+# by Gerben Meijer (gerben@daybyday.nl)
+#
+# Warning: using this assumes good knowledge of what goes on here.
+# Requires the SCST scsi stack (http://scst.sourceforge.net)
+# 
+# Usage:
+# - install linux on a server
+# - compile and install scst, iscsi-scst, scstadmin and if desired fileio
+# - set up /etc/iscsi/initiatorname.iscsi
+# - set up lvm; this script assumes the volume group is called 'localstorage'
+# - add a user (grpadmin) to the server and grant this user sudo rights (running as root is untested)
+# - change the prompt to something like EMULOGIC> (PS1='EMULOGIC> ' in bashrc)
+# - change the variables in the lines below
+# - add this script to the users ~/bin directory or /usr/local/bin
+# - symlink the following commands to the script: chapuser, access, volume (eg ln -s ~/bin/eqemu-scst ~/bin/chapuser)
+# - add a new resource, add equallogic-storage, and *IMPORTANT* add the comment 'emulator' to the config fields (where you also configure the username and password for the storage box)
+# - test it, and hope it works ;)
+
+command=`basename $0`
+subcommand=$1
+InitiatorName=`sudo grep ^InitiatorName /etc/iscsi/initiatorname.iscsi | cut -d'=' -f2-`
+ietdconf=/etc/iscsi-scstd.conf
+userdb=/home/grpadmin/.eqemu-userdb
+tgtconfdir=/home/grpadmin/.eqemu-targets
+
+mkdir -p /home/grpadmin/.eqemu-targets
+
+sudo chgrp grpadmin $ietdconf
+sudo chmod g+rw $ietdconf
+
+function eqlog {
+  logger "EQEMU($PPID): $*"
+}
+
+eqlog "CMD: $command $*"
+
+case $command in
+ chapuser) 
+  case $subcommand in
+   create)
+    chapuser=$2
+    chappass=$4
+    eqlog "Creating chapuser $2 with pass $4"
+    echo "$chapuser:$chappass" >> $userdb
+   ;;
+   delete)
+    chapuser=$2
+    eqlog "Deleting chapuser $2"
+    dbtmp=`tempfile`
+    cat $userdb | grep -v "^${chapuser}:" > $dbtmp
+    mv $dbtmp $userdb
+   ;;
+  esac
+ ;;  
+ volume)
+  volume=$2
+  case $subcommand in
+   create)
+    size=$3
+    eqlog "Creating volume $volume (size $size)"
+    sudo lvcreate -n $volume -L ${size}M localstorage
+    sudo scstadmin -adddev "$volume" -path /dev/localstorage/$volume -handler vdisk -options NV_CACHE
+    sudo scstadmin -addgroup Default_${InitiatorName}:$volume
+    sudo scstadmin -assigndev $volume -group Default_${InitiatorName}:$volume -lun 0
+    sudo dd if=/dev/zero of=/dev/localstorage/$volume bs=1M count=250
+   ;;
+   select)
+    action=$3
+    case $action in
+     offline)
+      eqlog "Switching volume $volume offline (not really, just faking it)"
+      # no need to do anything here. i think.
+     ;;
+     size)
+      newsize=$4	
+      eqlog "Resizing $volume to $newsize"
+      sudo lvresize -L $newsize /dev/localstorage/$volume
+      sudo scstadmin -resyncdev $volume -handler vdisk
+     ;;
+     clone)
+      newvolume=$4	
+      eqlog "Cloning $volume to $newvolume, will take some time..."
+      newsize=`sudo lvdisplay /dev/localstorage/$volume | grep "LV Size" |sed 's/LV Size//g' | sed 's/ //g'`
+      sudo lvcreate -n $newvolume -L $newsize localstorage
+
+      #sudo dd if=/dev/localstorage/$volume of=/dev/localstorage/$newvolume bs=1M
+
+      sudo mkfs.ext3 -j /dev/localstorage/$newvolume
+      clonesrc=`tempfile`
+      clonedst=`tempfile`
+      rm -f $clonesrc $clonedst
+      mkdir -p $clonesrc $clonedst
+      sudo lvcreate -s -L 1G -n ${volume}-snap /dev/localstorage/$volume
+      sudo mount -o noatime,nodiratime,ro /dev/localstorage/${volume}-snap $clonesrc
+      sudo mount -o noatime,nodiratime,rw /dev/localstorage/$newvolume $clonedst
+      sudo rsync -a ${clonesrc}/ ${clonedst}/
+      sudo sync
+      sudo umount ${clonesrc}
+      sudo umount ${clonedst}
+      sudo lvremove -f /dev/localstorage/${volume}-snap
+      rmdir $clonesrc $clonedst
+      sudo scstadmin -adddev "$newvolume" -path /dev/localstorage/$newvolume -handler vdisk -options NV_CACHE
+      sudo scstadmin -addgroup Default_${InitiatorName}:$newvolume
+      sudo scstadmin -assigndev $newvolume -group Default_${InitiatorName}:$newvolume -lun 0
+      eqlog "Finished cloning $volume to $newvolume"
+     ;;
+     access)
+      case $4 in
+       show)
+        eqlog "Showing access table for volume $volume"
+        chapuser=`grep IncomingUser $tgtconfdir/$volume.conf | awk '{ print $2 }'`
+        echo "ID  Initiator                     Ipaddress       AuthMethod UserName   Apply-To"
+        echo "--- ----------------------------- --------------- ---------- ---------- --------"
+        echo "1                                 *.*.*.*         chap       $chapuser  both"
+       ;;
+       create)
+        chapuser=$6
+        chappass=`cat $userdb |grep "^${chapuser}:" | cut -d':' -f2-`
+        eqlog "Granting rights to volume $volume to user $chapuser (pass $chappass)"
+        sudo scstadmin -adduser $chapuser -group Default_${InitiatorName}:$volume
+        echo "Target ${InitiatorName}:$volume" > $tgtconfdir/$volume.conf
+        echo "  IncomingUser $chapuser $chappass" >> $tgtconfdir/$volume.conf
+        cat $tgtconfdir/*conf > $ietdconf
+        LAST_TID=`grep tid: /proc/scsi_tgt/iscsi/session | cut -d':' -f2 | awk {' print $1 '} | sort -g | tail -n1`
+        NEW_TID=$(( $LAST_TID + 1 ))
+        CURRENT_TID=`grep tid.*name:${InitiatorName}:$volume /proc/scsi_tgt/iscsi/session | cut -d':' -f2 | awk {' print $1 '} | sort -g | tail -n1`
+        if [ "x$CURRENT_TID" == "x" ]; then
+         if ! sudo iscsi-scst-adm --op new --tid=$NEW_TID --params Name=${InitiatorName}:$volume; then
+          eqlog "ERROR: adding new target ${InitiatorName}:$volume to iscsi-scst-adm"
+          eqlog "Failed commandline: iscsi-scst-adm --op new --tid=$NEW_TID --params Name=${InitiatorName}:$volume"
+         fi
+        else
+         eqlog "WARNING: not adding ${InitiatorName}:$volume because it already exists"
+        fi
+        if ! sudo iscsi-scst-adm --op new --tid=$NEW_TID --user --params IncomingUser=$chapuser,Password=$chappass; then
+         eqlog "ERROR: adding user $chapuser to ${InitiatorName}:$volume with iscsi-scst-adm"
+         eqlog "Failed commandline: iscsi-scst-adm --op new --tid=$NEW_TID --user --params IncomingUser=$chapuser,Password=$chappass"
+        fi
+       ;;
+       delete)
+        eqlog "Revoking rights to volume $volume"
+        chapuser=`grep IncomingUser $tgtconfdir/$volume.conf | awk '{ print $2 }'`
+        sudo scstadmin -RemoveUser $chapuser -group Default_${InitiatorName}:$volume
+        rm $tgtconfdir/$volume.conf
+        cat $tgtconfdir/*conf > $ietdconf
+        TID_TO_REMOVE=`cat /proc/scsi_tgt/iscsi/session| grep "name:${InitiatorName}:${volume}$" | cut -d':' -f2 | awk {' print $1 '}`
+        # can't seem to force deletion, try waiting for it to clear
+        count=1
+        maxcount=9
+        sleep=10
+        while (test $count -le $maxcount); do
+         OPEN_SESSION=`cat /proc/scsi_tgt/iscsi/session| grep -w "^tid:$TID_TO_REMOVE.*:${volume}" -A1 | grep sid: | cut -d':' -f2 | awk {' print $1 '}`
+         if [ "$OPEN_SESSION" != "" ]; then
+          if ! sudo iscsi-scst-adm --op delete --tid=$TID_TO_REMOVE --sid=$OPEN_SESSION --cid=0; then
+           eqlog "WARNING: removing active session tid $TID_TO_REMOVE sid $OPEN_SESSION failed, retrying in ${sleep}s ($count/$maxcount)"
+          else
+           eqlog "Removed active session $OPEN_SESSION for tid $TID_TO_REMOVE"
+           break
+          fi
+          if [ $count -eq $maxcount ]; then
+           eqlog "ERROR: removing active session tid $TID_TO_REMOVE sid $OPEN_SESSION for $volume failed after $maxcount tries"
+           eqlog "Failed commandline: iscsi-scst-adm --op delete --tid=$TID_TO_REMOVE --sid=$OPEN_SESSION --cid=0"
+          else
+           sleep $sleep
+          fi
+          let count=$count+1
+         else
+          eqlog "No active sessions for volume $volume tid $TID_TO_REMOVE"
+          let count=$maxcount+1
+         fi
+        done
+        # and for some reason the tid removal returns 0 even though its not really deleted
+        count=1
+        maxcount=9
+        sleep=10
+        while (test $count -le $maxcount); do
+         TID_TO_REMOVE=`cat /proc/scsi_tgt/iscsi/session| grep "name:${InitiatorName}:${volume}$" | cut -d':' -f2 | awk {' print $1 '}`
+         if [ "$TID_TO_REMOVE" != "" ]; then
+          if [ $count -eq $maxcount ]; then
+           eqlog "ERROR: removing tid ($tid) for ${InitiatorName}:$volume with iscsi-scst-adm failed after $maxcount tries"
+           eqlog "Failed commandline: iscsi-scst-adm --op delete --tid=$TID_TO_REMOVE"
+          else 
+           sudo iscsi-scst-adm --op delete --tid=$TID_TO_REMOVE
+           eqlog "Trying to remove $TID_TO_REMOVE for ${InitiatorName}:$volume with iscsi-scst-adm"
+          fi
+         else
+          eqlog "Tid removed or no tid to remove for volume $volume"
+          break
+         fi
+         sleep $sleep
+         let count=$count+1
+        done
+       ;;
+      esac
+     ;; 
+    esac
+   ;;
+   delete)
+    eqlog "Deleting volume $volume"
+    sudo scstadmin -ReleaseDev $volume -group Default_${InitiatorName}:$volume
+    sudo scstadmin -RemoveGroup Default_${InitiatorName}:$volume
+    sudo scstadmin -RemoveDev $volume -handler vdisk
+    sudo lvremove -f /dev/localstorage/$volume
+    rm $tgtconfdir/$volume.conf
+    cat $tgtconfdir/*conf > $ietdconf
+    # and for some reason the tid removal returns 0 even though its not really deleted
+    count=1
+    maxcount=9
+    sleep=10
+    while (test $count -le $maxcount); do
+     TID_TO_REMOVE=`cat /proc/scsi_tgt/iscsi/session| grep "name:${InitiatorName}:${volume}$" | cut -d':' -f2 | awk {' print $1 '}`
+     if [ "$TID_TO_REMOVE" != "" ]; then
+      if [ $count -eq $maxcount ]; then
+       eqlog "ERROR: removing tid ($tid) for ${InitiatorName}:$volume with iscsi-scst-adm failed after $maxcount tries"
+       eqlog "Failed commandline: iscsi-scst-adm --op delete --tid=$TID_TO_REMOVE"
+      else 
+       sudo iscsi-scst-adm --op delete --tid=$TID_TO_REMOVE
+       eqlog "Trying to remove $TID_TO_REMOVE for ${InitiatorName}:$volume with iscsi-scst-adm"
+      fi
+     else
+      eqlog "Tid removed or no tid to remove for volume $volume"
+      break
+     fi
+     sleep $sleep
+     let count=$count+1
+    done
+  ;;
+   show)
+    eqlog "Showing volumes"
+    # take care to only post "our" iscsi luns and not the ones from e.g lvm-iscsi-storage
+    VOLUMES=`cat /proc/scsi_tgt/vdisk/vdisk | grep -v '^Name.*Size' | awk '{print $1 }'`
+    ( echo "Name            Size       SnapShots Status         Permission Connections TP"
+      echo "--------------- ---------- --------- -------------- ---------- ----------- -"
+      for i in $VOLUMES; do
+       VNAME=$i
+       VSIZE=`grep "^$VNAME " /proc/scsi_tgt/vdisk/vdisk | awk '{print $2  }'`
+       echo "$VNAME $VSIZE 0 online read-write 0 N"
+      done ) | column -c 7 -x -t
+   ;;
+  esac
+ ;;
+esac
+sudo scstadmin -WriteConfig /etc/scst.conf 2>/dev/null 1>/dev/null
