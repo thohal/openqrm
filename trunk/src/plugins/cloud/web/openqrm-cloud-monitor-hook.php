@@ -872,7 +872,9 @@ function openqrm_cloud_monitor() {
 								// we have a new vm as resource :) update it in the appliance
 								$appliance_fields = array();
 								$appliance_fields['appliance_resources'] = $new_vm_resource_id;
+								// update and refresh the appliance object
 								$appliance->update($appliance->id, $appliance_fields);
+								$appliance->get_instance_by_id($appliance_id);
 								$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Created new resource $new_vm_resource_id for request ID $cr_id", "", "", 0, 0, 0);
 							}
 						} else {
