@@ -2044,7 +2044,7 @@ function openqrm_cloud_monitor() {
 				$ca_resource_stop->get_instance_by_id($ca_appliance->resources);
 				$resource_external_ip=$ca_resource_stop->ip;
 				$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Restarting Appliance $ca_appliance->name ($ca_appliance_id/$ca_resource_stop->id/$resource_external_ip)", "", "", 0, 0, 0);
-				$openqrm_server->send_command("openqrm_assign_kernel $resource->id $resource->mac default");
+				$openqrm_server->send_command("openqrm_assign_kernel $ca_resource_stop->id $ca_resource_stop->mac default");
 				// now stop
 				$ca_appliance->stop();
 				// remove resource
