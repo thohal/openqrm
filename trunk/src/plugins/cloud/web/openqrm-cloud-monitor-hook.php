@@ -2138,7 +2138,6 @@ function openqrm_cloud_monitor() {
 
             case 2:
 				// start_resize
-    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudirlc", "(START_RESIZE) Resize life-cycle of Appliance $cd_appliance_id", "", "", 0, 0, 0);
                 // set the cloudimage to state resize
                 $cloud_app_resize = new cloudappliance();
                 $cloud_app_resize->get_instance_by_id($cd_appliance_id);
@@ -2146,8 +2145,15 @@ function openqrm_cloud_monitor() {
                 $appliance->get_instance_by_id($cloud_app_resize->appliance_id);
                 $cloud_im = new cloudimage();
                 $cloud_im->get_instance_by_image_id($appliance->imageid);
-                $cloud_im->set_state($cloud_im->id, "resizing");
-                $cd->set_state($cd_id, "resizing");
+                // make sure that we wait until the cloud image has no resource, 
+                // otherwise we risk doing things while the volume is still in use.
+                if($cloud_im->resource_id == -1) {
+                        $cloud_im->set_state($cloud_im->id, "resizing");
+                        $cd->set_state($cd_id, "resizing");
+			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudirlc", "(START_RESIZE) Resize life-cycle of Appliance $cd_appliance_id", "", "", 0, 0, 0);
+                } else {
+                        $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudirlc", "(START_RESIZE) Awaiting resource release of Appliance $cd_appliance_id", "", "", 0, 0, 0);
+                }
                 break;
 
             case 3:
@@ -2231,7 +2237,6 @@ function openqrm_cloud_monitor() {
 
             case 2:
 				// start_private
-    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(START_PRIVATE) Private life-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
                 // set the cloudimage to state resize
                 $cloud_app_private = new cloudappliance();
                 $cloud_app_private->get_instance_by_id($cp_appliance_id);
@@ -2239,8 +2244,15 @@ function openqrm_cloud_monitor() {
                 $appliance->get_instance_by_id($cloud_app_private->appliance_id);
                 $cloud_im = new cloudimage();
                 $cloud_im->get_instance_by_image_id($appliance->imageid);
-                $cloud_im->set_state($cloud_im->id, "private");
-                $cp->set_state($cp_id, "cloning");
+                // make sure that we wait until the cloud image has no resource, 
+                // otherwise we risk doing things while the volume is still in use.
+                if($cloud_im->resource_id == -1) {
+                	$cloud_im->set_state($cloud_im->id, "private");
+	                $cp->set_state($cp_id, "cloning");
+    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(START_PRIVATE) Private life-cycle of Appliance $cp_appliance_id", "", "", 0, 0, 0);
+                } else {
+    			$event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloudiplc", "(START_PRIVATE) Awaiting resource release of Appliance $cp_appliance_id", "", "", 0, 0, 0);
+                }
                 break;
 
             case 3:
