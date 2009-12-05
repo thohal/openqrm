@@ -133,7 +133,6 @@ if(htmlobject_request('action') != '' && $OPENQRM_USER->role == "administrator")
 						$resource = new resource();
 						$resource->get_instance_by_id($id);
 						$mac = $resource->mac;
-						$openqrm_server->send_command("openqrm_remove_resource $id, $mac");
 						$return_msg .= $resource->remove($id, $mac);
                         $strMsg .= "Removed resource $id <br>";
 					}

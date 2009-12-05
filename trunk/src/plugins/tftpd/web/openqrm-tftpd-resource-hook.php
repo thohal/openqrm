@@ -34,7 +34,7 @@ global $event;
 
 
 
-function openqrm_kvm_resource($cmd, $resource_fields) {
+function openqrm_tftpd_resource($cmd, $resource_fields) {
 	global $event;
 	global $OPENQRM_SERVER_BASE_DIR;
 	global $OPENQRM_SERVER_IP_ADDRESS;
@@ -42,7 +42,7 @@ function openqrm_kvm_resource($cmd, $resource_fields) {
 	$resource_id=$resource_fields["resource_id"];
 	$resource_ip=$resource_fields["resource_ip"];
 	$resource_mac=$resource_fields["resource_mac"];
-	$event->log("openqrm_new_resource", $_SERVER['REQUEST_TIME'], 5, "openqrm-kvm-resource-hook.php", "Handling $cmd event $resource_id/$resource_ip/$resource_mac", "", "", 0, 0, $resource_id);
+	$event->log("openqrm_new_resource", $_SERVER['REQUEST_TIME'], 5, "openqrm-tftpd-resource-hook.php", "Handling $cmd event $resource_id/$resource_ip/$resource_mac", "", "", 0, 0, $resource_id);
 	switch($cmd) {
 		case "remove":
 			// we remove the pxe config file; the database removal is handled in the resource class
@@ -55,5 +55,3 @@ function openqrm_kvm_resource($cmd, $resource_fields) {
 
 
 ?>
-
-
