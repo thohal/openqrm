@@ -54,12 +54,16 @@ function openqrm_install_os_dependency() {
     	if [ "$WHOAMI" != "root" ]; then
     		export SUDO="sudo"
     	fi
-        $SUDO apt-get update
-    	if [ "$FORCE_INSTALL" == "true" ]; then
-	    	$SUDO apt-get -y install $PACKAGE
-	    else
-	    	$SUDO apt-get install $PACKAGE
-	    fi
+	# if we already have the package installed, don't install it
+	local PACKAGESTATE=`dpkg -s $PACKAGE | grep '^Status' | awk '{print $4}'`
+	if [ "$PACKAGESTATE" != "installed" ]; then
+	        $SUDO apt-get update
+	    	if [ "$FORCE_INSTALL" == "true" ]; then
+		    	$SUDO apt-get -y install $PACKAGE
+		    else
+		    	$SUDO apt-get install $PACKAGE
+		    fi
+	fi
     elif [ -f /etc/redhat-release ]; then
     	if [ "$FORCE_INSTALL" == "true" ]; then
 			su - root -c "yum -y install $PACKAGE"
