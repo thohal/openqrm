@@ -122,6 +122,14 @@ function show_progressbar() {
 function validate_input($var, $type) {
     switch ($type) {
         case 'string':
+            // we need to special take care that the volume name does not contain special characters
+            $var = preg_replace("/\./", "", $var);
+            $var = preg_replace("/-/", "", $var);
+            $var = preg_replace("/_/", "", $var);
+            // and do not let the volume name start with a number
+            if(preg_match("/^[0-9].*/",$var)) {
+                $var = "na".$var
+            }
             for ($i = 0; $i<strlen($var); $i++) {
                 if (!ctype_alpha($var[$i])) {
                     if (!ctype_digit($var[$i])) {
