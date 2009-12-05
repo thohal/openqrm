@@ -383,8 +383,18 @@ if (htmlobject_request('action') != '') {
                         $cl_user = new clouduser();
                         $cl_user->get_instance_by_name($auth_user);
                         if ($private_cu_image->cu_id == $cl_user->id) {
-                            // set to non-shared !
-                            $request_fields['cr_shared_req']=0;
+                            // check to make sure we don't start two appliances off of one image!
+                            $cloudimage_state = new cloudimage();
+                            $cloudimage_state->get_instance_by_image_id($private_cu_image->image_id);
+                            if(!$cloudimage_state->id) {
+                                    // set to non-shared !
+                                    $request_fields['cr_shared_req']=0;
+                            } else {
+                                    $strMsg .="Private Cloud image is already in use! Skipping ...<br>";
+                                    redirect($strMsg, "tab2");
+                                    exit(0);
+
+                            }
                         } else {
                             $strMsg .="Unauthorized request of private Cloud image! Skipping ...<br>";
                             redirect($strMsg, "tab2");

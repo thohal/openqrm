@@ -734,7 +734,13 @@ function my_cloud_create_request() {
             if ($cl_user->id == $priv_image->cu_id) {
                 $priv_im = new image();
                 $priv_im->get_instance_by_id($priv_image->image_id);
-                $image_list[] = array("value" => $priv_im->id, "label" => $priv_im->name);
+                // only show the non-shared image to the user if it is not attached to a resource
+                // because we don't want users to assign the same image to two appliances
+                $priv_cloud_im = new cloudimage();
+                $priv_cloud_im->get_instance_by_image_id($priv_image->image_id);
+                if(!$priv_cloud_im->id) {
+                        $image_list[] = array("value" => $priv_im->id, "label" => $priv_im->name);
+                }
             } else if ($priv_image->cu_id == 0) {
                 $priv_im = new image();
                 $priv_im->get_instance_by_id($priv_image->image_id);

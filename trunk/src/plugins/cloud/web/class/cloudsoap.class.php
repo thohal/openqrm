@@ -282,8 +282,17 @@ class cloudsoap {
             if (strlen($private_cu_image->cu_id)) {
                 if ($private_cu_image->cu_id > 0) {
                     if ($private_cu_image->cu_id == $cl_user->id) {
-                        // set to non-shared !
-                        $request_fields['cr_shared_req']=0;
+                        // check if the private image is not attached to a resource
+                        // because we don't want to use the same private image on two appliances
+                        $cloudimage_state = new cloudimage();
+                        $cloudimage_state->get_instance_by_image_id($image->id);
+                        if(!$cloudimage_state->id) {
+                                // set to non-shared !
+                                $request_fields['cr_shared_req']=0;
+                        } else {
+                                $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Private Cloud image $image->name for Cloud User $cloud_username is already in use! Not adding the request.", "", "", 0, 0, 0);
+                                return;
+                        }
                     } else {
                         $event->log("cloudsoap->CloudProvision", $_SERVER['REQUEST_TIME'], 2, "cloud-soap-server.php", "Unauthorized request of private Cloud image from Cloud User $cloud_username ! Not adding the request.", "", "", 0, 0, 0);
                         return;
@@ -1748,7 +1757,13 @@ class cloudsoap {
                     if ($pcloud_user->id == $priv_image->cu_id) {
                         $priv_im = new image();
                         $priv_im->get_instance_by_id($priv_image->image_id);
-                        $image_name_list[] = $priv_im->name;
+                        // only show the non-shared image to the user if it is not attached to a resource
+                        // because we don't want users to assign the same image to two appliances
+                        $priv_cloud_im = new cloudimage();
+                        $priv_cloud_im->get_instance_by_image_id($priv_image->image_id);
+                        if(!$priv_cloud_im->id) {
+	                        $image_name_list[] = $priv_im->name;
+			}
                     } else if ($priv_image->cu_id == 0) {
                         $priv_im = new image();
                         $priv_im->get_instance_by_id($priv_image->image_id);
