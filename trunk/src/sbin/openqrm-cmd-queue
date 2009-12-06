@@ -34,8 +34,12 @@ resource_id=0
 resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
 OPENQRM_QUEUEING_DELAY=1
 SEQ=1
-RETRY=5
-RETRY_DELAY=20
+RETRY=3
+RETRY_DELAY=10
+# defines how long commands are allowed to run
+CMD_TIMEOUT=20
+
+
 
 function cmd_queue_log() {
     local PRIO=$1
@@ -44,15 +48,38 @@ function cmd_queue_log() {
     echo "openQRM-cmd-queu $PRIO : $CQLOG" | logger
 }
 
+
+function cmd_timeout() {
+    [ $# -eq 1 ] || cmd_queue_log ERROR "cmd_timeout takes 2 arguments"
+    command=$1
+    sleep_time=$CMD_TIMEOUT
+    $command &
+    cmd_pid=$!
+    ( sleep $sleep_time && kill $cmd_pid && cmd_queue_log ERROR "Killed $command due to timeout $sleep_time exceeded" ) &
+    killer_pid=$!
+    wait $cmd_pid &> /dev/null
+    wait_status=$?
+    if [ $wait_status == 0 ]; then
+        disown $killer_pid
+        kill $killer_pid &> /dev/null
+    else
+        kill `ps ax | grep dbclient | grep dropbear_rsa_host_key | awk {' print $1 '}` 2>/dev/null
+    fi
+    return $wait_status
+}
+
+
+
+
 cd $OPENQRM_COMMAND_QUEUE
 while (true); do
 	for OPENQRM_COMMAND_FILE in `ls -t openqrm-queue* 2>/dev/null`; do
 		chmod +x $OPENQRM_COMMAND_FILE
 		COMMAND_TOKEN=`echo $OPENQRM_COMMAND_FILE | cut -d'.' -f2`
 		OPENQRM_COMMAND=`cat $OPENQRM_COMMAND_FILE`
-		./$OPENQRM_COMMAND_FILE 2>ouput.$COMMAND_TOKEN
-		COMMAND_RES=$?
 		cmd_queue_log NOTICE "Running $COMMAND_TOKEN : $OPENQRM_COMMAND"
+		cmd_timeout ./$OPENQRM_COMMAND_FILE 2>ouput.$COMMAND_TOKEN
+		COMMAND_RES=$?
 		if [ "$COMMAND_RES" != "0" ]; then
 			# put it in the failed queue
 			mv -f $OPENQRM_COMMAND_FILE failed-cmd.1.$COMMAND_TOKEN
@@ -74,7 +101,7 @@ while (true); do
 			FAILED_OPENQRM_COMMAND=`cat $FAILED_OPENQRM_COMMAND_FILE`
 
             cmd_queue_log NOTICE "$FAILED_COMMAND_RETRY_COUNT. retry for Command $FAILED_COMMAND_TOKEN : $FAILED_OPENQRM_COMMAND"
-            ./$FAILED_OPENQRM_COMMAND_FILE 2>ouput.$FAILED_COMMAND_TOKEN
+            cmd_timeout ./$FAILED_OPENQRM_COMMAND_FILE 2>ouput.$FAILED_COMMAND_TOKEN
             FAILED_COMMAND_RES=$?
             if [ "$FAILED_COMMAND_RES" != "0" ]; then
                 FAILED_OPENQRM_COMMAND_OUTPUT=`cat ouput.$FAILED_COMMAND_TOKEN`
