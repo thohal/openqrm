@@ -44,9 +44,6 @@ function openqrm_plugin_zabbix_start() {
         else
             /etc/init.d/zabbix start || exit $?
         fi
-	else
-		zabbix_manager_lock release
-		openqrm_post_event 0 "openqrm_plugin_zabbix_start" 3 "openqrm-plugin-zabbix" "Could not start Zabbix-server. Init script not found !."
 	fi
     # start agent
     if [ -x "/etc/init.d/zabbix-agent" ]; then
@@ -83,9 +80,6 @@ function openqrm_plugin_zabbix_stop() {
         else
             /etc/init.d/zabbix stop || exit $?
         fi
-	else
-		zabbix_manager_lock release
-		openqrm_post_event 0 "openqrm_plugin_zabbix_stop" 3 "openqrm-plugin-zabbix" "Could not stop Zabbix-server. Init script not found !."
 	fi
 	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/zabbix/.running
 	return 0
