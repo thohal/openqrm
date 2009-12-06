@@ -292,7 +292,7 @@ function my_cloud_appliances() {
 			'appliance_name' => $appliance->name,
 			'appliance_config' => $config_column,
 			'appliance_disk_size' => $cloud_appliance_disk_size,
-			'appliance_comment' => "<input type=text name=\"appliance_comment[$appliance->id]\" value=\"$appliance_comment\">",
+			'appliance_comment' => "<input type=text name=\"appliance_comment[$cloud_appliance->id]\" value=\"$appliance_comment\">",
 			'appliance_cloud_state' => $cloudappliance_state,
 			'appliance_cloud_action' => $cloudappliance_action,
 		);
@@ -308,7 +308,7 @@ function my_cloud_appliances() {
 	$table->head = $arHead;
 	$table->body = $arBody;
     $table->sort = "";
-    $command_array = array('pause', 'unpause', 'restart', 'comment');
+    $command_array = array('pause', 'unpause', 'restart', 'set-comment');
     if ($sshterm_enabled) {
     	$command_array[] = 'login';
     }

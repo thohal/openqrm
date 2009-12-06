@@ -697,7 +697,7 @@ if (htmlobject_request('action') != '') {
 
 
 
-		case 'comment':
+		case 'set-comment':
             // get the user
             $clouduser = new clouduser();
             $clouduser->get_instance_by_name($auth_user);
