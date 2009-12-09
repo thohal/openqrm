@@ -1,0 +1,63 @@
+#!/bin/bash
+#
+# This file is part of openQRM.
+#
+# openQRM is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2
+# as published by the Free Software Foundation.
+#
+# openQRM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+#
+
+KVM=`which kvm`
+if [ "$KVM" == "" ]; then
+    KVM=`which qemu-kvm`
+    if [ "$KVM" == "" ]; then
+        echo "ERROR: kvm ist not installed on this system !" | logger
+        exit 1
+    fi
+fi
+# which screen binary to use
+if [ -x /usr/bin/screen.real ]; then
+    RUNSCREEN="/usr/bin/screen.real"
+else
+    RUNSCREEN=`which screen`
+fi
+
+
+# source the component config files
+VM_CONF_DIR=`dirname $0`
+VM_CONF_DIR=`cd $VM_CONF_DIR && pwd && cd - 1>/dev/null`
+VM_NAME=`basename $VM_CONF_DIR`
+. $VM_CONF_DIR/cpus
+. $VM_CONF_DIR/ram
+. $VM_CONF_DIR/disk1
+. $VM_CONF_DIR/disk2
+. $VM_CONF_DIR/disk3
+. $VM_CONF_DIR/disk4
+. $VM_CONF_DIR/cdrom
+. $VM_CONF_DIR/net1
+. $VM_CONF_DIR/net2
+. $VM_CONF_DIR/net3
+. $VM_CONF_DIR/net4
+. $VM_CONF_DIR/net5
+. $VM_CONF_DIR/vnc
+. $VM_CONF_DIR/boot
+
+
+KVM_VM_DISK="$KVM_VM_DISK_1 $KVM_VM_DISK_2 $KVM_VM_DISK_3 $KVM_VM_DISK_4"
+KVM_VM_NET="$KVM_VM_NET_1 $KVM_VM_NET_2 $KVM_VM_NET_3 $KVM_VM_NET_4 $KVM_VM_NET_5"
+
+echo "KVM vm $VM_NAME starting up ..." | logger
+$RUNSCREEN -dmS $KVM_VM_MAC_1 $KVM $KVM_VM_DISK $KVM_VM_CDROM -m $KVM_VM_RAM -smp $KVM_VM_CPUS $KVM_VM_BOOT $KVM_VM_NET -vnc $KVM_VM_VNC
+
+
+

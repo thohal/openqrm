@@ -1,0 +1,141 @@
+#!/bin/bash
+# this is the boot-service init script for the Kvm-server hosts
+#
+# This file is part of openQRM.
+#
+# openQRM is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2
+# as published by the Free Software Foundation.
+#
+# openQRM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+#
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+# for including the package functions
+export OPENQRM_SOURCE_DIR="$OPENQRM_SERVER_BASE_DIR/openqrm/"
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-package-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/include/openqrm-plugin-kvm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/etc/openqrm-plugin-kvm.conf
+if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+fi
+
+# do not start on the intitrd
+if [ -f /etc/initrd-devices.conf ]; then
+	exit 0
+fi
+
+
+function kvm_start() {
+	echo "Starting the openQRM kvm-plugin"
+   	export FORCE_INSTALL=true
+   	openqrm_install_os_dependency screen
+
+	# preparing the nic-bios in case the openQRM server itself is the kvm-host
+	if [ ! -d /usr/share/kvm/ ]; then
+		mkdir -p /usr/share/kvm
+	fi
+    if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.1.tgz ]; then
+        if [ -f /usr/share/kvm/pxe-e1000.bin ] && [ ! -f /usr/share/kvm/pxe-e1000.bin.openqrm-backup ]; then
+            cp -f /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-e1000.bin.openqrm-backup
+        fi
+        if [ -f /usr/share/kvm/pxe-rtl8139.bin ] && [ ! -f /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup ]; then
+            cp -f /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-rtl8139.bin.openqrm-backup
+        fi
+        if [ -f /usr/share/kvm/pxe-virtio.bin ] && [ ! -f /usr/share/kvm/pxe-virtio.bin.openqrm-backup ]; then
+            cp -f /usr/share/kvm/pxe-virtio.bin /usr/share/kvm/pxe-virtio.bin.openqrm-backup
+        fi
+        tar -C /usr/share/kvm/ -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/include/pxe/kvm-nic-bios-1.1.tgz
+        chown root:root /usr/share/kvm/pxe-e1000.bin /usr/share/kvm/pxe-rtl8139.bin /usr/share/kvm/pxe-virtio.bin
+    fi
+
+	# be sure to have the tun device
+	if [ ! -f /dev/tun ]; then
+		mknod /dev/tun c 10 200
+	fi
+	depmod -a
+	modprobe tun
+
+	# check that bridging is enabled
+	if ! which brctl 1>/dev/null; then
+		kvm_log kvm_start "ERROR: brctl is not installed! Please install bridge-utils."
+		exit 1
+	fi
+	if ! which kvm 1>/dev/null; then
+        if ! which qemu-kvm 1>/dev/null; then
+            kvm_log kvm_start "ERROR: kvm is not installed! Please install kvm."
+            exit 1
+        fi
+    fi
+    # setting the kvm-ifup +kvm-ifdown script to the internal and external bridge
+    # internal
+    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_STORAGE_BRIDGE@@/$OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-ifup
+    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_STORAGE_BRIDGE@@/$OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-ifdown
+    # external
+    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/etc/templates/openqrm-kvm-ifup | sed -e "s/@@OPENQRM_PLUGIN_KVM_STORAGE_BRIDGE@@/$OPENQRM_PLUGIN_KVM_EXTERNAL_BRIDGE/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-ifup-ext
+    cat $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/etc/templates/openqrm-kvm-ifdown | sed -e "s/@@OPENQRM_PLUGIN_KVM_STORAGE_BRIDGE@@/$OPENQRM_PLUGIN_KVM_EXTERNAL_BRIDGE/g" > $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-ifdown-ext
+    chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/*
+
+    # make sure the kvm modules are loaded
+    modprobe kvm
+    if grep flags.*vmx /proc/cpuinfo 1>/dev/null; then modprobe kvm-intel; fi
+    if grep flags.*svm /proc/cpuinfo 1>/dev/null; then modprobe kvm-amd; fi
+
+}
+
+
+function kvm_stop() {
+	echo "Stopping the openQRM kvm-plugin"
+
+}
+
+
+
+
+
+case "$1" in
+	start)
+		kvm_start
+		;;
+	stop)
+		kvm_stop
+		;;
+	restart)
+		kvm_stop
+		sleep 1
+		kvm_start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+
+esac
+exit $?
+
+
+
+
+
+
+
+
+
+
+
+
+
