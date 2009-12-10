@@ -174,7 +174,7 @@ if(htmlobject_request('action') != '') {
 				$kvm_server_appliance->get_instance_by_id($kvm_server_id);
 				$kvm_server = new resource();
 				$kvm_server->get_instance_by_id($kvm_server_appliance->resources);
-				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-storage-vm add_vm_nic -n $kvm_server_name -x $kvm_nic_nr -m $kvm_new_nic -t $kvm_nic_model -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+				$resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-storage-vm add_vm_nic -n $kvm_server_name -x $kvm_nic_nr -m $kvm_new_nic -t $kvm_nic_model -z $kvm_vm_bridge -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
                 // remove current stat file
                 $kvm_server_resource_id = $kvm_server->id;
                 $statfile="kvm-stat/".$kvm_server_resource_id.".".$kvm_server_name.".vm_config";
@@ -187,7 +187,7 @@ if(htmlobject_request('action') != '') {
                 if (!wait_for_statfile($statfile)) {
                     $strMsg .= "Error during adding nic to KVM vm $kvm_server_name ! Please check the Event-Log<br>";
                 } else {
-                    $strMsg .="Added network card to KVM vm $kvm_server_name<br>";
+                    $strMsg .="Added network card to KVM vm $kvm_server_name attached to $kvm_vm_bridge<br>";
                 }
                 redirect_config($strMsg, $kvm_server_id, $kvm_server_name);
 			break;
@@ -337,7 +337,7 @@ function kvm_vm_config() {
 	$html = new htmlobject_input();	
 	$html->name = "net1";
 	$html->id = 'p'.uniqid();
-	$html->value = "$store[OPENQRM_KVM_VM_MAC_1]";
+	$html->value = "$store[OPENQRM_KVM_VM_MAC_1] / $store[OPENQRM_KVM_VM_BRIDGE_1]";
 	$html->title = "Network-1";
 	$html->disabled = true;
 	$html->maxlength="10";
@@ -347,7 +347,7 @@ function kvm_vm_config() {
 		$html = new htmlobject_input();
 		$html->name = "net2";
 		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_KVM_VM_MAC_2]";
+		$html->value = "$store[OPENQRM_KVM_VM_MAC_2] / $store[OPENQRM_KVM_VM_BRIDGE_2]";
 		$html->title = "Network-2";
 		$html->disabled = true;
 		$html->maxlength="10";
@@ -358,7 +358,7 @@ function kvm_vm_config() {
 		$html = new htmlobject_input();
 		$html->name = "net3";
 		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_KVM_VM_MAC_3]";
+		$html->value = "$store[OPENQRM_KVM_VM_MAC_3] / $store[OPENQRM_KVM_VM_BRIDGE_3]";
 		$html->title = "Network-3";
 		$html->disabled = true;
 		$html->maxlength="10";
@@ -369,7 +369,7 @@ function kvm_vm_config() {
 		$html = new htmlobject_input();
 		$html->name = "net4";
 		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_KVM_VM_MAC_4]";
+		$html->value = "$store[OPENQRM_KVM_VM_MAC_4] / $store[OPENQRM_KVM_VM_BRIDGE_4]";
 		$html->title = "Network-4";
 		$html->disabled = true;
 		$html->maxlength="10";
@@ -380,7 +380,7 @@ function kvm_vm_config() {
 		$html = new htmlobject_input();
 		$html->name = "net5";
 		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_KVM_VM_MAC_5]";
+		$html->value = "$store[OPENQRM_KVM_VM_MAC_5] / $store[OPENQRM_KVM_VM_BRIDGE_5]";
 		$html->title = "Network-5";
 		$html->disabled = true;
 		$html->maxlength="10";
@@ -526,12 +526,30 @@ function kvm_vm_config_net() {
 	extract($store);
     $backlink = "<a href='kvm-storage-vm-config.php?kvm_server_id=".$kvm_server_id."&kvm_server_name=".$kvm_server_name."'>back</a>";
 
+    // refresh config parameter
+    $resource_command="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-storage-vm post_bridge_config -u $OPENQRM_USER->name -p $OPENQRM_USER->password";
+    // remove current stat file
+    $kvm_server_resource_id = $kvm_server->id;
+    $statfile="kvm-stat/".$kvm_server_resource_id.".bridge_config";
+    if (file_exists($statfile)) {
+        unlink($statfile);
+    }
+    // send command
+    $kvm_server->send_command($kvm_server->ip, $resource_command);
+    // and wait for the resulting statfile
+    if (!wait_for_statfile($statfile)) {
+        echo "<b>Could not get bridge config status file! Please checks the event log";
+        extit(0);
+    }
+	$bridge_store = openqrm_parse_conf($statfile);
+	extract($bridge_store);
+
 	// the first nic must not be changed, this is the identifier for openQRM
 	// disable the first nic, this is from what we manage the vm
 	$html = new htmlobject_input();
 	$html->name = "net1";
 	$html->id = 'p'.uniqid();
-	$html->value = "$store[OPENQRM_KVM_VM_MAC_1]";
+	$html->value = "$store[OPENQRM_KVM_VM_MAC_1] / $store[OPENQRM_KVM_VM_BRIDGE_1]";
 	$html->title = "Network-1";
 	$html->disabled = true;
 	$html->maxlength="10";
@@ -547,7 +565,7 @@ function kvm_vm_config_net() {
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_net";
 		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_KVM_VM_MAC_2]";
+		$html->value = "$store[OPENQRM_KVM_VM_MAC_2] / $store[OPENQRM_KVM_VM_BRIDGE_2]";
 		$html->title = "Network-2";
 		$html->disabled = true;
 		$html->maxlength="10";
@@ -566,7 +584,7 @@ function kvm_vm_config_net() {
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_net";
 		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_KVM_VM_MAC_3]";
+		$html->value = "$store[OPENQRM_KVM_VM_MAC_3] / $store[OPENQRM_KVM_VM_BRIDGE_3]";
 		$html->title = "Network-3";
 		$html->disabled = true;
 		$html->maxlength="10";
@@ -585,7 +603,7 @@ function kvm_vm_config_net() {
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_net";
 		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_KVM_VM_MAC_4]";
+		$html->value = "$store[OPENQRM_KVM_VM_MAC_4] / $store[OPENQRM_KVM_VM_BRIDGE_4]";
 		$html->title = "Network-4";
 		$html->disabled = true;
 		$html->maxlength="10";
@@ -604,7 +622,7 @@ function kvm_vm_config_net() {
 		$html = new htmlobject_input();
 		$html->name = "remove_vm_net";
 		$html->id = 'p'.uniqid();
-		$html->value = "$store[OPENQRM_KVM_VM_MAC_5]";
+		$html->value = "$store[OPENQRM_KVM_VM_MAC_5] / $store[OPENQRM_KVM_VM_BRIDGE_5]";
 		$html->title = "Network-5";
 		$html->disabled = true;
 		$html->maxlength="10";
@@ -625,6 +643,14 @@ function kvm_vm_config_net() {
 		$vm_config_add_nic_disp .= "<input type=hidden name=kvm_server_name value=$kvm_server_name>";
 		$vm_config_add_nic_disp .= "<input type=hidden name=kvm_nic_nr value=$nic_number>";
 		$vm_config_add_nic_disp .= htmlobject_input('kvm_new_nic', array("value" => $suggested_mac, "label" => 'Add Network'), 'text', 10);
+
+        // bridge array for the select
+        $kvm_internal_bridge = $bridge_store[OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE];
+        $kvm_external_bridge = $bridge_store[OPENQRM_PLUGIN_KVM_EXTERNAL_BRIDGE];
+        $bridge_identifier_array = array();
+        $bridge_identifier_array[] = array("value" => "$kvm_internal_bridge", "label" => "$kvm_internal_bridge (internal bridge)");
+        $bridge_identifier_array[] = array("value" => "$kvm_external_bridge", "label" => "$kvm_external_bridge (external bridge)");
+        $bridge_select = htmlobject_select('kvm_vm_bridge', $bridge_identifier_array, 'Network-Bridge', array($store[OPENQRM_KVM_VM_CPUS]));
 
         $vm_config_nic_type_disp = "<input type=\"radio\" name=\"kvm_nic_model\" value=\"virtio\" checked=\"checked\" /> virtio - Best performance, Linux only <br>";
         $vm_config_nic_type_disp .= "<input type=\"radio\" name=\"kvm_nic_model\" value=\"e1000\" /> e1000 - Server Operating systems <br>";
@@ -647,6 +673,7 @@ function kvm_vm_config_net() {
         'vm_config_nic5_disp' => $vm_config_nic5_disp,
         'vm_config_add_nic_disp' => $vm_config_add_nic_disp,
         'vm_config_nic_type_disp' => $vm_config_nic_type_disp,
+        'vm_config_nic_bridge' => $bridge_select,
         'submit' => $submit,
         'thisfile' => $thisfile,
         'backlink' => $backlink,

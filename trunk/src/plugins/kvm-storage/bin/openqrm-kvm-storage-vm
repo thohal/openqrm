@@ -579,18 +579,50 @@ case "$KVM_COMMAND" in
                 KVM_VM_BOOT_STR="network"
                 ;;
         esac
+        # make the bridge config readable
+        if echo $KVM_VM_NET_1 | grep openqrm-kvm-ifdown-ext 1>/dev/null; then
+            KVM_VM_NIC1_BRIDGE="extern"
+        else
+            KVM_VM_NIC1_BRIDGE="intern"
+        fi
+        if echo $KVM_VM_NET_2 | grep openqrm-kvm-ifdown-ext 1>/dev/null; then
+            KVM_VM_NIC2_BRIDGE="extern"
+        else
+            KVM_VM_NIC2_BRIDGE="intern"
+        fi
+        if echo $KVM_VM_NET_3 | grep openqrm-kvm-ifdown-ext 1>/dev/null; then
+            KVM_VM_NIC3_BRIDGE="extern"
+        else
+            KVM_VM_NIC3_BRIDGE="intern"
+        fi
+        if echo $KVM_VM_NET_4 | grep openqrm-kvm-ifdown-ext 1>/dev/null; then
+            KVM_VM_NIC4_BRIDGE="extern"
+        else
+            KVM_VM_NIC4_BRIDGE="intern"
+        fi
+        if echo $KVM_VM_NET_5 | grep openqrm-kvm-ifdown-ext 1>/dev/null; then
+            KVM_VM_NIC5_BRIDGE="extern"
+        else
+            KVM_VM_NIC5_BRIDGE="intern"
+        fi
+
 		echo "OPENQRM_KVM_VM_CPUS=\"$KVM_VM_CPUS\"" > $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_RAM=\"$KVM_VM_RAM\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_NET_1=\"$KVM_VM_NET_1\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_MAC_1=\"$KVM_VM_MAC_1\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_BRIDGE_1=\"$KVM_VM_NIC1_BRIDGE\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_NET_2=\"$KVM_VM_NET_2\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_MAC_2=\"$KVM_VM_MAC_2\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_BRIDGE_2=\"$KVM_VM_NIC2_BRIDGE\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_NET_3=\"$KVM_VM_NET_3\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_MAC_3=\"$KVM_VM_MAC_3\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_BRIDGE_3=\"$KVM_VM_NIC3_BRIDGE\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_NET_4=\"$KVM_VM_NET_4\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_MAC_4=\"$KVM_VM_MAC_4\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_BRIDGE_4=\"$KVM_VM_NIC4_BRIDGE\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_NET_5=\"$KVM_VM_NET_5\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_MAC_5=\"$KVM_VM_MAC_5\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_KVM_VM_BRIDGE_5=\"$KVM_VM_NIC5_BRIDGE\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_DISK_1=\"$KVM_VM_DISK_1\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_DISK_SIZE_1=\"$KVM_VM_DISK_SIZE_1\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_KVM_VM_DISK_2=\"$KVM_VM_DISK_2\"" >> $VM_CONFIG_TMP
@@ -669,9 +701,17 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_VM_COMPONENT_NUMBER" == "" ]; then
 			kvm_usage
 		fi
+		if [ "$KVM_VM_MAC_BRIDGE" == "" ]; then
+			KVM_VM_MAC_BRIDGE=$OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE
+		fi
 		lvm_storage_lock aquire
-		echo "Adding nic $KVM_VM_COMPONENT_NUMBER size $KVM_VM_DISK to KVM vm $KVM_VM_NAME"
-		sed -i -e s"#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=\"-net nic,vlan=$KVM_VM_COMPONENT_NUMBER,macaddr=$KVM_VM_MAC,model=$KVM_VM_NIC_TYPE -net tap,vlan=$KVM_VM_COMPONENT_NUMBER,script=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifup-ext,downscript=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm/bin/openqrm-kvm-ifdown-ext\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/net""$KVM_VM_COMPONENT_NUMBER
+		echo "Adding nic ($OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE) to KVM vm $KVM_VM_NAME" | logger
+        # ex or internal bridge ?
+        if [ "$KVM_VM_MAC_BRIDGE" == "$OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE" ]; then
+    		sed -i -e s"#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=\"-net nic,vlan=$KVM_VM_COMPONENT_NUMBER,macaddr=$KVM_VM_MAC,model=$KVM_VM_NIC_TYPE -net tap,vlan=$KVM_VM_COMPONENT_NUMBER,script=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-ifup,downscript=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-ifdown\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/net""$KVM_VM_COMPONENT_NUMBER
+        else
+    		sed -i -e s"#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=\"-net nic,vlan=$KVM_VM_COMPONENT_NUMBER,macaddr=$KVM_VM_MAC,model=$KVM_VM_NIC_TYPE -net tap,vlan=$KVM_VM_COMPONENT_NUMBER,script=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-ifup-ext,downscript=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-ifdown-ext\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/net""$KVM_VM_COMPONENT_NUMBER
+        fi
 		sed -i -e s"#KVM_VM_MAC_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_MAC_$KVM_VM_COMPONENT_NUMBER=\"$KVM_VM_MAC\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/net""$KVM_VM_COMPONENT_NUMBER
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then

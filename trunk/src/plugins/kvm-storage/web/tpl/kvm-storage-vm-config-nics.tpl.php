@@ -57,7 +57,7 @@
 
 <form action="{thisfile}" method="post">
 <div style="float:left;">
-{vm_config_add_nic_disp}
+{vm_config_add_nic_disp}  {vm_config_nic_bridge}
 </div>
 
 <div style="float:right;">
