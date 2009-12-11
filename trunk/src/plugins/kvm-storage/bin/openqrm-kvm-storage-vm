@@ -358,7 +358,7 @@ case "$KVM_COMMAND" in
 		chmod +x $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
         # $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
         # start monitor for the fake idle resource
-        kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep $KVM_VM_MAC | awk {' print $1 '}` 2>/dev/null
+        kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep -i $KVM_VM_MAC | awk {' print $1 '}` 2>/dev/null
         $RUNSCREEN -dmS $KVM_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/sbin/openqrm-kvm-storage-monitord $KVM_VM_MAC
 
 		# in case we have a username + password post the updated list to the openQRM-server
@@ -377,7 +377,7 @@ case "$KVM_COMMAND" in
     		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
         fi
         # start the vm monitord / make sure it is stopped before
-        kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep $KVM_VM_MAC_1 | awk {' print $1 '}` 2>/dev/null
+        kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep -i $KVM_VM_MAC_1 | awk {' print $1 '}` 2>/dev/null
         $RUNSCREEN -dmS $KVM_VM_MAC_1 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/sbin/openqrm-kvm-storage-monitord $KVM_VM_MAC_1
 
 		# in case we have a username + password post the updated list to the openQRM-server
@@ -389,7 +389,7 @@ case "$KVM_COMMAND" in
 	start_by_mac)
 		lvm_storage_lock aquire
 		echo "Starting Kvm vm $KVM_VM_MAC"
-        KVM_VM_NAME=`grep -rH $KVM_VM_MAC $OPENQRM_VM_DIR/*/net1 2>/dev/null | grep KVM_VM_MAC | cut -d':' -f1 2>/dev/null` 2>/dev/null
+        KVM_VM_NAME=`grep -rHi $KVM_VM_MAC $OPENQRM_VM_DIR/*/net1 2>/dev/null | grep KVM_VM_MAC | cut -d':' -f1 2>/dev/null` 2>/dev/null
         KVM_VM_NAME=`dirname $KVM_VM_NAME` 2>/dev/null
         KVM_VM_NAME=`basename $KVM_VM_NAME` 2>/dev/null
         if [ "$KVM_VM_NAME" == "" ]; then
@@ -406,7 +406,7 @@ case "$KVM_COMMAND" in
             $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
         fi
         # start the vm monitord / make sure it is stopped before
-        kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep $KVM_VM_MAC | awk {' print $1 '}` 2>/dev/null
+        kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep -i $KVM_VM_MAC | awk {' print $1 '}` 2>/dev/null
         $RUNSCREEN -dmS $KVM_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/sbin/openqrm-kvm-storage-monitord $KVM_VM_MAC
 
 		# in case we have a username + password post the updated list to the openQRM-server
@@ -419,7 +419,7 @@ case "$KVM_COMMAND" in
 		lvm_storage_lock aquire
 		echo "Stopping Kvm vm $KVM_VM_NAME"
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
-		VM_PID=`ps ax | grep $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
+		VM_PID=`ps ax | grep -i $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
 		if [ "$VM_PID" == "" ]; then
 			echo "NOTICE: Attempting to stop KVM vm $KVM_VM_NAME which is not active" | logger
 		else
@@ -427,7 +427,7 @@ case "$KVM_COMMAND" in
 			kill -9 $VM_PID 1>/dev/null 2>&1
 		fi
         # kill the status monitor
-        kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep $KVM_VM_MAC_1 | awk {' print $1 '}` 2>/dev/null
+        kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep -i $KVM_VM_MAC_1 | awk {' print $1 '}` 2>/dev/null
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
@@ -437,7 +437,7 @@ case "$KVM_COMMAND" in
 
 	stop_by_mac)
 		lvm_storage_lock aquire
-        KVM_VM_NAME=`grep -rH $KVM_VM_MAC $OPENQRM_VM_DIR/*/net1 2>/dev/null | grep KVM_VM_MAC | cut -d':' -f1 2>/dev/null` 2>/dev/null
+        KVM_VM_NAME=`grep -rHi $KVM_VM_MAC $OPENQRM_VM_DIR/*/net1 2>/dev/null | grep KVM_VM_MAC | cut -d':' -f1 2>/dev/null` 2>/dev/null
         KVM_VM_NAME=`dirname $KVM_VM_NAME` 2>/dev/null
         KVM_VM_NAME=`basename $KVM_VM_NAME` 2>/dev/null
         if [ "$KVM_VM_NAME" == "" ]; then
@@ -447,7 +447,7 @@ case "$KVM_COMMAND" in
         fi
         echo "Stopping Kvm vm $KVM_VM_NAME / $KVM_VM_MAC" | logger
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
-		VM_PID=`ps ax | grep $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
+		VM_PID=`ps ax | grep -i $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
 		if [ "$VM_PID" == "" ]; then
 			echo "NOTICE: Attempting to stop KVM vm $KVM_VM_NAME which is not active" | logger
 		else
@@ -455,7 +455,7 @@ case "$KVM_COMMAND" in
 			kill -9 $VM_PID 1>/dev/null 2>&1
 		fi
         # kill the status monitor
-        kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep $KVM_VM_MAC_1 | awk {' print $1 '}` 2>/dev/null
+        kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep -i $KVM_VM_MAC_1 | awk {' print $1 '}` 2>/dev/null
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
@@ -465,7 +465,7 @@ case "$KVM_COMMAND" in
 
 	restart_by_mac)
 		lvm_storage_lock aquire
-        KVM_VM_NAME=`grep -rH $KVM_VM_MAC $OPENQRM_VM_DIR/*/net1 2>/dev/null | grep KVM_VM_MAC | cut -d':' -f1 2>/dev/null` 2>/dev/null
+        KVM_VM_NAME=`grep -rHi $KVM_VM_MAC $OPENQRM_VM_DIR/*/net1 2>/dev/null | grep KVM_VM_MAC | cut -d':' -f1 2>/dev/null` 2>/dev/null
         KVM_VM_NAME=`dirname $KVM_VM_NAME` 2>/dev/null
         KVM_VM_NAME=`basename $KVM_VM_NAME` 2>/dev/null
         if [ "$KVM_VM_NAME" == "" ]; then
@@ -475,7 +475,7 @@ case "$KVM_COMMAND" in
         fi
 		echo "Restarting Kvm vm $KVM_VM_MAC -> $KVM_VM_NAME" | logger
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
-		VM_PID=`ps ax | grep $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
+		VM_PID=`ps ax | grep -i $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
 		if [ "$VM_PID" == "" ]; then
 			echo "NOTICE: Attempting to stop KVM vm $KVM_VM_NAME which is not active" | logger
 		else
@@ -488,7 +488,7 @@ case "$KVM_COMMAND" in
             echo "KVM_VM_DISK_1=\"$KVM_VM_DISK\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk1
         fi
         # stop the vm monitor
-        kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep $KVM_VM_MAC | awk {' print $1 '}` 2>/dev/null
+        kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep -i $KVM_VM_MAC | awk {' print $1 '}` 2>/dev/null
         # start only if we have a root-disk
         . $OPENQRM_VM_DIR/$KVM_VM_NAME/disk1
         if [ "$KVM_VM_DISK_1" != "" ]; then
@@ -496,7 +496,7 @@ case "$KVM_COMMAND" in
      		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
         fi
         # start the vm monitord
-        kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep $KVM_VM_MAC | awk {' print $1 '}` 2>/dev/null
+        kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep -i $KVM_VM_MAC | awk {' print $1 '}` 2>/dev/null
         $RUNSCREEN -dmS $KVM_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/sbin/openqrm-kvm-storage-monitord $KVM_VM_MAC
 
 		# in case we have a username + password post the updated list to the openQRM-server
@@ -509,7 +509,7 @@ case "$KVM_COMMAND" in
 		lvm_storage_lock aquire
 		echo "Rebooting Kvm vm $KVM_VM_NAME"
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
-		VM_PID=`ps ax | grep $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
+		VM_PID=`ps ax | grep -i $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
 		if [ "$VM_PID" == "" ]; then
 			echo "NOTICE: Attempting to stop KVM vm $KVM_VM_NAME which is not active" | logger
 		else
@@ -533,7 +533,7 @@ case "$KVM_COMMAND" in
 		echo "Deleting Kvm vm $KVM_VM_NAME"
 		# be sure it is stopped
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
-		VM_PID=`ps ax | grep $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
+		VM_PID=`ps ax | grep -i $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
 		if [ "$VM_PID" != "" ]; then
 			kill $VM_PID
 			kill -9 $VM_PID 1>/dev/null 2>&1
@@ -562,7 +562,7 @@ case "$KVM_COMMAND" in
             . $OPENQRM_VM_DIR/$kvmvm/ram
             . $OPENQRM_VM_DIR/$kvmvm/net1
             # check if active
-            if ps ax | grep "$KVM_VM_MAC_1" | grep -v grep | grep -i screen 1>/dev/null; then
+            if ps ax | grep -i "$KVM_VM_MAC_1" | grep -v grep | grep -i screen 1>/dev/null; then
                 VM_ACTIVE=1
             else
                 VM_ACTIVE=0
@@ -780,7 +780,7 @@ case "$KVM_COMMAND" in
 		echo "Setting vm with mac $KVM_VM_MAC to boot from $KVM_VM_BOOT"
         # this command is is running from the openQRM engine which does
         # not know about the kvm-name
-        KVM_VM_NAME=`grep -rH $KVM_VM_MAC $OPENQRM_VM_DIR/*/net1 2>/dev/null | grep KVM_VM_MAC | cut -d':' -f1 2>/dev/null` 2>/dev/null
+        KVM_VM_NAME=`grep -rHi $KVM_VM_MAC $OPENQRM_VM_DIR/*/net1 2>/dev/null | grep KVM_VM_MAC | cut -d':' -f1 2>/dev/null` 2>/dev/null
         KVM_VM_NAME=`dirname $KVM_VM_NAME` 2>/dev/null
         KVM_VM_NAME=`basename $KVM_VM_NAME` 2>/dev/null
         if [ "$KVM_VM_NAME" == "" ]; then
@@ -811,7 +811,7 @@ case "$KVM_COMMAND" in
         # we do it here because the openQRM server engine does not
         # know anything about the vm name to restart it later
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
-		VM_PID=`ps ax | grep $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
+		VM_PID=`ps ax | grep -i $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
 		if [ "$VM_PID" != "" ]; then
 			kill $VM_PID
 			kill -9 $VM_PID 1>/dev/null 2>&1

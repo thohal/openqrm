@@ -97,9 +97,13 @@ KVM_VM_RESOURCE_PARAMETER="$OPENQRM_VM_DIR/$KVM_VM_NAME/resource-parameter.conf"
 # sending resource-id will add the resource if not existing (-1 = new resource)
 # loop get-parameters in case the network card is still not ready initialyzed
 NETWORKCARD_LOOP=0
+# send id -1 if resource parameters are not existing
+if [ ! -f $KVM_VM_RESOURCE_PARAMETER ]; then
+    NEW_RES_ID="&resource_id=-1"
+fi
 
 while (true); do
-	if wget $WGET_NO_CERT_CHECK -q -O $KVM_VM_RESOURCE_PARAMETER "$SERVER_PROTOCOL://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_mac=$KVM_VM_MAC"; then
+	if wget $WGET_NO_CERT_CHECK -q -O $KVM_VM_RESOURCE_PARAMETER "$SERVER_PROTOCOL://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_mac=$KVM_VM_MAC$NEW_RES_ID"; then
         if grep resource_id $KVM_VM_RESOURCE_PARAMETER 1>/dev/null 2>&1; then
             echo "-> got parameters via $SERVER_PROTOCOL"
             break

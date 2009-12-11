@@ -266,6 +266,16 @@ function openqrm_cloud_monitor() {
                 $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
                 $resource->send_command($resource_ip, $image_resize_cmd);
 
+            // kvm-lvm-deployment
+            } else if (!strcmp($image_type, "kvm-lvm-deployment")) {
+                // parse the volume group info in the identifier
+                $volume_group_location=dirname($image_rootdevice);
+                $volume_group=basename($volume_group_location);
+                $image_location_name=basename($image_rootdevice);
+                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-storage resize -n $image_location_name -v $volume_group -m $resize_value";
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
+                $resource->send_command($resource_ip, $image_resize_cmd);
+
             // equallogic-storage
             } else if (!strcmp($image_type, "equallogic")) {
                 $equallogic_volume_name=basename($image_rootdevice);
@@ -279,8 +289,8 @@ function openqrm_cloud_monitor() {
                     $eq_storage_ip = $resource_ip;
                     $eq_user = $eq_storage->storage_user;
                     $eq_password = $eq_storage->storage_password;
-		     $eq_resize_from = $ci->disk_size;
-		     $eq_resize_to = $ci->disk_rsize;
+                    $eq_resize_from = $ci->disk_size;
+                    $eq_resize_to = $ci->disk_rsize;
                     // Convert values to MB
                     if(preg_match('/TB$/i',$eq_resize_from)) {
                      $eq_resize_from = preg_replace('/TB$/i','',$eq_resize_from);
@@ -305,15 +315,15 @@ function openqrm_cloud_monitor() {
                     if(preg_match('/MB$/i',$eq_resize_to)) {
                      $eq_resize_to = preg_replace('/MB$/i','',$eq_resize_to);
                      $eq_resize_to = round($eq_resize_to);
-		    }
-		    if($eq_resize_to <= $eq_resize_from) {
-                     $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage resize -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip -m $eq_resize_to";
-                     $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Error, downsizing (".$ci->disk_size." to ".$ci->disk_rsize.") unsupported: $image_resize_cmd", "", "", 0, 0, 0); 
+                    }
+                    if($eq_resize_to <= $eq_resize_from) {
+                             $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage resize -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip -m $eq_resize_to";
+                             $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Error, downsizing (".$ci->disk_size." to ".$ci->disk_rsize.") unsupported: $image_resize_cmd", "", "", 0, 0, 0);
                     } else {
-                     $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage resize -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip -m $eq_resize_to";
-                     $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
-                     $output = shell_exec($image_resize_cmd);
-	            }
+                             $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage resize -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip -m $eq_resize_to";
+                             $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
+                             $output = shell_exec($image_resize_cmd);
+                    }
                 }
 
 
@@ -386,6 +396,19 @@ function openqrm_cloud_monitor() {
                 $image_location_name=substr($image_rootdevice_rest, 0, $ident_separate2);
                 $root_device=substr($image_rootdevice_rest, $ident_separate2+1);
                 $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/lvm-storage/bin/openqrm-lvm-storage clone -n $image_location_name -s $private_image_name -v $volume_group -m $private_disk -t lvm-aoe-deployment -u $openqrm_admin_user->name -p $openqrm_admin_user->password";
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
+                $resource->send_command($resource_ip, $image_resize_cmd);
+                // set the storage specific image root_device parameter
+    			$clone_image_fields["image_rootdevice"] = str_replace($image_location_name, $private_image_name, $image->rootdevice);
+                $private_success = true;
+
+            // kvm-lvm-deployment
+            } else if (!strcmp($image_type, "kvm-lvm-deployment")) {
+                // parse the volume group info in the identifier
+                $volume_group_location=dirname($image_rootdevice);
+                $volume_group=basename($volume_group_location);
+                $image_location_name=basename($image_rootdevice);
+                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-storage clone -n $image_location_name -s $private_image_name -v $volume_group -m $private_disk -u $openqrm_admin_user->name -p $openqrm_admin_user->password";
                 $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
                 $resource->send_command($resource_ip, $image_resize_cmd);
                 // set the storage specific image root_device parameter
@@ -576,6 +599,16 @@ function openqrm_cloud_monitor() {
                         $output = shell_exec($image_remove_clone_cmd);
                     }
 
+
+                // kvm-lvm-deployment
+                } else if (!strcmp($image_type, "kvm-lvm-deployment")) {
+                    // parse the volume group info in the identifier
+                    $volume_group_location=dirname($image_rootdevice);
+                    $volume_group=basename($volume_group_location);
+                    $image_location_name=basename($image_rootdevice);
+                    $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-storage remove -n $image_location_name -v $volume_group";
+                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+                    $resource->send_command($resource_ip, $image_remove_clone_cmd);
 
                 // equallogic-storage
                 } else if (!strcmp($image_type, "equallogic")) {
@@ -1227,6 +1260,25 @@ function openqrm_cloud_monitor() {
 
                         }
 
+					// kvm-lvm-deployment
+					} else if (!strcmp($image_type, "kvm-lvm-deployment")) {
+						$image->get_instance_by_id($image_id);
+                        // parse the volume group info in the identifier
+                        $volume_group_location=dirname($image_rootdevice);
+                        $volume_group=basename($volume_group_location);
+                        $image_location_name=basename($image_rootdevice);
+						// set default snapshot size
+						$disk_size=5000;
+						if (strlen($cr->disk_req)) {
+							$disk_size=$cr->disk_req;
+						}
+						$image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-storage snap -n $image_location_name -v $volume_group -s $image_clone_name -m $disk_size";
+						$resource->send_command($resource_ip, $image_clone_cmd);
+						// update the image rootdevice parameter
+						$ar_image_update = array(
+							'image_rootdevice' => "/dev/$volume_group/$image_clone_name",
+						);
+						$image->update($image_id, $ar_image_update);
 
                     // equallogic-storage
                     // since the equallogic storage is not really good at cloning/snapshotting
