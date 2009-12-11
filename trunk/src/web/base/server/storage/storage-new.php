@@ -21,6 +21,7 @@ $RootDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/base/';
 $BaseDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/';
 require_once "$RootDir/include/user.inc.php";
 require_once "$RootDir/class/storage.class.php";
+require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/include/htmlobject.inc.php";
 
@@ -207,8 +208,14 @@ global $thisfile;
 		$arHead['resource_hostname'] = array();
 		$arHead['resource_hostname']['title'] ='Name';
 
+		$arHead['resource_mac'] = array();
+		$arHead['resource_mac']['title'] ='Mac';
+
 		$arHead['resource_ip'] = array();
 		$arHead['resource_ip']['title'] ='IP';
+
+		$arHead['resource_vtype'] = array();
+		$arHead['resource_vtype']['title'] ='Type';
 
 		$arBody = array();
 
@@ -228,13 +235,23 @@ global $thisfile;
 			if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 				$state_icon="/openqrm/base/img/unknown.png";
 			}
+            if ($resource->id == 0) {
+                $resource_type_info="openQRM Server";
+                $resource->mac = "x:x:x:x:x:x";
+            } else {
+                $virtualization = new virtualization();
+                $virtualization->get_instance_by_id($resource->vtype);
+                $resource_type_info=$virtualization->name." on Res. ".$resource->vhostid;
+            }
 
 			$arBody[] = array(
 				'resource_state' => "<img src=$state_icon>",
 				'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 				'resource_id' => $resource->id,
 				'resource_hostname' => $resource->hostname,
-				'resource_ip' => $resource->ip,
+                'resource_mac' => $resource->mac,
+                'resource_ip' => $resource->ip,
+                'resource_vtype' => $resource_type_info,
 			);
 			
 			$table->add_headrow('<h3>Resource</h3>');
@@ -264,16 +281,25 @@ global $thisfile;
 				if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 					$state_icon="/openqrm/base/img/unknown.png";
 				}
-			
 				$ident_command = '';
-				
+                if ($resource->id == 0) {
+                    $resource_type_info="openQRM Server";
+                    $resource_mac = "x:x:x:x:x:x";
+                } else {
+                    $virtualization = new virtualization();
+                    $virtualization->get_instance_by_id($resource->vtype);
+                    $resource_type_info=$virtualization->name." on Res. ".$resource->vhostid;
+                    $resource_mac=$resource_db["resource_ip"];
+                }
 	
 				$arBody[] = array(
 					'resource_state' => "<img src=$state_icon>",
 					'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 					'resource_id' => $resource_db["resource_id"],
 					'resource_hostname' => $resource_db["resource_hostname"],
+                    'resource_mac' => $resource_mac,
 					'resource_ip' => $resource_db["resource_ip"],
+                    'resource_vtype' => $resource_type_info,
 				);
 	
 			}

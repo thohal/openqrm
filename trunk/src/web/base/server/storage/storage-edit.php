@@ -186,8 +186,15 @@ function storage_edit($storage_id='') {
 
 	$arHead['resource_hostname'] = array();
 	$arHead['resource_hostname']['title'] ='Name';
-	$arHead['resource_ip'] = array();
-	$arHead['resource_ip']['title'] ='IP';
+
+    $arHead['resource_mac'] = array();
+    $arHead['resource_mac']['title'] ='Mac';
+
+    $arHead['resource_ip'] = array();
+    $arHead['resource_ip']['title'] ='IP';
+
+    $arHead['resource_vtype'] = array();
+    $arHead['resource_vtype']['title'] ='Type';
 
 	$arBody = array();
 
@@ -216,13 +223,24 @@ function storage_edit($storage_id='') {
 		if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 			$state_icon="/openqrm/base/img/unknown.png";
 		}
+        if ($resource->id == 0) {
+            $resource_type_info="openQRM Server";
+            $resource_mac = "x:x:x:x:x:x";
+        } else {
+            $virtualization = new virtualization();
+            $virtualization->get_instance_by_id($resource->vtype);
+            $resource_type_info=$virtualization->name." on Res. ".$resource->vhostid;
+            $resource_mac=$resource_db["resource_ip"];
+        }
 
 		$arBody[] = array(
 			'resource_state' => "<img src=$state_icon>",
 			'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 			'resource_id' => $resource_db["resource_id"],
 			'resource_hostname' => $resource_db["resource_hostname"],
-			'resource_ip' => $resource_db["resource_ip"],
+            'resource_mac' => $resource_mac,
+            'resource_ip' => $resource_db["resource_ip"],
+            'resource_vtype' => $resource_type_info,
 		);
 	}
 

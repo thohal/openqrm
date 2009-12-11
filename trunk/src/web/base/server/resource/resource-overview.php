@@ -179,7 +179,6 @@ function resource_display() {
 	$arHead['resource_type'] = array();
 	$arHead['resource_type']['title'] ='Type';
 
-
 	$arHead['resource_memtotal'] = array();
 	$arHead['resource_memtotal']['title'] ='Memory';
 
@@ -203,7 +202,9 @@ function resource_display() {
 		if ($resource->id == 0) {
 			$resource_icon_default="/openqrm/base/img/logo.png";
 			$resource_type = "openQRM";
+            $resource_mac = "x:x:x:x:x:x";
 		} else {
+            $resource_mac = $resource_db["resource_mac"];
 			$resource_icon_default="/openqrm/base/img/resource.png";
 			// the resource_type
 			if ((strlen($resource->vtype)) && (!strstr($resource->vtype, "NULL"))){
@@ -236,7 +237,7 @@ function resource_display() {
 			'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 			'resource_id' => $resource_db["resource_id"],
 			'resource_hostname' => $resource_db["resource_hostname"],
-			'resource_mac' => $resource_db["resource_mac"],
+			'resource_mac' => $resource_mac,
 			'resource_ip' => $resource_db["resource_ip"],
 			'resource_type' => $resource_type,
 			'resource_memtotal' => $mem,

@@ -211,8 +211,12 @@ function appliance_form() {
 				$arHead['resource_id']['title'] ='ID';
 				$arHead['resource_name'] = array();
 				$arHead['resource_name']['title'] ='Name';
+                $arHead['resource_mac'] = array();
+                $arHead['resource_mac']['title'] ='Mac';
 				$arHead['resource_ip'] = array();
 				$arHead['resource_ip']['title'] ='Ip';
+                $arHead['resource_vtype'] = array();
+                $arHead['resource_vtype']['title'] ='Type';
 			
 				$auto_resource_icon="/openqrm/base/img/resource.png";
 				$auto_state_icon="/openqrm/base/img/active.png";
@@ -224,7 +228,9 @@ function appliance_form() {
 					'resource_icon' => "<img width=24 height=24 src=$auto_resource_icon>",
 					'resource_id' => '-1',
 					'resource_name' => "auto-select resource",
-					'resource_ip' => "0.0.0.0",
+                    'resource_mac' => "x:x:x:x:x:x",
+                    'resource_ip' => "0.0.0.0",
+                    'resource_vtype' => "auto",
 				);
 			
 				$resource_tmp = new resource();
@@ -241,12 +247,23 @@ function appliance_form() {
 					if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/".$state_icon)) {
 						$state_icon="/openqrm/base/img/unknown.png";
 					}
+                    if ($resource->id == 0) {
+                        $resource_type_info="openQRM Server";
+                        $resource->mac = "x:x:x:x:x:x";
+                    } else {
+                        $virtualization = new virtualization();
+                        $virtualization->get_instance_by_id($resource->vtype);
+                        $resource_type_info=$virtualization->name." on Res. ".$resource->vhostid;
+                    }
+
 					$arBody[] = array(
 						'resource_state' => "<img src=$state_icon>",
 						'resource_icon' => "<img width=24 height=24 src=$resource_icon_default>",
 						'resource_id' => $resource->id,
 						'resource_name' => $resource->hostname,
-						'resource_ip' => $resource->ip,
+                        'resource_mac' => $resource->mac,
+                        'resource_ip' => $resource->ip,
+                        'resource_vtype' => $resource_type_info,
 					);
 				}
 
