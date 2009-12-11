@@ -89,6 +89,16 @@ function find_uptime() {
 		current_uptime=0
 	fi
 }
+# cpu_speed
+function find_cpu_speed() {
+	if [ -f /proc/cpuinfo ]; then
+		current_cpu_speed=(`cat /proc/cpuinfo | grep "cpu.*MHz"`)
+		current_cpu_speed=${current_cpu_speed[3]/\.*/}
+	fi
+	if [ -z "$current_cpu_speed" ]; then
+		current_cpu_speed=0
+	fi
+}
 
 
 
@@ -120,11 +130,40 @@ done
 # source parameters
 . $KVM_VM_RESOURCE_PARAMETER
 
-
-
 # gathering the static values
 echo "$0: Gathering resources-information" | logger
+# source kvm vm config
+. $OPENQRM_VM_DIR/$KVM_VM_NAME/cpus
+. $OPENQRM_VM_DIR/$KVM_VM_NAME/ram
+. $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
+. $OPENQRM_VM_DIR/$KVM_VM_NAME/net2
+. $OPENQRM_VM_DIR/$KVM_VM_NAME/net3
+. $OPENQRM_VM_DIR/$KVM_VM_NAME/net4
+. $OPENQRM_VM_DIR/$KVM_VM_NAME/net5
+export current_hostname=$KVM_VM_NAME
+export resource_cpumodel="Qemu Virtual CPU"
+export current_cpu_number=$KVM_VM_CPUS
+export current_mem_total=$KVM_VM_RAM
+# nic count
+if [ "$KVM_VM_MAC_1" != "" ]; then
+    export current_nic_count=1
+fi
+if [ "$KVM_VM_MAC_2" != "" ]; then
+    export current_nic_count=2
+fi
+if [ "$KVM_VM_MAC_3" != "" ]; then
+    export current_nic_count=3
+fi
+if [ "$KVM_VM_MAC_4" != "" ]; then
+    export current_nic_count=4
+fi
+if [ "$KVM_VM_MAC_5" != "" ]; then
+    export current_nic_count=5
+fi
 
+
+# gather cpu speed only once
+find_cpu_speed
 # main loop
 while (true); do
 	# uptime

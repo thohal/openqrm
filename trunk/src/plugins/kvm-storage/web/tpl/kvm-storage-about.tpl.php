@@ -57,8 +57,9 @@ This results in a dependency to "local-disk" devices on the KVM-Storage Host.
 <ul type="disc">
     <li>Create a new storage from type "kvm-storage"</li>
     <li>Create a new logical volume on this storage</li>
-    <li><b>manuall dd a systems root-disk content to the logical volume <br>
-    Please notice that this initial version does not provide automatically creation of server-templates yet !</b></li>
+    <li><b>Use the "local-storage" plugin to populate the new logical volume<br>
+    or use the "linuxcoe-plugin" to automatically install a Linux distribution on it.<br>
+    Another option is to connect to the VMs VNC console and install an OS in the regular way.</b></li>
     <li>Create an Image using the new created logical volume as root-device</li>
 </ul>
 Result is an openQRM Image (server-template) which can be deployed to a KVM-Storage VM
