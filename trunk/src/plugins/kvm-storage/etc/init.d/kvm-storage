@@ -23,8 +23,8 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 export OPENQRM_SOURCE_DIR="$OPENQRM_SERVER_BASE_DIR/openqrm/"
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-package-functions
-. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/include/openqrm-plugin-kvm-functions
-. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/etc/openqrm-plugin-kvm.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/include/openqrm-plugin-kvm-storage-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/etc/openqrm-plugin-kvm-storage.conf
 if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
 	. $OPENQRM_RESOURCE_PARAMETER_FILE
 	OPENQRM_SERVER_IP=$resource_openqrmserver
