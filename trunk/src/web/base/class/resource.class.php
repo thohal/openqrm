@@ -25,6 +25,7 @@ $BootServiceDir = $_SERVER["DOCUMENT_ROOT"].'/openqrm/boot-service/';
 require_once "$RootDir/include/openqrm-database-functions.php";
 require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/class/storage.class.php";
+require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/image.class.php";
 require_once "$RootDir/class/plugin.class.php";
 require_once "$RootDir/class/event.class.php";
@@ -243,6 +244,7 @@ function add($resource_fields) {
 			$event->log("check_all_states", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling new-resource event.", "", "", 0, 0, $resource_id);
 			require_once "$plugin_new_resource_hook";
 			$resource_function="openqrm_"."$plugin_name"."_resource";
+            $resource_function=str_replace("-", "_", $resource_function);
 			$resource_function("add", $resource_fields);
 		}
 	}
@@ -269,6 +271,7 @@ function remove($resource_id, $resource_mac) {
 			$resource_fields["resource_id"]=$resource_id;
 			$resource_fields["resource_mac"]=$resource_mac;
 			$resource_function="openqrm_"."$plugin_name"."_resource";
+            $resource_function=str_replace("-", "_", $resource_function);
 			$resource_function("remove", $resource_fields);
 		}
 	}
@@ -505,9 +508,7 @@ function send_command($resource_ip, $resource_command) {
 	global $OPENQRM_EXECUTION_LAYER;
 	global $event;
 	global $RootDir;
-
-	$resource = new resource();
-	$resource->get_instance_by_ip($resource_ip);
+    // here we assume that we are the resource
 
 	// plugin hook in case a resource gets rebooted or halted
 	switch($resource_command) {
@@ -521,14 +522,37 @@ function send_command($resource_ip, $resource_command) {
 					$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling start-resource event.", "", "", 0, 0, $resource->id);
 					// prepare resource_fields array
 					$resource_fields = array();
-					$resource_fields = $resource->get_fields($resource->id);
+					$resource_fields = $this->get_fields($this->id);
 					// include the plugin function file and run it						
 					require_once "$plugin_start_resource_hook";
 					$resource_function="openqrm_"."$plugin_name"."_resource";
+                    $resource_function=str_replace("-", "_", $resource_function);
 					$resource_function("start", $resource_fields);
 				}
 			}
-			break;
+            // here we check if the resource is virtual and if 
+            // the virtualization plugin wants to reboot it via the host
+            $virtualization = new virtualization();
+            $virtualization->get_instance_by_id($this->vtype);
+            $virtualization_plugin_name = str_replace("-vm", "", $virtualization->type);
+            $plugin_resource_virtual_command_hook = "$RootDir/plugins/$virtualization_plugin_name/openqrm-$virtualization_plugin_name-resource-virtual-command-hook.php";
+            if (file_exists($plugin_resource_virtual_command_hook)) {
+                $event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $virtualization_plugin_name virtually handling the reboot command.", "", "", 0, 0, $resource->id);
+                // prepare resource_fields array
+                $resource_fields = array();
+                $resource_fields = $this->get_fields($this->id);
+                // include the plugin function file and run it
+                require_once "$plugin_resource_virtual_command_hook";
+                $resource_function="openqrm_"."$virtualization_plugin_name"."_resource_virtual_command";
+                $resource_function=str_replace("-", "_", $resource_function);
+                $resource_function("reboot", $resource_fields);
+                // the virtual reboot function can only be
+                // implemented by a single plugin depending on the
+                // resource type. So we return after that and
+                // do not try to reboot the resource via its ip
+                return;
+            }
+            break;
 
 		case 'halt':
 			// stop hook
@@ -537,17 +561,39 @@ function send_command($resource_ip, $resource_command) {
 			foreach ($enabled_plugins as $index => $plugin_name) {
 				$plugin_start_resource_hook = "$RootDir/plugins/$plugin_name/openqrm-$plugin_name-resource-hook.php";
 				if (file_exists($plugin_start_resource_hook)) {
-					$event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling start-resource event.", "", "", 0, 0, $resource->id);
+					$event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $plugin_name handling start-resource event.", "", "", 0, 0, $resource->id);
 					// prepare resource_fields array
 					$resource_fields = array();
-					$resource_fields = $resource->get_fields($resource->id);
+					$resource_fields = $this->get_fields($this->id);
 					// include the plugin function file and run it						
 					require_once "$plugin_start_resource_hook";
 					$resource_function="openqrm_"."$plugin_name"."_resource";
+                    $resource_function=str_replace("-", "_", $resource_function);
 					$resource_function("stop", $resource_fields);
 				}
 			}
-
+            // here we check if the resource is virtual and if
+            // the virtualization plugin wants to reboot it via the host
+            $virtualization = new virtualization();
+            $virtualization->get_instance_by_id($this->vtype);
+            $virtualization_plugin_name = str_replace("-vm", "", $virtualization->type);
+            $plugin_resource_virtual_command_hook = "$RootDir/plugins/$virtualization_plugin_name/openqrm-$virtualization_plugin_name-resource-virtual-command-hook.php";
+            if (file_exists($plugin_resource_virtual_command_hook)) {
+                $event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $virtualization_plugin_name virtually handling the reboot command.", "", "", 0, 0, $resource->id);
+                // prepare resource_fields array
+                $resource_fields = array();
+                $resource_fields = $this->get_fields($this->id);
+                // include the plugin function file and run it
+                require_once "$plugin_resource_virtual_command_hook";
+                $resource_function="openqrm_"."$virtualization_plugin_name"."_resource_virtual_command";
+                $resource_function=str_replace("-", "_", $resource_function);
+                $resource_function("halt", $resource_fields);
+                // the virtual halt function can only be
+                // implemented by a single plugin depending on the
+                // resource type. So we return after that and
+                // do not try to halt the resource via its ip
+                return;
+            }
 			break;
 	}
 

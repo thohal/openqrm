@@ -207,7 +207,7 @@ if [ "$KVM_COMMAND" == "post_vm_list" ] || [ "$KVM_COMMAND" == "post_vm_config" 
 		fi
 else
 
-	if [ "$KVM_COMMAND" != "list" ] && [ "$KVM_COMMAND" != "setboot" ] && [ "$KVM_COMMAND" != "start_by_mac" ] && [ "$KVM_COMMAND" != "restart_by_mac" ]  && [ "$KVM_COMMAND" != "post_bridge_config" ]; then
+	if [ "$KVM_COMMAND" != "list" ] && [ "$KVM_COMMAND" != "setboot" ] && [ "$KVM_COMMAND" != "start_by_mac" ] && [ "$KVM_COMMAND" != "restart_by_mac" ]  && [ "$KVM_COMMAND" != "post_bridge_config" ]  && [ "$KVM_COMMAND" != "stop_by_mac" ]; then
 		if [ "$KVM_VM_NAME" == "" ]; then
 			kvm_usage
 		fi
@@ -434,9 +434,9 @@ case "$KVM_COMMAND" in
 		fi
 		lvm_storage_lock release
 		;;
-	restart_by_mac)
+
+	stop_by_mac)
 		lvm_storage_lock aquire
-		echo "Stopping Kvm vm $KVM_VM_MAC"
         KVM_VM_NAME=`grep -rH $KVM_VM_MAC $OPENQRM_VM_DIR/*/net1 2>/dev/null | grep KVM_VM_MAC | cut -d':' -f1 2>/dev/null` 2>/dev/null
         KVM_VM_NAME=`dirname $KVM_VM_NAME` 2>/dev/null
         KVM_VM_NAME=`basename $KVM_VM_NAME` 2>/dev/null
@@ -445,7 +445,35 @@ case "$KVM_COMMAND" in
     		lvm_storage_lock release
             exit 1
         fi
-		echo "Stopping Kvm vm $KVM_VM_MAC -> $KVM_VM_NAME" | logger
+        echo "Stopping Kvm vm $KVM_VM_NAME / $KVM_VM_MAC" | logger
+		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
+		VM_PID=`ps ax | grep $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
+		if [ "$VM_PID" == "" ]; then
+			echo "NOTICE: Attempting to stop KVM vm $KVM_VM_NAME which is not active" | logger
+		else
+			kill $VM_PID
+			kill -9 $VM_PID 1>/dev/null 2>&1
+		fi
+        # kill the status monitor
+        kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep $KVM_VM_MAC_1 | awk {' print $1 '}` 2>/dev/null
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
+		fi
+		lvm_storage_lock release
+		;;
+
+	restart_by_mac)
+		lvm_storage_lock aquire
+        KVM_VM_NAME=`grep -rH $KVM_VM_MAC $OPENQRM_VM_DIR/*/net1 2>/dev/null | grep KVM_VM_MAC | cut -d':' -f1 2>/dev/null` 2>/dev/null
+        KVM_VM_NAME=`dirname $KVM_VM_NAME` 2>/dev/null
+        KVM_VM_NAME=`basename $KVM_VM_NAME` 2>/dev/null
+        if [ "$KVM_VM_NAME" == "" ]; then
+			echo "NOTICE: Cloud not find KVM-storage vm $KVM_VM_MAC on this host" | logger
+    		lvm_storage_lock release
+            exit 1
+        fi
+		echo "Restarting Kvm vm $KVM_VM_MAC -> $KVM_VM_NAME" | logger
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
 		VM_PID=`ps ax | grep $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
 		if [ "$VM_PID" == "" ]; then
@@ -455,12 +483,15 @@ case "$KVM_COMMAND" in
 			kill -9 $VM_PID 1>/dev/null 2>&1
 		fi
 
-        # add empty disk disk parameter
-        echo "KVM_VM_DISK_1=\"$KVM_VM_DISK\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk1
+        # add disk disk parameter if disk param is not set to noop
+        if [ "$KVM_VM_DISK" != "noop" ]; then
+            echo "KVM_VM_DISK_1=\"$KVM_VM_DISK\"" > $OPENQRM_VM_DIR/$KVM_VM_NAME/disk1
+        fi
         # stop the vm monitor
         kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep $KVM_VM_MAC | awk {' print $1 '}` 2>/dev/null
         # start only if we have a root-disk
-        if [ "$KVM_VM_DISK" != "" ]; then
+        . $OPENQRM_VM_DIR/$KVM_VM_NAME/disk1
+        if [ "$KVM_VM_DISK_1" != "" ]; then
             # :) start + boot local
      		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
         fi
