@@ -289,7 +289,7 @@ global $thisfile;
                     $virtualization = new virtualization();
                     $virtualization->get_instance_by_id($resource->vtype);
                     $resource_type_info=$virtualization->name." on Res. ".$resource->vhostid;
-                    $resource_mac=$resource_db["resource_ip"];
+                    $resource_mac=$resource_db["resource_mac"];
                 }
 	
 				$arBody[] = array(
