@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/kvm/img/manager.png"> KVM Storage VM Boot Device Configuration</h1>
+<h1><img border=0 src="/openqrm/base/plugins/kvm-storage/img/manager.png"> KVM Storage VM Boot Device Configuration</h1>
 {backlink}
 <br>
 {vm_config_boot_disp}

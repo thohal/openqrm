@@ -23,7 +23,7 @@
 }
 </style>
 
-<h1><img border=0 src="/openqrm/base/plugins/kvm/img/manager.png"> KVM Storage VM Configuration</h1>
+<h1><img border=0 src="/openqrm/base/plugins/kvm-storage/img/manager.png"> KVM Storage VM Configuration</h1>
 {backlink}
 <br><br>
 <h4>VM CPUs</h4>

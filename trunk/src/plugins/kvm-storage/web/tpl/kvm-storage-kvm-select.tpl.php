@@ -24,7 +24,7 @@
 </style>
 <form action="{formaction}" method="GET">
 
-<h1><img border=0 src="/openqrm/base/plugins/kvm/img/manager.png"> KVM Storage VM Manager</h1>
+<h1><img border=0 src="/openqrm/base/plugins/kvm-storage/img/manager.png"> KVM Storage VM Manager</h1>
 
 <div style="float:left;">
 <h4>Please select a KVM-Storage Host from the list below</h4>
