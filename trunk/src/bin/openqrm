@@ -53,6 +53,9 @@ function openqrm_usage() {
 	echo "- Managing server-configuration -"
 	echo "`basename $0` init_config [restore]"
 	echo
+	echo "- Login to resources -"
+	echo "`basename $0` login -i <resource-ip>"
+	echo
 
 
 }
@@ -248,6 +251,33 @@ case "$1" in
 				openqrm_server_state list
 				;;
 		esac
+		;;
+
+
+
+
+	login)
+		shift
+		if [ $# == 0 ]; then
+			openqrm_usage
+			exit 0
+		fi
+        while [ $# -ne 0 ]; do
+            case "$1" in
+                -i)
+                    RESOURCE_IP_ADDRESS=$2
+                    shift
+                    ;;
+            esac
+            shift
+        done
+        if [ "$RESOURCE_IP_ADDRESS" == "" ]; then
+            openqrm_usage
+            exit 1
+        fi
+        echo "Login to resource $RESOURCE_IP_ADDRESS ..."
+        $OPENQRM_SERVER_BASE_DIR/openqrm/bin/dbclient -K 10 -y -i $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key -p $OPENQRM_EXEC_PORT root@$RESOURCE_IP_ADDRESS
+
 		;;
 
 
