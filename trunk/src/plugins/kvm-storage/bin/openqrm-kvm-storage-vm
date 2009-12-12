@@ -240,7 +240,7 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_VM_RAM" == "" ]; then
 			kvm_usage
 		fi
-		lvm_storage_lock aquire
+		kvm_storage_lock aquire
 		echo "Creating KVM vm $KVM_VM_NAME -> $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm"
 		# creating the kvm start script
 		mkdir -p $OPENQRM_VM_DIR/$KVM_VM_NAME/
@@ -365,10 +365,10 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
 		fi
-		lvm_storage_lock release
+		kvm_storage_lock release
 		;;
 	start)
-		lvm_storage_lock aquire
+		kvm_storage_lock aquire
 		echo "Starting Kvm vm $KVM_VM_NAME"
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
         # start only if we have a root-disk
@@ -384,17 +384,17 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
 		fi
-		lvm_storage_lock release
+		kvm_storage_lock release
 		;;
 	start_by_mac)
-		lvm_storage_lock aquire
+		kvm_storage_lock aquire
 		echo "Starting Kvm vm $KVM_VM_MAC"
         KVM_VM_NAME=`grep -rHi $KVM_VM_MAC $OPENQRM_VM_DIR/*/net1 2>/dev/null | grep KVM_VM_MAC | cut -d':' -f1 2>/dev/null` 2>/dev/null
         KVM_VM_NAME=`dirname $KVM_VM_NAME` 2>/dev/null
         KVM_VM_NAME=`basename $KVM_VM_NAME` 2>/dev/null
         if [ "$KVM_VM_NAME" == "" ]; then
 			echo "NOTICE: Cloud not find KVM-storage vm $KVM_VM_MAC on this host" | logger
-    		lvm_storage_lock release
+    		kvm_storage_lock release
             exit 1
         fi
 		echo "Starting Kvm vm $KVM_VM_MAC -> $KVM_VM_NAME on LVM volume $KVM_VM_DISK" | logger
@@ -413,10 +413,10 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
 		fi
-		lvm_storage_lock release
+		kvm_storage_lock release
 		;;
 	stop)
-		lvm_storage_lock aquire
+		kvm_storage_lock aquire
 		echo "Stopping Kvm vm $KVM_VM_NAME"
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
 		VM_PID=`ps ax | grep -i $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
@@ -432,17 +432,17 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
 		fi
-		lvm_storage_lock release
+		kvm_storage_lock release
 		;;
 
 	stop_by_mac)
-		lvm_storage_lock aquire
+		kvm_storage_lock aquire
         KVM_VM_NAME=`grep -rHi $KVM_VM_MAC $OPENQRM_VM_DIR/*/net1 2>/dev/null | grep KVM_VM_MAC | cut -d':' -f1 2>/dev/null` 2>/dev/null
         KVM_VM_NAME=`dirname $KVM_VM_NAME` 2>/dev/null
         KVM_VM_NAME=`basename $KVM_VM_NAME` 2>/dev/null
         if [ "$KVM_VM_NAME" == "" ]; then
 			echo "NOTICE: Cloud not find KVM-storage vm $KVM_VM_MAC on this host" | logger
-    		lvm_storage_lock release
+    		kvm_storage_lock release
             exit 1
         fi
         echo "Stopping Kvm vm $KVM_VM_NAME / $KVM_VM_MAC" | logger
@@ -460,17 +460,17 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
 		fi
-		lvm_storage_lock release
+		kvm_storage_lock release
 		;;
 
 	restart_by_mac)
-		lvm_storage_lock aquire
+		kvm_storage_lock aquire
         KVM_VM_NAME=`grep -rHi $KVM_VM_MAC $OPENQRM_VM_DIR/*/net1 2>/dev/null | grep KVM_VM_MAC | cut -d':' -f1 2>/dev/null` 2>/dev/null
         KVM_VM_NAME=`dirname $KVM_VM_NAME` 2>/dev/null
         KVM_VM_NAME=`basename $KVM_VM_NAME` 2>/dev/null
         if [ "$KVM_VM_NAME" == "" ]; then
 			echo "NOTICE: Cloud not find KVM-storage vm $KVM_VM_MAC on this host" | logger
-    		lvm_storage_lock release
+    		kvm_storage_lock release
             exit 1
         fi
 		echo "Restarting Kvm vm $KVM_VM_MAC -> $KVM_VM_NAME" | logger
@@ -503,10 +503,10 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
 		fi
-		lvm_storage_lock release
+		kvm_storage_lock release
 		;;
 	reboot)
-		lvm_storage_lock aquire
+		kvm_storage_lock aquire
 		echo "Rebooting Kvm vm $KVM_VM_NAME"
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
 		VM_PID=`ps ax | grep -i $KVM_VM_MAC_1 | grep kvm | grep -i screen | grep -v grep | awk {' print $1 '}`
@@ -526,10 +526,10 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
 		fi
-		lvm_storage_lock release
+		kvm_storage_lock release
 		;;
 	delete)
-		lvm_storage_lock aquire
+		kvm_storage_lock aquire
 		echo "Deleting Kvm vm $KVM_VM_NAME"
 		# be sure it is stopped
 		. $OPENQRM_VM_DIR/$KVM_VM_NAME/net1
@@ -543,7 +543,7 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
 		fi
-		lvm_storage_lock release
+		kvm_storage_lock release
 		;;
 	list)
 		echo "Listing Kvm vms"
@@ -694,14 +694,14 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_VM_CPUS" == "" ]; then
 			kvm_usage
 		fi
-		lvm_storage_lock aquire
+		kvm_storage_lock aquire
 		echo "Updating KVM vm $KVM_VM_NAME with $KVM_VM_CPUS CPUs"
 		sed -i -e s"#KVM_VM_CPUS=.*#KVM_VM_CPUS=\"$KVM_VM_CPUS\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/cpus
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $KVM_VM_NAME -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
 		fi
-		lvm_storage_lock release
+		kvm_storage_lock release
 		;;
 
 
@@ -712,14 +712,14 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_VM_RAM" == "" ]; then
 			kvm_usage
 		fi
-		lvm_storage_lock aquire
+		kvm_storage_lock aquire
 		echo "Updating KVM vm $KVM_VM_NAME with $KVM_VM_RAM Memory"
 		sed -i -e s"#KVM_VM_RAM=.*#KVM_VM_RAM=\"$KVM_VM_RAM\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/ram
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $KVM_VM_NAME -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
 		fi
-		lvm_storage_lock release
+		kvm_storage_lock release
 		;;
 
 	add_vm_nic)
@@ -735,7 +735,7 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_VM_MAC_BRIDGE" == "" ]; then
 			KVM_VM_MAC_BRIDGE=$OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE
 		fi
-		lvm_storage_lock aquire
+		kvm_storage_lock aquire
 		echo "Adding nic ($OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE) to KVM vm $KVM_VM_NAME" | logger
         # ex or internal bridge ?
         if [ "$KVM_VM_MAC_BRIDGE" == "$OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE" ]; then
@@ -748,7 +748,7 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $KVM_VM_NAME -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
 		fi
-		lvm_storage_lock release
+		kvm_storage_lock release
 		;;
 	remove_vm_nic)
 		if [ "$KVM_VM_NAME" == "" ]; then
@@ -757,7 +757,7 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_VM_COMPONENT_NUMBER" == "" ]; then
 			kvm_usage
 		fi
-		lvm_storage_lock aquire
+		kvm_storage_lock aquire
 		echo "Removing nic $KVM_VM_COMPONENT_NUMBER from KVM vm $KVM_VM_NAME"
 		sed -i -e s"#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/net""$KVM_VM_COMPONENT_NUMBER
 		sed -i -e s"#KVM_VM_MAC_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_MAC_$KVM_VM_COMPONENT_NUMBER=\"\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/net""$KVM_VM_COMPONENT_NUMBER
@@ -765,7 +765,7 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $KVM_VM_NAME -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
 		fi
-		lvm_storage_lock release
+		kvm_storage_lock release
 		;;
 
 	setboot)
@@ -776,7 +776,7 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_VM_BOOT" == "" ]; then
 			kvm_usage
 		fi
-		lvm_storage_lock aquire
+		kvm_storage_lock aquire
 		echo "Setting vm with mac $KVM_VM_MAC to boot from $KVM_VM_BOOT"
         # this command is is running from the openQRM engine which does
         # not know about the kvm-name
@@ -785,7 +785,7 @@ case "$KVM_COMMAND" in
         KVM_VM_NAME=`basename $KVM_VM_NAME` 2>/dev/null
         if [ "$KVM_VM_NAME" == "" ]; then
 			echo "NOTICE: Cloud not find KVM-storage vm $KVM_VM_MAC on this host" | logger
-    		lvm_storage_lock release
+    		kvm_storage_lock release
             exit 1
         fi
         case "$KVM_VM_BOOT" in
@@ -818,7 +818,7 @@ case "$KVM_COMMAND" in
 		fi
 		sleep 2
 		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
-		lvm_storage_lock release
+		kvm_storage_lock release
 		;;
 
 
@@ -829,7 +829,7 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_VM_BOOT" == "" ]; then
 			kvm_usage
 		fi
-		lvm_storage_lock aquire
+		kvm_storage_lock aquire
 		echo "Setting vm $KVM_VM_NAME to boot from $KVM_VM_BOOT"
         case "$KVM_VM_BOOT" in
             local)
@@ -856,7 +856,7 @@ case "$KVM_COMMAND" in
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_config -n $KVM_VM_NAME -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
 		fi
-		lvm_storage_lock release
+		kvm_storage_lock release
 		;;
 
 

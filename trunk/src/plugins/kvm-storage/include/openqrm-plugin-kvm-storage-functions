@@ -36,8 +36,8 @@ fi
 
 ################ common kvm-storage functions
 
-# logs for lvm_storage
-function lvm_storage_log() {
+# logs for kvm_storage
+function kvm_storage_log() {
 	local COMPONENT=$1
 	shift
 	local MESSAGE=$@
@@ -46,7 +46,7 @@ function lvm_storage_log() {
 
 
 # locking function
-function lvm_storage_lock() {
+function kvm_storage_lock() {
 	local COMMAND=$1
 	local RET=1
 	
@@ -57,17 +57,17 @@ function lvm_storage_lock() {
 		aquire)
 				lockfile -s $LVM_MGMT_LOCK_DELAY -r $LVM_MGMT_LOCK_RETRY -l $LVM_MGMT_LOCK_TIMEOUT $LVM_MGMT_LOCK_FILE
 				RET=$?
-				lvm_storage_log lvm_storage_lock "Aquired the lock"
+				kvm_storage_log kvm_storage_lock "Aquired the lock"
 				return $RET
 				;;
 		release)
 				/bin/rm -f $LVM_MGMT_LOCK_FILE
 				RET=$?
-				lvm_storage_log lvm_storage_lock "Released the lock"
+				kvm_storage_log kvm_storage_lock "Released the lock"
 				return $RET
 				;;
 		*)
-			lvm_storage_log lvm_storage_lock "No such command. Try 'aquire' or 'release'"
+			kvm_storage_log kvm_storage_lock "No such command. Try 'aquire' or 'release'"
 			return 1
 			;;	
 	esac

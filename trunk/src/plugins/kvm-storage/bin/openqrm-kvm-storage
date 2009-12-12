@@ -1,5 +1,5 @@
 #!/bin/bash
-# this script automatically manages nfs and iscsi on lvm
+# this script automatically manages nfs and iscsi on kvm
 #
 # This file is part of openQRM.
 #
@@ -54,7 +54,7 @@ if [ "$WHOAMI" != "root" ]; then
 	exit 6
 fi
 
-function lvm_storage_usage() {
+function kvm_storage_usage() {
 	echo "Usage : $0 add/remove/snap/list/resize/clone <-n image-name> <-v volume-group>"
 	echo "             [-m size in MB]"
 	echo "             [-s image-snapshot-name]"
@@ -106,7 +106,7 @@ while [ $# -ne 0 ]; do
 			;;
 		*)
 			echo "ERROR: Free commandline arguments are not allowed"
-			lvm_storage_usage
+			kvm_storage_usage
 			exit 6
 			;;
 	esac
@@ -118,19 +118,19 @@ done
 
 # main
 if [ "$LVM_COMMAND" == "" ]; then
-	lvm_storage_usage
+	kvm_storage_usage
 fi
 
 if [ "$LVM_COMMAND" == "post_lv" ] || [ "$LVM_COMMAND" == "post_vg" ] || [ "$LVM_COMMAND" == "post_identifier" ]; then
 		if [ "$LVM_OPENQRM_USERNAME" == "" ]; then
-			lvm_storage_usage
+			kvm_storage_usage
 		fi
 		if [ "$LVM_OPENQRM_PASSWORD" == "" ]; then
-			lvm_storage_usage
+			kvm_storage_usage
 		fi
 		if [ "$LVM_COMMAND" == "post_lv" ]; then
 			if [ "$LVM_STORAGE_SERVER_VOLUME_GROUP" == "" ]; then
-				lvm_storage_usage
+				kvm_storage_usage
 			fi
 		fi
 
@@ -138,10 +138,10 @@ else
 
 	if [ "$LVM_COMMAND" != "list" ] && [ "$LVM_COMMAND" != "auth" ]; then
 		if [ "$LVM_IMAGE_NAME" == "" ]; then
-			lvm_storage_usage
+			kvm_storage_usage
 		fi
 		if [ "$LVM_STORAGE_SERVER_VOLUME_GROUP" == "" ]; then
-			lvm_storage_usage
+			kvm_storage_usage
 		fi
 	fi
 fi
@@ -171,9 +171,9 @@ case "$LVM_COMMAND" in
 		fi
 		export LVM_IMAGE_SIZE
 		echo -n "Creating logical volume $LVM_IMAGE_NAME size $LVM_IMAGE_SIZE MB using volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
-        lvm_storage_lock aquire
+        kvm_storage_lock aquire
 		lvcreate -L$LVM_IMAGE_SIZE -n$LVM_IMAGE_NAME $LVM_STORAGE_SERVER_VOLUME_GROUP
-        lvm_storage_lock release
+        kvm_storage_lock release
 
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
@@ -185,10 +185,10 @@ case "$LVM_COMMAND" in
 	remove)
 
 		echo -n "Removing logical volume $LVM_IMAGE_NAME on volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
-        lvm_storage_lock aquire
+        kvm_storage_lock aquire
 		lvchange -a n /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
 		lvremove -f /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
-        lvm_storage_lock release
+        kvm_storage_lock release
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP
@@ -200,7 +200,7 @@ case "$LVM_COMMAND" in
 		if [ "$LVM_IMAGE_SNAPSHOT_NAME" == "" ]; then
 			echo "ERROR: Please give a name for the snapshot using the -s cmdline parmeter"
 			echo
-			lvm_storage_usage
+			kvm_storage_usage
 		fi
 		if [ "$LVM_IMAGE_SIZE" == "" ]; then
 			LVM_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
@@ -214,9 +214,9 @@ case "$LVM_COMMAND" in
 			exit 1
 		fi
 		echo -n "Creating snapshot size $LVM_IMAGE_SIZE from logical volume $LVM_IMAGE_NAME -> $LVM_IMAGE_SNAPSHOT_NAME"
-        lvm_storage_lock aquire
+        kvm_storage_lock aquire
 		lvcreate --size $LVM_IMAGE_SIZE""m --snapshot --name $LVM_IMAGE_SNAPSHOT_NAME /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME
-        lvm_storage_lock release
+        kvm_storage_lock release
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP
@@ -287,9 +287,9 @@ case "$LVM_COMMAND" in
 		fi
 		export LVM_IMAGE_SIZE
 		echo "Resizing logical volume $LVM_IMAGE_NAME + size $LVM_IMAGE_SIZE MB using volume group $LVM_STORAGE_SERVER_VOLUME_GROUP"
-        lvm_storage_lock aquire
+        kvm_storage_lock aquire
         lvresize -L +$LVM_IMAGE_SIZE /dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME 2>&1 | logger
-        lvm_storage_lock release
+        kvm_storage_lock release
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$LVM_OPENQRM_USERNAME" != "" ] && [ "$LVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_lv -u $LVM_OPENQRM_USERNAME -p $LVM_OPENQRM_PASSWORD -v $LVM_STORAGE_SERVER_VOLUME_GROUP
@@ -305,7 +305,7 @@ case "$LVM_COMMAND" in
 		if [ "$LVM_IMAGE_SNAPSHOT_NAME" == "" ]; then
 			echo "ERROR: Please give a name for the clone using the -s cmdline parmeter"
 			echo
-			lvm_storage_usage
+			kvm_storage_usage
 		fi
 		if [ "$LVM_IMAGE_SIZE" == "" ]; then
 			LVM_IMAGE_SIZE=$DEFAULT_IMAGE_SIZE
@@ -327,7 +327,7 @@ case "$LVM_COMMAND" in
             exit
         fi
 
-        lvm_storage_lock aquire
+        kvm_storage_lock aquire
 		if ! lvcreate -L$LVM_IMAGE_SIZE -n$LVM_IMAGE_SNAPSHOT_NAME $LVM_STORAGE_SERVER_VOLUME_GROUP; then
             echo "ERROR: Cloud not create target logical volume $LVM_IMAGE_SNAPSHOT_NAME !"
             echo "ERROR: Cloud not create target logical volume $LVM_IMAGE_SNAPSHOT_NAME !" | logger
@@ -335,7 +335,7 @@ case "$LVM_COMMAND" in
         fi
         # copy content
         echo "Running : dd if=/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME of=/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_SNAPSHOT_NAME bs=1M" | logger
-        lvm_storage_lock release
+        kvm_storage_lock release
         dd if=/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_NAME of=/dev/$LVM_STORAGE_SERVER_VOLUME_GROUP/$LVM_IMAGE_SNAPSHOT_NAME bs=1M
 
         # here we notify openQRM that cloning has finished
@@ -357,7 +357,7 @@ case "$LVM_COMMAND" in
 
 
 	*)
-		lvm_storage_usage
+		kvm_storage_usage
 		;;
 
 
