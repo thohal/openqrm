@@ -280,7 +280,7 @@ if(htmlobject_request('action') != '') {
     // and wait for the resulting statfile
     if (!wait_for_statfile($statfile)) {
         echo "<b>Could not get bridge config status file! Please checks the event log";
-        extit(0);
+        exit(0);
     }
 }
 
