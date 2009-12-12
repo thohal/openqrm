@@ -62,7 +62,7 @@ if [ "$KVM_VM_MAC" == "" ]; then
 	exit 1
 fi
 
-KVM_VM_NAME=`grep -rH $KVM_VM_MAC $OPENQRM_VM_DIR/*/net1 2>/dev/null | grep KVM_VM_MAC | cut -d':' -f1 2>/dev/null` 2>/dev/null
+KVM_VM_NAME=`grep -rHi $KVM_VM_MAC $OPENQRM_VM_DIR/*/net1 2>/dev/null | grep KVM_VM_MAC | cut -d':' -f1 2>/dev/null` 2>/dev/null
 KVM_VM_NAME=`dirname $KVM_VM_NAME` 2>/dev/null
 KVM_VM_NAME=`basename $KVM_VM_NAME` 2>/dev/null
 if [ "$KVM_VM_NAME" == "" ]; then
