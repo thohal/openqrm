@@ -1,0 +1,130 @@
+#!/bin/bash
+# init script for the openQRM xen-storage-plugin
+#
+# This file is part of openQRM.
+#
+# openQRM is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2
+# as published by the Free Software Foundation.
+#
+# openQRM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+#
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/include/openqrm-plugin-xen-storage-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/etc/openqrm-plugin-xen-storage.conf
+
+
+LINE_IFS='
+'
+
+function openqrm_plugin_xen_storage_start() {
+	openqrm_plugin_xen_storage_stop 1>/dev/null 2>&1
+	echo "Starting the openQRM xen-storage-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/xen-storage/.running
+
+}
+
+
+function openqrm_plugin_xen_storage_stop() {
+	echo "Stopping the openQRM xen-storage-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/xen-storage/.running
+}
+
+function openqrm_plugin_xen_storage_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "xen-storage: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "xen-storage: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM xen-storage-plugin"
+	openqrm_plugin_xen_storage_stop
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD xen-lvm-deployment
+	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD xen-storage
+	openqrm_server_remove_virtualization_type $USERNAME $PASSWORD xen-storage-vm
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/xen-storage
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-xen-storage.tgz
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.xen-lvm-deployment.php
+
+}
+
+function openqrm_plugin_xen_storage_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "xen-storage: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "xen-storage: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Initializing the openQRM xen-storage-plugin"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD xen-lvm-deployment xen-lvm-deployment "LVM deployment for Xen" xen-storage "Xen LVM Storage"
+	openqrm_server_add_virtualization_type $USERNAME $PASSWORD xen-storage "Xen-Storage Host"
+	openqrm_server_add_virtualization_type $USERNAME $PASSWORD xen-storage-vm "Xen-Storage VM"
+
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/xen-storage
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/boot-service-xen-storage.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-xen-storage.tgz
+	# linking the image deployment parameters menu
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/image.xen-lvm-deployment.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.xen-lvm-deployment.php
+    # create storage dir for stat files
+    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/storage
+    chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/storage
+    chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/bin/*
+    # create xen-stat dir
+    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/xen-stat
+    chmod -R 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/web/xen-stat
+
+	
+}
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_xen_storage_start
+		;;
+	stop)
+		openqrm_plugin_xen_storage_stop
+		;;
+	restart)
+		openqrm_plugin_xen_storage_stop
+		sleep 1
+		openqrm_plugin_xen_storage_start
+		;;
+	init)
+		openqrm_plugin_xen_storage_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_xen_storage_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+

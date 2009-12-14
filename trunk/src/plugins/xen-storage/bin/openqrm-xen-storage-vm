@@ -1,0 +1,1047 @@
+#!/bin/bash
+# this script automatically manages xen-storage
+#
+# This file is part of openQRM.
+#
+# openQRM is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2
+# as published by the Free Software Foundation.
+#
+# openQRM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+#
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/include/openqrm-plugin-xen-storage-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/etc/openqrm-plugin-xen-storage.conf
+if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+	OPENQRM_INTERFACE=$OPENQRM_SERVER_INTERFACE
+	resource_id=0
+	resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+    openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
+
+elif [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+	OPENQRM_INTERFACE=`ifconfig | grep -i $resource_mac | grep :oq | cut -d':' -f1`
+
+fi
+OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode"
+# the directory to keep the vm files for vms created by openQRM
+OPENQRM_VM_DIR="/var/lib/xen-storage/openqrm/"
+# which directory to use for the xen vms -> set by the plugin config file
+if [ -d "$OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR" ]; then
+    mkdir -p $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR
+fi
+export LANG=C
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
+
+
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+# check interface
+if [ "$OPENQRM_INTERFACE" == "" ]; then
+	# we are doing a local boot and do not have an ethX:oq network device
+	OPENQRM_INTERFACE=`ifconfig | grep $resource_mac | cut -d':' -f1 | grep ^eth | awk {' print $1 '}`
+	if [ "$OPENQRM_INTERFACE" == "" ]; then
+		echo "ERROR: Could not find out which network interface to use"
+		exit 1
+	fi
+fi
+# which screen binary to use
+if [ -x /usr/bin/screen.real ]; then
+    RUNSCREEN="/usr/bin/screen.real"
+else
+    RUNSCREEN=`which screen`
+fi
+
+
+function xen_storage_usage() {
+	echo "Usage : $0 start/stop/reboot/remove/list <-n vm-name>"
+	echo "        $0 create <-n vm-name> <-m mac-address> <-r memory> [-d disk-size] [-s swap-size] [ -c cpu-number]"
+	echo "        $0 restart_by_mac/start_by_mac <-m vm-mac> <-d root-disk>"
+	echo "        $0 setboot <-m mac-address> <-b local/net>"
+	echo "        $0 post_vm_list <-u username> <-p password>"
+	echo "        $0 post_vm_config <-n vm-name> <-u username> <-p password>"
+	echo "        $0 update_vm_ram <-r memory> <-n vm-name>"
+	echo "        $0 update_vm_cpu <-c cpu-number> <-n vm-name>"
+	echo "        $0 add_vm_nic <-x nic-number> <-m mac-address> <-n vm-name>"
+	echo "        $0 remove_vm_nic <-x nic-number> <-n vm-name>"
+	echo "        $0 add_vm_disk <-x disk-number> <-d disk-size> <-n vm-name>"
+	echo "        $0 remove_vm_disk <-x disk-number> <-n vm-name>"
+	exit 1
+}
+
+
+
+function get_disk_name() {
+    local component=$1
+    case "$component" in
+        1)
+            echo "hda"
+            ;;
+        2)
+            echo "hdb"
+            ;;
+        3)
+            echo "hdc"
+            ;;
+        4)
+            echo "hdd"
+            ;;
+    esac
+}
+
+function xen_storage_generate_vm_config() {
+    VM_NAME=$1
+    VM_BASE_DIR=$OPENQRM_VM_DIR/$VM_NAME
+    # source the components config
+    vm_kernel=`cat $VM_BASE_DIR/kernel 2>/dev/null`
+    vm_builder=`cat $VM_BASE_DIR/builder 2>/dev/null`
+    vm_memory=`cat $VM_BASE_DIR/memory 2>/dev/null`
+    vm_vcpu=`cat $VM_BASE_DIR/vcpu 2>/dev/null`
+    vm_device_model=`cat $VM_BASE_DIR/device_model 2>/dev/null`
+    vm_name=`cat $VM_BASE_DIR/name 2>/dev/null`
+    vm_mac1=`cat $VM_BASE_DIR/mac1 2>/dev/null`
+    vm_bridge1=`cat $VM_BASE_DIR/bridge1 2>/dev/null`
+    vm_mac2=`cat $VM_BASE_DIR/mac2 2>/dev/null`
+    vm_bridge2=`cat $VM_BASE_DIR/bridge2 2>/dev/null`
+    vm_mac3=`cat $VM_BASE_DIR/mac3 2>/dev/null`
+    vm_bridge3=`cat $VM_BASE_DIR/bridge3 2>/dev/null`
+    vm_mac4=`cat $VM_BASE_DIR/mac4 2>/dev/null`
+    vm_bridge4=`cat $VM_BASE_DIR/bridge4 2>/dev/null`
+    vm_mac5=`cat $VM_BASE_DIR/mac5 2>/dev/null`
+    vm_bridge5=`cat $VM_BASE_DIR/bridge5 2>/dev/null`
+    vm_boot=`cat $VM_BASE_DIR/boot 2>/dev/null`
+    vm_root=`cat $VM_BASE_DIR/root 2>/dev/null`
+    vm_swap=`cat $VM_BASE_DIR/swap 2>/dev/null`
+    vm_swapsize=`cat $VM_BASE_DIR/swapsize 2>/dev/null`
+    vm_disk1=`cat $VM_BASE_DIR/disk1 2>/dev/null`
+    vm_disksize1=`cat $VM_BASE_DIR/disksize1 2>/dev/null`
+    vm_disk2=`cat $VM_BASE_DIR/disk2 2>/dev/null`
+    vm_disksize2=`cat $VM_BASE_DIR/disksize2 2>/dev/null`
+    vm_disk3=`cat $VM_BASE_DIR/disk3 2>/dev/null`
+    vm_disksize3=`cat $VM_BASE_DIR/disksize3 2>/dev/null`
+    vm_vnc=`cat $VM_BASE_DIR/vnc 2>/dev/null`
+    vm_vncviewer=`cat $VM_BASE_DIR/vncviewer 2>/dev/null`
+    vm_vnc_display=`cat $VM_BASE_DIR/vncdisplay 2>/dev/null`
+    vm_sdl=`cat $VM_BASE_DIR/sdl 2>/dev/null`
+    vm_cdrom=`cat $XEN_STORAGE_VM_BASE_DIR/cdrom 2>/dev/null`
+
+    > $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$VM_NAME.cfg
+    cat >> $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$VM_NAME.cfg << EOF
+kernel = "$vm_kernel"
+builder = "$vm_builder"
+memory = "$vm_memory"
+device_model="$vm_device_model"
+name = "$vm_name"
+boot="$vm_boot"
+vcpu="$vm_vcpu"
+vnc=$vm_vnc
+vncviewer=$vm_vncviewer
+vncdisplay=$vm_vnc_display
+sdl=$vm_sdl
+EOF
+
+
+    # boot nic
+    VM_NIC_CONF="$VM_DISK_CONF \"mac=$vm_mac1, type=ioemu, bridge=$vm_bridge1\","
+    # additional nics
+    if [ "$vm_mac2" != "" ]; then
+        VM_NIC_CONF="$VM_NIC_CONF \"mac=$vm_mac2, type=ioemu, bridge=$vm_bridge2\","
+    fi
+    if [ "$vm_mac3" != "" ]; then
+        VM_NIC_CONF="$VM_NIC_CONF \"mac=$vm_mac3, type=ioemu, bridge=$vm_bridge3\","
+    fi
+    if [ "$vm_mac4" != "" ]; then
+        VM_NIC_CONF="$VM_NIC_CONF \"mac=$vm_mac4, type=ioemu, bridge=$vm_bridge4\","
+    fi
+    if [ "$vm_mac5" != "" ]; then
+        VM_NIC_CONF="$VM_NIC_CONF \"mac=$vm_mac5, type=ioemu, bridge=$vm_bridge5\","
+    fi
+    cat >> $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$VM_NAME.cfg << EOF
+vif = [ $VM_NIC_CONF ]
+EOF
+
+    # add disk + swap
+    ADD_DISK=false
+    if [ "$vm_disk1" != "" ]; then
+        VM_DISK_CONF="$VM_DISK_CONF \"$vm_disk1\","
+        ADD_DISK=true
+        cat >> $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$VM_NAME.cfg << EOF
+root = "/dev/hda"
+EOF
+    fi
+    if [ "$vm_disk2" != "" ]; then
+        VM_DISK_CONF="$VM_DISK_CONF \"$vm_disk2\","
+        ADD_DISK=true
+    fi
+    if [ "$vm_disk3" != "" ]; then
+        VM_DISK_CONF="$VM_DISK_CONF \"$vm_disk3\","
+        ADD_DISK=true
+    fi
+    if [ "$vm_swap" != "" ]; then
+        VM_DISK_CONF="$VM_DISK_CONF \"$vm_swap\","
+        ADD_DISK=true
+    fi
+    if [ "$vm_cdrom" != "" ]; then
+        VM_DISK_CONF="$VM_DISK_CONF \"$vm_cdrom\","
+        ADD_DISK=true
+    fi
+
+    if [ "$ADD_DISK" == "true" ]; then
+        cat >> $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$VM_NAME.cfg << EOF
+disk = [ $VM_DISK_CONF ]
+EOF
+    fi
+
+}
+
+
+
+
+XEN_STORAGE_COMMAND=$1
+shift
+
+while [ $# -ne 0 ]; do
+	case "$1" in
+		-n)
+			XEN_STORAGE_VM_NAME=$2
+			shift
+			;;
+		-m)
+			XEN_STORAGE_VM_MAC=$2
+			shift
+			;;
+		-z)
+			XEN_STORAGE_VM_BRIDGE=$2
+			shift
+			;;
+		-m2)
+			XEN_STORAGE_VM_MAC2=$2
+			shift
+			;;
+		-m3)
+			XEN_STORAGE_VM_MAC3=$2
+			shift
+			;;
+		-m4)
+			XEN_STORAGE_VM_MAC4=$2
+			shift
+			;;
+		-m5)
+			XEN_STORAGE_VM_MAC5=$2
+			shift
+			;;
+		-i)
+			XEN_STORAGE_VM_IP=$2
+			shift
+			;;
+		-r)
+			XEN_STORAGE_VM_RAM=$2
+			shift
+			;;
+		-c)
+			XEN_STORAGE_VM_CPU=$2
+			shift
+			;;
+		-d)
+			XEN_STORAGE_VM_DISK=$2
+			shift
+			;;
+		-s)
+			XEN_STORAGE_VM_SWAP=$2
+			shift
+			;;
+		-t)
+			XEN_STORAGE_MIGRATION_TYPE=$2
+			shift
+			;;
+		-u)
+			XEN_STORAGE_OPENQRM_USERNAME=$2
+			shift
+			;;
+		-p)
+			XEN_STORAGE_OPENQRM_PASSWORD=$2
+			shift
+			;;
+		-x)
+			XEN_STORAGE_VM_COMPONENT_NUMBER=$2
+			shift
+			;;
+		-b)
+			XEN_STORAGE_VM_BOOT=$2
+			shift
+			;;
+		-iso)
+			XEN_STORAGE_VM_BOOT_ISO=$2
+			shift
+			;;
+		*)
+			echo "ERROR: Free commandline arguments are not allowed"
+			xen_storage_usage
+			exit 6
+			;;
+	esac
+	shift
+done
+
+
+
+
+# main
+if [ "$XEN_STORAGE_COMMAND" == "" ]; then
+	xen_storage_usage
+fi
+
+if [ "$XEN_STORAGE_COMMAND" == "post_vm_list" ]; then
+		if [ "$XEN_STORAGE_OPENQRM_USERNAME" == "" ]; then
+			xen_storage_usage
+		fi
+		if [ "$XEN_STORAGE_OPENQRM_PASSWORD" == "" ]; then
+			xen_storage_usage
+		fi
+else
+
+	if [ "$XEN_STORAGE_COMMAND" != "list" ] && [ "$XEN_STORAGE_COMMAND" != "setboot" ] && [ "$XEN_STORAGE_COMMAND" != "start_by_mac" ] && [ "$XEN_STORAGE_COMMAND" != "restart_by_mac" ] && [ "$XEN_STORAGE_COMMAND" != "post_bridge_config" ]; then
+		if [ "$XEN_STORAGE_VM_NAME" == "" ]; then
+			xen_storage_usage
+		fi
+	fi
+fi
+
+
+case "$XEN_STORAGE_COMMAND" in
+
+	create)
+		if [ "$XEN_STORAGE_VM_MAC" == "" ]; then
+			xen_storage_usage
+		fi
+		if [ "$XEN_STORAGE_VM_RAM" == "" ]; then
+			xen_storage_usage
+		fi
+		xen_storage_lock aquire
+		echo "Creating Xen-Storage-Storage vm $XEN_STORAGE_VM_NAME -> /etc/xen/$XEN_STORAGE_VM_NAME.cfg"
+		# find the hvmloader
+		HVM_LOADER=`find /usr/lib/xen* /usr/lib64/xen* -name hvmloader | head -n1`
+		QEMU_DM=`find /usr/lib/xen* /usr/lib64/xen* -name qemu-dm | head -n1`
+		if [ "$HVM_LOADER" == "" ]; then
+            openqrm_post_event 0 "create" 3 "openqrm-xen-storage" "Could not find the hvmloader on this Xen-Storage-Storage system. Please make sure to install it!"
+    		xen_storage_lock release
+            exit 1
+		fi
+		if [ "$QEMU_DM" == "" ]; then
+            openqrm_post_event 0 "create" 3 "openqrm-xen-storage" "Could not find the qemu-dm on this Xen-Storage-Storage system. Please make sure to install it!"
+    		xen_storage_lock release
+            exit 1
+		fi
+
+        XEN_STORAGE_VM_BASE_DIR=$OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME
+        mkdir -p $XEN_STORAGE_VM_BASE_DIR
+        echo "$XEN_STORAGE_VM_NAME" > $XEN_STORAGE_VM_BASE_DIR/name
+        echo "$HVM_LOADER" > $XEN_STORAGE_VM_BASE_DIR/kernel
+        echo "$XEN_STORAGE_VM_RAM" > $XEN_STORAGE_VM_BASE_DIR/memory
+        echo "hvm" > $XEN_STORAGE_VM_BASE_DIR/builder
+        echo "$QEMU_DM" > $XEN_STORAGE_VM_BASE_DIR/device_model
+        # nic1
+        echo "$XEN_STORAGE_VM_MAC" > $XEN_STORAGE_VM_BASE_DIR/mac1
+        # external or internal bridge
+        if [ "$XEN_STORAGE_VM_BRIDGE" == "$OPENQRM_PLUGIN_XEN_STORAGE_INTERNAL_BRIDGE" ]; then
+            echo "$OPENQRM_PLUGIN_XEN_STORAGE_INTERNAL_BRIDGE" > $XEN_STORAGE_VM_BASE_DIR/bridge1
+        else
+            echo "$OPENQRM_PLUGIN_XEN_STORAGE_EXTERNAL_BRIDGE" > $XEN_STORAGE_VM_BASE_DIR/bridge1
+        fi
+        echo "1" > $XEN_STORAGE_VM_BASE_DIR/vnc
+        echo "1" > $XEN_STORAGE_VM_BASE_DIR/vncviewer
+        echo "0" > $XEN_STORAGE_VM_BASE_DIR/sdl
+
+        # one cpu by default
+        if [ "$XEN_STORAGE_VM_CPU" == "" ]; then
+            XEN_STORAGE_VM_CPU=1
+        fi
+        echo "$XEN_STORAGE_VM_CPU" > $XEN_STORAGE_VM_BASE_DIR/vcpu
+
+        # find the next free vncdisplay
+        for VNCD in `find $OPENQRM_VM_DIR/* -name vncdisplay 2>/dev/null`; do
+                NVNCD=`cat $VNCD`
+                VNCD_LIST="$VNCD_LIST $NVNCD"
+
+        done
+        for TVNCD in `echo $VNCD_LIST | sort`; do
+                :
+        done
+        NEW_VNCD=$(( TVNCD + 1 ))
+        echo "$NEW_VNCD" > $XEN_STORAGE_VM_BASE_DIR/vncdisplay
+
+		# empty disk + swap
+        echo "" > $XEN_STORAGE_VM_BASE_DIR/disk1
+        echo "" > $XEN_STORAGE_VM_BASE_DIR/disksize1
+        echo "" > $XEN_STORAGE_VM_BASE_DIR/disk2
+        echo "" > $XEN_STORAGE_VM_BASE_DIR/disksize2
+        echo "" > $XEN_STORAGE_VM_BASE_DIR/disk3
+        echo "" > $XEN_STORAGE_VM_BASE_DIR/disksize3
+        echo "" > $XEN_STORAGE_VM_BASE_DIR/swap
+        echo "" > $XEN_STORAGE_VM_BASE_DIR/swapsize
+
+		# nic1
+		if [ "$XEN_STORAGE_VM_MAC2" != "" ]; then
+			echo "-> Creating additional nic $XEN_STORAGE_VM_MAC2"
+            echo "$XEN_STORAGE_VM_MAC2" > $XEN_STORAGE_VM_BASE_DIR/mac2
+            echo "$OPENQRM_PLUGIN_XEN_STORAGE_EXTERNAL_BRIDGE" > $XEN_STORAGE_VM_BASE_DIR/bridge2
+		fi
+		# nic2
+		if [ "$XEN_STORAGE_VM_MAC3" != "" ]; then
+			echo "-> Creating additional nic $XEN_STORAGE_VM_MAC3"
+            echo "$XEN_STORAGE_VM_MAC3" > $XEN_STORAGE_VM_BASE_DIR/mac3
+            echo "$OPENQRM_PLUGIN_XEN_STORAGE_EXTERNAL_BRIDGE" > $XEN_STORAGE_VM_BASE_DIR/bridge3
+		fi
+		# nic3
+		if [ "$XEN_STORAGE_VM_MAC4" != "" ]; then
+			echo "-> Creating additional nic $XEN_STORAGE_VM_MAC4"
+            echo "$XEN_STORAGE_VM_MAC4" > $XEN_STORAGE_VM_BASE_DIR/mac4
+            echo "$OPENQRM_PLUGIN_XEN_STORAGE_EXTERNAL_BRIDGE" > $XEN_STORAGE_VM_BASE_DIR/bridge4
+		fi
+		# nic4
+		if [ "$XEN_STORAGE_VM_MAC5" != "" ]; then
+			echo "-> Creating additional nic $XEN_STORAGE_VM_MAC5"
+            echo "$XEN_STORAGE_VM_MAC5" > $XEN_STORAGE_VM_BASE_DIR/mac5
+            echo "$OPENQRM_PLUGIN_XEN_STORAGE_EXTERNAL_BRIDGE" > $XEN_STORAGE_VM_BASE_DIR/bridge5
+		fi
+
+        # a cdrom/iso
+        echo "" > $XEN_STORAGE_VM_BASE_DIR/cdrom
+        if [ "$XEN_STORAGE_VM_BOOT" == "" ]; then
+            XEN_STORAGE_VM_BOOT=net
+        fi
+        case "$XEN_STORAGE_VM_BOOT" in
+            local)
+                echo "c" > $XEN_STORAGE_VM_BASE_DIR/boot
+                ;;
+            net)
+                echo "n" > $XEN_STORAGE_VM_BASE_DIR/boot
+                ;;
+            network)
+                echo "n" > $XEN_STORAGE_VM_BASE_DIR/boot
+                ;;
+            cdrom)
+                echo "d" > $XEN_STORAGE_VM_BASE_DIR/boot
+                echo "phy:/dev/cdrom,hdd,r" > $XEN_STORAGE_VM_BASE_DIR/cdrom
+                ;;
+            iso)
+                echo "d" > $XEN_STORAGE_VM_BASE_DIR/boot
+                echo "file:$XEN_STORAGE_VM_BOOT_ISO,hdd,r" > $XEN_STORAGE_VM_BASE_DIR/cdrom
+                ;;
+        esac
+
+		# creating the cfg
+        xen_storage_generate_vm_config $XEN_STORAGE_VM_NAME
+        # start monitor for the fake idle resource
+        kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
+        $RUNSCREEN -dmS $XEN_STORAGE_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/sbin/openqrm-xen-storage-monitord $XEN_STORAGE_VM_MAC
+
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_STORAGE_OPENQRM_USERNAME -p $XEN_STORAGE_OPENQRM_PASSWORD
+		fi
+		xen_storage_lock release
+		;;
+	start)
+		xen_storage_lock aquire
+		echo "Starting Xen-Storage-Storage vm $XEN_STORAGE_VM_NAME"
+        # only start real when we have a root disk
+        XEN_STORAGE_VM_ROOT_DISK=`cat $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/disk1 2>/dev/null`
+        XEN_STORAGE_VM_MAC=`cat $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/mac1 2>/dev/null`
+        if [ "$XEN_STORAGE_VM_ROOT_DISK" != "" ]; then
+            SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+            if $RUNSCREEN -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.cfg; then
+                openqrm_post_event 0 "create" 5 "openqrm-xen-storage" "Created and started Xen-Storage-Storage vm $XEN_STORAGE_VM_NAME -> $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.cfg"
+            else
+                openqrm_post_event 0 "create" 3 "openqrm-xen-storage" "Could not create Xen-Storage-Storage vm $XEN_STORAGE_VM_NAME -> $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.cfg"
+                xen_storage_lock release
+                exit 1
+            fi
+        fi
+        # and start the monitord
+        kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
+        $RUNSCREEN -dmS $XEN_STORAGE_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/sbin/openqrm-xen-storage-monitord $XEN_STORAGE_VM_MAC
+
+		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_STORAGE_OPENQRM_USERNAME -p $XEN_STORAGE_OPENQRM_PASSWORD
+		fi
+		xen_storage_lock release
+		;;
+
+
+	start_by_mac)
+		if [ "$XEN_STORAGE_VM_MAC" == "" ]; then
+			xen_storage_usage
+		fi
+		xen_storage_lock aquire
+		echo "Starting Xen vm $XEN_STORAGE_VM_MAC"
+        XEN_STORAGE_VM_NAME=`grep -rHi $XEN_STORAGE_VM_MAC $OPENQRM_VM_DIR/*/mac1 2>/dev/null | cut -d':' -f1  | head -n1 2>/dev/null` 2>/dev/null
+        XEN_STORAGE_VM_NAME=`dirname $XEN_STORAGE_VM_NAME` 2>/dev/null
+        XEN_STORAGE_VM_NAME=`basename $XEN_STORAGE_VM_NAME` 2>/dev/null
+        if [ "$XEN_STORAGE_VM_NAME" == "" ]; then
+			echo "NOTICE: Cloud not find XEN-storage vm $XEN_STORAGE_VM_MAC on this host" | logger
+    		xen_storage_lock release
+            exit 1
+        fi
+		echo "Starting Xen vm $XEN_STORAGE_VM_MAC -> $XEN_STORAGE_VM_NAME on LVM volume $XEN_STORAGE_VM_DISK" | logger
+        # add disk disk parameter
+        # start only if we have a root-disk
+        if [ "$XEN_STORAGE_VM_DISK" != "" ]; then
+            echo "phy:$XEN_STORAGE_VM_DISK,hda,w" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/disk1
+            # creating the cfg
+            xen_storage_generate_vm_config $XEN_STORAGE_VM_NAME
+            # :) start + boot local
+            SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+            if $RUNSCREEN -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.cfg; then
+                openqrm_post_event 0 "create" 5 "openqrm-xen-storage" "Created and started Xen-Storage-Storage vm $XEN_STORAGE_VM_NAME -> $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.cfg"
+            else
+                openqrm_post_event 0 "create" 3 "openqrm-xen-storage" "Could not create Xen-Storage-Storage vm $XEN_STORAGE_VM_NAME -> $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.cfg"
+                xen_storage_lock release
+                exit 1
+            fi
+        else
+            echo "" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/disk1
+            # creating the cfg
+            xen_storage_generate_vm_config $XEN_STORAGE_VM_NAME
+        fi
+        # start the vm monitord / make sure it is stopped before
+        kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
+        $RUNSCREEN -dmS $XEN_STORAGE_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/sbin/openqrm-xen-storage-monitord $XEN_STORAGE_VM_MAC
+
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
+		xen_storage_lock release
+		;;
+
+
+	stop)
+		xen_storage_lock aquire
+        XEN_STORAGE_VM_MAC=`cat $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/mac1 2>/dev/null`
+		echo "Stopping Xen-Storage-Storage vm $XEN_STORAGE_VM_NAME / $XEN_STORAGE_VM_MAC"
+		if ! xm shutdown $XEN_STORAGE_VM_NAME; then
+            xm destroy $XEN_STORAGE_VM_NAME
+        fi
+        kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
+        openqrm_post_event 0 "stop" 5 "openqrm-xen-storage" "Stopped Xen-Storage-Storage vm $XEN_STORAGE_VM_NAME"
+
+		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_STORAGE_OPENQRM_USERNAME -p $XEN_STORAGE_OPENQRM_PASSWORD
+		fi
+		xen_storage_lock release
+		;;
+
+
+	stop_by_mac)
+		if [ "$XEN_STORAGE_VM_MAC" == "" ]; then
+			xen_storage_usage
+		fi
+		xen_storage_lock aquire
+        XEN_STORAGE_VM_NAME=`grep -rHi $XEN_STORAGE_VM_MAC $OPENQRM_VM_DIR/*/mac1 2>/dev/null | cut -d':' -f1 | head -n1 2>/dev/null` 2>/dev/null
+        XEN_STORAGE_VM_NAME=`dirname $XEN_STORAGE_VM_NAME` 2>/dev/null
+        XEN_STORAGE_VM_NAME=`basename $XEN_STORAGE_VM_NAME` 2>/dev/null
+        if [ "$XEN_STORAGE_VM_NAME" == "" ]; then
+			echo "NOTICE: Cloud not find XEN-storage vm $XEN_STORAGE_VM_MAC on this host" | logger
+    		xen_storage_lock release
+            exit 1
+        fi
+        echo "Stopping Xen vm $XEN_STORAGE_VM_NAME / $XEN_STORAGE_VM_MAC" | logger
+		if ! xm shutdown $XEN_STORAGE_VM_NAME; then
+            xm destroy $XEN_STORAGE_VM_NAME
+        fi
+        # kill the status monitor
+        kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
+		xen_storage_lock release
+		;;
+
+
+	restart_by_mac)
+		if [ "$XEN_STORAGE_VM_MAC" == "" ]; then
+			xen_storage_usage
+		fi
+		xen_storage_lock aquire
+        XEN_STORAGE_VM_NAME=`grep -rHi $XEN_STORAGE_VM_MAC $OPENQRM_VM_DIR/*/mac1 2>/dev/null | cut -d':' -f1 | head -n1 2>/dev/null` 2>/dev/null
+        XEN_STORAGE_VM_NAME=`dirname $XEN_STORAGE_VM_NAME` 2>/dev/null
+        XEN_STORAGE_VM_NAME=`basename $XEN_STORAGE_VM_NAME` 2>/dev/null
+        if [ "$XEN_STORAGE_VM_NAME" == "" ]; then
+			echo "NOTICE: Cloud not find XEN-storage vm $XEN_STORAGE_VM_MAC on this host" | logger
+    		xen_storage_lock release
+            exit 1
+        fi
+		echo "Restarting Xen vm $XEN_STORAGE_VM_MAC -> $XEN_STORAGE_VM_NAME" | logger
+        if ! xm shutdown $XEN_STORAGE_VM_NAME; then
+            xm destroy $XEN_STORAGE_VM_NAME
+        fi
+
+        # add disk disk parameter if disk param is not set to noop
+        if [ "$XEN_STORAGE_VM_DISK" == "" ]; then
+            echo "" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/disk1
+            # creating the cfg
+            xen_storage_generate_vm_config $XEN_STORAGE_VM_NAME
+        elif [ "$XEN_STORAGE_VM_DISK" != "noop" ]; then
+            echo "phy:$XEN_STORAGE_VM_DISK,hda,w" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/disk1
+            # creating the cfg
+            xen_storage_generate_vm_config $XEN_STORAGE_VM_NAME
+        fi
+        # stop the vm monitor
+        kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
+        # start only if we have a root-disk
+        XEN_STORAGE_VM_CURRENT_DISK=`cat $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/disk1 2>/dev/null`
+        if [ "$XEN_STORAGE_VM_CURRENT_DISK" != "" ]; then
+            # :) start + boot local
+            SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+            if $RUNSCREEN -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.cfg; then
+                openqrm_post_event 0 "restart_by_mac" 5 "openqrm-xen-storage" "Created and started Xen-Storage-Storage vm $XEN_STORAGE_VM_NAME -> $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.cfg"
+            else
+                openqrm_post_event 0 "restart_by_mac" 3 "openqrm-xen-storage" "Could not create Xen-Storage-Storage vm $XEN_STORAGE_VM_NAME -> $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.cfg"
+                xen_storage_lock release
+                exit 1
+            fi
+        fi
+        # start the vm monitord
+        kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
+        $RUNSCREEN -dmS $XEN_STORAGE_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/sbin/openqrm-xen-storage-monitord $XEN_STORAGE_VM_MAC
+
+		# in case we have a username + password post the updated list to the openQRM-server
+		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
+		fi
+		xen_storage_lock release
+		;;
+
+
+	reboot)
+		xen_storage_lock aquire
+		echo "Rebooting Xen-Storage vm $XEN_STORAGE_VM_NAME"
+		# creating the cfg
+        xen_storage_generate_vm_config $XEN_STORAGE_VM_NAME
+
+        XEN_STORAGE_VM_ROOT_DISK=`cat $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/disk1 2>/dev/null`
+        XEN_STORAGE_VM_MAC=`cat $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/mac1 2>/dev/null`
+        if [ "$XEN_STORAGE_VM_ROOT_DISK" != "" ]; then
+            if xm reboot $XEN_STORAGE_VM_NAME; then
+                openqrm_post_event 0 "reboot" 5 "openqrm-xen-storage" "Rebooted Xen-Storage vm $XEN_STORAGE_VM_NAME"
+            else
+                openqrm_post_event 0 "reboot" 3 "openqrm-xen-storage" "Could not reboot Xen-Storage vm $XEN_STORAGE_VM_NAME"
+                xen_storage_lock release
+                exit 1
+            fi
+        fi
+        # restart the vm monitord
+        kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
+        $RUNSCREEN -dmS $XEN_STORAGE_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/sbin/openqrm-xen-storage-monitord $XEN_STORAGE_VM_MAC
+
+		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_STORAGE_OPENQRM_USERNAME -p $XEN_STORAGE_OPENQRM_PASSWORD
+		fi
+		xen_storage_lock release
+		;;
+	remove)
+		xen_storage_lock aquire
+		echo "Deleting Xen-Storage vm $XEN_STORAGE_VM_NAME"
+        XEN_STORAGE_VM_MAC=`cat $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/mac1 2>/dev/null`
+        xm destroy $XEN_STORAGE_VM_NAME 1>/dev/null 2>&1
+		rm -f $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.*
+		if rm -rf $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME; then
+            openqrm_post_event 0 "delete" 5 "openqrm-xen-storage" "Deleted Xen-Storage vm $XEN_STORAGE_VM_NAME"
+        else
+            openqrm_post_event 0 "delete" 3 "openqrm-xen-storage" "Could not delete Xen-Storage vm $XEN_STORAGE_VM_NAME"
+    		xen_storage_lock release
+            exit 1
+        fi
+        # stop the vm monitord
+        kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
+		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_list -u $XEN_STORAGE_OPENQRM_USERNAME -p $XEN_STORAGE_OPENQRM_PASSWORD
+		fi
+		xen_storage_lock release
+		;;
+
+	list)
+		echo "Listing Xen-Storage vms"
+		xm list
+		;;
+	post_vm_list)
+		echo "Posting vm list to the openQRM-server"
+		VM_LIST_TMP=$resource_id.vm_list
+		xm list | grep -v ^Name | grep Domain.*0 | sed -e "s/^ *//;s/ *$/@/;s/ \{1,\}/@/g" > $VM_LIST_TMP
+
+        # gather informations from the not active xen vms
+        for cfg in `ls $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/*.cfg 2>/dev/null`; do
+            VML_NAME=`basename $cfg | sed -e 's#.cfg$##g'`
+            XEN_STORAGE_VM_BASE_DIR=$OPENQRM_VM_DIR/$VML_NAME
+            # running ?
+            if ps ax | grep qemu-dm | grep xen | grep $VML_NAME > /dev/null; then
+                VM_ONLINE=1
+            elif xm list |grep $VML_NAME > /dev/null; then
+                VM_ONLINE=1
+            else
+                VM_ONLINE=0
+            fi
+            # check if created with openQRM or manually
+            if [ -f $XEN_STORAGE_VM_BASE_DIR/memory ]; then
+                VM_MEMORY=`cat $XEN_STORAGE_VM_BASE_DIR/memory`
+                VM_MAC1=`cat $XEN_STORAGE_VM_BASE_DIR/mac1`
+                # check again if the monitord is running
+                if ps ax | grep openqrm-xen-storage-monitord | grep -i $VM_MAC1 >/dev/null; then
+                    VM_ONLINE=1
+                fi
+                VM_BRIDGE1=`cat $XEN_STORAGE_VM_BASE_DIR/bridge1`
+                VM_VNC=`cat $XEN_STORAGE_VM_BASE_DIR/vncdisplay`
+                echo "1@$VML_NAME""@""$VM_MEMORY""@""$VM_MAC1""@""$VM_BRIDGE1""@""$VM_VNC""@""$VM_ONLINE" >> $VM_LIST_TMP
+            else
+                VM_MEMORY=`cat $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$VML_NAME.cfg | grep ^memory | cut -d'=' -f2 | sed -e "s/ //g" | sed -e "s/\"//g"`
+                VM_MAC1=`cat $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$VML_NAME.cfg | grep ^vif | grep mac | sed -e "s/.*mac=[[:space:]]*\([0-9a-fA-F:]\+\).*/\1/g"`
+                VM_BRIDGE1=`cat $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$VML_NAME.cfg | grep ^vif | grep mac | sed -e "s/.*bridge=[[:space:]]*\([[:alnum:]]\+\).*/\1/g"`
+                VM_VNC="n.a."
+                echo "0@$VML_NAME""@""$VM_MEMORY""@""$VM_MAC1""@""$VM_BRIDGE1""@""$VM_VNC""@""$VM_ONLINE" >> $VM_LIST_TMP
+            fi
+        done
+
+        # post the file
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$XEN_STORAGE_OPENQRM_USERNAME --http-password=$XEN_STORAGE_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_LIST_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/xen-storage/xen-storage-action.php?xen_server_command=get_xen; then
+			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!"
+			echo "ERROR: Could not post vm list to the openQRM-server at $resource_openqrmserver!" | logger
+    		openqrm_post_event 0 "post_vm_list" 3 "openqrm-xen-storage" "Could not post vm list to the openQRM-server at $resource_openqrmserver!"
+		fi
+		rm -f $VM_LIST_TMP
+		rm -f $VM_LIST_TMP.post
+		;;
+
+	post_vm_config)
+		if [ "$XEN_STORAGE_VM_NAME" == "" ]; then
+			xen_storage_usage
+		fi
+		echo "Posting vm config for $XEN_STORAGE_VM_NAME to the openQRM-server"
+		VM_CONFIG_TMP=$resource_id.$XEN_STORAGE_VM_NAME.vm_config
+        VM_BASE_DIR=$OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME
+        vm_memory=`cat $VM_BASE_DIR/memory 2>/dev/null`
+        vm_cpu=`cat $VM_BASE_DIR/vcpu 2>/dev/null`
+        vm_mac1=`cat $VM_BASE_DIR/mac1 2>/dev/null`
+        vm_bridge1=`cat $VM_BASE_DIR/bridge1 2>/dev/null`
+        vm_mac2=`cat $VM_BASE_DIR/mac2 2>/dev/null`
+        vm_bridge2=`cat $VM_BASE_DIR/bridge2 2>/dev/null`
+        vm_mac3=`cat $VM_BASE_DIR/mac3 2>/dev/null`
+        vm_bridge3=`cat $VM_BASE_DIR/bridge3 2>/dev/null`
+        vm_mac4=`cat $VM_BASE_DIR/mac4 2>/dev/null`
+        vm_bridge4=`cat $VM_BASE_DIR/bridge4 2>/dev/null`
+        vm_mac5=`cat $VM_BASE_DIR/mac5 2>/dev/null`
+        vm_bridge5=`cat $VM_BASE_DIR/bridge5 2>/dev/null`
+        vm_swap=`cat $VM_BASE_DIR/swap 2>/dev/null`
+        vm_swapsize=`cat $VM_BASE_DIR/swapsize 2>/dev/null`
+        vm_disk1=`cat $VM_BASE_DIR/disk1 2>/dev/null`
+        vm_disksize1=`cat $VM_BASE_DIR/disksize1 2>/dev/null`
+        vm_disk2=`cat $VM_BASE_DIR/disk2 2>/dev/null`
+        vm_disksize2=`cat $VM_BASE_DIR/disksize2 2>/dev/null`
+        vm_disk3=`cat $VM_BASE_DIR/disk3 2>/dev/null`
+        vm_disksize3=`cat $VM_BASE_DIR/disksize3 2>/dev/null`
+        vm_vnc_display=`cat $VM_BASE_DIR/vncdisplay`
+        vm_cdrom=`cat $VM_BASE_DIR/cdrom 2>/dev/null`
+		echo "OPENQRM_XEN_STORAGE_VM_RAM=\"$vm_memory\"" > $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_CPU=\"$vm_cpu\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_NET_1=\"$vm_bridge1\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_MAC_1=\"$vm_mac1\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_NET_2=\"$vm_bridge2\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_MAC_2=\"$vm_mac2\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_NET_3=\"$vm_bridge3\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_MAC_3=\"$vm_mac3\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_NET_4=\"$vm_bridge4\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_MAC_4=\"$vm_mac4\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_NET_5=\"$vm_bridge5\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_MAC_5=\"$vm_mac5\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_SWAP=\"$vm_swap\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_SWAPSIZE=\"$vm_swapsize\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_DISK_1=\"$vm_disk1\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_DISK_SIZE_1=\"$vm_disksize1\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_DISK_2=\"$vm_disk2\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_DISK_SIZE_2=\"$vm_disksize2\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_DISK_3=\"$vm_disk3\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_DISK_SIZE_3=\"$vm_disksize3\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_VNC=\"$vm_vnc_display\"" >> $VM_CONFIG_TMP
+		echo "OPENQRM_XEN_STORAGE_VM_CDROM=\"$vm_cdrom\"" >> $VM_CONFIG_TMP
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$XEN_STORAGE_OPENQRM_USERNAME --http-password=$XEN_STORAGE_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_CONFIG_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/xen-storage/xen-action.php?xen_server_command=get_xen_storageconfig; then
+			echo "ERROR: Could not post vm config to the openQRM-server at $OPENQRM_SERVER_IP!"
+			echo "ERROR: Could not post vm config to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
+		fi
+		rm -f $VM_CONFIG_TMP
+		rm -f $VM_CONFIG_TMP.post
+		;;
+
+
+	post_bridge_config)
+		echo "Posting bridge config  to the openQRM-server"
+		BRIDGE_CONFIG_TMP=$resource_id.bridge_config
+		echo "OPENQRM_PLUGIN_XEN_STORAGE_INTERNAL_BRIDGE=\"$OPENQRM_PLUGIN_XEN_STORAGE_INTERNAL_BRIDGE\"" > $BRIDGE_CONFIG_TMP
+		echo "OPENQRM_PLUGIN_XEN_STORAGE_EXTERNAL_BRIDGE=\"$OPENQRM_PLUGIN_XEN_STORAGE_EXTERNAL_BRIDGE\"" >> $BRIDGE_CONFIG_TMP
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$XEN_STORAGE_OPENQRM_USERNAME --http-password=$XEN_STORAGE_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $BRIDGE_CONFIG_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/xen-storage/xen-storage-action.php?xen_server_command=get_bridge_config; then
+			echo "ERROR: Could not post bridge config to the openQRM-server at $OPENQRM_SERVER_IP!"
+			echo "ERROR: Could not post bridge config to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
+		fi
+		rm -f $VM_CONFIG_TMP
+		rm -f $VM_CONFIG_TMP.post
+		;;
+
+
+	update_vm_ram)
+		if [ "$XEN_STORAGE_VM_NAME" == "" ]; then
+			xen_storage_usage
+		fi
+		if [ "$XEN_STORAGE_VM_RAM" == "" ]; then
+			xen_storage_usage
+		fi
+		xen_storage_lock aquire
+		echo "Updating XEN_STORAGE vm $XEN_STORAGE_VM_NAME with $XEN_STORAGE_VM_RAM Memory"
+        VM_BASE_DIR=$OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME
+        echo "$XEN_STORAGE_VM_RAM" > $VM_BASE_DIR/memory
+		# creating the cfg
+        xen_storage_generate_vm_config $XEN_STORAGE_VM_NAME
+		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $XEN_STORAGE_VM_NAME -u $XEN_STORAGE_OPENQRM_USERNAME -p $XEN_STORAGE_OPENQRM_PASSWORD
+		fi
+		xen_storage_lock release
+		;;
+
+	update_vm_cpu)
+		if [ "$XEN_STORAGE_VM_NAME" == "" ]; then
+			xen_storage_usage
+		fi
+		if [ "$XEN_STORAGE_VM_CPU" == "" ]; then
+			xen_storage_usage
+		fi
+		xen_storage_lock aquire
+		echo "Updating XEN_STORAGE vm $XEN_STORAGE_VM_NAME with $XEN_STORAGE_VM_CPU CPUs"
+        VM_BASE_DIR=$OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME
+        echo "$XEN_STORAGE_VM_CPU" > $VM_BASE_DIR/vcpu
+		# creating the cfg
+        xen_storage_generate_vm_config $XEN_STORAGE_VM_NAME
+		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $XEN_STORAGE_VM_NAME -u $XEN_STORAGE_OPENQRM_USERNAME -p $XEN_STORAGE_OPENQRM_PASSWORD
+		fi
+		xen_storage_lock release
+		;;
+
+
+	add_vm_nic)
+		if [ "$XEN_STORAGE_VM_NAME" == "" ]; then
+			xen_storage_usage
+		fi
+		if [ "$XEN_STORAGE_VM_MAC" == "" ]; then
+			xen_storage_usage
+		fi
+		if [ "$XEN_STORAGE_VM_COMPONENT_NUMBER" == "" ]; then
+			xen_storage_usage
+		fi
+		xen_storage_lock aquire
+		echo "Adding nic $XEN_STORAGE_VM_COMPONENT_NUMBER mac-address $XEN_STORAGE_VM_MAC to XEN_STORAGE vm $XEN_STORAGE_VM_NAME"
+        VM_BASE_DIR=$OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME
+        echo "$XEN_STORAGE_VM_MAC" > $VM_BASE_DIR/mac$XEN_STORAGE_VM_COMPONENT_NUMBER
+        echo "$OPENQRM_PLUGIN_XEN_STORAGE_EXTERNAL_BRIDGE" > $VM_BASE_DIR/bridge$XEN_STORAGE_VM_COMPONENT_NUMBER
+		# creating the cfg
+        xen_storage_generate_vm_config $XEN_STORAGE_VM_NAME
+		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $XEN_STORAGE_VM_NAME -u $XEN_STORAGE_OPENQRM_USERNAME -p $XEN_STORAGE_OPENQRM_PASSWORD
+		fi
+		xen_storage_lock release
+		;;
+	remove_vm_nic)
+		if [ "$XEN_STORAGE_VM_NAME" == "" ]; then
+			xen_storage_usage
+		fi
+		if [ "$XEN_STORAGE_VM_COMPONENT_NUMBER" == "" ]; then
+			xen_storage_usage
+		fi
+		xen_storage_lock aquire
+		echo "Removing nic $XEN_STORAGE_VM_COMPONENT_NUMBER from XEN_STORAGE vm $XEN_STORAGE_VM_NAME"
+        VM_BASE_DIR=$OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME
+        > $VM_BASE_DIR/mac$XEN_STORAGE_VM_COMPONENT_NUMBER
+        > $VM_BASE_DIR/bridge$XEN_STORAGE_VM_COMPONENT_NUMBER
+		# creating the cfg
+        xen_storage_generate_vm_config $XEN_STORAGE_VM_NAME
+		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $XEN_STORAGE_VM_NAME -u $XEN_STORAGE_OPENQRM_USERNAME -p $XEN_STORAGE_OPENQRM_PASSWORD
+		fi
+		xen_storage_lock release
+		;;
+
+
+	add_vm_disk)
+		if [ "$XEN_STORAGE_VM_NAME" == "" ]; then
+			xen_storage_usage
+		fi
+		if [ "$XEN_STORAGE_VM_DISK" == "" ]; then
+			xen_storage_usage
+		fi
+		if [ "$XEN_STORAGE_VM_COMPONENT_NUMBER" == "" ]; then
+			xen_storage_usage
+		fi
+		xen_storage_lock aquire
+        DISK_NAME=`get_disk_name $XEN_STORAGE_VM_COMPONENT_NUMBER`
+		echo "Adding disk $XEN_STORAGE_VM_COMPONENT_NUMBER size $XEN_STORAGE_VM_DISK to XEN_STORAGE vm $XEN_STORAGE_VM_NAME"
+        VM_BASE_DIR=$OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME
+        dd if=/dev/zero of=$OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/disk$XEN_STORAGE_VM_COMPONENT_NUMBER.img bs=1M seek=$XEN_STORAGE_VM_DISK count=1
+        mkfs.ext3 -F $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/disk$XEN_STORAGE_VM_COMPONENT_NUMBER.img
+        echo "file:$OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/disk$XEN_STORAGE_VM_COMPONENT_NUMBER.img,ioemu:$DISK_NAME,w" > $VM_BASE_DIR/disk$XEN_STORAGE_VM_COMPONENT_NUMBER
+        echo "$XEN_STORAGE_VM_DISK" > $VM_BASE_DIR/disksize$XEN_STORAGE_VM_COMPONENT_NUMBER
+		# creating the cfg
+        xen_storage_generate_vm_config $XEN_STORAGE_VM_NAME
+		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $XEN_STORAGE_VM_NAME -u $XEN_STORAGE_OPENQRM_USERNAME -p $XEN_STORAGE_OPENQRM_PASSWORD
+		fi
+		xen_storage_lock release
+		;;
+	remove_vm_disk)
+		if [ "$XEN_STORAGE_VM_NAME" == "" ]; then
+			xen_storage_usage
+		fi
+		if [ "$XEN_STORAGE_VM_COMPONENT_NUMBER" == "" ]; then
+			xen_storage_usage
+		fi
+		xen_storage_lock aquire
+		echo "Removing disk $XEN_STORAGE_VM_COMPONENT_NUMBER from XEN_STORAGE vm $XEN_STORAGE_VM_NAME"
+        VM_BASE_DIR=$OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME
+        > $VM_BASE_DIR/disk$XEN_STORAGE_VM_COMPONENT_NUMBER
+        > $VM_BASE_DIR/disksize$XEN_STORAGE_VM_COMPONENT_NUMBER
+		rm -f $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/disk$XEN_STORAGE_VM_COMPONENT_NUMBER.img
+		# creating the cfg
+        xen_storage_generate_vm_config $XEN_STORAGE_VM_NAME
+		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $XEN_STORAGE_VM_NAME -u $XEN_STORAGE_OPENQRM_USERNAME -p $XEN_STORAGE_OPENQRM_PASSWORD
+		fi
+		xen_storage_lock release
+		;;
+
+	setboot)
+        unset XEN_STORAGE_VM_NAME
+		if [ "$XEN_STORAGE_VM_MAC" == "" ]; then
+            echo "openQRM Xen-Storage-plugin: ERROR during setboot. No mac-address given" | logger
+			xen_storage_usage
+		fi
+		if [ "$XEN_STORAGE_VM_BOOT" == "" ]; then
+            echo "openQRM Xen-Storage-plugin: ERROR during setboot. No boot param given" | logger
+			xen_storage_usage
+		fi
+		xen_storage_lock aquire
+		echo "Setting vm with mac $XEN_STORAGE_VM_MAC to boot from $XEN_STORAGE_VM_BOOT"
+        echo "openQRM Xen-Storage-plugin: Setting vm with mac $XEN_STORAGE_VM_MAC to boot from $XEN_STORAGE_VM_BOOT" | logger
+        XEN_STORAGE_VM_NAME=`grep -rHi $XEN_STORAGE_VM_MAC $OPENQRM_VM_DIR/*/mac1 2>/dev/null | cut -d':' -f1 | head -n1 2>/dev/null` 2>/dev/null
+        XEN_STORAGE_VM_NAME=`dirname $XEN_STORAGE_VM_NAME` 2>/dev/null
+        XEN_STORAGE_VM_NAME=`basename $XEN_STORAGE_VM_NAME` 2>/dev/null
+        if [ "$XEN_STORAGE_VM_NAME" == "" ]; then
+			echo "NOTICE: Cloud not find XEN-storage vm $XEN_STORAGE_VM_MAC on this host" | logger
+    		xen_storage_lock release
+            exit 1
+        fi
+        case "$XEN_STORAGE_VM_BOOT" in
+            local)
+                echo "c" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/boot
+                ;;
+            net)
+                echo "n" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/boot
+                ;;
+            network)
+                echo "n" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/boot
+                ;;
+            cdrom)
+                echo "d" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/boot
+                echo "phy:/dev/cdrom,hdd,r" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/cdrom
+                ;;
+            iso)
+                echo "d" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/boot
+                echo "file:$XEN_STORAGE_VM_BOOT_ISO,hdd,r" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/cdrom
+                ;;
+        esac
+		# hard restart it to apply its configuration
+        # we do it here because the openQRM server engine does not
+        # know anything about the vm name to restart it later
+        if xm destroy $XEN_STORAGE_VM_NAME; then
+            openqrm_post_event 0 "setboot" 5 "openqrm-xen-storage" "Forced stop for re-starting Xen-Storage vm $XEN_STORAGE_VM_NAME"
+        else
+            openqrm_post_event 0 "setboot" 3 "openqrm-xen-storage" "Cloud not force stop Xen-Storage vm $XEN_STORAGE_VM_NAME. Trying to continue .."
+        fi
+		# creating the cfg
+        xen_storage_generate_vm_config $XEN_STORAGE_VM_NAME
+        # start it
+		SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+		if $RUNSCREEN -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.cfg; then
+           openqrm_post_event 0 "setboot" 5 "openqrm-xen-storage" "Re-started Xen-Storage vm $XEN_STORAGE_VM_NAME -> $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.cfg"
+        else
+            openqrm_post_event 0 "setboot" 3 "openqrm-xen-storage" "Could not re-start Xen-Storage vm $XEN_STORAGE_VM_NAME -> $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.cfg"
+            echo "openQRM Xen-Storage-plugin: ERROR: Could not re-start Xen-Storage vm $XEN_STORAGE_VM_NAME -> $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.cfg" | logger
+    		xen_storage_lock release
+            exit 1
+        fi
+		xen_storage_lock release
+        exit 0
+		;;
+
+	setboot_by_name)
+		if [ "$XEN_STORAGE_VM_NAME" == "" ]; then
+			xen_storage_usage
+		fi
+		if [ "$XEN_STORAGE_VM_BOOT" == "" ]; then
+			xen_storage_usage
+		fi
+		xen_storage_lock aquire
+		echo "Setting vm $XEN_STORAGE_VM_NAME to boot from $XEN_STORAGE_VM_BOOT"
+        case "$XEN_STORAGE_VM_BOOT" in
+            local)
+                echo "c" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/boot
+                ;;
+            net)
+                echo "n" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/boot
+                ;;
+            network)
+                echo "n" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/boot
+                ;;
+            cdrom)
+                echo "d" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/boot
+                echo "phy:/dev/cdrom,hdd,r" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/cdrom
+                ;;
+            iso)
+                echo "d" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/boot
+                echo "file:$XEN_STORAGE_VM_BOOT_ISO,hdd,r" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/cdrom
+                ;;
+        esac
+        # no restart here, this is from the vm config
+		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
+			$0 post_vm_config -n $XEN_STORAGE_VM_NAME -u $XEN_STORAGE_OPENQRM_USERNAME -p $XEN_STORAGE_OPENQRM_PASSWORD
+		fi
+		xen_storage_lock release
+		;;
+
+
+
+	*)
+		xen_storage_usage
+		;;
+
+
+esac
+

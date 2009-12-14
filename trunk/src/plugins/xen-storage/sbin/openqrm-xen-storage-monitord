@@ -1,0 +1,194 @@
+#!/bin/bash
+# this script automatically monitors xen vms
+#
+# This file is part of openQRM.
+#
+# openQRM is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2
+# as published by the Free Software Foundation.
+#
+# openQRM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+#
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/include/openqrm-plugin-xen-storage-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/etc/openqrm-plugin-xen-storage.conf
+if [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
+	. $OPENQRM_RESOURCE_PARAMETER_FILE
+	OPENQRM_SERVER_IP=$resource_openqrmserver
+    export SERVER_PROTOCOL=$openqrm_web_protocol
+elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+	. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+	openqrm_server_get_config
+	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+	resource_id=0
+	export resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+    export SERVER_PROTOCOL=$OPENQRM_WEB_PROTOCOL
+    export resource_senddelay=10
+fi
+OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode"
+OPENQRM_VM_DIR="/var/lib/xen-storage/openqrm/"
+export LANG=C
+OPENQRM_EVENT="statistics"
+OPENQRM_ACTIVE_STATE="active"
+OPENQRM_STARTING_STATE="starting"
+
+# define wget to use with https
+if [ "$SERVER_PROTOCOL" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate --random-file=/dev/random"
+fi
+
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+
+# mac is the identifier
+XEN_VM_MAC=$1
+if [ "$XEN_VM_MAC" == "" ]; then
+	echo "Usage: $0 <mac-address>"
+	exit 1
+fi
+
+XEN_VM_NAME=`grep -rHi $XEN_VM_MAC $OPENQRM_VM_DIR/*/mac1 2>/dev/null | cut -d':' -f1 2>/dev/null` 2>/dev/null
+XEN_VM_NAME=`dirname $XEN_VM_NAME` 2>/dev/null
+XEN_VM_NAME=`basename $XEN_VM_NAME` 2>/dev/null
+if [ "$XEN_VM_NAME" == "" ]; then
+    echo "NOTICE: Cloud not find XEN-storage vm $XEN_VM_MAC on this host" | logger
+    exit 1
+fi
+
+
+# local used functions
+function send_info() {
+    current_state=`urlencodestring $OPENQRM_ACTIVE_STATE`
+	current_event=`urlencodestring $OPENQRM_EVENT`
+	MESSAGEDATA="resource_id=$resource_id&resource_uptime=$current_uptime&resource_cpunumber=$current_cpu_number&resource_cpuspeed=$current_cpu_speed&resource_cpumodel=$current_cpu_model&resource_memtotal=$current_mem_total&resource_memused=$current_mem_used&resource_swaptotal=$current_swap_total&resource_swapused=$current_swap_used&resource_hostname=$current_hostname&resource_load=$current_cpu_load&resource_nics=$current_nic_count&resource_state=$current_state&resource_event=$current_event";
+	OPENQRM_RESOURCE_INFO_URL="$SERVER_PROTOCOL://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=update_info&$MESSAGEDATA"
+	wget $WGET_NO_CERT_CHECK -q -O /dev/null "$OPENQRM_RESOURCE_INFO_URL"
+}
+
+# uptime
+function find_uptime() {
+	if [ -f /proc/uptime ]; then
+		current_uptime=`cat /proc/uptime | cut -d'.' -f 1`
+	fi
+	if [ -z "$current_uptime" ]; then
+		current_uptime=0
+	fi
+}
+# cpu_speed
+function find_cpu_speed() {
+	if [ -f /proc/cpuinfo ]; then
+		current_cpu_speed=(`cat /proc/cpuinfo | grep "cpu.*MHz"`)
+		current_cpu_speed=${current_cpu_speed[3]/\.*/}
+	fi
+	if [ -z "$current_cpu_speed" ]; then
+		current_cpu_speed=0
+	fi
+}
+
+
+
+# get parameters for the vm resource
+XEN_VM_RESOURCE_PARAMETER="$OPENQRM_VM_DIR/$XEN_VM_NAME/resource-parameter.conf"
+# sending resource-id will add the resource if not existing (-1 = new resource)
+# loop get-parameters in case the network card is still not ready initialyzed
+NETWORKCARD_LOOP=0
+# send id -1 if resource parameters are not existing
+if [ ! -f $XEN_VM_RESOURCE_PARAMETER ]; then
+    NEW_RES_ID="&resource_id=-1"
+fi
+
+while (true); do
+	if wget $WGET_NO_CERT_CHECK -q -O $XEN_VM_RESOURCE_PARAMETER "$SERVER_PROTOCOL://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_mac=$XEN_VM_MAC$NEW_RES_ID"; then
+        if grep resource_id $XEN_VM_RESOURCE_PARAMETER 1>/dev/null 2>&1; then
+            echo "-> got parameters via $SERVER_PROTOCOL"
+            break
+        fi
+	fi
+    # no chance ?
+	if [ "$NETWORKCARD_LOOP" == "10" ]; then
+		echo "ERROR: Could not reach the openQRM-Server at $OPENQRM_SERVER_IP_ADDRESS!"
+        exit 1
+	fi
+	NETWORKCARD_LOOP=$(( NETWORKCARD_LOOP + 1 ))
+	sleep 5
+done
+# source parameters
+. $XEN_VM_RESOURCE_PARAMETER
+
+# gathering the static values
+echo "$0: Gathering resources-information" | logger
+# source xen vm config
+XEN_VM_CPUS=`cat $OPENQRM_VM_DIR/$XEN_VM_NAME/vcpu 2>/dev/null`
+XEN_VM_RAM=`cat $OPENQRM_VM_DIR/$XEN_VM_NAME/memory 2>/dev/null`
+XEN_VM_MAC_1=`cat $OPENQRM_VM_DIR/$XEN_VM_NAME/mac1 2>/dev/null`
+XEN_VM_MAC_2=`cat $OPENQRM_VM_DIR/$XEN_VM_NAME/mac2 2>/dev/null`
+XEN_VM_MAC_3=`cat $OPENQRM_VM_DIR/$XEN_VM_NAME/mac3 2>/dev/null`
+XEN_VM_MAC_4=`cat $OPENQRM_VM_DIR/$XEN_VM_NAME/mac4 2>/dev/null`
+XEN_VM_MAC_5=`cat $OPENQRM_VM_DIR/$XEN_VM_NAME/mac5 2>/dev/null`
+export current_hostname=$XEN_VM_NAME
+export resource_cpumodel="Xen Virtual CPU"
+export current_cpu_number=$XEN_VM_CPUS
+export current_mem_total=$XEN_VM_RAM
+# nic count
+if [ "$XEN_VM_MAC_1" != "" ]; then
+    export current_nic_count=1
+fi
+if [ "$XEN_VM_MAC_2" != "" ]; then
+    export current_nic_count=2
+fi
+if [ "$XEN_VM_MAC_3" != "" ]; then
+    export current_nic_count=3
+fi
+if [ "$XEN_VM_MAC_4" != "" ]; then
+    export current_nic_count=4
+fi
+if [ "$XEN_VM_MAC_5" != "" ]; then
+    export current_nic_count=5
+fi
+
+
+# gather cpu speed only once
+find_cpu_speed
+# main loop
+while (true); do
+	# uptime
+	find_uptime
+	# sending statistics
+	send_info
+	# delay
+	sleep $resource_senddelay
+done
+# never reached
+exit 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

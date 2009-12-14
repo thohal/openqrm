@@ -1,0 +1,81 @@
+#!/bin/bash
+# this is the functions file for the xen-storage-plugin
+#
+# This file is part of openQRM.
+#
+# openQRM is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2
+# as published by the Free Software Foundation.
+#
+# openQRM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+#
+
+
+# some definitions
+DEFAULT_IMAGE_SIZE=5000
+LVM_MGMT_LOCK_FILE=/var/run/xen-storage/xen-storage-plugin.lock
+LVM_MGMT_LOCK_DELAY=5
+LVM_MGMT_LOCK_RETRY=100
+LVM_MGMT_LOCK_TIMEOUT=500
+LV_SIZE_DEFAULT=5000
+
+# which screen binary to use
+if [ -x /usr/bin/screen.real ]; then
+    RUNSCREEN="/usr/bin/screen.real"
+else
+    RUNSCREEN=`which screen`
+fi
+
+################ common xen-storage functions
+
+# logs for xen_storage
+function xen_storage_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "xen-storage plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function xen_storage_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $LVM_MGMT_LOCK_FILE` ]; then
+		mkdir -p `dirname $LVM_MGMT_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $LVM_MGMT_LOCK_DELAY -r $LVM_MGMT_LOCK_RETRY -l $LVM_MGMT_LOCK_TIMEOUT $LVM_MGMT_LOCK_FILE
+				RET=$?
+				xen_storage_log xen_storage_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $LVM_MGMT_LOCK_FILE
+				RET=$?
+				xen_storage_log xen_storage_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			xen_storage_log xen_storage_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ xen-storage functions
+
+
+
