@@ -1613,13 +1613,13 @@ class cloudsoap {
         // create a new cloud-image private-life-cycle / using the cloudappliance id
         $cloudiplc = new cloudiplc();
         $ciplc_fields['cp_id'] = openqrm_db_get_free_id('cp_id', $cloudiplc->_db_table);
-        $ciplc_fields['cp_appliance_id'] = $id;
+        $ciplc_fields['cp_appliance_id'] = $ca_id;
         $ciplc_fields['cp_cu_id'] = $cl_user->id;
         $ciplc_fields['cp_state'] = '1';
         $ciplc_fields['cp_start_private'] = $_SERVER['REQUEST_TIME'];
         $cloudiplc->add($ciplc_fields);
 
-        $event->log("cloudsoap->CloudAppliancePrivate", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Creating a private image $private_image_name from Cloud appliance $id", "", "", 0, 0, 0);
+        $event->log("cloudsoap->CloudAppliancePrivate", $_SERVER['REQUEST_TIME'], 5, "cloud-soap-server.php", "Creating a private image $private_image_name from Cloud appliance $ca_id", "", "", 0, 0, 0);
         return 0;
 	}
 
