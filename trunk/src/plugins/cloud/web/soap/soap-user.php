@@ -47,11 +47,14 @@ The Cloud SOAP WebService in "user" mode exposes the following methods :
 
 $DocRoot = $_SERVER["DOCUMENT_ROOT"];
 $user_class_file1 = "../class/cloudsoap.class.php";
-$user_class_file2 = "$DocRoot/openqrm/base/plugins/cloud/web/class/cloudsoap.class.php";
+$user_class_file2 = "$DocRoot/openqrm/base/plugins/cloud/class/cloudsoap.class.php";
+$user_class_file3 = "$DocRoot/openqrm/base/plugins/cloud/web/class/cloudsoap.class.php";
 if (file_exists($user_class_file1)) {
     $lines = file($user_class_file1);
-} else {
+} else if (file_exists($user_class_file2)) {
     $lines = file($user_class_file2);
+} else if (file_exists($user_class_file3)) {
+    $lines = file($user_class_file3);
 }
 foreach ($lines as $line_num => $line) {
     if (strstr($line, "function ")) {
