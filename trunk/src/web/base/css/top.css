@@ -1,53 +1,53 @@
 body {
-	background-color: #74B3DC;
+	background: url(../img/top_pageBgr.png) repeat-x #5b5b5b;
 	margin: 0px; 
 	padding: 0px;
 	font-family: arial, sans-serif;
 	font-size: 12px;
-
+	color: #353535;
 }
+
 div {
 	margin: 0px; 
 	padding: 0px;
 }
 .logo {
-	background-image: url(../img/top-logo-bg.gif);
-	background-repeat:no-repeat;
-	background-color: white;
-	position:absolute;
-	top:10px;
-	width:170px;
+	background-repeat: no-repeat;
+	position: absolute;
+	top: 20px;
+	width: 170px;
+	height: 80px;
 	padding: 15px 0 0 30px;
-	height:80px;
+	font-size: 80%;
 }
+
+.logo .openqrmVersion {
+	position: absolute;
+	top: 53px;
+	left: 133px;
+}
+
 .main {
-	background-color: #74B3DC;
-	margin: 1px 0 0 250px;
-	height: 72px;
-	padding: 5px 0 0 0;
-/*
-	border: 1px solid #3399CC;
-	border-top: 1px solid #33CCFF;
-	border-left: 1px solid #33CCFF;
-*/
+	background: #000000;
+	opacity: 0.6;	
+	margin: 20px 0 0 199px;
+	height: 70px;
+	padding: 0 0 0 15px;
+	color: #ffffff;
+	font-size: 80%;
+	border-top: 1px solid #aaaaaa;
+	border-left: 1px solid #aaaaaa;
+	-moz-border-radius-topleft: 5px;
 }
-.watch {
-	position:absolute;
-	top:10px;
-	left:235px;
-	color:white;
-	font-family:arial;
-	font-size:12px;
+.main * {
+	opacity: 1;
 }
 
 .top {
-	color: #646464;
-	background-image: url(../img/top-top-bg.gif);
-	background-repeat:no-repeat;
-	background-color: white;
 	margin: 0 0 0 450px;
-	text-align:right;
-	padding:0 20px 0 0;
+	text-align: right;
+	padding: 0 20px 0 0;
+	color: #fff;
 }
 .bottom-line {
 	position:absolute;
@@ -68,74 +68,51 @@ div {
 	color:red;
 }
 
-#Login_box {
-	text-decoration:none;
-	background:url(../img/user.gif) no-repeat;
-	color:black;
+#Watch, #Login_box, #Docu_box, #Support_box {
+	color: #ffffff;
+	font-size: 80%;
 	display:block;
 	margin: 5px 0 5px 20px;
 	padding: 0 0 0 20px;
 	float:right;
 	line-height:18px;
 }
+#Login_box {
+	background:url(../img/user.gif) no-repeat;
+}
 #Docu_box {
 	background:url(../img/help.png) no-repeat;
-	text-decoration:none;
-	padding: 0 0 0 20px;
-	color:black;
-	display:block;
-	margin: 5px 0 5px 20px;
-	float:right;
-	line-height:18px;
 }
 
 #Support_box {
 	background:url(../img/support.png) no-repeat;
-	text-decoration:none;
-	padding: 0 0 0 20px;
-	color:black;
-	display:block;
-	margin: 5px 0 5px 20px;
-	float:right;
-	line-height:18px;
 }
 
-
-/*
-.div_box {
-	margin: 5px 0 0 5px;
-	height: 60px;
-	border: 1px solid #3399CC;
-	border-bottom: 1px solid #33CCFF;
-	border-right: 1px solid #33CCFF;
-	float:left;
-}
-*/
 #Appliance_box {
-	width:250px;
-float:left;
+	width: 200px;
+	float: left;
 }
 #Resource_box {
-	width:350px;
-float:left;
+	margin: 0 0 0 20px;
+	width: 300px;
+	float: left;
 }
 
 .appliances.headline,
 .resources.headline
 {
 	float:none;
-	margin:5px 0 10px 0;
+	margin: 5px 0;
 	padding: 0 0 0 0;
-	font-size:12px;
 	font-weight:bold;
+	border-bottom: 1px solid #999;
 }
 .appliances,
 .resources
 {
 	line-height:16px;
-	color:white;
 	float:left;
-	margin: 0 0 0 0;
+	margin: 0;
 	padding: 0 15px 0 22px;
 }
 .resources.error
