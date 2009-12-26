@@ -371,12 +371,11 @@ foreach($plugtype as $p) {
 
 
 
-$table_1 = new htmlobject_db_table('plugin_enabled', 'ASC');
+$table_1 = new htmlobject_db_table('plugin_enabled', 'ASC', 50);
 $table_1->add_headrow(htmlobject_select('plugin_filter', $plugs, 'Filter by Type', array(htmlobject_request('plugin_filter'))));
 $table_1->id = 'Tabelle';
 $table_1->css = 'htmlobject_table';
 $table_1->border = 1;
-$table_1->limit = 50;
 $table_1->cellspacing = 0;
 $table_1->cellpadding = 3;
 $table_1->form_action = $thisfile;
