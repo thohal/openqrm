@@ -73,12 +73,12 @@ function kvm_start() {
 
 	# check that bridging is enabled
 	if ! which brctl 1>/dev/null; then
-		kvm_log kvm_start "ERROR: brctl is not installed! Please install bridge-utils."
+		kvm_storage_log kvm_start "ERROR: brctl is not installed! Please install bridge-utils."
 		exit 1
 	fi
 	if ! which kvm 1>/dev/null; then
         if ! which qemu-kvm 1>/dev/null; then
-            kvm_log kvm_start "ERROR: kvm is not installed! Please install kvm."
+            kvm_storage_log kvm_start "ERROR: kvm is not installed! Please install kvm."
             exit 1
         fi
     fi
