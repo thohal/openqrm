@@ -736,7 +736,7 @@ case "$KVM_COMMAND" in
 			KVM_VM_MAC_BRIDGE=$OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE
 		fi
 		kvm_storage_lock aquire
-		echo "Adding nic ($OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE) to KVM vm $KVM_VM_NAME" | logger
+		echo "Adding nic ($KVM_VM_MAC_BRIDGE) to KVM vm $KVM_VM_NAME" | logger
         # ex or internal bridge ?
         if [ "$KVM_VM_MAC_BRIDGE" == "$OPENQRM_PLUGIN_KVM_INTERNAL_BRIDGE" ]; then
     		sed -i -e s"#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=.*#KVM_VM_NET_$KVM_VM_COMPONENT_NUMBER=\"-net nic,vlan=$KVM_VM_COMPONENT_NUMBER,macaddr=$KVM_VM_MAC,model=$KVM_VM_NIC_TYPE -net tap,vlan=$KVM_VM_COMPONENT_NUMBER,script=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-ifup,downscript=$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/bin/openqrm-kvm-ifdown\"#g" $OPENQRM_VM_DIR/$KVM_VM_NAME/net""$KVM_VM_COMPONENT_NUMBER
