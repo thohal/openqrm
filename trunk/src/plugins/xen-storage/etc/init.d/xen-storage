@@ -1,5 +1,5 @@
 #!/bin/bash
-# this is the boot-service init script for the Kvm-server hosts
+# this is the boot-service init script for the Xen-server hosts
 #
 # This file is part of openQRM.
 #

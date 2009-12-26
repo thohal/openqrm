@@ -31,7 +31,7 @@
 </div>
 
 <div style="float:left;">
-<h4>KVM vms on resource {xen_server_id}/{xen_server_name}</h4>
+<h4>Xen vms on resource {xen_server_id}/{xen_server_name}</h4>
 {xen_vm_table}
 </div>
 
