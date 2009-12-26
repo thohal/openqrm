@@ -2,23 +2,6 @@
 /**
  * @package htmlobjects
  */
-/*
-  This file is part of openQRM.
-
-    openQRM is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2
-    as published by the Free Software Foundation.
-
-    openQRM is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
-
-    Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
-*/
 
 //----------------------------------------------------------------------------------------
 /**
@@ -110,14 +93,13 @@ var $_tabs = array();
 	//----------------------------------------------------------------------------------------
 	/**
 	* constructor
-	*
 	* <code>
 	* $content = array();
 	* $content[0]['label']   = 'some title';
 	* $content[0]['value']   = 'some content text';
 	* $content[0]['target']  = 'somefile.php';
 	* $content[0]['request'] = '&param1=value1&param2=value2';
-	*
+	* $content[0]['onclick'] = false;
 	* $tab = new htmlobject_tabmenu($content, 'some_prefix');
 	* </code>
 	* @access public
@@ -125,8 +107,9 @@ var $_tabs = array();
 	* @param string $prefix
 	*/
 	//----------------------------------------------------------------------------------------
-	function htmlobject_tabmenu($arr, $prefix = 'currenttab') {
+	function htmlobject_tabmenu($arr, $prefix = 'currenttab', $prefix_tab = 'tab') {
 		$this->prefix = $prefix;
+		$this->prefix_tab = $prefix_tab;
 		$this->_set($arr);	
 	}
 
@@ -137,30 +120,38 @@ var $_tabs = array();
 	* @param array $arr
 	*/
 	//----------------------------------------------------------------------------------------	
-	function _set($arr) {
+	function _set( $arr ) {
 		$i = 0;
 		foreach ($arr as $val) {
 			
 			$identifier = $this->prefix.$this->prefix_tab.$i;
 
 			if(array_key_exists('value', $val)) {
-				$html = new htmlobject_div();
-				$html->id = $identifier;
-				$html->css = 'htmlobject_tab_box';
-				$html->text = $val['value'].'<div style="clear:both;line-height:0;">&#160;</div>';
-				$value = $html->get_string();
+				$html       = new htmlobject_div();
+				$html->id   = $identifier;
+				$html->css  = 'htmlobject_tab_box';
+				$html->text = $val['value']."<div style=\"line-height:0px;clear:both;\">&#160;</div>\n";
+				$value = $html;
 			} else { $value = ''; }
 
 			array_key_exists('label', $val) ? $label = $val['label'] : $label = '';
 			array_key_exists('target', $val) ? 	$target = $val['target'].'?'.$this->prefix.'='.$this->prefix_tab.$i : $target = '?'.$this->prefix.'='.$this->prefix_tab.$i;
 			array_key_exists('request', $val) ? $request = $val['request'] : $request = array();
+			array_key_exists('onclick', $val) ? $onclick = $val['onclick'] : $onclick = true;
+			array_key_exists('active', $val) ? $active = $val['active'] : $active = false;
+
+			if( $active === true ) {
+				$_REQUEST[$this->prefix.$this->prefix_tab] = $i;
+			}
 
 			$this->_tabs[] = array(
-				'target' => $target,
-				'value' => $value,
-				'label' => $label,
-				'id' => $identifier,
+				'target'  => $target,
+				'value'   => $value,
+				'label'   => $label,
+				'id'      => $identifier,
 				'request' => $request,
+				'onclick' => $onclick,
+				'active'  => $active,
 				);
 		$i++;
 		}
@@ -176,34 +167,35 @@ var $_tabs = array();
 	//----------------------------------------------------------------------------------------	
 	function _get_tabs($currenttab) {
 		$thisfile = basename($_SERVER['PHP_SELF']);
-		$_strReturn = "\n<div $this->_init>\n";
-		$_strReturn .= "<ul>\n";	
+		$_str = "\n<div ".$this->_init.">\n";
+		$_str .= "<ul>\n";	
 		foreach($this->_tabs as $tab) {
 			$css = '';
 			if($tab['id'] == $this->prefix.$this->prefix_tab.$currenttab) { $css = ' class="'.$this->tabcss.'"'; }
 			foreach ($tab['request'] as $key => $arg) {
-				$tab['target'] = $tab['target'].'&'.$key.'='.$arg;
+				$tab['target'] = $tab['target'].'&amp;'.$key.'='.$arg;
 			}
-			$_strReturn .= '<li id="tab_'.$tab['id'].'"'.$css.'>';
-			$_strReturn .= "<span>";
-			if(strstr($tab['target'], $thisfile)) {
-				$_strReturn .= '<a href="'.$tab['target'].'" onclick="'.$this->prefix.'Toggle(\''.$tab['id'].'\'); this.blur(); return false;">';
+			$_str .= '<li id="tab_'.$tab['id'].'"'.$css.'>';
+			$_str .= "<span>";
+
+			if(strstr($tab['target'], $thisfile) && $tab['onclick'] !== false) {
+				$_str .= '<a href="'.$tab['target'].'" onclick="'.$this->prefix.'Toggle(\''.$tab['id'].'\'); this.blur(); return false;">';
 			} else {
-				$_strReturn .= '<a href="'.$tab['target'].'" onclick="this.blur();">';
+				$_str .= '<a href="'.$tab['target'].'" onclick="this.blur();">';
 			}
-			$_strReturn .= $tab['label'];
-			$_strReturn .= "</a>";
-			$_strReturn .= "</span>";
-			$_strReturn .= "</li>\n";
+			$_str .= $tab['label'];
+			$_str .= "</a>";
+			$_str .= "</span>";
+			$_str .= "</li>\n";
 		}
-		$_strReturn .= "</ul>\n";
+		$_str .= "</ul>\n";
 		if($this->custom_tab != '') {
-			$_strReturn .= "<div class=\"custom_tab\">".$this->custom_tab."</div>\n";		
+			$_str .= "<div class=\"custom_tab\">".$this->custom_tab."</div>\n";		
 		}	
-		$_strReturn .= "</div>\n";
-		$_strReturn .= "<div style=\"line-height:0px;clear:both;\">&#160;</div>\n";
+		$_str .= "</div>\n";
+		$_str .= "<div style=\"line-height:0px;clear:both;\">&#160;</div>\n";
 		
-	return $_strReturn;
+	return $_str;
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -214,43 +206,22 @@ var $_tabs = array();
 	*/
 	//----------------------------------------------------------------------------------------	
 	function _get_js() {
-	$_strReturn = '';
+	$_str = '';
 		$thisfile = basename($_SERVER['PHP_SELF']);
-		$_strReturn .= "\n<script>\n";
-		$_strReturn .= "function ".$this->prefix."Toggle(id) {\n";
+		$_str .= "\n<script type=\"text/javascript\">\n";
+		$_str .= "function ".$this->prefix."Toggle(id) {\n";
 		foreach($this->_tabs  as $tab) {
 			if(strstr($tab['target'], $thisfile)) {
-				$_strReturn .= "document.getElementById('".$tab['id']."').style.display = 'none';\n";
-				$_strReturn .= "document.getElementById('tab_".$tab['id']."').className = '';\n";
+				$_str .= "document.getElementById('".$tab['id']."').style.display = 'none';\n";
+				$_str .= "document.getElementById('tab_".$tab['id']."').className = '';\n";
 			}
 		}
-		$_strReturn .= "document.getElementById(id).style.display = 'block';\n";
-		$_strReturn .= "document.getElementById('tab_'+id).className = '".$this->tabcss."';\n";
-		$_strReturn .= "}\n";	
-		$_strReturn .= "</script>\n";
+		$_str .= "document.getElementById(id).style.display = 'block';\n";
+		$_str .= "document.getElementById('tab_' + id).className = '".$this->tabcss."';\n";
+		$_str .= "}\n";	
+		$_str .= "</script>\n";
 		
-	return $_strReturn;
-	}
-
-	//----------------------------------------------------------------------------------------
-	/**
-	* create css
-	* @access private
-	* @param string $currenttab
-	* @return string
-	*/
-	//----------------------------------------------------------------------------------------	
-	function _get_css($currenttab) {
-	$_strReturn = '';
-
-		$_strReturn .= "\n<style>\n";
-		foreach($this->_tabs as $tab) {
-			if($tab['id'] == $this->prefix.$this->prefix_tab.$currenttab) { $_strReturn .= "#".$tab['id']." { display: block; }\n"; }
-			else { $_strReturn .= "#".$tab['id']." { display: none; }\n"; }
-		}
-		$_strReturn .= "</style>\n";
-		
-	return $_strReturn;
+	return $_str;
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -261,24 +232,21 @@ var $_tabs = array();
 	*/
 	//----------------------------------------------------------------------------------------	
 	function _get_messagebox() {
-	$_strReturn = '';
-	    if($this->get_request($this->message_param) != "") {
-
-			$this->add_request_filter($this->message_replace);
-			$msg = $this->get_request($this->message_param);
-		
-		    $_strReturn .= '';
-		    $_strReturn .= '<div class="'.$this->message_css.'" id="'.$this->prefix.'msgBox">'.$msg.'</div>';
-		    $_strReturn .= '<script>';
-		    $_strReturn .= 'var '.$this->prefix.'aktiv = window.setInterval("'.$this->prefix.'msgBox()", '.$this->message_time.');';
-		    $_strReturn .= 'function '.$this->prefix.'msgBox() {';
-		    $_strReturn .= '    document.getElementById(\''.$this->prefix.'msgBox\').style.display = \'none\';';
-		    $_strReturn .= '    window.clearInterval('.$this->prefix.'aktiv);';
-		    $_strReturn .= '}';
-		    $_strReturn .= '</script>';
-		    $_strReturn .= '';
+	$_str = '';
+		$msg = $this->get_request($this->message_param);
+	    if($msg != "") {
+		    $_str .= '';
+		    $_str .= '<div class="'.$this->message_css.'" id="'.$this->prefix.'msgBox">'.$msg.'</div>';
+		    $_str .= '<script type="text/javascript">';
+		    $_str .= 'var '.$this->prefix.'aktiv = window.setInterval("'.$this->prefix.'msgBox()", '.$this->message_time.');';
+		    $_str .= 'function '.$this->prefix.'msgBox() {';
+		    $_str .= '    document.getElementById(\''.$this->prefix.'msgBox\').style.display = \'none\';';
+		    $_str .= '    window.clearInterval('.$this->prefix.'aktiv);';
+		    $_str .= '}';
+		    $_str .= '</script>';
+		    $_str .= '';
 	    }
-	return $_strReturn;
+	return $_str;
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -290,8 +258,8 @@ var $_tabs = array();
 	*/
 	//----------------------------------------------------------------------------------------	
 	function get_string() {
-	$_strReturn = '';
-		($this->form_action != '') ? $_strReturn .= '<form action="'.$this->form_action.'" method="POST">' : null;
+	$_str = '';
+		($this->form_action != '') ? $_str .= '<form action="'.$this->form_action.'" method="POST">' : null;
 		if(count($this->_tabs) > 0) {
 			$this->init();
 			if(isset($_REQUEST[$this->prefix]) && $_REQUEST[$this->prefix] != '') {
@@ -299,19 +267,23 @@ var $_tabs = array();
 			} else {
 				$currenttab = '0';
 			}
-			$_strReturn .= $this->_get_js();
-			$_strReturn .= $this->_get_css($currenttab);
-			$_strReturn .= $this->_get_tabs($currenttab);
-			$_strReturn .= $this->_get_messagebox();
+			$_str .= $this->_get_js();
+			$_str .= $this->_get_tabs($currenttab);
 			foreach ($this->_tabs as $tab) {
 				if($tab['value'] != '') {
-					$_strReturn .= $tab['value'];
+					$html = $tab['value'];
+					if($tab['id'] !== $this->prefix.$this->prefix_tab.$currenttab) {
+						$html->style = 'display:none;';
+					} else {
+						$html->text = $this->_get_messagebox().$html->text;
+					}										
+					$_str .= $html->get_string();
 				}
 			}
-		}	
-		($this->form_action != '') ? $_strReturn .= '</form>' : null;
+		}
+		($this->form_action != '') ? $_str .= '</form>' : null;
 		
-	return $_strReturn;
+	return $_str;
 	}
 }
 ?>
