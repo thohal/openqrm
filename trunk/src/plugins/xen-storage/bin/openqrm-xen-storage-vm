@@ -764,6 +764,20 @@ case "$XEN_STORAGE_COMMAND" in
         vm_disksize3=`cat $VM_BASE_DIR/disksize3 2>/dev/null`
         vm_vnc_display=`cat $VM_BASE_DIR/vncdisplay`
         vm_cdrom=`cat $VM_BASE_DIR/cdrom 2>/dev/null`
+        vm_boot=`cat $VM_BASE_DIR/boot 2>/dev/null`
+        # made the boot device readable
+        XEN_VM_BOOT_STR="local"
+        case "$vm_boot" in
+            d)
+                XEN_VM_BOOT_STR="cdrom"
+                ;;
+            c)
+                XEN_VM_BOOT_STR="local"
+                ;;
+            n)
+                XEN_VM_BOOT_STR="network"
+                ;;
+        esac
 		echo "OPENQRM_XEN_STORAGE_VM_RAM=\"$vm_memory\"" > $VM_CONFIG_TMP
 		echo "OPENQRM_XEN_STORAGE_VM_CPU=\"$vm_cpu\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_XEN_STORAGE_VM_NET_1=\"$vm_bridge1\"" >> $VM_CONFIG_TMP
@@ -786,7 +800,8 @@ case "$XEN_STORAGE_COMMAND" in
 		echo "OPENQRM_XEN_STORAGE_VM_DISK_SIZE_3=\"$vm_disksize3\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_XEN_STORAGE_VM_VNC=\"$vm_vnc_display\"" >> $VM_CONFIG_TMP
 		echo "OPENQRM_XEN_STORAGE_VM_CDROM=\"$vm_cdrom\"" >> $VM_CONFIG_TMP
-		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$XEN_STORAGE_OPENQRM_USERNAME --http-password=$XEN_STORAGE_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_CONFIG_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/xen-storage/xen-action.php?xen_server_command=get_xen_storageconfig; then
+		echo "OPENQRM_XEN_STORAGE_VM_BOOT=\"$XEN_VM_BOOT_STR\"" >> $VM_CONFIG_TMP
+		if ! wget -q $WGET_NO_CERT_CHECK -O /dev/null --http-user=$XEN_STORAGE_OPENQRM_USERNAME --http-password=$XEN_STORAGE_OPENQRM_PASSWORD  --post-file=`$OPENQRM_POSTENCODE $VM_CONFIG_TMP` $openqrm_web_protocol://$OPENQRM_SERVER_IP/openqrm/base/plugins/xen-storage/xen-storage-action.php?xen_server_command=get_xen_config; then
 			echo "ERROR: Could not post vm config to the openQRM-server at $OPENQRM_SERVER_IP!"
 			echo "ERROR: Could not post vm config to the openQRM-server at $OPENQRM_SERVER_IP!" | logger
 		fi
@@ -858,11 +873,14 @@ case "$XEN_STORAGE_COMMAND" in
 		if [ "$XEN_STORAGE_VM_COMPONENT_NUMBER" == "" ]; then
 			xen_storage_usage
 		fi
+		if [ "$XEN_STORAGE_VM_BRIDGE" == "" ]; then
+            XEN_STORAGE_VM_BRIDGE=$OPENQRM_PLUGIN_XEN_STORAGE_EXTERNAL_BRIDGE
+		fi
 		xen_storage_lock aquire
-		echo "Adding nic $XEN_STORAGE_VM_COMPONENT_NUMBER mac-address $XEN_STORAGE_VM_MAC to XEN_STORAGE vm $XEN_STORAGE_VM_NAME"
+		echo "Adding nic $XEN_STORAGE_VM_COMPONENT_NUMBER mac-address $XEN_STORAGE_VM_MAC / $XEN_STORAGE_VM_BRIDGE to XEN_STORAGE vm $XEN_STORAGE_VM_NAME"
         VM_BASE_DIR=$OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME
         echo "$XEN_STORAGE_VM_MAC" > $VM_BASE_DIR/mac$XEN_STORAGE_VM_COMPONENT_NUMBER
-        echo "$OPENQRM_PLUGIN_XEN_STORAGE_EXTERNAL_BRIDGE" > $VM_BASE_DIR/bridge$XEN_STORAGE_VM_COMPONENT_NUMBER
+        echo "$XEN_STORAGE_VM_BRIDGE" > $VM_BASE_DIR/bridge$XEN_STORAGE_VM_COMPONENT_NUMBER
 		# creating the cfg
         xen_storage_generate_vm_config $XEN_STORAGE_VM_NAME
 		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then

@@ -385,7 +385,7 @@ function xen_select() {
     $xen_count=0;
     $arBody = array();
     $virtualization = new virtualization();
-    $virtualization->get_instance_by_type("xen");
+    $virtualization->get_instance_by_type("xen-storage");
     $xen_tmp = new appliance();
     $xen_array = $xen_tmp->display_overview_per_virtualization($virtualization->id, $table->offset, $table->limit, $table->sort, $table->order);
     foreach ($xen_array as $index => $xen_db) {

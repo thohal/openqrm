@@ -61,10 +61,7 @@
 </div>
 
 <div style="float:right;">
-<strong>Select the Networkcard model for the VM</strong>
-    <div style="border: solid 1px #ccc; padding: 10px 10px 0 10px;">
-    {vm_config_nic_type_disp}
-    </div>
+<br>
 </div>
 <div style="clear:both;line-height:0px;">&#160;</div>
 {submit}
