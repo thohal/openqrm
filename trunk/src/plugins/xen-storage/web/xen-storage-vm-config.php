@@ -225,7 +225,7 @@ if(htmlobject_request('xen_config_action') != '' && $OPENQRM_USER->role == "admi
                         $strMsg .= "Got empty boot-iso config. Not updating the vm config on Xen Host $xen_id";
                         redirect_conf($strMsg, "xen-storage-vm-config.php", $xen_id, $xen_name);
                     }
-                    $xen_vm_boot_iso = "-i ".$xen_vm_boot_iso;
+                    $xen_vm_boot_iso = "-iso ".$xen_vm_boot_iso;
                 } else {
                     $xen_vm_boot_iso = "";
                 }
@@ -704,7 +704,7 @@ function xen_vm_config_boot() {
 	$vm_config_boot_disp .= "<input type=hidden name=xen_name value=$xen_name>";
     $vm_config_boot_disp .= 'CD-ROM <input type="radio" name="xen_vm_boot_dev" value="cdrom" checked="checked" />  (local CD-ROM Device on the Xen storage)';
     $vm_config_boot_disp .= '<br />';
-    $vm_config_boot_disp .= 'ISO Image <input type="radio" name="xen_vm_boot_dev" value="iso" /> <input type="text" name="xen_vm_boot_iso" value="[/path/filename.iso on the Xen storage]" size="30" />';
+    $vm_config_boot_disp .= 'ISO Image <input type="radio" name="xen_vm_boot_dev" value="iso" /> <input type="text" name="xen_vm_boot_iso" value="[/dev/loopX on the Xen storage]" size="30" />';
     $vm_config_boot_disp .= '<br />';
     $vm_config_boot_disp .= 'Network <input type="radio" name="xen_vm_boot_dev" value="network" />';
     $vm_config_boot_disp .= '<br />';

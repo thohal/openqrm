@@ -145,7 +145,7 @@ function xen_storage_generate_vm_config() {
     vm_vncviewer=`cat $VM_BASE_DIR/vncviewer 2>/dev/null`
     vm_vnc_display=`cat $VM_BASE_DIR/vncdisplay 2>/dev/null`
     vm_sdl=`cat $VM_BASE_DIR/sdl 2>/dev/null`
-    vm_cdrom=`cat $XEN_STORAGE_VM_BASE_DIR/cdrom 2>/dev/null`
+    vm_cdrom=`cat $VM_BASE_DIR/cdrom 2>/dev/null`
 
     > $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$VM_NAME.cfg
     cat >> $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$VM_NAME.cfg << EOF
@@ -444,11 +444,11 @@ case "$XEN_STORAGE_COMMAND" in
                 ;;
             cdrom)
                 echo "d" > $XEN_STORAGE_VM_BASE_DIR/boot
-                echo "phy:/dev/cdrom,hdd,r" > $XEN_STORAGE_VM_BASE_DIR/cdrom
+                echo "phy:/dev/cdrom,hdd:cdrom,r" > $XEN_STORAGE_VM_BASE_DIR/cdrom
                 ;;
             iso)
                 echo "d" > $XEN_STORAGE_VM_BASE_DIR/boot
-                echo "file:$XEN_STORAGE_VM_BOOT_ISO,hdd,r" > $XEN_STORAGE_VM_BASE_DIR/cdrom
+                echo "phy:$XEN_STORAGE_VM_BOOT_ISO,hdd:cdrom,r" > $XEN_STORAGE_VM_BASE_DIR/cdrom
                 ;;
         esac
 
@@ -471,6 +471,8 @@ case "$XEN_STORAGE_COMMAND" in
         XEN_STORAGE_VM_ROOT_DISK=`cat $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/disk1 2>/dev/null`
         XEN_STORAGE_VM_MAC=`cat $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/mac1 2>/dev/null`
         if [ "$XEN_STORAGE_VM_ROOT_DISK" != "" ]; then
+            # creating the cfg
+            xen_storage_generate_vm_config $XEN_STORAGE_VM_NAME
             SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
             if $RUNSCREEN -dmS $SCREEN_NAME xm create -f $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.cfg; then
                 openqrm_post_event 0 "create" 5 "openqrm-xen-storage" "Created and started Xen-Storage-Storage vm $XEN_STORAGE_VM_NAME -> $OPENQRM_PLUGIN_XEN_STORAGE_VM_CONFIG_DIR/$XEN_STORAGE_VM_NAME.cfg"
@@ -988,11 +990,11 @@ case "$XEN_STORAGE_COMMAND" in
                 ;;
             cdrom)
                 echo "d" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/boot
-                echo "phy:/dev/cdrom,hdd,r" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/cdrom
+                echo "phy:/dev/cdrom,hdd:cdrom,r" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/cdrom
                 ;;
             iso)
                 echo "d" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/boot
-                echo "file:$XEN_STORAGE_VM_BOOT_ISO,hdd,r" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/cdrom
+                echo "phy:$XEN_STORAGE_VM_BOOT_ISO,hdd:cdrom,r" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/cdrom
                 ;;
         esac
 		# hard restart it to apply its configuration
@@ -1040,11 +1042,11 @@ case "$XEN_STORAGE_COMMAND" in
                 ;;
             cdrom)
                 echo "d" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/boot
-                echo "phy:/dev/cdrom,hdd,r" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/cdrom
+                echo "phy:/dev/cdrom,hdd:cdrom,r" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/cdrom
                 ;;
             iso)
                 echo "d" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/boot
-                echo "file:$XEN_STORAGE_VM_BOOT_ISO,hdd,r" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/cdrom
+                echo "phy:$XEN_STORAGE_VM_BOOT_ISO,hdd:cdrom,r" > $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/cdrom
                 ;;
         esac
         # no restart here, this is from the vm config

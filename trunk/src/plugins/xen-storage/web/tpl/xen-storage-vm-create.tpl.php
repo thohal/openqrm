@@ -58,7 +58,7 @@
 <br />
 CD-ROM <input type="radio" name="xen_vm_boot_dev" value="cdrom" checked="checked" />  (local CD-ROM Device on the Xen storage)
 <br />
-ISO Image <input type="radio" name="xen_vm_boot_dev" value="iso" /> <input type="text" name="xen_vm_boot_iso" value="[/path/filename.iso on the Xen storage]" size="30" />
+ISO Image <input type="radio" name="xen_vm_boot_dev" value="iso" /> <input type="text" name="xen_vm_boot_iso" value="[/dev/loopX on the Xen storage]" size="30" />
 <br />
 Network <input type="radio" name="xen_vm_boot_dev" value="network" />
 <br />
