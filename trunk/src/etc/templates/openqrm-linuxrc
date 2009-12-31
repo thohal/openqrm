@@ -97,25 +97,26 @@ function import_kernel() {
 	# and mount /dev/pts
 	mkdir -p /dev/pts
 	mount /dev/pts
-	
 	depmod -a
-	# load ide disk + cdroms
-	modprobe ide-core
-	modprobe ide-generic
-	modprobe ide-disk
-	modprobe ata_piix
-	modprobe sata_nv
-	modprobe sd_mod
-	hwsetup -p
+	# manually load ide disk + cdroms
+	modprobe ide-core 2>/mplog1
+	modprobe ide-generic 2>/mplog1
+	modprobe ide-disk 2>/mplog1
+	modprobe ata_piix 2>/mplog1
+	modprobe sata_nv 2>/mplog1
+	modprobe sd_mod 2>/mplog1
+    rm -f /mplog1
+    echo "- (2) Starting hardware detection (all system components)"
+    for module in `/sbin/pcimodules`; do
+        echo " -- loading $module"
+        modprobe -s -k "$module"
+    done
 	umount /tmp_download
 	rmdir /tmp_download
 	# start udev
 	udevd --daemon
 	# give time to settle, especially needed for some scsi devices
 	sleep 3
-    # make sure hwsetup is gone
-    killall hwsetup 2>/tmplog
-    rm -f /tmp/log
 }
 
 
@@ -220,13 +221,17 @@ syslogd &&  klogd
 # need to run depmod 2 times as experienced
 depmod -a
 depmod -a
-# load virtio drivers for KVM VMs because hwsetup doesn't handle it
+# load virtio drivers for KVM VMs
 modprobe virtio 2>/mplog
 modprobe virtio_pci 2>/mplog
 modprobe virtio_ring 2>/mplog
 modprobe virtio_net 2>/mplog
 rm -f  /mplog
-hwsetup -p
+echo "- (1) Starting hardware detection (network)"
+for module in `/sbin/pcimodules`; do
+    echo " -- loading $module"
+    modprobe -s -k "$module"
+done
 eval `cat /proc/cmdline`
 if grep -q sysfs /proc/filesystems ; then
 	mount -t sysfs none /sys

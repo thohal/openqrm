@@ -173,11 +173,10 @@ function openqrm_rpm_package() {
    	openqrm_install_os_dependency redhat-rpm-config
     openqrm_install_os_dependency rpm-build
    	openqrm_install_os_dependency gcc
-   	openqrm_install_os_dependency pciutils-devel
    	openqrm_install_os_dependency zlib-devel
 
     # this is only rpm packaging, debian package are build with the standard debian package tools
-    PLUGINS_IN_OPENQRM_PACKAGE="aoe-storage aws cloud dhcpd dns highavailability image-shelf iscsi-storage kvm local-server lvm-storage nagios3 nfs-storage puppet tftpd xen"
+    PLUGINS_IN_OPENQRM_PACKAGE="aoe-storage aws cloud dhcpd dns highavailability image-shelf iscsi-storage kvm kvm-storage local-server lvm-storage nagios3 nfs-storage puppet tftpd xen xen-storage"
     PLUGINS_IN_PLUGINS_PACKAGE="citrix equallogic-storage linuxcoe local-storage netapp-storage solx86 sshterm vmware-esx vmware-server vmware-server2 zabbix zfs-storage"
     OPENQRM_PACKAGE_ARCHITECTURE=` uname -i`
     if [ -f /etc/redhat-release ]; then

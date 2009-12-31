@@ -11,6 +11,7 @@ usr/share/openqrm/plugins/highavailability
 usr/share/openqrm/plugins/image-shelf
 usr/share/openqrm/plugins/iscsi-storage
 usr/share/openqrm/plugins/kvm
+usr/share/openqrm/plugins/kvm-storage
 usr/share/openqrm/plugins/local-server
 usr/share/openqrm/plugins/lvm-storage
 usr/share/openqrm/plugins/nagios3
@@ -18,5 +19,6 @@ usr/share/openqrm/plugins/nfs-storage
 usr/share/openqrm/plugins/puppet
 usr/share/openqrm/plugins/tftpd
 usr/share/openqrm/plugins/xen
+usr/share/openqrm/plugins/xen-storage
 usr/share/openqrm/sbin
 usr/share/openqrm/web

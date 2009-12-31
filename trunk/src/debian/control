@@ -2,7 +2,7 @@ Source: openqrm
 Section: admin
 Priority: extra
 Maintainer: Matthias Rechenburg <matt@openqrm.com>
-Build-Depends: debhelper (>= 6.0.7~), libpci-dev, portmap, rsync, zlib1g-dev, wget, bzip2, cdbs, unzip, module-init-tools, udev, quilt, netbase
+Build-Depends: debhelper (>= 6.0.7~), portmap, rsync, zlib1g-dev, wget, bzip2, cdbs, unzip, module-init-tools, udev, quilt, netbase
 Standards-Version: 3.8.2
 Homepage: http://www.openqrm.org
 

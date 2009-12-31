@@ -291,62 +291,17 @@ function openqrm_create_default_initrd_template() {
 	export OPENQRM_PRE_MAKE="cp $OPENQRM_SOURCE_DIR_FULL_PATH/etc/build.conf/busybox.configuration $OPENQRM_SOURCE_COMPONENT_BUILD_DIR/.config && make oldconfig"
 	export OPENQRM_POST_MAKE="make install"
 	openqrm_compile_from_source busybox
-	# getting hwdata
-	openqrm_cache_or_download hwdata-knoppix
-	export DESTDIR=$OPENQRM_BUILD_TMP_DIR/openqrm-build/hwdata-knoppix/hwdata-install
-	export OPENQRM_POST_MAKE="make install"
-	openqrm_compile_from_source hwdata-knoppix
-	. $OPENQRM_SOURCE_DIR/etc/build.conf/hwdata-knoppix.conf
-	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwdata-knoppix/hwdata-knoppix-$OPENQRM_SOURCE_VERSION/debian/pcitable-knoppix $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwdata-knoppix/hwdata-install/usr/share/hwdata/pcitable
-	# kudzu
-	openqrm_cache_or_download kudzu-knoppix
-	export OPENQRM_MAKE_TARGET=libkudzu.a
-	openqrm_compile_from_source kudzu-knoppix
 
-    # check if we have to patch
-    . $OPENQRM_SOURCE_DIR/etc/build.conf/kudzu-knoppix.conf
-    if [ ! -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/kudzu-knoppix/kudzu-knoppix-$OPENQRM_SOURCE_VERSION/libkudzu.a ]; then
-        LOCAL_KERNEL_VERSION=`uname -r | sed -e "s/[a-z]//g" | sed -e "s/[A-Z]//g" | sed -e "s/\.//g" | cut -d'-' -f1`
-        KUDZU_MAX_KERNEL_VERSION="2626"
-        if [ "$LOCAL_KERNEL_VERSION" != "" ]; then
-            if [ "$LOCAL_KERNEL_VERSION" -gt "$KUDZU_MAX_KERNEL_VERSION" ]; then
-                echo "!! Trying to patch kudzu-knoppix for newer kernel-versions ...."
-                OPENQRM_PRE_MAKE="cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/kudzu-knoppix/kudzu-knoppix-$OPENQRM_SOURCE_VERSION/ddcprobe/; patch -p0 -i $OPENQRM_SOURCE_DIR/etc/build.conf/kudzu-knoppix-lrmi.patch; cd -"
-                export OPENQRM_MAKE_TARGET=libkudzu.a
-            	openqrm_compile_from_source kudzu-knoppix
-            else
-                echo "!! Trying to patch kudzu-knoppix. Assuming newer kernel version in fakeroot ...."
-                sleep 10
-                OPENQRM_PRE_MAKE="cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/kudzu-knoppix/kudzu-knoppix-$OPENQRM_SOURCE_VERSION/ddcprobe/; patch -p0 -i $OPENQRM_SOURCE_DIR/etc/build.conf/kudzu-knoppix-lrmi.patch; cd -"
-                export OPENQRM_MAKE_TARGET=libkudzu.a
-            	openqrm_compile_from_source kudzu-knoppix
-            fi
-        fi
-        if [ ! -f $OPENQRM_BUILD_TMP_DIR/openqrm-build/kudzu-knoppix/kudzu-knoppix-$OPENQRM_SOURCE_VERSION/libkudzu.a ]; then
-                echo "ERROR: It seems libkudzu.a could not be compiled correctly !"
-                echo "ERROR: It seems libkudzu.a could not be compiled correctly !" > /dev/stderr
-                echo "ERROR: Please capture the error messages and post it to the openQRM maillinglist."
-                echo "ERROR: Please capture the error messages and post it to the openQRM maillinglist." > /dev/stderr
-                sleep 10
-        fi
-    else
-        echo "-> successfully build libkudzu.a"
-    fi
-
-	# hwsetup
-	openqrm_cache_or_download hwsetup
-	# we need some more includes/libs as provided in the hwsetup Makefile
-	# so we compile it manually
-	. $OPENQRM_SOURCE_DIR/etc/build.conf/kudzu-knoppix.conf
-	OPENQRM_SOURCE_KUDZU_DIR="$OPENQRM_BUILD_TMP_DIR/openqrm-build/kudzu-knoppix/kudzu-knoppix-$OPENQRM_SOURCE_VERSION/"
-	. $OPENQRM_SOURCE_DIR/etc/build.conf/hwsetup.conf
-
-	OPENQRM_SOURCE_HWSETUP_FILE=`basename $OPENQRM_SOURCE_DOWNLOAD`
-	OPENQRM_SOURCE_HWSETUP_DIR="$OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/hwsetup-$OPENQRM_SOURCE_VERSION/"
-	tar -C $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/ -xzf $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/source/$OPENQRM_SOURCE_HWSETUP_FILE
-	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwsetup/hwsetup-$OPENQRM_SOURCE_VERSION
-	cc -I$OPENQRM_SOURCE_KUDZU_DIR -DBLACKLIST -Wall -fPIC -O2 -s -o hwsetup hwsetup.c -L$OPENQRM_SOURCE_KUDZU_DIR -lkudzu -lpci -lz
-	cd $CURRENT_DIR
+	# getting pciutils
+	openqrm_cache_or_download pciutils
+    # compile static
+	export LDFLAGS="-static"
+    # patch for pcimodules
+	. $OPENQRM_SOURCE_DIR/etc/build.conf/pciutils.conf
+	OPENQRM_SOURCE_PCIUTILS_DIR="$OPENQRM_BUILD_TMP_DIR/openqrm-build/pciutils/pciutils-$OPENQRM_SOURCE_VERSION/"
+    export OPENQRM_PRE_MAKE="cd $OPENQRM_SOURCE_PCIUTILS_DIR; patch -p1 < $OPENQRM_SOURCE_DIR/etc/build.conf/pciutils-pcimodules.patch; cd -"
+	openqrm_compile_from_source pciutils
+    unset LDFLAGS
 
 	# dropbear
 	. $OPENQRM_SOURCE_DIR/etc/build.conf/dropbear.conf
@@ -489,18 +444,9 @@ EOF
 		cp -aR /lib/libnss_files* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
 	fi
 
-	# installing hwdata, libkudzu and hwsetup
-	cp -aR $OPENQRM_BUILD_TMP_DIR/openqrm-build/hwdata-knoppix/hwdata-install/* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
-	cp -a $OPENQRM_SOURCE_KUDZU_DIR/libkudzu.a $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
-	cp -a $OPENQRM_SOURCE_HWSETUP_DIR/hwsetup $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/
-	# add the libs hwsetup depends on
-	for LIB in `openqrm_build_find_libs $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/hwsetup`; do
-		LIB=`echo $LIB | cut -d'-' -f1 | cut -d'.' -f1`
-		if [ "$LIB" != "/lib/" ]; then
-			cp -a $LIB""* $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
-		fi
-	done
-
+	# installing pciutils + pcimodules
+	cp -a $OPENQRM_SOURCE_PCIUTILS_DIR/lspci $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/
+	cp -a $OPENQRM_SOURCE_PCIUTILS_DIR/pcimodules $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/
 	# installing dropbear
 	cp -a $OPENQRM_SOURCE_DROPBEAR_DIR/dropbear $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/sbin/
 	cp -a $OPENQRM_SOURCE_DROPBEAR_DIR/dbclient $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/bin/
@@ -543,15 +489,6 @@ EOF
 	# create symlink to /lib64 for 64bit systems
 	cd $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/
 	ln -sf lib lib64
-
-	# take /etc/udev  -> now in openqrm kernel add ...
-#	rm -rf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/udev
-#	cp -aR /etc/udev $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/etc/
-	# and /lib/udev
-#	rm -rf $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/udev
-#	cp -aR /lib/udev $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/lib/
-	# take the initial console device
-#	cp -aR /dev/console $OPENQRM_BUILD_TMP_DIR/openqrm-build/initroot/dev/
 
 	cd $CURRENT_DIR
 }
@@ -713,7 +650,7 @@ function openqrm_get_openqrm_clients() {
 # function to install the additional initrd-templates
 # -> this is for "make install" phase
 function openqrm_install_initrd_templates() {
-    CLIENT_VERSION="4.6.0"
+    CLIENT_VERSION="4.6.1"
 	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-initrd-template.centos.i386/source/openqrm-initrd-template.$CLIENT_VERSION.centos.i386.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-template.centos.i386.tgz
 	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-initrd-template.centos.x86_64/source/openqrm-initrd-template.$CLIENT_VERSION.centos.x86_64.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-template.centos.x86_64.tgz
 	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-initrd-template.debian.i386/source/openqrm-initrd-template.$CLIENT_VERSION.debian.i386.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/etc/templates/openqrm-initrd-template.debian.i386.tgz

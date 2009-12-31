@@ -126,6 +126,8 @@ function openqrm_server_create_kernel() {
             /bin/cp -f $MODULE $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/lib/modules/$OPENQRM_SERVER_KERNEL_VERSION
         fi
     done
+    # also we need to take the modules.pcimap for the hardware detection to work
+    cp -a $OPENQRM_SERVER_KERNEL_LOCATION/lib/modules/$OPENQRM_SERVER_KERNEL_VERSION/modules.* $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME/lib/modules/$OPENQRM_SERVER_KERNEL_VERSION/
 	# unpack the initrd-template
 	echo "-> using initrd-template from $OPENQRM_SERVER_INITRD_TEMPLATE"
 	tar -C $OPENQRM_TEMP_DIR/bootimage/$OPENQRM_SERVER_KERNEL_NAME -xzf $OPENQRM_SERVER_INITRD_TEMPLATE
