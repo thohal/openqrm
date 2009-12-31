@@ -50,7 +50,6 @@ OPENQRM_SERVER_STATE_DIRS="$OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/boot/ \
 	$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/plugins/"
 
 
-
 # function to export all given configuration from the
 # main openQRM-server config file
 function openqrm_server_get_config() {
