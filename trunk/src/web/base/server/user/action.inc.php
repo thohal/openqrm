@@ -46,7 +46,7 @@ switch ($_REQUEST['action']) {
 			}
 			//--------------------------------------------------
 			$user->get_role_name();
-			if(strstr($OPENQRM_USER->role, "administrator") && htmlobject_request('role') != $user->role['value'] && $error === false) {
+			if(!strstr($OPENQRM_USER->role, "administrator") && htmlobject_request('role') != $user->role['value'] && $error === false) {
 				$strMsg .= 'You are not allowed to change Role<br>';
 				$error = true;
 			}
