@@ -74,7 +74,6 @@ fi
 # here we gather the target name + lun from the image_rootdevice
 IMAGE_TARGET=`echo $image_rootdevice | cut -d'/' -f3`
 IMAGE_LUN=`echo $image_rootdevice | cut -d'/' -f4`
-IMAGE_ROOT_DEVICE="/dev/iscsi_$IMAGE_LUN"
 
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
@@ -121,15 +120,7 @@ function mount_rootfs() {
     cd /
     tar -xzf eq-resize.$kernel_name.tgz
     rm -f eq-resize.$kernel_name.tgz
-
-	# perstistance iscsi device names
-	echo "BUS==\"scsi\", SYSFS{vendor}==\"IET\", SYSFS{model}==\"VIRTUAL-DISK\", KERNEL==\"sd*\", NAME=\"%k\", PROGRAM=\"/lib/udev/getlun.sh \$id\", SYMLINK+=\"iscsi_%c%n\"" >>/etc/udev/rules.d/10_persistant_scsi.rules
 	mkdir -p /tmp
-	cat <<! >> /lib/udev/getlun.sh
-#!/bin/bash
-echo \$1 | awk -F":" '{print $NF}' | cut -d':' -f4
-!
-	chmod +x /lib/udev/getlun.sh
 
 	# load iscsi related modules
 	modprobe iscsi_tcp
@@ -210,62 +201,58 @@ EOF
 	sleep 4
 
     # check that udev found the new device
-    # if not find the block device name in /sys
-    if [ ! -f $IMAGE_ROOT_DEVICE ]; then
-
-        FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block | head -n1`
+    FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block | head -n1`
+    if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
+        FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block:s* | head -n1`
         if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
-            FIND_ISCSI_BLOCK_DEVICE=`find /sys/class/iscsi_session/session*/device/target*/*/ -name block:s* | head -n1`
-            if [ "$FIND_ISCSI_BLOCK_DEVICE" == "" ]; then
-                echo "ERROR: Udev did not detect the new device"
-                echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
-                # give a shell for the admin
-                /bin/bash
-            fi
-        fi
-        # check for different sysfs styles
-        if [ -h $FIND_ISCSI_BLOCK_DEVICE ]; then
-            ISCSI_BLOCK_DEVICE_NAME=`readlink $FIND_ISCSI_BLOCK_DEVICE`
-            ISCSI_BLOCK_DEVICE_NAME=`basename $ISCSI_BLOCK_DEVICE_NAME`
-            echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as symlink)"
-            ln -sf /dev/$ISCSI_BLOCK_DEVICE_NAME $IMAGE_ROOT_DEVICE
-        elif [ -d $FIND_ISCSI_BLOCK_DEVICE ]; then
-            ISCSI_BLOCK_DEVICE_NAME=`ls $FIND_ISCSI_BLOCK_DEVICE`
-            echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as dir)"
-            ln -sf /dev/$ISCSI_BLOCK_DEVICE_NAME $IMAGE_ROOT_DEVICE
-        else
             echo "ERROR: Udev did not detect the new device"
             echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
             # give a shell for the admin
             /bin/bash
         fi
     fi
+    # check for different sysfs styles
+    if [ -h $FIND_ISCSI_BLOCK_DEVICE ]; then
+        ISCSI_BLOCK_DEVICE_NAME=`readlink $FIND_ISCSI_BLOCK_DEVICE`
+        ISCSI_BLOCK_DEVICE_NAME=`basename $ISCSI_BLOCK_DEVICE_NAME`
+        echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as symlink)"
+    elif [ -d $FIND_ISCSI_BLOCK_DEVICE ]; then
+        ISCSI_BLOCK_DEVICE_NAME=`ls $FIND_ISCSI_BLOCK_DEVICE`
+        echo "SUCCESS: Found $ISCSI_BLOCK_DEVICE_NAME in sys-fs (as dir)"
+    else
+        echo "ERROR: Udev did not detect the new device"
+        echo "ERROR: Could not look-up the Iscsi device in the sys-fs dir"
+        # give a shell for the admin
+        /bin/bash
+    fi
+    # export the blockdevice name for the further functions
+    export ISCSI_BLOCK_DEVICE="/dev/$ISCSI_BLOCK_DEVICE_NAME"
 
     # here we resize the disk if needed, if not needed this won't hurt 
-    /sbin/e2fsck -f -y $IMAGE_ROOT_DEVICE
-    /sbin/resize2fs -fp $IMAGE_ROOT_DEVICE
+    /sbin/e2fsck -f -y $ISCSI_BLOCK_DEVICE
+    /sbin/resize2fs -fp $ISCSI_BLOCK_DEVICE
 
 	# finallly mount
-	if ! mount -t $image_rootfstype $IMAGE_ROOT_DEVICE /mnt; then
+	if ! mount -t $image_rootfstype $ISCSI_BLOCK_DEVICE /mnt; then
         # in case we install from nfs we create a fs since this should be a new lun
     	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
             echo "NOTICE: Found install-from-nfs enabled but failed mounting the rootdevice"
-            echo "NOTICE: Assuming a new (unformatted) Lun -> creating $image_rootfstype filesystem on $IMAGE_ROOT_DEVICE"
-            mke2fs -F -j $IMAGE_ROOT_DEVICE
-            if ! mount -t $image_rootfstype $IMAGE_ROOT_DEVICE /mnt; then
-                echo "ERROR: Could not mount $IMAGE_ROOT_DEVICE via iscsi"
+            echo "NOTICE: Assuming a new (unformatted) Lun -> creating $image_rootfstype filesystem on $ISCSI_BLOCK_DEVICE"
+            mke2fs -F -j $ISCSI_BLOCK_DEVICE
+            if ! mount -t $image_rootfstype $ISCSI_BLOCK_DEVICE /mnt; then
+                echo "ERROR: Could not mount $ISCSI_BLOCK_DEVICE via iscsi"
                 # give a shell for the admin
                 /bin/bash
             else
-        		echo "equallogic-storage: Mounted $IMAGE_ROOT_DEVICE rw"
+        		echo "equallogic-storage: Mounted $ISCSI_BLOCK_DEVICE rw"
             fi
         else
-            echo "ERROR: Could not mount $IMAGE_ROOT_DEVICE via iscsi"
+            echo "ERROR: Could not mount $ISCSI_BLOCK_DEVICE via iscsi"
             # give a shell for the admin
             /bin/bash
         fi
 	else
-		echo "equallogic-storage: Mounted $IMAGE_ROOT_DEVICE rw"
+		echo "equallogic-storage: Mounted $ISCSI_BLOCK_DEVICE rw"
 	fi
 
 	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
@@ -295,7 +282,7 @@ function remount_rootfs() {
 
 	REMOUNT_LOOP=0
 	# remont /mnt ro
-	while ! mount -t $image_rootfstype -o ro,remount $IMAGE_ROOT_DEVICE /mnt; do
+	while ! mount -t $image_rootfstype -o ro,remount $ISCSI_BLOCK_DEVICE /mnt; do
 		echo -n "."
 		sleep 1
 		REMOUNT_LOOP=$[ REMOUNT_LOOP + 1 ]
@@ -304,14 +291,14 @@ function remount_rootfs() {
 			/bin/bash
 		fi
 	done
-	echo "equallogic-storage: Re-mounted $IMAGE_ROOT_DEVICE ro"
+	echo "equallogic-storage: Re-mounted $ISCSI_BLOCK_DEVICE ro"
 	
 }
 
 
 function create_fstab() {
 	rm -f $IMAGE_FSTAB
-	echo "$IMAGE_ROOT_DEVICE   /     $image_rootfstype  defaults   0 0" >> $IMAGE_FSTAB
+	echo "$ISCSI_BLOCK_DEVICE   /     $image_rootfstype  defaults   0 0" >> $IMAGE_FSTAB
 }
 
 
