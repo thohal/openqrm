@@ -428,6 +428,7 @@ case "$XEN_COMMAND" in
     		xen_lock release
             exit 1
         fi
+        touch $OPENQRM_VM_DIR/$XEN_VM_NAME/autostart
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
@@ -445,6 +446,7 @@ case "$XEN_COMMAND" in
     		xen_lock release
             exit 1
         fi
+        touch $OPENQRM_VM_DIR/$XEN_VM_NAME/autostart
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
 		fi
@@ -453,6 +455,7 @@ case "$XEN_COMMAND" in
 	stop)
 		xen_lock aquire
 		echo "Stopping Xen vm $XEN_VM_NAME"
+        rm -f $OPENQRM_VM_DIR/$XEN_VM_NAME/autostart
 		if xm shutdown $XEN_VM_NAME; then
     		openqrm_post_event 0 "stop" 5 "openqrm-xen" "Stopped Xen vm $XEN_VM_NAME"
         else
@@ -481,6 +484,7 @@ case "$XEN_COMMAND" in
     		xen_lock release
             exit 1
         fi
+        touch $OPENQRM_VM_DIR/$XEN_VM_NAME/autostart
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
 		fi

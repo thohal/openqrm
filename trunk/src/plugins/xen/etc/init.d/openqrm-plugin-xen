@@ -24,10 +24,21 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/include/openqrm-plugin-xen-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/openqrm-plugin-xen.conf
+OPENQRM_VM_DIR="/var/lib/xen/openqrm/"
+export OPENQRM_VM_DIR
 
 function openqrm_plugin_xen_start() {
 	echo "Starting the openQRM xen-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/xen/.running
+    # start the vm status autostart
+    if [ -d "$OPENQRM_VM_DIR" ]; then
+        for VM_CONFIG in `find $OPENQRM_VM_DIR/* -name autostart`; do
+            VM_NAME=`dirname $VM_CONFIG`
+            VM_NAME=`basename $VM_NAME`
+            echo "- auto-starting VM $VM_NAME"
+            $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/xen/bin/openqrm-xen start -n $VM_NAME
+        done
+    fi
 }
 
 

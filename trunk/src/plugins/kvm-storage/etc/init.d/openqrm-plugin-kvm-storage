@@ -24,6 +24,8 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/include/openqrm-plugin-kvm-storage-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/etc/openqrm-plugin-kvm-storage.conf
+OPENQRM_VM_DIR="/var/lib/kvm-storage/openqrm/"
+export OPENQRM_VM_DIR
 
 
 LINE_IFS='
@@ -33,6 +35,15 @@ function openqrm_plugin_kvm_storage_start() {
 	openqrm_plugin_kvm_storage_stop 1>/dev/null 2>&1
 	echo "Starting the openQRM kvm-storage-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/kvm-storage/.running
+    # start the vm status autostart
+    if [ -d "$OPENQRM_VM_DIR" ]; then
+        for VM_CONFIG in `find $OPENQRM_VM_DIR/* -name autostart`; do
+            VM_NAME=`dirname $VM_CONFIG`
+            VM_NAME=`basename $VM_NAME`
+            echo "- auto-starting VM $VM_NAME"
+            $OPENQRM_VM_DIR/$VM_NAME/$VM_NAME.kvm
+        done
+    fi
 
 }
 

@@ -24,6 +24,8 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/include/openqrm-plugin-xen-storage-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/etc/openqrm-plugin-xen-storage.conf
+OPENQRM_VM_DIR="/var/lib/xen-storage/openqrm/"
+export OPENQRM_VM_DIR
 
 
 LINE_IFS='
@@ -33,6 +35,15 @@ function openqrm_plugin_xen_storage_start() {
 	openqrm_plugin_xen_storage_stop 1>/dev/null 2>&1
 	echo "Starting the openQRM xen-storage-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/xen-storage/.running
+    # start the vm status autostart
+    if [ -d "$OPENQRM_VM_DIR" ]; then
+        for VM_CONFIG in `find $OPENQRM_VM_DIR/* -name autostart`; do
+            VM_NAME=`dirname $VM_CONFIG`
+            VM_NAME=`basename $VM_NAME`
+            echo "- auto-starting VM $VM_NAME"
+            $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/xen-storage/bin/openqrm-xen-storage-vm start -n $VM_NAME
+        done
+    fi
 
 }
 

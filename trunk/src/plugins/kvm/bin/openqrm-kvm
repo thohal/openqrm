@@ -350,6 +350,7 @@ case "$KVM_COMMAND" in
 		# start
 		chmod +x $OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
 		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+        touch $OPENQRM_VM_DIR/$KVM_VM_NAME/autostart
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
@@ -360,6 +361,7 @@ case "$KVM_COMMAND" in
 		kvm_lock aquire
 		echo "Starting Kvm vm $KVM_VM_NAME"
 		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+        touch $OPENQRM_VM_DIR/$KVM_VM_NAME/autostart
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
@@ -377,6 +379,7 @@ case "$KVM_COMMAND" in
 			kill $VM_PID
 			kill -9 $VM_PID 1>/dev/null 2>&1
 		fi
+        rm -f $OPENQRM_VM_DIR/$KVM_VM_NAME/autostart
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
@@ -396,6 +399,7 @@ case "$KVM_COMMAND" in
 		fi
 		sleep 2
 		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
+        touch $OPENQRM_VM_DIR/$KVM_VM_NAME/autostart
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD

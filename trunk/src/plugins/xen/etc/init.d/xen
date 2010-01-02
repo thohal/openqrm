@@ -39,6 +39,8 @@ elif [ -f $OPENQRM_RESOURCE_PARAMETER_FILE ]; then
 	OPENQRM_INTERFACE=`ifconfig | grep -i $resource_mac | grep :oq | cut -d':' -f1`
 
 fi
+OPENQRM_VM_DIR="/var/lib/xen/openqrm/"
+export OPENQRM_VM_DIR
 
 # only run on xen hosts
 grep -q "control_d" /proc/xen/capabilities 2>/dev/null || exit 0
@@ -58,6 +60,16 @@ function xen_start() {
 	DIR_CURRENT=`pwd`
    	export FORCE_INSTALL=true
    	openqrm_install_os_dependency screen
+    # start the vm status autostart
+    if [ -d "$OPENQRM_VM_DIR" ]; then
+        for VM_CONFIG in `find $OPENQRM_VM_DIR/* -name autostart`; do
+            VM_NAME=`dirname $VM_CONFIG`
+            VM_NAME=`basename $VM_NAME`
+            echo "- auto-starting VM $VM_NAME"
+            $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/xen/bin/openqrm-xen start -n $VM_NAME
+        done
+    fi
+
 }
 
 

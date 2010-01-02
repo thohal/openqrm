@@ -360,7 +360,7 @@ case "$KVM_COMMAND" in
         # start monitor for the fake idle resource
         kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep -i $KVM_VM_MAC | awk {' print $1 '}` 2>/dev/null
         $RUNSCREEN -dmS $KVM_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/sbin/openqrm-kvm-storage-monitord $KVM_VM_MAC
-
+        touch $OPENQRM_VM_DIR/$KVM_VM_NAME/autostart
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
@@ -379,6 +379,7 @@ case "$KVM_COMMAND" in
         # start the vm monitord / make sure it is stopped before
         kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep -i $KVM_VM_MAC_1 | awk {' print $1 '}` 2>/dev/null
         $RUNSCREEN -dmS $KVM_VM_MAC_1 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/sbin/openqrm-kvm-storage-monitord $KVM_VM_MAC_1
+        touch $OPENQRM_VM_DIR/$KVM_VM_NAME/autostart
 
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
@@ -408,6 +409,7 @@ case "$KVM_COMMAND" in
         # start the vm monitord / make sure it is stopped before
         kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep -i $KVM_VM_MAC | awk {' print $1 '}` 2>/dev/null
         $RUNSCREEN -dmS $KVM_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/sbin/openqrm-kvm-storage-monitord $KVM_VM_MAC
+        touch $OPENQRM_VM_DIR/$KVM_VM_NAME/autostart
 
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
@@ -428,6 +430,7 @@ case "$KVM_COMMAND" in
 		fi
         # kill the status monitor
         kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep -i $KVM_VM_MAC_1 | awk {' print $1 '}` 2>/dev/null
+        rm -f $OPENQRM_VM_DIR/$KVM_VM_NAME/autostart
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
@@ -456,6 +459,7 @@ case "$KVM_COMMAND" in
 		fi
         # kill the status monitor
         kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep -i $KVM_VM_MAC_1 | awk {' print $1 '}` 2>/dev/null
+        rm -f $OPENQRM_VM_DIR/$KVM_VM_NAME/autostart
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD
@@ -498,6 +502,7 @@ case "$KVM_COMMAND" in
         # start the vm monitord
         kill `ps ax | grep openqrm-kvm-storage-monitord | grep -v grep | grep -i $KVM_VM_MAC | awk {' print $1 '}` 2>/dev/null
         $RUNSCREEN -dmS $KVM_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/kvm-storage/sbin/openqrm-kvm-storage-monitord $KVM_VM_MAC
+        touch $OPENQRM_VM_DIR/$KVM_VM_NAME/autostart
 
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
@@ -522,6 +527,7 @@ case "$KVM_COMMAND" in
         if [ "$KVM_VM_DISK_1" != "" ]; then
     		$OPENQRM_VM_DIR/$KVM_VM_NAME/$KVM_VM_NAME.kvm
         fi
+        touch $OPENQRM_VM_DIR/$KVM_VM_NAME/autostart
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$KVM_OPENQRM_USERNAME" != "" ] && [ "$KVM_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $KVM_OPENQRM_USERNAME -p $KVM_OPENQRM_PASSWORD

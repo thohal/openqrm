@@ -457,6 +457,7 @@ case "$XEN_STORAGE_COMMAND" in
         # start monitor for the fake idle resource
         kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
         $RUNSCREEN -dmS $XEN_STORAGE_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/sbin/openqrm-xen-storage-monitord $XEN_STORAGE_VM_MAC
+        touch $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/autostart
 
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
@@ -485,6 +486,7 @@ case "$XEN_STORAGE_COMMAND" in
         # and start the monitord
         kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
         $RUNSCREEN -dmS $XEN_STORAGE_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/sbin/openqrm-xen-storage-monitord $XEN_STORAGE_VM_MAC
+        touch $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/autostart
 
 		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_STORAGE_OPENQRM_USERNAME -p $XEN_STORAGE_OPENQRM_PASSWORD
@@ -531,6 +533,7 @@ case "$XEN_STORAGE_COMMAND" in
         # start the vm monitord / make sure it is stopped before
         kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
         $RUNSCREEN -dmS $XEN_STORAGE_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/sbin/openqrm-xen-storage-monitord $XEN_STORAGE_VM_MAC
+        touch $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/autostart
 
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
@@ -549,6 +552,7 @@ case "$XEN_STORAGE_COMMAND" in
         fi
         kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
         openqrm_post_event 0 "stop" 5 "openqrm-xen-storage" "Stopped Xen-Storage-Storage vm $XEN_STORAGE_VM_NAME"
+        rm -f $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/autostart
 
 		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_STORAGE_OPENQRM_USERNAME -p $XEN_STORAGE_OPENQRM_PASSWORD
@@ -576,6 +580,7 @@ case "$XEN_STORAGE_COMMAND" in
         fi
         # kill the status monitor
         kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
+        rm -f $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/autostart
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_OPENQRM_USERNAME -p $XEN_OPENQRM_PASSWORD
@@ -630,6 +635,7 @@ case "$XEN_STORAGE_COMMAND" in
         # start the vm monitord
         kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
         $RUNSCREEN -dmS $XEN_STORAGE_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/sbin/openqrm-xen-storage-monitord $XEN_STORAGE_VM_MAC
+        touch $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/autostart
 
 		# in case we have a username + password post the updated list to the openQRM-server
 		if [ "$XEN_OPENQRM_USERNAME" != "" ] && [ "$XEN_OPENQRM_PASSWORD" != "" ]; then
@@ -659,6 +665,7 @@ case "$XEN_STORAGE_COMMAND" in
         # restart the vm monitord
         kill `ps ax | grep openqrm-xen-storage-monitord | grep -v grep | grep -i $XEN_STORAGE_VM_MAC | awk {' print $1 '}` 2>/dev/null
         $RUNSCREEN -dmS $XEN_STORAGE_VM_MAC $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/sbin/openqrm-xen-storage-monitord $XEN_STORAGE_VM_MAC
+        touch $OPENQRM_VM_DIR/$XEN_STORAGE_VM_NAME/autostart
 
 		if [ "$XEN_STORAGE_OPENQRM_USERNAME" != "" ] && [ "$XEN_STORAGE_OPENQRM_PASSWORD" != "" ]; then
 			$0 post_vm_list -u $XEN_STORAGE_OPENQRM_USERNAME -p $XEN_STORAGE_OPENQRM_PASSWORD

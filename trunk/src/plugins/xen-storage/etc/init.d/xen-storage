@@ -34,6 +34,8 @@ elif [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
 	openqrm_server_get_config
 	OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
 fi
+OPENQRM_VM_DIR="/var/lib/xen-storage/openqrm/"
+export OPENQRM_VM_DIR
 
 # do not start on the intitrd
 if [ -f /etc/initrd-devices.conf ]; then
@@ -45,9 +47,16 @@ function xen_start() {
 	echo "Starting the openQRM xen-plugin"
    	export FORCE_INSTALL=true
    	openqrm_install_os_dependency screen
-
     chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/bin/*
-
+    # start the vm status autostart
+    if [ -d "$OPENQRM_VM_DIR" ]; then
+        for VM_CONFIG in `find $OPENQRM_VM_DIR/* -name autostart`; do
+            VM_NAME=`dirname $VM_CONFIG`
+            VM_NAME=`basename $VM_NAME`
+            echo "- auto-starting VM $VM_NAME"
+            $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/xen-storage/bin/openqrm-xen-storage-vm start -n $VM_NAME
+        done
+    fi
 
 }
 
