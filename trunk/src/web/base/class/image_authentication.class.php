@@ -217,7 +217,7 @@ function check_all_image_authentication() {
 		$ia_auth_id = $ia_list['ia_id'];
 		$ia_auth = new image_authentication();
 		$ia_auth->get_instance_by_id($ia_auth_id);
-		$event->log("check_all_image_authentication", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "-> checking image_authentication $ia_auth_id", "", "", 0, 0, 0);
+		$event->log("check_all_image_authentication", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "Checking image_authentication $ia_auth_id", "", "", 0, 0, 0);
 		// get data
 		$image = new image();
 		$image->get_instance_by_id($ia_auth->image_id);
@@ -239,10 +239,10 @@ function check_all_image_authentication() {
 			case 0:
 				// run storage_auth_stop (rootfs)
 				if ((!strcmp($resource->state, "active")) && ($resource->imageid == 1)) {
-					$event->log("check_all_image_authentication", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "-> Resource $resource_id is idle again, applying stop auth for image $image_name ($image_id)", "", "", 0, 0, $resource_id);
+					$event->log("check_all_image_authentication", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "Resource $resource_id idle again, stop-auth $image_name ($image_id)", "", "", 0, 0, $resource_id);
 					// include storage-plugin auth-hook
 					if (file_exists($storage_auth_hook)) {
-						$event->log("check_all_image_authentication", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "Found deployment type $deployment_type handling the stop auth hook for image id $image_id.", "", "", 0, 0, $resource_id);
+						$event->log("check_all_image_authentication", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "Deployment type $deployment_type handling stop-auth hook $image_id.", "", "", 0, 0, $resource_id);
 						require_once "$storage_auth_hook";
 						storage_auth_stop($image->id);
 						// remove image_authentication
@@ -251,7 +251,7 @@ function check_all_image_authentication() {
 					}
 				} else {
 					// resource is still on rebooting
-					$event->log("check_all_image_authentication", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "-> Resource $resource_id is still rebooting to idle, waiting for applying stop auth for image $image_name", "", "", 0, 0, $resource_id);
+					$event->log("check_all_image_authentication", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "Resource $resource_id still rebooting, waiting for stop-auth $image_name", "", "", 0, 0, $resource_id);
 				}
 				break;
 
@@ -261,10 +261,10 @@ function check_all_image_authentication() {
 				// we stop the deployment hook when the resource is active or active/idle
 				// -> in both states it for sure does not need the deployment mount any more
 				if (!strcmp($resource->state, "active")) {
-					$event->log("check_all_image_authentication", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "-> Resource $resource_id is active again, applying stop deployment auth for image $image_name", "", "", 0, 0, $resource_id);
+					$event->log("check_all_image_authentication", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "Resource $resource_id active, stop-deployment auth $image_name", "", "", 0, 0, $resource_id);
 					// include storage-plugin auth-hook
 					if (file_exists($storage_auth_hook)) {
-						$event->log("check_all_image_authentication", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "Found deployment type $deployment_type handling the stop deployment auth hook.", "", "", 0, 0, $resource_id);
+						$event->log("check_all_image_authentication", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "Deployment type $deployment_type handling stop-deployment auth hook $image_id.", "", "", 0, 0, $resource_id);
 						require_once "$storage_auth_hook";
 						storage_auth_deployment_stop($image->id);
 
@@ -281,7 +281,7 @@ function check_all_image_authentication() {
 					}
 				} else {
 					// resource is still on rebooting
-					$event->log("check_all_image_authentication", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "-> Resource $resource_id is still rebooting to active, waiting for applying stop deployment auth for image $image_name", "", "", 0, 0, $resource_id);
+					$event->log("check_all_image_authentication", $_SERVER['REQUEST_TIME'], 5, "image_authentication.class.php", "Resource $resource_id is still rebooting, waiting for stop-deployment auth $image_name", "", "", 0, 0, $resource_id);
 				}
 				break;
 
