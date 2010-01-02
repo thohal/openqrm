@@ -663,7 +663,7 @@ function openqrm_install_initrd_templates() {
 # function to install the additional openqrm-client packages
 # -> this is for "make install" phase
 function openqrm_install_openqrm_clients() {
-    CLIENT_VERSION="4.6.0"
+    CLIENT_VERSION="4.6.1"
     mkdir -p $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/
 	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client.centos.i386/source/openqrm-client.$CLIENT_VERSION.centos.i386.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-client.centos.i386.tgz
 	cp -a $OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client.centos.x86_64/source/openqrm-client.$CLIENT_VERSION.centos.x86_64.tgz $DESTINATION_DIR$OPENQRM_SERVER_BASE_DIR/openqrm/web/boot-service/openqrm-client.centos.x86_64.tgz
