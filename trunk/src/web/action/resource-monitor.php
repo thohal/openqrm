@@ -103,8 +103,19 @@ $event = new event();
 		case 'update_info':
 			$resource = new resource();
 			if (strlen($resource_id)) {
-				$event->log("update_info", $_SERVER['REQUEST_TIME'], 5, "resource-monitor", "Processing statistics from resource $resource_id", "", "", 0, 0, $resource_id);
-				$resource->update_info($resource_id, $resource_fields);
+                $resource->get_instance_by_id($resource_id);
+                if (!strcmp($resource->event, "reboot")) {
+                    // we do not accept this stats since the resource will be rebooted
+                    // reset the events field
+                    $resource_reboot_fields=array();
+                    $resource_reboot_fields["resource_state"]="transition";
+                    $resource_reboot_fields["resource_event"]="";
+                    $event->log("update_info", $_SERVER['REQUEST_TIME'], 5, "resource-monitor", "Rejecting statistics from rebooting resource $resource_id", "", "", 0, 0, $resource_id);
+                    $resource->update_info($resource_id, $resource_reboot_fields);
+                } else {
+                    $event->log("update_info", $_SERVER['REQUEST_TIME'], 5, "resource-monitor", "Processing statistics from resource $resource_id", "", "", 0, 0, $resource_id);
+                    $resource->update_info($resource_id, $resource_fields);
+                }
 			}
 			// in case the openQRM-server sends its stats we check
 			// the states of all resources

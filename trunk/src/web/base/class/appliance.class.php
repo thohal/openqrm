@@ -338,7 +338,17 @@ function start() {
 	$image = new image();
 	$image->get_instance_by_id($this->imageid);
 
-	// storage authentication hook
+	// update resource state to transition early
+	$resource_fields=array();
+	$resource_fields["resource_state"]="transition";
+	$resource_fields["resource_event"]="reboot";
+	$resource->update_info($resource->id, $resource_fields);
+    
+	// assign resource, wait a bit for the kernel to be assigned
+	$resource->assign($resource->id, $kernel->id, $kernel->name, $image->id, $image->name);
+    sleep(2);
+
+    // storage authentication hook
 	$deployment = new deployment();
 	$deployment->get_instance_by_type($image->type);
 	$deployment_type = $deployment->type;
@@ -352,8 +362,7 @@ function start() {
 		$event->log("start", $_SERVER['REQUEST_TIME'], 5, "appliance.class.php", "No storage-auth hook ($storage_auth_hook) available for deployment type $deployment_type for start auth hook.", "", "", 0, 0, $resource->id);
     }
 	
-	// assign + reboot resource
-	$resource->assign($resource->id, $kernel->id, $kernel->name, $image->id, $image->name);
+    // reboot resource
 	$resource->send_command("$resource->ip", "reboot");
 
 	// unset stoptime + update starttime + state
@@ -363,12 +372,6 @@ function start() {
 	$appliance_fields['appliance_starttime']=$now;
 	$appliance_fields['appliance_state']='active';
 	$this->update($this->id, $appliance_fields);
-
-	// update resource state to transition
-	$resource_fields=array();
-	$resource_fields["resource_state"]="transition";
-	$resource->update_info($resource->id, $resource_fields);
-
 
 	// start appliance hook
 	// fill in the rest of the appliance info in the array for the plugin hook
@@ -428,6 +431,7 @@ function stop() {
 	// update resource state to transition
 	$resource_fields=array();
 	$resource_fields["resource_state"]="transition";
+	$resource_fields["resource_event"]="reboot";
 	$resource->update_info($resource->id, $resource_fields);
 
 	// stop appliance hook
