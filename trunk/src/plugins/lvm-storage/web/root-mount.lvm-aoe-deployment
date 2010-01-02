@@ -130,6 +130,17 @@ EOF
 
 	# let udev settle
 	sleep 4
+	# let udev settle
+	sleep 4
+    while (true); do
+        if [ -e "$IMAGE_ROOT_DEVICE" ]; then
+            echo "Udev created $IMAGE_ROOT_DEVICE"
+            break
+        else
+            echo -n "."
+        fi
+        sleep 1
+    done
 
 	# finallly mount
 	if ! mount -t $image_rootfstype $IMAGE_ROOT_DEVICE /mnt; then
