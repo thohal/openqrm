@@ -193,7 +193,7 @@ function openqrm_rpm_package() {
     OPENQRM_PACKAGE_PREREMOVE="sh /usr/share/openqrm/etc/init.d/openqrm-server.preremove"
     # static deps / removed nagios + puppet from the rpm deps to make install easier
     #OPENQRM_PACKAGE_DEPENDENCIES="httpd, php, php-mysql, mysql, syslinux, screen, procmail, rsync, expect, dhcp, bind, iscsi-initiator-utils, nagios, nagios-plugins, nagios-plugins-nrpe, nagios-devel, perl-XML-Simple, perl-XML-Parser, nmap, puppet-server, subversion, tftp-server, openssl"
-    OPENQRM_PACKAGE_DEPENDENCIES="httpd, php, php-mysql, mysql, syslinux, screen, procmail, rsync, expect, dhcp, bind, iscsi-initiator-utils, perl-XML-Simple, perl-XML-Parser, nmap, subversion, tftp-server, openssl"
+    OPENQRM_PACKAGE_DEPENDENCIES="httpd, mod_ssl, php, php-mysql, mysql, syslinux, screen, procmail, rsync, expect, dhcp, bind, iscsi-initiator-utils, perl-XML-Simple, perl-XML-Parser, nmap, subversion, tftp-server, openssl"
     # and build postbuild
     for PLUGIN_DEP in $PLUGINS_IN_PLUGINS_PACKAGE; do
         OPENQRM_BUILD_POSTINSTALL="$OPENQRM_BUILD_POSTINSTALL rm -rf \$RPM_BUILD_ROOT/usr/share/openqrm/plugins/$PLUGIN_DEP;"
