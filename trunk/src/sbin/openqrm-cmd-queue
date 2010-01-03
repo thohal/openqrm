@@ -37,7 +37,7 @@ SEQ=1
 RETRY=3
 RETRY_DELAY=10
 # defines how long commands are allowed to run
-CMD_TIMEOUT=20
+CMD_TIMEOUT=30
 
 
 
