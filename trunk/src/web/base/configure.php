@@ -246,8 +246,9 @@ if(htmlobject_request('action') != '') {
             if (file_exists($db_config_lock)) {
                 unlink($db_config_lock);
             }
-            // init
+            // init token plus timeout
             $cmd_token = md5(uniqid(rand(), true));
+            $cmd_token .= ".".$refresh_loop_max;
             // restore last backup ?
             if ($oqc_db_restore == 1) {
                 $config_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-exec -i 127.0.0.1 -t $cmd_token -c \"$OPENQRM_SERVER_BASE_DIR/openqrm/bin/openqrm init_config restore\"";

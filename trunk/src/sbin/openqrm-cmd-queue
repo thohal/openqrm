@@ -37,7 +37,7 @@ SEQ=1
 RETRY=3
 RETRY_DELAY=10
 # defines how long commands are allowed to run
-CMD_TIMEOUT=30
+DEFAULT_CMD_TIMEOUT=30
 
 
 
@@ -50,9 +50,9 @@ function cmd_queue_log() {
 
 
 function cmd_timeout() {
-    [ $# -eq 1 ] || cmd_queue_log ERROR "cmd_timeout takes 2 arguments"
-    command=$1
-    sleep_time=$CMD_TIMEOUT
+    [ $# -eq 2 ] || cmd_queue_log ERROR "cmd_timeout takes 2 arguments"
+    sleep_time=$1
+    command=$2
     $command &
     cmd_pid=$!
     ( sleep $sleep_time && kill $cmd_pid && cmd_queue_log ERROR "Killed $command due to timeout $sleep_time exceeded" ) &
@@ -76,10 +76,18 @@ while (true); do
 	for OPENQRM_COMMAND_FILE in `ls -t openqrm-queue* 2>/dev/null`; do
 		chmod +x $OPENQRM_COMMAND_FILE
 		COMMAND_TOKEN=`echo $OPENQRM_COMMAND_FILE | cut -d'.' -f2`
+        TIMEOUT_TOKEN=`echo $OPENQRM_COMMAND_FILE | cut -d'.' -f3`
+        if [ "$TIMEOUT_TOKEN" == "" ]; then
+            CMD_TIMEOUT=$DEFAULT_CMD_TIMEOUT
+            cmd_queue_log NOTICE "Running $COMMAND_TOKEN with default cmd-timeout $CMD_TIMEOUT"
+        else
+            CMD_TIMEOUT=$TIMEOUT_TOKEN
+            cmd_queue_log NOTICE "Running $COMMAND_TOKEN with custom cmd-timeout $CMD_TIMEOUT"
+        fi
 		OPENQRM_COMMAND=`cat $OPENQRM_COMMAND_FILE`
-		cmd_queue_log NOTICE "Running $COMMAND_TOKEN : $OPENQRM_COMMAND"
-		cmd_timeout ./$OPENQRM_COMMAND_FILE 2>ouput.$COMMAND_TOKEN
-		COMMAND_RES=$?
+        cmd_queue_log NOTICE "Running $COMMAND_TOKEN : $OPENQRM_COMMAND"
+        cmd_timeout $CMD_TIMEOUT ./$OPENQRM_COMMAND_FILE 2>ouput.$COMMAND_TOKEN
+        COMMAND_RES=$?
 		if [ "$COMMAND_RES" != "0" ]; then
 			# put it in the failed queue
 			mv -f $OPENQRM_COMMAND_FILE failed-cmd.1.$COMMAND_TOKEN
@@ -98,10 +106,17 @@ while (true); do
 			chmod +x $FAILED_OPENQRM_COMMAND_FILE
 			FAILED_COMMAND_RETRY_COUNT=`echo $FAILED_OPENQRM_COMMAND_FILE | cut -d'.' -f2`
 			FAILED_COMMAND_TOKEN=`echo $FAILED_OPENQRM_COMMAND_FILE | cut -d'.' -f3`
+            FAILED_TIMEOUT_TOKEN=`echo $FAILED_OPENQRM_COMMAND_FILE | cut -d'.' -f4`
+            if [ "$FAILED_TIMEOUT_TOKEN" == "" ]; then
+                CMD_TIMEOUT=$DEFAULT_CMD_TIMEOUT
+                cmd_queue_log NOTICE "Running failed $COMMAND_TOKEN with default cmd-timeout $CMD_TIMEOUT"
+            else
+                CMD_TIMEOUT=$FAILED_TIMEOUT_TOKEN
+                cmd_queue_log NOTICE "Running failed $COMMAND_TOKEN with custom cmd-timeout $CMD_TIMEOUT"
+            fi
 			FAILED_OPENQRM_COMMAND=`cat $FAILED_OPENQRM_COMMAND_FILE`
-
             cmd_queue_log NOTICE "$FAILED_COMMAND_RETRY_COUNT. retry for Command $FAILED_COMMAND_TOKEN : $FAILED_OPENQRM_COMMAND"
-            cmd_timeout ./$FAILED_OPENQRM_COMMAND_FILE 2>ouput.$FAILED_COMMAND_TOKEN
+            cmd_timeout $CMD_TIMEOUT ./$FAILED_OPENQRM_COMMAND_FILE 2>ouput.$FAILED_COMMAND_TOKEN
             FAILED_COMMAND_RES=$?
             if [ "$FAILED_COMMAND_RES" != "0" ]; then
                 FAILED_OPENQRM_COMMAND_OUTPUT=`cat ouput.$FAILED_COMMAND_TOKEN`

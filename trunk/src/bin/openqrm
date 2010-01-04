@@ -56,8 +56,12 @@ function openqrm_usage() {
 	echo "- Login to resources -"
 	echo "`basename $0` login -i <resource-ip>"
 	echo
+}
 
-
+# logs for init_config
+function init_config_log() {
+	local MESSAGE=$@
+	logger -i -t "openQRM init-config" "$MESSAGE"
 }
 
 
@@ -285,20 +289,33 @@ case "$1" in
 	init_config)
 		shift
         RESTORE_LAST_STATE=$1
-
+        INIT_CONFIG_LOCK="$OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/running_init_config"
+        if [ -f $INIT_CONFIG_LOCK ]; then
+            init_config_log "init_config already running. Skipping re-init"
+            exit 0
+        fi
         if [ -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/unconfigured ]; then
-            echo "Initialyzing the openQRM Database"
+            # setup traps, make sure we do not get stopped by timeout
+            trap "" HUP
+            trap "" INT
+            trap "" QUIT
+            trap "" KILL
+            trap "" TSTP
+            # create lock
+            touch $INIT_CONFIG_LOCK
+            init_config_log "Initialyzing the openQRM Database"
 
             # initialyze the database
             chmod +x $OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions
             if ! $OPENQRM_SERVER_BASE_DIR/openqrm/etc/db/$OPENQRM_DATABASE_TYPE/openqrm-$OPENQRM_DATABASE_TYPE-functions init; then
-                echo "Initialyzing the openQRM Database failed !"
+                init_config_log "ERROR: Initialyzing the openQRM Database failed !"
+                rm -f $INIT_CONFIG_LOCK
                 exit -1
             fi
 
             # check if we should restore the last state
             if [ "$RESTORE_LAST_STATE" == "restore" ]; then
-                echo "Restoring last openQRM state backup"
+                init_config_log "Restoring last openQRM state backup"
                 # check if backups are not locked
                 if [ ! -f $OPENQRM_SERVER_STATE_DIR/locked ]; then
                     if [ "$OPENQRM_RESTORE_STATE" != "false" ]; then
@@ -306,17 +323,17 @@ case "$1" in
                         LAST_SERVER_STATE_BACKUP=`ls -tr $OPENQRM_SERVER_STATE_DIR/uninstall-* 2>/dev/null | tail -n1 | sed -s "s/\.tgz//g"`
                         if [ "$LAST_SERVER_STATE_BACKUP" != "" ]; then
                             LAST_SERVER_STATE_BACKUP=`basename $LAST_SERVER_STATE_BACKUP`
-                            echo "Found backup of last openQRM Server state $LAST_SERVER_STATE_BACKUP, restoring it"
+                            init_config_log "Found backup of last openQRM Server state $LAST_SERVER_STATE_BACKUP, restoring it"
                             openqrm_server_state restore $LAST_SERVER_STATE_BACKUP
                         fi
                     fi
                 else
-                    echo "Found openQRM Server state backups locked by $OPENQRM_SERVER_STATE_DIR/locked"
+                    init_config_log "Found openQRM Server state backups locked by $OPENQRM_SERVER_STATE_DIR/locked"
                 fi
             fi
 
             # create $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/default
-            echo "Creating default PXE-configuration"
+            init_config_log "Creating default PXE-configuration"
             mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/pxelinux.cfg/
             openqrm_server_create_pxe_config -1 default default
 
@@ -326,12 +343,13 @@ case "$1" in
             # here we create + add the default kernel+kernel-version to the openQRM Server
             # via the kernel-action.form. If this returns bad something is wrong
             DEFAULT_KERNEL_VERSION=`uname -r`
-            echo "Creating the default kernel version $DEFAULT_KERNEL_VERSION"
+            init_config_log "Creating the default kernel version $DEFAULT_KERNEL_VERSION"
             INITRD_TYPE="initramfs"
             openqrm_server_create_kernel default $DEFAULT_KERNEL_VERSION / $INITRD_TYPE
             if ! openqrm_server_manage_kernel add openqrm openqrm default $DEFAULT_KERNEL_VERSION; then
-                echo "Could not create/add the default kernel ! Initialization failed !"
+                init_config_log "Could not create/add the default kernel ! Initialization failed !"
                 exit -1
+                rm -f $INIT_CONFIG_LOCK
             fi
 
             # remove configure lock
@@ -352,11 +370,12 @@ case "$1" in
                     fi
                 done
             fi
-            echo "Successfully initialyzed and started the openQRM Server"
+            init_config_log "Successfully initialyzed and started the openQRM Server"
+            rm -f $INIT_CONFIG_LOCK
             exit 0
 
         else
-            echo "This openQRM Server is already configured. Skipping re-init"
+            init_config_log "This openQRM Server is already configured. Skipping re-init"
             exit 0
         fi
 
