@@ -71,7 +71,11 @@ function collectd_start() {
         sed -e "s/@@OPENQRM_SERVER_IP_ADDRESS@@/$resource_openqrmserver/g" > $COLLECTD_CONF
 
     # start collectd
-	if ! /usr/sbin/collectdmon -P /var/run/collectdmon.pid -- -C $COLLECTD_CONF 1>/dev/null 2>&1; then
+    if [ -x /usr/sbin/collectdmon ]; then
+        if ! /usr/sbin/collectdmon -P /var/run/collectdmon.pid -- -C $COLLECTD_CONF 1>/dev/null 2>&1; then
+            echo "ERROR: Could not start collectd"
+        fi
+    elif [ -x /usr/sbin/collectd ]; then
         if ! /usr/sbin/collectd -C $COLLECTD_CONF; then
             echo "ERROR: Could not start collectd"
         fi

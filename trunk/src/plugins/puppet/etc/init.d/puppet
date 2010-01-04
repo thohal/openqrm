@@ -58,7 +58,11 @@ function puppet_start() {
 	rm -rf /etc/puppet/ssl/* /var/lib/puppet/ssl/* /var/lib/puppet/state/*
 	openqrm_chkconfig del puppet
 	puppet_stop 1>/dev/null 2>&1
-	puppetd -v -d -D -l syslog
+    if which puppetd 1>/dev/null 2>&1; then
+    	puppetd -v -d -D -l syslog
+    else
+        echo "ERROR: Cloud not find puppetd binary"
+    fi
 }
 
 

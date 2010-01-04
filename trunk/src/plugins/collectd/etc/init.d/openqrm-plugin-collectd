@@ -35,8 +35,10 @@ function openqrm_plugin_collectd_start() {
 	kill -9 `ps ax | grep collectd | grep -v openqrm | grep -v grep | awk {' print $1 '}` 2>/dev/null
 	openqrm_chkconfig del collectd
     # start collectd
-	if /usr/sbin/collectdmon -P /var/run/collectdmon.pid -- -C $COLLECTD_CONF; then
-        touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/collectd/.running
+    if [ -x /usr/sbin/collectdmon ]; then
+        if /usr/sbin/collectdmon -P /var/run/collectdmon.pid -- -C $COLLECTD_CONF; then
+            touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/collectd/.running
+        fi
     fi
 }
 

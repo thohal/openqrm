@@ -37,8 +37,16 @@ function openqrm_plugin_puppet_start() {
 	kill -9 `ps ax | grep puppetd | grep -v grep | awk {' print $1 '}` 2>/dev/null
 	openqrm_chkconfig del puppet
 	openqrm_chkconfig del puppetmaster
-	puppetmasterd -v -d -l syslog
-	puppetd -v -d -D -l syslog
+    if which puppetmasterd 1>/dev/null 2>&1; then
+    	puppetmasterd -v -d -l syslog
+    else
+        echo "ERROR: Cloud not find puppetmasterd binary"
+    fi
+    if which puppetd 1>/dev/null 2>&1; then
+        puppetd -v -d -D -l syslog
+    else
+        echo "ERROR: Cloud not find puppetd binary"
+    fi
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/puppet/.running
 }
 
