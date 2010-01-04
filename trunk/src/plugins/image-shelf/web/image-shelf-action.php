@@ -65,8 +65,10 @@ switch ($image_shelf_command) {
         $recordSet = &$db->Execute($create_image_shelf_locations);
 
         // create the default configuration
-        $create_default_image_shelf_config = "insert into image_shelf_locations(imageshelf_id, imageshelf_name, imageshelf_username, imageshelf_protocol, imageshelf_uri, imageshelf_user, imageshelf_password) values (1, 'www.openqrm-ng.net', 'openqrm', 'http', 'http://www.openqrm-ng.net/image-shelf', '', '')";
+        $create_default_image_shelf_config = "insert into image_shelf_locations(imageshelf_id, imageshelf_name, imageshelf_username, imageshelf_protocol, imageshelf_uri, imageshelf_user, imageshelf_password) values (1, 'openqrm-enterprise', 'openqrm', 'http', 'http://image-shelf.openqrm-enterprise.org', '', '')";
         $recordSet = &$db->Execute($create_default_image_shelf_config);
+        $create_default_image_shelf_config1 = "insert into image_shelf_locations(imageshelf_id, imageshelf_name, imageshelf_username, imageshelf_protocol, imageshelf_uri, imageshelf_user, imageshelf_password) values (2, 'www.openqrm-ng.net', 'openqrm', 'http', 'http://www.openqrm-ng.net/image-shelf', '', '')";
+        $recordSet = &$db->Execute($create_default_image_shelf_config1);
 
         $db->Close();
         break;
