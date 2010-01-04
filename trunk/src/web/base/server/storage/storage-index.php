@@ -214,8 +214,12 @@ function storage_display() {
 
         $storage_edit = '<a href="storage-edit.php?storage_id='.$storage_db["storage_id"].'&currenttab=tab2&storage_filter='.htmlobject_request('storage_filter').'"><img src="../../img/edit.png" width="24" height="24" alt="edit"/> Edit</a>';
         $storage_mgmt_url = "/openqrm/base/plugins/".$deployment->storagetype."/".$deployment->storagetype."-manager.php?currenttab=tab0&action=select&identifier[]=".$storage->id;
-        $storage_mgmt = '<a href="'.$storage_mgmt_url.'"><img src="../../img/manage.png" width="24" height="24" alt="manage"/> Mgmt</a>';
-
+        $storage_mgmt_file = "/openqrm/base/plugins/".$deployment->storagetype."/".$deployment->storagetype."-manager.php";
+        if (file_exists($_SERVER["DOCUMENT_ROOT"]."/".$storage_mgmt_file)) {
+            $storage_mgmt = '<a href="'.$storage_mgmt_url.'"><img src="../../img/manage.png" width="24" height="24" alt="manage"/> Mgmt</a>';
+        } else {
+            $storage_mgmt = "";
+        }
 
 		if (!strlen(htmlobject_request('storage_filter')) || strstr(htmlobject_request('storage_filter'), $deployment->storagetype )) {
 			$arBody[] = array(
