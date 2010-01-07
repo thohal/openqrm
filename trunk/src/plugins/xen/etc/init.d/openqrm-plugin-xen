@@ -36,7 +36,7 @@ function openqrm_plugin_xen_start() {
             VM_NAME=`dirname $VM_CONFIG`
             VM_NAME=`basename $VM_NAME`
             echo "- auto-starting VM $VM_NAME"
-            $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/xen/bin/openqrm-xen start -n $VM_NAME
+            $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/bin/openqrm-xen start -n $VM_NAME
         done
     fi
 }
