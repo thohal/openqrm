@@ -71,7 +71,7 @@ function openqrm_plugin_tmpfs_storage_init() {
 		echo
 	fi
 	echo "Initializing the openQRM tmpfs-storage-plugin"
-	openqrm_server_add_deployment_type $USERNAME $PASSWORD tmpfs-deployment tmpfs-deployment "Tmpfs-root deployment" tmpfs-storage "tmporary In-Memory Storage"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD tmpfs-deployment tmpfs-deployment "Tmpfs-root deployment" tmpfs-storage "temporary In-Memory Storage"
 	# linking the web dir
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/tmpfs-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/tmpfs-storage
 	# linking the root mount hook

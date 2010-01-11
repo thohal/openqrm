@@ -57,7 +57,10 @@ function get_image_rootdevice_identifier($tmpfs_storage_id) {
 	global $event;
 
 	$rootdevice_identifier_array = array();
-    $rootdevice_identifier_array[] = array("value" => "tmpfs", "label" => "tmpfs-image");
+    $rootdevice_identifier_array[] = array("value" => "500", "label" => "500MB tmpfs");
+    $rootdevice_identifier_array[] = array("value" => "1000", "label" => "1GB tmpfs");
+    $rootdevice_identifier_array[] = array("value" => "2000", "label" => "2GB tmpfs");
+    $rootdevice_identifier_array[] = array("value" => "5000", "label" => "5GB tmpfs");
 	return $rootdevice_identifier_array;
 
 }

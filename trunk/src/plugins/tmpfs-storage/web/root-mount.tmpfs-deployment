@@ -79,8 +79,10 @@ else
 fi
 
 
-# for now static size
-IMAGE_SIZE=1000M
+# size from the root-device identifer
+IMAGE_SIZE=$image_rootdevice"M"
+
+
 #######################################################################
 # required functions ##################################################
 #######################################################################
@@ -89,7 +91,7 @@ function mount_rootfs() {
 
     mkdir -p /mnt
     mount -t tmpfs -o rw,size=$IMAGE_SIZE none /mnt
-    echo "tmpfs-storage: Mounted tmpfs at /mnt rw"
+    echo "tmpfs-storage: Mounted tmpfs at /mnt rw using $IMAGE_SIZE of memory"
 	
 	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
 		install_rootfs_from_nfs
