@@ -41,7 +41,7 @@ fi
 OPENQRM_POSTENCODE="$OPENQRM_SERVER_BASE_DIR/openqrm/sbin/openqrm-postencode"
 OPENQRM_XEN_VM_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen/etc/templates/openqrm-xen-vm"
 # the directory to keep the vm files for vms created by openQRM
-OPENQRM_VM_DIR="/var/lib/xen/openqrm/"
+OPENQRM_VM_DIR="/var/lib/xen/openqrm"
 # which directory to use for the xen vms -> set by the plugin config file
 if [ -d "$OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR" ]; then
     mkdir -p $OPENQRM_PLUGIN_XEN_VM_CONFIG_DIR
