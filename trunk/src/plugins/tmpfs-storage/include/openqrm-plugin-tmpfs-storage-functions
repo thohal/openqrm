@@ -1,0 +1,81 @@
+#!/bin/bash
+# this is the functions file for the tmpfs-storage-plugin
+#
+# This file is part of openQRM.
+#
+# openQRM is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2
+# as published by the Free Software Foundation.
+#
+# openQRM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+#
+
+
+# some definitions
+DEFAULT_IMAGE_SIZE=5000
+TMPFS_MGMT_LOCK_FILE=/var/run/tmpfs-storage/tmpfs-storage-plugin.lock
+TMPFS_MGMT_LOCK_DELAY=5
+TMPFS_MGMT_LOCK_RETRY=100
+TMPFS_MGMT_LOCK_TIMEOUT=500
+
+################ common tmpfs-storage functions
+
+# logs for tmpfs_storage
+function tmpfs_storage_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "tmpfs-storage plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function tmpfs_storage_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $TMPFS_MGMT_LOCK_FILE` ]; then
+		mkdir -p `dirname $TMPFS_MGMT_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $TMPFS_MGMT_LOCK_DELAY -r $TMPFS_MGMT_LOCK_RETRY -l $TMPFS_MGMT_LOCK_TIMEOUT $TMPFS_MGMT_LOCK_FILE
+				RET=$?
+				tmpfs_storage_log tmpfs_storage_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $TMPFS_MGMT_LOCK_FILE
+				RET=$?
+				tmpfs_storage_log tmpfs_storage_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			tmpfs_storage_log tmpfs_storage_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ tmpfs-storage functions
+
+
+
+
+
+
+
+
+
+
+
