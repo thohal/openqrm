@@ -1,0 +1,283 @@
+#!/bin/bash
+# this is the functions file for the sanboot-storage-plugin
+#
+# This file is part of openQRM.
+#
+# openQRM is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2
+# as published by the Free Software Foundation.
+#
+# openQRM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+#
+
+
+# iscsi-target config file
+IETDCONF=/etc/ietd.conf
+# vblade config file
+VBLADECONF=/etc/vblade.conf
+# some definitions
+DEFAULT_IMAGE_SIZE=5000
+SANBOOT_MGMT_LOCK_FILE=/var/run/sanboot-storage/sanboot-storage-plugin.lock
+SANBOOT_MGMT_LOCK_DELAY=5
+SANBOOT_MGMT_LOCK_RETRY=100
+SANBOOT_MGMT_LOCK_TIMEOUT=500
+MAX_UMOUNT_LOOP=5
+LV_SIZE_DEFAULT=5000
+ISCSI_TARGET_URL=http://iscsitarget.sourceforge.net/
+AOE_AUTHENTICATED_MAC="00:00:00:00:00:00"
+IMAGE_LUN=0
+# which screen binary to use
+if [ -x /usr/bin/screen.real ]; then
+    RUNSCREEN="/usr/bin/screen.real"
+else
+    RUNSCREEN=`which screen`
+fi
+
+################ common sanboot-storage functions
+
+# logs for sanboot_storage
+function sanboot_storage_log() {
+	local COMPONENT=$1
+	shift
+	local MESSAGE=$@
+	logger -i -t "sanboot-storage plug-in" "$COMPONENT : $MESSAGE"
+}
+
+
+# locking function
+function sanboot_storage_lock() {
+	local COMMAND=$1
+	local RET=1
+	
+	if [ ! -d `dirname $SANBOOT_MGMT_LOCK_FILE` ]; then
+		mkdir -p `dirname $SANBOOT_MGMT_LOCK_FILE`
+	fi
+	case "$COMMAND" in
+		aquire)
+				lockfile -s $SANBOOT_MGMT_LOCK_DELAY -r $SANBOOT_MGMT_LOCK_RETRY -l $SANBOOT_MGMT_LOCK_TIMEOUT $SANBOOT_MGMT_LOCK_FILE
+				RET=$?
+				sanboot_storage_log sanboot_storage_lock "Aquired the lock"
+				return $RET
+				;;
+		release)
+				/bin/rm -f $SANBOOT_MGMT_LOCK_FILE
+				RET=$?
+				sanboot_storage_log sanboot_storage_lock "Released the lock"
+				return $RET
+				;;
+		*)
+			sanboot_storage_log sanboot_storage_lock "No such command. Try 'aquire' or 'release'"
+			return 1
+			;;	
+	esac
+}
+
+
+
+################ sanboot-storage functions
+
+
+
+################ sanboot-iscsi ###################################
+
+
+function check_iscsi_target() {
+	# iscsi-target installed ?
+	if ! ls $IETDCONF 1>/dev/null; then
+		echo "ERROR: Iscsi Enterprise Target not installed !"
+		echo "ERROR: For managing Iscsi filesystem-images please download and install from"
+		echo "       $ISCSI_TARGET_URL"
+		sanboot_storage_log sanboot-storage-functions "ERROR: Iscsi Enterprise Target not installed !"
+		sanboot_storage_lock release
+		return 1
+	fi			
+}
+
+
+function manage_iscsi() {
+
+	if ! check_iscsi_target; then
+		return
+	fi
+	case "$1" in
+		add)
+			IMAGE_PASS=$3
+			if [ "$2" != "snap" ]; then
+				# create fs, currently static all ext3
+				mkfs.ext3 -F /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_NAME
+			fi
+			echo "Target $SANBOOT_IMAGE_NAME:$SANBOOT_IMAGE_NAME" >> $IETDCONF
+			# echo "	IncomingUser $SANBOOT_IMAGE_NAME $IMAGE_PASS" >> $IETDCONF
+			echo "	Lun $IMAGE_LUN Path=/dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_NAME,Type=fileio" >> $IETDCONF
+			LAST_TID=`grep tid: /proc/net/iet/volume | cut -d':' -f2 | awk {' print $1 '} | sort -g | tail -n1`
+			NEW_TID=$(( $LAST_TID + 1 ))
+			# dynamically add new target
+			if ! ietadm --op new --tid=$NEW_TID --params Name=$SANBOOT_IMAGE_NAME:$SANBOOT_IMAGE_NAME; then
+				sanboot_storage_log sanboot-storage-functions "ERROR: sanboot-iscsi could not create new target !"
+				sanboot_storage_lock release
+				return 1
+			fi
+			# set path to sanboot device in the new target
+			if ! ietadm --op new --tid=$NEW_TID --lun=$IMAGE_LUN --params Path=/dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_NAME; then
+				sanboot_storage_log sanboot-storage-functions "ERROR: sanboot-iscsi could not set sanboot-path in new target !"
+				sanboot_storage_lock release
+				return 1
+			fi
+			# auth target
+			#if ! ietadm --op new --tid=$NEW_TID --user --params IncomingUser=$SANBOOT_IMAGE_NAME,Password=$IMAGE_PASS; then
+			#	sanboot_storage_log sanboot-storage-functions "ERROR: sanboot-iscsi could not set username/password in new target !"
+			#	sanboot_storage_lock release
+			#	return 1
+			#else
+			#	sanboot_storage_log sanboot-storage-functions "sanboot-iscsi created new target $SANBOOT_IMAGE_NAME !"
+			#fi
+			;;
+		remove)
+			sed -i -e "s#.*$SANBOOT_IMAGE_NAME.*##g" $IETDCONF
+			TID_TO_REMOVE=`cat /proc/net/iet/volume | grep "name:$SANBOOT_IMAGE_NAME:$SANBOOT_IMAGE_NAME$" | cut -d':' -f2 | awk {' print $1 '}`
+			OPEN_SESSION=`cat /proc/net/iet/session | grep -w ^tid:$TID_TO_REMOVE -A1 | grep sid: | cut -d':' -f2 | awk {' print $1 '}`
+			if [ "$OPEN_SESSION" != "" ]; then
+				# first remove active session (does not support multiple sessions yet)
+				if ! ietadm --op delete --tid=$TID_TO_REMOVE --sid=$OPEN_SESSION --cid=0; then
+					sanboot_storage_log sanboot-storage-functions "ERROR: sanboot-iscsi could not remove session $OPEN_SESSION for tid $TID_TO_REMOVE !"
+					sanboot_storage_lock release
+					return 1
+				else
+					sanboot_storage_log sanboot-storage-functions "sanboot-iscsi removed session $OPEN_SESSION for tid $TID_TO_REMOVE !"
+				fi
+			fi
+			# remove lun
+			if ! ietadm --op delete --tid=$TID_TO_REMOVE --lun=$IMAGE_LUN; then
+				sanboot_storage_log sanboot-storage-functions "ERROR: sanboot-iscsi could not remove lun $IMAGE_LUN for tid $TID_TO_REMOVE !"
+				sanboot_storage_lock release
+				return 1
+			fi
+			# remove target dynamically
+			if ! ietadm --op delete --tid=$TID_TO_REMOVE; then
+				sanboot_storage_log sanboot-storage-functions "ERROR: sanboot-iscsi could not remove target tid $TID_TO_REMOVE !"
+				sanboot_storage_lock release
+				return 1
+			else
+				sanboot_storage_log sanboot-storage-functions "sanboot-iscsi removed target tid $TID_TO_REMOVE !"
+			fi
+			;;
+		auth)
+			IMAGE_PASS=$2
+			IMAGE_AUTHNAME=`echo $SANBOOT_IMAGE_ROOTDEVICE | cut -d'/' -f3`
+			#sed -i -e "s#IncomingUser $IMAGE_AUTHNAME .*#IncomingUser $IMAGE_AUTHNAME $IMAGE_PASS#g" $IETDCONF
+			#sed -i '/^$/d' $IETDCONF
+			#TID_TO_AUTH=`cat /proc/net/iet/volume | grep "name:$IMAGE_AUTHNAME$" | cut -d':' -f2 | awk {' print $1 '}`
+			#if [ "$TID_TO_AUTH" == "" ]; then
+			#	sanboot_storage_log sanboot-storage-functions "ERROR: sanboot-iscsi could not find target $IMAGE_AUTHNAME to update the authentication !"
+			#	sanboot_storage_lock release
+			#	return 1
+			#fi
+			#if ! ietadm --op new --tid=$TID_TO_AUTH --user --params IncomingUser=$IMAGE_AUTHNAME,Password=$IMAGE_PASS; then
+			#	sanboot_storage_log sanboot-storage-functions "ERROR: sanboot-iscsi could not find target $IMAGE_AUTHNAME to update the authentication !"
+			#	sanboot_storage_lock release
+			#	return 1
+			#else
+			#	sanboot_storage_log sanboot-storage-functions "sanboot-iscsi updated the authentication for target $IMAGE_AUTHNAME !"
+			#fi
+			;;
+	esac
+}
+
+
+
+
+################ sanboot-aoe ###################################
+
+
+
+function check_vblade() {
+	# vblade installed ?
+	if ! which vbladed 1>/dev/null; then
+		echo "ERROR: Vblade is not installed !"
+		echo "ERROR: For managing Aoe filesystem-images please install 'vblade'"
+		sanboot_storage_log sanboot-storage-functions "ERROR: Vblade is not installed !"
+		sanboot_storage_lock release
+		return 1
+	fi			
+}
+
+
+function manage_vblade() {
+
+	if ! check_vblade; then
+		return
+	fi
+	if [ ! -f $VBLADECONF ]; then
+		mkdir -p `dirname $VBLADECONF`
+		echo "# this is the vblade configuration file created by openQRM" > $VBLADECONF
+		echo "" >> $VBLADECONF
+	fi
+	
+	case "$1" in
+		add)
+			if [ "$2" != "snap" ]; then
+				# create fs, currently static all ext3
+				mkfs.ext3 -F /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_NAME
+			fi
+			# slots are dynamic
+			AOE_SLOT=`cat $VBLADECONF | grep -v '^#' | awk {' print $3 '} | sort -n -r | head -n 1`
+			AOE_SLOT=$(( AOE_SLOT + 1 ))
+			if [ -f $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf ]; then
+				. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+				AOE_INTERFACE=$OPENQRM_SERVER_INTERFACE
+			else
+                . /var/openqrm/openqrm-resource.conf
+				AOE_INTERFACE=`ifconfig | grep -i $resource_mac | awk {' print $1 '} | tail -1`
+			fi
+			echo "$AOE_INTERFACE $AOE_SHELF $AOE_SLOT /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_NAME $AOE_AUTHENTICATED_MAC" >> $VBLADECONF
+			sed -i '/^$/d' $VBLADECONF
+			# start vbladed
+			SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+			$RUNSCREEN -dmS $SCREEN_NAME vblade -m $AOE_AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_NAME
+			;;
+		auth)
+			AUTHENTICATED_MAC=$2
+			AOE_SLOT=`echo $SANBOOT_IMAGE_ROOTDEVICE | cut -d'.' -f2`
+			AOE_SHELF=`echo $SANBOOT_IMAGE_ROOTDEVICE | cut -d'.' -f1 | sed -e "s#/dev/etherd/e##g"`
+			if grep "$AOE_SHELF $AOE_SLOT" $VBLADECONF 1>/dev/null; then
+				AOE_INTERFACE=`cat $VBLADECONF | grep -v "#" | grep "$AOE_SHELF $AOE_SLOT" | awk {' print $1'}`
+				AOE_IMAGE_ROOTDEVICE_PATH=`cat $VBLADECONF | grep "$AOE_SHELF $AOE_SLOT" | awk {' print $4 '}`
+				sed -i -e "s#$AOE_IMAGE_ROOTDEVICE_PATH .*#$AOE_IMAGE_ROOTDEVICE_PATH $AUTHENTICATED_MAC#g" $VBLADECONF
+				sed -i '/^$/d' $VBLADECONF
+				for VBLADE_PID in `ps ax | grep vblade | grep -w $AOE_IMAGE_ROOTDEVICE_PATH | awk {' print $1 '}`; do
+					kill $VBLADE_PID
+				done
+				sync			
+				# start vbladed
+				SCREEN_NAME=`date +%T%x | sed -e "s/://g" | sed -e "s#/##g"`
+				$RUNSCREEN -dmS $SCREEN_NAME vblade -m $AUTHENTICATED_MAC $AOE_SHELF $AOE_SLOT $AOE_INTERFACE $AOE_IMAGE_ROOTDEVICE_PATH
+			fi
+			;;
+		remove)
+			for VBLADE_PID in `ps ax | grep vblade | grep -w $SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_NAME | awk {' print $1 '}`; do
+				kill $VBLADE_PID
+			done
+			sync
+			sed -i -e "s#.*$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_NAME.*##g" $VBLADECONF
+			sed -i '/^$/d' $VBLADECONF
+			;;
+	esac
+}
+
+
+
+
+
+
+
+
+
+

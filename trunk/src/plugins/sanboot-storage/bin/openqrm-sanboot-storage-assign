@@ -1,0 +1,210 @@
+#!/bin/bash
+# this script automatically assigns aoe and iscsi sanboot images to resources
+#
+# This file is part of openQRM.
+#
+# openQRM is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2
+# as published by the Free Software Foundation.
+#
+# openQRM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+#
+OPENQRM_SERVER_BASE_DIR=$(dirname $0)/../../../..
+OPENQRM_SERVER_BASE_DIR=$(pushd $OPENQRM_SERVER_BASE_DIR > /dev/null && echo $PWD && popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/include/openqrm-plugin-sanboot-storage-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+openqrm_server_get_config
+OPENQRM_SERVER_IP=$OPENQRM_SERVER_IP_ADDRESS
+resource_id=0
+resource_openqrmserver=$OPENQRM_SERVER_IP_ADDRESS
+openqrm_web_protocol=$OPENQRM_WEB_PROTOCOL
+export LANG=C
+LINEBR='
+'
+# also source the dhcpd function for creating a lock
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/include/openqrm-plugin-dhcpd-functions
+DHCPD_CONF="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf"
+SANBOOT_DHCPD_HOST_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/etc/templates/openqrm-plugin-sanboot-storage-host.template"
+DHCPD_HOST_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/templates/openqrm-plugin-dhcpd-host.template"
+
+# define wget to use with https
+if [ "$openqrm_web_protocol" == "https" ]; then
+    WGET_NO_CERT_CHECK="--no-check-certificate"
+fi
+
+# using the resource_id as the shelf-id
+AOE_SHELF=$resource_id
+export AOE_SHELF
+
+# let only root run this script
+WHOAMI=`whoami`
+if [ "$WHOAMI" != "root" ]; then
+	echo "ERROR: Please run this script as root!"
+	exit 6
+fi
+
+function sanboot_storage_usage() {
+	echo "Usage : $0 assign/deassign <-n image-name> <-i storage-ip> <-m resource-mac> <-r resource-id> <-z resource-ip> <-p password> <-t iscsi-san-deployment/aoe-san-deployment>"
+	exit 1
+}
+
+
+FULL_COMMANDLINE="$0 $@"
+SANBOOT_COMMAND=$1
+shift
+
+while [ $# -ne 0 ]; do
+	case "$1" in
+		-n)
+			SANBOOT_IMAGE_NAME=$2
+			shift
+			;;
+		-m)
+			SANBOOT_RESOURCE_MAC=$2
+			shift
+			;;
+		-r)
+			SANBOOT_RESOURCE_ID=$2
+			shift
+			;;
+		-z)
+			SANBOOT_RESOURCE_IP=$2
+			shift
+			;;
+		-i)
+			SANBOOT_STORAGE_IP=$2
+			shift
+			;;
+		-p)
+			SANBOOT_IMAGE_PASSWORD=$2
+			shift
+			;;
+		-t)
+			SANBOOT_IMAGE_TYPE=$2
+			shift
+			;;
+		*)
+			echo "ERROR: Free commandline arguments are not allowed"
+			sanboot_storage_usage
+			exit 6
+			;;
+	esac
+	shift
+done
+
+
+
+
+# main
+if [ "$SANBOOT_COMMAND" == "" ]; then
+	sanboot_storage_usage
+fi
+
+SANBOOT_HOSTNAME="resource$SANBOOT_RESOURCE_ID"
+
+
+case "$SANBOOT_COMMAND" in 
+
+	assign)
+		echo "sanboot: Assigning $SANBOOT_RESOURCE_MAC ($SANBOOT_RESOURCE_ID) to $SANBOOT_IMAGE_NAME ($SANBOOT_IMAGE_TYPE) using pass $SANBOOT_IMAGE_PASSWORD on storage $SANBOOT_STORAGE_IP" | logger
+		dhcpd_lock aquire
+		if ! grep $SANBOOT_HOSTNAME $DHCPD_CONF 1>/dev/null; then
+			dhcpd_log openqrm-dhcpd-manager "Resource  $SANBOOT_HOSTNAME $SANBOOT_RESOURCE_ID $SANBOOT_RESOURCE_MAC $SANBOOT_RESOURCE_IP not existing in the dhcpd-server."
+			dhcpd_lock release
+			exit 0
+		fi
+        if grep -A 1 $SANBOOT_HOSTNAME $DHCPD_CONF | grep "# sanboot" 1>/dev/null; then
+			dhcpd_log openqrm-dhcpd-manager "Resource  $SANBOOT_HOSTNAME $SANBOOT_RESOURCE_ID $SANBOOT_RESOURCE_MAC $SANBOOT_RESOURCE_IP already assigned to sanboot."
+			dhcpd_lock release
+			exit 0
+        fi
+
+		dhcpd_log openqrm-dhcpd-manager "removing $SANBOOT_HOSTNAME $SANBOOT_RESOURCE_ID $SANBOOT_RESOURCE_MAC $SANBOOT_RESOURCE_IP"
+		cp -f $DHCPD_CONF $DHCPD_CONF.openqrm-dhcpd-manager
+        # find the resource entry + remove it
+		# first - resource
+		grep -B 10000 -A 4 "^host $SANBOOT_HOSTNAME {" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf | sed -e :a -e '$d;N;2,5ba' -e 'P;D' > $DHCPD_CONF.first_part
+		# after resource
+		grep -A 10000 "^host $SANBOOT_HOSTNAME {" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf | sed '1,5d' > $DHCPD_CONF.last_part
+        # now add the resource entry again with the new sanboot config
+		cat $SANBOOT_DHCPD_HOST_TEMPLATE | \
+			sed -e "s/SANBOOT_RESOURCE_HOSTNAME/$SANBOOT_HOSTNAME/g" |	\
+			sed -e "s/SANBOOT_RESOURCE_MAC/$SANBOOT_RESOURCE_MAC/g" |	\
+			sed -e "s/SANBOOT_STORAGE_IP/$SANBOOT_STORAGE_IP/g" |	\
+			sed -e "s/SANBOOT_IMAGE_NAME/$SANBOOT_IMAGE_NAME/g" |	\
+			sed -e "s/SANBOOT_RESOURCE_IP/$SANBOOT_RESOURCE_IP/g" > $DHCPD_CONF.sanboot_part
+
+        # create new config
+        cat $DHCPD_CONF.first_part $DHCPD_CONF.sanboot_part $DHCPD_CONF.last_part > $DHCPD_CONF
+        # restart dhcpd
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd stop
+		if ! $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start; then
+			dhcpd_log openqrm-dhcpd-manager "Removing Resource  $SANBOOT_HOSTNAME $SANBOOT_RESOURCE_ID $SANBOOT_RESOURCE_MAC $SANBOOT_RESOURCE_IP failed. Reverting dhcpd-configuration."
+			# restore previous version, better not to add it than to corrupt the config
+			cp -f $DHCPD_CONF.openqrm-dhcpd-manager $DHCPD_CONF
+			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start
+		fi
+		dhcpd_lock release
+
+
+		;;
+
+
+	deassign)
+		echo "sanboot: De-Assigning $SANBOOT_RESOURCE_MAC to $SANBOOT_IMAGE_NAME ($SANBOOT_IMAGE_TYPE) using pass $SANBOOT_IMAGE_PASSWORD on storage $SANBOOT_STORAGE_IP" | logger
+		dhcpd_lock aquire
+		if ! grep $SANBOOT_HOSTNAME $DHCPD_CONF 1>/dev/null; then
+			dhcpd_log openqrm-dhcpd-manager "Resource  $SANBOOT_HOSTNAME $SANBOOT_RESOURCE_ID $SANBOOT_RESOURCE_MAC $SANBOOT_RESOURCE_IP not existing in the dhcpd-server."
+			dhcpd_lock release
+			exit 0
+		fi
+        if ! grep -A 1 $SANBOOT_HOSTNAME $DHCPD_CONF | grep "# sanboot" 1>/dev/null; then
+			dhcpd_log openqrm-dhcpd-manager "Resource  $SANBOOT_HOSTNAME $SANBOOT_RESOURCE_ID $SANBOOT_RESOURCE_MAC $SANBOOT_RESOURCE_IP already de-assigned from sanboot."
+			dhcpd_lock release
+			exit 0
+        fi
+
+		dhcpd_log openqrm-dhcpd-manager "removing $SANBOOT_HOSTNAME $SANBOOT_RESOURCE_ID $SANBOOT_RESOURCE_MAC $SANBOOT_RESOURCE_IP"
+		cp -f $DHCPD_CONF $DHCPD_CONF.openqrm-dhcpd-manager
+        # find the resource entry + remove it
+		# first - resource
+		grep -B 10000 -A 10 "^host $SANBOOT_HOSTNAME {" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf | sed -e :a -e '$d;N;2,11ba' -e 'P;D' > $DHCPD_CONF.first_part
+		# after resource
+		grep -A 10000 "^host $SANBOOT_HOSTNAME {" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf | sed '1,11d' > $DHCPD_CONF.last_part
+        # create the new resouce config using the dhcpd-plugin template
+		cat $DHCPD_HOST_TEMPLATE | \
+			sed -e "s/DHCPD_RESOURCE_HOSTNAME/$SANBOOT_HOSTNAME/g" |	\
+			sed -e "s/DHCPD_RESOURCE_MAC/$SANBOOT_RESOURCE_MAC/g" |	\
+			sed -e "s/DHCPD_RESOURCE_IP/$SANBOOT_RESOURCE_IP/g" > $DHCPD_CONF.host_part
+        # create new config
+        cat $DHCPD_CONF.first_part $DHCPD_CONF.host_part $DHCPD_CONF.last_part > $DHCPD_CONF
+        # restart dhcpd
+		$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd stop
+		if ! $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start; then
+			dhcpd_log openqrm-dhcpd-manager "Removing Resource  $SANBOOT_HOSTNAME $SANBOOT_RESOURCE_ID $SANBOOT_RESOURCE_MAC $SANBOOT_RESOURCE_IP failed. Reverting dhcpd-configuration."
+			# restore previous version, better not to add it than to corrupt the config
+			cp -f $DHCPD_CONF.openqrm-dhcpd-manager $DHCPD_CONF
+			$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/init.d/openqrm-plugin-dhcpd start
+		fi
+		dhcpd_lock release
+
+		;;
+
+
+	*)
+		sanboot_storage_usage
+		;;
+
+
+esac
+

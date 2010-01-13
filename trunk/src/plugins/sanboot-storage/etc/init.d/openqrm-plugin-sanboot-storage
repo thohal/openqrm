@@ -1,0 +1,216 @@
+#!/bin/bash
+# init script for the openQRM sanboot-storage-plugin
+#
+# This file is part of openQRM.
+#
+# openQRM is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2
+# as published by the Free Software Foundation.
+#
+# openQRM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openQRM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
+#
+
+OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $PWD; popd > /dev/null)
+. $OPENQRM_SERVER_BASE_DIR/openqrm/etc/openqrm-server.conf
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/include/openqrm-plugin-sanboot-storage-functions
+. $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/etc/openqrm-plugin-sanboot-storage.conf
+
+
+LINE_IFS='
+'
+
+function openqrm_plugin_sanboot-storage_start() {
+	openqrm_plugin_sanboot-storage_stop 1>/dev/null 2>&1
+	echo "Starting the openQRM sanboot-storage-plugin"
+	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sanboot-storage/.running
+
+	# aoe
+	mkdir -p /var/run/vblade/
+    if [ -x "/etc/init.d/vblade" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d vblade start
+        else
+            /etc/init.d/vblade start
+        fi
+	else
+		if [ -f $VBLADECONF ]; then
+			if which vbladed 1>/dev/null; then
+				echo "Starting vblades ..."
+				OLD_IFS=$IFS
+				IFS=$LINE_IFS
+				for VBLADE_L in `cat $VBLADECONF | grep -v '#' | sed '/^$/d'`; do
+					V_INTERFACE=`echo $VBLADE_L | awk {' print $1 '}`
+					V_SHELF=`echo $VBLADE_L | awk {' print $2 '}`
+					V_SLOT=`echo $VBLADE_L | awk {' print $3 '}`
+					V_IMAGE=`echo $VBLADE_L | awk {' print $4 '}`
+					V_ALLOWED_MAC=`echo $VBLADE_L | awk {' print $5 '}`
+					vbladed $V_SHELF $V_SLOT $V_INTERFACE $V_IMAGE
+				done
+				IFS=$OLD_IFS
+			fi
+		fi
+	fi
+	
+    if [ -x "/etc/init.d/iscsi-target" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d iscsi-target start
+        else
+            /etc/init.d/iscsi-target start
+        fi
+    elif [ -x /etc/init.d/iscsitarget ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d iscsitarget start
+        else
+            /etc/init.d/iscsitarget start
+        fi
+    fi
+
+	
+}
+
+
+function openqrm_plugin_sanboot-storage_stop() {
+	echo "Stopping the openQRM sanboot-storage-plugin"
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sanboot-storage/.running
+
+	# aoe
+    if [ -x "/etc/init.d/vblade" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d vblade stop
+        else
+            /etc/init.d/vblade stop
+            for VPID in `ps ax | grep vblade | grep -v grep | awk {' print $1 '}`; do
+                kill $VPID
+            done
+        fi
+	else
+		if [ -f $VBLADECONF ]; then
+			echo "Stopping vblades ..."
+			OLD_IFS=$IFS
+			IFS=$LINE_IFS
+			for VBLADE_L in `cat $VBLADECONF | grep -v '#' | sed '/^$/d'`; do
+				V_INTERFACE=`echo $VBLADE_L | awk {' print $1 '}`
+				V_SHELF=`echo $VBLADE_L | awk {' print $2 '}`
+				V_SLOT=`echo $VBLADE_L | awk {' print $3 '}`
+				V_IMAGE=`echo $VBLADE_L | awk {' print $4 '}`
+				V_ALLOWED_MAC=`echo $VBLADE_L | awk {' print $5 '}`
+				for VBLADE_PID in `ps ax | grep vblade | grep -w $V_IMAGE | awk {' print $1 '}`; do
+					kill $VBLADE_PID
+				done
+			done
+			IFS=$OLD_IFS
+		fi
+		killall vblade 1>/dev/null 2>&1
+	fi
+
+    if [ -x "/etc/init.d/iscsi-target" ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d iscsi-target stop
+        else
+            /etc/init.d/iscsi-target stop
+        fi
+    elif [ -x /etc/init.d/iscsitarget ]; then
+        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
+            invoke-rc.d iscsitarget stop
+        else
+            /etc/init.d/iscsitarget stop
+        fi
+    fi
+
+}
+
+function openqrm_plugin_sanboot-storage_uninstall() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "sanboot-storage: Please give a username to uninstall the plugin : "
+		read USERNAME
+		echo	
+		echo -n "sanboot-storage: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Uninstalling the openQRM sanboot-storage-plugin"
+	openqrm_plugin_sanboot-storage_stop
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD aoe-san-deployment
+	openqrm_server_remove_deployment_type $USERNAME $PASSWORD iscsi-san-deployment
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sanboot-storage
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-sanboot-storage.tgz
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.aoe-san-deployment.php
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.iscsi-san-deployment.php
+	rm -f $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.iscsi-san-deployment.php
+    # remove gpxe
+	rm -f $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/undionly.kpxe
+}
+
+function openqrm_plugin_sanboot-storage_init() {
+	local USERNAME=$1
+	local PASSWORD=$2
+	if [ "$USERNAME" == "" ] && [ "$PASSWORD" == "" ]; then
+		echo -n "sanboot-storage: Please give a username to init the plugin : "
+		read USERNAME
+		echo	
+		echo -n "sanboot-storage: Please give the password for user $USERNAME : "
+		read PASSWORD
+		echo
+	fi
+	echo "Initializing the openQRM sanboot-storage-plugin"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD aoe-san-deployment aoe-san-deployment "Sanboot Aoe-root deployment" sanboot-storage "Sanboot Storage Server (Aoe)"
+	openqrm_server_add_deployment_type $USERNAME $PASSWORD iscsi-san-deployment iscsi-san-deployment "Sanboot Iscsi-root deployment" sanboot-storage "Sanboot Storage Server (Iscsi)"
+
+	# linking the web dir
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sanboot-storage
+	# link the boot-service
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/web/boot-service-sanboot-storage.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-sanboot-storage.tgz
+    # copy gpxe bootloader
+    cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/undionly.kpxe $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/undionly.kpxe
+	# linking the image deployment parameters menu
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/web/image.aoe-san-deployment.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.aoe-san-deployment.php
+	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/web/image.iscsi-san-deployment.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.iscsi-san-deployment.php
+    # create storage dir for stat files
+    mkdir -p $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/web/storage
+    chmod 777 $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/web/storage
+	
+}
+
+USER=$2
+PASS=$3
+
+case "$1" in
+	start)
+		openqrm_plugin_sanboot-storage_start
+		;;
+	stop)
+		openqrm_plugin_sanboot-storage_stop
+		;;
+	restart)
+		openqrm_plugin_sanboot-storage_stop
+		sleep 1
+		openqrm_plugin_sanboot-storage_start
+		;;
+	init)
+		openqrm_plugin_sanboot-storage_init $USER $PASS
+		;;
+	uninstall)
+		openqrm_plugin_sanboot-storage_uninstall $USER $PASS
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|init|uninstall}"
+		exit 1
+
+esac
+exit $?
+
+
+
+
