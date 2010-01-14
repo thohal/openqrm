@@ -27,6 +27,8 @@ require_once "$RootDir/class/openqrm_server.class.php";
 require_once "$RootDir/class/storage.class.php";
 require_once "$RootDir/class/virtualization.class.php";
 require_once "$RootDir/class/image.class.php";
+require_once "$RootDir/class/storage.class.php";
+require_once "$RootDir/class/deployment.class.php";
 require_once "$RootDir/class/plugin.class.php";
 require_once "$RootDir/class/event.class.php";
 
@@ -535,8 +537,37 @@ function send_command($resource_ip, $resource_command) {
             $virtualization = new virtualization();
             $virtualization->get_instance_by_id($this->vtype);
             $virtualization_plugin_name = str_replace("-vm", "", $virtualization->type);
-            $plugin_resource_virtual_command_hook = "$RootDir/plugins/$virtualization_plugin_name/openqrm-$virtualization_plugin_name-resource-virtual-command-hook.php";
-            if (file_exists($plugin_resource_virtual_command_hook)) {
+            $plugin_resource_virtual_command_hook_vm_type = "$RootDir/plugins/$virtualization_plugin_name/openqrm-$virtualization_plugin_name-resource-virtual-command-hook.php";
+            // we also give the deployment type a chance to implement virtual commands
+            if ($this->imageid != 1) {
+                $image = new image();
+                $image->get_instance_by_id($this->imageid);
+                $storage = new storage();
+                $storage->get_instance_by_id($image->storageid);
+                $deployment = new deployment();
+                $deployment->get_instance_by_id($storage->type);
+                $deployment_plugin_name = $deployment->storagetype;
+            }
+            $plugin_resource_virtual_command_hook_image_type = "$RootDir/plugins/$deployment_plugin_name/openqrm-$deployment_plugin_name-resource-virtual-command-hook.php";
+//            $plugin_resource_virtual_command_hook_image_type = "$RootDir/plugins/sanboot-storage/openqrm-sanboot-storage-resource-virtual-command-hook.php";
+            if (file_exists($plugin_resource_virtual_command_hook_vm_type)) {
+                $event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found virtualization $virtualization_plugin_name managing virtual command.", "", "", 0, 0, $resource->id);
+                $plugin_resource_virtual_command_hook = $plugin_resource_virtual_command_hook_vm_type;
+            } else if (file_exists($plugin_resource_virtual_command_hook_image_type)) {
+                // check if IMAGE_VIRTUAL_RESOURCE_COMMAND=true
+                $event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found deploymetn $deployment_plugin_name managing virtual command.", "", "", 0, 0, $resource->id);
+                $image = new image();
+                $image->get_instance_by_id($this->imageid);
+                $virtual_command_enabled = $image->get_deployment_parameter("IMAGE_VIRTUAL_RESOURCE_COMMAND");
+                if (!strcmp($virtual_command_enabled, "true")) {
+                    $event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found IMAGE_VIRTUAL_RESOURCE_COMMAND enabled, using virtual command.", "", "", 0, 0, $resource->id);
+                    $plugin_resource_virtual_command_hook = $plugin_resource_virtual_command_hook_image_type;
+                    $virtualization_plugin_name="sanboot-storage";
+                } else {
+                    $event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found IMAGE_VIRTUAL_RESOURCE_COMMAND disabled, using regular command.", "", "", 0, 0, $resource->id);
+                }
+            }
+            if (strlen($plugin_resource_virtual_command_hook)) {
                 $event->log("start", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $virtualization_plugin_name virtually handling the reboot command.", "", "", 0, 0, $resource->id);
                 // prepare resource_fields array
                 $resource_fields = array();
@@ -577,8 +608,38 @@ function send_command($resource_ip, $resource_command) {
             $virtualization = new virtualization();
             $virtualization->get_instance_by_id($this->vtype);
             $virtualization_plugin_name = str_replace("-vm", "", $virtualization->type);
-            $plugin_resource_virtual_command_hook = "$RootDir/plugins/$virtualization_plugin_name/openqrm-$virtualization_plugin_name-resource-virtual-command-hook.php";
-            if (file_exists($plugin_resource_virtual_command_hook)) {
+            $plugin_resource_virtual_command_hook_vm_type = "$RootDir/plugins/$virtualization_plugin_name/openqrm-$virtualization_plugin_name-resource-virtual-command-hook.php";
+            // we also give the deployment type a chance to implement virtual commands
+            if ($this->imageid != 1) {
+                $image = new image();
+                $image->get_instance_by_id($this->imageid);
+                $storage = new storage();
+                $storage->get_instance_by_id($image->storageid);
+                $deployment = new deployment();
+                $deployment->get_instance_by_id($storage->type);
+                $deployment_plugin_name = $deployment->storagetype;
+            }
+            $plugin_resource_virtual_command_hook_image_type = "$RootDir/plugins/$deployment_plugin_name/openqrm-$deployment_plugin_name-resource-virtual-command-hook.php";
+//            $plugin_resource_virtual_command_hook_image_type = "$RootDir/plugins/$virtualization_plugin_name/openqrm-$virtualization_plugin_name-resource-virtual-command-hook.php";
+            $plugin_resource_virtual_command_hook_image_type = "$RootDir/plugins/sanboot-storage/openqrm-sanboot-storage-resource-virtual-command-hook.php";
+            if (file_exists($plugin_resource_virtual_command_hook_vm_type)) {
+                $event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found virtualization $virtualization_plugin_name managing virtual command.", "", "", 0, 0, $resource->id);
+                $plugin_resource_virtual_command_hook = $plugin_resource_virtual_command_hook_vm_type;
+            } else if (file_exists($plugin_resource_virtual_command_hook_image_type)) {
+                // check if IMAGE_VIRTUAL_RESOURCE_COMMAND=true
+                $event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found deploymetn $deployment_plugin_name managing virtual command.", "", "", 0, 0, $resource->id);
+                $image = new image();
+                $image->get_instance_by_id($this->imageid);
+                $virtual_command_enabled = $image->get_deployment_parameter("IMAGE_VIRTUAL_RESOURCE_COMMAND");
+                if (!strcmp($virtual_command_enabled, "true")) {
+                    $event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found IMAGE_VIRTUAL_RESOURCE_COMMAND enabled, using virtual command.", "", "", 0, 0, $resource->id);
+                    $plugin_resource_virtual_command_hook = $plugin_resource_virtual_command_hook_image_type;
+                    $virtualization_plugin_name="sanboot-storage";
+                } else {
+                    $event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found IMAGE_VIRTUAL_RESOURCE_COMMAND disabled, using regular command.", "", "", 0, 0, $resource->id);
+                }
+            }
+            if (strlen($plugin_resource_virtual_command_hook)) {
                 $event->log("stop", $_SERVER['REQUEST_TIME'], 5, "resource.class.php", "Found plugin $virtualization_plugin_name virtually handling the reboot command.", "", "", 0, 0, $resource->id);
                 // prepare resource_fields array
                 $resource_fields = array();
