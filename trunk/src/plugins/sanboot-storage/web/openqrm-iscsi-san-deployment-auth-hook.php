@@ -130,7 +130,10 @@ global $event;
 				);
 				$image_authentication->add($image_auth_ar);
 				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-san-deployment-auth-hook.php", "Registered image $appliance->imageid for de-authentication the root-fs exports when resource $appliance->resources is idle again.", "", "", 0, 0, $appliance_id);
-                // stopping sanboot assignment is in the appliance hook
+                // stopping sanboot assignment is in the appliance hook, must before the reboot of the resource
+
+                // set IMAGE_VIRTUAL_RESOURCE_COMMAND to false here, after the reboot of the resource
+                $image->set_deployment_parameters("IMAGE_VIRTUAL_RESOURCE_COMMAND", "false");
                 break;
 			
 		}
