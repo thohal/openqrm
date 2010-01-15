@@ -54,14 +54,14 @@ function openqrm_sanboot_storage_resource_virtual_command($cmd, $resource_fields
 	switch($cmd) {
 		case "reboot":
         	$event->log("openqrm_sanboot_storage_resource_virtual_command", $_SERVER['REQUEST_TIME'], 5, "openqrm-sanboot-storage-resource-virtual-command-hook.php", "Handling $cmd command", "", "", 0, 0, 0);
-            $virtual_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dbclient -K 10 -y -i $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key -p 22 root@$resource_ip 'shutdown.exe /r /f /t 5 /m localhost'";
+            $virtual_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dbclient -K 10 -y -i $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key -p 22 root@$resource_ip 'shutdown.exe /r /f /t 2'";
             $openqrm_server->send_command($virtual_command);
             sleep(2);
             $openqrm_server->send_command($virtual_command);
 			break;
 		case "halt":
         	$event->log("openqrm_sanboot_storage_resource_virtual_command", $_SERVER['REQUEST_TIME'], 5, "openqrm-sanboot-storage-resource-virtual-command-hook.php", "Handling $cmd command", "", "", 0, 0, 0);
-            $virtual_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dbclient -K 10 -y -i $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key -p 22 root@$resource_ip 'shutdown.exe /f /t 5 /m localhost'";
+            $virtual_command = "$OPENQRM_SERVER_BASE_DIR/openqrm/bin/dbclient -K 10 -y -i $OPENQRM_SERVER_BASE_DIR/openqrm/etc/dropbear/dropbear_rsa_host_key -p 22 root@$resource_ip 'shutdown.exe /f /t 2'";
             $openqrm_server->send_command($virtual_command);
             sleep(2);
             $openqrm_server->send_command($virtual_command);
