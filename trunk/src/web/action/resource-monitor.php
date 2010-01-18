@@ -93,6 +93,12 @@ $event = new event();
 				// update the resource parameter in any way
 				$resource->update_info($resource->id, $resource_fields);
 				$resource->get_parameter($resource->id);
+			} else if (strlen($resource_id)) {
+				$resource = new resource();
+                $resource->get_instance_by_id($resource_id);
+				// update the resource parameter in any way
+				$resource->update_info($resource->id, $resource_fields);
+				$resource->get_parameter($resource->id);
 			}
 			exit();
 			break;
