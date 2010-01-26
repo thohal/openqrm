@@ -42,7 +42,10 @@ mkdir -p $(dirname $LOCKFILE)
 export `eval cat /proc/cmdline`	
 . /var/openqrm/openqrm-resource.conf
 export OPENQRM_SERVER_BASE_DIR=$resource_basedir
+export OPENQRM_SOURCE_DIR=$resource_basedir/openqrm
+
 . $resource_basedir/openqrm/include/openqrm-functions
+. $resource_basedir/openqrm/include/openqrm-package-functions
 
 # define wget to use with https
 if [ "$openqrm_web_protocol" == "https" ]; then
@@ -125,7 +128,29 @@ function openqrm_client_start() {
 				rm -f openqrm-server-public-rsa-key
 				chmod 600 /root/.ssh/authorized_keys
 			fi
-			$resource_basedir/openqrm/sbin/dropbear -p $resource_execdport -r $resource_basedir/openqrm/etc/dropbear/dropbear_rsa_host_key
+			# try to install and use the distro dropbear package; if it fails, fall back to our static build
+			DROPBEAR=`which dropbear`
+			if test -z $DROPBEAR; then
+				FORCE_INSTALL=true openqrm_install_os_dependency dropbear
+				# on debian and ubuntu, lets make sure it is not started as a service due to our install
+				if test -e /etc/default/dropbear; then
+					if grep '^NO_START=0' /etc/default/dropbear 1>/dev/null|| ! grep 'NO_START' /etc/default/dropbear 1>/dev/null; then 
+						# looks like it has been set to start by default; let's revert that
+						/etc/init.d/dropbear stop
+						sed -i -e "s/^NO_START=0/NO_START=1/g" /etc/default/dropbear
+						# just in case it was never there in the first place
+						echo "NO_START=1" >> /etc/default/dropbear
+					fi
+				fi
+			fi
+			# check again if dropbear exists in $PATH
+			DROPBEAR=`which dropbear`
+			# start dropbear
+			if test -z $DROPBEAR; then
+				$resource_basedir/openqrm/sbin/dropbear -p $resource_execdport -r $resource_basedir/openqrm/etc/dropbear/dropbear_rsa_host_key
+			else
+				$DROPBEAR -p $resource_execdport -r $resource_basedir/openqrm/etc/dropbear/dropbear_rsa_host_key
+			fi
 			;;
 		openqrm-execd)
 			# start openqrm-execd
