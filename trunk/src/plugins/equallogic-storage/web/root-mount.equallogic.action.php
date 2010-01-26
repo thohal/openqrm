@@ -50,14 +50,14 @@ $event->log("$equallogic_root_mount_command", $_SERVER['REQUEST_TIME'], 5, "equa
 	switch ($equallogic_root_mount_command) {
 
 		case 'create_fs_finished':
-			$event->log("$equallogic_root_mount_command", $_SERVER['REQUEST_TIME'], 3, "equallogic-root-mount-action", "Removing CREATE_FS parameter for image_id $equallogic_root_mount_image_id", "", "", 0, 0, 0);
+			$event->log("$equallogic_root_mount_command", $_SERVER['REQUEST_TIME'], 5, "equallogic-root-mount-action", "Removing CREATE_FS parameter for image_id $equallogic_root_mount_image_id", "", "", 0, 0, 0);
 			$image = new image();
 			$image->get_instance_by_id($equallogic_root_mount_image_id);
 			$image->set_deployment_parameters("CREATE_FS", "FALSE");
 		        break;
 
 		case 'resize_fs_finished':
-			$event->log("$equallogic_root_mount_command", $_SERVER['REQUEST_TIME'], 3, "equallogic-root-mount-action", "Removing RESIZE_FS parameter for image_id $equallogic_root_mount_image_id", "", "", 0, 0, 0);
+			$event->log("$equallogic_root_mount_command", $_SERVER['REQUEST_TIME'], 5, "equallogic-root-mount-action", "Removing RESIZE_FS parameter for image_id $equallogic_root_mount_image_id", "", "", 0, 0, 0);
 			$image = new image();
 			$image->get_instance_by_id($equallogic_root_mount_image_id);
 			$image->set_deployment_parameters("RESIZE_FS", "FALSE");
