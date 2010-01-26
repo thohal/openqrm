@@ -330,6 +330,14 @@ function openqrm_cloud_monitor() {
                              $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage resize -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip -m $eq_resize_to";
                              $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Error, downsizing (".$ci->disk_size." to ".$ci->disk_rsize.") unsupported: $image_resize_cmd", "", "", 0, 0, 0);
                     } else {
+                             // For Equallogic we set a deployment parameter RESIZE_FS that is used by the root-mount script
+                             // to determine whether if we have to do a filesystem resize
+                             $image->set_deployment_parameters("RESIZE_FS", "TRUE");
+                             $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "Setting RESIZE_FS parameter for image_id $ci_image_id", "", "", 0, 0, 0);
+                             // Update image object and vars
+                             $image->get_instance_by_id($ci_image_id);
+                             $image_deployment_parameter = $image->deployment_parameter;
+                             // Execute resize command on equallogic
                              $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/equallogic-storage/bin/openqrm-equallogic-storage resize -n $equallogic_volume_name -u $eq_user -p $eq_password -e $eq_storage_ip -m $eq_resize_to";
                              $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
                              $output = shell_exec($image_resize_cmd);

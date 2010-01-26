@@ -228,32 +228,47 @@ EOF
     # export the blockdevice name for the further functions
     export ISCSI_BLOCK_DEVICE="/dev/$ISCSI_BLOCK_DEVICE_NAME"
 
-    # here we resize the disk if needed, if not needed this won't hurt 
-    /sbin/e2fsck -f -y $ISCSI_BLOCK_DEVICE
-    /sbin/resize2fs -fp $ISCSI_BLOCK_DEVICE
+      # If CREATE_FS=TRUE, this is the first time we access the Equallogic LUN so we force filesystem creation.
+      if [ "$CREATE_FS" == "TRUE" ]; then
 
-	# finallly mount
-	if ! mount -t $image_rootfstype $ISCSI_BLOCK_DEVICE /mnt; then
-        # in case we install from nfs we create a fs since this should be a new lun
-    	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
-            echo "NOTICE: Found install-from-nfs enabled but failed mounting the rootdevice"
-            echo "NOTICE: Assuming a new (unformatted) Lun -> creating $image_rootfstype filesystem on $ISCSI_BLOCK_DEVICE"
-            mke2fs -F -j $ISCSI_BLOCK_DEVICE
-            if ! mount -t $image_rootfstype $ISCSI_BLOCK_DEVICE /mnt; then
-                echo "ERROR: Could not mount $ISCSI_BLOCK_DEVICE via iscsi"
-                # give a shell for the admin
-                /bin/bash
-            else
-        		echo "equallogic-storage: Mounted $ISCSI_BLOCK_DEVICE rw"
-            fi
-        else
-            echo "ERROR: Could not mount $ISCSI_BLOCK_DEVICE via iscsi"
-            # give a shell for the admin
-            /bin/bash
-        fi
-	else
-		echo "equallogic-storage: Mounted $ISCSI_BLOCK_DEVICE rw"
-	fi
+              # forcibly create filesystem
+              echo "NOTICE: CREATE_FS parameter found, forcibly creating $image_rootfstype filesystem on $ISCSI_BLOCK_DEVICE"
+              mke2fs -F -j $ISCSI_BLOCK_DEVICE
+
+              # Remove the CREATE_FS deployment parameter
+              if ! $WGET -O /dev/null "$openqrm_web_protocol://${resource_openqrmserver}/openqrm/boot-service/root-mount.equallogic.action.php?equallogic_root_mount_command=create_fs_finished&equallogic_root_mount_image_id=$image_id"; then
+ 	               echo "ERROR: Could not post create_fs_finished for image $image_id to the openQRM-server at ${resource_openqrmserver}!"
+              else
+      	         echo "Posted create_fs_finished for image $image_id to the openQRM-server at $resource_openqrmserver!"
+          		fi
+      else
+              # Check if we need to resize the FS
+              if [ "$RESIZE_FS" == "TRUE"  ]; then
+
+                  echo "NOTICE: Resize FS request found, resizing $image_rootfstype filesystem on $ISCSI_BLOCK_DEVICE"
+                  # here we resize the disk if needed, if not needed this won't hurt
+                  /sbin/e2fsck -f -y $ISCSI_BLOCK_DEVICE
+                  /sbin/resize2fs -fp $ISCSI_BLOCK_DEVICE
+
+                  # post it to openqrm
+                  if ! $WGET -O /dev/null "$openqrm_web_protocol://${resource_openqrmserver}/openqrm/boot-service/root-mount.equallogic.action.php?equallogic_root_mount_command=resize_fs_finished&equallogic_root_mount_image_id=$image_id"; then
+     	               echo "ERROR: Could not post resize fs finished status for image $image_id to the openQRM-server at ${resource_openqrmserver}!"
+                  else
+          	         echo "Posted resize fs finished status for image $image_id to the openQRM-server at $resource_openqrmserver!"
+              		fi
+              else
+ 	               echo "No resize_fs parameter found, not resizing"
+              fi
+      fi
+
+      # finallly mount
+      if ! mount -t $image_rootfstype $ISCSI_BLOCK_DEVICE /mnt; then
+              echo "ERROR: Could not mount $ISCSI_BLOCK_DEVICE via iscsi"
+              # give a shell for the admin
+              /bin/bash
+      else
+              echo "equallogic-storage: Mounted $ISCSI_BLOCK_DEVICE rw"
+      fi
 
 	if  [ "$IMAGE_INSTALL_FROM_NFS" != "" ]; then
 		install_rootfs_from_nfs

@@ -60,6 +60,8 @@ Clone-on-deploy in the cloud is not actually cloning volumes; instead, new volum
 The clone function in the Equallogic storage manager is exactly that; it runs the "clone" command on the hardware.
 </li><li>
 Only alphanumeric characters, colon, dot and dash are allowed in volume names.
+</li><li>
+When resizing a LUN through the storage manager that is attached to an image, one must manually add the RESIZE_FS=TRUE parameter to the image deployment parameters to enable filesystem resizing during bootup. In the cloud-plugin this is done automatically.
 </li>
 </ul>
 <br>
