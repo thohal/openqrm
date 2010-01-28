@@ -325,6 +325,12 @@ Section "openQRM Monitoring subsystem" SecWget
   ;Create uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
+  ; write uninstall infos into the registry
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\openQRM-Client" \
+                 "DisplayName" "openQRM-Client"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\openQRM-Client" \
+                 "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
+
 SectionEnd
 
 
@@ -368,6 +374,9 @@ Section "Uninstall"
   ; copssh uninstall first
   MessageBox MB_OK "Copssh Uninstallation"
   Execwait '"$PROGRAMFILES\ICW\uninstall_Copssh.exe" _?=$INSTDIR'
+  Execwait '"$PROGRAMFILES\ICW\uninstall_ICW_OpenSSHServer.exe"'
+  Execwait '"$PROGRAMFILES\ICW\uninstall_ICW_Base.exe"'
+
 
   ;file uninstall
   Delete "$INSTDIR\Uninstall.exe"
@@ -391,6 +400,8 @@ Section "Uninstall"
 
   RMDir "$INSTDIR"
 
+  ; remove registry entries
   DeleteRegKey /ifempty HKCU "Software\${OQPROGRAMNAME}"
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\openQRM-Client"
 
 SectionEnd
