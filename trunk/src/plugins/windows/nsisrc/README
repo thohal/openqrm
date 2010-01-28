@@ -1,0 +1,23 @@
+This directory contains the sources for the Windows openQRM Client.
+The openQRM Client is made with the Open-Source Nullsoft Installer.
+To compile the openQRM Client please follow the steps below :
+
+1) run "bash ./get-components.sh"
+  This will download additional components needed for the openQRM Client installer such as :
+  - CopSsh
+  - Wget.exe
+  - Sleep.exe
+
+2) Copy or mount this dir on a Windows system
+3) Install the Nullsoft Installer
+4) Right-click on the "openQRM-Client.nsi" file and choose "compile"
+
+=> this will generate a new openQRM-Client-VERSION-setup.exe
+
+How to integrate Windows systems into openQRM via this windows client is explained
+in the Windows plugin About page.
+
+Please notice !
+Make sure to run "bash ./clean-components.sh" before commiting in this directory.
+
+

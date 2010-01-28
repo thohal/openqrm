@@ -18,12 +18,13 @@
 # Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 #
 
-if [ -f /var/openqrm/openqrm-resource.conf ]; then
-	. /var/openqrm/openqrm-resource.conf
-fi
-WINDOWS_VDEVICE_NAME="windowsdhcp"
-WINDOWS_XE_BINARY=/usr/sbin/xe
 
+# some definitions
+DEFAULT_IMAGE_SIZE=5000
+WINDOWS_LOCK_FILE=/var/run/windows/windows-plugin.lock
+WINDOWS_LOCK_DELAY=5
+WINDOWS_LOCK_RETRY=100
+WINDOWS_LOCK_TIMEOUT=500
 
 ################ common windows functions
 
@@ -40,19 +41,19 @@ function windows_log() {
 function windows_lock() {
 	local COMMAND=$1
 	local RET=1
-	
-	if [ ! -d `dirname $LVM_MGMT_LOCK_FILE` ]; then
-		mkdir -p `dirname $LVM_MGMT_LOCK_FILE`
+
+	if [ ! -d `dirname $WINDOWS_LOCK_FILE` ]; then
+		mkdir -p `dirname $WINDOWS_LOCK_FILE`
 	fi
 	case "$COMMAND" in
 		aquire)
-				lockfile -s $LVM_MGMT_LOCK_DELAY -r $LVM_MGMT_LOCK_RETRY -l $LVM_MGMT_LOCK_TIMEOUT $LVM_MGMT_LOCK_FILE
+				lockfile -s $WINDOWS_LOCK_DELAY -r $WINDOWS_LOCK_RETRY -l $WINDOWS_LOCK_TIMEOUT $WINDOWS_LOCK_FILE
 				RET=$?
 				windows_log windows_lock "Aquired the lock"
 				return $RET
 				;;
 		release)
-				/bin/rm -f $LVM_MGMT_LOCK_FILE
+				/bin/rm -f $WINDOWS_LOCK_FILE
 				RET=$?
 				windows_log windows_lock "Released the lock"
 				return $RET
@@ -60,13 +61,21 @@ function windows_lock() {
 		*)
 			windows_log windows_lock "No such command. Try 'aquire' or 'release'"
 			return 1
-			;;	
+			;;
 	esac
 }
 
 
 
 ################ windows functions
+
+
+
+
+
+
+
+
 
 
 

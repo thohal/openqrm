@@ -23,6 +23,7 @@ export OPENQRM_SERVER_CONF=$(shell pwd)/../../etc/openqrm-server.conf
 configure:
 
 compile:
+	../../make-assistant openqrm_cache_or_download openqrm-client.windows etc/build.conf/openqrm-client.windows.conf
 
 install:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make install' as root" && exit 1)
@@ -38,10 +39,10 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp web/*.css $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/web/
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/web/img
 	. $(OPENQRM_SERVER_CONF) && cp web/img/*.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/web/img/
+	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/web/tpl
+	. $(OPENQRM_SERVER_CONF) && cp web/tpl/*.php $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/web/tpl/
+	. $(OPENQRM_SERVER_CONF) && . etc/build.conf/openqrm-client.windows.conf && if ! cp $$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client.windows/source/openQRM-Client-$$OPENQRM_SOURCE_SUB_VERSION-setup.exe $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/web/ 2>/dev/null; then cp ../../$$OPENQRM_BUILD_TMP_DIR/openqrm-build/openqrm-client.windows/source/openQRM-Client-$$OPENQRM_SOURCE_SUB_VERSION-setup.exe $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/web/; fi
 	. $(OPENQRM_SERVER_CONF) && chmod 777 $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/web
-	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/bin
-	. $(OPENQRM_SERVER_CONF) && cp bin/openqrm* $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/bin/
-	. $(OPENQRM_SERVER_CONF) && chmod +x $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/windows/bin/*
 
 uninstall:
 	@whoami | grep root 1>/dev/null 2>&1 || (echo "Please run 'make uninstall' as root" && exit 1)

@@ -35,29 +35,12 @@ require_once "$RootDir/include/htmlobject.inc.php";
 
 function windows_about() {
 	global $OPENQRM_SERVER_BASE_DIR;
-	$disp = "<h1><img border=0 src=\"/openqrm/base/plugins/windows/img/plugin.png\"> VMware-server plugin</h1>";
-	$disp = $disp."<br>";
-	$disp = $disp."The Windows-plugin ";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
-	$disp = $disp."<b>How to use :</b>";
-	$disp = $disp."<br>";
-
-	$disp = $disp."<ul>";
-	$disp = $disp."<li>";
-	$disp = $disp."";
-	$disp = $disp."</li><li>";
-	$disp = $disp."";
-	$disp = $disp."</li><li>";
-	$disp = $disp."";
-	$disp = $disp."</li>";
-	$disp = $disp."</ul>";
-	$disp = $disp."<br>";
-	$disp = $disp."<br>";
+	$t = new Template_PHPLIB();
+	$t->debug = false;
+	$t->setFile('tplfile', './tpl/' . 'windows-about.tpl.php');
+	$t->setVar(array(
+	));
+	$disp =  $t->parse('out', 'tplfile');
 	return $disp;
 }
 

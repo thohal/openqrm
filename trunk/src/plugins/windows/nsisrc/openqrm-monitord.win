@@ -1,0 +1,190 @@
+#!/bin/bash
+
+RESPARAM="/cygdrive/c/Programme/openQRM-Client/resource-parameter.conf"
+SLEEP="/cygdrive/c/Programme/openQRM-Client/sleep.exe"
+
+# source the parameters 
+if [ ! -f $RESPARAM ]; then
+	echo "ERROR: Could not find $RESPARAM ! Exiting ..."
+	exit -1
+fi
+. $RESPARAM
+
+export SERVER_PROTOCOL=$openqrm_web_protocol
+# define wget to use with https
+if [ "$SERVER_PROTOCOL" == "https" ]; then
+    WGET="/cygdrive/c/Programme/openQRM-Client/wget.exe --no-check-certificate -q -O wgetlog"
+else
+    export WGET="/cygdrive/c/Programme/openQRM-Client/wget.exe -q -O wgetlog"
+fi
+
+
+function urlencodechar() {
+	# notice : "%", "*" and "\" are not supported
+	UCHAR=$1
+	UCHAR=${UCHAR/\~/%7E}
+	UCHAR=${UCHAR/\!/%21}
+	UCHAR=${UCHAR/\@/%40}
+	UCHAR=${UCHAR/\\#/%23}
+	UCHAR=${UCHAR/\\$/%24}
+	#UCHAR=${UCHAR/\%/%25}
+	UCHAR=${UCHAR/\^/%5E}
+	UCHAR=${UCHAR/\&/%26}
+	#UCHAR=${UCHAR/\\*/%2A}
+	UCHAR=${UCHAR/\(/%28}
+	UCHAR=${UCHAR/\)/%29}
+	UCHAR=${UCHAR/\+/%2B}
+	UCHAR=${UCHAR/\|/%7C}
+	UCHAR=${UCHAR/\{/%7B}
+	UCHAR=${UCHAR/\}/%7D}
+	UCHAR=${UCHAR/\:/%3A}
+	UCHAR=${UCHAR/\"/%22}
+	UCHAR=${UCHAR/\</%3C}
+	UCHAR=${UCHAR/\>/%3E}
+	UCHAR=${UCHAR/\\?/%3F}
+	UCHAR=${UCHAR/\`/%60}
+	UCHAR=${UCHAR/\=/%3D}
+	#UCHAR=${UCHAR/\\/%5C}
+	UCHAR=${UCHAR/\[/%5B}
+	UCHAR=${UCHAR/\]/%5D}
+	UCHAR=${UCHAR/\;/%3B}
+	UCHAR=${UCHAR/\'/%27}
+	UCHAR=${UCHAR/\,/%2C}
+	UCHAR=${UCHAR/\//%2F}
+	# whitespace
+	if [ -z $UCHAR ]; then
+	        UCHAR=%20
+	fi
+	# remove tabs + enter
+	UCHAR=${UCHAR/$'\r'/}
+	echo "$UCHAR"
+}
+
+
+function urlencodestring() {
+	USERINPUT=$@
+	LENGTH=${#USERINPUT}
+	for (( LOOP=0; LOOP<$LENGTH; LOOP++ )); do
+		TESTCHAR=`echo ${USERINPUT:$LOOP:1}`
+		TESTCHAR=`urlencodechar $TESTCHAR`
+		echo -n $TESTCHAR
+	done
+}
+
+
+
+
+
+# local used functions
+function send_info() {
+MESSAGEDATA="resource_id=$resource_id&resource_uptime=$current_uptime&resource_state=active&resource_event=statistics&resource_hostname=$current_hostname";
+OPENQRM_RESOURCE_INFO_URL="$SERVER_PROTOCOL://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=update_info&$MESSAGEDATA"
+	$WGET "$OPENQRM_RESOURCE_INFO_URL"
+	rm -f wgetlog
+
+}
+
+
+
+
+function valid_mac_address () {
+    MACA=$1
+    ERROR=0
+    oldIFS=$IFS
+    IFS=-
+    set -f
+    set -- $1
+    if [ $# -eq 6 ]; then
+        GOOD=$MACA
+    fi
+    IFS=$oldIFS
+    set +f
+    GOOD=`echo $GOOD | sed -e "s/.*: //g"`
+    echo $GOOD
+}
+
+
+function tryupdateparameters() {
+    oldIFS=$IFS
+IFS='
+'
+    . $RESPARAM
+    #echo "mac : $resource_mac"
+    #echo "oq  : $resource_openqrmserver"
+    MYMAC=`echo $resource_mac | sed -e "s/:/-/g"`
+    #echo "my mac : $MYMAC"
+    if ipconfig /all | grep $MYMAC; then
+        echo "SUCCESS: found valid resource-parameter"
+    else
+        echo "NOTICE: trying to find my resource-parameter from $resource_openqrmserver"
+        ipconfig /all | grep ".*: 00-" > tmpiplog
+        MACS=`cat tmpiplog`
+
+        for MAC in $MACS; do
+            ISMAC=`valid_mac_address $MAC`
+            echo "$ISMAC"
+            getparams $ISMAC
+            if grep resource_openqrmserver wgetlog; then
+                cp wgetlog $RESPARAM
+                . $RESPARAM
+                echo "SUCCESS: found myself on the openQRM Server. I am id $resource_id"
+            fi
+        done
+        IFS=$oldIFS
+    fi
+    IFS=$oldIFS
+}
+
+
+
+function getparams() {
+    . $RESPARAM
+    resource_mac=`echo $1 | sed -e "s/-/:/g"`
+    export SERVER_PROTOCOL=$openqrm_web_protocol
+    export WGET=/cygdrive/c/Programme/openQRM-Client/wget.exe
+    OPENQRM_RESOURCE_INFO_URL="$SERVER_PROTOCOL://$resource_openqrmserver/openqrm/action/resource-monitor.php?resource_command=get_parameter&resource_mac=$resource_mac"
+    $WGET --no-check-certificate -q -O wgetlog "$OPENQRM_RESOURCE_INFO_URL"
+}
+
+
+
+
+# uptime
+function find_uptime() {
+	current_uptime=$(( current_uptime + 10 ))
+	if [ -z "$current_uptime" ]; then
+		current_uptime=0
+	fi
+}
+
+# hostname
+function find_hostname() {
+	current_hostname=`hostname.exe`
+	current_hostname=`urlencodestring $current_hostname`
+	if [ -z "$current_hostname" ]; then
+		current_hostname=0
+	fi
+}
+
+
+
+# update resource parameters
+tryupdateparameters
+
+# gathering the static values
+echo "$0: Gathering resources-information"
+
+# main loop
+while (true); do
+	# uptime
+	find_uptime
+	# hostname
+	find_hostname
+	send_info
+	# delay
+	$SLEEP $resource_senddelay
+done
+# never reached
+exit 0
+
+
