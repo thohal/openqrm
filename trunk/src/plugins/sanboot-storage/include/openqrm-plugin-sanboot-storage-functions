@@ -110,10 +110,6 @@ function manage_iscsi() {
 	case "$1" in
 		add)
 			IMAGE_PASS=$3
-			if [ "$2" != "snap" ]; then
-				# create fs, currently static all ext3
-				mkfs.ext3 -F /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_NAME
-			fi
 			echo "Target $SANBOOT_IMAGE_NAME:$SANBOOT_IMAGE_NAME" >> $IETDCONF
 			# echo "	IncomingUser $SANBOOT_IMAGE_NAME $IMAGE_PASS" >> $IETDCONF
 			echo "	Lun $IMAGE_LUN Path=/dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_NAME,Type=fileio" >> $IETDCONF
@@ -223,10 +219,6 @@ function manage_vblade() {
 	
 	case "$1" in
 		add)
-			if [ "$2" != "snap" ]; then
-				# create fs, currently static all ext3
-				mkfs.ext3 -F /dev/mapper/$SANBOOT_STORAGE_SERVER_VOLUME_GROUP-$SANBOOT_IMAGE_NAME
-			fi
 			# slots are dynamic
 			AOE_SLOT=`cat $VBLADECONF | grep -v '^#' | awk {' print $3 '} | sort -n -r | head -n 1`
 			AOE_SLOT=$(( AOE_SLOT + 1 ))
