@@ -1218,6 +1218,10 @@ class cloudsoap {
         $image = new image();
         $image->get_instance_by_id($appliance->imageid);
         $cloudappliance_details['image_name'] = $image->name;
+        $cloud_image = new cloudimage();
+        $cloud_image->get_instance_by_image_id($image->id);
+        $cloudappliance_details['disk_size'] = $cloud_image->disk_size;
+
         // kernel details
         $kernel = new kernel();
         $kernel->get_instance_by_id($appliance->kernelid);
