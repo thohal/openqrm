@@ -973,6 +973,13 @@ class cloudsoap {
         $cloudrequest_details['shared_req'] = $cr_request->shared_req;
         $cloudrequest_details['puppet_groups'] = $cr_request->puppet_groups;
         $cloudrequest_details['appliance_id'] = $cr_request->appliance_id;
+        $appliance_id_array = explode(",", $cr_request->appliance_id);
+        foreach($appliance_id_array as $appliance_id) {
+                $cloudappliance = new cloudappliance();
+                $cloudappliance->get_instance_by_appliance_id($appliance_id);
+                $cloudappliance_id_array[$appliance_id] = $cloudappliance->id;
+        }
+        $cloudrequest_details['cloudappliance_id'] = $cloudappliance->id;
         $cloudrequest_details['lastbill'] = $cr_request->lastbill;
 
         return $cloudrequest_details;
