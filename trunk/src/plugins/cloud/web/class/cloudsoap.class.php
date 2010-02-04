@@ -1735,45 +1735,8 @@ class cloudsoap {
         $image_name_list = array();
         $cc_so_conf = new cloudconfig();
         $show_private_image = $cc_so_conf->get_value(21);	// show_private_image
-        if (!strcmp($show_private_image, "true")) {
-            // private image feature enabled
-            $private_cimage = new cloudprivateimage();
-            $private_image_list = $private_cimage->get_all_ids();
-            foreach ($private_image_list as $index => $cpi) {
-                $cpi_id = $cpi["co_id"];
-                $priv_image = new cloudprivateimage();
-                $priv_image->get_instance_by_id($cpi_id);
-                // show all images in admin mode
-                if (!strcmp($mode, "admin")) {
-                    $image = new image();
-                    $image_list = $image->get_list();
-                    foreach($image_list as $images) {
-                        $image_name_list[] = $images['label'];
-                    }
-                    // remove openqrm and idle image
-                    array_splice($image_name_list, 0, 1);
-                    array_splice($image_name_list, 0, 1);
-                } else {
-                    if ($pcloud_user->id == $priv_image->cu_id) {
-                        $priv_im = new image();
-                        $priv_im->get_instance_by_id($priv_image->image_id);
-                        // only show the non-shared image to the user if it is not attached to a resource
-                        // because we don't want users to assign the same image to two appliances
-                        $priv_cloud_im = new cloudimage();
-                        $priv_cloud_im->get_instance_by_image_id($priv_image->image_id);
-                        if(!$priv_cloud_im->id) {
-	                        $image_name_list[] = $priv_im->name;
-			}
-                    } else if ($priv_image->cu_id == 0) {
-                        $priv_im = new image();
-                        $priv_im->get_instance_by_id($priv_image->image_id);
-                        $image_name_list[] = $priv_im->name;
-                    }
-                }
-            }
-
-        } else {
-            // private image feature disabled
+        // show all images in admin mode
+        if (!strcmp($mode, "admin")) {
             $image = new image();
             $image_list = $image->get_list();
             foreach($image_list as $images) {
@@ -1782,9 +1745,45 @@ class cloudsoap {
             // remove openqrm and idle image
             array_splice($image_name_list, 0, 1);
             array_splice($image_name_list, 0, 1);
-        }
+        } else { 
+            if (!strcmp($show_private_image, "true")) {
+                // private image feature enabled
+                $private_cimage = new cloudprivateimage();
+                $private_image_list = $private_cimage->get_all_ids();
+                foreach ($private_image_list as $index => $cpi) {
+                    $cpi_id = $cpi["co_id"];
+                    $priv_image = new cloudprivateimage();
+                    $priv_image->get_instance_by_id($cpi_id);
+                    if ($pcloud_user->id == $priv_image->cu_id) {
+                        $priv_im = new image();
+                        $priv_im->get_instance_by_id($priv_image->image_id);
+                        // only show the non-shared image to the user if it is not attached to a resource
+                        // because we don't want users to assign the same image to two appliances
+                        $priv_cloud_im = new cloudimage();
+                        $priv_cloud_im->get_instance_by_image_id($priv_image->image_id);
+                        if(!$priv_cloud_im->id) {
+	                    $image_name_list[] = $priv_im->name;
+                        }
+                    } else if ($priv_image->cu_id == 0) {
+                        $priv_im = new image();
+                        $priv_im->get_instance_by_id($priv_image->image_id);
+                        $image_name_list[] = $priv_im->name;
+                    }
+                }   
+            } else {
+                // private image feature disabled
+                $image = new image();
+                $image_list = $image->get_list();
+                foreach($image_list as $images) {
+                    $image_name_list[] = $images['label'];
+                }
+                // remove openqrm and idle image
+                array_splice($image_name_list, 0, 1);
+                array_splice($image_name_list, 0, 1);
+            }
+        } 
         return $image_name_list;
-	}
+        }
 
 
 
