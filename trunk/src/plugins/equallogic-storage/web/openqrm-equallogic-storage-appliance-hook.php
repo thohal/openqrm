@@ -63,9 +63,14 @@ function openqrm_equallogic_storage_appliance($cmd, $appliance_fields) {
 
 	switch($cmd) {
 		case "add":
-	                // set CREATE_FS=TRUE deployment parameter
-			$image->set_deployment_parameters("CREATE_FS", "TRUE");
-			$event->log("openqrm_equallogic_storage_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-storage-appliance-hook.php", "Set CREATE_FS parameter for $appliance_id/$appliance_name/$appliance_ip", "", "", 0, 0, $appliance_id);
+	                // set CREATE_FS=TRUE deployment parameter when it's not set (e.g. with newly created images)
+			$create_fs_param = $image->get_deployment_parameter("CREATE_FS");
+			if($create_fs_param == "") {
+				$image->set_deployment_parameters("CREATE_FS", "TRUE");
+				$event->log("openqrm_equallogic_storage_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-storage-appliance-hook.php", "Set CREATE_FS parameter for $appliance_id/$appliance_name/$appliance_ip", "", "", 0, 0, $appliance_id);
+			} else {
+				$event->log("openqrm_equallogic_storage_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-equallogic-storage-appliance-hook.php", "Not setting CREATE_FS parameter for $appliance_id/$appliance_name/$appliance_ip, already set to ".$create_fs_param, "", "", 0, 0, $appliance_id);
+			}
 			break;
 	}
 }
