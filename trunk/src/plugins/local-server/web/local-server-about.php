@@ -67,7 +67,7 @@ function local_server_about() {
 	$disp = $disp."Execute the 'openqrm-local-server' util on the remote system via ssh e.g. :";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<i><b>ssh [ip-address-of-existing-server] /tmp/openqrm-local-server integrate -u openqrm -p openqrm -q $OPENQRM_SERVER_IP_ADDRESS -i eth0</b></i>";
+	$disp = $disp."<i><b>ssh [ip-address-of-existing-server] /tmp/openqrm-local-server integrate -u openqrm -p openqrm -q $OPENQRM_SERVER_IP_ADDRESS -i eth0 [-s http/https]</b></i>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."</li><li>";
@@ -86,7 +86,7 @@ function local_server_about() {
 	$disp = $disp."To remove a system from openQRM integrated via the local-server plugin run the 'openqrm-local-server' util again. e.g. :";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
-	$disp = $disp."<i><b>ssh [ip-address-of-existing-server] /tmp/openqrm-local-server remove -u openqrm -p openqrm -q $OPENQRM_SERVER_IP_ADDRESS</b></i>";
+	$disp = $disp."<i><b>ssh [ip-address-of-existing-server] /tmp/openqrm-local-server remove -u openqrm -p openqrm -q $OPENQRM_SERVER_IP_ADDRESS [-s http/https]</b></i>";
 	$disp = $disp."<br>";
 	$disp = $disp."<br>";
 	$disp = $disp."</li>";
