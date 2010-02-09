@@ -1616,6 +1616,8 @@ class cloudsoap {
         $time_token = $_SERVER['REQUEST_TIME'];
         $private_image_name = str_replace("cloud", "private", $image->name);
         $private_image_name = $private_image_name."".$time_token;
+        // get the current disk size
+        $cloud_image_current_disk_size = $cloud_image->disk_size;
         $cloudi_request = array(
             'ci_disk_rsize' => $cloud_image_current_disk_size,
             'ci_clone_name' => $private_image_name,
