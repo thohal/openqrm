@@ -1,5 +1,5 @@
 host SANBOOT_RESOURCE_HOSTNAME {
-    # sanboot
+    # sanboot iscsi
 	hardware ethernet SANBOOT_RESOURCE_MAC;
 	fixed-address SANBOOT_RESOURCE_IP;
     if exists user-class and option user-class = "gPXE" {

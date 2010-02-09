@@ -51,6 +51,7 @@ function openqrm_sanboot_storage_appliance($cmd, $appliance_fields) {
     $resource_id=$resource->id;
     $image = new image();
     $image->get_instance_by_id($appliance_image_id);
+    $image_deployment_type = $image->type;
 
 	$event->log("openqrm_new_appliance", $_SERVER['REQUEST_TIME'], 5, "openqrm-sanboot-storage-appliance-hook.php", "Handling $cmd event $appliance_id/$appliance_name/$appliance_ip", "", "", 0, 0, $appliance_id);
 
@@ -63,7 +64,7 @@ function openqrm_sanboot_storage_appliance($cmd, $appliance_fields) {
 
         case "stop":
 			$openqrm_server = new openqrm_server();
-			$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/openqrm-sanboot-storage-assign deassign -t iscsi-san-deployment -m $resource_mac -r $resource_id -z $resource_ip");
+			$openqrm_server->send_command("$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/openqrm-sanboot-storage-assign deassign -t $image_deployment_type -m $resource_mac -r $resource_id -z $resource_ip");
 			break;
 	}
 }

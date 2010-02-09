@@ -109,7 +109,7 @@ global $event;
 				$auth_start_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name auth -r $image_location_name -i $image_password -t iscsi-san-deployment";
 				$resource->send_command($storage_ip, $auth_start_cmd);
 
-                // TODO assign resource to boot from san via dhcpd.conf params
+                // assign resource to boot from san via dhcpd.conf params
                 // we need to run it here just before the resource reboots
 				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-iscsi-san-deployment-auth-hook.php", "Setting resource $resource_mac dhcpd-config to boot from san", "", "", 0, 0, $appliance_id);
 

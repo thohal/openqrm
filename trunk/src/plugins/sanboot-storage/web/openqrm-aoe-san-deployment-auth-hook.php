@@ -99,7 +99,8 @@ global $event;
 		$resource->get_instance_by_id($appliance->resources);
 		$resource_mac=$resource->mac;
 		$resource_ip=$resource->ip;
-	
+		$resource_id=$resource->id;
+
 		switch($cmd) {
 			case "start":
 				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-aoe-san-deployment-auth-hook.php", "Authenticating $image_name / $root_device to resource $resource_mac", "", "", 0, 0, $appliance_id);
@@ -107,6 +108,12 @@ global $event;
 				$resource->send_command($storage_ip, $auth_start_cmd);
 				// give time to settle restart of openqrm-exec daemon
 				sleep(3);
+                // assign resource to boot from san via dhcpd.conf params
+                // we need to run it here just before the resource reboots
+				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-aoe-san-deployment-auth-hook.php", "Setting resource $resource_mac dhcpd-config to boot from san", "", "", 0, 0, $appliance_id);
+
+				$sanboot_assing_cmd = "$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/$deployment_plugin_name/bin/openqrm-$deployment_plugin_name-assign assign -n $image_location_name -a $root_device -i $storage_ip -m $resource_mac -r $resource_id -z $resource_ip -t aoe-san-deployment";
+				$openqrm_server->send_command($sanboot_assing_cmd);
 
 				break;
 			
@@ -121,6 +128,10 @@ global $event;
 				);
 				$image_authentication->add($image_auth_ar);
 				$event->log("storage_auth_function", $_SERVER['REQUEST_TIME'], 5, "openqrm-aoe-san-deployment-auth-hook.php", "Registered image $appliance->imageid for de-authentication the root-fs exports when resource $appliance->resources is idle again.", "", "", 0, 0, $appliance_id);
+                // stopping sanboot assignment is in the appliance hook, must before the reboot of the resource
+
+                // set IMAGE_VIRTUAL_RESOURCE_COMMAND to false here, after the reboot of the resource
+                $image->set_deployment_parameters("IMAGE_VIRTUAL_RESOURCE_COMMAND", "false");
 				break;
 			
 		}

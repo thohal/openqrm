@@ -34,7 +34,8 @@ LINEBR='
 # also source the dhcpd function for creating a lock
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/include/openqrm-plugin-dhcpd-functions
 DHCPD_CONF="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf"
-SANBOOT_DHCPD_HOST_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/etc/templates/openqrm-plugin-sanboot-storage-host.template"
+SANBOOT_DHCPD_HOST_ISCSI_BOOT_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/etc/templates/openqrm-plugin-sanboot-storage-host.iscsi.template"
+SANBOOT_DHCPD_HOST_AOE_BOOT_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/etc/templates/openqrm-plugin-sanboot-storage-host.aoe.template"
 DHCPD_HOST_TEMPLATE="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/templates/openqrm-plugin-dhcpd-host.template"
 
 # define wget to use with https
@@ -54,7 +55,7 @@ if [ "$WHOAMI" != "root" ]; then
 fi
 
 function sanboot_storage_usage() {
-	echo "Usage : $0 assign/deassign <-n image-name> <-i storage-ip> <-m resource-mac> <-r resource-id> <-z resource-ip> <-p password> <-t iscsi-san-deployment/aoe-san-deployment>"
+	echo "Usage : $0 assign/deassign <-n image-name> <-i storage-ip> <-m resource-mac> <-r resource-id> <-z resource-ip> <-p password> <-t iscsi-san-deployment/aoe-san-deployment> [-a aoe-device-name]"
 	exit 1
 }
 
@@ -87,6 +88,10 @@ while [ $# -ne 0 ]; do
 			;;
 		-p)
 			SANBOOT_IMAGE_PASSWORD=$2
+			shift
+			;;
+		-a)
+			SANBOOT_AOE_DEVICE_NAME=$2
 			shift
 			;;
 		-t)
@@ -136,13 +141,34 @@ case "$SANBOOT_COMMAND" in
 		grep -B 10000 -A 4 "^host $SANBOOT_HOSTNAME {" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf | sed -e :a -e '$d;N;2,5ba' -e 'P;D' > $DHCPD_CONF.first_part
 		# after resource
 		grep -A 10000 "^host $SANBOOT_HOSTNAME {" $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/dhcpd/etc/dhcpd.conf | sed '1,5d' > $DHCPD_CONF.last_part
-        # now add the resource entry again with the new sanboot config
-		cat $SANBOOT_DHCPD_HOST_TEMPLATE | \
-			sed -e "s/SANBOOT_RESOURCE_HOSTNAME/$SANBOOT_HOSTNAME/g" |	\
-			sed -e "s/SANBOOT_RESOURCE_MAC/$SANBOOT_RESOURCE_MAC/g" |	\
-			sed -e "s/SANBOOT_STORAGE_IP/$SANBOOT_STORAGE_IP/g" |	\
-			sed -e "s/SANBOOT_IMAGE_NAME/$SANBOOT_IMAGE_NAME/g" |	\
-			sed -e "s/SANBOOT_RESOURCE_IP/$SANBOOT_RESOURCE_IP/g" > $DHCPD_CONF.sanboot_part
+
+        case "$SANBOOT_IMAGE_TYPE" in
+
+            iscsi-san-deployment)
+                echo "sanboot: $SANBOOT_IMAGE_NAME is from type iscsi-san-deployment" | logger
+
+
+                # now add the resource entry again with the new sanboot config
+                cat $SANBOOT_DHCPD_HOST_ISCSI_BOOT_TEMPLATE | \
+                    sed -e "s/SANBOOT_RESOURCE_HOSTNAME/$SANBOOT_HOSTNAME/g" |	\
+                    sed -e "s/SANBOOT_RESOURCE_MAC/$SANBOOT_RESOURCE_MAC/g" |	\
+                    sed -e "s/SANBOOT_STORAGE_IP/$SANBOOT_STORAGE_IP/g" |	\
+                    sed -e "s/SANBOOT_IMAGE_NAME/$SANBOOT_IMAGE_NAME/g" |	\
+                    sed -e "s/SANBOOT_RESOURCE_IP/$SANBOOT_RESOURCE_IP/g" > $DHCPD_CONF.sanboot_part
+    		;;
+
+            aoe-san-deployment)
+                echo "sanboot: $SANBOOT_IMAGE_NAME is from type aoe-san-deployment ($SANBOOT_AOE_DEVICE_NAME)" | logger
+                SANBOOT_DEVICE=`echo $SANBOOT_AOE_DEVICE_NAME | cut -d'/' -f4`
+                # now add the resource entry again with the new sanboot config
+                cat $SANBOOT_DHCPD_HOST_AOE_BOOT_TEMPLATE | \
+                    sed -e "s/SANBOOT_RESOURCE_HOSTNAME/$SANBOOT_HOSTNAME/g" |	\
+                    sed -e "s/SANBOOT_RESOURCE_MAC/$SANBOOT_RESOURCE_MAC/g" |	\
+                    sed -e "s/SANBOOT_DEVICE/$SANBOOT_DEVICE/g" |	\
+                    sed -e "s/SANBOOT_RESOURCE_IP/$SANBOOT_RESOURCE_IP/g" > $DHCPD_CONF.sanboot_part
+    		;;
+
+        esac
 
         # create new config
         cat $DHCPD_CONF.first_part $DHCPD_CONF.sanboot_part $DHCPD_CONF.last_part > $DHCPD_CONF
