@@ -36,19 +36,23 @@ on the Windows systems as Windows services after integrating them with a simple 
 <br>
 <b> Windows openQRM Client setup :</b>
 <br>
+<strong>Please notice : Before you run the setup program for the Windows openQRM-Client please create a new user 'root' on the windows system !</strong>
+<br>
+<br>
+<strong>Please notice : After running the Windows openQRM-Client installer please make sure to have TCP port 22 (ssh) enabled in the Windows firewall !</strong>
+<br>
+<br>
+<strong>Hint for Windows XP : Please run 'gpedit.msc' and add the Permission to remote shutdown the system to user 'root' </strong>
+<br>
+<br>
 <ul type="disc">
     <li>Download the openQRM Client from here -> <a href="openQRM-Client-4.6.1-setup.exe">openQRM-Client-4.6.1-setup.exe</a></li>
     <li>Run the openQRM-Client-setup.exe on the Windows system</li>
 </ul>
 <br>
-<b>Please notice :</b>
-<br>
-<b>=> This is the initial version of the Windows support in openQRM !</b>
-<br>
-<b>=> Please install the openQRM Client with its default parameters.</b>
-<br>
 <br>
 <b>Rapid Deployment for Windows :</b>
+<br>
 <br>
 The following openQRM Plugin providing support for rapid deployment of Windows systems :
 <ul type="disc">
