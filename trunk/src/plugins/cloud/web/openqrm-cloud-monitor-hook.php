@@ -286,6 +286,33 @@ function openqrm_cloud_monitor() {
                 $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
                 $resource->send_command($resource_ip, $image_resize_cmd);
 
+            // iscsi-san-deployment
+            } else if (!strcmp($image_type, "iscsi-san-deployment")) {
+                // parse the volume group info in the identifier
+                $ident_separate=strpos($image_rootdevice, ":");
+                $volume_group=substr($image_rootdevice, 0, $ident_separate);
+                $root_device=substr($image_rootdevice, $ident_separate);
+                $image_location=dirname($root_device);
+                $image_location_name_full=basename($image_location);
+                $ident_separate1=strpos($image_location_name_full, ":");
+                $image_location_name=substr($image_location_name_full, 0, $ident_separate1);
+                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/openqrm-sanboot-storage resize -n $image_location_name -v $volume_group -m $resize_value -t iscsi-san-deployment";
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
+                $resource->send_command($resource_ip, $image_resize_cmd);
+
+            // aoe-san-deployment
+            } else if (!strcmp($image_type, "aoe-san-deployment")) {
+                // parse the volume group info in the identifier
+                $ident_separate=strpos($image_rootdevice, ":");
+                $volume_group=substr($image_rootdevice, 0, $ident_separate);
+                $image_rootdevice_rest=substr($image_rootdevice, $ident_separate+1);
+                $ident_separate2=strpos($image_rootdevice_rest, ":");
+                $image_location_name=substr($image_rootdevice_rest, 0, $ident_separate2);
+                $root_device=substr($image_rootdevice_rest, $ident_separate2+1);
+                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/openqrm-sanboot-storage resize -n $image_location_name -v $volume_group -m $resize_value -t aoe-san-deployment";
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
+                $resource->send_command($resource_ip, $image_resize_cmd);
+
             // equallogic-storage
             } else if (!strcmp($image_type, "equallogic")) {
                 $equallogic_volume_name=basename($image_rootdevice);
@@ -446,6 +473,39 @@ function openqrm_cloud_monitor() {
     			$clone_image_fields["image_rootdevice"] = str_replace($image_location_name, $private_image_name, $image->rootdevice);
                 $private_success = true;
 
+            // iscsi-san-deployment
+            } else if (!strcmp($image_type, "iscsi-san-deployment")) {
+                // parse the volume group info in the identifier
+                $ident_separate=strpos($image_rootdevice, ":");
+                $volume_group=substr($image_rootdevice, 0, $ident_separate);
+                $root_device=substr($image_rootdevice, $ident_separate);
+                $image_location=dirname($root_device);
+                $image_location_name_full=basename($image_location);
+                $ident_separate1=strpos($image_location_name_full, ":");
+                $image_location_name=substr($image_location_name_full, 0, $ident_separate1);
+                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/openqrm-sanboot-storage clone -n $image_location_name -s $private_image_name -v $volume_group -m $private_disk -t iscsi-san-deployment -u $openqrm_admin_user->name -p $openqrm_admin_user->password";
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
+                $resource->send_command($resource_ip, $image_resize_cmd);
+                // set the storage specific image root_device parameter
+    			$clone_image_fields["image_rootdevice"] = str_replace($image_location_name, $private_image_name, $image->rootdevice);
+                $private_success = true;
+
+            // aoe-san-deployment
+            } else if (!strcmp($image_type, "aoe-san-deployment")) {
+                // parse the volume group info in the identifier
+                $ident_separate=strpos($image_rootdevice, ":");
+                $volume_group=substr($image_rootdevice, 0, $ident_separate);
+                $image_rootdevice_rest=substr($image_rootdevice, $ident_separate+1);
+                $ident_separate2=strpos($image_rootdevice_rest, ":");
+                $image_location_name=substr($image_rootdevice_rest, 0, $ident_separate2);
+                $root_device=substr($image_rootdevice_rest, $ident_separate2+1);
+                $image_resize_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/openqrm-sanboot-storage clone -n $image_location_name -s $private_image_name -v $volume_group -m $private_disk -t aoe-san-deployment -u $openqrm_admin_user->name -p $openqrm_admin_user->password";
+                $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_resize_cmd", "", "", 0, 0, 0);
+                $resource->send_command($resource_ip, $image_resize_cmd);
+                // set the storage specific image root_device parameter
+    			$clone_image_fields["image_rootdevice"] = str_replace($image_location_name, $private_image_name, $image->rootdevice);
+                $private_success = true;
+
             // equallogic-storage
             } else if (!strcmp($image_type, "equallogic")) {
                 $equallogic_volume_name=basename($image_rootdevice);
@@ -539,7 +599,7 @@ function openqrm_cloud_monitor() {
 // equallogic-storage
 
 
-                // lvm-iscsi-storage
+                // lvm-nfs-storage
                 if (!strcmp($image_type, "lvm-nfs-deployment")) {
                     $full_vol_name=$image_rootdevice;
                     $vol_dir=dirname($full_vol_name);
@@ -648,6 +708,34 @@ function openqrm_cloud_monitor() {
                     $volume_group=basename($volume_group_location);
                     $image_location_name=basename($image_rootdevice);
                     $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/xen-storage/bin/openqrm-xen-storage remove -n $image_location_name -v $volume_group";
+                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+                    $resource->send_command($resource_ip, $image_remove_clone_cmd);
+
+                // iscsi-san-deployment
+                } else if (!strcmp($image_type, "iscsi-san-deployment")) {
+
+                    // parse the volume group info in the identifier
+                    $ident_separate=strpos($image_rootdevice, ":");
+                    $volume_group=substr($image_rootdevice, 0, $ident_separate);
+                    $root_device=substr($image_rootdevice, $ident_separate);
+                    $image_location=dirname($root_device);
+                    $image_location_name_full=basename($image_location);
+                    $ident_separate1=strpos($image_location_name_full, ":");
+                    $image_location_name=substr($image_location_name_full, 0, $ident_separate1);
+                    $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/openqrm-sanboot-storage remove -n $image_location_name -v $volume_group -t iscsi-san-deployment";
+                    $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
+                    $resource->send_command($resource_ip, $image_remove_clone_cmd);
+
+                // aoe-san-deployment
+                } else if (!strcmp($image_type, "aoe-san-deployment")) {
+                    // parse the volume group info in the identifier
+                    $ident_separate=strpos($image_rootdevice, ":");
+                    $volume_group=substr($image_rootdevice, 0, $ident_separate);
+                    $image_rootdevice_rest=substr($image_rootdevice, $ident_separate+1);
+                    $ident_separate2=strpos($image_rootdevice_rest, ":");
+                    $image_location_name=substr($image_rootdevice_rest, 0, $ident_separate2);
+                    $root_device=substr($image_rootdevice_rest, $ident_separate2+1);
+                    $image_remove_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/openqrm-sanboot-storage remove -n $image_location_name -v $volume_group -t aoe-san-deployment";
                     $event->log("cloud", $_SERVER['REQUEST_TIME'], 5, "cloud-monitor", "!!!! Running : $image_remove_clone_cmd", "", "", 0, 0, 0);
                     $resource->send_command($resource_ip, $image_remove_clone_cmd);
 
@@ -1340,6 +1428,77 @@ function openqrm_cloud_monitor() {
 							'image_rootdevice' => "/dev/$volume_group/$image_clone_name",
 						);
 						$image->update($image_id, $ar_image_update);
+
+
+					// iscsi-san-deployment
+					} else if (!strcmp($image_type, "iscsi-san-deployment")) {
+						// generate a new image password for the clone
+						$image->get_instance_by_id($image_id);
+						$image_password = $image->generatePassword(12);
+						$image->set_deployment_parameters("IMAGE_ISCSI_AUTH", $image_password);
+						// parse the volume group info in the identifier
+						$ident_separate=strpos($image_rootdevice, ":");
+						$volume_group=substr($image_rootdevice, 0, $ident_separate);
+						$root_device=substr($image_rootdevice, $ident_separate);
+						$image_location=dirname($root_device);
+						$image_location_name_full=basename($image_location);
+                        $ident_separate1=strpos($image_location_name_full, ":");
+                        $image_location_name=substr($image_location_name_full, 0, $ident_separate1);
+						// set default snapshot size
+						$disk_size=5000;
+						if (strlen($cr->disk_req)) {
+							$disk_size=$cr->disk_req;
+						}
+						$image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/openqrm-sanboot-storage snap -n $image_location_name -v $volume_group -t iscsi-san-deployment -s $image_clone_name -m $disk_size -i $image_password";
+						$resource->send_command($resource_ip, $image_clone_cmd);
+						// update the image rootdevice parameter
+						$ar_image_update = array(
+							'image_rootdevice' => "$volume_group:/dev/$image_clone_name:$image_clone_name/1",
+						);
+						$image->update($image_id, $ar_image_update);
+
+					// aoe-san-deployment
+					} else if (!strcmp($image_type, "aoe-san-deployment")) {
+						$image->get_instance_by_id($image_id);
+						// parse the volume group info in the identifier
+						$ident_separate=strpos($image_rootdevice, ":");
+						$volume_group=substr($image_rootdevice, 0, $ident_separate);
+						$image_rootdevice_rest=substr($image_rootdevice, $ident_separate+1);
+						$ident_separate2=strpos($image_rootdevice_rest, ":");
+						$image_location_name=substr($image_rootdevice_rest, 0, $ident_separate2);
+						$root_device=substr($image_rootdevice_rest, $ident_separate2+1);
+						// set default snapshot size
+						$disk_size=5000;
+						if (strlen($cr->disk_req)) {
+							$disk_size=$cr->disk_req;
+						}
+						$image_clone_cmd="$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/openqrm-sanboot-storage snap -n $image_location_name -v $volume_group -t aoe-san-deployment -s $image_clone_name -m $disk_size";
+						$resource->send_command($resource_ip, $image_clone_cmd);
+
+						// wait for clone
+						sleep(4);
+
+						// find the new rootdevice of the snapshot, get it via the storage-ident hook
+						$rootdevice_identifier_hook = "$BaseDir/boot-service/image.aoe-san-deployment.php";
+						// require once
+						require_once "$rootdevice_identifier_hook";
+						$rootdevice_identifier_arr = array();
+						$rootdevice_identifier_arr = get_image_rootdevice_identifier($image->storageid);
+						foreach($rootdevice_identifier_arr as $id) {
+							foreach($id as $aoe_identifier_string) {
+								if (strstr($aoe_identifier_string, $image_clone_name)) {
+									$aoe_clone_rootdevice_tmp=strrchr($aoe_identifier_string, ":");
+									$aoe_clone_rootdevice=trim(str_replace(":", "", $aoe_clone_rootdevice_tmp));
+									break;
+								}
+							}
+						}
+						// update the image rootdevice parameter
+						$ar_image_update = array(
+							'image_rootdevice' => "$volume_group:$image_clone_name:$aoe_clone_rootdevice",
+						);
+						$image->update($image_id, $ar_image_update);
+
 
                     // equallogic-storage
                     // since the equallogic storage is not really good at cloning/snapshotting
