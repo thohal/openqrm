@@ -1041,7 +1041,7 @@ class cloudsoap {
 
         // you may have to do some date-to-timestamps on the $extent
 
-        $cr_request->extend_stop_time($cr_request, $extent);
+        $cr_request->extend_stop_time($cr_request->id, $extent);
         return 0;
 	}
 
