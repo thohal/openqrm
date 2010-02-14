@@ -17,7 +17,7 @@
 #
 # Copyright 2009, Matthias Rechenburg <matt@openqrm.com>
 #
-KVM_SERVER_LOCK_FILE=/var/run/lvm-storage/lvm-storage-plugin.lock
+KVM_SERVER_LOCK_FILE=/var/run/kvm/kvm-plugin.lock
 KVM_SERVER_LOCK_DELAY=5
 KVM_SERVER_LOCK_RETRY=100
 KVM_SERVER_LOCK_TIMEOUT=500
