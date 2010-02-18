@@ -23,7 +23,6 @@ configure:
 
 compile:
 	../../make-assistant openqrm_cache_or_download gpxe etc/build.conf/gpxe.conf
-	export OPENQRM_PRE_MAKE="cd src" && export OPENQRM_POST_MAKE="cd .." && ../../make-assistant openqrm_compile_from_source gpxe etc/build.conf/gpxe.conf
 
 install:
 	. $(OPENQRM_SERVER_CONF) && mkdir -p $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/etc
@@ -54,7 +53,7 @@ install:
 	. $(OPENQRM_SERVER_CONF) && cp web/img/plugin.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/sanboot-storage/
 	. $(OPENQRM_SERVER_CONF) && cp web/img/volumes.png $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/web/base/img/menu/sanboot-storage/
     # gpxe bootloader
-	. $(OPENQRM_SERVER_CONF) && if ! cp $$OPENQRM_BUILD_TMP_DIR/openqrm-build/gpxe/gpxe-0.9.9/src/bin/undionly.kpxe $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/ 2>/dev/null; then cp ../../$$OPENQRM_BUILD_TMP_DIR/openqrm-build/gpxe/gpxe-0.9.9/src/bin/undionly.kpxe $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/; fi
+	. $(OPENQRM_SERVER_CONF) && if ! cp $$OPENQRM_BUILD_TMP_DIR/openqrm-build/gpxe/source/undionly.kpxe.0.9.9.tgz $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/ 2>/dev/null; then cp ../../$$OPENQRM_BUILD_TMP_DIR/openqrm-build/gpxe/source/undionly.kpxe.0.9.9.tgz $(DESTINATION_DIR)$$OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/; fi
 
 
 uninstall:

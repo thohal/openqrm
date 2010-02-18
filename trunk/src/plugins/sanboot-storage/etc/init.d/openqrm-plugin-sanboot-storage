@@ -24,7 +24,7 @@ OPENQRM_SERVER_BASE_DIR=$(pushd $(dirname $0)/../../../../.. > /dev/null; echo $
 . $OPENQRM_SERVER_BASE_DIR/openqrm/include/openqrm-server-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/include/openqrm-plugin-sanboot-storage-functions
 . $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/etc/openqrm-plugin-sanboot-storage.conf
-
+OPENQRM_SOURCE_VERSION="0.9.9"
 
 LINE_IFS='
 '
@@ -172,8 +172,8 @@ function openqrm_plugin_sanboot-storage_init() {
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/web $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/sanboot-storage
 	# link the boot-service
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/web/boot-service-sanboot-storage.tgz $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/boot-service-sanboot-storage.tgz
-    # copy gpxe bootloader
-    cp -f $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/undionly.kpxe $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/undionly.kpxe
+    # unpack gpxe bootloader
+    tar -C $OPENQRM_SERVER_BASE_DIR/openqrm/tftpboot/ -xzf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/bin/undionly.kpxe.$OPENQRM_SOURCE_VERSION.tgz
 	# linking the image deployment parameters menu
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/web/image.aoe-san-deployment.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.aoe-san-deployment.php
 	ln -sf $OPENQRM_SERVER_BASE_DIR/openqrm/plugins/sanboot-storage/web/image.iscsi-san-deployment.php $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/boot-service/image.iscsi-san-deployment.php
