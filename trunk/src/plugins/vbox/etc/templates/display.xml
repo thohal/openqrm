@@ -1,0 +1,2 @@
+      <Display VRAMSize="12" monitorCount="1" accelerate3D="false" accelerate2DVideo="false"/>
+      <RemoteDisplay enabled="false" port="3389" authType="Null" authTimeout="5000"/>

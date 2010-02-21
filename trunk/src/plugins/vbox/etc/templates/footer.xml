@@ -1,0 +1,9 @@
+      <SharedFolders/>
+      <Clipboard mode="Bidirectional"/>
+      <Guest memoryBalloonSize="0" statisticsUpdateInterval="0"/>
+      <GuestProperties>
+        <GuestProperty name="/VirtualBox/HostInfo/GUI/LanguageID" value="en_US" timestamp="1266513526954082000" flags=""/>
+      </GuestProperties>
+    </Hardware>
+  </Machine>
+</VirtualBox>

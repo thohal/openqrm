@@ -1,0 +1,6 @@
+      <Boot>
+        <Order position="1" device="@@VBOX_VM_BOOT@@"/>
+        <Order position="2" device="None"/>
+        <Order position="3" device="None"/>
+        <Order position="4" device="None"/>
+      </Boot>

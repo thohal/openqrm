@@ -1,0 +1,6 @@
+      <CPU count="@@VBOX_VM_CPUS@@">
+        <HardwareVirtEx enabled="true" exclusive="true"/>
+        <HardwareVirtExNestedPaging enabled="false"/>
+        <HardwareVirtExVPID enabled="false"/>
+        <PAE enabled="true"/>
+      </CPU>

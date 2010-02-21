@@ -1,0 +1,4 @@
+      <LPT>
+        <Port slot="0" enabled="false" IOBase="0x378" IRQ="4"/>
+        <Port slot="1" enabled="false" IOBase="0x378" IRQ="4"/>
+      </LPT>

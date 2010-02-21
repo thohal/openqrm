@@ -1,0 +1,3 @@
+        <Adapter slot="1" enabled="true" MACAddress="@@VBOX_VM_MAC1@@" cable="true" speed="0" type="Am79C973">
+          <BridgedInterface name="@@VBOX_VM_BR1@@"/>
+        </Adapter>
