@@ -522,7 +522,7 @@ function openqrm_cloud_monitor() {
                     if(preg_match("/emulator/i",$eq_storage->storage_comment)) {
                         $event->log("cloud", $_SERVER['REQUEST_TIME'], 2, "cloud-monitor","Equallogic emulator detected, trimming LUNs to 16 characters", "", "", 0, 0, 0);
                         $private_image_lun_name = preg_replace('/private/','pvt',$private_image_lun_name);
-                        $private_image_lun_name = substr($private_image_lun_name,0,16);
+                        $private_image_lun_name = substr($private_image_lun_name,0,11).rand(10000,99999);
                     }
                     $eq_storage_ip = $resource_ip;
                     $eq_user = $eq_storage->storage_user;
