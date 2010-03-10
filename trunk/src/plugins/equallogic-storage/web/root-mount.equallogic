@@ -185,7 +185,7 @@ EOF
 	iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260
 
     # get targetname
-	IMAGE_TARGET=`iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260 | grep $IMAGE_LUN | awk {' print $2 '}`
+	IMAGE_TARGET=`iscsiadm -m discovery -t sendtargets -p $image_storage_server_ip:3260 | grep -i $IMAGE_LUN | awk {' print $2 '}`
     if [ "$IMAGE_TARGET" == "" ]; then
 		echo "ERROR: Could not find the iscsi-target name in discovery results"
 		# give a shell for the admin
