@@ -190,6 +190,7 @@ function openqrm_integrate_solx86() {
     # link the init script to rc.d 
 	ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 /etc/init.d/openqrm-client.solx86
     ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 /etc/rc2.d/S99openqrm-client.solx86
+    ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 /etc/rc3.d/S99openqrm-client.solx86
     ln -sf $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 /etc/rcS.d/K99openqrm-client.solx86
 
     $resource_basedir/openqrm/etc/init.d/openqrm-client.solx86 start
