@@ -90,7 +90,7 @@ function openqrm_integrate_local_server() {
     cd /
     if [ "$OPENQRM_SHORT_DISTRI_NAME" != "" ]; then
         echo "Getting openqrm-client package $OPENQRM_SHORT_DISTRI_NAME/$OPENQRM_CLIENT_ARCH"
-        if ! $WGET -q -O openqrm-client.tgz "$openqrm_web_protocol://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.$OPENQRM_SHORT_DISTRI_NAME.$OPENQRM_CLIENT_ARCH.tgz"; then
+        if ! wget -q -O openqrm-client.tgz "$openqrm_web_protocol://$OPENQRM_SERVER_IP_ADDRESS/openqrm/boot-service/openqrm-client.$OPENQRM_SHORT_DISTRI_NAME.$OPENQRM_CLIENT_ARCH.tgz"; then
             rm -f openqrm-client.tgz
             echo "WARNING: Failed to get the openqrm-client package arch $OPENQRM_CLIENT_ARCH ! Using default one fitting $OPENQRM_CLIENT_ARCH"
             if ! wget -q $WGET_NO_CERT_CHECK -O openqrm-client.tgz "$OPENQRM_WEB_PROTOCOL://$OPENQRM_SERVER/openqrm/boot-service/openqrm-client.$OPENQRM_CLIENT_ARCH.tgz"; then
