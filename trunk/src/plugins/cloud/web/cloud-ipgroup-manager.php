@@ -204,7 +204,7 @@ function cloud_create_ipgroup() {
 	$ig_network = htmlobject_input('ig_network', array("value" => '[network-address]', "label" => 'Network'), 'text', 20);
 	$ig_subnet = htmlobject_input('ig_subnet', array("value" => '[subnet-mask]', "label" => 'Subnet'), 'text', 20);
 	$ig_gateway = htmlobject_input('ig_gateway', array("value" => '[gateway]', "label" => 'Gateway'), 'text', 20);
-	$ig_dns1 = htmlobject_input('ig_dns1', array("value" => '[fist-dns-server]', "label" => '1. DNS'), 'text', 20);
+	$ig_dns1 = htmlobject_input('ig_dns1', array("value" => '[first-dns-server]', "label" => '1. DNS'), 'text', 20);
 	$ig_dns2 = htmlobject_input('ig_dns2', array("value" => '[second-dns-server]', "label" => '2. DNS'), 'text', 20);
 	$ig_domain = htmlobject_input('ig_domain', array("value" => '[domain-name]', "label" => 'Domain'), 'text', 20);
 
