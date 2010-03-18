@@ -33,6 +33,6 @@ require_once "$RootDir/class/htmlobjects/htmlobject.class.php";
 class htmlobject_openqrm extends htmlobject
 {	
 	function htmlobject_openqrm() {
-		parent::htmlobject($_SERVER["DOCUMENT_ROOT"].'/openqrm/base/class');
+		parent::htmlobject($_SERVER["DOCUMENT_ROOT"].'/openqrm/base/class/htmlobjects');
 	}
 }
