@@ -22,8 +22,8 @@ var $_error_body;
 var $_error_head;
 var $_send;
 
-	function init_table() {
-		parent::init_table();
+	function init() {
+		parent::init();
 
 		if( isset($this->identifier) && $this->identifier !== '' ) {
 

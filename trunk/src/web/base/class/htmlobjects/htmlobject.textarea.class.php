@@ -70,15 +70,16 @@ var $text = '';
 	 *
 	 * @access protected
 	 */
-	function init() {
-		parent::init();
-		if ($this->cols != '')			{ $this->_init .= ' cols="'.$this->cols.'"'; }
-		if ($this->disabled === true)	{ $this->_init .= ' disabled'; }
-		if ($this->name != '')  		{ $this->_init .= ' name="'.$this->name.'"'; }
-		if ($this->readonly === true)	{ $this->_init .= ' readonly'; }
-		if ($this->rows != '')			{ $this->_init .= ' rows="'.$this->rows.'"'; }
-		if ($this->tabindex != '')  	{ $this->_init .= ' tabindex="'.$this->tabindex.'"'; }
-		if ($this->wrap != '')  		{ $this->_init .= ' wrap="'.$this->wrap.'"'; }
+	function get_attribs() {
+		$str = parent::get_attribs();
+		if ($this->cols != '')			{ $str .= ' cols="'.$this->cols.'"'; }
+		if ($this->disabled === true)	{ $str .= ' disabled'; }
+		if ($this->name != '')  		{ $str .= ' name="'.$this->name.'"'; }
+		if ($this->readonly === true)	{ $str .= ' readonly'; }
+		if ($this->rows != '')			{ $str .= ' rows="'.$this->rows.'"'; }
+		if ($this->tabindex != '')  	{ $str .= ' tabindex="'.$this->tabindex.'"'; }
+		if ($this->wrap != '')  		{ $str .= ' wrap="'.$this->wrap.'"'; }
+		return $str;
 	}
 
 	/**
@@ -89,8 +90,8 @@ var $text = '';
 	 */
 	function get_string() {
 	$_strReturn = '';
-		$this->init();
-		$_strReturn = "\n<textarea$this->_init>";
+		$attribs = $this->get_attribs();
+		$_strReturn = "\n<textarea$attribs>";
 		$_strReturn .= $this->text;
 		$_strReturn .= "</textarea>\n";
 	return $_strReturn;

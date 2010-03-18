@@ -35,22 +35,22 @@ class htmlobject {
 	 *
 	 * @access protected
 	 */
-	function factory( $name, $arg1 = null, $arg2 = null, $arg3 = null, $arg4 = null, $arg5 = null ) {
+	function factory( $name, $arg1 = null, $arg2 = null, $arg3 = null, $arg4 = null, $arg5 = null, $arg6 = null ) {
 		if (!is_string( $name ) || !strlen( $name )) {
 			throw new exception('Die zu ladende Klasse muss in einer Zeichenkette benannt werden');
 		}
 
-		$file  = $this->_path.'/htmlobjects/htmlobject.'.$name;
+		$file  = $this->_path.'/htmlobject.'.$name;
 		require_once( $file.'.class.php' );
 		$class = 'htmlobject_'.$name;
 		if($this->_debug === 'debug') {
-			require_once( $this->_path.'/htmlobjects/htmlobject.debug.class.php' );
+			require_once( $this->_path.'/htmlobject.debug.class.php' );
 			if( file_exists($file.'.'.$this->_debug.'.class.php') ) {
 				require_once( $file.'.'.$this->_debug.'.class.php' );
 				$class = $class.'_'.$this->_debug;
 			}
 		}	
-		return new $class( $arg1, $arg2, $arg3, $arg4, $arg5 );
+		return new $class( $arg1, $arg2, $arg3, $arg4, $arg5, $arg6 );
 	}
 
 	function http() {		
@@ -58,12 +58,12 @@ class htmlobject {
 			$http = $this->_http;
 		} else {
 			$http = $this->factory( 'http' );
+			$this->_http = $http;
 		}
 		return $http;
 	}
 
 	function base() {
-		$this->http();
 		return $this->factory( 'base' );
 	}
 
@@ -72,20 +72,32 @@ class htmlobject {
 		return $this->factory( 'box' );
 	}
 
-	function breadcrumps( ) {
-		$this->http();
-		$this->base();
-		return $this->factory( 'breadcrumps' );
-	}
-
 	function button() {
 		$this->base();
 		return $this->factory( 'button' );
 	}
 
+	function div() {
+		return $this->factory( 'div' );
+	}
+
+	function form() {
+		$this->base();
+		return $this->factory( 'form' );
+	}
+
+	function formbuilder() {
+		return $this->factory( 'formbuilder', $this );
+	}
+
 	function input() {
 		$this->base();
 		return $this->factory( 'input' );
+	}
+
+	function select() {
+		$this->base();
+		return $this->factory( 'select' );
 	}
 
 	function table() {
@@ -94,16 +106,18 @@ class htmlobject {
 	}
 
 	function tablebuilder( $sort = '', $order = '', $limit = '', $offset = '', $var_prefix = 'table_' ) {
-		$this->http();
-		$this->base();
-		$this->input();
-		$this->select();
-		$this->textarea();
-		$this->button();
-		$this->td();
-		$this->tr();
 		$this->table();
-		return $this->factory( 'tablebuilder', $sort, $order, $limit, $offset, $var_prefix );
+		return $this->factory( 'tablebuilder', $sort, $order, $limit, $offset, $var_prefix, $this);
+	}
+
+	function tabmenu( $data, $prefix ) {
+		$this->base();
+		$this->div();
+		return $this->factory( 'tabmenu', $data, $prefix, '', $this->http());
+	}
+
+	function template($file) {
+		return $this->factory( 'template', $file );
 	}
 
 	function textarea() {
@@ -111,9 +125,9 @@ class htmlobject {
 		return $this->factory( 'textarea' );
 	}
 
-	function tabmenu( $data, $prefix ) {
+	function td() {
 		$this->base();
-		return $this->factory( 'tabmenu', $data, $prefix );
+		return $this->factory( 'td' );
 	}
 
 	function tr() {
@@ -121,25 +135,6 @@ class htmlobject {
 		return $this->factory( 'tr' );
 	}
 
-	function td() {
-		$this->base();
-		return $this->factory( 'td' );
-	}
-
-	function select() {
-		$this->base();
-		return $this->factory( 'select' );
-	}
-
-	function formbuilder() {
-		$this->http();
-		$this->input();
-		$this->select();
-		$this->textarea();
-		$this->button();
-		$this->box();	
-		return $this->factory( 'formbuilder', $this );
-	}
 
 }
 ?>

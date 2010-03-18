@@ -80,23 +80,24 @@ var $width = '';
 var $arr_table = array();
 
 
-	function init() {
-		parent::init();
-		if ($this->align != '') { $this->_init .= ' align="'.$this->align.'"'; }
-		if (isset($this->border) && $this->border !== '') { $this->_init .= ' border="'.$this->border.'"'; }
-		if ($this->bgcolor != '') { $this->_init .= ' bgcolor="'.$this->bgcolor.'"'; }
-		if (isset($this->cellpadding) && $this->cellpadding !== '') { $this->_init .= ' cellpadding="'.$this->cellpadding.'"'; }
-		if (isset($this->cellspacing) && $this->cellspacing !== '') { $this->_init .= ' cellspacing="'.$this->cellspacing.'"'; }
-		if ($this->frame != '') { $this->_init .= ' frame="'.$this->frame.'"'; }
-		if ($this->rules != '') { $this->_init .= ' rules="'.$this->rules.'"'; }
-		if ($this->summary != '') { $this->_init .= ' summary="'.$this->summary.'"'; }
-		if ($this->width != '') { $this->_init .= ' width="'.$this->width.'"'; }
+	function get_attribs() {
+		$str = parent::get_attribs();
+		if ($this->align != '') { $str .= ' align="'.$this->align.'"'; }
+		if (isset($this->border) && $this->border !== '') { $str .= ' border="'.$this->border.'"'; }
+		if ($this->bgcolor != '') { $str .= ' bgcolor="'.$this->bgcolor.'"'; }
+		if (isset($this->cellpadding) && $this->cellpadding !== '') { $str .= ' cellpadding="'.$this->cellpadding.'"'; }
+		if (isset($this->cellspacing) && $this->cellspacing !== '') { $str .= ' cellspacing="'.$this->cellspacing.'"'; }
+		if ($this->frame != '') { $str .= ' frame="'.$this->frame.'"'; }
+		if ($this->rules != '') { $str .= ' rules="'.$this->rules.'"'; }
+		if ($this->summary != '') { $str .= ' summary="'.$this->summary.'"'; }
+		if ($this->width != '') { $str .= ' width="'.$this->width.'"'; }
+		return $str;
 	}
 
 	function get_string() {
 	$_strReturn = '';
-		$this->init();
-		$_strReturn = "\n<table$this->_init>";
+		$attribs = $this->get_attribs();
+		$_strReturn = "\n<table$attribs>";
 		foreach($this->arr_table as $tr) {
 			if(is_object($tr) == true && get_class($tr) == 'htmlobject_tr') {
 				$_strReturn .= $tr->get_string();

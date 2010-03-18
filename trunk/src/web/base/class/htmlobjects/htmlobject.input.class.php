@@ -68,15 +68,15 @@ var $value = '';
 	 *
 	 * @access protected
 	 */
-	function init() {
-		parent::init();
-		if ($this->checked !== false)  	{ $this->_init .= ' checked="checked"'; }
-		if ($this->disabled === true)	{ $this->_init .= ' disabled="disabled"'; }
-		if ($this->maxlength != '')		{ $this->_init .= ' maxlength="'.$this->maxlength.'"'; }
-		if ($this->name != '')  		{ $this->_init .= ' name="'.$this->name.'"'; }
-		if ($this->size != '')			{ $this->_init .= ' size="'.$this->size.'"'; }
-		if ($this->tabindex != '')  	{ $this->_init .= ' tabindex="'.$this->tabindex.'"'; }
-		if ($this->value != '')  		{ $this->_init .= ' value="'.$this->value.'"'; }
+	function get_attribs() {
+		$str = parent::get_attribs();
+		if ($this->checked !== false)  	{ $str .= ' checked="checked"'; }
+		if ($this->disabled === true)	{ $str .= ' disabled="disabled"'; }
+		if ($this->maxlength != '')		{ $str .= ' maxlength="'.$this->maxlength.'"'; }
+		if ($this->name != '')  		{ $str .= ' name="'.$this->name.'"'; }
+		if ($this->size != '')			{ $str .= ' size="'.$this->size.'"'; }
+		if ($this->tabindex != '')  	{ $str .= ' tabindex="'.$this->tabindex.'"'; }
+		if ($this->value != '')  		{ $str .= ' value="'.$this->value.'"'; }
 		$this->type = strtolower($this->type);
 		switch($this->type) {
 			case 'text':
@@ -89,12 +89,13 @@ var $value = '';
 			case 'image':
 			case 'button':
 			case 'file':
-				$this->_init .= ' type="'.$this->type.'"';
+				$str .= ' type="'.$this->type.'"';
 			break;
 			default:
-				$this->_init .= ' type="text"';
+				$str .= ' type="text"';
 			break;
 		}
+		return $str;
 	}
 
 	/**
@@ -105,8 +106,8 @@ var $value = '';
 	 */
 	function get_string() {
 	$_strReturn = '';
-		$this->init();
-		$_strReturn = "<input$this->_init>";
+		$attribs = $this->get_attribs();
+		$_strReturn = "<input$attribs>";
 	return $_strReturn;
 	}
 }

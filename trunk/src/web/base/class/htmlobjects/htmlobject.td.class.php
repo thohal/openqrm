@@ -37,18 +37,35 @@ var $type = 'td';
 var $text = '';
 
 
-	function init() {
-		parent::init();
-		if ($this->colspan != '') { $this->_init .= ' colspan="'.$this->colspan.'"'; }
+	function get_attribs() {
+		$str = parent::get_attribs();
+		if ($this->colspan != '') { $str .= ' colspan="'.$this->colspan.'"'; }
+		return $str;
 	}
 
 	function get_string() {
-	$_strReturn = '';
-		$this->init();
-		$_strReturn = "\n<$this->type$this->_init>";
-		$_strReturn .= $this->text;
-		$_strReturn .= "</$this->type>";
-	return $_strReturn;
+		$str     = '';
+		$attribs = $this->get_attribs();
+		$text    = $this->text;
+		if(!is_array($text)) {
+			$text = array($text);
+		}
+
+		foreach($text as $value) {
+			if(is_object($value)) {
+				$str .= $value->get_string();
+			} else {
+				$str .= $value;
+			}
+		}
+		$_str  = "\n<$this->type$attribs>";
+		$_str .= $str;
+		$_str .= "</$this->type>";
+	return $_str;
+	}
+
+	function add($text) {
+		$this->text[] = $text;
 	}
 }
 ?>

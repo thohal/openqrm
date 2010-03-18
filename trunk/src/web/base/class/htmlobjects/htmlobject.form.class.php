@@ -50,20 +50,21 @@ var $target = '';
 * @access public
 * @var string
 */
-var $fields = '';
+var $elements = array();
 
 	/**
 	 * init attribs
 	 *
 	 * @access protected
 	 */
-	function init() {
-		parent::init();
-		if ($this->action != '')  		{ $this->_init .= ' action="'.$this->action.'"'; }
-		if ($this->enctype != '')  		{ $this->_init .= ' enctype="'.$this->enctype.'"'; }
-		if ($this->method != '')  		{ $this->_init .= ' method="'.$this->method.'"'; }
-		if ($this->name != '')  		{ $this->_init .= ' name="'.$this->name.'"'; }
-		if ($this->target != '')  		{ $this->_init .= ' target="'.$this->target.'"'; }
+	function get_attribs() {
+		$str = parent::get_attribs();
+		if ($this->action != '')  		{ $str .= ' action="'.$this->action.'"'; }
+		if ($this->enctype != '')  		{ $str .= ' enctype="'.$this->enctype.'"'; }
+		if ($this->method != '')  		{ $str .= ' method="'.$this->method.'"'; }
+		if ($this->name != '')  		{ $str .= ' name="'.$this->name.'"'; }
+		if ($this->target != '')  		{ $str .= ' target="'.$this->target.'"'; }
+		return $str;
 	}
 
 	/**
@@ -73,12 +74,45 @@ var $fields = '';
 	 * @return string
 	 */
 	function get_string() {
-	$_strReturn = '';
-		$this->init();
-		$_strReturn .= "\n<form$this->_init>\n";
-		$_strReturn .= $this->fields;
+		$str = '';
+		$arr = $this->get_template_array();
+		foreach($arr as $key => $value) {
+			if($key === 'formbuilder') {
+				foreach($value as $val) {
+					$str .= $val;
+				}
+			} else {
+				$str .= $value;
+			}
+		}
+		$attribs = $this->get_attribs();
+		$_strReturn = '';
+		$_strReturn .= "\n<form$attribs>\n";
+		$_strReturn .= $str;
 		$_strReturn .= "\n</form>\n";
-	return $_strReturn;
+		return $_strReturn;
 	}
+
+	function add($object, $key = null) {
+		$this->elements[$key] = $object;
+	}
+
+	function get_template_array() {
+		$arr = array();
+		foreach($this->elements as $key => $value) {
+			if(is_object($value)){	
+				if(
+					$value instanceof htmlobject_formbuilder ||
+					$value instanceof htmlobject_formbuilder_debug
+				) {	
+					$arr[$key] = $value->get_template_array();
+				} else {
+					$arr[$key] = $value->get_string();
+				}
+			}
+		}
+		return $arr;
+	}
+
 }
 ?>

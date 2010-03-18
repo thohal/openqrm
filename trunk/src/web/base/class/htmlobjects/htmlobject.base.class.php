@@ -14,7 +14,7 @@
  * @version 1.0
  */
 
-class htmlobject_base extends htmlobject_http
+class htmlobject_base
 {
 /**
 * Attribute class
@@ -53,22 +53,23 @@ var $handler = '';
 * @access protected
 * @var string
 */
-var $_init;
+#var $_init;
 
 	/**
 	 * init attribs
 	 *
 	 * @access protected
 	 */
-	function init() {
-		$this->_init = '';
-		if ($this->css != '')  		{ $this->_init .= ' class="'.$this->css.'"'; }
-		if ($this->style != '')		{ $this->_init .= ' style="'.$this->style.'"'; }
-		if ($this->title != '')		{ $this->_init .= ' title="'.$this->title.'"'; }
-		if ($this->handler != '')	{ $this->_init .= ' '.$this->handler; }
+	function get_attribs() {
+		$str = '';
+		if ($this->css != '')  		{ $str .= ' class="'.$this->css.'"'; }
+		if ($this->style != '')		{ $str .= ' style="'.$this->style.'"'; }
+		if ($this->title != '')		{ $str .= ' title="'.$this->title.'"'; }
+		if ($this->handler != '')	{ $str .= ' '.$this->handler; }
 		// set id
 		if ($this->id == '') 		{ $this->set_id(); }
-		if ($this->id != '')		{ $this->_init .= ' id="'.$this->id.'"'; }
+		if ($this->id != '')		{ $str .= ' id="'.$this->id.'"'; }
+		return $str;
 	}
 
 	/**
@@ -92,37 +93,4 @@ var $_init;
 	}
 	
 }
-
-/**
- * Div
- *
- * @package htmlobjects
- * @author Alexander Kuballa <akuballa@users.sourceforge.net>
- * @copyright Copyright (c) 2008, Alexander Kuballa
- * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @version 1.0
- */
-class htmlobject_div extends htmlobject_base
-{
-/**
-* text
-* @access private
-* @var string
-*/
-var $text = '';
-
-	/**
-	 * Get html element as string
-	 *
-	 * @access public
-	 * @return string
-	 */	
-	function get_string() {
-	$_strReturn = '';
-		$this->init();
-		$_strReturn = "\n<div$this->_init>$this->text</div>";
-	return $_strReturn;
-	}
-}
-
 ?>

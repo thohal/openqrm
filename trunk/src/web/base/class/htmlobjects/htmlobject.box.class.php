@@ -60,11 +60,12 @@ var $arr_content = array();
 	 *
 	 * @access protected
 	 */
-	function init() {
-		parent::init();
+	function get_attribs() {
+		$str = parent::get_attribs();
 		if ($this->content == '')	{ $this->content = '&#160;'; }
 		if ($this->css_left != '') 	{ $this->css_left = ' class="'.$this->css_left.'"'; }
 		if ($this->css_right != '') { $this->css_right = ' class="'.$this->css_right.'"'; }
+		return $str;
 	}
 
 	/**
@@ -85,8 +86,8 @@ var $arr_content = array();
 		}
 
 		if($this->label !== '') {
-			$this->init();
-			$_strReturn .= "\n<div".$this->_init.">";
+			$attribs = $this->get_attribs();
+			$_strReturn .= "\n<div".$attribs.">";
 			$_strReturn .= "\n<div".$this->css_left.">";
 			if(is_object($this->content) && isset($this->content->id)) { $_strReturn .= '<label for="'.$this->content->id.'">'.$this->label.'</label>'; }
 			if(is_string($this->content)) {

@@ -192,7 +192,6 @@ var $html;
 			$box = $this->html->box();
 			$box->label = $this->get_label($data);
 			$box->content = $this->get_htmlobject_object($data);
-			$box->css = 'htmlobject_box';
 			$ar = array_merge($ar, array($key => $box->get_string()));
 		}
 		return $ar;

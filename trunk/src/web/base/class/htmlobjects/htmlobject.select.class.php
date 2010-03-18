@@ -82,13 +82,14 @@ var $selected_by_text = false;
 	 *
 	 * @access protected
 	 */
-	function init() {
-		parent::init();
-		if ($this->disabled === true)	{ $this->_init .= ' disabled="disabled"'; }
-		if ($this->multiple === true)	{ $this->_init .= ' multiple="multiple"'; }
-		if ($this->name != '')  		{ $this->_init .= ' name="'.$this->name.'"'; }
-		if ($this->size != '')			{ $this->_init .= ' size="'.$this->size.'"'; }
-		if ($this->tabindex != '')  	{ $this->_init .= ' tabindex="'.$this->tabindex.'"'; }
+	function get_attribs() {
+		$str = parent::get_attribs();
+		if ($this->disabled === true)	{ $str .= ' disabled="disabled"'; }
+		if ($this->multiple === true)	{ $str .= ' multiple="multiple"'; }
+		if ($this->name != '')  		{ $str .= ' name="'.$this->name.'"'; }
+		if ($this->size != '')			{ $str .= ' size="'.$this->size.'"'; }
+		if ($this->tabindex != '')  	{ $str .= ' tabindex="'.$this->tabindex.'"'; }
+		return $str;
 	}
 
 	/**
@@ -99,8 +100,8 @@ var $selected_by_text = false;
 	 */
 	function get_string() {
 	$_strReturn = '';
-		$this->init();
-		$_strReturn = "\n<select$this->_init>\n";
+		$attribs = $this->get_attribs();
+		$_strReturn = "\n<select$attribs>\n";
 		$_strReturn .= $this->get_options();
 		$_strReturn .= "</select>\n";
 	return $_strReturn;

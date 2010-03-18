@@ -107,10 +107,11 @@ var $_tabs = array();
 	* @param string $prefix
 	*/
 	//----------------------------------------------------------------------------------------
-	function htmlobject_tabmenu($arr, $prefix = 'currenttab', $prefix_tab = '') {
-		$this->prefix = $prefix;
+	function htmlobject_tabmenu($arr, $prefix = 'currenttab', $prefix_tab = '', $http) {
+		$this->http       = $http;
+		$this->prefix     = $prefix;
 		$this->prefix_tab = $prefix_tab;
-		$this->_set($arr);	
+		$this->init($arr);	
 	}
 
 	//----------------------------------------------------------------------------------------
@@ -120,9 +121,9 @@ var $_tabs = array();
 	* @param array $arr
 	*/
 	//----------------------------------------------------------------------------------------	
-	function _set( $arr ) {
+	function init( $arr ) {
 		$i = 0;
-		foreach ($arr as $val) {
+		foreach ($arr as $key => $val) {
 			if($val && $val !== '') {			
 				$identifier = $this->prefix.$this->prefix_tab.$i;
 
@@ -135,7 +136,7 @@ var $_tabs = array();
 				} else { $value = ''; }
 
 				array_key_exists('label', $val) ? $label = $val['label'] : $label = '';
-				array_key_exists('target', $val) ? 	$target = $val['target'].'?'.$this->prefix.'='.$this->prefix_tab.$i : $target = '?'.$this->prefix.'='.$this->prefix_tab.$i;
+				array_key_exists('target', $val) ? 	$target = $val['target'] : $target = '';
 				array_key_exists('request', $val) ? $request = $val['request'] : $request = array();
 				array_key_exists('onclick', $val) ? $onclick = $val['onclick'] : $onclick = true;
 				array_key_exists('active', $val) ? $active = $val['active'] : $active = false;
@@ -144,7 +145,7 @@ var $_tabs = array();
 					$_REQUEST[$this->prefix.$this->prefix_tab] = $i;
 				}
 
-				$this->_tabs[] = array(
+				$this->_tabs[$key] = array(
 					'target'  => $target,
 					'value'   => $value,
 					'label'   => $label,
@@ -168,11 +169,17 @@ var $_tabs = array();
 	//----------------------------------------------------------------------------------------	
 	function _get_tabs($currenttab) {
 		$thisfile = basename($_SERVER['PHP_SELF']);
-		$_str = "\n<div ".$this->_init.">\n";
-		$_str .= "<ul>\n";	
+		$attribs  = $this->get_attribs();
+
+		$_str = "\n<div ".$attribs.">\n";
+		$_str .= "<ul>\n";
+		$i = 0;
+	
 		foreach($this->_tabs as $tab) {
 			$css = '';
 			if($tab['id'] == $this->prefix.$this->prefix_tab.$currenttab) { $css = ' class="'.$this->tabcss.'"'; }
+			$tab['target'] = $tab['target'].'?'.$this->prefix.'='.$this->prefix_tab.$i;
+
 			foreach ($tab['request'] as $key => $arg) {
 				$tab['target'] = $tab['target'].'&amp;'.$key.'='.$arg;
 			}
@@ -188,6 +195,8 @@ var $_tabs = array();
 			$_str .= "</a>";
 			$_str .= "</span>";
 			$_str .= "</li>\n";
+			
+			++$i;
 		}
 		$_str .= "</ul>\n";
 		if($this->custom_tab != '') {
@@ -234,7 +243,7 @@ var $_tabs = array();
 	//----------------------------------------------------------------------------------------	
 	function _get_messagebox() {
 	$_str = '';
-		$msg = $this->get_request($this->message_param);
+		$msg = $this->http->get_request($this->message_param);
 	    if($msg != "") {
 		    $_str .= '';
 		    $_str .= '<div class="'.$this->message_css.'" id="'.$this->prefix.'msgBox">'.$msg.'</div>';
@@ -262,7 +271,6 @@ var $_tabs = array();
 	$_str = '';
 		($this->form_action != '') ? $_str .= '<form action="'.$this->form_action.'" method="POST">' : null;
 		if(count($this->_tabs) > 0) {
-			$this->init();
 			if(isset($_REQUEST[$this->prefix]) && $_REQUEST[$this->prefix] != '') {
 				$currenttab = str_replace($this->prefix_tab, '', $_REQUEST[$this->prefix]);
 			} else {

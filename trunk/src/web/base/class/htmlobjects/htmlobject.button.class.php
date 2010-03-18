@@ -58,26 +58,24 @@ var $label = '';
 	 *
 	 * @access protected
 	 */
-	function init() {
-		parent::init();
-		if ($this->disabled === true)	{ $this->_init .= ' disabled="disabled"'; }
-		if ($this->name != '')  		{ $this->_init .= ' name="'.$this->name.'"'; }
-		if ($this->tabindex != '')  	{ $this->_init .= ' tabindex="'.$this->tabindex.'"'; }
-		if ($this->value != '')  		{ $this->_init .= ' value="'.$this->value.'"'; }
+	function get_attribs() {
+		$str = parent::get_attribs();
+		if ($this->disabled === true)	{ $str .= ' disabled="disabled"'; }
+		if ($this->name != '')  		{ $str .= ' name="'.$this->name.'"'; }
+		if ($this->tabindex != '')  	{ $str .= ' tabindex="'.$this->tabindex.'"'; }
+		if ($this->value != '')  		{ $str .= ' value="'.$this->value.'"'; }
 		$this->type = strtolower($this->type);
 		switch($this->type) {
 			case 'submit':
 			case 'reset':
 			case 'button':
-				$this->_init .= ' type="'.$this->type.'"';
+				$str .= ' type="'.$this->type.'"';
 			break;
 			default:
-				$this->_init .= ' type="button"';
-				#if(debug::active()) {
-				#	debug::add('type '.$this->type.' not supported - type set to button', 'ERROR');
-				#}
+				$str .= ' type="button"';
 			break;
 		}
+		return $str;
 	}
 
 	/**
@@ -88,8 +86,8 @@ var $label = '';
 	 */
 	function get_string() {
 	$_strReturn = '';
-		$this->init();
-		$_strReturn = "\n<button$this->_init>$this->label</button>";
+		$attribs = $this->get_attribs();
+		$_strReturn = "\n<button$attribs>$this->label</button>";
 	return $_strReturn;
 	}
 }

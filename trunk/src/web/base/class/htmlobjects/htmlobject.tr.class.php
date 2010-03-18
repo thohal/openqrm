@@ -27,8 +27,8 @@ var $arr_tr = array();
 
 	function get_string() {
 	$_strReturn = '';
-		$this->init();
-		$_strReturn = "\n<tr$this->_init>";
+		$str = $this->get_attribs();
+		$_strReturn = "\n<tr$str>";
 		foreach($this->arr_tr as $td) {
 			if(is_object($td) == true && get_class($td) == 'htmlobject_td') {
 				$_strReturn .= $td->get_string();
