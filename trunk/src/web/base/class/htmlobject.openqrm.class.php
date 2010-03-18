@@ -35,4 +35,13 @@ class htmlobject_openqrm extends htmlobject
 	function htmlobject_openqrm() {
 		parent::htmlobject($_SERVER["DOCUMENT_ROOT"].'/openqrm/base/class/htmlobjects');
 	}
+
+
+	function box() {
+		$html      = parent::box();
+		$html->css = 'htmlobject_box';
+		return $html;
+	}
+
+
 }
