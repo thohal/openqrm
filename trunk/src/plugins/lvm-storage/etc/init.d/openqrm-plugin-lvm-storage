@@ -30,7 +30,12 @@ LINE_IFS='
 '
 
 function openqrm_plugin_lvm-storage_start() {
-	openqrm_plugin_lvm-storage_stop 1>/dev/null 2>&1
+    # make sure vbladed is stopped, not using the init script here because this may exit 1
+    for VPID in `ps ax | grep vblade | grep -v grep | awk {' print $1 '}`; do
+        kill $VPID
+    done
+    killall vblade 1>/dev/null 2>&1
+	#openqrm_plugin_lvm-storage_stop 1>/dev/null 2>&1
 	echo "Starting the openQRM lvm-storage-plugin"
 	touch $OPENQRM_WEBSERVER_DOCUMENT_ROOT/openqrm/base/plugins/lvm-storage/.running
 
